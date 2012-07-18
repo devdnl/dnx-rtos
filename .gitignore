@@ -1,0 +1,14 @@
+01_binaries/
+.settings/
+doc/dsys/html/
+doc/dsys/latex/
+*.o
+*.lst
+*.src
+*.d
+*.bak
+*.bin
+*.hex
+*.elf
+*.*~
+
