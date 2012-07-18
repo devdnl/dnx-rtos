@@ -32,6 +32,13 @@
 CSRC = $(sort \
    cpu/stm32/stm32f10x_vectors.c \
    main.c \
+   kernel/croutine.c \
+   kernel/list.c \
+   kernel/queue.c \
+   kernel/tasks.c \
+   kernel/timers.c \
+   kernel/portable/GCC/ARM_CM3/port.c \
+   kernel/portable/MemMang/heap_2.c \
    )
 
 ####################################################################################################
@@ -52,8 +59,11 @@ ASRC = $(sort \
 ####################################################################################################
 HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    . \
+   cfg \
+   cpu \
    drivers \
    drivers/cfg \
+   kernel/include \
    )
 
 ####################################################################################################
@@ -257,10 +267,10 @@ status :
 	@if ! $(TEST) -f $(INFO_LOC)/build; then echo "0" > $(INFO_LOC)/build; fi
 	@echo $$(($$($(CAT) $(INFO_LOC)/build) + 1)) > $(INFO_LOC)/build
 
-	@echo '/* application version created automatically by $(THIS_MAKEFILE) */' > app/version.h
-	@echo '#'ifndef DSYS_VERSION >> app/version.h
-	@echo '#'define DSYS_VERSION `$(DATE) "+%Y%m%d"`UL >> app/version.h
-	@echo '#'endif >> app/version.h
+	@echo '/* application version created automatically by $(THIS_MAKEFILE) */' > cfg/version.h
+	@echo '#'ifndef DSYS_VERSION >> cfg/version.h
+	@echo '#'define DSYS_VERSION `$(DATE) "+%Y%m%d"`UL >> cfg/version.h
+	@echo '#'endif >> cfg/version.h
 
 	@echo "Build: `$(CAT) $(INFO_LOC)/build` `$(DATE) "+completed: %k:%M:%S"`"
 
