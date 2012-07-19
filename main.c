@@ -32,10 +32,13 @@
                                              Include files
 ==================================================================================================*/
 #include "basic_types.h"
+#include "stm32f10x.h"
 
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 
 /*==================================================================================================
@@ -69,25 +72,25 @@ void InitSystem(void);
 ==================================================================================================*/
 
 
-static void task1(void *arg)
-{
-    (void) arg;
-
-    for ( ;; )
-    {
-        asm volatile ("nop");
-    }
-}
-
-static void task2(void *arg)
-{
-    (void) arg;
-
-    for ( ;; )
-    {
-        asm volatile ("nop");
-    }
-}
+// static void task1(void *arg)
+// {
+//     (void) arg;
+//
+//     for ( ;; )
+//     {
+//         asm volatile ("nop");
+//     }
+// }
+//
+// static void task2(void *arg)
+// {
+//     (void) arg;
+//
+//     for ( ;; )
+//     {
+//         asm volatile ("nop");
+//     }
+// }
 
 
 
@@ -101,12 +104,9 @@ int main(void)
 {
     InitSystem();
 
-    xTaskCreate(task1, (signed char *)"Task1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    xTaskCreate(task2, (signed char *)"Task2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-
     vTaskStartScheduler();
 
-    for ( ;; );
+    return 0;
 }
 
 
@@ -117,9 +117,60 @@ int main(void)
 //================================================================================================//
 void InitSystem(void)
 {
+    SCB->VTOR = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
+    SCB->AIRCR = 0x05FA0000 | 0x300;
+}
+
+
+
+/*-----------------------------------------------------------*/
+
+// void vApplicationMallocFailedHook( void )
+// {
+//     for( ;; );
+// }
+
+
+void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
+{
+ ( void ) pcTaskName;
+ ( void ) pxTask;
+
+ for( ;; );
+}
+
+
+// void vApplicationIdleHook( void )
+// {
+// }
+
+
+
+void HardFault_Handler(void)
+{
 
 }
 
+
+void MemManage_Handler(void)
+{
+
+}
+
+void BusFault_Handler(void)
+{
+
+}
+
+void UsageFault_Handler(void)
+{
+
+}
+
+void DebugMon_Handler(void)
+{
+
+}
 
 #ifdef __cplusplus
    }

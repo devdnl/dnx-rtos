@@ -61,6 +61,7 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    . \
    cfg \
    cpu \
+   cpu/CMSIS \
    drivers \
    drivers/cfg \
    kernel/include \
@@ -267,10 +268,10 @@ status :
 	@if ! $(TEST) -f $(INFO_LOC)/build; then echo "0" > $(INFO_LOC)/build; fi
 	@echo $$(($$($(CAT) $(INFO_LOC)/build) + 1)) > $(INFO_LOC)/build
 
-	@echo '/* application version created automatically by $(THIS_MAKEFILE) */' > cfg/version.h
-	@echo '#'ifndef DSYS_VERSION >> cfg/version.h
-	@echo '#'define DSYS_VERSION `$(DATE) "+%Y%m%d"`UL >> cfg/version.h
-	@echo '#'endif >> cfg/version.h
+	@echo '/* application version created automatically by $(THIS_MAKEFILE) */' > $(INFO_LOC)/version.h
+	@echo '#'ifndef DSYS_VERSION >> $(INFO_LOC)/version.h
+	@echo '#'define DSYS_VERSION `$(DATE) "+%Y%m%d"`UL >> $(INFO_LOC)/version.h
+	@echo '#'endif >> $(INFO_LOC)/version.h
 
 	@echo "Build: `$(CAT) $(INFO_LOC)/build` `$(DATE) "+completed: %k:%M:%S"`"
 
