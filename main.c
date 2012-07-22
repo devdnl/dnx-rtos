@@ -133,17 +133,17 @@ void InitSystem(void)
 
 void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
 {
- ( void ) pcTaskName;
- ( void ) pxTask;
+    ( void ) pcTaskName;
+    ( void ) pxTask;
 
- for( ;; );
+    for( ;; );
 }
 
 
-// void vApplicationIdleHook( void )
-// {
-// }
-
+void vApplicationIdleHook( void )
+{
+    asm volatile ("nop");
+}
 
 
 void HardFault_Handler(void)
