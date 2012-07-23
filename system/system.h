@@ -46,12 +46,35 @@
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
+#define MINIMAL_STACK_SIZE              configMINIMAL_STACK_SIZE
+#define THIS_TASK                       NULL
+
 #define TaskTerminate()                 vTaskDelete(NULL)
+#define TaskDelete(taskID)              vTaskDelete(taskID)
 #define TaskDelay(delay)                vTaskDelay(delay)
+#define TaskSuspend(taskID)             vTaskSuspend(taskID)
+#define TaskResume(taskID)              vTaskResume(taskID)
+#define TaskResumeFromISR(taskID)       xTaskResumeFromISR(taskID)
 #define TaskYield()                     taskYIELD()
+#define TaskEnterCritical()             taskENTER_CRITICAL()
+#define TaskExitCritical()              taskEXIT_CRITICAL()
+#define TaskDisableIRQ()                taskDISABLE_INTERRUPTS()
+#define TaskEnableIRQ()                 taskENABLE_INTERRUPTS()
+#define TaskSuspendAll()                vTaskSuspendAll()
+#define TaskResumeAll()                 xTaskResumeAll()
+#define TaskGetTickCount()              xTaskGetTickCount()
+#define YieldFromISR()                  portYIELD_FROM_ISR()
+#define GetStackFreeSpace(taskID)       uxTaskGetStackHighWaterMark(taskID)
+#define GetFreeHeapSize()               xPortGetFreeHeapSize()
+#define Malloc(size)                    pvPortMalloc(size)
+#define Free(pv)                        vPortFree(pv)
+
 #define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
         xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
-#define MINIMAL_STACK_SIZE              configMINIMAL_STACK_SIZE
+
+#define TaskDelayUntil(pPreviousWakeTime, TimeIncrement) \
+        vTaskDelayUntil(pPreviousWakeTime, TimeIncrement)
+
 
 /*==================================================================================================
                                   Exported types, enums definitions

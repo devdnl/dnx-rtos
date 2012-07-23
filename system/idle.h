@@ -1,11 +1,11 @@
-#ifndef HOOKS_H_
-#define HOOKS_H_
+#ifndef IDLE_H_
+#define IDLE_H_
 /*=============================================================================================*//**
-@file    hooks.h
+@file    idle.h
 
 @author  Daniel Zorychta
 
-@brief   This file support all system's hooks
+@brief   File support idle task
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -54,14 +54,14 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName );
+extern void vApplicationIdleHook( void );
 
 
 #ifdef __cplusplus
    }
 #endif
 
-#endif /* HOOKS_H_ */
+#endif /* IDLE_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

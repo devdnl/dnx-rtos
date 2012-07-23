@@ -69,9 +69,18 @@ void task1(void *argv)
 {
     (void) argv;
 
+    static u8_t *data;
+    static u32_t stackFree;
+
     for (;;)
     {
         TaskDelay(2);
+        data = (u8_t*)Malloc(40*1024*sizeof(u8_t));
+        TaskDelay(10);
+        Free(data);
+
+        stackFree = GetStackFreeSpace(THIS_TASK);
+
         TaskTerminate();
     }
 }
@@ -84,7 +93,7 @@ void task2(void *argv)
 
     for (;;)
     {
-        heapsize = xPortGetFreeHeapSize();
+        heapsize = GetFreeHeapSize();
         TaskDelay(5);
     }
 }
@@ -115,8 +124,9 @@ int main(void)
 //================================================================================================//
 void InitSystem(void)
 {
-//    SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
-//    SCB->AIRCR = 0x05FA0000 | 0x300;
+    /* set interrupt vectors and NVIC priority */
+    SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
+    SCB->AIRCR = 0x05FA0000 | 0x300;
 }
 
 

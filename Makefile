@@ -40,6 +40,7 @@ CSRC = $(sort \
    kernel/portable/MemMang/heap_2.c \
    system/main.c \
    system/src/hooks.c \
+   system/src/idle.c \
    )
 
 ####################################################################################################

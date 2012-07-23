@@ -75,26 +75,6 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
 
 //================================================================================================//
 /**
- * @brief Application Idle hook (idle task - don't use loop)
- */
-//================================================================================================//
-void vApplicationIdleHook(void)
-{
-//    static bool_t TaskStarted = FALSE;
-//
-//    if (TaskStarted == FALSE)
-//    {
-//        if (  TaskCreate(task1, "Task1", MINIMAL_STACK_SIZE*6, NULL, 1, 0) == pdPASS
-//           && TaskCreate(task2, "Task2", MINIMAL_STACK_SIZE, NULL, 1, 0) == pdPASS )
-//        {
-//            TaskStarted = TRUE;
-//        }
-//    }
-}
-
-
-//================================================================================================//
-/**
  * @brief Hard Fault ISR
  */
 //================================================================================================//
