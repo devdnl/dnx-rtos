@@ -31,7 +31,6 @@
 ####################################################################################################
 CSRC = $(sort \
    cpu/stm32/stm32f10x_vectors.c \
-   main.c \
    kernel/croutine.c \
    kernel/list.c \
    kernel/queue.c \
@@ -39,6 +38,8 @@ CSRC = $(sort \
    kernel/timers.c \
    kernel/portable/GCC/ARM_CM3/port.c \
    kernel/portable/MemMang/heap_2.c \
+   system/main.c \
+   system/src/hooks.c \
    )
 
 ####################################################################################################
@@ -58,7 +59,6 @@ ASRC = $(sort \
 # INSERT HERE PATHS WITH HEADER FILES ONLY
 ####################################################################################################
 HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
-   . \
    cfg \
    cpu \
    cpu/CMSIS \
@@ -363,3 +363,14 @@ cleanall:
 # include all dependencies
 ####################################################################################################
 -include $(BIN_LOC)/$(DEP_FILE)
+
+
+####################################################################################################
+# program Flash memory using openOCD and gdb
+####################################################################################################
+.PHONY : flash
+flash :
+	@echo -e "target remote localhost:3333\nmonitor reset halt\nload\nmonitor reset halt\nq\ny\n" > $(BIN_LOC)/gdbcmd
+	@arm-none-eabi-gdb $(BIN_LOC)/micro/main.elf -x $(BIN_LOC)/gdbcmd
+	-@$(RM) $(BIN_LOC)/gdbcmd
+

@@ -7,7 +7,7 @@
 * compiler: arm-none-eabi-gcc
 *
 * description:
-* Linker script for STM32F103RB chip (256 KiB Flash, 64 KiB SRAM).
+* Linker script for STM32F107 chip (256 KiB Flash, 64 KiB SRAM).
 ***************************************************************************************************/
 
 SEARCH_DIR(.);
@@ -25,8 +25,8 @@ stacks sizes
 /* Handler mode (core exceptions / interrupts) can use only main stack */
 /* Thread mode can use main stack (default) or process stack - selected in CONTROL special register */
 
-__main_stack_size    = 512;
-__process_stack_size = 512;
+__main_stack_size    = 128;
+__process_stack_size = 0;
 
 PROVIDE(__main_stack_size    = __main_stack_size);
 PROVIDE(__process_stack_size = __process_stack_size);
@@ -37,8 +37,8 @@ available memories definitions
 
 MEMORY
 {
-   rom (rx)  : org = 0x00000000, len = 256k
-   ram (rwx) : org = 0x00002000, len = 64k
+   rom (rx)  : org = 0x08000000, len = 256k
+   ram (rwx) : org = 0x20000000, len = 64k
 }
 
 __rom_start = ORIGIN(rom);

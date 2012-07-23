@@ -1,9 +1,11 @@
+#ifndef SYSTEM_H_
+#define SYSTEM_H_
 /*=============================================================================================*//**
-@file    mian.c
+@file    gpio.h
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief   System main header
 
 @note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -29,7 +31,7 @@
 #endif
 
 /*==================================================================================================
-                                             Include files
+                                            Include files
 ==================================================================================================*/
 #include "basic_types.h"
 #include "stm32f10x.h"
@@ -42,140 +44,35 @@
 
 
 /*==================================================================================================
-                                   Local symbolic constants/macros
+                                  Exported symbolic constants/macros
+==================================================================================================*/
+#define TaskTerminate()                 vTaskDelete(NULL)
+#define TaskDelay(delay)                vTaskDelay(delay)
+#define TaskYield()                     taskYIELD()
+#define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
+        xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
+#define MINIMAL_STACK_SIZE              configMINIMAL_STACK_SIZE
+
+/*==================================================================================================
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
-void InitSystem(void);
-
-
-/*==================================================================================================
-                                      Local object definitions
+                                     Exported function prototypes
 ==================================================================================================*/
 
-
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                         Function definitions
-==================================================================================================*/
-
-
-// static void task1(void *arg)
-// {
-//     (void) arg;
-//
-//     for ( ;; )
-//     {
-//         asm volatile ("nop");
-//     }
-// }
-//
-// static void task2(void *arg)
-// {
-//     (void) arg;
-//
-//     for ( ;; )
-//     {
-//         asm volatile ("nop");
-//     }
-// }
-
-
-
-
-//================================================================================================//
-/**
- * @brief Main function
- */
-//================================================================================================//
-int main(void)
-{
-    InitSystem();
-
-    vTaskStartScheduler();
-
-    return 0;
-}
-
-
-//================================================================================================//
-/**
- * @brief Initialise system
- */
-//================================================================================================//
-void InitSystem(void)
-{
-    SCB->VTOR = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
-    SCB->AIRCR = 0x05FA0000 | 0x300;
-}
-
-
-
-/*-----------------------------------------------------------*/
-
-// void vApplicationMallocFailedHook( void )
-// {
-//     for( ;; );
-// }
-
-
-void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
-{
-    ( void ) pcTaskName;
-    ( void ) pxTask;
-
-    for( ;; );
-}
-
-
-void vApplicationIdleHook( void )
-{
-    asm volatile ("nop");
-}
-
-
-void HardFault_Handler(void)
-{
-
-}
-
-
-void MemManage_Handler(void)
-{
-
-}
-
-void BusFault_Handler(void)
-{
-
-}
-
-void UsageFault_Handler(void)
-{
-
-}
-
-void DebugMon_Handler(void)
-{
-
-}
 
 #ifdef __cplusplus
    }
 #endif
 
+#endif /* SYSTEM_H_ */
 /*==================================================================================================
                                              End of file
 ==================================================================================================*/
