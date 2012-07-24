@@ -57,6 +57,9 @@
 extern void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName );
 
 
+extern void vApplicationTickHook(void);
+
+
 #ifdef __cplusplus
    }
 #endif

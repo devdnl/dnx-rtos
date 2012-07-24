@@ -1,13 +1,13 @@
-#ifndef GPIO_H_
-#define GPIO_H_
+#ifndef PLL_CFG_H_
+#define PLL_CFG_H_
 /*=============================================================================================*//**
-@file    gpio.h
+@file    pll_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO.
+@brief   PLL configuration file
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,14 +33,13 @@
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "gpio_cfg.h"
-#include "system.h"
 
 
 /*==================================================================================================
-                                  Exported symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
-
+/** CPU target frequency */
+#define CPU_TARGET_FREQ                     72000000UL
 
 /*==================================================================================================
                                   Exported types, enums definitions
@@ -55,29 +54,13 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdStatus_t GPIO_Init(void);
-
-
-extern stdStatus_t GPIO_Open(dev_t);
-
-
-extern stdStatus_t GPIO_Close(dev_t);
-
-
-extern stdStatus_t GPIO_Write(dev_t, void*, size_t, size_t);
-
-
-extern stdStatus_t GPIO_Read(dev_t, void*, size_t, size_t);
-
-
-extern stdStatus_t GPIO_IOCtl(dev_t, IORq_t, void*);
 
 
 #ifdef __cplusplus
    }
 #endif
 
-#endif /* GPIO_H_ */
+#endif /* PLL_CFG_H_ */
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/

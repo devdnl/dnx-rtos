@@ -79,6 +79,20 @@
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** default system status */
+typedef enum status_enum
+{
+      STD_STATUS_OK         = 0,
+      STD_STATUS_ERROR      = 1,
+} stdStatus_t;
+
+
+/** device number type */
+typedef u8_t dev_t;
+
+
+/** IO reqest type */
+typedef u8_t IORq_t;
 
 
 /*==================================================================================================

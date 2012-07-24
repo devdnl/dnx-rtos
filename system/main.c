@@ -32,6 +32,7 @@
                                              Include files
 ==================================================================================================*/
 #include "system.h"
+#include "pll.h"
 
 
 /*==================================================================================================
@@ -67,35 +68,35 @@ void InitSystem(void);
 
 void task1(void *argv)
 {
-    (void) argv;
+      (void) argv;
 
-    static u8_t *data;
-    static u32_t stackFree;
+      static u8_t *data;
+      static u32_t stackFree;
 
-    for (;;)
-    {
-        TaskDelay(2);
-        data = (u8_t*)Malloc(40*1024*sizeof(u8_t));
-        TaskDelay(10);
-        Free(data);
+      for (;;)
+      {
+            TaskDelay(2);
+            data = (u8_t*) Malloc(50*1024*sizeof(u8_t));
+            TaskDelay(10);
+            Free(data);
 
-        stackFree = GetStackFreeSpace(THIS_TASK);
+            stackFree = GetStackFreeSpace(THIS_TASK);
 
-        TaskTerminate();
-    }
+            TaskTerminate();
+      }
 }
 
 uint32_t heapsize;
 
 void task2(void *argv)
 {
-    (void) argv;
+      (void) argv;
 
-    for (;;)
-    {
-        heapsize = GetFreeHeapSize();
-        TaskDelay(5);
-    }
+      for (;;)
+      {
+            heapsize = GetFreeHeapSize();
+            TaskDelay(5);
+      }
 }
 
 
@@ -106,14 +107,14 @@ void task2(void *argv)
 //================================================================================================//
 int main(void)
 {
-    InitSystem();
+      InitSystem();
 
-    TaskCreate(task1, "Task1", MINIMAL_STACK_SIZE, NULL, 1, NULL);
-    TaskCreate(task2, "Task2", MINIMAL_STACK_SIZE, NULL, 1, NULL);
+      TaskCreate(task1, "Task1", MINIMAL_STACK_SIZE, NULL, 1, NULL);
+      TaskCreate(task2, "Task2", MINIMAL_STACK_SIZE, NULL, 1, NULL);
 
-    vTaskStartScheduler();
+      vTaskStartScheduler();
 
-    return 0;
+      return 0;
 }
 
 
@@ -124,9 +125,15 @@ int main(void)
 //================================================================================================//
 void InitSystem(void)
 {
-    /* set interrupt vectors and NVIC priority */
-    SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
-    SCB->AIRCR = 0x05FA0000 | 0x300;
+      /* set interrupt vectors and NVIC priority */
+      SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
+      SCB->AIRCR = 0x05FA0000 | 0x300;
+
+      /* PLL initialization */
+      if (PLL_Init() != STD_STATUS_OK)
+            while (TRUE);
+
+      GPIO_Init();
 }
 
 

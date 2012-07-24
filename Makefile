@@ -31,6 +31,8 @@
 ####################################################################################################
 CSRC = $(sort \
    cpu/stm32/stm32f10x_vectors.c \
+   drivers/src/gpio.c \
+   drivers/src/pll.c \
    kernel/croutine.c \
    kernel/list.c \
    kernel/queue.c \

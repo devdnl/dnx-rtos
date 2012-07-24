@@ -1,13 +1,13 @@
-#ifndef GPIO_H_
-#define GPIO_H_
+#ifndef PLL_H_
+#define PLL_H_
 /*=============================================================================================*//**
-@file    gpio.h
+@file    pll.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO.
+@brief   File support PLL
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,18 +33,24 @@
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "gpio_cfg.h"
 #include "system.h"
+#include "pll_cfg.h"
 
 
 /*==================================================================================================
-                                  Exported symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** PLL exit statuses */
+#define PLL_STATUS_HSE_ERROR              -1
+#define PLL_STATUS_PLL_ERROR              -2
+#define PLL_STATUS_PLL2_ERROR             -3
+#define PLL_STATUS_PLL3_ERROR             -4
+#define PLL_STATUS_PLL_SW_ERROR           -5
 
 
 /*==================================================================================================
@@ -55,29 +61,29 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdStatus_t GPIO_Init(void);
+extern stdStatus_t PLL_Init(void);
 
 
-extern stdStatus_t GPIO_Open(dev_t);
+extern stdStatus_t PLL_Open(dev_t);
 
 
-extern stdStatus_t GPIO_Close(dev_t);
+extern stdStatus_t PLL_Close(dev_t);
 
 
-extern stdStatus_t GPIO_Write(dev_t, void*, size_t, size_t);
+extern stdStatus_t PLL_Write(dev_t, void*, size_t, size_t);
 
 
-extern stdStatus_t GPIO_Read(dev_t, void*, size_t, size_t);
+extern stdStatus_t PLL_Read(dev_t, void*, size_t, size_t);
 
 
-extern stdStatus_t GPIO_IOCtl(dev_t, IORq_t, void*);
+extern stdStatus_t PLL_IOCtl(dev_t, IORq_t, void*);
 
 
 #ifdef __cplusplus
    }
 #endif
 
-#endif /* GPIO_H_ */
+#endif /* PLL_H_ */
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/
