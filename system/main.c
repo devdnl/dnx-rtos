@@ -33,6 +33,7 @@
 ==================================================================================================*/
 #include "system.h"
 #include "pll.h"
+#include "gpio.h"
 
 
 /*==================================================================================================
@@ -87,6 +88,7 @@ void task1(void *argv)
 }
 
 uint32_t heapsize;
+u32_t tickcnt;
 
 void task2(void *argv)
 {
@@ -94,8 +96,12 @@ void task2(void *argv)
 
       for (;;)
       {
+            USART1_TX_PORT->BSRR = USART1_TX_BM;
+            TaskDelay(1);
+            USART1_TX_PORT->BRR = USART1_TX_BM;
             heapsize = GetFreeHeapSize();
-            TaskDelay(5);
+            tickcnt  = TaskGetTickCount();
+            TaskDelay(999);
       }
 }
 
@@ -133,6 +139,7 @@ void InitSystem(void)
       if (PLL_Init() != STD_STATUS_OK)
             while (TRUE);
 
+      /* GPIO and AFIO initialization */
       GPIO_Init();
 }
 

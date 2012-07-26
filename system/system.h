@@ -35,8 +35,7 @@
 ==================================================================================================*/
 #include "basic_types.h"
 #include "stm32f10x.h"
-
-/* Scheduler includes. */
+#include "pll_cfg.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
