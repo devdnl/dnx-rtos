@@ -1,11 +1,11 @@
 /*=============================================================================================*//**
-@file    mian.c
+@file    usart.c
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief   This file support USART peripherals
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,20 +24,15 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-   extern "C" {
-#endif
-
 /*==================================================================================================
-                                             Include files
+                                            Include files
 ==================================================================================================*/
-#include "system.h"
-#include "pll.h"
-#include "gpio.h"
+#include "usart.h"
+#include "usart_cfg.h"
 
 
 /*==================================================================================================
-                                   Local symbolic constants/macros
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
@@ -49,7 +44,6 @@
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-void InitSystem(void);
 
 
 /*==================================================================================================
@@ -63,94 +57,75 @@ void InitSystem(void);
 
 
 /*==================================================================================================
-                                         Function definitions
+                                        Function definitions
 ==================================================================================================*/
 
-static u32_t PID = 0xFF;
-
-void task1(void *argv)
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+stdStatus_t USART_Init(void)
 {
-      (void) argv;
-
-      static u8_t *data;
-      static u32_t stackFree;
-
-      for (;;)
-      {
-            PID = TaskGetPID();
-            TaskDelay(2);
-            data = (u8_t*) Malloc(50*1024*sizeof(u8_t));
-            TaskDelay(10);
-            Free(data);
-
-            stackFree = GetStackFreeSpace(THIS_TASK);
-
-            TaskTerminate();
-      }
-}
-
-uint32_t heapsize;
-u32_t tickcnt;
-
-void task2(void *argv)
-{
-      (void) argv;
-
-      for (;;)
-      {
-            PID = TaskGetPID();
-            USART1_TX_PORT->BRR = USART1_TX_BM;
-            TaskDelay(1);
-            USART1_TX_PORT->BSRR = USART1_TX_BM;
-            heapsize = GetFreeHeapSize();
-            tickcnt  = TaskGetTickCount();
-            TaskDelay(999);
-      }
+      return STD_STATUS_OK;
 }
 
 
 //================================================================================================//
 /**
- * @brief Main function
+ * @brief
  */
 //================================================================================================//
-int main(void)
+stdStatus_t USART_Open(dev_t usartName)
 {
-      InitSystem();
-
-      TaskCreate(task1, "Task1", MINIMAL_STACK_SIZE, NULL, 1, NULL);
-      TaskCreate(task2, "Task2", MINIMAL_STACK_SIZE, NULL, 1, NULL);
-
-      vTaskStartScheduler();
-
-      return 0;
+      return STD_STATUS_ERROR;
 }
 
 
 //================================================================================================//
 /**
- * @brief Initialise system
+ * @brief
  */
 //================================================================================================//
-void InitSystem(void)
+stdStatus_t USART_Close(dev_t usartName)
 {
-      /* set interrupt vectors and NVIC priority */
-      SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
-      SCB->AIRCR = 0x05FA0000 | 0x300;
-
-      /* PLL initialization */
-      if (PLL_Init() != STD_STATUS_OK)
-            while (TRUE);
-
-      /* GPIO and AFIO initialization */
-      GPIO_Init();
+      return STD_STATUS_ERROR;
 }
 
 
-#ifdef __cplusplus
-   }
-#endif
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+stdStatus_t USART_Write(dev_t usartName, void *src, size_t size, size_t seek)
+{
+      return STD_STATUS_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+stdStatus_t USART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
+{
+      return STD_STATUS_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+stdStatus_t USART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
+{
+      return STD_STATUS_ERROR;
+}
+
 
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/

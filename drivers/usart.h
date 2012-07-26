@@ -1,13 +1,13 @@
-#ifndef SYSTEM_H_
-#define SYSTEM_H_
+#ifndef USART_H_
+#define USART_H_
 /*=============================================================================================*//**
-@file    gpio.h
+@file    usart.h
 
 @author  Daniel Zorychta
 
-@brief   System main header
+@brief   This file support USART peripherals
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,66 +33,17 @@
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
-#include "stm32f10x.h"
-#include "pll_cfg.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
+#include "system.h"
 
 
 /*==================================================================================================
-                                  Exported symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
-#define MINIMAL_STACK_SIZE              configMINIMAL_STACK_SIZE
-#define THIS_TASK                       NULL
-
-#define TaskTerminate()                 vTaskDelete(NULL)
-#define TaskDelete(taskID)              vTaskDelete(taskID)
-#define TaskDelay(delay)                vTaskDelay(delay)
-#define TaskSuspend(taskID)             vTaskSuspend(taskID)
-#define TaskResume(taskID)              vTaskResume(taskID)
-#define TaskResumeFromISR(taskID)       xTaskResumeFromISR(taskID)
-#define TaskYield()                     taskYIELD()
-#define TaskEnterCritical()             taskENTER_CRITICAL()
-#define TaskExitCritical()              taskEXIT_CRITICAL()
-#define TaskDisableIRQ()                taskDISABLE_INTERRUPTS()
-#define TaskEnableIRQ()                 taskENABLE_INTERRUPTS()
-#define TaskSuspendAll()                vTaskSuspendAll()
-#define TaskResumeAll()                 xTaskResumeAll()
-#define TaskGetTickCount()              xTaskGetTickCount()
-#define TaskGetPID()                    xTaskGetPID()
-#define YieldFromISR()                  portYIELD_FROM_ISR()
-#define GetStackFreeSpace(taskID)       uxTaskGetStackHighWaterMark(taskID)
-#define GetFreeHeapSize()               xPortGetFreeHeapSize()
-#define Malloc(size)                    pvPortMalloc(size)
-#define Free(pv)                        vPortFree(pv)
-
-#define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
-        xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
-
-#define TaskDelayUntil(pPreviousWakeTime, TimeIncrement) \
-        vTaskDelayUntil(pPreviousWakeTime, TimeIncrement)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** default system status */
-typedef enum status_enum
-{
-      STD_STATUS_OK         = 0,
-      STD_STATUS_ERROR      = 1,
-} stdStatus_t;
-
-
-/** device number type */
-typedef u8_t dev_t;
-
-
-/** IO reqest type */
-typedef u8_t IORq_t;
 
 
 /*==================================================================================================
@@ -103,13 +54,29 @@ typedef u8_t IORq_t;
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
+extern stdStatus_t USART_Init(void);
+
+
+extern stdStatus_t USART_Open(dev_t);
+
+
+extern stdStatus_t USART_Close(dev_t);
+
+
+extern stdStatus_t USART_Write(dev_t, void*, size_t, size_t);
+
+
+extern stdStatus_t USART_Read(dev_t, void*, size_t, size_t);
+
+
+extern stdStatus_t USART_IOCtl(dev_t, IORq_t, void*);
 
 
 #ifdef __cplusplus
    }
 #endif
 
-#endif /* SYSTEM_H_ */
+#endif /* USART_H_ */
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/
