@@ -154,7 +154,7 @@
 #define USART1_TX_BP                            9U                               /* pin name      */
 #define USART1_TX_BM                            (1 << 9)                         /* pin mask      */
 #define USART1_TX_PORT                          GPIOA                            /* port name     */
-#define GPIOA_PIN_09_MODE                       GPIO_OUT_PUSH_PULL_2MHZ      /* pin mode      */ /* GPIO_ALT_OUT_PUSH_PULL_2MHZ*/
+#define GPIOA_PIN_09_MODE                       GPIO_ALT_OUT_PUSH_PULL_2MHZ      /* pin mode      */
 #define GPIOA_PIN_09_DEFAULT_STATE              HIGH                             /* def. pin state*/
 
 #define USART1_RX_BP                            10U                              /* pin name      */

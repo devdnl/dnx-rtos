@@ -47,6 +47,7 @@
 ==================================================================================================*/
 #define MINIMAL_STACK_SIZE              configMINIMAL_STACK_SIZE
 #define THIS_TASK                       NULL
+#define EMPTY_TASK                      UINT32_MAX
 
 #define TaskTerminate()                 vTaskDelete(NULL)
 #define TaskDelete(taskID)              vTaskDelete(taskID)
@@ -63,7 +64,7 @@
 #define TaskResumeAll()                 xTaskResumeAll()
 #define TaskGetTickCount()              xTaskGetTickCount()
 #define TaskGetPID()                    xTaskGetPID()
-#define YieldFromISR()                  portYIELD_FROM_ISR()
+#define TaskGetCurrentTaskHandle()      xTaskGetCurrentTaskHandle()
 #define GetStackFreeSpace(taskID)       uxTaskGetStackHighWaterMark(taskID)
 #define GetFreeHeapSize()               xPortGetFreeHeapSize()
 #define Malloc(size)                    pvPortMalloc(size)

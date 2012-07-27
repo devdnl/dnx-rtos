@@ -34,6 +34,7 @@
 #include "system.h"
 #include "pll.h"
 #include "gpio.h"
+#include "uart.h"
 
 
 /*==================================================================================================
@@ -79,13 +80,13 @@ void task1(void *argv)
       {
             PID = TaskGetPID();
             TaskDelay(2);
-            data = (u8_t*) Malloc(50*1024*sizeof(u8_t));
-            TaskDelay(10);
-            Free(data);
+//            data = (u8_t*) Malloc(50*1024*sizeof(u8_t));
+//            TaskDelay(10);
+//            Free(data);
 
             stackFree = GetStackFreeSpace(THIS_TASK);
 
-            TaskTerminate();
+//            TaskTerminate();
       }
 }
 
@@ -95,16 +96,28 @@ u32_t tickcnt;
 void task2(void *argv)
 {
       (void) argv;
+      static stdStatus_t uartstat;
+      static u8_t data;
+      static u32_t stackFree;
+
+      ch_t *text = "Hello world :)";
 
       for (;;)
       {
-            PID = TaskGetPID();
-            USART1_TX_PORT->BRR = USART1_TX_BM;
-            TaskDelay(1);
-            USART1_TX_PORT->BSRR = USART1_TX_BM;
             heapsize = GetFreeHeapSize();
             tickcnt  = TaskGetTickCount();
-            TaskDelay(999);
+            stackFree = GetStackFreeSpace(THIS_TASK);
+
+            uartstat = UART_Open(UART_DEV_1);
+            uartstat = UART_Read(UART_DEV_1, &data, 1, 0);
+            uartstat = UART_Write(UART_DEV_1, text, 15, 0);
+            uartstat = UART_Write(UART_DEV_1, &data, 1, 0);
+            uartstat = UART_Close(UART_DEV_1);
+
+            TaskDelay(1000);
+            stackFree = GetStackFreeSpace(THIS_TASK);
+            heapsize = GetFreeHeapSize();
+            TaskDelay(1000);
       }
 }
 

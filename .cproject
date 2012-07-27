@@ -354,8 +354,8 @@
 									<listOptionValue builtIn="false" value="__SIG_ATOMIC_MIN__"/>
 									<listOptionValue builtIn="false" value="__FLT_MIN__"/>
 									<listOptionValue builtIn="false" value="__DBL_EPSILON__"/>
-									<listOptionValue builtIn="false" value="__INT16_MAX__"/>
 									<listOptionValue builtIn="false" value="__UINT16_C(c)"/>
+									<listOptionValue builtIn="false" value="__INT16_MAX__"/>
 									<listOptionValue builtIn="false" value="__UINT_FAST64_MAX__"/>
 									<listOptionValue builtIn="false" value="__LDBL_MAX_EXP__"/>
 									<listOptionValue builtIn="false" value="__SIZEOF_SIZE_T__"/>
@@ -464,7 +464,6 @@
 									<listOptionValue builtIn="false" value="__CHAR16_TYPE__"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1228156673" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="STM32F10X_LD_VL"/>
 									<listOptionValue builtIn="false" value="__INLINE=inline"/>
 									<listOptionValue builtIn="false" value="STM32F10X_CL"/>
 								</option>
@@ -508,4 +507,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
