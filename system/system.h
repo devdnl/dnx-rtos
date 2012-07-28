@@ -77,6 +77,11 @@
         vTaskDelayUntil(pPreviousWakeTime, TimeIncrement)
 
 
+/** application preable */
+#define APPLICATION(name)     \
+      void name(void *arg)
+
+
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/

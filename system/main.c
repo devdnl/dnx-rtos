@@ -113,9 +113,9 @@ void task2(void *argv)
             tickcnt  = TaskGetTickCount();
             stackFree = GetStackFreeSpace(THIS_TASK);
 
-//            uartstat = UART_Read(UART_DEV_1, &data, 1, 0);
-//            uartstat = UART_Write(UART_DEV_1, &data, 1, 0);
-            uartstat = UART_Write(UART_DEV_1, text, 15, 0);
+            uartstat = UART_Read(UART_DEV_1, &data, 1, 0);
+            uartstat = UART_Write(UART_DEV_1, &data, 1, 0);
+//            uartstat = UART_Write(UART_DEV_1, text, 15, 0);
 
             stackFree = GetStackFreeSpace(THIS_TASK);
             heapsize = GetFreeHeapSize();
@@ -162,6 +162,9 @@ void InitSystem(void)
 
       /* GPIO and AFIO initialization */
       GPIO_Init();
+
+      /* initialize UART driver */
+      UART_Init();
 }
 
 

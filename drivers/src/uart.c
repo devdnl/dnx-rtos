@@ -28,6 +28,12 @@
       extern "C" {
 #endif
 
+
+/*
+ * INFO:
+ * - driver don't support DMA (future support)
+ */
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
@@ -40,7 +46,7 @@
 #define PORT_FREE                   (u16_t)EMPTY_TASK
 
 /** UART wake method: idle line (0) or address mark (1) */
-#define SetAddressWakeMethod(enable)            \
+#define SetAddressMarkWakeMethod(enable)        \
       if (enable)                               \
             usartPtr->CR1 |= USART_CR1_WAKE;    \
       else                                      \
@@ -410,7 +416,7 @@ stdStatus_t UART_Open(dev_t usartName)
                   else
                         SetBaudRate(UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
 
-                  SetAddressWakeMethod(UART_DEFAULT_WAKE_METHOD);
+                  SetAddressMarkWakeMethod(UART_DEFAULT_WAKE_METHOD);
 
                   ParityCheckEnable(UART_DEFAULT_PARITY_ENABLE);
 
@@ -644,70 +650,25 @@ stdStatus_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
                   /* load data from FIFO */
                   if (size)
                   {
-                        bool_t DMAEnabled = FALSE;
+                         /* set port address */
+                        usartPtr = PortHandle[usartName].Address;
+                        u8_t *dataPtr = (u8_t*)src;
 
-                        switch (usartName)
+                        do
                         {
-                              #ifdef RCC_APB2ENR_USART1EN
-                              #if (UART_1_ENABLE > 0)
-                              case UART_DEV_1: DMAEnabled = UART_1_DMA_TX_ENABLE; break;
-                              #endif
-                              #endif
-
-                              #ifdef RCC_APB1ENR_USART2EN
-                              #if (UART_2_ENABLE > 0)
-                              case UART_DEV_2: DMAEnabled = UART_2_DMA_TX_ENABLE; break;
-                              #endif
-                              #endif
-
-                              #ifdef RCC_APB1ENR_USART3EN
-                              #if (UART_3_ENABLE > 0)
-                              case UART_DEV_3: DMAEnabled = UART_3_DMA_TX_ENABLE; break;
-                              #endif
-                              #endif
-
-                              #ifdef RCC_APB1ENR_UART4EN
-                              #if (UART_4_ENABLE > 0)
-                              case UART_DEV_4: DMAEnabled = UART_4_DMA_TX_ENABLE; break;
-                              #endif
-                              #endif
-
-                              #ifdef RCC_APB1ENR_UART5EN
-                              #if (UART_5_ENABLE > 0)
-                              case UART_DEV_5: DMAEnabled = UART_5_DMA_TX_ENABLE; break;
-                              #endif
-                              #endif
-
-                              default:
-                                    break;
-                        }
-
-                        if (DMAEnabled)
-                        {
-                              /* TODO */
-                        }
-                        else
-                        {
-                              /* set port address */
-                              usartPtr = PortHandle[usartName].Address;
-                              u8_t *dataPtr = (u8_t*)src;
-
-                              do
+                              if (usartPtr->SR & USART_SR_TXE)
                               {
-                                    if (usartPtr->SR & USART_SR_TXE)
-                                    {
-                                          usartPtr->DR = *(dataPtr++);
-                                          size--;
-                                    }
-                                    else
-                                    {
-                                          TaskDelay(1);
-                                    }
+                                    usartPtr->DR = *(dataPtr++);
+                                    size--;
                               }
-                              while (size);
-
-                              status = STD_STATUS_OK;
+                              else
+                              {
+                                    TaskDelay(1);
+                              }
                         }
+                        while (size);
+
+                        status = STD_STATUS_OK;
                   }
                   else
                   {
@@ -778,7 +739,6 @@ stdStatus_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
                               {
                                     TaskExitCritical();
                                     TaskSuspend(THIS_TASK);
-//                                    TaskDelay(1);
                               }
                         }
                         while (size);
@@ -802,12 +762,171 @@ stdStatus_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Direct IO control
+ *
+ * @param[in]     usartName               USART name (number)
+ * @param[in,out] ioRQ                    IO request
+ * @param[in,out] *data                   IO data (arguments, results, etc)
+ *
+ * @retval STD_STATUS_OK                  operation success
+ * @retval UART_STATUS_PORTLOCKED         port locked for other task
+ * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
+ * @retval UART_STATUS_BUFFEREMPTY        rx buffer empty
+ * @retval UART_STATUS_BADRQ              bad request
  */
 //================================================================================================//
 stdStatus_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 {
-      return STD_STATUS_ERROR;
+      stdStatus_t status = UART_STATUS_PORTNOTEXIST;
+
+      /* check port range */
+      if (usartName <= UART_DEV_LAST)
+      {
+            /* check that port is reserved for this task */
+            if (PortHandle[usartName].Lock == TaskGetPID())
+            {
+                  USART_t *usartPtr = PortHandle[usartName].Address;
+
+                  status = STD_STATUS_OK;
+
+                  switch (ioRQ)
+                  {
+                        case UART_IORQ_ENABLE_WAKEUP_IDLE:
+                              SetAddressMarkWakeMethod(FALSE);
+                              break;
+
+                        case UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK:
+                              SetAddressMarkWakeMethod(TRUE);
+					break;
+
+                        case UART_IORQ_ENABLE_PARITY_CHECK:
+                              ParityCheckEnable(TRUE);
+					break;
+
+                        case UART_IORQ_DISABLE_PARITY_CHECK:
+                              ParityCheckEnable(FALSE);
+					break;
+
+                        case UART_IORQ_SET_ODD_PARITY:
+                              SetOddParity(TRUE);
+					break;
+
+                        case UART_IORQ_SET_EVEN_PARITY:
+                              SetOddParity(FALSE);
+					break;
+
+                        case UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE:
+                              ReceiverWakeupMuteEnable(TRUE);
+					break;
+
+                        case UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE:
+                              ReceiverWakeupMuteEnable(FALSE);
+					break;
+
+                        case UART_IORQ_ENABLE_LIN_MODE:
+                              LINModeEnable(TRUE);
+					break;
+
+                        case UART_IORQ_DISABLE_LIN_MODE:
+                              LINModeEnable(FALSE);
+					break;
+
+                        case UART_IORQ_SET_1_STOP_BIT:
+                              Set2StopBits(FALSE);
+					break;
+
+                        case UART_IORQ_SET_2_STOP_BITS:
+                              Set2StopBits(TRUE);
+					break;
+
+                        case UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS:
+                              LINBreakDet11Bits(TRUE);
+					break;
+
+                        case UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS:
+                              LINBreakDet11Bits(FALSE);
+					break;
+
+                        case UART_IORQ_SET_ADDRESS_NODE:
+                              SetAddressNode(*(u8_t*)data);
+					break;
+
+                        case UART_IORQ_ENABLE_CTS:
+                              CTSEnable(TRUE);
+					break;
+
+                        case UART_IORQ_DISABLE_CTS:
+                              CTSEnable(FALSE);
+					break;
+
+                        case UART_IORQ_ENABLE_RTS:
+                              RTSEnable(TRUE);
+					break;
+
+                        case UART_IORQ_DISABLE_RTS:
+                              RTSEnable(FALSE);
+					break;
+
+                        case UART_IORQ_GET_BYTE:
+                        {
+                              RxFIFO_t *RxFIFO = &PortHandle[usartName].RxFIFO;
+
+                              TaskEnterCritical();
+
+                              if (RxFIFO->Level > 0)
+                              {
+                                    *(u8_t*)data = RxFIFO->Buffer[RxFIFO->RxIdx++];
+
+                                    if (RxFIFO->RxIdx >= UART_RX_BUFFER_SIZE)
+                                          RxFIFO->RxIdx = 0;
+
+                                    RxFIFO->Level--;
+                              }
+                              else
+                              {
+                                    status = UART_STATUS_BUFFEREMPTY;
+                              }
+
+                              TaskExitCritical();
+					break;
+                        }
+
+                        case UART_IORQ_SEND_BYTE:
+                        {
+                              usartPtr = PortHandle[usartName].Address;
+
+                              while (!(usartPtr->SR & USART_SR_TXE))
+                                    TaskDelay(1);
+
+                              usartPtr->DR = *(u8_t*)data;
+
+					break;
+                        }
+
+                        case UART_IORQ_SET_BAUDRATE:
+                        {
+                             usartPtr = PortHandle[usartName].Address;
+
+                             if ((u32_t)usartPtr == USART1_BASE)
+                                   SetBaudRate(UART_PCLK2_FREQ, *(u32_t*)data);
+                             else
+                                   SetBaudRate(UART_PCLK1_FREQ, *(u32_t*)data);
+                              break;
+                        }
+
+                        default:
+                              status = UART_STATUS_BADRQ;
+                              break;
+
+                  }
+            }
+            else
+            {
+                  status = UART_STATUS_PORTLOCKED;
+            }
+      }
+
+      return status;
 }
 
 

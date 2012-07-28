@@ -94,22 +94,6 @@
 #define UART_DEFAULT_RTS_ENABLE                 1
 
 
-/** USART 1 DMA TX support enable (1) or disable (0) */
-#define UART_1_DMA_TX_ENABLE                    0
-
-/** USART 2 DMA TX support enable (1) or disable (0) */
-#define UART_2_DMA_TX_ENABLE                    0
-
-/** USART 3 DMA TX support enable (1) or disable (0) */
-#define UART_3_DMA_TX_ENABLE                    0
-
-/** UART 4 DMA TX support enable (1) or disable (0) */
-#define UART_4_DMA_TX_ENABLE                    0
-
-/** UART 5 DMA TX support enable (1) or disable (0) */
-#define UART_5_DMA_TX_ENABLE                    0
-
-
 /** PCLK1 frequency */
 #define UART_PCLK1_FREQ                         36000000UL
 
