@@ -40,7 +40,7 @@
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define TERMINAL_STACK_SIZE               (5 * MINIMAL_STACK_SIZE)
+#define TERMINAL_STACK_SIZE               (10 * MINIMAL_STACK_SIZE)
 
 
 /*==================================================================================================
@@ -56,7 +56,7 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern APPLICATION(terminal);
+extern APPLICATION(terminal, arg);
 
 
 #ifdef __cplusplus

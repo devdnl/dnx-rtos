@@ -67,34 +67,38 @@
  * @brief
  */
 //================================================================================================//
-APPLICATION(terminal)
+APPLICATION(terminal, arg)
 {
-      ch_t buffer[20];
+      stdio_t *stdio = (stdio_t*)arg;
+      u32_t   cnt = 0;
+      u8_t    *mem = NULL;
 
-      const ch_t *text = "Wather station supported by FreeRTOS. Welcome.\r\n";
-
-      if (UART_Open(UART_DEV_1) != STD_STATUS_OK)
-            TaskTerminate();
-
-      UART_Write(UART_DEV_1, (ch_t*)text, strlen(text), 0);
+      sprint(stdio, "Hello world. I'm terminal\r\n");
 
       for (;;)
       {
-            ch_t key;
+            sprint(stdio, "%d: Heap free space: %d; stack free space: %d\r\n",
+                   cnt++, GetFreeHeapSize(), TaskGetStackFreeSpace(THIS_TASK));
 
-            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &key) == STD_STATUS_OK)
-                  UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &key);
-
-            if (key == 'r')
+            if (cnt == 30)
             {
-                  memset(buffer, 0, sizeof(buffer));
-                  bprint(buffer, sizeof(buffer), "\r\nTask ID: %x\r\n", TaskGetPID());
-                  UART_Write(UART_DEV_1, buffer, strlen(buffer), 0);
-                  key = 0;
-            }
-      }
+                  sprint(stdio, "Try to alloc 60000 bytes...\r\n");
+                  mem = (u8_t*)Malloc(60000);
 
-      UART_Close(UART_DEV_1);
+                  if (mem == NULL)
+                        sprint(stdio, "Allocation failed :(\r\n");
+            }
+            else if (cnt == 40)
+            {
+                  if (mem)
+                  {
+                        sprint(stdio, "Freed allocated memory...\r\n");
+                        Free(mem);
+                  }
+            }
+
+            TaskDelay(1000);
+      }
 
       TaskTerminate();
 }

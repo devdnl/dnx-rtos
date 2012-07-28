@@ -41,6 +41,8 @@
 /*==================================================================================================
                                    Local symbolic constants/macros
 ==================================================================================================*/
+/** InitTask stack size */
+#define INITTASK_STACK_SIZE               (10 * MINIMAL_STACK_SIZE)
 
 
 /*==================================================================================================
@@ -51,7 +53,8 @@
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-void InitSystem(void);
+static void InitSystem(void);
+static void InitTask(void *arg);
 
 
 /*==================================================================================================
@@ -68,30 +71,6 @@ void InitSystem(void);
                                          Function definitions
 ==================================================================================================*/
 
-static u32_t PID = 0xFF;
-
-void task1(void *argv)
-{
-      (void) argv;
-
-      static u8_t *data;
-      static u32_t stackFree;
-
-      for (;;)
-      {
-            PID = TaskGetPID();
-            TaskDelay(2);
-//            data = (u8_t*) Malloc(50*1024*sizeof(u8_t));
-//            TaskDelay(10);
-//            Free(data);
-
-            stackFree = GetStackFreeSpace(THIS_TASK);
-
-//            TaskTerminate();
-      }
-}
-
-
 //================================================================================================//
 /**
  * @brief Main function
@@ -101,9 +80,7 @@ int main(void)
 {
       InitSystem();
 
-      TaskCreate(task1, "Task1", MINIMAL_STACK_SIZE, NULL, 1, NULL);
-//      TaskCreate(task2, "Task2", 4*MINIMAL_STACK_SIZE, NULL, 1, NULL);
-      TaskCreate(terminal, "terminal", TERMINAL_STACK_SIZE, NULL, 1, NULL);
+      TaskCreate(InitTask, "init", INITTASK_STACK_SIZE, NULL, 3, NULL);
 
       vTaskStartScheduler();
 
@@ -114,9 +91,10 @@ int main(void)
 //================================================================================================//
 /**
  * @brief Initialise system
+ * Insert here all initialize functions which should be initialized early before application start
  */
 //================================================================================================//
-void InitSystem(void)
+static void InitSystem(void)
 {
       /* set interrupt vectors and NVIC priority */
       SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
@@ -131,6 +109,97 @@ void InitSystem(void)
 
       /* initialize UART driver */
       UART_Init();
+}
+
+
+//================================================================================================//
+/**
+ * @brief Task which initialise high-level devices/applications etc
+ * Task is responsible for low-level application runtime environment (stdio). Task connect
+ * applications' stdios with hardware layer.
+ */
+//================================================================================================//
+static void InitTask(void *arg)
+{
+      (void) arg;
+
+      stdio_t *stdio = NULL;
+
+      TaskDelay(2000);
+      TaskSuspendAll();
+
+      /* initialization kprint */
+      UART_Open(UART_DEV_1);
+      kprintEnable();
+      kprint("\x1B[2J");
+      kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\r\n");
+      kprint("init: started kernel print\r\n");
+      kprint("init: started init task\r\n");
+
+      /* initialize drivers */
+
+      /* starting first application */
+      kprint("init: starting interactive console... ");
+      stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
+
+      if (stdio == NULL)
+      {
+            kprint("[\x1b[31mFAILED\x1b[0m]\r\n");
+            kprint("Probably no enough free space. Restart board...");
+            TaskDelay(5000);
+            NVIC_SystemReset();
+      }
+      else
+      {
+            kprint("[\x1b[32mSUCCESS\x1b[0m]\r\n");
+      }
+
+      TaskResumeAll();
+
+      /* main loop which read stdios from applications */
+      for (;;)
+      {
+            ch_t data;
+
+            TaskSuspendAll();
+
+            if (stdio->stdout.Level > 0)
+            {
+                  data = stdio->stdout.Buffer[stdio->stdout.RxIdx++];
+
+                  if (stdio->stdout.RxIdx >= configSTDIO_BUFFER_SIZE)
+                        stdio->stdout.RxIdx = 0;
+
+                  stdio->stdout.Level--;
+
+                  UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &data);
+            }
+
+            TaskResumeAll();
+
+            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &data) == STD_STATUS_OK)
+            {
+                  TaskSuspendAll();
+
+                  if (stdio->stdin.Level < configSTDIO_BUFFER_SIZE)
+                  {
+                        stdio->stdin.Buffer[stdio->stdin.TxIdx++] = data;
+
+                        if (stdio->stdin.TxIdx >= configSTDIO_BUFFER_SIZE)
+                              stdio->stdin.TxIdx = 0;
+
+                        stdio->stdin.Level++;
+                  }
+
+                  TaskResumeAll();
+            }
+
+            TaskDelay(1);
+      }
+
+      UART_Close(UART_DEV_1);
+
+      TaskTerminate();
 }
 
 

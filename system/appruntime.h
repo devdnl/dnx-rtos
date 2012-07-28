@@ -1,11 +1,11 @@
-#ifndef PRINTF_H_
-#define PRINTF_H_
+#ifndef APPRUNTIME_H_
+#define APPRUNTIME_H_
 /*=============================================================================================*//**
-@file    printf.h
+@file    appruntime.h
 
 @author  Daniel Zorychta
 
-@brief   This file support message printing
+@brief   This file support runtime environment for applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,7 +33,6 @@
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include <stdarg.h>
 #include "system.h"
 
 
@@ -55,18 +54,14 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base);
-extern u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...);
-extern u32_t kprint(const ch_t *format, ...);
-extern u32_t sprint(stdio_t *stdio, const ch_t *format, ...);
-extern void kprintEnable(void);
+extern stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg);
 
 
 #ifdef __cplusplus
    }
 #endif
 
-#endif /* PRINTF_H_ */
+#endif /* APPRUNTIME_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

@@ -1,11 +1,9 @@
-#ifndef PRINTF_H_
-#define PRINTF_H_
 /*=============================================================================================*//**
-@file    printf.h
+@file    appruntime.c
 
 @author  Daniel Zorychta
 
-@brief   This file support message printing
+@brief   This file support runtime environment for applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -26,47 +24,72 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-   extern "C" {
-#endif
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include <stdarg.h>
-#include "system.h"
+#include "appruntime.h"
 
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                  Exported types, enums definitions
+                                   Local types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported object declarations
+                                      Local function prototypes
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported function prototypes
+                                      Local object definitions
 ==================================================================================================*/
-extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base);
-extern u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...);
-extern u32_t kprint(const ch_t *format, ...);
-extern u32_t sprint(stdio_t *stdio, const ch_t *format, ...);
-extern void kprintEnable(void);
 
 
-#ifdef __cplusplus
-   }
-#endif
+/*==================================================================================================
+                                     Exported object definitions
+==================================================================================================*/
 
-#endif /* PRINTF_H_ */
+
+/*==================================================================================================
+                                        Function definitions
+==================================================================================================*/
+
+//================================================================================================//
+/**
+ * @brief This function start selected application
+ */
+//================================================================================================//
+stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
+{
+      stdio_t *stdioPtr = NULL;
+
+      /* allocate memory for stdio structure */
+      stdioPtr = (stdio_t*)Malloc(sizeof(stdio_t));
+
+      if (stdioPtr != NULL)
+      {
+            /* initialize stdio data */
+            stdioPtr->arg          = arg;
+            stdioPtr->stdin.Level  = 0;
+            stdioPtr->stdin.RxIdx  = 0;
+            stdioPtr->stdin.TxIdx  = 0;
+            stdioPtr->stdout.Level = 0;
+            stdioPtr->stdout.RxIdx = 0;
+            stdioPtr->stdout.TxIdx = 0;
+
+            /* start application task */
+            TaskCreate(app, appName, stackSize, stdioPtr, 2, NULL);
+      }
+
+      return stdioPtr;
+}
+
+
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

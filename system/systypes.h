@@ -1,11 +1,11 @@
-#ifndef PRINTF_H_
-#define PRINTF_H_
+#ifndef SYSTYPES_H_
+#define SYSTYPES_H_
 /*=============================================================================================*//**
-@file    printf.h
+@file    systypes.h
 
 @author  Daniel Zorychta
 
-@brief   This file support message printing
+@brief   This file contains all system types
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,8 +33,7 @@
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include <stdarg.h>
-#include "system.h"
+#include "FreeRTOSConfig.h"
 
 
 /*==================================================================================================
@@ -45,7 +44,39 @@
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** default system status */
+typedef enum status_enum
+{
+   STD_STATUS_OK         = 0,
+   STD_STATUS_ERROR      = 1,
+} stdStatus_t;
 
+
+/** device number type */
+typedef u8_t dev_t;
+
+
+/** IO request type */
+typedef u8_t IORq_t;
+
+
+/** stdio FIFO type */
+typedef struct stdioFIFO_struct
+{
+      u16_t Level;                                  /* load level */
+      u16_t TxIdx;                                  /* fifo Tx index */
+      u16_t RxIdx;                                  /* fifo Rx index */
+      ch_t  Buffer[configSTDIO_BUFFER_SIZE];        /* fifo buffer */
+} stdioFIFO_t;
+
+
+/** application standard io type */
+typedef struct stdio_struct
+{
+      void        *arg;                      /* pointer to the argument */
+      stdioFIFO_t stdin;                     /* stdin fifo */
+      stdioFIFO_t stdout;                    /* stdout fifo */
+} stdio_t;
 
 /*==================================================================================================
                                      Exported object declarations
@@ -55,18 +86,13 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base);
-extern u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...);
-extern u32_t kprint(const ch_t *format, ...);
-extern u32_t sprint(stdio_t *stdio, const ch_t *format, ...);
-extern void kprintEnable(void);
 
 
 #ifdef __cplusplus
    }
 #endif
 
-#endif /* PRINTF_H_ */
+#endif /* SYSTYPES_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

@@ -28,11 +28,16 @@
                                             Include files
 ==================================================================================================*/
 #include "printf.h"
+#include "FreeRTOSConfig.h"
+#include <string.h>
+#include "uart.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+/** define function which provide terminal output */
+#define SEND_BUFFER(buffer, size)         UART_Write(UART_DEV_1, buffer, size, 0)
 
 
 /*==================================================================================================
@@ -45,11 +50,13 @@
 ==================================================================================================*/
 static void reverseBuffer(ch_t *begin, ch_t *end);
 static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg);
+static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg);
 
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+static bool_t kprintEnabled = FALSE;
 
 
 /*==================================================================================================
@@ -60,6 +67,17 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
 /*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+void kprintEnable(void)
+{
+      kprintEnabled = TRUE;
+}
+
 
 //================================================================================================//
 /**
@@ -129,7 +147,7 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base)
 
 //================================================================================================//
 /**
- * @brief Function send on a standard output string
+ * @brief Function send to buffer formated output string
  *
  * @param *format             formated text
  * @param ...                 format arguments
@@ -139,15 +157,156 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base)
 //================================================================================================//
 u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 {
-    va_list args;
-    u32_t   n;
+      va_list args;
+      u32_t n;
 
-    va_start(args, format);
-    n = vsnprint(stream, size, format, args);
-    va_end(args);
+      va_start(args, format);
+      n = vsnprint(stream, size, format, args);
+      va_end(args);
 
-    return n;
+      return n;
 }
+
+
+//================================================================================================//
+/**
+ * @brief Function send on a standard output string
+ *
+ * @param *format             formated text
+ * @param ...                 format arguments
+ *
+ * @retval number of written characters
+ */
+//================================================================================================//
+u32_t sprint(stdio_t *stdio, const ch_t *format, ...)
+{
+      va_list args;
+      u32_t n;
+
+      va_start(args, format);
+      n = svsnprint(stdio, format, args);
+      va_end(args);
+
+      return n;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function send kernel message on terminal
+ *
+ * @param *format             formated text
+ * @param ...                 format arguments
+ *
+ * @retval number of written characters
+ */
+//================================================================================================//
+u32_t kprint(const ch_t *format, ...)
+{
+      ch_t    buffer[constKPRINT_BUFFER_SIZE];
+      va_list args;
+      u32_t   n = 0;
+
+      if (kprintEnabled)
+      {
+            memset(buffer, 0, constKPRINT_BUFFER_SIZE);
+
+            va_start(args, format);
+            n = vsnprint(buffer, constKPRINT_BUFFER_SIZE, format, args);
+            va_end(args);
+
+            SEND_BUFFER(buffer, strlen(buffer));
+      }
+
+      return n;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function convert arguments to the stdio (vsnprintf)
+ *
+ * @param[out] *stream        buffer for stream
+ * @param[in]  size           buffer size
+ * @param[in]  *format        message format
+ * @param[in]  arg            argument list
+ *
+ * @return number of printed characters
+ */
+//================================================================================================//
+static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
+{
+      ch_t  character;
+      u32_t streamLen = 1;
+
+      #define putStream()                                                     \
+            TaskSuspendAll();                                                 \
+            if (stdio->stdout.Level < configSTDIO_BUFFER_SIZE)                \
+            {                                                                 \
+                  stdio->stdout.Buffer[stdio->stdout.TxIdx++] = character;    \
+                  if (stdio->stdout.TxIdx >= configSTDIO_BUFFER_SIZE)         \
+                        stdio->stdout.TxIdx = 0;                              \
+                                                                              \
+                  stdio->stdout.Level++;                                      \
+                  TaskResumeAll();                                            \
+            }                                                                 \
+            else                                                              \
+            {                                                                 \
+                  TaskResumeAll();                                            \
+                  TaskDelay(10);                                              \
+            }
+
+      while ((character = *format++) != '\0')
+      {
+            if (character != '%')
+            {
+                  putStream();
+            }
+            else
+            {
+                  character = *format++;
+
+                  if (character == '%' || character == 'c')
+                  {
+                        if (character == 'c')
+                              character = va_arg(arg, i32_t);
+
+                        putStream();
+
+                        continue;
+                  }
+
+                  if (character == 's' || character == 'd' || character == 'x')
+                  {
+                        ch_t result[11];
+                        ch_t *resultPtr;
+
+                        if (character == 's')
+                        {
+                              resultPtr = va_arg(arg, ch_t*);
+                        }
+                        else
+                        {
+                              u8_t base = (character == 'd' ? 10 : 16);
+
+                              resultPtr = itoa(va_arg(arg, i32_t), result, base);
+                        }
+
+                        while ((character = *resultPtr++))
+                        {
+                              putStream();
+                        }
+
+                        continue;
+                  }
+            }
+      }
+
+      return (streamLen - 1);
+
+      #undef putStream
+}
+
 
 
 //================================================================================================//
