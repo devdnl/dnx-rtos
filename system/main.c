@@ -100,7 +100,12 @@ void task2(void *argv)
       static u8_t data;
       static u32_t stackFree;
 
-      ch_t *text = "Hello world :)";
+      ch_t clearScrColorText[] = {0x1B,'[','2','J',0x1B,'[','3','2','m'};
+      ch_t *text = "Hello world :)\r\n";
+
+      uartstat = UART_Open(UART_DEV_1);
+      uartstat = UART_Write(UART_DEV_1, clearScrColorText, sizeof(clearScrColorText), 0);
+      uartstat = UART_Write(UART_DEV_1, text, 17, 0);
 
       for (;;)
       {
@@ -108,17 +113,17 @@ void task2(void *argv)
             tickcnt  = TaskGetTickCount();
             stackFree = GetStackFreeSpace(THIS_TASK);
 
-            uartstat = UART_Open(UART_DEV_1);
-            uartstat = UART_Read(UART_DEV_1, &data, 1, 0);
+//            uartstat = UART_Read(UART_DEV_1, &data, 1, 0);
+//            uartstat = UART_Write(UART_DEV_1, &data, 1, 0);
             uartstat = UART_Write(UART_DEV_1, text, 15, 0);
-            uartstat = UART_Write(UART_DEV_1, &data, 1, 0);
-            uartstat = UART_Close(UART_DEV_1);
 
-            TaskDelay(1000);
             stackFree = GetStackFreeSpace(THIS_TASK);
             heapsize = GetFreeHeapSize();
-            TaskDelay(1000);
+//            TaskDelay(1000);fdsa
       }
+
+      uartstat = UART_Close(UART_DEV_1);
+      TaskTerminate();
 }
 
 
@@ -132,7 +137,7 @@ int main(void)
       InitSystem();
 
       TaskCreate(task1, "Task1", MINIMAL_STACK_SIZE, NULL, 1, NULL);
-      TaskCreate(task2, "Task2", MINIMAL_STACK_SIZE, NULL, 1, NULL);
+      TaskCreate(task2, "Task2", 4*MINIMAL_STACK_SIZE, NULL, 1, NULL);
 
       vTaskStartScheduler();
 

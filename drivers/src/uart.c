@@ -171,16 +171,32 @@
       usartPtr->CR1 &= ~USART_CR1_TXEIE
 
 
-/** write data into RX FIFO buffer */
-#define WriteRxFIFO(FIFO, data)                       \
-      if (FIFO->Level < UART_RX_BUFFER_SIZE)          \
-      {                                               \
-            FIFO->Buffer[FIFO->TxIdx++] = data;       \
-                                                      \
-            if (FIFO->TxIdx >= UART_RX_BUFFER_SIZE)   \
-                  FIFO->TxIdx = 0;                    \
-                                                      \
-            FIFO->Level++;                            \
+/** interrupt definition */
+#define IRQCode(usartBase, devName)                                                             \
+      if (usartBase->SR & USART_SR_RXNE)                                                        \
+      {                                                                                         \
+            RxFIFO_t *RxFIFO = &PortHandle[devName].RxFIFO;                                     \
+                                                                                                \
+            u8_t DR = usartBase->DR;                                                            \
+                                                                                                \
+            if (RxFIFO->Buffer)                                                                 \
+            {                                                                                   \
+                  if (RxFIFO->Level < UART_RX_BUFFER_SIZE)                                      \
+                  {                                                                             \
+                        RxFIFO->Buffer[RxFIFO->TxIdx++] = DR;                                   \
+                                                                                                \
+                        if (RxFIFO->TxIdx >= UART_RX_BUFFER_SIZE)                               \
+                              RxFIFO->TxIdx = 0;                                                \
+                                                                                                \
+                        RxFIFO->Level++;                                                        \
+                  }                                                                             \
+                                                                                                \
+                  if (PortHandle[devName].TaskHandle)                                           \
+                  {                                                                             \
+                        if (TaskResumeFromISR(PortHandle[devName].TaskHandle) == pdTRUE)        \
+                              TaskYield();                                                      \
+                  }                                                                             \
+            }                                                                                   \
       }
 
 
@@ -672,17 +688,23 @@ stdStatus_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
                         }
                         else
                         {
-                              /* set buffer address and size */
-                              PortHandle[usartName].TxBuffer.TxSrcPtr = (u8_t*)src;
-                              PortHandle[usartName].TxBuffer.Size     = size;
-
                               /* set port address */
                               usartPtr = PortHandle[usartName].Address;
+                              u8_t *dataPtr = (u8_t*)src;
 
-                              /* enable TXE interrupt */
-                              EnableTXEIRQ();
-
-                              TaskSuspend(THIS_TASK);
+                              do
+                              {
+                                    if (usartPtr->SR & USART_SR_TXE)
+                                    {
+                                          usartPtr->DR = *(dataPtr++);
+                                          size--;
+                                    }
+                                    else
+                                    {
+                                          TaskDelay(1);
+                                    }
+                              }
+                              while (size);
 
                               status = STD_STATUS_OK;
                         }
@@ -756,6 +778,7 @@ stdStatus_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
                               {
                                     TaskExitCritical();
                                     TaskSuspend(THIS_TASK);
+//                                    TaskDelay(1);
                               }
                         }
                         while (size);
@@ -797,34 +820,7 @@ stdStatus_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 #if (UART_1_ENABLE > 0)
 void USART1_IRQHandler(void)
 {
-      if (USART1->SR & USART_SR_RXNE)
-      {
-            RxFIFO_t *RxFIFO = &PortHandle[UART_DEV_1].RxFIFO;
-
-            if (RxFIFO->Buffer)
-            {
-                  WriteRxFIFO(RxFIFO, USART1->DR);
-
-                  if (PortHandle[UART_DEV_1].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_1].TaskHandle);
-            }
-      }
-
-      if ((USART1->SR & USART_SR_TXE) && PortHandle[UART_DEV_1].TxBuffer.Size)
-      {
-            USART1->DR = *(PortHandle[UART_DEV_1].TxBuffer.TxSrcPtr++);
-            PortHandle[UART_DEV_1].TxBuffer.Size--;
-
-            if (PortHandle[UART_DEV_1].TxBuffer.Size == 0)
-            {
-                  USART_t *usartPtr = USART1;
-
-                  DisableTXEIRQ();
-
-                  if (PortHandle[UART_DEV_1].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_1].TaskHandle);
-            }
-      }
+      IRQCode(USART1, UART_DEV_1);
 }
 #endif
 #endif
@@ -839,34 +835,7 @@ void USART1_IRQHandler(void)
 #if (UART_2_ENABLE > 0)
 void USART2_IRQHandler(void)
 {
-      if (USART2->SR & USART_SR_RXNE)
-      {
-            RxFIFO_t *RxFIFO = &PortHandle[UART_DEV_2].RxFIFO;
-
-            if (RxFIFO->Buffer)
-            {
-                  WriteRxFIFO(RxFIFO, USART2->DR);
-
-                  if (PortHandle[UART_DEV_2].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_2].TaskHandle);
-            }
-      }
-
-      if (USART2->SR & USART_SR_TXE)
-      {
-            USART2->DR = *(PortHandle[UART_DEV_2].TxBuffer.TxSrcPtr++);
-            PortHandle[UART_DEV_2].TxBuffer.Size--;
-
-            if (PortHandle[UART_DEV_2].TxBuffer.Size == 0)
-            {
-                  USART_t *usartPtr = USART2;
-
-                  DisableTXEIRQ();
-
-                  if (PortHandle[UART_DEV_2].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_2].TaskHandle);
-            }
-      }
+      IRQCode(USART2, UART_DEV_2);
 }
 #endif
 #endif
@@ -881,35 +850,7 @@ void USART2_IRQHandler(void)
 #if (UART_3_ENABLE > 0)
 void USART3_IRQHandler(void)
 {
-      if (USART3->SR & USART_SR_RXNE)
-      {
-            RxFIFO_t *RxFIFO = &PortHandle[UART_DEV_3].RxFIFO;
-
-            if (RxFIFO->Buffer)
-            {
-                  WriteRxFIFO(RxFIFO, USART3->DR);
-
-                  if (PortHandle[UART_DEV_3].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_3].TaskHandle);
-            }
-      }
-
-
-      if (USART3->SR & USART_SR_TXE)
-      {
-            USART3->DR = *(PortHandle[UART_DEV_3].TxBuffer.TxSrcPtr++);
-            PortHandle[UART_DEV_3].TxBuffer.Size--;
-
-            if (PortHandle[UART_DEV_3].TxBuffer.Size == 0)
-            {
-                  USART_t *usartPtr = USART3;
-
-                  DisableTXEIRQ();
-
-                  if (PortHandle[UART_DEV_3].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_3].TaskHandle);
-            }
-      }
+      IRQCode(USART3, UART_DEV_3);
 }
 #endif
 #endif
@@ -924,34 +865,7 @@ void USART3_IRQHandler(void)
 #if (UART_4_ENABLE > 0)
 void UART4_IRQHandler(void)
 {
-      if (UART4->SR & USART_SR_RXNE)
-      {
-            RxFIFO_t *RxFIFO = &PortHandle[UART_DEV_4].RxFIFO;
-
-            if (RxFIFO->Buffer)
-            {
-                  WriteRxFIFO(RxFIFO, UART4->DR);
-
-                  if (PortHandle[UART_DEV_4].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_4].TaskHandle);
-            }
-      }
-
-      if (UART4->SR & USART_SR_TXE)
-      {
-            UART4->DR = *(PortHandle[UART_DEV_4].TxBuffer.TxSrcPtr++);
-            PortHandle[UART_DEV_4].TxBuffer.Size--;
-
-            if (PortHandle[UART_DEV_4].TxBuffer.Size == 0)
-            {
-                  USART_t *usartPtr = UART4;
-
-                  DisableTXEIRQ();
-
-                  if (PortHandle[UART_DEV_4].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_4].TaskHandle);
-            }
-      }
+      IRQCode(UART4, UART_DEV_4);
 }
 #endif
 #endif
@@ -966,34 +880,7 @@ void UART4_IRQHandler(void)
 #if (UART_5_ENABLE > 0)
 void UART5_IRQHandler(void)
 {
-      if (UART5->SR & USART_SR_RXNE)
-      {
-            RxFIFO_t *RxFIFO = &PortHandle[UART_DEV_5].RxFIFO;
-
-            if (RxFIFO->Buffer)
-            {
-                  WriteRxFIFO(RxFIFO, UART5->DR);
-
-                  if (PortHandle[UART_DEV_5].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_5].TaskHandle);
-            }
-      }
-
-      if (UART5->SR & USART_SR_TXE)
-      {
-            UART5->DR = *(PortHandle[UART_DEV_5].TxBuffer.TxSrcPtr++);
-            PortHandle[UART_DEV_5].TxBuffer.Size--;
-
-            if (PortHandle[UART_DEV_5].TxBuffer.Size == 0)
-            {
-                  USART_t *usartPtr = UART5;
-
-                  DisableTXEIRQ();
-
-                  if (PortHandle[UART_DEV_5].TaskHandle)
-                        TaskResumeFromISR(PortHandle[UART_DEV_5].TaskHandle);
-            }
-      }
+      IRQCode(UART5, UART_DEV_5);
 }
 #endif
 #endif

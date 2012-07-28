@@ -88,10 +88,10 @@
 #define UART_DEFAULT_BAUDRATE                   9600
 
 /** CTS hardware flow control enable (1) or disable (0) */
-#define UART_DEFAULT_CTS_ENABLE                 0
+#define UART_DEFAULT_CTS_ENABLE                 1
 
 /** RTS hardware flow control enable (1) or disable (0) */
-#define UART_DEFAULT_RTS_ENABLE                 0
+#define UART_DEFAULT_RTS_ENABLE                 1
 
 
 /** USART 1 DMA TX support enable (1) or disable (0) */
@@ -117,7 +117,7 @@
 #define UART_PCLK2_FREQ                         72000000UL
 
 /** RX buffer size [B] */
-#define UART_RX_BUFFER_SIZE                     20
+#define UART_RX_BUFFER_SIZE                     128
 
 
 
