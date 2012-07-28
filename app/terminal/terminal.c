@@ -1,11 +1,11 @@
 /*=============================================================================================*//**
-@file    mian.c
+@file    terminal.c
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,22 +24,17 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-   extern "C" {
-#endif
-
 /*==================================================================================================
-                                             Include files
+                                            Include files
 ==================================================================================================*/
-#include "system.h"
-#include "pll.h"
-#include "gpio.h"
-#include "uart.h"
 #include "terminal.h"
+#include "uart.h"
+#include <string.h>
+#include <stdarg.h>
 
 
 /*==================================================================================================
-                                   Local symbolic constants/macros
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
@@ -51,7 +46,6 @@
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-void InitSystem(void);
 
 
 /*==================================================================================================
@@ -65,79 +59,47 @@ void InitSystem(void);
 
 
 /*==================================================================================================
-                                         Function definitions
+                                        Function definitions
 ==================================================================================================*/
 
-static u32_t PID = 0xFF;
-
-void task1(void *argv)
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+APPLICATION(terminal)
 {
-      (void) argv;
+      ch_t buffer[20];
 
-      static u8_t *data;
-      static u32_t stackFree;
+      const ch_t *text = "Wather station supported by FreeRTOS. Welcome.\r\n";
+
+      if (UART_Open(UART_DEV_1) != STD_STATUS_OK)
+            TaskTerminate();
+
+      UART_Write(UART_DEV_1, (ch_t*)text, strlen(text), 0);
 
       for (;;)
       {
-            PID = TaskGetPID();
-            TaskDelay(2);
-//            data = (u8_t*) Malloc(50*1024*sizeof(u8_t));
-//            TaskDelay(10);
-//            Free(data);
+            ch_t key;
 
-            stackFree = GetStackFreeSpace(THIS_TASK);
+            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &key) == STD_STATUS_OK)
+                  UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &key);
 
-//            TaskTerminate();
+            if (key == 'r')
+            {
+                  memset(buffer, 0, sizeof(buffer));
+                  bprint(buffer, sizeof(buffer), "\r\nTask ID: %x\r\n", TaskGetPID());
+                  UART_Write(UART_DEV_1, buffer, strlen(buffer), 0);
+                  key = 0;
+            }
       }
+
+      UART_Close(UART_DEV_1);
+
+      TaskTerminate();
 }
 
-
-//================================================================================================//
-/**
- * @brief Main function
- */
-//================================================================================================//
-int main(void)
-{
-      InitSystem();
-
-      TaskCreate(task1, "Task1", MINIMAL_STACK_SIZE, NULL, 1, NULL);
-//      TaskCreate(task2, "Task2", 4*MINIMAL_STACK_SIZE, NULL, 1, NULL);
-      TaskCreate(terminal, "terminal", TERMINAL_STACK_SIZE, NULL, 1, NULL);
-
-      vTaskStartScheduler();
-
-      return 0;
-}
-
-
-//================================================================================================//
-/**
- * @brief Initialise system
- */
-//================================================================================================//
-void InitSystem(void)
-{
-      /* set interrupt vectors and NVIC priority */
-      SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
-      SCB->AIRCR = 0x05FA0000 | 0x300;
-
-      /* PLL initialization */
-      if (PLL_Init() != STD_STATUS_OK)
-            while (TRUE);
-
-      /* GPIO and AFIO initialization */
-      GPIO_Init();
-
-      /* initialize UART driver */
-      UART_Init();
-}
-
-
-#ifdef __cplusplus
-   }
-#endif
 
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/

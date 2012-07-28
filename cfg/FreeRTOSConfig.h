@@ -70,6 +70,12 @@
 #include "pll_cfg.h"
 
 /*-----------------------------------------------------------
+ * My specific definitions
+ *----------------------------------------------------------*/
+#define configSTDIO_BUFFER_SIZE                 100
+
+
+/*-----------------------------------------------------------
  * Application specific definitions.
  *
  * These definitions should be adjusted for your particular hardware and
@@ -80,7 +86,6 @@
  *
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
-
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     1
 #define configUSE_TICK_HOOK                     0

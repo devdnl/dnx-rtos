@@ -40,6 +40,7 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+#include "printf.h"
 
 
 /*==================================================================================================
@@ -97,8 +98,23 @@ typedef enum status_enum
 typedef u8_t dev_t;
 
 
-/** IO reqest type */
+/** IO request type */
 typedef u8_t IORq_t;
+
+
+/** application standard io type */
+typedef struct stdio_struct
+{
+      void *arg;                                      /* pointer to the argument */
+      u16_t InLevel;                                  /* stdin load level */
+      u16_t InTxIdx;                                  /* stdin fifo Tx index */
+      u16_t InRxIdx;                                  /* stdin fifo Rx index */
+      u16_t OutLevel;                                 /* stdout load level */
+      u16_t OutTxIdx;                                 /* stdout fifo Tx index */
+      u16_t OutRxIdx;                                 /* stdout fifo Rx index */
+      ch_t  InBuffer[configSTDIO_BUFFER_SIZE];        /* stdin fifo buffer */
+      ch_t  OutBuffer[configSTDIO_BUFFER_SIZE];       /* stdout fifo buffer */
+} stdio_t;
 
 
 /*==================================================================================================

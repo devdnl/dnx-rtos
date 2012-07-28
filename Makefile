@@ -30,6 +30,7 @@
 # INSERT HERE C SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC = $(sort \
+	app/terminal/terminal.c \
    cpu/stm32/stm32f10x_vectors.c \
    drivers/src/gpio.c \
    drivers/src/pll.c \
@@ -44,6 +45,7 @@ CSRC = $(sort \
    system/main.c \
    system/src/hooks.c \
    system/src/idle.c \
+   system/src/printf.c \
    )
 
 ####################################################################################################
