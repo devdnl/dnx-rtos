@@ -67,9 +67,11 @@
  * @brief
  */
 //================================================================================================//
-APPLICATION(terminal, arg)
+APPLICATION(terminal)
 {
-      stdio_t *stdio = (stdio_t*)arg;
+      InitSTDIO();
+      InitArgvAs(u8_t);
+
       u32_t   cnt = 0;
       u8_t    *mem = NULL;
 

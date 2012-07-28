@@ -81,7 +81,9 @@
 
 
 /** application preable */
-#define APPLICATION(name, argument)                 void name(void *argument)
+#define APPLICATION(name)                 void name(void *appArgument)
+#define InitSTDIO()                       stdio_t *stdio = (stdio_t*)appArgument
+#define InitArgvAs(argvType)              argvType *argv = ((stdio_t*)appArgument)->arg
 
 
 /*==================================================================================================
