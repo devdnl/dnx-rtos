@@ -42,7 +42,7 @@
                                    Local symbolic constants/macros
 ==================================================================================================*/
 /** InitTask stack size */
-#define INITTASK_STACK_SIZE               (10 * MINIMAL_STACK_SIZE)
+#define INITTASK_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
 
 
 /*==================================================================================================
@@ -123,29 +123,29 @@ static void InitTask(void *arg)
 {
       (void) arg;
 
-      stdio_t *stdio = NULL;
+      TaskSuspendAll();
 
       TaskDelay(2000);
-      TaskSuspendAll();
 
       /* initialization kprint */
       UART_Open(UART_DEV_1);
       kprintEnable();
       kprint("\x1B[2J");
       kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\r\n");
-      kprint("init: started kernel print\r\n");
-      kprint("init: started init task\r\n");
+      kprint("init [%d]: started kernel print\r\n", TaskGetTickCount());
+      kprint("init [%d]: started init task\r\n", TaskGetTickCount());
 
       /* initialize drivers */
 
       /* starting first application */
-      kprint("init: starting interactive console... ");
-      stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
+      kprint("init [%d]: starting interactive console...", TaskGetTickCount());
+
+      stdio_t *stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
 
       if (stdio == NULL)
       {
             kprint("[\x1b[31mFAILED\x1b[0m]\r\n");
-            kprint("Probably no enough free space. Restart board...");
+            kprint("Probably no enough free space. Restarting board...");
             TaskDelay(5000);
             NVIC_SystemReset();
       }
@@ -166,6 +166,13 @@ static void InitTask(void *arg)
             if (stdio->stdout.Level > 0)
             {
                   data = stdio->stdout.Buffer[stdio->stdout.RxIdx++];
+
+                  if (data == 0)
+                  {
+                        Free(stdio);
+                        kprint("init [%d]: terminal was terminated...", TaskGetTickCount());
+                        while (TRUE) TaskDelay(1000);
+                  }
 
                   if (stdio->stdout.RxIdx >= configSTDIO_BUFFER_SIZE)
                         stdio->stdout.RxIdx = 0;

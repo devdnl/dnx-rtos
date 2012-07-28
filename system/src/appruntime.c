@@ -62,6 +62,13 @@
 //================================================================================================//
 /**
  * @brief This function start selected application
+ *
+ * @param[in] app                   application function
+ * @param[in] *appName              application name
+ * @param[in] stackSize             application stack size
+ * @param[in] *arg                  application arguments
+ *
+ * @retval NULL if error occur otherwise correct pointer
  */
 //================================================================================================//
 stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)

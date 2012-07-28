@@ -96,10 +96,19 @@ APPLICATION(terminal, arg)
                         Free(mem);
                   }
             }
+            else if (cnt == 50)
+            {
+                  break;
+            }
 
             TaskDelay(1000);
       }
 
+      while (stdio->stdout.Level >= configSTDIO_BUFFER_SIZE);
+      stdio->stdout.Buffer[stdio->stdout.TxIdx++] = 0;
+      if (stdio->stdout.TxIdx >= configSTDIO_BUFFER_SIZE)
+            stdio->stdout.TxIdx = 0;
+      stdio->stdout.Level++;
       TaskTerminate();
 }
 
