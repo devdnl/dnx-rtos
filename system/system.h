@@ -88,10 +88,10 @@
 /** application preable */
 #define APPLICATION(name)                 void name(void *appArgument)
 
-#define InitSTDIO()                       stdioFIFO_t *stdin  = &((stdio_t*)appArgument)->stdin;  \
-                                          stdioFIFO_t *stdout = &((stdio_t*)appArgument)->stdout
+#define InitSTDIO()                       stdioFIFO_t *stdin  = &((appArgs_t*)appArgument)->stdin;  \
+                                          stdioFIFO_t *stdout = &((appArgs_t*)appArgument)->stdout
 
-#define InitArgvAs(argvType)              argvType *argv = ((stdio_t*)appArgument)->arg
+#define InitArgvAs(argvType)              argvType *argv = ((appArgs_t*)appArgument)->arg
 
 
 /*==================================================================================================

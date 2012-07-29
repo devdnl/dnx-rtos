@@ -111,37 +111,50 @@ static void reverseBuffer(ch_t *begin, ch_t *end)
  * @return pointer in the buffer
  */
 //================================================================================================//
-ch_t *itoa(i32_t value, ch_t *buffer, u8_t base)
+ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue)
 {
-    static const ch_t digits[] = "0123456789abcdef";
+      static const ch_t digits[] = "0123456789abcdef";
 
-    ch_t *bufferCopy = buffer;
-    i32_t sign       = 0;
-    i32_t quot;
-    i32_t rem;
+      ch_t *bufferCopy = buffer;
+      i32_t sign = 0;
+      i32_t quot;
+      i32_t rem;
 
-    if ((base >= 2) && (base <= 16))
-    {
-        if ((base == 10) && ((sign = value) < 0))
-            value = -value;
+      if ((base >= 2) && (base <= 16))
+      {
+            if (unsignedValue)
+            {
+                  do
+                  {
+                        quot = (u32_t)((u32_t)value / (u32_t)base);
+                        rem  = (u32_t)((u32_t)value % (u32_t)base);
+                        *buffer++   = digits[rem];
+                  }
+                  while ((value = quot));
+            }
+            else
+            {
+                  if ((base == 10) && ((sign = value) < 0))
+                        value = -value;
 
-        do
-        {
-            quot      = value / base;
-            rem       = value % base;
-            *buffer++ = digits[rem];
-        }
-        while ((value = quot));
+                  do
+                  {
+                        quot = value / base;
+                        rem  = value % base;
+                        *buffer++ = digits[rem];
+                  }
+                  while ((value = quot));
+            }
 
-        if (sign < 0)
-            *buffer++ = '-';
+            if (sign < 0)
+                  *buffer++ = '-';
 
-        reverseBuffer(bufferCopy, (buffer - 1));
-    }
+            reverseBuffer(bufferCopy, (buffer - 1));
+      }
 
-    *buffer = '\0';
+      *buffer = '\0';
 
-    return bufferCopy;
+      return bufferCopy;
 }
 
 
@@ -297,7 +310,7 @@ ch_t fgetChar(stdioFIFO_t *stdin)
 /**
  * @brief Function convert arguments to the stdio (vsnprintf)
  *
- * @param[out] *stream        buffer for stream
+ * @param[out] *stdout        stdout
  * @param[in]  size           buffer size
  * @param[in]  *format        message format
  * @param[in]  arg            argument list
@@ -333,7 +346,7 @@ static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
                         continue;
                   }
 
-                  if (character == 's' || character == 'd' || character == 'x')
+                  if (character == 's' || character == 'd' || character == 'x' || character == 'u')
                   {
                         ch_t result[11];
                         ch_t *resultPtr;
@@ -344,9 +357,10 @@ static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
                         }
                         else
                         {
-                              u8_t base = (character == 'd' ? 10 : 16);
+                              u8_t   base = ((character == 'd') || (character == 'u') ? 10 : 16);
+                              bool_t uint = ((character == 'x') || (character == 'u') ? TRUE : FALSE);
 
-                              resultPtr = itoa(va_arg(arg, i32_t), result, base);
+                              resultPtr = itoa(va_arg(arg, i32_t), result, base, uint);
                         }
 
                         while ((character = *resultPtr++))
@@ -359,6 +373,234 @@ static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
             }
       }
 
+      return (streamLen - 1);
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function convert arguments to the stdio and gets data from stdin
+ *
+ * @param[in]  *stdin         stdin
+ * @param[in]  *stdout        stdout
+ * @param[in]  size           buffer size
+ * @param[in]  *format        message format
+ * @param[in]  *var           output
+ *
+ * @return number of printed characters
+ */
+//================================================================================================//
+u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *var)
+{
+      ch_t  character;
+      u32_t streamLen = 1;
+
+      while ((character = *format++) != '\0')
+      {
+            if (character != '%')
+            {
+                  if (character == '\n')
+                        fputChar(stdout, '\r');
+
+                  fputChar(stdout, character);
+            }
+            else
+            {
+                  character = *format++;
+
+                  if (character == 'd' || character == 'u')
+                  {
+                        i32_t  *dec = (i32_t*)var;
+                        i32_t  sign = 1;
+                        bool_t uint = (character == 'u' ? TRUE : FALSE);
+
+                        *dec = 0;
+
+                        while (TRUE)
+                        {
+                              character = fgetChar(stdin);
+
+                              if (  (character >= '0' && character <= '9')
+                                 || (character == '-' && !uint && sign == 1) )
+                              {
+                                    fputChar(stdout, character);
+                              }
+                              else if (character == 0x0D)
+                              {
+                                    *dec *= sign;
+                                    fputChar(stdout, '\r');
+                                    fputChar(stdout, '\n');
+                                    goto fscan_end;
+                              }
+                              else if ((character == 0x08) && (streamLen > 1))
+                              {
+                                    fprint(stdout, "%c\x1B[K", character);
+
+                                    if (streamLen == 2 && sign == -1)
+                                          sign = 1;
+                                    else
+                                          *dec /= 10;
+                                    streamLen--;
+                                    continue;
+                              }
+                              else
+                              {
+                                    continue;
+                              }
+
+                              if (character == '-' && sign == 1 && !uint)
+                              {
+                                    sign = -1;
+                              }
+
+                              if (character >= '0' && character <= '9')
+                              {
+                                    character -= '0';
+
+                                    *dec *= 10;
+                                    *dec += character;
+                              }
+
+                              streamLen++;
+                        }
+
+                        goto fscan_end;
+                  }
+
+                  if (character == 'x')
+                  {
+                        u32_t *hex = (u32_t *)var;
+
+                        *hex = 0;
+
+                        while (TRUE)
+                        {
+                              character = fgetChar(stdin);
+
+                              if (  ((character >= '0') && (character <= '9'))
+                                 || ((character >= 'A') && (character <= 'F'))
+                                 || ((character >= 'a') && (character <= 'f')) )
+                              {
+                                    fputChar(stdout, character);
+                              }
+                              else if (character == 0x0D)
+                              {
+                                    fputChar(stdout, '\r');
+                                    fputChar(stdout, '\n');
+                                    goto fscan_end;
+                              }
+                              else if ((character == 0x08) && (streamLen > 1))
+                              {
+                                    fprint(stdout, "%c\x1B[K", character);
+                                    *hex >>= 4;
+                                    streamLen--;
+                                    continue;
+                              }
+                              else
+                              {
+                                    continue;
+                              }
+
+                              if ((character >= 'A') && (character <= 'F'))
+                              {
+                                    character = character - 'A' + 0x0A;
+                              }
+                              else if ((character >= 'a') && (character <= 'f'))
+                              {
+                                    character = character - 'a' + 0x0A;
+                              }
+                              else if ((character >= '0') && (character <= '9'))
+                              {
+                                    character -= '0';
+                              }
+
+                              *hex <<= 4;
+                              *hex |= character;
+
+                              streamLen++;
+                        }
+                  }
+
+                  if (character == 'b')
+                  {
+                        u32_t *bin = (u32_t *)var;
+
+                        *bin = 0;
+
+                        while (TRUE)
+                        {
+                              character = fgetChar(stdin);
+
+                              if (character == '0' || character == '1')
+                              {
+                                    fputChar(stdout, character);
+                              }
+                              else if (character == 0x0D)
+                              {
+                                    fputChar(stdout, '\r');
+                                    fputChar(stdout, '\n');
+                                    goto fscan_end;
+                              }
+                              else if ((character == 0x08) && (streamLen > 1))
+                              {
+                                    fprint(stdout, "%c\x1B[K", character);
+                                    *bin >>= 1;
+                                    streamLen--;
+                                    continue;
+                              }
+                              else
+                              {
+                                    continue;
+                              }
+
+                              character -= '0';
+
+                              *bin <<= 1;
+                              *bin |= character;
+
+                              streamLen++;
+                        }
+                  }
+
+                  if (character == 's')
+                  {
+                        ch_t *string = (ch_t*)var;
+
+                        while (TRUE)
+                        {
+                              character = fgetChar(stdin);
+
+                              if (character == 0x0D)
+                              {
+                                    *(string++) = 0x00;
+                                    fputChar(stdout, '\r');
+                                    fputChar(stdout, '\n');
+                                    goto fscan_end;
+                              }
+                              else if ((character == 0x08) && (streamLen > 1))
+                              {
+                                    fprint(stdout, "%c\x1B[K", character);
+                                    *(--string) = 0x00;
+                                    streamLen--;
+                                    continue;
+                              }
+                              else if (character >= ' ')
+                              {
+                                    fputChar(stdout, character);
+                                    *(string++) = character;
+                              }
+                              else
+                              {
+                                    continue;
+                              }
+
+                              streamLen++;
+                        }
+                  }
+            }
+      }
+
+fscan_end:
       return (streamLen - 1);
 }
 
@@ -435,9 +677,10 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
                         }
                         else
                         {
-                              u8_t base = (character == 'd' ? 10 : 16);
+                              u8_t   base = ((character == 'd') || (character == 'u') ? 10 : 16);
+                              bool_t uint = ((character == 'x') || (character == 'u') ? TRUE : FALSE);
 
-                              resultPtr = itoa(va_arg(arg, i32_t), result, base);
+                              resultPtr = itoa(va_arg(arg, i32_t), result, base, uint);
                         }
 
                         while ((character = *resultPtr++))

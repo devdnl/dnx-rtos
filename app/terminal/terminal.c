@@ -103,7 +103,11 @@ APPLICATION(terminal)
 
                   for (;;)
                   {
-                        ch_t ch;
+                        ch_t  ch;
+                        ch_t  buffer[50];
+                        i32_t dec;
+                        u32_t hex;
+                        u32_t bin;
 
                         print("Exit success? [y/n]: ");
                         ch = getChar();
@@ -118,6 +122,23 @@ APPLICATION(terminal)
 
                         if (ch == 'y')
                               Exit(STD_STATUS_ERROR);
+
+                        scan("Dec d: %d", &dec);
+                        print("Signed %d\n", dec);
+                        print("Unsigned %u\n", dec);
+
+                        scan("Dec u: %u", &dec);
+                        print("Signed %d\n", dec);
+                        print("Unsigned %u\n", dec);
+
+                        scan("Hex: 0x%x", &hex);
+                        print("0x%x\n", hex);
+
+                        scan("Bin: %b", &bin);
+                        print("0x%x\n", bin);
+
+                        scan("String: %s", &buffer);
+                        print("%s\n", buffer);
                   }
             }
 

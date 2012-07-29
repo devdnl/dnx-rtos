@@ -70,13 +70,14 @@ typedef struct stdioFIFO_struct
 } stdioFIFO_t;
 
 
-/** application standard io type */
-typedef struct stdio_struct
+/** application standard arguments type */
+typedef struct appArgs_struct
 {
       void        *arg;                      /* pointer to the argument */
       stdioFIFO_t stdin;                     /* stdin fifo */
       stdioFIFO_t stdout;                    /* stdout fifo */
-} stdio_t;
+} appArgs_t;
+
 
 /*==================================================================================================
                                      Exported object declarations

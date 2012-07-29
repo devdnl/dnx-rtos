@@ -71,12 +71,12 @@
  * @retval NULL if error occur otherwise correct pointer
  */
 //================================================================================================//
-stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
+appArgs_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
 {
-      stdio_t *stdioPtr = NULL;
+      appArgs_t *stdioPtr = NULL;
 
       /* allocate memory for stdio structure */
-      stdioPtr = (stdio_t*)Malloc(sizeof(stdio_t));
+      stdioPtr = (appArgs_t*)Malloc(sizeof(appArgs_t));
 
       if (stdioPtr != NULL)
       {

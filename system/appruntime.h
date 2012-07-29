@@ -56,7 +56,7 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg);
+extern appArgs_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg);
 extern void TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode);
 
 

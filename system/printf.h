@@ -41,6 +41,7 @@
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 #define print(...)                  fprint(stdout, __VA_ARGS__)
+#define scan(format, result)        fscan(stdin, stdout, format, result)
 #define putChar(c)                  fputChar(stdout, c)
 #define getChar()                   fgetChar(stdin)
 #define clearSTDIN()                fclearSTDIO(stdin)
@@ -49,6 +50,7 @@
 /** VT100 terminal commands */
 #define clrscr()                    print("\x1B[2J")
 #define eraseLine()                 print("\x1B[2K")
+#define eraseLineEnd()              print("\x1B[K")
 #define cursorHome()                print("\x1B[H")
 #define resetAttr()                 print("\x1B[0m")
 #define fontBlink()                 print("\x1B[5m")
@@ -84,7 +86,7 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern ch_t  *itoa(i32_t value, ch_t *buffer, u8_t base);
+extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue);
 extern u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...);
 extern u32_t kprint(const ch_t *format, ...);
 extern u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...);
@@ -92,6 +94,7 @@ extern void  kprintEnable(void);
 extern void  fputChar(stdioFIFO_t *stdout, ch_t c);
 extern ch_t  fgetChar(stdioFIFO_t *stdin);
 extern void  fclearSTDIO(stdioFIFO_t *stdio);
+extern u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *var);
 
 
 #ifdef __cplusplus

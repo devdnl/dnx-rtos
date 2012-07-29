@@ -80,7 +80,7 @@ int main(void)
 {
       InitSystem();
 
-      TaskCreate(InitTask, "init", INITTASK_STACK_SIZE, NULL, 3, NULL);
+      TaskCreate(InitTask, "initd", INITTASK_STACK_SIZE, NULL, 3, NULL);
 
       vTaskStartScheduler();
 
@@ -129,7 +129,7 @@ static void InitTask(void *arg)
       /* initialization kprint */
       UART_Open(UART_DEV_1);
       kprintEnable();
-      kprint("\x1B[2J");
+      kprint("\x1B[2J\x1b[0m");
       kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\n");
       kprint("By \x1B[31mDaniel Zorychta\x1B[0m <\x1B[33mdaniel.zorychta@gmail.com\x1B[0m>\n\n");
       kprint("initd [%d]: kernel print started\n", TaskGetTickCount());
@@ -140,7 +140,7 @@ static void InitTask(void *arg)
       /* starting first application */
       kprint("initd [%d]: starting interactive console...", TaskGetTickCount());
 
-      stdio_t *stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
+      appArgs_t *stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
 
       if (stdio == NULL)
       {
