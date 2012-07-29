@@ -107,6 +107,7 @@ stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void 
 //================================================================================================//
 void TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode)
 {
+      TaskDelay(10);
       fclearSTDIO(stdout);
       fputChar(stdout, exitCode);
       TaskTerminate();

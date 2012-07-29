@@ -131,13 +131,14 @@ static void InitTask(void *arg)
       kprintEnable();
       kprint("\x1B[2J");
       kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\n");
-      kprint("init [%d]: started kernel print\n", TaskGetTickCount());
-      kprint("init [%d]: started init task\n", TaskGetTickCount());
+      kprint("By \x1B[31mDaniel Zorychta\x1B[0m <\x1B[33mdaniel.zorychta@gmail.com\x1B[0m>\n\n");
+      kprint("initd [%d]: kernel print started\n", TaskGetTickCount());
+      kprint("initd [%d]: init daemon started\n", TaskGetTickCount());
 
       /* initialize drivers */
 
       /* starting first application */
-      kprint("init [%d]: starting interactive console...", TaskGetTickCount());
+      kprint("initd [%d]: starting interactive console...", TaskGetTickCount());
 
       stdio_t *stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
 
@@ -153,14 +154,16 @@ static void InitTask(void *arg)
             kprint("[\x1b[32mSUCCESS\x1b[0m]\n");
       }
 
-      kprint("init [%d]: free stack: %d\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
+      kprint("initd [%d]: free stack: %d\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       TaskResumeAll();
 
       /* main loop which read stdios from applications */
       for (;;)
       {
-            ch_t data;
+            ch_t   data;
+            bool_t stdoutEmpty = FALSE;
+            bool_t RxFIFOEmpty = FALSE;
 
             TaskSuspendAll();
 
@@ -168,24 +171,33 @@ static void InitTask(void *arg)
             {
                   data = stdio->stdout.Buffer[stdio->stdout.RxIdx++];
 
-                  if (data <= 1)
-                  {
-                        Free(stdio);
-
-                        if (data == 0)
-                              kprint("\ninit [%d]: terminal was terminated.", TaskGetTickCount());
-                        else
-                              kprint("\ninit [%d]: terminal was terminated with error.", TaskGetTickCount());
-
-                        while (TRUE) TaskDelay(1000);
-                  }
-
                   if (stdio->stdout.RxIdx >= configSTDIO_BUFFER_SIZE)
                         stdio->stdout.RxIdx = 0;
 
                   stdio->stdout.Level--;
 
                   UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &data);
+
+                  if (data <= 1)
+                  {
+                        Free(stdio);
+
+                        if (data == 0)
+                              kprint("\ninitd [%d]: terminal was terminated.\n", TaskGetTickCount());
+                        else
+                              kprint("\ninitd [%d]: terminal was terminated with error.\n", TaskGetTickCount());
+
+                        kprint("initd [%d]: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
+
+                        vTaskEndScheduler();
+                        while (TRUE) TaskDelay(1000);
+                  }
+
+                  stdoutEmpty = FALSE;
+            }
+            else
+            {
+                  stdoutEmpty = TRUE;
             }
 
             TaskResumeAll();
@@ -205,9 +217,16 @@ static void InitTask(void *arg)
                   }
 
                   TaskResumeAll();
+
+                  RxFIFOEmpty = FALSE;
+            }
+            else
+            {
+                  RxFIFOEmpty = TRUE;
             }
 
-            TaskDelay(1);
+            if (stdoutEmpty && RxFIFOEmpty)
+                  TaskDelay(1);
       }
 
       UART_Close(UART_DEV_1);
