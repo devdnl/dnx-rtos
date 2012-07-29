@@ -52,6 +52,7 @@
 #define THIS_TASK                         NULL
 #define EMPTY_TASK                        UINT32_MAX
 
+/** TASK LEVEL DEFINITIONS */
 #define TaskTerminate()                   vTaskDelete(NULL)
 #define TaskDelete(taskID)                vTaskDelete(taskID)
 #define TaskDelay(delay)                  vTaskDelay(delay)
@@ -80,9 +81,16 @@
         vTaskDelayUntil(pPreviousWakeTime, TimeIncrement)
 
 
+/** APPLICATION LEVEL DEFINITIONS */
+#define Sleep(delay)                      TaskDelay(delay)
+
+
 /** application preable */
 #define APPLICATION(name)                 void name(void *appArgument)
-#define InitSTDIO()                       stdio_t *stdio = (stdio_t*)appArgument
+
+#define InitSTDIO()                       stdioFIFO_t *stdin  = &((stdio_t*)appArgument)->stdin;  \
+                                          stdioFIFO_t *stdout = &((stdio_t*)appArgument)->stdout
+
 #define InitArgvAs(argvType)              argvType *argv = ((stdio_t*)appArgument)->arg
 
 

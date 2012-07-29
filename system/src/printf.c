@@ -50,7 +50,7 @@
 ==================================================================================================*/
 static void reverseBuffer(ch_t *begin, ch_t *end);
 static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg);
-static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg);
+static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg);
 
 
 /*==================================================================================================
@@ -157,7 +157,7 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...)
+u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 {
       va_list args;
       u32_t n;
@@ -174,20 +174,20 @@ u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 /**
  * @brief Function send on a standard output string
  *
- * @param *stdio              stdio
+ * @param *stdout             stdout
  * @param *format             formated text
  * @param ...                 format arguments
  *
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t sprint(stdio_t *stdio, const ch_t *format, ...)
+u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...)
 {
       va_list args;
       u32_t n;
 
       va_start(args, format);
-      n = svsnprint(stdio, format, args);
+      n = vfprint(stdout, format, args);
       va_end(args);
 
       return n;
@@ -229,22 +229,22 @@ u32_t kprint(const ch_t *format, ...)
 /**
  * @brief Function put character into stdout stream
  *
- * @param *stdio              stdio
+ * @param *stdout             stdout
  * @param c                   character
  */
 //================================================================================================//
-void PutChar(stdio_t *stdio, ch_t c)
+void fputChar(stdioFIFO_t *stdout, ch_t c)
 {
       TaskSuspendAll();
 
-      if (stdio->stdout.Level < configSTDIO_BUFFER_SIZE)
+      if (stdout->Level < configSTDIO_BUFFER_SIZE)
       {
-            stdio->stdout.Buffer[stdio->stdout.TxIdx++] = c;
+            stdout->Buffer[stdout->TxIdx++] = c;
 
-            if (stdio->stdout.TxIdx >= configSTDIO_BUFFER_SIZE)
-                  stdio->stdout.TxIdx = 0;
+            if (stdout->TxIdx >= configSTDIO_BUFFER_SIZE)
+                  stdout->TxIdx = 0;
 
-            stdio->stdout.Level++;
+            stdout->Level++;
 
             TaskResumeAll();
       }
@@ -260,25 +260,25 @@ void PutChar(stdio_t *stdio, ch_t c)
 /**
  * @brief Function get character from stdin stream
  *
- * @param *stdio              stdio
+ * @param *stdin            stdin
  *
  * @retval character
  */
 //================================================================================================//
-ch_t GetChar(stdio_t *stdio)
+ch_t fgetChar(stdioFIFO_t *stdin)
 {
       while (TRUE)
       {
             TaskSuspendAll();
 
-            if (stdio->stdin.Level > 0)
+            if (stdin->Level > 0)
             {
-                  ch_t out = stdio->stdin.Buffer[stdio->stdin.RxIdx++];
+                  ch_t out = stdin->Buffer[stdin->RxIdx++];
 
-                  if (stdio->stdin.RxIdx >= configSTDIO_BUFFER_SIZE)
-                        stdio->stdin.RxIdx = 0;
+                  if (stdin->RxIdx >= configSTDIO_BUFFER_SIZE)
+                        stdin->RxIdx = 0;
 
-                  stdio->stdin.Level--;
+                  stdin->Level--;
 
                   TaskResumeAll();
 
@@ -305,7 +305,7 @@ ch_t GetChar(stdio_t *stdio)
  * @return number of printed characters
  */
 //================================================================================================//
-static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
+static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
 {
       ch_t  character;
       u32_t streamLen = 1;
@@ -315,9 +315,9 @@ static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
             if (character != '%')
             {
                   if (character == '\n')
-                        PutChar(stdio, '\r');
+                        fputChar(stdout, '\r');
 
-                  PutChar(stdio, character);
+                  fputChar(stdout, character);
             }
             else
             {
@@ -328,7 +328,7 @@ static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
                         if (character == 'c')
                               character = va_arg(arg, i32_t);
 
-                        PutChar(stdio, character);
+                        fputChar(stdout, character);
 
                         continue;
                   }
@@ -351,7 +351,7 @@ static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
 
                         while ((character = *resultPtr++))
                         {
-                              PutChar(stdio, character);
+                              fputChar(stdout, character);
                         }
 
                         continue;
@@ -460,32 +460,15 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
 /**
  * @brief Clear stdin buffer
  *
- * @param *stdio              stdio
+ * @param *stdin              stdin
  */
 //================================================================================================//
-void ClearStdin(stdio_t *stdio)
+void fclearSTDIO(stdioFIFO_t *stdio)
 {
       TaskSuspendAll();
-      stdio->stdin.Level = 0;
-      stdio->stdin.RxIdx = 0;
-      stdio->stdin.TxIdx = 0;
-      TaskResumeAll();
-}
-
-
-//================================================================================================//
-/**
- * @brief Clear stdout buffer
- *
- * @param *stdio              stdio
- */
-//================================================================================================//
-void ClearStdout(stdio_t *stdio)
-{
-      TaskSuspendAll();
-      stdio->stdout.Level = 0;
-      stdio->stdout.RxIdx = 0;
-      stdio->stdout.TxIdx = 0;
+      stdio->Level = 0;
+      stdio->RxIdx = 0;
+      stdio->TxIdx = 0;
       TaskResumeAll();
 }
 

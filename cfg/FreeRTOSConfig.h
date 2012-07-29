@@ -73,7 +73,7 @@
  * My specific definitions
  *----------------------------------------------------------*/
 #define configSTDIO_BUFFER_SIZE                 100
-#define constKPRINT_BUFFER_SIZE                 50
+#define constKPRINT_BUFFER_SIZE                 80
 
 
 /*-----------------------------------------------------------

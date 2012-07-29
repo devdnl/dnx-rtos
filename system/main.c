@@ -153,6 +153,8 @@ static void InitTask(void *arg)
             kprint("[\x1b[32mSUCCESS\x1b[0m]\n");
       }
 
+      kprint("init [%d]: free stack: %d\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
+
       TaskResumeAll();
 
       /* main loop which read stdios from applications */
@@ -171,9 +173,9 @@ static void InitTask(void *arg)
                         Free(stdio);
 
                         if (data == 0)
-                              kprint("init [%d]: terminal was terminated.", TaskGetTickCount());
+                              kprint("\ninit [%d]: terminal was terminated.", TaskGetTickCount());
                         else
-                              kprint("init [%d]: terminal was terminated with error.", TaskGetTickCount());
+                              kprint("\ninit [%d]: terminal was terminated with error.", TaskGetTickCount());
 
                         while (TRUE) TaskDelay(1000);
                   }

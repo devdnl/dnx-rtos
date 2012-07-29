@@ -105,10 +105,10 @@ stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void 
  * @param exitCode            return value
  */
 //================================================================================================//
-void TerminateApplication(stdio_t *stdio, stdStatus_t exitCode)
+void TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode)
 {
-      ClearStdout(stdio);
-      PutChar(stdio, exitCode);
+      fclearSTDIO(stdout);
+      fputChar(stdout, exitCode);
       TaskTerminate();
 }
 

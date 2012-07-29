@@ -74,46 +74,54 @@ APPLICATION(terminal)
       u32_t   cnt = 0;
       u8_t    *mem = NULL;
 
-      sprint(stdio, "Hello world. I'm terminal\n");
+      print("Hello world. I'm terminal\n");
 
       for (;;)
       {
-            sprint(stdio, "%d: Heap free space: %d; stack free space: %d\n",
-                   cnt++, GetFreeHeapSize(), TaskGetStackFreeSpace(THIS_TASK));
+            print("%d: Heap free space: %d; stack free space: %d\n",
+                  cnt++, GetFreeHeapSize(), TaskGetStackFreeSpace(THIS_TASK));
 
             if (cnt == 2)
             {
-                  sprint(stdio, "Try to alloc 60000 bytes...\n");
+                  print("Try to allocate 60000 bytes...\n");
                   mem = (u8_t*)Malloc(60000);
 
                   if (mem == NULL)
-                        sprint(stdio, "Allocation failed :(\n");
+                        print("Allocation failed :(\n");
             }
             else if (cnt == 4)
             {
                   if (mem)
                   {
-                        sprint(stdio, "Freed allocated memory...\n");
+                        print("Freed allocated memory...\n");
                         Free(mem);
                   }
             }
             else if (cnt == 6)
             {
-                  ClearStdin(stdio);
+                  clearSTDIN();
 
                   for (;;)
                   {
-                        sprint(stdio, "Czy zakonczyc terminal? [t/n]: ");
-                        ch_t ch = GetChar(stdio);
-                        PutChar(stdio, ch);
-                        sprint(stdio, "\n");
+                        ch_t ch;
 
-                        if (ch == 't')
+                        print("Exit success? [y/n]: ");
+                        ch = getChar();
+                        print("%c\n", ch);
+
+                        if (ch == 'y')
                               Exit(STD_STATUS_OK);
+
+                        print("Exit failure? [y/n]: ");
+                        ch = getChar();
+                        print("%c\n", ch);
+
+                        if (ch == 'y')
+                              Exit(STD_STATUS_ERROR);
                   }
             }
 
-            TaskDelay(1000);
+            Sleep(1000);
       }
 
       Exit(STD_STATUS_ERROR);
