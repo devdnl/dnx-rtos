@@ -49,8 +49,7 @@
                                       Local function prototypes
 ==================================================================================================*/
 static void reverseBuffer(ch_t *begin, ch_t *end);
-static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg);
-static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg);
+static u32_t vsnfprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg);
 
 
 /*==================================================================================================
@@ -176,7 +175,7 @@ u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
       u32_t n;
 
       va_start(args, format);
-      n = vsnprint(stream, size, format, args);
+      n = vsnfprint(FALSE, stream, size, format, args);
       va_end(args);
 
       return n;
@@ -200,7 +199,7 @@ u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...)
       u32_t n;
 
       va_start(args, format);
-      n = vfprint(stdout, format, args);
+      n = vsnfprint(TRUE, stdout, 0, format, args);
       va_end(args);
 
       return n;
@@ -228,7 +227,7 @@ u32_t kprint(const ch_t *format, ...)
             memset(buffer, 0, constKPRINT_BUFFER_SIZE);
 
             va_start(args, format);
-            n = vsnprint(buffer, constKPRINT_BUFFER_SIZE, format, args);
+            n = vsnfprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
             va_end(args);
 
             SEND_BUFFER(buffer, strlen(buffer));
@@ -310,27 +309,54 @@ ch_t fgetChar(stdioFIFO_t *stdin)
 /**
  * @brief Function convert arguments to the stdio (vsnprintf)
  *
- * @param[out] *stdout        stdout
- * @param[in]  size           buffer size
- * @param[in]  *format        message format
- * @param[in]  arg            argument list
+ * @param[in] stdio          TRUE to enable STDIO
+ * @param[in] *streamStdout  buffer for stream or stdout
+ * @param[in] size           buffer size
+ * @param[in] *format        message format
+ * @param[in] arg            argument list
  *
  * @return number of printed characters
  */
 //================================================================================================//
-static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
+static u32_t vsnfprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg)
 {
+      #define putCharacter(character)                       \
+            if (stdio)                                      \
+            {                                               \
+                  fputChar(stdout, character);              \
+            }                                               \
+            else                                            \
+            {                                               \
+                  if (streamLen < size)                     \
+                  {                                         \
+                        *stream++ = character;              \
+                  }                                         \
+                  else                                      \
+                  {                                         \
+                        *stream = 0;                        \
+                        goto vsnfprint_end;                 \
+                  }                                         \
+            }                                               \
+            streamLen++
+
+
       ch_t  character;
       u32_t streamLen = 1;
+
+      stdioFIFO_t *stdout = (stdioFIFO_t*)streamStdout;
+      ch_t        *stream = (ch_t*)streamStdout;
+
 
       while ((character = *format++) != '\0')
       {
             if (character != '%')
             {
                   if (character == '\n')
-                        fputChar(stdout, '\r');
+                  {
+                        putCharacter('\r');
+                  }
 
-                  fputChar(stdout, character);
+                  putCharacter(character);
             }
             else
             {
@@ -341,7 +367,7 @@ static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
                         if (character == 'c')
                               character = va_arg(arg, i32_t);
 
-                        fputChar(stdout, character);
+                        putCharacter(character);
 
                         continue;
                   }
@@ -365,7 +391,7 @@ static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
 
                         while ((character = *resultPtr++))
                         {
-                              fputChar(stdout, character);
+                              putCharacter(character);
                         }
 
                         continue;
@@ -373,7 +399,10 @@ static u32_t vfprint(stdioFIFO_t *stdout, const ch_t *format, va_list arg)
             }
       }
 
+vsnfprint_end:
       return (streamLen - 1);
+
+      #undef putChar
 }
 
 
@@ -602,100 +631,6 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
 
 fscan_end:
       return (streamLen - 1);
-}
-
-
-
-//================================================================================================//
-/**
- * @brief Function convert arguments to the buffer (vsnprintf)
- *
- * @param[out] *stream        buffer for stream
- * @param[in]  size           buffer size
- * @param[in]  *format        message format
- * @param[in]  arg            argument list
- *
- * @return number of printed characters
- */
-//================================================================================================//
-static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
-{
-      ch_t  character;
-      u32_t streamLen = 1;
-
-      #define putStream()                               \
-            if (streamLen < size)                       \
-            {                                           \
-                  *stream++ = character;                \
-                  streamLen++;                          \
-            }                                           \
-            else                                        \
-            {                                           \
-                  *stream = 0;                          \
-                  return (streamLen - 1);               \
-            }
-
-
-      if (size == 0)
-            return 0;
-
-      while ((character = *format++) != '\0')
-      {
-            if (character != '%')
-            {
-                  if (character == '\n')
-                  {
-                        character = '\r';
-                        putStream();
-                        character = '\n';
-                  }
-
-                  putStream();
-            }
-            else
-            {
-                  character = *format++;
-
-                  if (character == '%' || character == 'c')
-                  {
-                        if (character == 'c')
-                              character = va_arg(arg, i32_t);
-
-                        putStream();
-
-                        continue;
-                  }
-
-                  if (character == 's' || character == 'd' || character == 'x')
-                  {
-                        ch_t result[11];
-                        ch_t *resultPtr;
-
-                        if (character == 's')
-                        {
-                              resultPtr = va_arg(arg, ch_t*);
-                        }
-                        else
-                        {
-                              u8_t   base = ((character == 'd') || (character == 'u') ? 10 : 16);
-                              bool_t uint = ((character == 'x') || (character == 'u') ? TRUE : FALSE);
-
-                              resultPtr = itoa(va_arg(arg, i32_t), result, base, uint);
-                        }
-
-                        while ((character = *resultPtr++))
-                        {
-                              putStream();
-                        }
-
-                        continue;
-                  }
-            }
-      }
-
-      return (streamLen - 1);
-
-      #undef putStream
 }
 
 

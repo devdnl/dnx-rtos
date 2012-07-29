@@ -337,6 +337,11 @@ stdStatus_t UART_Init(void)
  * @brief Opens specified port and initialize default settings
  *
  * @param[in]  usartName                  USART name (number)
+ *
+ * @retval STD_STATUS_OK                  operation success
+ * @retval UART_STATUS_PORTLOCKED         port locked for other task
+ * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
+ * @retval UART_STATUS_NOFREEMEM          no enough free memory to allocate RxBuffer
  */
 //================================================================================================//
 stdStatus_t UART_Open(dev_t usartName)

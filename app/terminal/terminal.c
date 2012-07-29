@@ -139,6 +139,10 @@ APPLICATION(terminal)
 
                         scan("String: %s", &buffer);
                         print("%s\n", buffer);
+
+                        print("Readkey: ");
+                        ch = getChar();
+                        print("Key code: 0x%x\n", ch);
                   }
             }
 

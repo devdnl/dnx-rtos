@@ -123,23 +123,38 @@ static void InitTask(void *arg)
 {
       (void) arg;
 
+      /* short delay and lock task scheduling */
       TaskDelay(2000);
       TaskSuspendAll();
 
-      /* initialization kprint */
+      /*--------------------------------------------------------------------------------------------
+       * initialization kprint()
+       *------------------------------------------------------------------------------------------*/
       UART_Open(UART_DEV_1);
       kprintEnable();
+
+      /* clear VT100 terminal screen */
       kprint("\x1B[2J\x1b[0m");
+
+      /* something about board and system */
       kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\n");
       kprint("By \x1B[31mDaniel Zorychta\x1B[0m <\x1B[33mdaniel.zorychta@gmail.com\x1B[0m>\n\n");
+
+      /* info about system start */
       kprint("initd [%d]: kernel print started\n", TaskGetTickCount());
       kprint("initd [%d]: init daemon started\n", TaskGetTickCount());
 
-      /* initialize drivers */
+      /*--------------------------------------------------------------------------------------------
+       * driver initialization
+       *------------------------------------------------------------------------------------------*/
 
-      /* starting first application */
+
+      /*--------------------------------------------------------------------------------------------
+       * starting terminal
+       *------------------------------------------------------------------------------------------*/
       kprint("initd [%d]: starting interactive console...", TaskGetTickCount());
 
+      /* try to start terminal */
       appArgs_t *stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
 
       if (stdio == NULL)
@@ -154,11 +169,14 @@ static void InitTask(void *arg)
             kprint("[\x1b[32mSUCCESS\x1b[0m]\n");
       }
 
+      /* initd info about stack usage */
       kprint("initd [%d]: free stack: %d\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
+      /*--------------------------------------------------------------------------------------------
+       * main loop which read stdios from applications
+       *------------------------------------------------------------------------------------------*/
       TaskResumeAll();
 
-      /* main loop which read stdios from applications */
       for (;;)
       {
             ch_t   data;
@@ -229,6 +247,7 @@ static void InitTask(void *arg)
                   TaskDelay(1);
       }
 
+      /* this should never happen */
       UART_Close(UART_DEV_1);
 
       TaskTerminate();
