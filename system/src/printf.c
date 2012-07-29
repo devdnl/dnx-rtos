@@ -149,6 +149,8 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base)
 /**
  * @brief Function send to buffer formated output string
  *
+ * @param *stream             output buffer
+ * @param size                buffer size
  * @param *format             formated text
  * @param ...                 format arguments
  *
@@ -172,6 +174,7 @@ u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 /**
  * @brief Function send on a standard output string
  *
+ * @param *stdio              stdio
  * @param *format             formated text
  * @param ...                 format arguments
  *
@@ -224,6 +227,74 @@ u32_t kprint(const ch_t *format, ...)
 
 //================================================================================================//
 /**
+ * @brief Function put character into stdout stream
+ *
+ * @param *stdio              stdio
+ * @param c                   character
+ */
+//================================================================================================//
+void PutChar(stdio_t *stdio, ch_t c)
+{
+      TaskSuspendAll();
+
+      if (stdio->stdout.Level < configSTDIO_BUFFER_SIZE)
+      {
+            stdio->stdout.Buffer[stdio->stdout.TxIdx++] = c;
+
+            if (stdio->stdout.TxIdx >= configSTDIO_BUFFER_SIZE)
+                  stdio->stdout.TxIdx = 0;
+
+            stdio->stdout.Level++;
+
+            TaskResumeAll();
+      }
+      else
+      {
+            TaskResumeAll();
+            TaskDelay(10);
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function get character from stdin stream
+ *
+ * @param *stdio              stdio
+ *
+ * @retval character
+ */
+//================================================================================================//
+ch_t GetChar(stdio_t *stdio)
+{
+      while (TRUE)
+      {
+            TaskSuspendAll();
+
+            if (stdio->stdin.Level > 0)
+            {
+                  ch_t out = stdio->stdin.Buffer[stdio->stdin.RxIdx++];
+
+                  if (stdio->stdin.RxIdx >= configSTDIO_BUFFER_SIZE)
+                        stdio->stdin.RxIdx = 0;
+
+                  stdio->stdin.Level--;
+
+                  TaskResumeAll();
+
+                  return out;
+            }
+            else
+            {
+                  TaskResumeAll();
+                  TaskDelay(10);
+            }
+      }
+}
+
+
+//================================================================================================//
+/**
  * @brief Function convert arguments to the stdio (vsnprintf)
  *
  * @param[out] *stream        buffer for stream
@@ -239,28 +310,14 @@ static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
       ch_t  character;
       u32_t streamLen = 1;
 
-      #define putStream()                                                     \
-            TaskSuspendAll();                                                 \
-            if (stdio->stdout.Level < configSTDIO_BUFFER_SIZE)                \
-            {                                                                 \
-                  stdio->stdout.Buffer[stdio->stdout.TxIdx++] = character;    \
-                  if (stdio->stdout.TxIdx >= configSTDIO_BUFFER_SIZE)         \
-                        stdio->stdout.TxIdx = 0;                              \
-                                                                              \
-                  stdio->stdout.Level++;                                      \
-                  TaskResumeAll();                                            \
-            }                                                                 \
-            else                                                              \
-            {                                                                 \
-                  TaskResumeAll();                                            \
-                  TaskDelay(10);                                              \
-            }
-
       while ((character = *format++) != '\0')
       {
             if (character != '%')
             {
-                  putStream();
+                  if (character == '\n')
+                        PutChar(stdio, '\r');
+
+                  PutChar(stdio, character);
             }
             else
             {
@@ -271,7 +328,7 @@ static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
                         if (character == 'c')
                               character = va_arg(arg, i32_t);
 
-                        putStream();
+                        PutChar(stdio, character);
 
                         continue;
                   }
@@ -294,7 +351,7 @@ static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
 
                         while ((character = *resultPtr++))
                         {
-                              putStream();
+                              PutChar(stdio, character);
                         }
 
                         continue;
@@ -303,8 +360,6 @@ static u32_t svsnprint(stdio_t *stdio, const ch_t *format, va_list arg)
       }
 
       return (streamLen - 1);
-
-      #undef putStream
 }
 
 
@@ -329,7 +384,8 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
       #define putStream()                               \
             if (streamLen < size)                       \
             {                                           \
-                  *stream++ = character; streamLen++;   \
+                  *stream++ = character;                \
+                  streamLen++;                          \
             }                                           \
             else                                        \
             {                                           \
@@ -345,6 +401,13 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
       {
             if (character != '%')
             {
+                  if (character == '\n')
+                  {
+                        character = '\r';
+                        putStream();
+                        character = '\n';
+                  }
+
                   putStream();
             }
             else
@@ -391,6 +454,41 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
 
       #undef putStream
 }
+
+
+//================================================================================================//
+/**
+ * @brief Clear stdin buffer
+ *
+ * @param *stdio              stdio
+ */
+//================================================================================================//
+void ClearStdin(stdio_t *stdio)
+{
+      TaskSuspendAll();
+      stdio->stdin.Level = 0;
+      stdio->stdin.RxIdx = 0;
+      stdio->stdin.TxIdx = 0;
+      TaskResumeAll();
+}
+
+
+//================================================================================================//
+/**
+ * @brief Clear stdout buffer
+ *
+ * @param *stdio              stdio
+ */
+//================================================================================================//
+void ClearStdout(stdio_t *stdio)
+{
+      TaskSuspendAll();
+      stdio->stdout.Level = 0;
+      stdio->stdout.RxIdx = 0;
+      stdio->stdout.TxIdx = 0;
+      TaskResumeAll();
+}
+
 
 /*==================================================================================================
                                             End of file

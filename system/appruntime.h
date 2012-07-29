@@ -39,6 +39,8 @@
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/** simpler definition of terminating application */
+#define Exit(exitCode)                    TerminateApplication(stdio, exitCode)
 
 
 /*==================================================================================================
@@ -55,6 +57,7 @@
                                      Exported function prototypes
 ==================================================================================================*/
 extern stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg);
+extern void TerminateApplication(stdio_t *stdio, stdStatus_t exitCode);
 
 
 #ifdef __cplusplus

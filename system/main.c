@@ -123,17 +123,16 @@ static void InitTask(void *arg)
 {
       (void) arg;
 
-      TaskSuspendAll();
-
       TaskDelay(2000);
+      TaskSuspendAll();
 
       /* initialization kprint */
       UART_Open(UART_DEV_1);
       kprintEnable();
       kprint("\x1B[2J");
-      kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\r\n");
-      kprint("init [%d]: started kernel print\r\n", TaskGetTickCount());
-      kprint("init [%d]: started init task\r\n", TaskGetTickCount());
+      kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\n");
+      kprint("init [%d]: started kernel print\n", TaskGetTickCount());
+      kprint("init [%d]: started init task\n", TaskGetTickCount());
 
       /* initialize drivers */
 
@@ -144,14 +143,14 @@ static void InitTask(void *arg)
 
       if (stdio == NULL)
       {
-            kprint("[\x1b[31mFAILED\x1b[0m]\r\n");
+            kprint("[\x1b[31mFAILED\x1b[0m]\n");
             kprint("Probably no enough free space. Restarting board...");
             TaskDelay(5000);
             NVIC_SystemReset();
       }
       else
       {
-            kprint("[\x1b[32mSUCCESS\x1b[0m]\r\n");
+            kprint("[\x1b[32mSUCCESS\x1b[0m]\n");
       }
 
       TaskResumeAll();
@@ -167,10 +166,15 @@ static void InitTask(void *arg)
             {
                   data = stdio->stdout.Buffer[stdio->stdout.RxIdx++];
 
-                  if (data == 0)
+                  if (data <= 1)
                   {
                         Free(stdio);
-                        kprint("init [%d]: terminal was terminated...", TaskGetTickCount());
+
+                        if (data == 0)
+                              kprint("init [%d]: terminal was terminated.", TaskGetTickCount());
+                        else
+                              kprint("init [%d]: terminal was terminated with error.", TaskGetTickCount());
+
                         while (TRUE) TaskDelay(1000);
                   }
 

@@ -97,6 +97,22 @@ stdio_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void 
 }
 
 
+//================================================================================================//
+/**
+ * @brief Terminate application
+ *
+ * @param *stdio              stdio
+ * @param exitCode            return value
+ */
+//================================================================================================//
+void TerminateApplication(stdio_t *stdio, stdStatus_t exitCode)
+{
+      ClearStdout(stdio);
+      PutChar(stdio, exitCode);
+      TaskTerminate();
+}
+
+
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

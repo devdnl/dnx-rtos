@@ -28,7 +28,6 @@
                                             Include files
 ==================================================================================================*/
 #include "terminal.h"
-#include "uart.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -75,43 +74,49 @@ APPLICATION(terminal)
       u32_t   cnt = 0;
       u8_t    *mem = NULL;
 
-      sprint(stdio, "Hello world. I'm terminal\r\n");
+      sprint(stdio, "Hello world. I'm terminal\n");
 
       for (;;)
       {
-            sprint(stdio, "%d: Heap free space: %d; stack free space: %d\r\n",
+            sprint(stdio, "%d: Heap free space: %d; stack free space: %d\n",
                    cnt++, GetFreeHeapSize(), TaskGetStackFreeSpace(THIS_TASK));
 
-            if (cnt == 30)
+            if (cnt == 2)
             {
-                  sprint(stdio, "Try to alloc 60000 bytes...\r\n");
+                  sprint(stdio, "Try to alloc 60000 bytes...\n");
                   mem = (u8_t*)Malloc(60000);
 
                   if (mem == NULL)
-                        sprint(stdio, "Allocation failed :(\r\n");
+                        sprint(stdio, "Allocation failed :(\n");
             }
-            else if (cnt == 40)
+            else if (cnt == 4)
             {
                   if (mem)
                   {
-                        sprint(stdio, "Freed allocated memory...\r\n");
+                        sprint(stdio, "Freed allocated memory...\n");
                         Free(mem);
                   }
             }
-            else if (cnt == 50)
+            else if (cnt == 6)
             {
-                  break;
+                  ClearStdin(stdio);
+
+                  for (;;)
+                  {
+                        sprint(stdio, "Czy zakonczyc terminal? [t/n]: ");
+                        ch_t ch = GetChar(stdio);
+                        PutChar(stdio, ch);
+                        sprint(stdio, "\n");
+
+                        if (ch == 't')
+                              Exit(STD_STATUS_OK);
+                  }
             }
 
             TaskDelay(1000);
       }
 
-      while (stdio->stdout.Level >= configSTDIO_BUFFER_SIZE);
-      stdio->stdout.Buffer[stdio->stdout.TxIdx++] = 0;
-      if (stdio->stdout.TxIdx >= configSTDIO_BUFFER_SIZE)
-            stdio->stdout.TxIdx = 0;
-      stdio->stdout.Level++;
-      TaskTerminate();
+      Exit(STD_STATUS_ERROR);
 }
 
 

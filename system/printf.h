@@ -40,6 +40,7 @@
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+#define print(format, __var_args)                sprint(stdio, format, __var_args)
 
 
 /*==================================================================================================
@@ -55,11 +56,15 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base);
+extern ch_t  *itoa(i32_t value, ch_t *buffer, u8_t base);
 extern u32_t bprint(ch_t *stream, u32_t size, const ch_t *format, ...);
 extern u32_t kprint(const ch_t *format, ...);
 extern u32_t sprint(stdio_t *stdio, const ch_t *format, ...);
-extern void kprintEnable(void);
+extern void  kprintEnable(void);
+extern void  PutChar(stdio_t *stdio, ch_t c);
+extern ch_t  GetChar(stdio_t *stdio);
+extern void  ClearStdin(stdio_t *stdio);
+extern void  ClearStdout(stdio_t *stdio);
 
 
 #ifdef __cplusplus
