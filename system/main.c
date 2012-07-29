@@ -170,7 +170,7 @@ static void InitTask(void *arg)
       }
 
       /* initd info about stack usage */
-      kprint("initd [%d]: free stack: %d\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
+      kprint("initd [%d]: free stack: %d\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications

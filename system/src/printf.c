@@ -112,7 +112,7 @@ static void reverseBuffer(ch_t *begin, ch_t *end)
 //================================================================================================//
 ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue)
 {
-      static const ch_t digits[] = "0123456789abcdef";
+      static const ch_t digits[] = "0123456789ABCDEF";
 
       ch_t *bufferCopy = buffer;
       i32_t sign = 0;

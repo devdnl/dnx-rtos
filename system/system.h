@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+      extern "C" {
 #endif
 
 /*==================================================================================================
@@ -82,10 +82,22 @@
 
 
 /** APPLICATION LEVEL DEFINITIONS */
-#define Sleep(delay)                      TaskDelay(delay)
+#define Sleep(delay)                      vTaskDelay(delay)
+#define SystemGetTickCount()              xTaskGetTickCount()
+#define SystemGetStackFreeSpace()         xPortGetFreeHeapSize()
+#define SystemEnterCritical()             taskENTER_CRITICAL()
+#define SystemExitCritical()              taskEXIT_CRITICAL()
+#define SystemDisableIRQ()                taskDISABLE_INTERRUPTS()
+#define SystemEnableIRQ()                 taskENABLE_INTERRUPTS()
+#define SystemGetPID()                    xTaskGetPID()
+#define SystemGetAppHandle()              xTaskGetCurrentTaskHandle()
+#define SystemAppSuspend()                vTaskSuspend(NULL)
+#define SystemLockContent()               vTaskSuspendAll()
+#define SystemUnlockContent()             xTaskResumeAll()
+#define SystemGetFreeHeapSize()           xPortGetFreeHeapSize()
 
 
-/** application preable */
+/** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)
 
 #define InitSTDIO()                       stdioFIFO_t *stdin  = &((appArgs_t*)appArgument)->stdin;  \

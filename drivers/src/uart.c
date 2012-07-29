@@ -231,7 +231,7 @@ typedef struct TxBuffer_struct
 /** type which contain port information */
 typedef struct PortHandle_struct
 {
-      USART_t *Address;             /* peripheral address */
+      USART_t *Address;                   /* peripheral address */
       RxFIFO_t      RxFIFO;               /* Rx FIFO for IRQ */
       TxBuffer_t    TxBuffer;             /* Tx Buffer for IRQ */
       xTaskHandle   TaskHandle;           /* task handle variable for IRQ */
@@ -254,10 +254,10 @@ static PortHandle_t PortHandle[] =
       #if (UART_1_ENABLE > 0)
       {
             .Address    = USART1,
-            .RxFIFO     = {0},
-            .TxBuffer   = {0},
+            .RxFIFO     = {NULL, 0, 0, 0},
+            .TxBuffer   = {NULL, 0},
             .TaskHandle = NULL,
-            . Lock      = PORT_FREE
+            .Lock       = PORT_FREE
       },
       #endif
       #endif
@@ -266,10 +266,10 @@ static PortHandle_t PortHandle[] =
       #if (UART_2_ENABLE > 0)
       {
             .Address    = USART2,
-            .RxFIFO     = {0},
-            .TxBuffer   = {0},
+            .RxFIFO     = {NULL, 0, 0, 0},
+            .TxBuffer   = {NULL, 0},
             .TaskHandle = NULL,
-            . Lock      = PORT_FREE
+            .Lock       = PORT_FREE
       },
       #endif
       #endif
@@ -278,10 +278,10 @@ static PortHandle_t PortHandle[] =
       #if (UART_3_ENABLE > 0)
       {
             .Address    = USART3,
-            .RxFIFO     = {0},
-            .TxBuffer   = {0},
+            .RxFIFO     = {NULL, 0, 0, 0},
+            .TxBuffer   = {NULL, 0},
             .TaskHandle = NULL,
-            . Lock      = PORT_FREE
+            .Lock       = PORT_FREE
       },
       #endif
       #endif
@@ -290,10 +290,10 @@ static PortHandle_t PortHandle[] =
       #if (UART_4_ENABLE > 0)
       {
             .Address    = UART4,
-            .RxFIFO     = {0},
-            .TxBuffer   = {0},
+            .RxFIFO     = {NULL, 0, 0, 0},
+            .TxBuffer   = {NULL, 0},
             .TaskHandle = NULL,
-            . Lock      = PORT_FREE
+            .Lock       = PORT_FREE
       },
       #endif
       #endif
@@ -302,10 +302,10 @@ static PortHandle_t PortHandle[] =
       #if (UART_5_ENABLE > 0)
       {
             .Address    = UART5,
-            .RxFIFO     = {0},
-            .TxBuffer   = {0},
+            .RxFIFO     = {NULL, 0, 0, 0},
+            .TxBuffer   = {NULL, 0},
             .TaskHandle = NULL,
-            . Lock      = PORT_FREE
+            .Lock       = PORT_FREE
       },
       #endif
       #endif
