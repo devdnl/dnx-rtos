@@ -35,6 +35,8 @@ CSRC = $(sort \
    drivers/src/gpio.c \
    drivers/src/pll.c \
    drivers/src/uart.c \
+   drivers/lib/STM32_ETH_Driver/stm32_eth.c \
+   drivers/lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    kernel/croutine.c \
    kernel/list.c \
    kernel/queue.c \
