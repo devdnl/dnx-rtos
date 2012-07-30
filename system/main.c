@@ -36,6 +36,7 @@
 #include "gpio.h"
 #include "uart.h"
 #include "terminal.h"
+#include "ether.h"
 
 
 /*==================================================================================================
@@ -134,11 +135,13 @@ static void InitTask(void *arg)
       kprintEnable();
 
       /* clear VT100 terminal screen */
-      kprint("\x1B[2J\x1b[0m");
+      clrscr(k);
 
       /* something about board and system */
-      kprint("Board powered by \x1b[32mFreeRTOS\x1b[0m\n");
-      kprint("By \x1B[31mDaniel Zorychta\x1B[0m <\x1B[33mdaniel.zorychta@gmail.com\x1B[0m>\n\n");
+      kprint("Board powered by "); fontGreen(k); kprint("FreeRTOS\n"); resetAttr(k);
+
+      kprint("By "); fontCyan(k); kprint("Daniel Zorychta ");
+      fontYellow(k); kprint("<daniel.zorychta@gmail.com>\n\n"); resetAttr(k);
 
       /* info about system start */
       kprint("initd [%d]: kernel print started\n", TaskGetTickCount());
@@ -147,26 +150,27 @@ static void InitTask(void *arg)
       /*--------------------------------------------------------------------------------------------
        * driver initialization
        *------------------------------------------------------------------------------------------*/
-
+      ETHER_Init();
 
       /*--------------------------------------------------------------------------------------------
        * starting terminal
        *------------------------------------------------------------------------------------------*/
-      kprint("initd [%d]: starting interactive console...", TaskGetTickCount());
+      kprint("initd [%d]: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
       appArgs_t *stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
 
       if (stdio == NULL)
       {
-            kprint("[\x1b[31mFAILED\x1b[0m]\n");
+            fontRed(k); kprint("FAILED\n"); resetAttr(k);
             kprint("Probably no enough free space. Restarting board...");
+            TaskResumeAll();
             TaskDelay(5000);
             NVIC_SystemReset();
       }
       else
       {
-            kprint("[\x1b[32mSUCCESS\x1b[0m]\n");
+            fontGreen(k); kprint("SUCCESS\n"); resetAttr(k);
       }
 
       /* initd info about stack usage */
@@ -208,7 +212,9 @@ static void InitTask(void *arg)
                         kprint("initd [%d]: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
 
                         vTaskEndScheduler();
-                        while (TRUE) TaskDelay(1000);
+
+                        while (TRUE)
+                              TaskDelay(1000);
                   }
 
                   stdoutEmpty = FALSE;

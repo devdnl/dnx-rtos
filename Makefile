@@ -32,6 +32,7 @@
 CSRC = $(sort \
 	app/terminal/terminal.c \
    cpu/stm32/stm32f10x_vectors.c \
+   drivers/src/ether.c \
    drivers/src/gpio.c \
    drivers/src/pll.c \
    drivers/src/uart.c \
