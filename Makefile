@@ -45,7 +45,7 @@ CSRC = $(sort \
    kernel/timers.c \
    kernel/portable/GCC/ARM_CM3/port.c \
    kernel/portable/MemMang/heap_2.c \
-   system/main.c \
+   system/src/main.c \
    system/src/appruntime.c \
    system/src/hooks.c \
    system/src/idle.c \
@@ -75,6 +75,7 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    drivers \
    drivers/cfg \
    kernel/include \
+   system \
    )
 
 ####################################################################################################
