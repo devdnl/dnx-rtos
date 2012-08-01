@@ -43,7 +43,7 @@
                                    Local symbolic constants/macros
 ==================================================================================================*/
 /** InitTask stack size */
-#define INITTASK_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
+#define INITTASK_STACK_SIZE               (4 * MINIMAL_STACK_SIZE)
 
 
 /*==================================================================================================

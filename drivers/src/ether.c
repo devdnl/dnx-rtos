@@ -32,6 +32,7 @@
                                             Include files
 ==================================================================================================*/
 #include "ether.h"
+#include "ether_cfg.h"
 #include "stm32_eth.h"
 
 
@@ -73,7 +74,72 @@ stdStatus_t ETHER_Init(void)
 {
       kprint("Ethernet interface configuration... ");
 
-      fontRed(k); kprint("FAILED\n"); resetAttr(k);
+      /* enable Ethernet clock */
+      RCC->AHBENR |= RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN;
+
+      /* enable Ethernet IRQ */
+      NVIC_EnableIRQ(ETH_IRQn);
+
+      /* configure Ethernet --------------------------------------------------------------------- */
+      ETH_InitTypeDef ETH_InitStructure;
+
+      /* Reset ETHERNET on AHB Bus */
+      ETH_DeInit();
+
+      /* Software reset */
+      ETH_SoftwareReset();
+
+      /* Wait for software reset */
+      while (ETH_GetSoftwareResetStatus() == SET);
+
+      ETH_StructInit(&ETH_InitStructure);
+
+      /* MAC configuration */
+      ETH_InitStructure.ETH_AutoNegotiation          = ETH_AutoNegotiation_Enable;
+      ETH_InitStructure.ETH_LoopbackMode             = ETH_LoopbackMode_Disable;
+      ETH_InitStructure.ETH_RetryTransmission        = ETH_RetryTransmission_Disable;
+      ETH_InitStructure.ETH_AutomaticPadCRCStrip     = ETH_AutomaticPadCRCStrip_Disable;
+      ETH_InitStructure.ETH_ReceiveAll               = ETH_ReceiveAll_Disable;
+      ETH_InitStructure.ETH_BroadcastFramesReception = ETH_BroadcastFramesReception_Enable;
+      ETH_InitStructure.ETH_PromiscuousMode          = ETH_PromiscuousMode_Disable;
+      ETH_InitStructure.ETH_MulticastFramesFilter    = ETH_MulticastFramesFilter_Perfect;
+      ETH_InitStructure.ETH_UnicastFramesFilter      = ETH_UnicastFramesFilter_Perfect;
+      ETH_InitStructure.ETH_Speed                    = ETH_Speed_10M;
+      #ifdef CHECKSUM_BY_HARDWARE
+            ETH_InitStructure.ETH_ChecksumOffload    = ETH_ChecksumOffload_Enable;
+      #endif
+
+      /*
+       * Ethernet DMA configuration
+       * When we use the Checksum offload feature, we need to enable the Store and Forward mode:
+       * the store and forward guarantee that a whole frame is stored in the FIFO, so the MAC can
+       * insert/verify the checksum, if the checksum is OK the DMA can handle the frame otherwise
+       * the frame is dropped
+       */
+      ETH_InitStructure.ETH_DropTCPIPChecksumErrorFrame = ETH_DropTCPIPChecksumErrorFrame_Enable;
+      ETH_InitStructure.ETH_ReceiveStoreForward         = ETH_ReceiveStoreForward_Enable;
+      ETH_InitStructure.ETH_TransmitStoreForward        = ETH_TransmitStoreForward_Enable;
+      ETH_InitStructure.ETH_ForwardErrorFrames          = ETH_ForwardErrorFrames_Disable;
+      ETH_InitStructure.ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Disable;
+      ETH_InitStructure.ETH_SecondFrameOperate          = ETH_SecondFrameOperate_Enable;
+      ETH_InitStructure.ETH_AddressAlignedBeats         = ETH_AddressAlignedBeats_Enable;
+      ETH_InitStructure.ETH_FixedBurst                  = ETH_FixedBurst_Enable;
+      ETH_InitStructure.ETH_RxDMABurstLength            = ETH_RxDMABurstLength_32Beat;
+      ETH_InitStructure.ETH_TxDMABurstLength            = ETH_TxDMABurstLength_32Beat;
+      ETH_InitStructure.ETH_DMAArbitration              = ETH_DMAArbitration_RoundRobin_RxTx_2_1;
+
+      /* Configure Ethernet */
+      if (ETH_Init(&ETH_InitStructure, ETHER_PHY_ADDRESS) == TRUE)
+      {
+            /* Enable the Ethernet Rx Interrupt */
+            ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
+
+            fontGreen(k); kprint("SUCCESS\n"); resetAttr(k);
+      }
+      else
+      {
+            fontRed(k); kprint("FAILED\n"); resetAttr(k);
+      }
 
       return STD_STATUS_OK;
 }
@@ -178,6 +244,29 @@ stdStatus_t ETHER_IOCtl(dev_t dev, IORq_t ioRq, void *data)
 
       return STD_STATUS_OK;
 }
+
+
+//================================================================================================//
+/**
+ * @brief Ethernet Interrupt
+ */
+//================================================================================================//
+void ETH_IRQHandler(void)
+{
+
+}
+
+
+//================================================================================================//
+/**
+ * @brief Ethernet wakeup Interrupt
+ */
+//================================================================================================//
+void ETH_WKUP_IRQHandler(void)
+{
+
+}
+
 
 #ifdef __cplusplus
       }
