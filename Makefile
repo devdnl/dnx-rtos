@@ -45,6 +45,35 @@ CSRC = $(sort \
    kernel/timers.c \
    kernel/portable/GCC/ARM_CM3/port.c \
    kernel/portable/MemMang/heap_2.c \
+   lib/lwip/api/tcpip.c \
+   lib/lwip/api/api_lib.c \
+   lib/lwip/api/netbuf.c \
+   lib/lwip/api/netifapi.c \
+   lib/lwip/api/netdb.c \
+   lib/lwip/api/api_msg.c \
+   lib/lwip/api/err.c \
+   lib/lwip/core/stats.c \
+   lib/lwip/core/sys.c \
+   lib/lwip/core/tcp.c \
+   lib/lwip/core/tcp_in.c \
+   lib/lwip/core/tcp_out.c \
+   lib/lwip/core/udp.c \
+   lib/lwip/core/dhcp.c \
+   lib/lwip/core/init.c \
+   lib/lwip/core/mem.c \
+   lib/lwip/core/memp.c \
+   lib/lwip/core/netif.c \
+   lib/lwip/core/pbuf.c \
+   lib/lwip/core/raw.c \
+   lib/lwip/core/ipv4/autoip.c \
+   lib/lwip/core/ipv4/icmp.c \
+   lib/lwip/core/ipv4/igmp.c \
+   lib/lwip/core/ipv4/inet.c \
+   lib/lwip/core/ipv4/inet_chksum.c \
+   lib/lwip/core/ipv4/ip.c \
+   lib/lwip/core/ipv4/ip_addr.c \
+   lib/lwip/core/ipv4/ip_frag.c \
+   lib/lwip/netif/etharp.c \
    system/src/main.c \
    system/src/appruntime.c \
    system/src/hooks.c \
@@ -75,6 +104,9 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    drivers \
    drivers/cfg \
    kernel/include \
+   lib/lwip/include \
+   lib/lwip/include/ipv4 \
+   lib/lwip/port \
    system \
    )
 
