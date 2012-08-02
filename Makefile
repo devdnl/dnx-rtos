@@ -105,7 +105,9 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    drivers/cfg \
    kernel/include \
    lib/lwip/include \
+   lib/lwip/include/lwip \
    lib/lwip/include/ipv4 \
+   lib/lwip/include/ipv4/lwip \
    lib/lwip/port \
    system \
    )
