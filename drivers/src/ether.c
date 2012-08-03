@@ -135,13 +135,15 @@ stdStatus_t ETHER_Init(void)
             ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
 
             fontGreen(k); kprint("SUCCESS\n"); resetAttr(k);
+
+            return STD_STATUS_OK;
       }
       else
       {
             fontRed(k); kprint("FAILED\n"); resetAttr(k);
-      }
 
-      return STD_STATUS_OK;
+            return STD_STATUS_ERROR;
+      }
 }
 
 

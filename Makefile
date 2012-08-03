@@ -45,6 +45,7 @@ CSRC = $(sort \
    kernel/timers.c \
    kernel/portable/GCC/ARM_CM3/port.c \
    kernel/portable/MemMang/heap_2.c \
+   lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
    lib/lwip/api/netbuf.c \
