@@ -26,9 +26,9 @@
 #include "lwip/dhcp.h"
 #include "ethernetif.h"
 #include "netconf.h"
-#include "system.h"
 #include "lwipopts.h"
 #include "lwip/init.h"
+#include "lwip/tcp_impl.h"
 
 #define TCP_TMR_INTERVAL            250 /* FIXME */
 

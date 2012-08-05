@@ -55,7 +55,7 @@
 #include "err.h"
 #include "ethernetif.h"
 
-#include "main.h"
+//#include "main.h"
 #include "stm32_eth.h"
 #include <string.h>
 
@@ -202,6 +202,8 @@ low_level_init(struct netif *netif)
 static err_t
 low_level_output(struct netif *netif, struct pbuf *p)
 {
+  (void)netif;
+
   struct pbuf *q;
   int l = 0;
   u8 *buffer =  (u8 *)ETH_GetCurrentTxBuffer();
@@ -228,6 +230,8 @@ low_level_output(struct netif *netif, struct pbuf *p)
 static struct pbuf *
 low_level_input(struct netif *netif)
 {
+  (void)netif;
+
   struct pbuf *p, *q;
   u16_t len;
   int l =0;
@@ -369,7 +373,7 @@ ethernetif_init(struct netif *netif)
 FrameTypeDef ETH_RxPkt_ChainMode(void)
 {
   u32 framelength = 0;
-  FrameTypeDef frame = {0,0};
+  FrameTypeDef frame = {0,0, NULL};
 
   /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
   if((DMARxDescToGet->Status & ETH_DMARxDesc_OWN) != (u32)RESET)

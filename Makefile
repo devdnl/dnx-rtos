@@ -30,7 +30,7 @@
 # INSERT HERE C SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC = $(sort \
-	app/terminal/terminal.c \
+   app/terminal/terminal.c \
    cpu/stm32/stm32f10x_vectors.c \
    drivers/src/ether.c \
    drivers/src/gpio.c \
@@ -66,6 +66,8 @@ CSRC = $(sort \
    lib/lwip/core/netif.c \
    lib/lwip/core/pbuf.c \
    lib/lwip/core/raw.c \
+   lib/lwip/core/def.c \
+   lib/lwip/core/timers.c \
    lib/lwip/core/ipv4/autoip.c \
    lib/lwip/core/ipv4/icmp.c \
    lib/lwip/core/ipv4/igmp.c \
@@ -75,6 +77,7 @@ CSRC = $(sort \
    lib/lwip/core/ipv4/ip_addr.c \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
+   lib/lwip/port/ethernetif.c \
    system/src/main.c \
    system/src/appruntime.c \
    system/src/hooks.c \
@@ -105,11 +108,14 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    drivers \
    drivers/cfg \
    kernel/include \
+   lib/lwip \
    lib/lwip/include \
    lib/lwip/include/lwip \
    lib/lwip/include/ipv4 \
    lib/lwip/include/ipv4/lwip \
+   lib/lwip/include/netif \
    lib/lwip/port \
+   lib/lwip/port/arch \
    system \
    )
 

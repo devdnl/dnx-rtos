@@ -66,8 +66,9 @@
 //================================================================================================//
 APPLICATION(terminal)
 {
-      InitSTDIO();
-      InitArgvAs(u8_t);
+      InitApp();
+
+      (void) argv;
 
       u32_t   cnt = 0;
       u8_t    *mem = NULL;

@@ -100,10 +100,9 @@
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)
 
-#define InitSTDIO()                       stdioFIFO_t *stdin  = &((appArgs_t*)appArgument)->stdin;  \
-                                          stdioFIFO_t *stdout = &((appArgs_t*)appArgument)->stdout
-
-#define InitArgvAs(argvType)              argvType *argv = ((appArgs_t*)appArgument)->arg
+#define InitApp()                         stdioFIFO_t *stdin  = &((appArgs_t*)appArgument)->stdin; \
+                                          stdioFIFO_t *stdout = &((appArgs_t*)appArgument)->stdout;\
+                                          ch_t *argv = ((appArgs_t*)appArgument)->arg
 
 
 /*==================================================================================================
