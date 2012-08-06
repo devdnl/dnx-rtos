@@ -39,6 +39,8 @@
 #include "ether.h"
 #include "netconf.h"
 
+#include "lwiptest.h"
+
 
 /*==================================================================================================
                                    Local symbolic constants/macros
@@ -149,12 +151,14 @@ static void InitTask(void *arg)
       kprint("initd [%d]: init daemon started\n", TaskGetTickCount());
 
       /*--------------------------------------------------------------------------------------------
-       * driver initialization
+       * user initialization
        *------------------------------------------------------------------------------------------*/
       if (ETHER_Init() == STD_STATUS_OK)
       {
             LwIP_Init();
       }
+
+      TaskCreate(lwiptest, "lwiptest", LWIPTEST_STACK_SIZE, NULL, 3, NULL);
 
       /*--------------------------------------------------------------------------------------------
        * starting terminal

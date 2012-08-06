@@ -105,7 +105,7 @@ stdStatus_t ETHER_Init(void)
       ETH_InitStructure.ETH_PromiscuousMode          = ETH_PromiscuousMode_Disable;
       ETH_InitStructure.ETH_MulticastFramesFilter    = ETH_MulticastFramesFilter_Perfect;
       ETH_InitStructure.ETH_UnicastFramesFilter      = ETH_UnicastFramesFilter_Perfect;
-      ETH_InitStructure.ETH_Speed                    = ETH_Speed_10M;
+      ETH_InitStructure.ETH_Speed                    = ETH_Speed_100M;
       #ifdef CHECKSUM_BY_HARDWARE
             ETH_InitStructure.ETH_ChecksumOffload    = ETH_ChecksumOffload_Enable;
       #endif
