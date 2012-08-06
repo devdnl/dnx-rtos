@@ -752,7 +752,6 @@ void (*const vectors[])(void) __attribute__ ((section(".vectors"))) =
    __Reserved_47_IRQHandler,
    __Reserved_48_IRQHandler,
    __Reserved_49_IRQHandler,
-   __Reserved_50_IRQHandler,
    TIM5_IRQHandler,                         /* TIM5 global Interrupt                              */
    SPI3_IRQHandler,                         /* SPI3 global Interrupt                              */
    UART4_IRQHandler,                        /* UART4 global Interrupt                             */

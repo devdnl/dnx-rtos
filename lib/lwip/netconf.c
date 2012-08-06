@@ -61,6 +61,9 @@ uint8_t Server = 0;
 /* Private function prototypes -----------------------------------------------*/
 //extern void client_init(void);
 //extern void server_init(void);
+
+void LwIP_Periodic_Handle(void *argv);
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -68,7 +71,7 @@ uint8_t Server = 0;
  * @param  None
  * @retval None
  */
-void LwIP_Init(void)
+stdStatus_t LwIP_Init(void)
 {
       struct ip_addr ipaddr;
       struct ip_addr netmask;
@@ -109,18 +112,12 @@ void LwIP_Init(void)
 
        The init function pointer must point to a initialization function for
        your ethernet netif interface. The following code illustrates it's use.*/
-      if (netif_add(&netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &ethernet_input) != NULL)
-      {
-            fontGreen(k);
-            kprint("SUCCESS\n");
-            resetAttr(k);
-      }
-      else
+      if (netif_add(&netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &ethernet_input) == NULL)
       {
             fontRed(k);
             kprint("FAILED\n");
             resetAttr(k);
-            goto LwIP_Init_end;
+            goto LwIP_Init_exit_Failure;
       }
 
       /*  Registers the default network interface.*/
@@ -137,8 +134,17 @@ void LwIP_Init(void)
       /*  When the netif is fully configured this function must be called.*/
       netif_set_up(&netif);
 
-      LwIP_Init_end:
-            return;
+      /* start task which periodically perform LwIP */
+      if (TaskCreate(LwIP_Periodic_Handle, "lwipd", MINIMAL_STACK_SIZE, NULL, 3, NULL) != pdPASS)
+            goto LwIP_Init_exit_Failure;
+
+      fontGreen(k);
+      kprint("SUCCESS\n");
+      resetAttr(k);
+      return STD_STATUS_OK;
+
+      LwIP_Init_exit_Failure:
+            return STD_STATUS_ERROR;
 }
 
 /**
@@ -157,34 +163,43 @@ void LwIP_Pkt_Handle(void)
  * @param  localtime the current LocalTime value
  * @retval None
  */
-void LwIP_Periodic_Handle(volatile uint32_t localtime)
+void LwIP_Periodic_Handle(void *argv)
 {
-      /* TCP periodic process every 250 ms */
-      if (localtime - TCPTimer >= TCP_TMR_INTERVAL)
+      u32_t localtime = TaskGetTickCount();
+
+      while (TRUE)
       {
-            TCPTimer = localtime;
-            tcp_tmr();
-      }
-      /* ARP periodic process every 5s */
-      if (localtime - ARPTimer >= ARP_TMR_INTERVAL)
-      {
-            ARPTimer = localtime;
-            etharp_tmr();
+            /* TCP periodic process every 250 ms */
+            if (localtime - TCPTimer >= TCP_TMR_INTERVAL)
+            {
+                  TCPTimer = localtime;
+                  tcp_tmr();
+            }
+
+            /* ARP periodic process every 5s */
+            if (localtime - ARPTimer >= ARP_TMR_INTERVAL)
+            {
+                  ARPTimer = localtime;
+                  etharp_tmr();
+            }
+
+            #if LWIP_DHCP
+            /* Fine DHCP periodic process every 500ms */
+            if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS)
+            {
+                  DHCPfineTimer = localtime;
+                  dhcp_fine_tmr();
+            }
+            /* DHCP Coarse periodic process every 60s */
+            if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS)
+            {
+                  DHCPcoarseTimer = localtime;
+                  dhcp_coarse_tmr();
+            }
+            #endif
+
+            TaskDelay(10);
       }
 
-      #if LWIP_DHCP
-      /* Fine DHCP periodic process every 500ms */
-      if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS)
-      {
-            DHCPfineTimer = localtime;
-            dhcp_fine_tmr();
-      }
-      /* DHCP Coarse periodic process every 60s */
-      if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS)
-      {
-            DHCPcoarseTimer = localtime;
-            dhcp_coarse_tmr();
-      }
-      #endif
-
+      TaskTerminate();
 }

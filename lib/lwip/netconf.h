@@ -30,10 +30,8 @@
 #include "system.h"
 
 /* Includes ------------------------------------------------------------------*/
-void LwIP_Init(void);
+ stdStatus_t LwIP_Init(void);
 void LwIP_Pkt_Handle(void);
-void LwIP_Periodic_Handle(volatile uint32_t localtime);
-
 
 #ifdef __cplusplus
 }
