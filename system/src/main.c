@@ -40,6 +40,7 @@
 #include "netconf.h"
 
 #include "lwiptest.h"
+#include "httpd.h"
 
 
 /*==================================================================================================
@@ -158,7 +159,8 @@ static void InitTask(void *arg)
             LwIP_Init();
       }
 
-      TaskCreate(lwiptest, "lwiptest", LWIPTEST_STACK_SIZE, NULL, 3, NULL);
+      TaskCreate(lwiptest, "lwiptest", LWIPTEST_STACK_SIZE, NULL, 3, NULL); /* FIXME sterowany demon telnetd*/
+      TaskCreate(httpd_init, "httpd", HTTPD_STACK_SIZE, NULL, 3, NULL);     /* FIXME sterowany demon httpd */
 
       /*--------------------------------------------------------------------------------------------
        * starting terminal
