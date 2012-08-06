@@ -91,8 +91,6 @@ void lwiptest(void *argv)
 {
       (void) argv;
 
-      kprint("lwiptest started.\n");
-
       struct tcp_pcb *pcb;
 
       /* Create a new TCP control block  */

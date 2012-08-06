@@ -1,44 +1,64 @@
-																			   /**
-  ******************************************************************************
-  * @file    netconf.h
-  * @author  MCD Application Team
-  * @version V1.0.0
-  * @date    11/20/2009
-  * @brief   This file contains all the functions prototypes for the netconf.c
-  *          file.
-  ******************************************************************************
-  * @copy
-  *
-  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
-  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
-  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
-  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
-  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-  *
-  * <h2><center>&copy; COPYRIGHT 2009 STMicroelectronics</center></h2>
-  */
+#ifndef NETCONF_H_
+#define NETCONF_H_
+/*=============================================================================================*//**
+@file    netconf.h
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __NETCONF_H
-#define __NETCONF_H
+@author  Daniel Zorychta
+
+@brief   This file support low level configuration for Ethernet interface and TCP/IP stack
+
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+*//*==============================================================================================*/
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
+/*==================================================================================================
+                                            Include files
+==================================================================================================*/
 #include "system.h"
 
-/* Includes ------------------------------------------------------------------*/
- stdStatus_t LwIP_Init(void);
-void LwIP_Pkt_Handle(void);
+
+/*==================================================================================================
+                                  Exported symbolic constants/macros
+==================================================================================================*/
+
+
+/*==================================================================================================
+                                  Exported types, enums definitions
+==================================================================================================*/
+
+
+/*==================================================================================================
+                                     Exported object declarations
+==================================================================================================*/
+
+
+/*==================================================================================================
+                                     Exported function prototypes
+==================================================================================================*/
+extern stdStatus_t LwIP_Init(void);
+extern void        LwIP_Pkt_Handle(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __NETCONF_H */
-
-
-/******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/
-
+#endif /* NETCONF_H_ */
