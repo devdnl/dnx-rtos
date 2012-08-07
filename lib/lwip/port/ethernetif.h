@@ -1,36 +1,71 @@
-#ifndef __ETHERNETIF_H__
-#define __ETHERNETIF_H__
+#ifndef ETHERNETIF_H_
+#define ETHERNETIF_H_
+/*=============================================================================================*//**
+@file    ethernetif.h
+
+@author  Daniel Zorychta
+
+@brief   This file support low level Ethernet interface
+
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
+*//*==============================================================================================*/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*==================================================================================================
+                                            Include files
+==================================================================================================*/
 #include "lwip/err.h"
 #include "lwip/netif.h"
 
-err_t ethernetif_init(struct netif *netif);
-err_t ethernetif_input(struct netif *netif);
-struct netif *ethernetif_register(void);
-int ethernetif_poll(void);
-void Set_MAC_Address(unsigned char* macadd);
 
-#ifdef SERVER
+/*==================================================================================================
+                                  Exported symbolic constants/macros
+==================================================================================================*/
 
-#define MAC_ADDR0 0x00
-#define MAC_ADDR1 0x00
-#define MAC_ADDR2 0x00
-#define MAC_ADDR3 0x00
-#define MAC_ADDR4 0x00
-#define MAC_ADDR5 0x01
 
-#else
+/*==================================================================================================
+                                  Exported types, enums definitions
+==================================================================================================*/
 
-#define MAC_ADDR0 0x00
-#define MAC_ADDR1 0x00
-#define MAC_ADDR2 0x00
-#define MAC_ADDR3 0x00
-#define MAC_ADDR4 0x00
-//#define MAC_ADDR5 0x02
-#define MAC_ADDR5 0x03
-//#define MAC_ADDR5 0x04
 
+/*==================================================================================================
+                                     Exported object declarations
+==================================================================================================*/
+
+
+/*==================================================================================================
+                                     Exported function prototypes
+==================================================================================================*/
+extern err_t ethernetif_init(struct netif *netif);
+extern err_t ethernetif_input(struct netif *netif);
+extern void  Set_MAC_Address(unsigned char *macadd);
+
+
+#ifdef __cplusplus
+}
 #endif
 
-#endif 
+#endif /* ETHERNETIF_H_ */
+/*==================================================================================================
+                                             End of file
+==================================================================================================*/
+
