@@ -161,11 +161,11 @@ http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 
         pbuf_free(p);
 
-        ADCVal = 1024;
+        ADCVal = 2048;
         ADCVal = ADCVal/8;
-        Digit1= ADCVal/100;
-        Digit2= (ADCVal-(Digit1*100))/10;
-        Digit3= ADCVal-(Digit1*100)-(Digit2*10);
+        Digit1 = ADCVal/100;
+        Digit2 = (ADCVal-(Digit1*100))/10;
+        Digit3 = ADCVal-(Digit1*100)-(Digit2*10);
         /* Update the ADC value in STM32F107ADC.html */
         *((data_STM32F107ADC_html)+ 0xb47+92) = 0x30 + Digit1; /* ADC value 1st digit */
         *((data_STM32F107ADC_html)+ 0xb48+92) = 0x30 + Digit2; /* ADC value 2nd digit */

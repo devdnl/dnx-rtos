@@ -168,7 +168,7 @@ static void InitTask(void *arg)
       kprint("initd [%d]: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
-      appArgs_t *stdio = StartApplication(terminal, "terminal", TERMINAL_STACK_SIZE, NULL);
+      appArgs_t *stdio = StartApplication(terminal, TERMINAL_NAME, TERMINAL_STACK_SIZE, NULL);
 
       if (stdio == NULL)
       {

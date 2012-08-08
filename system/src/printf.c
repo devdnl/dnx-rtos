@@ -172,11 +172,14 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue)
 u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 {
       va_list args;
-      u32_t n;
+      u32_t n = 0;
 
-      va_start(args, format);
-      n = vsnfprint(FALSE, stream, size, format, args);
-      va_end(args);
+      if (stream)
+      {
+            va_start(args, format);
+            n = vsnfprint(FALSE, stream, size, format, args);
+            va_end(args);
+      }
 
       return n;
 }
@@ -196,11 +199,14 @@ u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...)
 {
       va_list args;
-      u32_t n;
+      u32_t n = 0;
 
-      va_start(args, format);
-      n = vsnfprint(TRUE, stdout, 0, format, args);
-      va_end(args);
+      if (stdout)
+      {
+            va_start(args, format);
+            n = vsnfprint(TRUE, stdout, 0, format, args);
+            va_end(args);
+      }
 
       return n;
 }
@@ -247,23 +253,26 @@ u32_t kprint(const ch_t *format, ...)
 //================================================================================================//
 void fputChar(stdioFIFO_t *stdout, ch_t c)
 {
-      TaskSuspendAll();
-
-      if (stdout->Level < configSTDIO_BUFFER_SIZE)
+      if (stdout)
       {
-            stdout->Buffer[stdout->TxIdx++] = c;
+            TaskSuspendAll();
 
-            if (stdout->TxIdx >= configSTDIO_BUFFER_SIZE)
-                  stdout->TxIdx = 0;
+            if (stdout->Level < configSTDIO_BUFFER_SIZE)
+            {
+                  stdout->Buffer[stdout->TxIdx++] = c;
 
-            stdout->Level++;
+                  if (stdout->TxIdx >= configSTDIO_BUFFER_SIZE)
+                        stdout->TxIdx = 0;
 
-            TaskResumeAll();
-      }
-      else
-      {
-            TaskResumeAll();
-            TaskDelay(10);
+                  stdout->Level++;
+
+                  TaskResumeAll();
+            }
+            else
+            {
+                  TaskResumeAll();
+                  TaskDelay(10);
+            }
       }
 }
 
@@ -279,29 +288,37 @@ void fputChar(stdioFIFO_t *stdout, ch_t c)
 //================================================================================================//
 ch_t fgetChar(stdioFIFO_t *stdin)
 {
-      while (TRUE)
+      ch_t out = ' ';
+
+      if (stdin)
       {
-            TaskSuspendAll();
-
-            if (stdin->Level > 0)
+            while (TRUE)
             {
-                  ch_t out = stdin->Buffer[stdin->RxIdx++];
+                  TaskSuspendAll();
 
-                  if (stdin->RxIdx >= configSTDIO_BUFFER_SIZE)
-                        stdin->RxIdx = 0;
+                  if (stdin->Level > 0)
+                  {
+                        out = stdin->Buffer[stdin->RxIdx++];
 
-                  stdin->Level--;
+                        if (stdin->RxIdx >= configSTDIO_BUFFER_SIZE)
+                              stdin->RxIdx = 0;
 
-                  TaskResumeAll();
+                        stdin->Level--;
 
-                  return out;
-            }
-            else
-            {
-                  TaskResumeAll();
-                  TaskDelay(10);
+                        TaskResumeAll();
+
+                        goto fgetChar_end;
+                  }
+                  else
+                  {
+                        TaskResumeAll();
+                        TaskDelay(10);
+                  }
             }
       }
+
+      fgetChar_end:
+            return out;
 }
 
 

@@ -41,6 +41,7 @@ extern "C" {
 #include "netconf.h"
 #include "lwip/init.h"
 #include "lwip/tcp_impl.h"
+#include "stm32_eth.h"
 
 
 /*==================================================================================================
@@ -56,7 +57,7 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static void LwIP_Periodic_Handle(void *argv);
+static void LwIP_Daemon(void *argv);
 
 
 /*==================================================================================================
@@ -70,6 +71,8 @@ static volatile u32_t ARPTimer = 0;
 static volatile u32_t DHCPfineTimer   = 0;
 static volatile u32_t DHCPcoarseTimer = 0;
 #endif
+
+static bool_t packetReceived = FALSE;
 
 
 /*==================================================================================================
@@ -146,7 +149,7 @@ stdStatus_t LwIP_Init(void)
       netif_set_up(&netif);
 
       /* start task which periodically perform LwIP */
-      if (TaskCreate(LwIP_Periodic_Handle, "lwipd", MINIMAL_STACK_SIZE, NULL, 3, NULL) != pdPASS)
+      if (TaskCreate(LwIP_Daemon, "lwipd", 4*MINIMAL_STACK_SIZE, NULL, 3, NULL) != pdPASS)
             goto LwIP_Init_exit_Failure;
 
       /* configuration finished successfully */
@@ -161,15 +164,15 @@ LwIP_Init_exit_Failure:
 }
 
 
+
 //================================================================================================//
 /**
- * @brief Called when a frame is received
+ * @brief TEST
  */
 //================================================================================================//
-void LwIP_Pkt_Handle(void)
+void LwIP_SetReceiveFlag(void)
 {
-      /* read a received packet from the Ethernet buffers and send it to the lwIP for handling */
-      ethernetif_input(&netif);
+      packetReceived = TRUE;
 }
 
 
@@ -180,14 +183,30 @@ void LwIP_Pkt_Handle(void)
  * @param argument list
  */
 //================================================================================================//
-static void LwIP_Periodic_Handle(void *argv)
+static void LwIP_Daemon(void *argv)
 {
       (void) argv;
 
-      u32_t localtime = TaskGetTickCount();
-
       while (TRUE)
       {
+            /* receive packet from MAC */
+            if (packetReceived)
+            {
+                  /* Handles all the received frames */
+                  while(ETH_GetRxPktSize() != 0)
+                  {
+                        /*
+                         * read a received packet from the Ethernet buffers and send it to the lwIP
+                         * for handling
+                         */
+                        ethernetif_input(&netif);
+                  }
+
+                  packetReceived = FALSE;
+            }
+
+            u32_t localtime = TaskGetTickCount();
+
             /* TCP periodic process every 250 ms */
             if (localtime - TCPTimer >= TCP_TMR_INTERVAL)
             {

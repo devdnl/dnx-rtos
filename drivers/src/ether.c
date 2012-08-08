@@ -256,11 +256,7 @@ stdStatus_t ETHER_IOCtl(dev_t dev, IORq_t ioRq, void *data)
 //================================================================================================//
 void ETH_IRQHandler(void)
 {
-      /* Handles all the received frames */
-      while(ETH_GetRxPktSize() != 0)
-      {
-            LwIP_Pkt_Handle();
-      }
+      LwIP_SetReceiveFlag();
 
       /* Clear the Eth DMA Rx IT pending bits */
       ETH_DMAClearITPendingBit(ETH_DMA_IT_R);
