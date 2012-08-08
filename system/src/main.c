@@ -210,11 +210,11 @@ static void InitTask(void *arg)
 
                   UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &data);
 
-                  if (data <= 1)
+                  if (data == STD_STATUS_ERROR || data == STD_STATUS_OK)
                   {
                         Free(stdio);
 
-                        if (data == 0)
+                        if (data == STD_STATUS_OK)
                               kprint("\ninitd [%d]: terminal was terminated.\n", TaskGetTickCount());
                         else
                               kprint("\ninitd [%d]: terminal was terminated with error.\n", TaskGetTickCount());

@@ -90,7 +90,11 @@ appArgs_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, voi
             stdioPtr->stdout.TxIdx = 0;
 
             /* start application task */
-            TaskCreate(app, appName, stackSize, stdioPtr, 2, NULL);
+            if (TaskCreate(app, appName, stackSize, stdioPtr, 2, NULL) != pdPASS)
+            {
+                  Free(stdioPtr);
+                  stdioPtr = NULL;
+            }
       }
 
       return stdioPtr;

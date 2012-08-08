@@ -660,11 +660,14 @@ fscan_end:
 //================================================================================================//
 void fclearSTDIO(stdioFIFO_t *stdio)
 {
-      TaskSuspendAll();
-      stdio->Level = 0;
-      stdio->RxIdx = 0;
-      stdio->TxIdx = 0;
-      TaskResumeAll();
+      if (stdio)
+      {
+            TaskSuspendAll();
+            stdio->Level = 0;
+            stdio->RxIdx = 0;
+            stdio->TxIdx = 0;
+            TaskResumeAll();
+      }
 }
 
 
