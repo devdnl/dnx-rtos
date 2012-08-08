@@ -59,7 +59,7 @@
                                       Local function prototypes
 ==================================================================================================*/
 static void InitSystem(void);
-static void InitTask(void *arg);
+static void Initd(void *arg);
 
 
 /*==================================================================================================
@@ -85,7 +85,7 @@ int main(void)
 {
       InitSystem();
 
-      TaskCreate(InitTask, "initd", INITTASK_STACK_SIZE, NULL, 3, NULL);
+      TaskCreate(Initd, "initd", INITTASK_STACK_SIZE, NULL, 3, NULL);
 
       vTaskStartScheduler();
 
@@ -124,7 +124,7 @@ static void InitSystem(void)
  * applications' stdios with hardware layer.
  */
 //================================================================================================//
-static void InitTask(void *arg)
+static void Initd(void *arg)
 {
       (void) arg;
 
@@ -154,13 +154,39 @@ static void InitTask(void *arg)
       /*--------------------------------------------------------------------------------------------
        * user initialization
        *------------------------------------------------------------------------------------------*/
-      if (ETHER_Init() == STD_STATUS_OK)
-      {
-            LwIP_Init();
-      }
+      if (ETHER_Init() != STD_STATUS_OK)
+            goto initd_net_end;
 
-      TaskCreate(lwiptest, "lwiptest", LWIPTEST_STACK_SIZE, NULL, 3, NULL); /* FIXME sterowany demon telnetd*/
-      TaskCreate(httpd_init, "httpd", HTTPD_STACK_SIZE, NULL, 3, NULL);     /* FIXME sterowany demon httpd */
+      if (LwIP_Init() != STD_STATUS_OK)
+            goto initd_net_end;
+
+      kprint("Starting telnetd... ");
+      if (TaskCreate(telnetd, "telnetd", TELNETD_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+      {
+            fontGreen(k);
+            kprint("SUCCESS\n");
+      }
+      else
+      {
+            fontRed(k);
+            kprint("FAILED\n");
+      }
+      resetAttr(k);
+
+      kprint("Starting httpd... ");
+      if (TaskCreate(httpd_init, "httpd", HTTPD_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+      {
+            fontGreen(k);
+            kprint("SUCCESS\n");
+      }
+      else
+      {
+            fontRed(k);
+            kprint("FAILED\n");
+      }
+      resetAttr(k);
+
+      initd_net_end:
 
       /*--------------------------------------------------------------------------------------------
        * starting terminal

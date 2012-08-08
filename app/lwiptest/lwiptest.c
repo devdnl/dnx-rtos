@@ -87,7 +87,7 @@ static void HelloWorld_conn_err(void *arg, err_t err);
  * @brief
  */
 //================================================================================================//
-void lwiptest(void *argv)
+void telnetd(void *argv)
 {
       (void) argv;
 

@@ -149,7 +149,7 @@ stdStatus_t LwIP_Init(void)
       netif_set_up(&netif);
 
       /* start task which periodically perform LwIP */
-      if (TaskCreate(LwIP_Daemon, "lwipd", 4*MINIMAL_STACK_SIZE, NULL, 3, NULL) != pdPASS)
+      if (TaskCreate(LwIP_Daemon, "lwipd", 4*MINIMAL_STACK_SIZE, NULL, 2, NULL) != pdPASS)
             goto LwIP_Init_exit_Failure;
 
       /* configuration finished successfully */
@@ -159,10 +159,9 @@ stdStatus_t LwIP_Init(void)
       return STD_STATUS_OK;
 
       /* error occur */
-LwIP_Init_exit_Failure:
+      LwIP_Init_exit_Failure:
       return STD_STATUS_ERROR;
 }
-
 
 
 //================================================================================================//

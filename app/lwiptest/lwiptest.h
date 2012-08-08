@@ -40,7 +40,7 @@
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define LWIPTEST_STACK_SIZE               (10 * MINIMAL_STACK_SIZE)
+#define TELNETD_STACK_SIZE               (10 * MINIMAL_STACK_SIZE)
 
 
 /*==================================================================================================
@@ -56,7 +56,7 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void lwiptest(void *argv);
+extern void telnetd(void *argv);
 
 
 #ifdef __cplusplus
