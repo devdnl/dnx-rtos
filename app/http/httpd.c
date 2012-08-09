@@ -153,20 +153,7 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
 
                   if (strncmp(data, "GET /STM32F107ADC", 17) == 0)
                   {
-//                        char Digit1 = 0, Digit2 = 0, Digit3 = 0;
-//                        int ADCVal = 0;
-
                         pbuf_free(p);
-
-//                        ADCVal = 2048;
-//                        ADCVal = ADCVal / 8;
-//                        Digit1 = ADCVal / 100;
-//                        Digit2 = (ADCVal - (Digit1 * 100)) / 10;
-//                        Digit3 = ADCVal - (Digit1 * 100) - (Digit2 * 10);
-//                        /* Update the ADC value in STM32F107ADC.html */
-//                        *((data_STM32F107ADC_html) + 0xb47 + 92) = 0x30 + Digit1; /* ADC value 1st digit */
-//                        *((data_STM32F107ADC_html) + 0xb48 + 92) = 0x30 + Digit2; /* ADC value 2nd digit */
-//                        *((data_STM32F107ADC_html) + 0xb49 + 92) = 0x30 + Digit3; /* ADC value 3rd digit*/
 
                         fs_open("/STM32F107ADC.html", &file);
 
