@@ -80,10 +80,11 @@ CSRC = $(sort \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
-   system/src/main.c \
    system/src/appruntime.c \
    system/src/hooks.c \
    system/src/idle.c \
+   system/src/initd.c \
+   system/src/main.c \
    system/src/printf.c \
    )
 

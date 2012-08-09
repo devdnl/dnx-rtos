@@ -1,11 +1,13 @@
+#ifndef INITD_H_
+#define INITD_H_
 /*=============================================================================================*//**
-@file    mian.c
+@file    initd.h
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief   This file contain initialize and runtime daemon
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,90 +31,42 @@ extern "C" {
 #endif
 
 /*==================================================================================================
-                                             Include files
+                                            Include files
 ==================================================================================================*/
 #include "system.h"
-#include "pll.h"
-#include "gpio.h"
-#include "uart.h"
-#include "initd.h"
 
 
 /*==================================================================================================
-                                   Local symbolic constants/macros
+                                 Exported symbolic constants/macros
+==================================================================================================*/
+/** initd stack size */
+#define INITD_STACK_SIZE                  (4 * MINIMAL_STACK_SIZE)
+
+/** initd name */
+#define INITD_NAME                        "initd"
+
+
+/*==================================================================================================
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                      Local function prototypes
+                                     Exported function prototypes
 ==================================================================================================*/
-static void InitSystem(void);
-
-
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                         Function definitions
-==================================================================================================*/
-
-//================================================================================================//
-/**
- * @brief Main function
- */
-//================================================================================================//
-int main(void)
-{
-      InitSystem();
-
-      TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 3, NULL);
-
-      vTaskStartScheduler();
-
-      return 0;
-}
-
-
-//================================================================================================//
-/**
- * @brief Initialise system
- * Insert here all initialize functions which should be initialized early before application start
- */
-//================================================================================================//
-static void InitSystem(void)
-{
-      /* set interrupt vectors and NVIC priority */
-      SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
-      SCB->AIRCR = 0x05FA0000 | 0x300;
-
-      /* PLL initialization */
-      if (PLL_Init() != STD_STATUS_OK)
-            while (TRUE);
-
-      /* GPIO and AFIO initialization */
-      GPIO_Init();
-
-      /* initialize UART driver */
-      UART_Init();
-}
+void Initd(void *arg);
 
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* INITD_H_ */
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/
