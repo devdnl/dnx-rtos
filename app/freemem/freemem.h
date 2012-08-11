@@ -40,7 +40,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define FREEMEM_STACK_SIZE               (1 * MINIMAL_STACK_SIZE)
+#define FREEMEM_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
 
 /** define application name */
 #define FREEMEM_NAME                     "freemem"

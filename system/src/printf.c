@@ -505,14 +505,14 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                               {
                                     fputChar(stdout, character);
                               }
-                              else if (character == 0x0D)
+                              else if (character == ASCII_CR || character == ASCII_LF)
                               {
                                     *dec *= sign;
                                     fputChar(stdout, '\r');
                                     fputChar(stdout, '\n');
                                     goto fscan_end;
                               }
-                              else if ((character == 0x08) && (streamLen > 1))
+                              else if ((character == ASCII_BS) && (streamLen > 1))
                               {
                                     fprint(stdout, "%c\x1B[K", character);
 
@@ -563,13 +563,13 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                               {
                                     fputChar(stdout, character);
                               }
-                              else if (character == 0x0D)
+                              else if (character == ASCII_CR || character == ASCII_LF)
                               {
                                     fputChar(stdout, '\r');
                                     fputChar(stdout, '\n');
                                     goto fscan_end;
                               }
-                              else if ((character == 0x08) && (streamLen > 1))
+                              else if ((character == ASCII_BS) && (streamLen > 1))
                               {
                                     fprint(stdout, "%c\x1B[K", character);
                                     *hex >>= 4;
@@ -615,13 +615,13 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                               {
                                     fputChar(stdout, character);
                               }
-                              else if (character == 0x0D)
+                              else if (character == ASCII_CR || character == ASCII_LF)
                               {
                                     fputChar(stdout, '\r');
                                     fputChar(stdout, '\n');
                                     goto fscan_end;
                               }
-                              else if ((character == 0x08) && (streamLen > 1))
+                              else if ((character == ASCII_BS) && (streamLen > 1))
                               {
                                     fprint(stdout, "%c\x1B[K", character);
                                     *bin >>= 1;
@@ -661,14 +661,14 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                         {
                               character = fgetChar(stdin);
 
-                              if (character == 0x0D)
+                              if (character == ASCII_CR || character == ASCII_LF)
                               {
                                     *(string++) = 0x00;
                                     fputChar(stdout, '\r');
                                     fputChar(stdout, '\n');
                                     goto fscan_end;
                               }
-                              else if ((character == 0x08) && (streamLen > 1))
+                              else if ((character == ASCII_BS) && (streamLen > 1))
                               {
                                     fprint(stdout, "%c\x1B[K", character);
                                     *(--string) = 0x00;

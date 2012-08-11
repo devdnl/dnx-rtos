@@ -75,8 +75,9 @@ extern "C" {
 #define bgWhite(level)              level##print("\x1B[47m")
 
 /** key definitions */
-#define ASCII_ENTER                 0x0D
-#define ASCII_BACKSPACE             0x08
+#define ASCII_LF                    0x0A
+#define ASCII_CR                    0x0D
+#define ASCII_BS                    0x08
 #define ASCII_NULL                  0x00
 #define ASCII_ESC                   0x1B
 #define ASCII_CANCEL                0x18
