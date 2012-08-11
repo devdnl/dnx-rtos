@@ -1,11 +1,11 @@
-#ifndef APPRUNTIME_H_
-#define APPRUNTIME_H_
+#ifndef REGAPP_H_
+#define REGAPP_H_
 /*=============================================================================================*//**
-@file    appruntime.h
+@file    regapp.h
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief   This file is used to registration applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -39,13 +39,17 @@
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** simpler definition of terminating application */
-#define Exit(exitCode)                    TerminateApplication(stdout, exitCode)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+typedef struct
+{
+      const ch_t *appName;
+      void       (*appPtr)(void *argv);
+      u32_t      stackSize;
+} regAppData_t;
 
 
 /*==================================================================================================
@@ -56,19 +60,14 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern appArgs_t   *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern appArgs_t   *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern appArgs_t   *Exec(const ch_t *name, ch_t *argv);
-extern appArgs_t   *Execd(const ch_t *name, ch_t *argv);
-extern stdStatus_t FreeAppStdio(appArgs_t *appArgs);
-extern void        TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode);
+extern regAppData_t REGAPP_GetAppData(const ch_t *appName);
 
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
-#endif /* APPRUNTIME_H_ */
+#endif /* REGAPP_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

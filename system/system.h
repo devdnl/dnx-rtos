@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-      extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -104,6 +104,9 @@
                                           stdioFIFO_t *stdout = ((appArgs_t*)appArgument)->stdout;\
                                           ch_t        *argv   = ((appArgs_t*)appArgument)->arg
 
+/** array element count */
+#define ARRAY_SIZE(array)                 (sizeof(array)/sizeof(array[0]))
+
 
 /*==================================================================================================
                                   Exported types, enums definitions
@@ -121,7 +124,7 @@
 
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
 #endif /* SYSTEM_H_ */

@@ -28,6 +28,7 @@
                                             Include files
 ==================================================================================================*/
 #include "appruntime.h"
+#include "regapp.h"
 
 
 /*==================================================================================================
@@ -71,9 +72,14 @@
  * @return pointer to the structure with pointers to the STDIO and arguments
  */
 //================================================================================================//
-appArgs_t *RunAsApp(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
+appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
-      appArgs_t *appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
+      appArgs_t *appArgs = NULL;
+
+      if (!app || !stackSize || !appName)
+            goto StartApplication_end;
+
+      appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
 
       if (!appArgs)
             goto StartApplication_end;
@@ -132,9 +138,14 @@ appArgs_t *RunAsApp(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
  * @return pointer to the structure with pointers to the STDIO and arguments
  */
 //================================================================================================//
-appArgs_t *RunAsDaemon(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
+appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
-      appArgs_t *appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
+      appArgs_t *appArgs = NULL;
+
+      if (!app || !stackSize || !appName)
+                  goto RunAsDaemon_end;
+
+      appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
 
       if (appArgs)
       {
@@ -150,7 +161,44 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *ar
             }
       }
 
-      return appArgs;
+      RunAsDaemon_end:
+            return appArgs;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Run task as application using only task name
+ *
+ * @param[in] *name           task name
+ * @param[in] *argv           task arguments
+ *
+ * @return pointer to the structure with pointers to the STDIO and arguments
+ */
+//================================================================================================//
+appArgs_t *Exec(const ch_t *name, ch_t *argv)
+{
+      regAppData_t appData = REGAPP_GetAppData(name);
+
+      return RunAsApp(appData.appPtr, appData.appName, appData.stackSize, argv);
+}
+
+
+//================================================================================================//
+/**
+ * @brief Run task as daemon using only task name
+ *
+ * @param[in] *name           task name
+ * @param[in] *argv           task arguments
+ *
+ * @return pointer to the structure with pointers to the STDIO and arguments
+ */
+//================================================================================================//
+appArgs_t *Execd(const ch_t *name, ch_t *argv)
+{
+      regAppData_t appData = REGAPP_GetAppData(name);
+
+      return RunAsDaemon(appData.appPtr, appData.appName, appData.stackSize, argv);
 }
 
 

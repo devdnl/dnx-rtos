@@ -33,12 +33,11 @@ extern "C" {
 ==================================================================================================*/
 #include "initd.h"
 #include "uart.h"
-#include "terminal.h"
 #include "ether.h"
 #include "netconf.h"
+
 #include "lwiptest.h"
 #include "httpde.h"
-#include "httpd.h"
 
 
 /*==================================================================================================
@@ -147,8 +146,7 @@ void Initd(void *arg)
       kprint("initd [%d]: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
-      appArgs_t *stdio = RunAsApp(terminal, TERMINAL_NAME, TERMINAL_STACK_SIZE, NULL); /* TEST */
-//      appArgs_t *stdio = RunAsApp(httpd, HTTPD_NAME, HTTPD_STACK_SIZE, NULL); /* TEST */
+      appArgs_t *stdio  = Exec("terminal", NULL);
 
       if (stdio == NULL)
       {

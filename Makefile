@@ -30,6 +30,7 @@
 # INSERT HERE C SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC = $(sort \
+	app/regapp.c \
    app/terminal/terminal.c \
    app/lwiptest/lwiptest.c \
    app/http/httpde.c \

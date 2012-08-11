@@ -1,11 +1,9 @@
-#ifndef APPRUNTIME_H_
-#define APPRUNTIME_H_
 /*=============================================================================================*//**
-@file    appruntime.h
+@file    regapp.c
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief   This file is used to registration applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,48 +25,79 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
+#include "regapp.h"
+#include <string.h>
+
+/* include here applications headers */
+#include "terminal.h"
 
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
-==================================================================================================*/
-/** simpler definition of terminating application */
-#define Exit(exitCode)                    TerminateApplication(stdout, exitCode)
-
-
-/*==================================================================================================
-                                  Exported types, enums definitions
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported object declarations
+                                   Local types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported function prototypes
+                                      Local function prototypes
 ==================================================================================================*/
-extern appArgs_t   *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern appArgs_t   *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern appArgs_t   *Exec(const ch_t *name, ch_t *argv);
-extern appArgs_t   *Execd(const ch_t *name, ch_t *argv);
-extern stdStatus_t FreeAppStdio(appArgs_t *appArgs);
-extern void        TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode);
+
+
+/*==================================================================================================
+                                      Local object definitions
+==================================================================================================*/
+const regAppData_t appList[] =
+{
+      {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
+};
+
+
+/*==================================================================================================
+                                     Exported object definitions
+==================================================================================================*/
+
+
+/*==================================================================================================
+                                        Function definitions
+==================================================================================================*/
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+regAppData_t REGAPP_GetAppData(const ch_t *appName)
+{
+      u32_t i;
+
+      for (i = 0; i < ARRAY_SIZE(appList); i++)
+      {
+            if (strcmp(appList[i].appName, appName) == 0)
+            {
+                  return appList[i];
+            }
+      }
+
+      regAppData_t appNULL = {NULL, NULL, 0};
+
+      return appNULL;
+}
 
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
-#endif /* APPRUNTIME_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/
