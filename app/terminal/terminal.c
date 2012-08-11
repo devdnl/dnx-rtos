@@ -44,6 +44,12 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+typedef enum
+{
+      CMD_EXECUTED,
+      CMD_NOT_EXIST,
+      CMD_ALLOC_ERROR,
+} cmdStatus_t;
 
 
 /*==================================================================================================
@@ -70,6 +76,82 @@ void PrintPrompt(void)
 
 //================================================================================================//
 /**
+ * @brief Function find internal terminal commands
+ */
+//================================================================================================//
+cmdStatus_t FindInternalCmd(ch_t *line)
+{
+      /* exit command --------------------------------------------------------------------------- */
+      if (strcmp("exit", line) == 0)
+      {
+            Free(line);
+            print("Exit\n");
+            Exit(STD_RET_OK);
+      }
+
+      /* echo ----------------------------------------------------------------------------------- */
+      if (strncmp("echo ", line, 5) == 0)
+      {
+            print("%s\n", (line + 5));
+            return CMD_EXECUTED;
+      }
+
+      /* stack mesurement ----------------------------------------------------------------------- */
+      if (strcmp("stack", line) == 0)
+      {
+            print("Free stack: %d\n", SystemGetStackFreeSpace());
+            return CMD_EXECUTED;
+      }
+
+      return CMD_NOT_EXIST;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function find external commands (registered applications)
+ */
+//================================================================================================//
+cmdStatus_t FindExternalCmd(ch_t *line)
+{
+      stdRet_t  appHdlStatus;
+      appArgs_t *appHdl;
+      appArgs_t *appHdlCpy;
+
+      /* waiting for empty stdout */
+      Sleep(10);
+
+      appHdl = Exec(line, NULL, &appHdlStatus);
+
+      if (appHdlStatus == STD_RET_OK)
+      {
+            appHdlCpy      = appHdl;
+            appHdl->stdin  = stdin;
+            appHdl->stdout = stdout;
+
+            while (appHdl->exitCode == STD_RET_UNKNOWN)
+            {
+                  Sleep(100);
+            }
+
+            FreeAppStdio(appHdlCpy);
+
+            return CMD_EXECUTED;
+      }
+      else if (appHdlStatus == STD_RET_ALLOCERROR)
+      {
+            return CMD_ALLOC_ERROR;
+      }
+      else
+      {
+            return CMD_NOT_EXIST;
+      }
+}
+
+
+
+//================================================================================================//
+/**
  * @brief terminal main function
  */
 //================================================================================================//
@@ -77,8 +159,11 @@ stdRet_t appmain(ch_t *argv)
 {
       (void) argv;
 
+      cmdStatus_t cmdStatus;
+      ch_t        *line;
+
       /* allocate memory for input line */
-      ch_t *line = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      line = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
 
       if (!line)
       {
@@ -100,54 +185,25 @@ stdRet_t appmain(ch_t *argv)
             /* waiting for command */
             scan("%s3", line);
 
-            /* check internal commands ---------------------------------------------------------- */
-            if (strcmp("exit", line) == 0)
-            {
-                  Free(line);
-                  print("Exit\n");
-                  return STD_RET_OK;
-            }
-            else if (strncmp("echo ", line, 5) == 0)
-            {
-                  print("%s\n", (line + 5));
+            /* check internal commands */
+            if ((cmdStatus = FindInternalCmd(line)) == CMD_EXECUTED)
                   continue;
-            }
-            else if (strcmp("stack", line) == 0)
-            {
-                  print("Free stack: %d\n", SystemGetStackFreeSpace());
+
+            /* check external commands */
+            if ((cmdStatus = FindExternalCmd(line)) == CMD_EXECUTED)
                   continue;
-            }
 
-            /* tries to run external application ------------------------------------------------ */
-            Sleep(10);
-            stdRet_t  status;
-            appArgs_t *appHdl = Exec(line, NULL, &status);
-
-            if (status == STD_RET_OK)
+            /* check status */
+            if (cmdStatus == CMD_ALLOC_ERROR)
             {
-                  appArgs_t *appHdlCpy = appHdl;
-                  appHdl->stdin        = stdin;
-                  appHdl->stdout       = stdout;
-
-                  while (appHdl->exitCode == STD_RET_UNKNOWN)
+                  print("Not enough free memory to run application.\n");
+            }
+            else if (cmdStatus == CMD_NOT_EXIST)
+            {
+                  if (strlen(line) != 0)
                   {
-                        Sleep(100);
+                        print("%s is unknown command.\n", line);
                   }
-
-                  FreeAppStdio(appHdlCpy);
-                  continue;
-            }
-            else if (status == STD_RET_ALLOCERROR)
-            {
-                  print("No enough free memory.\n");
-                  continue;
-            }
-
-            /* Unknown command ------------------------------------------------------------------ */
-            if (strlen(line) != 0)
-            {
-                  print("%s is unknown command.\n", line);
-                  continue;
             }
       }
 
