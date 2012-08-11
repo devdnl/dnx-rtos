@@ -102,8 +102,8 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
             if (!appHandle->stdout)
                   Free(appHandle->stdout);
 
-            appHandle->stdin  = NULL;
-            appHandle->stdout = NULL;
+            Free(appHandle);
+            appHandle = NULL;
 
             goto RunAsApp_end;
       }

@@ -201,7 +201,7 @@ SIZE = arm-none-eabi-size
 # C compiler flags
 CFLAGS_micro = -c -mcpu=$(CPU) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
                -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
-               -D$(MCU) -D$(TARGET)
+               -D$(MCU) -D$(TARGET) -DGCC_ARMCM3
 
 CFLAGS_qemu  = $(CFLAGS_micro)
 
@@ -212,7 +212,8 @@ CXXFLAGS_quemu =
 
 # linker flags
 LFLAGS_micro = -mcpu=$(CPU) -mthumb -T$(LD_SCRIPT_$(TARGET)) -g -nostartfiles -Wl,--gc-sections -Wall \
-               -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch -D$(TARGET)
+               -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+               -D$(TARGET) -DGCC_ARMCM3
 
 LFLAGS_qemu  = $(LFLAGS_micro)
 
