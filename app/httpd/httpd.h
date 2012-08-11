@@ -1,11 +1,11 @@
-#ifndef UART_CFG_H_
-#define UART_CFG_H_
+#ifndef HTTPD_H_
+#define HTTPD_H_
 /*=============================================================================================*//**
-@file    usart_cfg.h
+@file    httpd.h
 
 @author  Daniel Zorychta
 
-@brief   This file support configuration of USART peripherals
+@brief   HTTP server
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,82 +27,23 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-      extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "system.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** user UART1 enable (1) or disable (0) */
-#define UART_1_ENABLE                           1
+/** define stack size for this application */
+#define HTTPD_STACK_SIZE               (10 * MINIMAL_STACK_SIZE)
 
-/** user UART2 enable (1) or disable (0) */
-#define UART_2_ENABLE                           0
-
-/** user UART3 enable (1) or disable (0) */
-#define UART_3_ENABLE                           0
-
-/** user UART4 enable (1) or disable (0) */
-#define UART_4_ENABLE                           0
-
-/** user UART5 enable (1) or disable (0) */
-#define UART_5_ENABLE                           0
-
-
-/** UART wake method: idle line (0) or address mark (1) */
-#define UART_DEFAULT_WAKE_METHOD                0
-
-/** parity enable (1) or disable (0) */
-#define UART_DEFAULT_PARITY_ENABLE              0
-
-/** even parity (0) or odd parity (1) */
-#define UART_DEFAULT_PARITY_SELECTION           0
-
-/** disable (0) or enable (1) UART transmitter */
-#define UART_DEFAULT_TX_ENABLE                  1
-
-/** disable (0) or enable (1) UART receiver */
-#define UART_DEFAULT_RX_ENABLE                  1
-
-/** receiver wakeup: active mode (0) or mute mode (1) */
-#define UART_DEFAULT_RX_WAKEUP_MODE             0
-
-/** LIN mode disable (0) or enable (1) */
-#define UART_DEFAULT_LIN_ENABLE                 0
-
-/** 1 stop bit (0) or 2 stop bits (1) */
-#define UART_DEFAULT_STOP_BITS                  0
-
-/** LIN break detector length: 10 bits (0) or 11 bits (1) */
-#define UART_DEFAULT_LIN_BREAK_LEN_DET          0
-
-/** address of the USART node (in the multiprocessor mode), 4-bit length */
-#define UART_DEFAULT_MULTICOM_ADDRESS           0
-
-/** baud rate */
-#define UART_DEFAULT_BAUDRATE                   9600
-
-/** CTS hardware flow control enable (1) or disable (0) */
-#define UART_DEFAULT_CTS_ENABLE                 0
-
-/** RTS hardware flow control enable (1) or disable (0) */
-#define UART_DEFAULT_RTS_ENABLE                 0
-
-
-/** PCLK1 frequency */
-#define UART_PCLK1_FREQ                         36000000UL
-
-/** PCLK2 frequency */
-#define UART_PCLK2_FREQ                         72000000UL
-
-/** RX buffer size [B] */
-#define UART_RX_BUFFER_SIZE                     128
-
+/** define application name */
+#define HTTPD_NAME                     "myhttpd"
 
 
 /*==================================================================================================
@@ -118,13 +59,13 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-
+extern APPLICATION(httpd);
 
 #ifdef __cplusplus
-      }
+}
 #endif
 
-#endif /* UART_CFG_H_ */
+#endif /* HTTPD_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

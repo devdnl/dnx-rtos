@@ -37,6 +37,7 @@ extern "C" {
 #include "ether.h"
 #include "netconf.h"
 #include "lwiptest.h"
+#include "httpde.h"
 #include "httpd.h"
 
 
@@ -125,8 +126,8 @@ void Initd(void *arg)
       }
       resetAttr(k);
 
-      kprint("Starting httpd... ");
-      if (TaskCreate(httpd_init, "httpd", HTTPD_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+      kprint("Starting httpde... ");
+      if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
       {
             fontGreen(k);
             kprint("SUCCESS\n");
@@ -146,7 +147,8 @@ void Initd(void *arg)
       kprint("initd [%d]: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
-      appArgs_t *stdio = StartApplication(terminal, TERMINAL_NAME, TERMINAL_STACK_SIZE, NULL);
+//      appArgs_t *stdio = StartApplication(terminal, TERMINAL_NAME, TERMINAL_STACK_SIZE, NULL); /* TEST */
+      appArgs_t *stdio = StartApplication(httpd, HTTPD_NAME, HTTPD_STACK_SIZE, NULL);
 
       if (stdio == NULL)
       {

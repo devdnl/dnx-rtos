@@ -32,7 +32,8 @@
 CSRC = $(sort \
    app/terminal/terminal.c \
    app/lwiptest/lwiptest.c \
-   app/http/httpd.c \
+   app/http/httpde.c \
+   app/httpd/httpd.c \
    cpu/stm32/stm32f10x_vectors.c \
    drivers/src/ether.c \
    drivers/src/gpio.c \
@@ -80,6 +81,7 @@ CSRC = $(sort \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
+   lib/lwip/port/net.c \
    system/src/appruntime.c \
    system/src/hooks.c \
    system/src/idle.c \

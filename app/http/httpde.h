@@ -44,7 +44,7 @@
 #include "lwip/def.h"
 #include "fsdata.h"
 
-#define HTTPD_STACK_SIZE           (10 * MINIMAL_STACK_SIZE)
+#define HTTPDE_STACK_SIZE           (10 * MINIMAL_STACK_SIZE)
 
 struct fs_file {
   char *data;

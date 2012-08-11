@@ -38,7 +38,7 @@
  *
  */
 
-#include "httpd.h"
+#include "httpde.h"
 #include "lwip/tcp.h"
 #include "fsdata.c"
 #include <string.h>

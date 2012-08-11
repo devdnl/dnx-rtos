@@ -487,6 +487,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1228156673" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F10X_CL"/>
+									<listOptionValue builtIn="false" value="ip_addr_t"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1059955023" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
