@@ -61,43 +61,127 @@
 
 //================================================================================================//
 /**
- * @brief This function start selected application
+ * @brief This function start task as application
  *
  * @param[in] app                   application function
  * @param[in] *appName              application name
  * @param[in] stackSize             application stack size
  * @param[in] *arg                  application arguments
  *
- * @retval NULL if error occur otherwise correct pointer
+ * @return pointer to the structure with pointers to the STDIO and arguments
  */
 //================================================================================================//
-appArgs_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
+appArgs_t *RunAsApp(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
 {
-      appArgs_t *stdioPtr = NULL;
+      appArgs_t *appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
 
-      /* allocate memory for stdio structure */
-      stdioPtr = (appArgs_t*)Malloc(sizeof(appArgs_t));
+      if (!appArgs)
+            goto StartApplication_end;
+      else
+            appArgs->arg = NULL;
 
-      if (stdioPtr != NULL)
+      appArgs->stdin  = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
+      appArgs->stdout = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
+
+      if (!appArgs->stdin || !appArgs->stdout)
+      {
+            if (!appArgs->stdin)
+                  Free(appArgs->stdin);
+
+            if (!appArgs->stdout)
+                  Free(appArgs->stdout);
+
+            appArgs->stdin  = NULL;
+            appArgs->stdout = NULL;
+      }
+      else
       {
             /* initialize stdio data */
-            stdioPtr->arg          = arg;
-            stdioPtr->stdin.Level  = 0;
-            stdioPtr->stdin.RxIdx  = 0;
-            stdioPtr->stdin.TxIdx  = 0;
-            stdioPtr->stdout.Level = 0;
-            stdioPtr->stdout.RxIdx = 0;
-            stdioPtr->stdout.TxIdx = 0;
+            appArgs->arg           = arg;
+            appArgs->stdin->Level  = 0;
+            appArgs->stdin->RxIdx  = 0;
+            appArgs->stdin->TxIdx  = 0;
+            appArgs->stdout->Level = 0;
+            appArgs->stdout->RxIdx = 0;
+            appArgs->stdout->TxIdx = 0;
 
             /* start application task */
-            if (TaskCreate(app, appName, stackSize, stdioPtr, 2, NULL) != pdPASS)
+            if (TaskCreate(app, appName, stackSize, appArgs, 2, appArgs->taskHandle) != pdPASS)
             {
-                  Free(stdioPtr);
-                  stdioPtr = NULL;
+                  Free(appArgs->stdin);
+                  Free(appArgs->stdout);
+                  Free(appArgs);
+                  appArgs = NULL;
             }
       }
 
-      return stdioPtr;
+      StartApplication_end:
+            return appArgs;
+}
+
+
+//================================================================================================//
+/**
+ * @brief This function start task as daemon
+ *
+ * @param[in] app                   application function
+ * @param[in] *appName              application name
+ * @param[in] stackSize             application stack size
+ * @param[in] *arg                  application arguments
+ *
+ * @return pointer to the structure with pointers to the STDIO and arguments
+ */
+//================================================================================================//
+appArgs_t *RunAsDaemon(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg)
+{
+      appArgs_t *appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
+
+      if (appArgs)
+      {
+            appArgs->stdin  = NULL;
+            appArgs->stdout = NULL;
+            appArgs->arg    = arg;
+
+            /* start daemon task */
+            if (TaskCreate(app, appName, stackSize, appArgs, 2, appArgs->taskHandle) != pdPASS)
+            {
+                  Free(appArgs);
+                  appArgs = NULL;
+            }
+      }
+
+      return appArgs;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function freed STDIO buffers
+ *
+ * @param *appArgs      pointer to the appArgs structure which contains pointers to the STDIO
+ *
+ * @retval STD_STATUS_OK            freed success
+ * @retval STD_STATUS_ERROR         freed error, bad pointer
+ */
+//================================================================================================//
+stdStatus_t FreeAppStdio(appArgs_t *appArgs)
+{
+      if (appArgs)
+      {
+            if (appArgs->stdin)
+                  Free(appArgs->stdin);
+
+            if (appArgs->stdout)
+                  Free(appArgs->stdout);
+
+            Free(appArgs);
+
+            return STD_STATUS_OK;
+      }
+      else
+      {
+            return STD_STATUS_ERROR;
+      }
 }
 
 

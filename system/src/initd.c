@@ -147,8 +147,8 @@ void Initd(void *arg)
       kprint("initd [%d]: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
-//      appArgs_t *stdio = StartApplication(terminal, TERMINAL_NAME, TERMINAL_STACK_SIZE, NULL); /* TEST */
-      appArgs_t *stdio = StartApplication(httpd, HTTPD_NAME, HTTPD_STACK_SIZE, NULL);
+      appArgs_t *stdio = RunAsApp(terminal, TERMINAL_NAME, TERMINAL_STACK_SIZE, NULL); /* TEST */
+//      appArgs_t *stdio = RunAsApp(httpd, HTTPD_NAME, HTTPD_STACK_SIZE, NULL); /* TEST */
 
       if (stdio == NULL)
       {
@@ -179,20 +179,20 @@ void Initd(void *arg)
 
             TaskSuspendAll();
 
-            if (stdio->stdout.Level > 0)
+            if (stdio->stdout->Level > 0)
             {
-                  data = stdio->stdout.Buffer[stdio->stdout.RxIdx++];
+                  data = stdio->stdout->Buffer[stdio->stdout->RxIdx++];
 
-                  if (stdio->stdout.RxIdx >= configSTDIO_BUFFER_SIZE)
-                        stdio->stdout.RxIdx = 0;
+                  if (stdio->stdout->RxIdx >= configSTDIO_BUFFER_SIZE)
+                        stdio->stdout->RxIdx = 0;
 
-                  stdio->stdout.Level--;
+                  stdio->stdout->Level--;
 
                   UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &data);
 
                   if (data == STD_STATUS_ERROR || data == STD_STATUS_OK)
                   {
-                        Free(stdio);
+                        FreeAppStdio(stdio);
 
                         if (data == STD_STATUS_OK)
                               kprint("\ninitd [%d]: terminal was terminated.\n", TaskGetTickCount());
@@ -220,14 +220,14 @@ void Initd(void *arg)
             {
                   TaskSuspendAll();
 
-                  if (stdio->stdin.Level < configSTDIO_BUFFER_SIZE)
+                  if (stdio->stdin->Level < configSTDIO_BUFFER_SIZE)
                   {
-                        stdio->stdin.Buffer[stdio->stdin.TxIdx++] = data;
+                        stdio->stdin->Buffer[stdio->stdin->TxIdx++] = data;
 
-                        if (stdio->stdin.TxIdx >= configSTDIO_BUFFER_SIZE)
-                              stdio->stdin.TxIdx = 0;
+                        if (stdio->stdin->TxIdx >= configSTDIO_BUFFER_SIZE)
+                              stdio->stdin->TxIdx = 0;
 
-                        stdio->stdin.Level++;
+                        stdio->stdin->Level++;
                   }
 
                   TaskResumeAll();

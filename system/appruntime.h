@@ -56,8 +56,10 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern appArgs_t *StartApplication(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg);
-extern void      TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode);
+extern appArgs_t   *RunAsApp(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg);
+extern appArgs_t   *RunAsDaemon(pdTASK_CODE app, ch_t *appName, u32_t stackSize, void *arg);
+extern stdStatus_t FreeAppStdio(appArgs_t *appArgs);
+extern void        TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode);
 
 
 #ifdef __cplusplus

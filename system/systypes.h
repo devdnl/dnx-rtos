@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -74,8 +74,9 @@ typedef struct stdioFIFO_struct
 typedef struct appArgs_struct
 {
       void        *arg;                      /* pointer to the argument */
-      stdioFIFO_t stdin;                     /* stdin fifo */
-      stdioFIFO_t stdout;                    /* stdout fifo */
+      stdioFIFO_t *stdin;                    /* stdin fifo */
+      stdioFIFO_t *stdout;                   /* stdout fifo */
+      void        *taskHandle;               /* FreeRTOS task handling */
 } appArgs_t;
 
 
@@ -90,7 +91,7 @@ typedef struct appArgs_struct
 
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
 #endif /* SYSTYPES_H_ */
