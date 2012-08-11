@@ -54,7 +54,7 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdStatus_t LwIP_Init(void);
+extern stdRet_t LwIP_Init(void);
 extern void        LwIP_SetReceiveFlag(void);
 
 #ifdef __cplusplus

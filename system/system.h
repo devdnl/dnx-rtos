@@ -84,7 +84,7 @@ extern "C" {
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      vTaskDelay(delay)
 #define SystemGetTickCount()              xTaskGetTickCount()
-#define SystemGetStackFreeSpace()         xPortGetFreeHeapSize()
+#define SystemGetStackFreeSpace()         uxTaskGetStackHighWaterMark(THIS_TASK)
 #define SystemEnterCritical()             taskENTER_CRITICAL()
 #define SystemExitCritical()              taskEXIT_CRITICAL()
 #define SystemDisableIRQ()                taskDISABLE_INTERRUPTS()
@@ -99,10 +99,12 @@ extern "C" {
 
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)
+#define APP_SEC_BEGIN                     { InitApp(); clearSTDIN();
+#define APP_SEC_END                       Exit(appmain(argv));}
 
-#define InitApp()                         stdioFIFO_t *stdin  = ((appArgs_t*)appArgument)->stdin; \
-                                          stdioFIFO_t *stdout = ((appArgs_t*)appArgument)->stdout;\
-                                          ch_t        *argv   = ((appArgs_t*)appArgument)->arg
+#define InitApp()                         stdioFIFO_t *stdin  = ((appArgs_t *)appArgument)->stdin; \
+                                          stdioFIFO_t *stdout = ((appArgs_t *)appArgument)->stdout;\
+                                          ch_t        *argv   = ((appArgs_t *)appArgument)->arg
 
 /** array element count */
 #define ARRAY_SIZE(array)                 (sizeof(array)/sizeof(array[0]))

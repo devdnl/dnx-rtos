@@ -25,7 +25,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-      extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -35,6 +35,7 @@
 #include "ether_cfg.h"
 #include "stm32_eth.h"
 #include "netconf.h"
+#include "lwipopts.h"
 
 
 /*==================================================================================================
@@ -71,7 +72,7 @@
  * @brief Initialise unit
  */
 //================================================================================================//
-stdStatus_t ETHER_Init(void)
+stdRet_t ETHER_Init(void)
 {
       kprint("Ethernet interface configuration... ");
 
@@ -80,6 +81,7 @@ stdStatus_t ETHER_Init(void)
 
       /* enable Ethernet IRQ */
       NVIC_EnableIRQ(ETH_IRQn);
+      NVIC_SetPriority(ETH_IRQn, 0xDF);
 
       /* configure Ethernet --------------------------------------------------------------------- */
       ETH_InitTypeDef ETH_InitStructure;
@@ -137,13 +139,13 @@ stdStatus_t ETHER_Init(void)
 
             fontGreen(k); kprint("SUCCESS\n"); resetAttr(k);
 
-            return STD_STATUS_OK;
+            return STD_RET_OK;
       }
       else
       {
             fontRed(k); kprint("FAILED\n"); resetAttr(k);
 
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
       }
 }
 
@@ -157,11 +159,11 @@ stdStatus_t ETHER_Init(void)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t ETHER_Open(dev_t dev)
+stdRet_t ETHER_Open(dev_t dev)
 {
       (void)dev;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -174,11 +176,11 @@ stdStatus_t ETHER_Open(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t ETHER_Close(dev_t dev)
+stdRet_t ETHER_Close(dev_t dev)
 {
       (void)dev;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -194,14 +196,14 @@ stdStatus_t ETHER_Close(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t ETHER_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t ETHER_Write(dev_t dev, void *src, size_t size, size_t seek)
 {
       (void)dev;
       (void)src;
       (void)size;
       (void)seek;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -217,14 +219,14 @@ stdStatus_t ETHER_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t seek)
 {
       (void)dev;
       (void)dst;
       (void)size;
       (void)seek;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -239,13 +241,13 @@ stdStatus_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t ETHER_IOCtl(dev_t dev, IORq_t ioRq, void *data)
+stdRet_t ETHER_IOCtl(dev_t dev, IORq_t ioRq, void *data)
 {
       (void)dev;
       (void)ioRq;
       (void)data;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -265,7 +267,7 @@ void ETH_IRQHandler(void)
 
 
 #ifdef __cplusplus
-      }
+}
 #endif
 
 /*==================================================================================================

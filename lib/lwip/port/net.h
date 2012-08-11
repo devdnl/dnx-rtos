@@ -70,16 +70,16 @@ typedef union
                                      Exported function prototypes
 ==================================================================================================*/
 extern netSoc_t    NET_NewTCPSocket(ip_addr_t *ipaddr, u16_t port);
-extern stdStatus_t NET_CloseTCPSocket(netSoc_t socket);
-extern stdStatus_t NET_GetTCPStatus(netSoc_t socket, netStatus_t *status);
-extern stdStatus_t NET_TCPAcceptReceived(netSoc_t socket);
+extern stdRet_t NET_CloseTCPSocket(netSoc_t socket);
+extern stdRet_t NET_GetTCPStatus(netSoc_t socket, netStatus_t *status);
+extern stdRet_t NET_TCPAcceptReceived(netSoc_t socket);
 extern void        *NET_GetReceivedDataBuffer(netSoc_t socket);
 extern void        NET_FreeReceivedBuffer(netSoc_t socket);
-extern stdStatus_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
-extern stdStatus_t NET_TCPClose(netSoc_t socket);
-extern stdStatus_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
-extern stdStatus_t NET_TCPAcceptError(netSoc_t socket);
-extern stdStatus_t NET_TCPAcceptPoll(netSoc_t socket);
+extern stdRet_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
+extern stdRet_t NET_TCPClose(netSoc_t socket);
+extern stdRet_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
+extern stdRet_t NET_TCPAcceptError(netSoc_t socket);
+extern stdRet_t NET_TCPAcceptPoll(netSoc_t socket);
 
 
 #ifdef __cplusplus

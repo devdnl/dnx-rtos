@@ -91,7 +91,7 @@ static bool_t packetReceived = FALSE;
  * @retval STD_STATUS_ERROR   configuration error
  */
 //================================================================================================//
-stdStatus_t LwIP_Init(void)
+stdRet_t LwIP_Init(void)
 {
       struct ip_addr ipaddr;
       struct ip_addr netmask;
@@ -156,11 +156,11 @@ stdStatus_t LwIP_Init(void)
       fontGreen(k);
       kprint("SUCCESS\n");
       resetAttr(k);
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 
       /* error occur */
       LwIP_Init_exit_Failure:
-      return STD_STATUS_ERROR;
+      return STD_RET_ERROR;
 }
 
 

@@ -98,7 +98,7 @@ static void InitSystem(void)
       SCB->AIRCR = 0x05FA0000 | 0x300;
 
       /* PLL initialization */
-      if (PLL_Init() != STD_STATUS_OK)
+      if (PLL_Init() != STD_RET_OK)
             while (TRUE);
 
       /* GPIO and AFIO initialization */

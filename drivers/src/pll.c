@@ -66,7 +66,7 @@
  * NOTE: PLL2 and PLL3 not used
  */
 //================================================================================================//
-stdStatus_t PLL_Init(void)
+stdRet_t PLL_Init(void)
 {
       u32_t wait;
 
@@ -143,7 +143,7 @@ stdStatus_t PLL_Init(void)
       if (wait == 0)
             return PLL_STATUS_PLL_SW_ERROR;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -156,11 +156,11 @@ stdStatus_t PLL_Init(void)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t PLL_Open(dev_t dev)
+stdRet_t PLL_Open(dev_t dev)
 {
       (void)dev;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -173,11 +173,11 @@ stdStatus_t PLL_Open(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t PLL_Close(dev_t dev)
+stdRet_t PLL_Close(dev_t dev)
 {
       (void)dev;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -193,14 +193,14 @@ stdStatus_t PLL_Close(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek)
 {
       (void)dev;
       (void)src;
       (void)size;
       (void)seek;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -216,14 +216,14 @@ stdStatus_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t PLL_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t PLL_Read(dev_t dev, void *dst, size_t size, size_t seek)
 {
       (void)dev;
       (void)dst;
       (void)size;
       (void)seek;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -238,13 +238,13 @@ stdStatus_t PLL_Read(dev_t dev, void *dst, size_t size, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t PLL_IOCtl(dev_t dev, IORq_t ioRq, void *data)
+stdRet_t PLL_IOCtl(dev_t dev, IORq_t ioRq, void *data)
 {
       (void)dev;
       (void)ioRq;
       (void)data;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 /*==================================================================================================

@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -40,7 +40,7 @@
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** simpler definition of terminating application */
-#define Exit(exitCode)                    TerminateApplication(stdout, exitCode)
+#define Exit(exitCode)                    TerminateApplication(appArgument, exitCode)
 
 
 /*==================================================================================================
@@ -56,16 +56,16 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern appArgs_t   *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern appArgs_t   *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern appArgs_t   *Exec(const ch_t *name, ch_t *argv);
-extern appArgs_t   *Execd(const ch_t *name, ch_t *argv);
-extern stdStatus_t FreeAppStdio(appArgs_t *appArgs);
-extern void        TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode);
+extern appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status);
+extern appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status);
+extern appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status);
+extern appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status);
+extern stdRet_t  FreeAppStdio(appArgs_t *appArgs);
+extern void      TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode);
 
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
 #endif /* APPRUNTIME_H_ */

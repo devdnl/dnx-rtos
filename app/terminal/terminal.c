@@ -28,20 +28,21 @@
                                             Include files
 ==================================================================================================*/
 #include "terminal.h"
+#include <string.h>
 
+/* Begin of application section declaration */
+APPLICATION(terminal)
+APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+/** user prompt line size [B] */
+#define PROMPT_LINE_SIZE            100
 
 
 /*==================================================================================================
                                    Local types, enums definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                      Local function prototypes
 ==================================================================================================*/
 
 
@@ -51,105 +52,111 @@
 
 
 /*==================================================================================================
-                                     Shared object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function print prompt
  */
 //================================================================================================//
-APPLICATION(terminal)
+void PrintPrompt(void)
 {
-      InitApp();
+      fontGreen();
+      print("root@board: ");
+      resetAttr();
+}
 
+
+//================================================================================================//
+/**
+ * @brief terminal main function
+ */
+//================================================================================================//
+stdRet_t appmain(ch_t *argv)
+{
       (void) argv;
 
-      u32_t   cnt = 0;
-      u8_t    *mem = NULL;
+      /* allocate memory for input line */
+      ch_t *line = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
 
-      print("Hello world. I'm terminal\n");
-
-      for (;;)
+      if (!line)
       {
-            print("%d: Heap free space: %d; stack free space: %d\n",
-                  cnt++, GetFreeHeapSize(), TaskGetStackFreeSpace(THIS_TASK));
-
-            if (cnt == 2)
-            {
-                  print("Try to allocate 60000 bytes...\n");
-                  mem = (u8_t*)Malloc(60000);
-
-                  if (mem == NULL)
-                        print("Allocation failed :(\n");
-            }
-            else if (cnt == 4)
-            {
-                  if (mem)
-                  {
-                        print("Freed allocated memory...\n");
-                        Free(mem);
-                  }
-            }
-            else if (cnt == 6)
-            {
-                  clearSTDIN();
-
-                  for (;;)
-                  {
-                        ch_t  ch;
-                        ch_t  buffer[50];
-                        i32_t dec;
-                        u32_t hex;
-                        u32_t bin;
-
-                        print("Exit success? [y/n]: ");
-                        ch = getChar();
-                        print("%c\n", ch);
-
-                        if (ch == 'y')
-                              Exit(STD_STATUS_OK);
-
-                        print("Exit failure? [y/n]: ");
-                        ch = getChar();
-                        print("%c\n", ch);
-
-                        if (ch == 'y')
-                              Exit(STD_STATUS_ERROR);
-
-                        scan("Dec d: %d", &dec);
-                        print("Signed %d\n", dec);
-                        print("Unsigned %u\n", dec);
-
-                        scan("Dec u: %u", &dec);
-                        print("Signed %d\n", dec);
-                        print("Unsigned %u\n", dec);
-
-                        scan("Hex: 0x%x", &hex);
-                        print("0x%x\n", hex);
-
-                        scan("Bin: %b", &bin);
-                        print("0x%x\n", bin);
-
-                        scan("String: %s", &buffer);
-                        print("%s\n", buffer);
-
-                        print("Readkey: ");
-                        ch = getChar();
-                        print("Key code: 0x%x\n", ch);
-                  }
-            }
-
-            Sleep(1000);
+            print("No enough free memory\n");
+            return STD_RET_ERROR;
+      }
+      else
+      {
+            print("Welcome to board - kernel FreeRTOS (tty1)\n");
       }
 
-      Exit(STD_STATUS_ERROR);
+      /* main loop ------------------------------------------------------------------------------ */
+      for (;;)
+      {
+            /* clear input line and print prompt */
+            memset(line, ASCII_NULL, PROMPT_LINE_SIZE);
+            PrintPrompt();
+
+            /* waiting for command */
+            scan("%s3", line);
+
+            /* check internal commands ---------------------------------------------------------- */
+            if (strcmp("exit", line) == 0)
+            {
+                  Free(line);
+                  print("Exit\n");
+                  return STD_RET_OK;
+            }
+            else if (strncmp("echo ", line, 5) == 0)
+            {
+                  print("%s\n", (line + 5));
+                  continue;
+            }
+            else if (strcmp("stack", line) == 0)
+            {
+                  print("Free stack: %d\n", SystemGetStackFreeSpace());
+                  continue;
+            }
+
+            /* tries to run external application ------------------------------------------------ */
+            Sleep(10);
+            stdRet_t  status;
+            appArgs_t *appHdl = Exec(line, NULL, &status);
+
+            if (status == STD_RET_OK)
+            {
+                  appArgs_t *appHdlCpy = appHdl;
+                  appHdl->stdin        = stdin;
+                  appHdl->stdout       = stdout;
+
+                  while (appHdl->exitCode == STD_RET_UNKNOWN)
+                  {
+                        Sleep(100);
+                  }
+
+                  FreeAppStdio(appHdlCpy);
+                  continue;
+            }
+            else if (status == STD_RET_ALLOCERROR)
+            {
+                  print("No enough free memory.\n");
+                  continue;
+            }
+
+            /* Unknown command ------------------------------------------------------------------ */
+            if (strlen(line) != 0)
+            {
+                  print("%s is unknown command.\n", line);
+                  continue;
+            }
+      }
+
+      Free(line);
+      return STD_RET_OK;
 }
+
+/* End of application section declaration */
+APP_SEC_END
 
 
 /*==================================================================================================

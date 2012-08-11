@@ -47,9 +47,11 @@ extern "C" {
 /** default system status */
 typedef enum status_enum
 {
-   STD_STATUS_OK         = 0,
-   STD_STATUS_ERROR      = 1,
-} stdStatus_t;
+   STD_RET_OK                 = 0,
+   STD_RET_ERROR              = 1,
+   STD_RET_ALLOCERROR         = 2,
+   STD_RET_UNKNOWN            = 127,
+} stdRet_t;
 
 
 /** device number type */
@@ -73,10 +75,12 @@ typedef struct stdioFIFO_struct
 /** application standard arguments type */
 typedef struct appArgs_struct
 {
-      void        *arg;                      /* pointer to the argument */
-      stdioFIFO_t *stdin;                    /* stdin fifo */
-      stdioFIFO_t *stdout;                   /* stdout fifo */
-      void        *taskHandle;               /* FreeRTOS task handling */
+      void        *arg;                         /* pointer to the argument */
+      stdioFIFO_t *stdin;                       /* stdin fifo */
+      stdioFIFO_t *stdout;                      /* stdout fifo */
+      void        *ChildTaskHandle;             /* FreeRTOS task handling for children */
+      void        *ParentTaskHandle;            /* FreeRTOS task handling for parent */
+      stdRet_t exitCode;                     /* exit code */
 } appArgs_t;
 
 

@@ -125,20 +125,20 @@ netSoc_t NET_NewTCPSocket(ip_addr_t *ipaddr, u16_t port)
 }
 
 
-stdStatus_t NET_GetTCPStatus(netSoc_t socket, netStatus_t *status)
+stdRet_t NET_GetTCPStatus(netSoc_t socket, netStatus_t *status)
 {
       if (!socket)
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
 
       netSoc_t socketNumber = socket - 1;
 
       *status = socketList[socketNumber].status;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
-stdStatus_t NET_TCPAcceptReceived(netSoc_t socket)
+stdRet_t NET_TCPAcceptReceived(netSoc_t socket)
 {
       if (!socket)
             goto NET_TCPAcceptReceived_error;
@@ -158,10 +158,10 @@ stdStatus_t NET_TCPAcceptReceived(netSoc_t socket)
             goto NET_TCPAcceptReceived_error;
       }
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 
       NET_TCPAcceptReceived_error:
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
 }
 
 
@@ -187,10 +187,10 @@ void NET_FreeReceivedBuffer(netSoc_t socket)
 }
 
 
-stdStatus_t NET_TCPClose(netSoc_t socket)
+stdRet_t NET_TCPClose(netSoc_t socket)
 {
       if (!socket)
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
 
       socketEntry_t *netSoc = &socketList[socket - 1];
 
@@ -202,14 +202,14 @@ stdStatus_t NET_TCPClose(netSoc_t socket)
 
       netSoc->status.integer = 0;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
-stdStatus_t NET_CloseTCPSocket(netSoc_t socket)
+stdRet_t NET_CloseTCPSocket(netSoc_t socket)
 {
       if (!socket)
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
 
       socketEntry_t *netSoc = &socketList[socket - 1];
 
@@ -224,16 +224,16 @@ stdStatus_t NET_CloseTCPSocket(netSoc_t socket)
       netSoc->status.integer = 0;
       TaskResumeAll();
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
-stdStatus_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len)
+stdRet_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len)
 {
       u32_t size;
 
       if (!socket || !src || !len || !*len)
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
 
       socketEntry_t *netSoc = &socketList[socket - 1];
 
@@ -257,33 +257,33 @@ stdStatus_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len)
             tcp_sent(netSoc->pcb, TCPSent);
       }
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
-stdStatus_t NET_TCPAcceptError(netSoc_t socket)
+stdRet_t NET_TCPAcceptError(netSoc_t socket)
 {
       if (!socket)
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
 
       socketEntry_t *netSoc = &socketList[socket - 1];
 
       netSoc->status.flag.ConnectionError = FALSE;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
-stdStatus_t NET_TCPAcceptPoll(netSoc_t socket)
+stdRet_t NET_TCPAcceptPoll(netSoc_t socket)
 {
       if (!socket)
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
 
       socketEntry_t *netSoc = &socketList[socket - 1];
 
       netSoc->status.flag.Poll = FALSE;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 

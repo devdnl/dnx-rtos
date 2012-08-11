@@ -55,22 +55,22 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdStatus_t GPIO_Init(void);
+extern stdRet_t GPIO_Init(void);
 
 
-extern stdStatus_t GPIO_Open(dev_t);
+extern stdRet_t GPIO_Open(dev_t);
 
 
-extern stdStatus_t GPIO_Close(dev_t);
+extern stdRet_t GPIO_Close(dev_t);
 
 
-extern stdStatus_t GPIO_Write(dev_t, void*, size_t, size_t);
+extern stdRet_t GPIO_Write(dev_t, void*, size_t, size_t);
 
 
-extern stdStatus_t GPIO_Read(dev_t, void*, size_t, size_t);
+extern stdRet_t GPIO_Read(dev_t, void*, size_t, size_t);
 
 
-extern stdStatus_t GPIO_IOCtl(dev_t, IORq_t, void*);
+extern stdRet_t GPIO_IOCtl(dev_t, IORq_t, void*);
 
 
 #ifdef __cplusplus

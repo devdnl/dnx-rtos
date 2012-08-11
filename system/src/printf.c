@@ -288,7 +288,7 @@ void fputChar(stdioFIFO_t *stdout, ch_t c)
 //================================================================================================//
 ch_t fgetChar(stdioFIFO_t *stdin)
 {
-      ch_t out = ' ';
+      ch_t out = ASCII_CANCEL;
 
       if (stdin)
       {
@@ -319,6 +319,40 @@ ch_t fgetChar(stdioFIFO_t *stdin)
 
       fgetChar_end:
             return out;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function get character from stdin stream in the unblocking mode
+ *
+ * @param *stdin            stdin
+ *
+ * @retval character
+ */
+//================================================================================================//
+ch_t ufgetChar(stdioFIFO_t *stdin)
+{
+      ch_t out = ASCII_CANCEL;
+
+      if (stdin)
+      {
+            TaskSuspendAll();
+
+            if (stdin->Level > 0)
+            {
+                  out = stdin->Buffer[stdin->RxIdx++];
+
+                  if (stdin->RxIdx >= configSTDIO_BUFFER_SIZE)
+                        stdin->RxIdx = 0;
+
+                  stdin->Level--;
+            }
+
+            TaskResumeAll();
+      }
+
+      return out;
 }
 
 
@@ -416,8 +450,8 @@ static u32_t vsnfprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t 
             }
       }
 
-vsnfprint_end:
-      return (streamLen - 1);
+      vsnfprint_end:
+            return (streamLen - 1);
 
       #undef putChar
 }
@@ -610,6 +644,17 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
 
                   if (character == 's')
                   {
+                        u16_t free = *(format++);
+
+                        if (free >= '1' && free <= '9')
+                        {
+                              free = (free - '0') * 50;
+                        }
+                        else
+                        {
+                              free = UINT16_MAX;
+                        }
+
                         ch_t *string = (ch_t*)var;
 
                         while (TRUE)
@@ -628,12 +673,17 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                                     fprint(stdout, "%c\x1B[K", character);
                                     *(--string) = 0x00;
                                     streamLen--;
+                                    free++;
                                     continue;
                               }
                               else if (character >= ' ')
                               {
-                                    fputChar(stdout, character);
-                                    *(string++) = character;
+                                    if (free)
+                                    {
+                                          fputChar(stdout, character);
+                                          *(string++) = character;
+                                          free--;
+                                    }
                               }
                               else
                               {
@@ -646,8 +696,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
             }
       }
 
-fscan_end:
-      return (streamLen - 1);
+      fscan_end:
+            return (streamLen - 1);
 }
 
 

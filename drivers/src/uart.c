@@ -25,7 +25,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-      extern "C" {
+extern "C" {
 #endif
 
 
@@ -206,6 +206,9 @@
       }
 
 
+/** IRQ priorities */
+#define IRQ_PRIORITY          0xDF
+
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -326,9 +329,9 @@ static PortHandle_t PortHandle[] =
  * @brief Initialize USART devices. Not used, initialization will done at port open
  */
 //================================================================================================//
-stdStatus_t UART_Init(void)
+stdRet_t UART_Init(void)
 {
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -344,9 +347,9 @@ stdStatus_t UART_Init(void)
  * @retval UART_STATUS_NOFREEMEM          no enough free memory to allocate RxBuffer
  */
 //================================================================================================//
-stdStatus_t UART_Open(dev_t usartName)
+stdRet_t UART_Open(dev_t usartName)
 {
-      stdStatus_t status    = UART_STATUS_PORTNOTEXIST;
+      stdRet_t status    = UART_STATUS_PORTNOTEXIST;
       USART_t     *usartPtr = NULL;
 
       /* check port range */
@@ -461,31 +464,46 @@ stdStatus_t UART_Open(dev_t usartName)
                   {
                         #ifdef RCC_APB2ENR_USART1EN
                         #if (UART_1_ENABLE > 0)
-                        case UART_DEV_1: NVIC_EnableIRQ(USART1_IRQn); break;
+                        case UART_DEV_1:
+                              NVIC_EnableIRQ(USART1_IRQn);
+                              NVIC_SetPriority(USART1_IRQn, IRQ_PRIORITY);
+                              break;
                         #endif
                         #endif
 
                         #ifdef RCC_APB1ENR_USART2EN
                         #if (UART_2_ENABLE > 0)
-                        case UART_DEV_2: NVIC_EnableIRQ(USART2_IRQn); break;
+                        case UART_DEV_2:
+                              NVIC_EnableIRQ(USART2_IRQn);
+                              NVIC_SetPriority(USART2_IRQn, IRQ_PRIORITY);
+                              break;
                         #endif
                         #endif
 
                         #ifdef RCC_APB1ENR_USART3EN
                         #if (UART_3_ENABLE > 0)
-                        case UART_DEV_3: NVIC_EnableIRQ(USART3_IRQn); break;
+                        case UART_DEV_3:
+                              NVIC_EnableIRQ(USART3_IRQn);
+                              NVIC_SetPriority(USART3_IRQn, IRQ_PRIORITY);
+                              break;
                         #endif
                         #endif
 
                         #ifdef RCC_APB1ENR_UART4EN
                         #if (UART_4_ENABLE > 0)
-                        case UART_DEV_4: NVIC_EnableIRQ(UART4_IRQn); break;
+                        case UART_DEV_4:
+                              NVIC_EnableIRQ(UART4_IRQn);
+                              NVIC_SetPriority(UART4_IRQn, IRQ_PRIORITY);
+                              break;
                         #endif
                         #endif
 
                         #ifdef RCC_APB1ENR_UART5EN
                         #if (UART_5_ENABLE > 0)
-                        case UART_DEV_5: NVIC_EnableIRQ(UART5_IRQn); break;
+                        case UART_DEV_5:
+                              NVIC_EnableIRQ(UART5_IRQn);
+                              NVIC_SetPriority(UART5_IRQn, IRQ_PRIORITY);
+                              break;
                         #endif
                         #endif
 
@@ -495,14 +513,14 @@ stdStatus_t UART_Open(dev_t usartName)
 
                   EnableRxIRQ();
 
-                  status = STD_STATUS_OK;
+                  status = STD_RET_OK;
             }
             else
             {
                   TaskResumeAll();
 
                   if (PortHandle[usartName].Lock == TaskGetPID())
-                        status = STD_STATUS_OK;
+                        status = STD_RET_OK;
                   else
                         status = UART_STATUS_PORTLOCKED;
             }
@@ -524,9 +542,9 @@ UART_Open_End:
  * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
  */
 //================================================================================================//
-stdStatus_t UART_Close(dev_t usartName)
+stdRet_t UART_Close(dev_t usartName)
 {
-      stdStatus_t status = UART_STATUS_PORTNOTEXIST;
+      stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
       if (usartName <= UART_DEV_LAST)
@@ -612,7 +630,7 @@ stdStatus_t UART_Close(dev_t usartName)
                   /* delete tx buffer */
                   PortHandle[usartName].TxBuffer.TxSrcPtr = NULL;
 
-                  status = STD_STATUS_OK;
+                  status = STD_RET_OK;
             }
             else
             {
@@ -639,11 +657,11 @@ stdStatus_t UART_Close(dev_t usartName)
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-stdStatus_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
+stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
 {
       (void)seek;
 
-      stdStatus_t status    = UART_STATUS_PORTNOTEXIST;
+      stdRet_t status    = UART_STATUS_PORTNOTEXIST;
       USART_t     *usartPtr = NULL;
 
       /* check port range */
@@ -673,7 +691,7 @@ stdStatus_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
                         }
                         while (size);
 
-                        status = STD_STATUS_OK;
+                        status = STD_RET_OK;
                   }
                   else
                   {
@@ -705,11 +723,11 @@ stdStatus_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-stdStatus_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
+stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
 {
       (void)seek;
 
-      stdStatus_t status = UART_STATUS_PORTNOTEXIST;
+      stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
       if (usartName <= UART_DEV_LAST)
@@ -748,7 +766,7 @@ stdStatus_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
                         }
                         while (size);
 
-                        status = STD_STATUS_OK;
+                        status = STD_RET_OK;
                   }
                   else
                   {
@@ -780,9 +798,9 @@ stdStatus_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
  * @retval UART_STATUS_BADRQ              bad request
  */
 //================================================================================================//
-stdStatus_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
+stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 {
-      stdStatus_t status = UART_STATUS_PORTNOTEXIST;
+      stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
       if (usartName <= UART_DEV_LAST)
@@ -792,7 +810,7 @@ stdStatus_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
             {
                   USART_t *usartPtr = PortHandle[usartName].Address;
 
-                  status = STD_STATUS_OK;
+                  status = STD_RET_OK;
 
                   switch (ioRQ)
                   {
@@ -1012,6 +1030,10 @@ void UART5_IRQHandler(void)
 
 #ifdef __cplusplus
    }
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 /*==================================================================================================

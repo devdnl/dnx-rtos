@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    regapp.c
+@file    freemem.c
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration applications
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,21 +24,15 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "regapp.h"
+#include "freemem.h"
 #include <string.h>
 
-/* include here applications headers */
-#include "terminal.h"
-#include "clear.h"
-#include "freemem.h"
-
+/* Begin of application section declaration */
+APPLICATION(freemem)
+APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -51,23 +45,7 @@ extern "C" {
 
 
 /*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
-
-
-/*==================================================================================================
                                       Local object definitions
-==================================================================================================*/
-const regAppData_t appList[] =
-{
-      {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
-      {CLEAR_NAME   , clear   , CLEAR_STACK_SIZE   },
-      {FREEMEM_NAME,  freemem,  FREEMEM_STACK_SIZE },
-};
-
-
-/*==================================================================================================
-                                     Exported object definitions
 ==================================================================================================*/
 
 
@@ -77,30 +55,20 @@ const regAppData_t appList[] =
 
 //================================================================================================//
 /**
- * @brief
+ * @brief clear main function
  */
 //================================================================================================//
-regAppData_t REGAPP_GetAppData(const ch_t *appName)
+stdRet_t appmain(ch_t *argv)
 {
-      u32_t i;
+      (void) argv;
 
-      for (i = 0; i < ARRAY_SIZE(appList); i++)
-      {
-            if (strcmp(appList[i].appName, appName) == 0)
-            {
-                  return appList[i];
-            }
-      }
+      print("Free memory: %d\n", SystemGetFreeHeapSize());
 
-      regAppData_t appNULL = {NULL, NULL, 0};
-
-      return appNULL;
+      return STD_RET_OK;
 }
 
-
-#ifdef __cplusplus
-}
-#endif
+/* End of application section declaration */
+APP_SEC_END
 
 /*==================================================================================================
                                             End of file

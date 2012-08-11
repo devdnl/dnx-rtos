@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -44,11 +44,12 @@
 #define scan(format, result)        fscan(stdin, stdout, format, result)
 #define putChar(c)                  fputChar(stdout, c)
 #define getChar()                   fgetChar(stdin)
+#define ugetChar()                  ufgetChar(stdin)
 #define clearSTDIN()                fclearSTDIO(stdin)
 #define clearSTDOUT()               fclearSTDIO(stdout)
 
 /** VT100 terminal commands */
-#define enableLineWrap(level)       level##print("\x1B[7h")
+#define enableLineWrap(level)       level##print("\x1B[?7h")
 #define clrscr(level)               level##print("\x1B[2J")
 #define eraseLine(level)            level##print("\x1B[2K")
 #define eraseLineEnd(level)         level##print("\x1B[K")
@@ -73,6 +74,13 @@
 #define bgCyan(level)               level##print("\x1B[46m")
 #define bgWhite(level)              level##print("\x1B[47m")
 
+/** key definitions */
+#define ASCII_ENTER                 0x0D
+#define ASCII_BACKSPACE             0x08
+#define ASCII_NULL                  0x00
+#define ASCII_ESC                   0x1B
+#define ASCII_CANCEL                0x18
+
 
 /*==================================================================================================
                                   Exported types, enums definitions
@@ -94,12 +102,13 @@ extern u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...);
 extern void  kprintEnable(void);
 extern void  fputChar(stdioFIFO_t *stdout, ch_t c);
 extern ch_t  fgetChar(stdioFIFO_t *stdin);
+extern ch_t  ufgetChar(stdioFIFO_t *stdin);
 extern void  fclearSTDIO(stdioFIFO_t *stdio);
 extern u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *var);
 
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
 #endif /* PRINTF_H_ */

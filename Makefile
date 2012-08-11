@@ -31,6 +31,8 @@
 ####################################################################################################
 CSRC = $(sort \
 	app/regapp.c \
+	app/clear/clear.c \
+	app/freemem/freemem.c \
    app/terminal/terminal.c \
    app/lwiptest/lwiptest.c \
    app/http/httpde.c \

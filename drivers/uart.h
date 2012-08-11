@@ -130,22 +130,22 @@ enum UART_IORq_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdStatus_t UART_Init(void);
+extern stdRet_t UART_Init(void);
 
 
-extern stdStatus_t UART_Open(dev_t usartName);
+extern stdRet_t UART_Open(dev_t usartName);
 
 
-extern stdStatus_t UART_Close(dev_t usartName);
+extern stdRet_t UART_Close(dev_t usartName);
 
 
-extern stdStatus_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek);
+extern stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek);
 
 
-extern stdStatus_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek);
+extern stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek);
 
 
-extern stdStatus_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data);
+extern stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data);
 
 
 #ifdef __cplusplus

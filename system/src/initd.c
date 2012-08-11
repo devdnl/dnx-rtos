@@ -90,8 +90,9 @@ void Initd(void *arg)
       UART_Open(UART_DEV_1);
       kprintEnable();
 
-      /* clear VT100 terminal screen */
+      /* VT100 terminal confiugration */
       clrscr(k);
+      enableLineWrap(k);
 
       /* something about board and system */
       kprint("Board powered by "); fontGreen(k); kprint("FreeRTOS\n"); resetAttr(k);
@@ -106,24 +107,24 @@ void Initd(void *arg)
       /*--------------------------------------------------------------------------------------------
        * user initialization
        *------------------------------------------------------------------------------------------*/
-      if (ETHER_Init() != STD_STATUS_OK)
+      if (ETHER_Init() != STD_RET_OK)
             goto initd_net_end;
 
-      if (LwIP_Init() != STD_STATUS_OK)
+      if (LwIP_Init() != STD_RET_OK)
             goto initd_net_end;
 
-      kprint("Starting telnetd... ");
-      if (TaskCreate(telnetd, "telnetd", TELNETD_STACK_SIZE, NULL, 2, NULL) == pdPASS)
-      {
-            fontGreen(k);
-            kprint("SUCCESS\n");
-      }
-      else
-      {
-            fontRed(k);
-            kprint("FAILED\n");
-      }
-      resetAttr(k);
+//      kprint("Starting telnetd... ");
+//      if (TaskCreate(telnetd, "telnetd", TELNETD_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+//      {
+//            fontGreen(k);
+//            kprint("SUCCESS\n");
+//      }
+//      else
+//      {
+//            fontRed(k);
+//            kprint("FAILED\n");
+//      }
+//      resetAttr(k);
 
       kprint("Starting httpde... ");
       if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
@@ -146,9 +147,10 @@ void Initd(void *arg)
       kprint("initd [%d]: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
-      appArgs_t *stdio  = Exec("terminal", NULL);
+      stdRet_t status;
+      appArgs_t *appHdl = Exec("terminal", NULL, &status);
 
-      if (stdio == NULL)
+      if (status != STD_RET_OK)
       {
             fontRed(k); kprint("FAILED\n"); resetAttr(k);
             kprint("Probably no enough free space. Restarting board...");
@@ -175,35 +177,19 @@ void Initd(void *arg)
             bool_t stdoutEmpty = FALSE;
             bool_t RxFIFOEmpty = FALSE;
 
+            /* STDOUT support ------------------------------------------------------------------- */
             TaskSuspendAll();
 
-            if (stdio->stdout->Level > 0)
+            if (appHdl->stdout->Level > 0)
             {
-                  data = stdio->stdout->Buffer[stdio->stdout->RxIdx++];
+                  data = appHdl->stdout->Buffer[appHdl->stdout->RxIdx++];
 
-                  if (stdio->stdout->RxIdx >= configSTDIO_BUFFER_SIZE)
-                        stdio->stdout->RxIdx = 0;
+                  if (appHdl->stdout->RxIdx >= configSTDIO_BUFFER_SIZE)
+                        appHdl->stdout->RxIdx = 0;
 
-                  stdio->stdout->Level--;
+                  appHdl->stdout->Level--;
 
                   UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &data);
-
-                  if (data == STD_STATUS_ERROR || data == STD_STATUS_OK)
-                  {
-                        FreeAppStdio(stdio);
-
-                        if (data == STD_STATUS_OK)
-                              kprint("\ninitd [%d]: terminal was terminated.\n", TaskGetTickCount());
-                        else
-                              kprint("\ninitd [%d]: terminal was terminated with error.\n", TaskGetTickCount());
-
-                        kprint("initd [%d]: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
-
-                        vTaskEndScheduler();
-
-                        while (TRUE)
-                              TaskDelay(1000);
-                  }
 
                   stdoutEmpty = FALSE;
             }
@@ -214,18 +200,19 @@ void Initd(void *arg)
 
             TaskResumeAll();
 
-            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &data) == STD_STATUS_OK)
+            /* STDIN support -------------------------------------------------------------------- */
+            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &data) == STD_RET_OK)
             {
                   TaskSuspendAll();
 
-                  if (stdio->stdin->Level < configSTDIO_BUFFER_SIZE)
+                  if (appHdl->stdin->Level < configSTDIO_BUFFER_SIZE)
                   {
-                        stdio->stdin->Buffer[stdio->stdin->TxIdx++] = data;
+                        appHdl->stdin->Buffer[appHdl->stdin->TxIdx++] = data;
 
-                        if (stdio->stdin->TxIdx >= configSTDIO_BUFFER_SIZE)
-                              stdio->stdin->TxIdx = 0;
+                        if (appHdl->stdin->TxIdx >= configSTDIO_BUFFER_SIZE)
+                              appHdl->stdin->TxIdx = 0;
 
-                        stdio->stdin->Level++;
+                        appHdl->stdin->Level++;
                   }
 
                   TaskResumeAll();
@@ -237,13 +224,30 @@ void Initd(void *arg)
                   RxFIFOEmpty = TRUE;
             }
 
+            /* application monitoring ----------------------------------------------------------- */
+            if (appHdl->exitCode != STD_RET_UNKNOWN)
+            {
+                  if (appHdl->exitCode == STD_RET_OK)
+                        kprint("\ninitd [%d]: terminal was terminated.\n", TaskGetTickCount());
+                  else
+                        kprint("\ninitd [%d]: terminal was terminated with error.\n", TaskGetTickCount());
+
+                  FreeAppStdio(appHdl);
+
+                  kprint("initd [%d]: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
+
+                  vTaskEndScheduler();
+
+                  while (TRUE)
+                        TaskDelay(1000);
+            }
+
+            /* wait state */
             if (stdoutEmpty && RxFIFOEmpty)
                   TaskDelay(1);
       }
 
       /* this should never happen */
-      UART_Close(UART_DEV_1);
-
       TaskTerminate();
 }
 

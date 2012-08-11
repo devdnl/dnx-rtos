@@ -64,65 +64,75 @@
 /**
  * @brief This function start task as application
  *
- * @param[in] app                   application function
- * @param[in] *appName              application name
- * @param[in] stackSize             application stack size
- * @param[in] *arg                  application arguments
+ * @param[in]  app                  application function
+ * @param[in]  *appName             application name
+ * @param[in]  stackSize            application stack size
+ * @param[in]  *arg                 application arguments
+ * @param[out] *status        status
  *
- * @return pointer to the structure with pointers to the STDIO and arguments
+ * @return application handler
  */
 //================================================================================================//
-appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status)
 {
-      appArgs_t *appArgs = NULL;
+      *status = STD_RET_ALLOCERROR;
+      appArgs_t *appHandle = NULL;
 
-      if (!app || !stackSize || !appName)
-            goto StartApplication_end;
+      /* check pointers values */
+      if (!app || !appName || !stackSize || !status)
+            goto RunAsApp_end;
 
-      appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
+      /* allocate memory for application handler */
+      appHandle = (appArgs_t *)Malloc(sizeof(appArgs_t));
 
-      if (!appArgs)
-            goto StartApplication_end;
+      if (!appHandle)
+            goto RunAsApp_end;
       else
-            appArgs->arg = NULL;
+            appHandle->arg = NULL;
 
-      appArgs->stdin  = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
-      appArgs->stdout = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
+      /* allocate memory for STDIO */
+      appHandle->stdin  = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
+      appHandle->stdout = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
 
-      if (!appArgs->stdin || !appArgs->stdout)
+      if (!appHandle->stdin || !appHandle->stdout)
       {
-            if (!appArgs->stdin)
-                  Free(appArgs->stdin);
+            if (!appHandle->stdin)
+                  Free(appHandle->stdin);
 
-            if (!appArgs->stdout)
-                  Free(appArgs->stdout);
+            if (!appHandle->stdout)
+                  Free(appHandle->stdout);
 
-            appArgs->stdin  = NULL;
-            appArgs->stdout = NULL;
-      }
-      else
-      {
-            /* initialize stdio data */
-            appArgs->arg           = arg;
-            appArgs->stdin->Level  = 0;
-            appArgs->stdin->RxIdx  = 0;
-            appArgs->stdin->TxIdx  = 0;
-            appArgs->stdout->Level = 0;
-            appArgs->stdout->RxIdx = 0;
-            appArgs->stdout->TxIdx = 0;
+            appHandle->stdin  = NULL;
+            appHandle->stdout = NULL;
 
-            /* start application task */
-            if (TaskCreate(app, appName, stackSize, appArgs, 2, appArgs->taskHandle) != pdPASS)
-            {
-                  Free(appArgs->stdin);
-                  Free(appArgs->stdout);
-                  Free(appArgs);
-                  appArgs = NULL;
-            }
+            goto RunAsApp_end;
       }
 
-      StartApplication_end:
-            return appArgs;
+      /* initialize stdio data */
+      appHandle->arg              = arg;
+      appHandle->exitCode         = STD_RET_UNKNOWN;
+      appHandle->stdin->Level     = 0;
+      appHandle->stdin->RxIdx     = 0;
+      appHandle->stdin->TxIdx     = 0;
+      appHandle->stdout->Level    = 0;
+      appHandle->stdout->RxIdx    = 0;
+      appHandle->stdout->TxIdx    = 0;
+      appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
+
+      /* start application task */
+      if (TaskCreate(app, appName, stackSize, appHandle, 2, appHandle->ChildTaskHandle) != pdPASS)
+      {
+            Free(appHandle->stdin);
+            Free(appHandle->stdout);
+            Free(appHandle);
+            appHandle = NULL;
+            goto RunAsApp_end;
+      }
+
+      *status = STD_RET_OK;
+
+      RunAsApp_end:
+            return appHandle;
 }
 
 
@@ -130,39 +140,49 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
 /**
  * @brief This function start task as daemon
  *
- * @param[in] app                   application function
- * @param[in] *appName              application name
- * @param[in] stackSize             application stack size
- * @param[in] *arg                  application arguments
+ * @param[in]  app                   application function
+ * @param[in]  *appName              application name
+ * @param[in]  stackSize             application stack size
+ * @param[in]  *arg                  application arguments
+ * @param[out] *status        status
  *
- * @return pointer to the structure with pointers to the STDIO and arguments
+ * @return application handler
  */
 //================================================================================================//
-appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status)
 {
-      appArgs_t *appArgs = NULL;
+      *status = STD_RET_ALLOCERROR;
+      appArgs_t *appHandle = NULL;
 
-      if (!app || !stackSize || !appName)
-                  goto RunAsDaemon_end;
+      /* check pointers values */
+      if (!app|| !appName  || !stackSize || !status)
+            goto RunAsDaemon_end;
 
-      appArgs = (appArgs_t *)Malloc(sizeof(appArgs_t));
+      /* allocate memory for application handler */
+      appHandle = (appArgs_t *)Malloc(sizeof(appArgs_t));
 
-      if (appArgs)
+      if (!appHandle)
+            goto RunAsDaemon_end;
+
+      /* set default values */
+      appHandle->arg              = arg;
+      appHandle->exitCode         = STD_RET_UNKNOWN;
+      appHandle->stdin            = NULL;
+      appHandle->stdout           = NULL;
+      appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
+
+      /* start daemon task */
+      if (TaskCreate(app, appName, stackSize, appHandle, 2, appHandle->ChildTaskHandle) != pdPASS)
       {
-            appArgs->stdin  = NULL;
-            appArgs->stdout = NULL;
-            appArgs->arg    = arg;
-
-            /* start daemon task */
-            if (TaskCreate(app, appName, stackSize, appArgs, 2, appArgs->taskHandle) != pdPASS)
-            {
-                  Free(appArgs);
-                  appArgs = NULL;
-            }
+            Free(appHandle);
+            appHandle = NULL;
+            goto RunAsDaemon_end;
       }
 
+      status = STD_RET_OK;
+
       RunAsDaemon_end:
-            return appArgs;
+            return appHandle;
 }
 
 
@@ -170,17 +190,24 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
 /**
  * @brief Run task as application using only task name
  *
- * @param[in] *name           task name
- * @param[in] *argv           task arguments
+ * @param[in]  *name          task name
+ * @param[in]  *argv          task arguments
+ * @param[out] *status        status
  *
- * @return pointer to the structure with pointers to the STDIO and arguments
+ * @return application handler
  */
 //================================================================================================//
-appArgs_t *Exec(const ch_t *name, ch_t *argv)
+appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status)
 {
       regAppData_t appData = REGAPP_GetAppData(name);
 
-      return RunAsApp(appData.appPtr, appData.appName, appData.stackSize, argv);
+      if (appData.appPtr == NULL)
+      {
+            *status = STD_RET_ERROR;
+            return NULL;
+      }
+
+      return RunAsApp(appData.appPtr, appData.appName, appData.stackSize, argv, status);
 }
 
 
@@ -188,17 +215,24 @@ appArgs_t *Exec(const ch_t *name, ch_t *argv)
 /**
  * @brief Run task as daemon using only task name
  *
- * @param[in] *name           task name
- * @param[in] *argv           task arguments
+ * @param[in]  *name          task name
+ * @param[in]  *argv          task arguments
+ * @param[out] *status        status
  *
- * @return pointer to the structure with pointers to the STDIO and arguments
+ * @return application handler
  */
 //================================================================================================//
-appArgs_t *Execd(const ch_t *name, ch_t *argv)
+appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status)
 {
       regAppData_t appData = REGAPP_GetAppData(name);
 
-      return RunAsDaemon(appData.appPtr, appData.appName, appData.stackSize, argv);
+      if (appData.appPtr == NULL)
+      {
+            *status = STD_RET_ERROR;
+            return NULL;
+      }
+
+      return RunAsDaemon(appData.appPtr, appData.appName, appData.stackSize, argv, status);
 }
 
 
@@ -212,7 +246,7 @@ appArgs_t *Execd(const ch_t *name, ch_t *argv)
  * @retval STD_STATUS_ERROR         freed error, bad pointer
  */
 //================================================================================================//
-stdStatus_t FreeAppStdio(appArgs_t *appArgs)
+stdRet_t FreeAppStdio(appArgs_t *appArgs)
 {
       if (appArgs)
       {
@@ -224,11 +258,11 @@ stdStatus_t FreeAppStdio(appArgs_t *appArgs)
 
             Free(appArgs);
 
-            return STD_STATUS_OK;
+            return STD_RET_OK;
       }
       else
       {
-            return STD_STATUS_ERROR;
+            return STD_RET_ERROR;
       }
 }
 
@@ -241,11 +275,23 @@ stdStatus_t FreeAppStdio(appArgs_t *appArgs)
  * @param exitCode            return value
  */
 //================================================================================================//
-void TerminateApplication(stdioFIFO_t *stdout, stdStatus_t exitCode)
+void TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode)
 {
-      TaskDelay(10);
-      fclearSTDIO(stdout);
-      fputChar(stdout, exitCode);
+      u32_t killTries = 100;
+
+      while (killTries)
+      {
+            if (appArgument->stdout->Level)
+                  TaskDelay(10);
+            else
+                  break;
+
+            killTries--;
+      }
+
+      /* set exit code */
+      appArgument->exitCode = exitCode;
+
       TaskTerminate();
 }
 

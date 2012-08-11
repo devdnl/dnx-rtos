@@ -103,7 +103,7 @@ APPLICATION(httpd)
 
             for (;;)
             {
-                  if (NET_GetTCPStatus(socket, &status) != STD_STATUS_OK)
+                  if (NET_GetTCPStatus(socket, &status) != STD_RET_OK)
                   {
                         print("Get status error.\n");
                         Sleep(1000);
@@ -135,7 +135,7 @@ APPLICATION(httpd)
                               {
                                     print("Data received\n");
 
-                                    if (NET_TCPAcceptReceived(socket) == STD_STATUS_ERROR)
+                                    if (NET_TCPAcceptReceived(socket) == STD_RET_ERROR)
                                     {
                                           print("TCPAcceptReceived error\n");
                                     }
@@ -167,7 +167,7 @@ APPLICATION(httpd)
             }
       }
 
-      Exit(STD_STATUS_ERROR);
+      Exit(STD_RET_ERROR);
 }
 
 #ifdef __cplusplus

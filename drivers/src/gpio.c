@@ -249,7 +249,7 @@ static void InitAFIO(void);
  * @brief Initialise all GPIOs
  */
 //================================================================================================//
-stdStatus_t GPIO_Init(void)
+stdRet_t GPIO_Init(void)
 {
       #if (AFIO_EN > 0)
             InitAFIO();
@@ -283,7 +283,7 @@ stdStatus_t GPIO_Init(void)
             InitGPIOx(GPIOG, GPIOG_CRL, GPIOG_CRH, GPIOG_ODR);
       #endif
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -296,11 +296,11 @@ stdStatus_t GPIO_Init(void)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t GPIO_Open(dev_t dev)
+stdRet_t GPIO_Open(dev_t dev)
 {
       (void)dev;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -313,11 +313,11 @@ stdStatus_t GPIO_Open(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t GPIO_Close(dev_t dev)
+stdRet_t GPIO_Close(dev_t dev)
 {
       (void)dev;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -333,14 +333,14 @@ stdStatus_t GPIO_Close(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t GPIO_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t GPIO_Write(dev_t dev, void *src, size_t size, size_t seek)
 {
       (void)dev;
       (void)src;
       (void)size;
       (void)seek;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -356,14 +356,14 @@ stdStatus_t GPIO_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t seek)
 {
       (void)dev;
       (void)dst;
       (void)size;
       (void)seek;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
@@ -378,13 +378,13 @@ stdStatus_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdStatus_t GPIO_IOCtl(dev_t dev, IORq_t ioRq, void *data)
+stdRet_t GPIO_IOCtl(dev_t dev, IORq_t ioRq, void *data)
 {
       (void)dev;
       (void)ioRq;
       (void)data;
 
-      return STD_STATUS_OK;
+      return STD_RET_OK;
 }
 
 
