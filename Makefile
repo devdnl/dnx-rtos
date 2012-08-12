@@ -42,8 +42,6 @@ CSRC = $(sort \
    drivers/src/gpio.c \
    drivers/src/pll.c \
    drivers/src/uart.c \
-   drivers/lib/STM32_ETH_Driver/stm32_eth.c \
-   drivers/lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    kernel/croutine.c \
    kernel/list.c \
    kernel/queue.c \
@@ -85,6 +83,8 @@ CSRC = $(sort \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
    lib/lwip/port/net.c \
+   lib/STM32_ETH_Driver/stm32_eth.c \
+   lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    system/src/appruntime.c \
    system/src/hooks.c \
    system/src/idle.c \
