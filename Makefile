@@ -40,6 +40,7 @@ CSRC = $(sort \
    cpu/stm32/stm32f10x_vectors.c \
    drivers/src/ether.c \
    drivers/src/gpio.c \
+   drivers/src/i2c.c \
    drivers/src/pll.c \
    drivers/src/uart.c \
    kernel/croutine.c \

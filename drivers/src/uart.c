@@ -234,11 +234,11 @@ typedef struct TxBuffer_struct
 /** type which contain port information */
 typedef struct PortHandle_struct
 {
-      USART_t *Address;                   /* peripheral address */
-      RxFIFO_t      RxFIFO;               /* Rx FIFO for IRQ */
-      TxBuffer_t    TxBuffer;             /* Tx Buffer for IRQ */
-      xTaskHandle   TaskHandle;           /* task handle variable for IRQ */
-      u16_t         Lock;                 /* port reservation */
+      USART_t     *Address;             /* peripheral address */
+      RxFIFO_t    RxFIFO;               /* Rx FIFO for IRQ */
+      TxBuffer_t  TxBuffer;             /* Tx Buffer for IRQ */
+      xTaskHandle TaskHandle;           /* task handle variable for IRQ */
+      u16_t       Lock;                 /* port reservation */
 } PortHandle_t;
 
 
@@ -316,11 +316,6 @@ static PortHandle_t PortHandle[] =
 
 
 /*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
 
@@ -350,7 +345,7 @@ stdRet_t UART_Init(void)
 stdRet_t UART_Open(dev_t usartName)
 {
       stdRet_t status    = UART_STATUS_PORTNOTEXIST;
-      USART_t     *usartPtr = NULL;
+      USART_t  *usartPtr = NULL;
 
       /* check port range */
       if ((unsigned)usartName < UART_DEV_LAST)
@@ -547,7 +542,7 @@ stdRet_t UART_Close(dev_t usartName)
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
-      if (usartName <= UART_DEV_LAST)
+      if ((unsigned)usartName < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
             if (PortHandle[usartName].Lock == TaskGetPID())
@@ -665,7 +660,7 @@ stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
       USART_t     *usartPtr = NULL;
 
       /* check port range */
-      if (usartName <= UART_DEV_LAST)
+      if ((unsigned)usartName < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
             if (PortHandle[usartName].Lock == TaskGetPID())
@@ -730,7 +725,7 @@ stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
-      if (usartName <= UART_DEV_LAST)
+      if ((unsigned)usartName < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
             if (PortHandle[usartName].Lock == TaskGetPID())
@@ -803,7 +798,7 @@ stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
-      if (usartName <= UART_DEV_LAST)
+      if ((unsigned)usartName < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
             if (PortHandle[usartName].Lock == TaskGetPID())

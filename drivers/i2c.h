@@ -33,6 +33,8 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "i2c_cfg.h"
+#include "system.h"
 
 
 /*==================================================================================================
@@ -43,11 +45,49 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** port names */
+enum I2C_DEV_NUMBER_enum
+{
+      #ifdef RCC_APB1ENR_I2C1EN
+      #if (I2C1_ENABLE > 0)
+            I2C_DEV_1,
+      #endif
+      #endif
+
+      #ifdef RCC_APB1ENR_I2C2EN
+      #if (I2C2_ENABLE > 0)
+            I2C_DEV_2,
+      #endif
+      #endif
+
+      I2C_DEV_LAST
+};
 
 
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
+/** statuses */
+enum I2C_STATUS_enum
+{
+      I2C_STATUS_PORTNOTEXIST       = -1,
+      I2C_STATUS_PORTLOCKED         = -2,
+      I2C_STATUS_NOFREEMEM          = -3,
+      I2C_STATUS_BADRQ              = -4,
+      I2C_STATUS_BADARG             = -5,
+      I2C_STATUS_TIMEOUT            = -6,
+      I2C_STATUS_OVERRUN            = -7,
+      I2C_STATUS_ACK_FAILURE        = -8,
+      I2C_STATUS_ARB_LOST           = -9,
+      I2C_STATUS_BUS_ERROR          = -10,
+      I2C_STATUS_ERROR              = -11,
+};
+
+
+/** IO request for I2C driver */
+enum I2C_IORq_enum
+{
+      I2C_IORQ_SETSLAVEADDR,                                /* [in]  u8_t slave address */
+      I2C_IORQ_GETSLAVEADDR,                                /* [out] u8_t slave address */
+      I2C_IORQ_SETSCLFREQ,                                  /* [in]  u32_t SCL frequency [Hz] */
+};
 
 
 /*==================================================================================================
@@ -68,7 +108,7 @@ extern stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek);
 extern stdRet_t I2C_Read(dev_t dev , void *dst, size_t size, size_t seek);
 
 
-extern stdRet_t I2C_IOCtl(dev_t dev, IORq_t iorq, void *data);
+extern stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
 
 
 #ifdef __cplusplus

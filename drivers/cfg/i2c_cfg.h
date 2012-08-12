@@ -36,24 +36,27 @@ extern "C" {
 
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                     I2C Default Configuration
 ==================================================================================================*/
+/** enable (1) or disable (0) I2C1 support */
+#define I2C1_ENABLE                       (1)
+
+/** enable (1) or disable (0) I2C2 support */
+#define I2C2_ENABLE                       (1)
+
+/** set peripheral clock frequency [MHz] */
+#define I2C_PERIPHERAL_FREQ               (36)
+
+/** set SCL frequency [Hz] */
+#define I2C_DEFAULT_SCL_FREQ              (50000)
 
 
 /*==================================================================================================
-                                  Exported types, enums definitions
+                                           Error handling
 ==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported function prototypes
-==================================================================================================*/
-
+#if (I2C_PERIPHERAL_FREQ > 36 || I2C_PERIPHERAL_FREQ < 2)
+#error "I2C_PERIPHERAL_FREQ should be between range of 2 - 36 MHz"
+#endif
 
 #ifdef __cplusplus
 }
