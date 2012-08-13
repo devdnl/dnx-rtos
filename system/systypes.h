@@ -45,13 +45,17 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 /** default system status */
-typedef enum status_enum
+enum status_enum
 {
    STD_RET_OK                 = 0,
    STD_RET_ERROR              = 1,
    STD_RET_ALLOCERROR         = 2,
    STD_RET_UNKNOWN            = 127,
-} stdRet_t;
+};
+
+
+/** universal status type */
+typedef signed char stdRet_t;
 
 
 /** device number type */

@@ -202,7 +202,7 @@ stdRet_t appmain(ch_t *argv)
             {
                   if (strlen(line) != 0)
                   {
-                        print("%s is unknown command.\n", line);
+                        print("\"%s\" is unknown command.\n", line);
                   }
             }
       }

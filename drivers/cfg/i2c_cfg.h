@@ -42,7 +42,7 @@ extern "C" {
 #define I2C1_ENABLE                       (1)
 
 /** enable (1) or disable (0) I2C2 support */
-#define I2C2_ENABLE                       (1)
+#define I2C2_ENABLE                       (0)
 
 /** set peripheral clock frequency [MHz] */
 #define I2C_PERIPHERAL_FREQ               (36)

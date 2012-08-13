@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    regapp.c
+@file    date.c
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration applications
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,22 +24,16 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "regapp.h"
+#include "date.h"
+#include "i2c.h"
 #include <string.h>
 
-/* include here applications headers */
-#include "terminal.h"
-#include "clear.h"
-#include "freemem.h"
-#include "date.h"
-
+/* Begin of application section declaration */
+APPLICATION(date)
+APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -52,24 +46,7 @@ extern "C" {
 
 
 /*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
-
-
-/*==================================================================================================
                                       Local object definitions
-==================================================================================================*/
-const regAppData_t appList[] =
-{
-      {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
-      {CLEAR_NAME   , clear   , CLEAR_STACK_SIZE   },
-      {FREEMEM_NAME,  freemem,  FREEMEM_STACK_SIZE },
-      {DATE_NAME,     date,     DATE_STACK_SIZE    },
-};
-
-
-/*==================================================================================================
-                                     Exported object definitions
 ==================================================================================================*/
 
 
@@ -79,30 +56,107 @@ const regAppData_t appList[] =
 
 //================================================================================================//
 /**
- * @brief
+ * @brief clear main function
  */
 //================================================================================================//
-regAppData_t REGAPP_GetAppData(const ch_t *appName)
+stdRet_t appmain(ch_t *argv)
 {
-      u32_t i;
+      (void) argv;
 
-      for (i = 0; i < ARRAY_SIZE(appList); i++)
+      stdRet_t status;
+      u8_t  date[7];
+      u8_t  tries = 5;
+      u8_t  sa = 0x68;
+
+      for (;;)
       {
-            if (strcmp(appList[i].appName, appName) == 0)
+            /* try to open port */
+            print("[0] Opening port: ");
+
+            if ((status = I2C_Open(I2C_DEV_1)) != STD_RET_OK)
             {
-                  return appList[i];
+                  print("Failed (%d)\n", status);
+
+                  Sleep(2000);
+
+                  if (tries-- == 0)
+                        return STD_RET_ERROR;
+
+                  continue;
+            }
+            else
+            {
+                  print("Success\n");
+            }
+
+            break;
+      }
+
+      /* set slave address */
+      print("[1] Setting slave address: ");
+      if ((status = I2C_IOCtl(I2C_DEV_1, I2C_IORQ_SETSLAVEADDR, &sa)) != STD_RET_OK)
+      {
+            print("Failed (%d)\n", status);
+            goto ClosePort;
+      }
+      else
+      {
+            print("Success\n");
+      }
+
+      /* read register to check that oscillator is enabled */
+      print("[2] Check oscillator settings: ");
+      if ((status = I2C_Read(I2C_DEV_1, date, 1, 0)) != STD_RET_OK)
+      {
+            print("Failed (%d)\n", status);
+            goto ClosePort;
+      }
+      else
+      {
+            print("Success\n");
+      }
+
+      if (date[0] & (1<<7))
+      {
+            print("    Initializing RTC: ");
+
+            memset(date, 0x00, sizeof(date));
+
+            if ((status = I2C_Write(I2C_DEV_1, date, sizeof(date), 0)) != STD_RET_OK)
+            {
+                  print("Failed (%d)\n", status);
+                  goto ClosePort;
+            }
+            else
+            {
+                  print("Success\n");
             }
       }
 
-      regAppData_t appNULL = {NULL, NULL, 0};
+      /* read time */
+      print("[3] Read date: ");
+      if ((status = I2C_Read(I2C_DEV_1, date, sizeof(date), 0)) != STD_RET_OK)
+      {
+            print("Failed (%d)\n", status);
+            goto ClosePort;
+      }
+      else
+      {
+            print("Success\n");
+      }
 
-      return appNULL;
+      /* show time */
+      print("%x:%x:%x day: %x %x-%x-20%x\n", date[2], date[1], date[0],
+            date[3], date[4], date[5], date[6]);
+
+      ClosePort:
+      I2C_Close(I2C_DEV_1);
+
+      return STD_RET_OK;
 }
 
-
-#ifdef __cplusplus
-}
-#endif
+/* End of application section declaration */
+APP_SEC_END
 
 /*==================================================================================================
                                             End of file

@@ -43,8 +43,6 @@ extern "C" {
 /** define I2C error mask */
 #define I2C_ERROR_MASK_BM                 (I2C_SR1_OVR | I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR)
 
-#define SetNACK(interface)                interface->CR1 &= ~(I2C_CR1_ACK);
-#define SetACK(interface)                 interface->CR1 |= I2C_CR1_ACK;
 #define SetSCLFreq(SCLFreq)               (((u32_t)I2C_PERIPHERAL_FREQ * 1000000UL) / (2UL * (u32_t)SCLFreq))
 #define SetSCLTRise()                     (I2C_PERIPHERAL_FREQ + 1)
 
@@ -65,12 +63,11 @@ typedef struct PortHandle_struct
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static stdRet_t StartCondition(I2C_t *i2c);
-static stdRet_t SendSlaveAddress(I2C_t *i2c, u8_t slaveAddr, bool_t twr_frd);
+static stdRet_t StartCondition(I2C_t *i2c, u8_t slaveaddr);
 static stdRet_t SendData(I2C_t *i2c, u8_t *src, size_t size);
-static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size, bool_t ackSupport);
+static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size);
 static void     StopCondition(I2C_t *i2c);
-static stdRet_t CheckStatus(I2C_t *i2c);
+static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout);
 
 
 /*==================================================================================================
@@ -109,7 +106,7 @@ static PortHandle_t PortHandle[] =
 
 //================================================================================================//
 /**
- * @brief
+ * @brief DNLTODO
  */
 //================================================================================================//
 stdRet_t I2C_Init(void)
@@ -120,7 +117,7 @@ stdRet_t I2C_Init(void)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief DNLTODO
  */
 //================================================================================================//
 stdRet_t I2C_Open(dev_t dev)
@@ -157,7 +154,7 @@ stdRet_t I2C_Open(dev_t dev)
                         #endif
 
                         #ifdef RCC_APB1ENR_I2C2EN
-                        #if (I2C1_ENABLE > 0)
+                        #if (I2C2_ENABLE > 0)
                         case I2C_DEV_2:
                               RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
                               break;
@@ -199,12 +196,13 @@ stdRet_t I2C_Open(dev_t dev)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Close device DNLTODO
  */
 //================================================================================================//
 stdRet_t I2C_Close(dev_t dev)
 {
-      stdRet_t status = I2C_STATUS_PORTNOTEXIST;
+      stdRet_t status  = I2C_STATUS_PORTNOTEXIST;
+      I2C_t    *i2cPtr = NULL;
 
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
@@ -212,6 +210,14 @@ stdRet_t I2C_Close(dev_t dev)
             /* check that port is reserved for this task */
             if (PortHandle[dev].Lock == TaskGetPID())
             {
+                  /* set port address */
+                  i2cPtr = PortHandle[dev].Address;
+
+                  /* disable I2C device */
+                  i2cPtr->CR1 |= I2C_CR1_SWRST;
+                  i2cPtr->CR1  = 0;
+                  i2cPtr->CR1 &= ~I2C_CR1_PE;
+
                   /* turn off device */
                   switch (dev)
                   {
@@ -255,7 +261,7 @@ stdRet_t I2C_Close(dev_t dev)
 
 //================================================================================================//
 /**
- * @brief Function write data to the
+ * @brief Function write data to the DNLTODO
  */
 //================================================================================================//
 stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
@@ -279,17 +285,15 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
                   u8_t  *data   = (u8_t *)src;
 
                   /* start condition */
-                  if ((status = StartCondition(i2cPtr)) != STD_RET_OK)
+                  if ((status = StartCondition(i2cPtr,
+                                               (PortHandle[dev].SlaveAddress << 1) & 0xFE
+                                              ) ) != STD_RET_OK)
                         goto I2C_Write_end;
 
-                  /* send slave address */
-                  if ((status = SendSlaveAddress(i2cPtr,
-                                                 PortHandle[dev].SlaveAddress,
-                                                 TRUE)) != STD_RET_OK)
-                        goto I2C_Write_end;
+                  /* send register address */
+                  u8_t regAddr = seek;
 
-                  /* register address */
-                  if ((status = SendData(i2cPtr, (u8_t*)&seek, 1)) != STD_RET_OK)
+                  if ((status = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
                         goto I2C_Write_end;
 
                   /* send data */
@@ -297,6 +301,11 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
                         goto I2C_Write_end;
 
                   /* stop condition */
+                  while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
+                  {
+                     TaskDelay(1);
+                  }
+
                   StopCondition(i2cPtr);
             }
             else
@@ -312,7 +321,7 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief DNLTODO Przerobic tak zeby w funkcjach READ/WRITE byl caly kod bez podfunkcji
  */
 //================================================================================================//
 stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
@@ -336,35 +345,40 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
                   u8_t  *data   = (u8_t *)dst;
 
                   /* start condition */
-                  if ((status = StartCondition(i2cPtr)) != STD_RET_OK)
+                  if ((status = StartCondition(i2cPtr,
+                                               (PortHandle[dev].SlaveAddress << 1) & 0xFE
+                                              ) ) != STD_RET_OK)
                         goto I2C_Read_end;
 
-                  /* send slave address */
-                  if ((status = SendSlaveAddress(i2cPtr,
-                                                 PortHandle[dev].SlaveAddress,
-                                                 TRUE)) != STD_RET_OK)
+                  /* send register address */
+                  u8_t regAddr = seek;
+
+                  if ((status = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
                         goto I2C_Read_end;
 
-                  /* register address */
-                  if ((status = SendData(i2cPtr, (u8_t*)&seek, 1)) != STD_RET_OK)
-                        goto I2C_Read_end;
+                  /* waiting for data send was finished */
+                  while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
+                  {
+                     TaskDelay(1);
+                  }
 
-                  /* repeat start condition */
-                  if ((status = StartCondition(i2cPtr)) != STD_RET_OK)
-                        goto I2C_Read_end;
+                  /* stop condition */
+                  StopCondition(i2cPtr);
 
-                  /* check if is only 1 byte to read */
+                  /* check if is only 1 byte to send */
                   if (size == 1)
-                        SetNACK(i2cPtr);
+                        i2cPtr->CR1 &= ~(I2C_CR1_ACK);
+                  else
+                        i2cPtr->CR1 |= I2C_CR1_ACK;
 
-                  /* send slave address */
-                  if ((status = SendSlaveAddress(i2cPtr,
-                                                 PortHandle[dev].SlaveAddress,
-                                                 FALSE)) != STD_RET_OK)
+                  /* start condition */
+                  if ((status = StartCondition(i2cPtr,
+                                               (PortHandle[dev].SlaveAddress << 1) | 0x01
+                                              ) ) != STD_RET_OK)
                         goto I2C_Read_end;
 
-                  /* read data */
-                  if ((status = ReadData(i2cPtr, data, size, TRUE)) != STD_RET_OK)
+                  /* receive bytes */
+                  if ((status = ReadData(i2cPtr, data, size)) != STD_RET_OK)
                         goto I2C_Read_end;
 
                   /* stop condition */
@@ -383,7 +397,7 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief DNLTODO
  */
 //================================================================================================//
 stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
@@ -437,26 +451,22 @@ stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
 }
 
 
-//================================================================================================//
+/*================================================================================================*/
 /**
- * @brief Generate start condition
- *
- * @param *i2c          i2c device
- *
- * @retval STATUS_OK                  start condition generated successfully
- * @retval STATUS_TIMEOUT             timeout occur
- * @retval STATUS_OVERRUN             overrun
- * @retval STATUS_ACK_FAILURE         ack failure
- * @retval STATUS_ARB_LOST            arbitration lost error
- * @retval STATUS_BUS_ERROR           bus error
- * @retval STATUS_ERROR               more than 1 error
- */
-//================================================================================================//
-static stdRet_t StartCondition(I2C_t *i2c)
+* @brief Function send via I2C interface start condition and slave address
+* Generate start (or repeat start) condition and send slave address to active slave.
+*
+* @param[in] *I2C        i2c device address
+* @param[in] slaveaddr   slave address
+* @return operation status @see i2c_status_t
+**/
+/*================================================================================================*/
+static stdRet_t StartCondition(I2C_t *i2c, u8_t slaveaddr)
 {
-      u8_t timeout;
+      stdRet_t status;
+      u8_t     timeout;
 
-      /* generate start condition */
+      /* generate start condition if bus is free */
       i2c->CR1 |= I2C_CR1_START;
 
       /* waiting for start condition was generated */
@@ -468,42 +478,14 @@ static stdRet_t StartCondition(I2C_t *i2c)
                   TaskDelay(1);
       }
 
-      /* check status */
-      if (!timeout)
-            return I2C_STATUS_TIMEOUT;
-      else
-            return CheckStatus(i2c);
-}
+      /* check errors */
+      if ((status = CheckStatus(i2c, timeout)) != STD_RET_OK)
+            goto StartCondition_end;
 
+      /* write slave address */
+      i2c->DR = slaveaddr;
 
-//================================================================================================//
-/**
- * @brief Function set slave address
- *
- * @param *i2c          i2c device
- * @param slaveAddr     slave address
- * @param twr_frd       write (TRUE), read (FALSE) mode
- *
- * @retval STATUS_OK                  start condition generated successfully
- * @retval STATUS_TIMEOUT             timeout occur
- * @retval STATUS_OVERRUN             overrun
- * @retval STATUS_ACK_FAILURE         ack failure
- * @retval STATUS_ARB_LOST            arbitration lost error
- * @retval STATUS_BUS_ERROR           bus error
- * @retval STATUS_ERROR               more than 1 error
- */
-//================================================================================================//
-static stdRet_t SendSlaveAddress(I2C_t *i2c, u8_t slaveAddr, bool_t twr_frd)
-{
-      u8_t timeout;
-
-      /* set correct address */
-      if (twr_frd)
-            i2c->DR = (slaveAddr << 1) & 0xFE;
-      else
-            i2c->DR = (slaveAddr << 1) | 0x01;
-
-      /* waiting for transmit */
+      /* waiting for slave address transmit */
       for (timeout = 100; timeout > 0; timeout--)
       {
             if (i2c->SR1 & I2C_SR1_ADDR)
@@ -512,11 +494,15 @@ static stdRet_t SendSlaveAddress(I2C_t *i2c, u8_t slaveAddr, bool_t twr_frd)
                   TaskDelay(10);
       }
 
-      /* check status */
-      if (!timeout)
-            return I2C_STATUS_TIMEOUT;
-      else
-            return CheckStatus(i2c);
+      /* check errors */
+      if ((status = CheckStatus(i2c, timeout)) != STD_RET_OK)
+            goto StartCondition_end;
+
+      /* clear ADDR flag */
+      volatile u32_t tmp = i2c->SR2;
+
+      StartCondition_end:
+            return status;
 }
 
 
@@ -540,44 +526,26 @@ static stdRet_t SendSlaveAddress(I2C_t *i2c, u8_t slaveAddr, bool_t twr_frd)
 static stdRet_t SendData(I2C_t *i2c, u8_t *src, size_t size)
 {
       stdRet_t status = STD_RET_OK;
+      u8_t     timeout;
 
-      if (!size)
+      while (size--)
       {
-            status = I2C_STATUS_BADARG;
-            goto SendData_end;
-      }
-
-      /* send buffer */
-      do
-      {
-            u8_t timeout;
-
-            for (timeout = 200; timeout > 0; timeout--)
+            for (timeout = 100; timeout > 0; timeout--)
             {
                   if (i2c->SR1 & I2C_SR1_TXE)
+                  {
+                        if ((status = CheckStatus(i2c, timeout)) != STD_RET_OK)
+                              goto SendData_end;
+
+                        i2c->DR = *(src++);
+
                         break;
+                  }
                   else
-                        TaskDelay(1);
+                  {
+                        TaskDelay(10);
+                  }
             }
-
-            /* check errors */
-            if (!timeout)
-            {
-                  status = I2C_STATUS_TIMEOUT;
-                  goto SendData_end;
-            }
-
-            if ((status = CheckStatus(i2c)) == STD_RET_OK)
-                  i2c->DR = *(src++);
-            else
-                  goto SendData_end;
-      }
-      while (--size);
-
-      /* wait for finish send operation */
-      while (!(i2c->SR1 & I2C_SR1_BTF) || !(i2c->SR1 & I2C_SR1_TXE))
-      {
-            TaskDelay(1);
       }
 
       SendData_end:
@@ -590,46 +558,34 @@ static stdRet_t SendData(I2C_t *i2c, u8_t *src, size_t size)
  * @brief Read data from slave
  */
 //================================================================================================//
-static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size, bool_t ackSupport)
+static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size)
 {
       stdRet_t status = STD_RET_OK;
-
-      if (!size)
-      {
-            status = I2C_STATUS_BADARG;
-            goto ReadData_end;
-      }
+      u8_t     timeout;
 
       /* send buffer */
       while (size--)
       {
-            u8_t timeout;
-
-            /* waiting for byte receive */
-            for (timeout = 200; timeout > 0; timeout--)
+            for (timeout = 100; timeout > 0; timeout--)
             {
                   if (i2c->SR1 & I2C_SR1_RXNE)
+                  {
+                        if ((status = CheckStatus(i2c, timeout)) != STD_RET_OK)
+                              goto ReadData_end;
+
+                        /* if second last byte send  */
+                        if (size == 2)
+                              i2c->CR1 &= ~(I2C_CR1_ACK);
+
+                        *(dst++) = i2c->DR;
+
                         break;
+                  }
                   else
-                        TaskDelay(1);
+                  {
+                        TaskDelay(10);
+                  }
             }
-
-            /* check timeout */
-            if (!timeout)
-            {
-                  status = I2C_STATUS_TIMEOUT;
-                  goto ReadData_end;
-            }
-
-            if ((status = CheckStatus(i2c)) != STD_RET_OK)
-                  goto ReadData_end;
-
-            /* if 2 byte after buffer end set NACK */
-            if (ackSupport && size == 2)
-                  SetNACK(i2c);
-
-            /* read byte from DR */
-            *(dst++) = i2c->DR;
       }
 
       ReadData_end:
@@ -655,6 +611,7 @@ static void StopCondition(I2C_t *i2c)
  * @brief Function check I2C errors
  *
  * @param *i2c          i2c device
+ * @param timeout       timeout value after operation
  *
  * @retval STATUS_OK                  no error
  * @retval STATUS_OVERRUN             overrun
@@ -664,22 +621,33 @@ static void StopCondition(I2C_t *i2c)
  * @retval STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
-static stdRet_t CheckStatus(I2C_t *i2c)
+static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout)
 {
-      stdRet_t status = STD_RET_OK;
+      stdRet_t status;
 
-      switch (i2c->SR1 & I2C_ERROR_MASK_BM)
+      if (!timeout)
       {
-         case I2C_SR1_OVR:  status = I2C_STATUS_OVERRUN;     break;
-         case I2C_SR1_AF:   status = I2C_STATUS_ACK_FAILURE; break;
-         case I2C_SR1_ARLO: status = I2C_STATUS_ARB_LOST;    break;
-         case I2C_SR1_BERR: status = I2C_STATUS_BUS_ERROR;   break;
-         default:           status = I2C_STATUS_ERROR;       break;
+            status = I2C_STATUS_TIMEOUT;
+      }
+      else
+      {
+            switch (i2c->SR1 & I2C_ERROR_MASK_BM)
+            {
+                  case 0:            status = STD_RET_OK;             break;
+                  case I2C_SR1_OVR:  status = I2C_STATUS_OVERRUN;     break;
+                  case I2C_SR1_AF:   status = I2C_STATUS_ACK_FAILURE; break;
+                  case I2C_SR1_ARLO: status = I2C_STATUS_ARB_LOST;    break;
+                  case I2C_SR1_BERR: status = I2C_STATUS_BUS_ERROR;   break;
+                  default:           status = I2C_STATUS_ERROR;       break;
+            }
       }
 
       /* when error occur generate stop condition */
       if (status != STD_RET_OK)
+      {
+            i2c->SR1 = 0;
             StopCondition(i2c);
+      }
 
       return status;
 }
