@@ -107,6 +107,11 @@ static PortHandle_t PortHandle[] =
 //================================================================================================//
 /**
  * @brief Initialize I2C
+ *
+ * @param[in] dev           I2C device
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
 stdRet_t I2C_Init(dev_t dev)
@@ -119,7 +124,13 @@ stdRet_t I2C_Init(dev_t dev)
 
 //================================================================================================//
 /**
- * @brief DNLTODO
+ * @brief Open selected I2C port
+ *
+ * @param[in] dev           I2C device
+ *
+ * @retval STD_RET_OK                     operation success
+ * @retval I2C_STATUS_PORTNOTEXIST        port not exist
+ * @retval I2C_STATUS_PORTLOCKED          port locked
  */
 //================================================================================================//
 stdRet_t I2C_Open(dev_t dev)
@@ -198,7 +209,13 @@ stdRet_t I2C_Open(dev_t dev)
 
 //================================================================================================//
 /**
- * @brief Close device DNLTODO
+ * @brief Close port
+ *
+ * @param[in] dev           I2C device
+ *
+ * @retval STD_RET_OK                     operation success
+ * @retval I2C_STATUS_PORTNOTEXIST        port not exist
+ * @retval I2C_STATUS_PORTLOCKED          port locked
  */
 //================================================================================================//
 stdRet_t I2C_Close(dev_t dev)
@@ -263,7 +280,21 @@ stdRet_t I2C_Close(dev_t dev)
 
 //================================================================================================//
 /**
- * @brief Function write data to the DNLTODO
+ * @brief Function write data to the I2C device
+ *
+ * @param[in] dev           I2C device
+ * @param[in] *src          source data
+ * @param[in] size          data size
+ * @param[in] seek          register address
+ *
+ * @retval STD_RET_OK                     operation success
+ * @retval I2C_STATUS_PORTNOTEXIST        port not exist
+ * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval I2C_STATUS_OVERRUN             overrun
+ * @retval I2C_STATUS_ACK_FAILURE         ack failure
+ * @retval I2C_STATUS_ARB_LOST            arbitration lost error
+ * @retval I2C_STATUS_BUS_ERROR           bus error
+ * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
 stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
@@ -323,7 +354,21 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
 
 //================================================================================================//
 /**
- * @brief DNLTODO Przerobic tak zeby w funkcjach READ/WRITE byl caly kod bez podfunkcji
+ * @brief Read data wrom I2C device
+ *
+ * @param[in ] dev           I2C device
+ * @param[out] *dst          destination data
+ * @param[in ] size          data size
+ * @param[in ] seek          register address
+ *
+ * @retval STD_RET_OK                     operation success
+ * @retval I2C_STATUS_PORTNOTEXIST        port not exist
+ * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval I2C_STATUS_OVERRUN             overrun
+ * @retval I2C_STATUS_ACK_FAILURE         ack failure
+ * @retval I2C_STATUS_ARB_LOST            arbitration lost error
+ * @retval I2C_STATUS_BUS_ERROR           bus error
+ * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
 stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
@@ -399,7 +444,20 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
 
 //================================================================================================//
 /**
- * @brief DNLTODO
+ * @brief Specific settings of I2C port
+ *
+ * @param[in    ] dev           I2C device
+ * @param[in    ] ioRQ          input/output reqest
+ * @param[in,out] *data         input/output data
+ *
+ * @retval STD_RET_OK                     operation success
+ * @retval I2C_STATUS_PORTNOTEXIST        port not exist
+ * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval I2C_STATUS_OVERRUN             overrun
+ * @retval I2C_STATUS_ACK_FAILURE         ack failure
+ * @retval I2C_STATUS_ARB_LOST            arbitration lost error
+ * @retval I2C_STATUS_BUS_ERROR           bus error
+ * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
 stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
@@ -460,7 +518,8 @@ stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
 *
 * @param[in] *I2C        i2c device address
 * @param[in] slaveaddr   slave address
-* @return operation status @see i2c_status_t
+*
+* @return operation status
 **/
 /*================================================================================================*/
 static stdRet_t StartCondition(I2C_t *i2c, u8_t slaveaddr)
@@ -512,17 +571,18 @@ static stdRet_t StartCondition(I2C_t *i2c, u8_t slaveaddr)
 /**
  * @brief Function send data to the slave
  *
- * @param *i2c          i2c device
- * @param *src          data source
- * @param size          data size
+ * @param[in] *i2c          i2c device
+ * @param[in] *src          data source
+ * @param[in] size          data size
  *
- * @retval STATUS_OK                  start condition generated successfully
- * @retval STATUS_TIMEOUT             timeout occur
- * @retval STATUS_OVERRUN             overrun
- * @retval STATUS_ACK_FAILURE         ack failure
- * @retval STATUS_ARB_LOST            arbitration lost error
- * @retval STATUS_BUS_ERROR           bus error
- * @retval STATUS_ERROR               more than 1 error
+ * @retval STD_RET_OK                     operation success
+ * @retval I2C_STATUS_PORTNOTEXIST        port not exist
+ * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval I2C_STATUS_OVERRUN             overrun
+ * @retval I2C_STATUS_ACK_FAILURE         ack failure
+ * @retval I2C_STATUS_ARB_LOST            arbitration lost error
+ * @retval I2C_STATUS_BUS_ERROR           bus error
+ * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
 static stdRet_t SendData(I2C_t *i2c, u8_t *src, size_t size)
@@ -558,6 +618,19 @@ static stdRet_t SendData(I2C_t *i2c, u8_t *src, size_t size)
 //================================================================================================//
 /**
  * @brief Read data from slave
+ *
+ * @param[in ] dev           I2C device
+ * @param[out] *dst          data destination
+ * @param[in ] size          data size
+ *
+ * @retval STD_RET_OK                     operation success
+ * @retval I2C_STATUS_PORTNOTEXIST        port not exist
+ * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval I2C_STATUS_OVERRUN             overrun
+ * @retval I2C_STATUS_ACK_FAILURE         ack failure
+ * @retval I2C_STATUS_ARB_LOST            arbitration lost error
+ * @retval I2C_STATUS_BUS_ERROR           bus error
+ * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
 static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size)
@@ -599,7 +672,7 @@ static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size)
 /**
  * @brief Function send stop condition
  *
- * @param *i2c          i2c device
+ * @param[in] *i2c          i2c device
  */
 //================================================================================================//
 static void StopCondition(I2C_t *i2c)
@@ -612,15 +685,15 @@ static void StopCondition(I2C_t *i2c)
 /**
  * @brief Function check I2C errors
  *
- * @param *i2c          i2c device
- * @param timeout       timeout value after operation
+ * @param[in] *i2c          i2c device
+ * @param[in] timeout       timeout value after operation
  *
- * @retval STATUS_OK                  no error
- * @retval STATUS_OVERRUN             overrun
- * @retval STATUS_ACK_FAILURE         ack failure
- * @retval STATUS_ARB_LOST            arbitration lost error
- * @retval STATUS_BUS_ERROR           bus error
- * @retval STATUS_ERROR               more than 1 error
+ * @retval STD_RET_OK                 no error
+ * @retval I2C_STATUS_OVERRUN         overrun
+ * @retval I2C_STATUS_ACK_FAILURE     ack failure
+ * @retval I2C_STATUS_ARB_LOST        arbitration lost error
+ * @retval I2C_STATUS_BUS_ERROR       bus error
+ * @retval I2C_STATUS_ERROR           more than 1 error
  */
 //================================================================================================//
 static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout)
