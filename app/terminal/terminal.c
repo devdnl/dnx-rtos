@@ -198,6 +198,7 @@ stdRet_t appmain(ch_t *argv)
             if ((arg = strchr(cmd, ' ')) != NULL)
             {
                   *(arg++) = ASCII_NULL;
+                  arg += strspn(arg, " ");
             }
 
             /* check internal commands */

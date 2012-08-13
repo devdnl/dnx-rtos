@@ -100,7 +100,25 @@ stdRet_t appmain(ch_t *argv)
       u8_t  sa = 0x68;
 
       if (argv)
+      {
             print("%s\n", argv);
+            print("Test itoa: %x, %x, %x\n", 255, 0x11, 0x1111);
+
+            ch_t  *outPtr;
+            i32_t result;
+
+            outPtr = atoi(argv, 2, &result);
+            print("2: Offset %d, result %x\n", outPtr - argv, result);
+
+            outPtr = atoi(argv, 8, &result);
+            print("8: Offset %d, result %d\n", outPtr - argv, result);
+
+            outPtr = atoi(argv, 10, &result);
+            print("10: Offset %d, result %d\n", outPtr - argv, result);
+
+            outPtr = atoi(argv, 16, &result);
+            print("16: Offset %d, result %x\n", outPtr - argv, result);
+      }
       else
             print("No args\n");
 
