@@ -324,8 +324,10 @@ static PortHandle_t PortHandle[] =
  * @brief Initialize USART devices. Not used, initialization will done at port open
  */
 //================================================================================================//
-stdRet_t UART_Init(void)
+stdRet_t UART_Init(dev_t usartName)
 {
+      (void) usartName;
+
       return STD_RET_OK;
 }
 

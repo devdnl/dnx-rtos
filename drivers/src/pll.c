@@ -66,8 +66,10 @@
  * NOTE: PLL2 and PLL3 not used
  */
 //================================================================================================//
-stdRet_t PLL_Init(void)
+stdRet_t PLL_Init(dev_t dev)
 {
+      (void) dev;
+
       u32_t wait;
 
       /* turn on HSE oscillator */

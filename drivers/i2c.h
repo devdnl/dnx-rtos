@@ -93,7 +93,7 @@ enum I2C_IORq_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t I2C_Init(void);
+extern stdRet_t I2C_Init(dev_t dev);
 
 
 extern stdRet_t I2C_Open(dev_t dev);

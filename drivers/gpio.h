@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -45,31 +45,37 @@
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** port names */
+enum GPIO_DEV_NUMBER_enum
+{
+   GPIO_DEV_NONE,
+   GPIO_DEV_LAST
+};
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t GPIO_Init(void);
+extern stdRet_t GPIO_Init(dev_t dev);
 
 
-extern stdRet_t GPIO_Open(dev_t);
+extern stdRet_t GPIO_Open(dev_t dev);
 
 
-extern stdRet_t GPIO_Close(dev_t);
+extern stdRet_t GPIO_Close(dev_t dev);
 
 
-extern stdRet_t GPIO_Write(dev_t, void*, size_t, size_t);
+extern stdRet_t GPIO_Write(dev_t dev, void *src, size_t size, size_t seek);
 
 
-extern stdRet_t GPIO_Read(dev_t, void*, size_t, size_t);
+extern stdRet_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t seek);
 
 
-extern stdRet_t GPIO_IOCtl(dev_t, IORq_t, void*);
+extern stdRet_t GPIO_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
 
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
 #endif /* GPIO_H_ */

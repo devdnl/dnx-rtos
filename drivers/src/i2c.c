@@ -106,11 +106,13 @@ static PortHandle_t PortHandle[] =
 
 //================================================================================================//
 /**
- * @brief DNLTODO
+ * @brief Initialize I2C
  */
 //================================================================================================//
-stdRet_t I2C_Init(void)
+stdRet_t I2C_Init(dev_t dev)
 {
+      (void) dev;
+
       return STD_RET_OK;
 }
 

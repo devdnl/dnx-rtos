@@ -72,8 +72,10 @@ extern "C" {
  * @brief Initialise unit
  */
 //================================================================================================//
-stdRet_t ETHER_Init(void)
+stdRet_t ETHER_Init(dev_t eth)
 {
+      (void) eth;
+
       kprint("Ethernet interface configuration... ");
 
       /* enable Ethernet clock */

@@ -107,7 +107,7 @@ void Initd(void *arg)
       /*--------------------------------------------------------------------------------------------
        * user initialization
        *------------------------------------------------------------------------------------------*/
-      if (ETHER_Init() != STD_RET_OK)
+      if (ETHER_Init(ETH_DEV_1) != STD_RET_OK)
             goto initd_net_end;
 
       if (LwIP_Init() != STD_RET_OK)

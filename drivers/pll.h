@@ -51,27 +51,33 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** devices names */
+enum I2C_DEV_NUMBER_enum
+{
+      PLL_DEV_NONE,
+      PLL_DEV_LAST
+};
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t PLL_Init(void);
+extern stdRet_t PLL_Init(dev_t dev);
 
 
-extern stdRet_t PLL_Open(dev_t);
+extern stdRet_t PLL_Open(dev_t dev);
 
 
-extern stdRet_t PLL_Close(dev_t);
+extern stdRet_t PLL_Close(dev_t dev);
 
 
-extern stdRet_t PLL_Write(dev_t, void*, size_t, size_t);
+extern stdRet_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek);
 
 
-extern stdRet_t PLL_Read(dev_t, void*, size_t, size_t);
+extern stdRet_t PLL_Read(dev_t dev, void *dst, size_t size, size_t seek);
 
 
-extern stdRet_t PLL_IOCtl(dev_t, IORq_t, void*);
+extern stdRet_t PLL_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
 
 
 #ifdef __cplusplus

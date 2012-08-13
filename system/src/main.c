@@ -98,14 +98,14 @@ static void InitSystem(void)
       SCB->AIRCR = 0x05FA0000 | 0x300;
 
       /* PLL initialization */
-      if (PLL_Init() != STD_RET_OK)
+      if (PLL_Init(PLL_DEV_NONE) != STD_RET_OK)
             while (TRUE);
 
       /* GPIO and AFIO initialization */
-      GPIO_Init();
+      GPIO_Init(GPIO_DEV_NONE);
 
       /* initialize UART driver */
-      UART_Init();
+      UART_Init(UART_DEV_1);
 }
 
 

@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-      extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -44,31 +44,37 @@
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** port names */
+enum ETH_DEV_NUMBER_enum
+{
+      ETH_DEV_1,
+      ETH_DEV_LAST
+};
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t ETHER_Init(void);
+extern stdRet_t ETHER_Init(dev_t eth);
 
 
-extern stdRet_t ETHER_Open(dev_t);
+extern stdRet_t ETHER_Open(dev_t eth);
 
 
-extern stdRet_t ETHER_Close(dev_t);
+extern stdRet_t ETHER_Close(dev_t eth);
 
 
-extern stdRet_t ETHER_Write(dev_t, void*, size_t, size_t);
+extern stdRet_t ETHER_Write(dev_t eth, void *src, size_t size, size_t seek);
 
 
-extern stdRet_t ETHER_Read(dev_t, void*, size_t, size_t);
+extern stdRet_t ETHER_Read(dev_t eth, void *dst, size_t size, size_t seek);
 
 
-extern stdRet_t ETHER_IOCtl(dev_t, IORq_t, void*);
+extern stdRet_t ETHER_IOCtl(dev_t eth, IORq_t ioRQ, void *data);
 
 
 #ifdef __cplusplus
-      }
+}
 #endif
 
 #endif /* ETH_H_ */

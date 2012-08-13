@@ -249,8 +249,10 @@ static void InitAFIO(void);
  * @brief Initialise all GPIOs
  */
 //================================================================================================//
-stdRet_t GPIO_Init(void)
+stdRet_t GPIO_Init(dev_t dev)
 {
+      (void) dev;
+
       #if (AFIO_EN > 0)
             InitAFIO();
       #endif

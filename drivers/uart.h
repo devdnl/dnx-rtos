@@ -125,7 +125,7 @@ enum UART_IORq_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t UART_Init(void);
+extern stdRet_t UART_Init(dev_t usartName);
 
 
 extern stdRet_t UART_Open(dev_t usartName);
