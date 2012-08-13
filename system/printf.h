@@ -96,7 +96,7 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue);
+extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired);
 extern u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...);
 extern u32_t kprint(const ch_t *format, ...);
 extern u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...);

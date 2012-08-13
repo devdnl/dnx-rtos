@@ -68,6 +68,8 @@ stdRet_t appmain(ch_t *argv)
       u8_t  tries = 5;
       u8_t  sa = 0x68;
 
+      print("Test %d5, %d, 0x%x4\n", -10, 10, 0xDA);
+
       for (;;)
       {
             /* try to open port */
@@ -146,7 +148,7 @@ stdRet_t appmain(ch_t *argv)
       }
 
       /* show time */
-      print("%x:%x:%x day: %x %x-%x-20%x\n", date[2], date[1], date[0],
+      print("%x2:%x2:%x2 day: %x %x2-%x2-20%x2\n", date[2], date[1], date[0],
             date[3], date[4], date[5], date[6]);
 
       ClosePort:

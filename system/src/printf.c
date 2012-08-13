@@ -110,12 +110,13 @@ static void reverseBuffer(ch_t *begin, ch_t *end)
  * @return pointer in the buffer
  */
 //================================================================================================//
-ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue)
+ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired)
 {
       static const ch_t digits[] = "0123456789ABCDEF";
 
       ch_t *bufferCopy = buffer;
-      i32_t sign = 0;
+      i32_t sign    = 0;
+      u8_t  zeroCnt = 0;
       i32_t quot;
       i32_t rem;
 
@@ -128,6 +129,7 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue)
                         quot = (u32_t)((u32_t)value / (u32_t)base);
                         rem  = (u32_t)((u32_t)value % (u32_t)base);
                         *buffer++   = digits[rem];
+                        zeroCnt++;
                   }
                   while ((value = quot));
             }
@@ -141,8 +143,14 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue)
                         quot = value / base;
                         rem  = value % base;
                         *buffer++ = digits[rem];
+                        zeroCnt++;
                   }
                   while ((value = quot));
+            }
+
+            while (zerosRequired > zeroCnt++)
+            {
+                  *buffer++ = '0';
             }
 
             if (sign < 0)
@@ -434,10 +442,22 @@ static u32_t vsnfprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t 
                         }
                         else
                         {
-                              u8_t   base = ((character == 'd') || (character == 'u') ? 10 : 16);
-                              bool_t uint = ((character == 'x') || (character == 'u') ? TRUE : FALSE);
+                              u8_t zeros = *format++;
 
-                              resultPtr = itoa(va_arg(arg, i32_t), result, base, uint);
+                              if (zeros >= '0' && zeros <= '9')
+                              {
+                                    zeros -= '0';
+                              }
+                              else
+                              {
+                                    zeros = 0;
+                                    format--;
+                              }
+
+                              u8_t   base  = ((character == 'd') || (character == 'u') ? 10 : 16);
+                              bool_t uint  = ((character == 'x') || (character == 'u') ? TRUE : FALSE);
+
+                              resultPtr = itoa(va_arg(arg, i32_t), result, base, uint, zeros);
                         }
 
                         while ((character = *resultPtr++))
