@@ -56,17 +56,53 @@ APP_SEC_BEGIN
 
 //================================================================================================//
 /**
+ * @brief Function set day of week based on year, month and day
+ *
+ * @param year
+ * @param month
+ * @param day
+ *
+ * @return week day
+ */
+//================================================================================================//
+u8_t Day(u16_t year, u8_t month, u8_t day)
+{
+      u32_t z, c;
+
+      if (month < 3)
+      {
+            z = year--;
+            c = 0;
+      }
+      else
+      {
+            z = year;
+            c = 2;
+      }
+
+      /* compute week day */
+      u32_t w = /*floor*/(23 * month / 9) + day + 4 + year + /*floor*/(z / 4) - /*floor*/(z / 100) + /*floor*/(z / 400) - c;
+
+      return w % 7;
+}
+
+
+//================================================================================================//
+/**
  * @brief clear main function
  */
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void) argv;
-
       stdRet_t status;
       u8_t  date[7];
       u8_t  tries = 5;
       u8_t  sa = 0x68;
+
+      if (argv)
+            print("%s\n", argv);
+      else
+            print("No args\n");
 
       print("Test %d5, %d, 0x%x4\n", -10, 10, 0xDA);
 

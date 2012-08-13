@@ -49,6 +49,7 @@ typedef enum
       CMD_EXECUTED,
       CMD_NOT_EXIST,
       CMD_ALLOC_ERROR,
+      CMD_EXIT,
 } cmdStatus_t;
 
 
@@ -79,25 +80,27 @@ void PrintPrompt(void)
  * @brief Function find internal terminal commands
  */
 //================================================================================================//
-cmdStatus_t FindInternalCmd(ch_t *line)
+cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 {
       /* exit command --------------------------------------------------------------------------- */
-      if (strcmp("exit", line) == 0)
+      if (strcmp("exit", cmd) == 0)
       {
-            Free(line);
             print("Exit\n");
-            Exit(STD_RET_OK);
+            return CMD_EXIT;
       }
 
       /* echo ----------------------------------------------------------------------------------- */
-      if (strncmp("echo ", line, 5) == 0)
+      if (strcmp("echo", cmd) == 0)
       {
-            print("%s\n", (line + 5));
+            if (arg)
+                  print("%s\n", arg);
+            else
+                  print("\n");
             return CMD_EXECUTED;
       }
 
       /* stack mesurement ----------------------------------------------------------------------- */
-      if (strcmp("stack", line) == 0)
+      if (strcmp("stack", cmd) == 0)
       {
             print("Free stack: %d\n", SystemGetStackFreeSpace());
             return CMD_EXECUTED;
@@ -112,7 +115,7 @@ cmdStatus_t FindInternalCmd(ch_t *line)
  * @brief Function find external commands (registered applications)
  */
 //================================================================================================//
-cmdStatus_t FindExternalCmd(ch_t *line)
+cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
       stdRet_t  appHdlStatus;
       appArgs_t *appHdl;
@@ -121,7 +124,7 @@ cmdStatus_t FindExternalCmd(ch_t *line)
       /* waiting for empty stdout */
       Sleep(10);
 
-      appHdl = Exec(line, NULL, &appHdlStatus);
+      appHdl = Exec(cmd, arg, &appHdlStatus);
 
       if (appHdlStatus == STD_RET_OK)
       {
@@ -161,6 +164,8 @@ stdRet_t appmain(ch_t *argv)
 
       cmdStatus_t cmdStatus;
       ch_t        *line;
+      ch_t        *cmd;
+      ch_t        *arg;
 
       /* allocate memory for input line */
       line = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
@@ -185,12 +190,24 @@ stdRet_t appmain(ch_t *argv)
             /* waiting for command */
             scan("%s3", line);
 
+            /* finds all spaces before command */
+            cmd = line;
+            cmd += strspn(line, " ");
+
+            /* finds first space after command */
+            if ((arg = strchr(cmd, ' ')) != NULL)
+            {
+                  *(arg++) = ASCII_NULL;
+            }
+
             /* check internal commands */
-            if ((cmdStatus = FindInternalCmd(line)) == CMD_EXECUTED)
+            if ((cmdStatus = FindInternalCmd(cmd, arg)) == CMD_EXECUTED)
                   continue;
+            else if (cmdStatus == CMD_EXIT)
+                  break;
 
             /* check external commands */
-            if ((cmdStatus = FindExternalCmd(line)) == CMD_EXECUTED)
+            if ((cmdStatus = FindExternalCmd(cmd, arg)) == CMD_EXECUTED)
                   continue;
 
             /* check status */
@@ -200,9 +217,9 @@ stdRet_t appmain(ch_t *argv)
             }
             else if (cmdStatus == CMD_NOT_EXIST)
             {
-                  if (strlen(line) != 0)
+                  if (strlen(cmd) != 0)
                   {
-                        print("\"%s\" is unknown command.\n", line);
+                        print("\"%s\" is unknown command.\n", cmd);
                   }
             }
       }
