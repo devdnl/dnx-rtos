@@ -46,6 +46,18 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** type which define parse possiblities */
+typedef enum parseType_enum
+{
+      PARSE_AS_BIN,
+      PARSE_AS_OCT,
+      PARSE_AS_DEC,
+      PARSE_AS_HEX,
+      PARSE_AS_STRING,
+      PARSE_AS_CHAR,
+      PARSE_AS_EXIST,
+      PARSE_AS_UNKNOWN
+} parseType_t;
 
 
 /*==================================================================================================
@@ -62,6 +74,7 @@ extern appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status);
 extern appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status);
 extern stdRet_t  FreeAppStdio(appArgs_t *appArgs);
 extern void      TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode);
+extern stdRet_t  ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 
 
 #ifdef __cplusplus

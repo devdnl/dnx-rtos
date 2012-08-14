@@ -68,7 +68,7 @@ stdRet_t appmain(ch_t *argv)
 
       memset(appList, 0, INPUT_BUFFER_SIZE);
 
-      REGAPP_GetAppList(appList, INPUT_BUFFER_SIZE);
+      GetAppList(appList, INPUT_BUFFER_SIZE);
 
       fontCyan();
       print("%s", appList);

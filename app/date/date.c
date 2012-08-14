@@ -99,9 +99,32 @@ stdRet_t appmain(ch_t *argv)
       u8_t  tries = 5;
       u8_t  sa = 0x68;
 
+
+      print("Argument parsing TEST:\n");
+      ch_t  *string = (ch_t*)Malloc(100);
+      i32_t value;
+      ch_t  character;
+
+      if (string)
+      {
+            if (ParseArgsAs(argv, "-h ", PARSE_AS_HEX, &value) == STD_RET_OK)
+                  print("-h = %x\n", value);
+
+            if (ParseArgsAs(argv, "--hour=", PARSE_AS_HEX, &value) == STD_RET_OK)
+                  print("--hour = %x\n", value);
+
+            if (ParseArgsAs(argv, "-s ", PARSE_AS_STRING, string) == STD_RET_OK)
+                  print("-s = %s\n", string);
+
+            if (ParseArgsAs(argv, "--char=", PARSE_AS_CHAR, &character) == STD_RET_OK)
+                  print("--char = %c\n", character);
+
+            Free(string);
+      }
+      print("END\n");
+
       if (argv)
       {
-            print("%s\n", argv);
             print("Test itoa: %x, %x, %x\n", 255, 0x11, 0x1111);
 
             ch_t  *outPtr;

@@ -29,6 +29,7 @@
 ==================================================================================================*/
 #include "appruntime.h"
 #include "regapp.h"
+#include <string.h>
 
 
 /*==================================================================================================
@@ -199,7 +200,7 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
 //================================================================================================//
 appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status)
 {
-      regAppData_t appData = REGAPP_GetAppData(name);
+      regAppData_t appData = GetAppData(name);
 
       if (appData.appPtr == NULL)
       {
@@ -224,7 +225,7 @@ appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status)
 //================================================================================================//
 appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status)
 {
-      regAppData_t appData = REGAPP_GetAppData(name);
+      regAppData_t appData = GetAppData(name);
 
       if (appData.appPtr == NULL)
       {
@@ -293,6 +294,113 @@ void TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode)
       appArgument->exitCode = exitCode;
 
       TaskTerminate();
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function parse application arguments
+ *
+ * @param *argv         argument string
+ * @param *findArg      argument to find
+ * @param parseAs       type of result
+ * @param *result       result buffer (depending of parse type)
+ *
+ * @retval STD_RET_OK         value of argument was finded and converted
+ * @retval STD_RET_ERROR      cannot find argument specified
+ */
+//================================================================================================//
+stdRet_t ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
+{
+      u8_t  base;
+
+      if (!argv || parseAs >= PARSE_AS_UNKNOWN || !result)
+            return STD_RET_ERROR;
+
+      u32_t findArgSize = strlen(findArg);
+
+      while (*argv != ASCII_NULL)
+      {
+            /* if find character which open string, parser must find string end */
+            if (*argv == '"')
+            {
+                  ch_t *stringEnd;
+
+                  argv++;
+
+                  if ((stringEnd = strchr(argv, '"')) == NULL)
+                        argv++;
+                  else
+                        argv = stringEnd + 1;
+            }
+
+            if (strncmp(argv, findArg, findArgSize) == 0)
+            {
+                  argv += findArgSize;
+
+                  if (parseAs == PARSE_AS_STRING)
+                  {
+                        ch_t character = *argv++;
+
+                        if (character == '"')
+                        {
+                              /* try to find closed " */
+                              if (strchr(argv, '"') == NULL)
+                                    return STD_RET_ERROR;
+
+                              ch_t *string = (ch_t*)result;
+
+                              while ((character = *(argv++)) != '"')
+                              {
+                                    *(string++) = character;
+                              }
+
+                              *(string++) = ASCII_NULL;
+
+                              return STD_RET_OK;
+                        }
+                        else
+                        {
+                              return STD_RET_ERROR;
+                        }
+                  }
+                  else if (parseAs == PARSE_AS_CHAR)
+                  {
+                        ch_t *character = (ch_t*)result;
+
+                        *character = *argv;
+
+                        return STD_RET_OK;
+                  }
+                  else if (parseAs == PARSE_AS_EXIST)
+                  {
+                        return STD_RET_OK;
+                  }
+                  else
+                  {
+                        i32_t *value = (i32_t*)result;
+
+                        switch (parseAs)
+                        {
+                              case PARSE_AS_BIN: base = 2;  break;
+                              case PARSE_AS_OCT: base = 8;  break;
+                              case PARSE_AS_DEC: base = 10; break;
+                              case PARSE_AS_HEX: base = 16; break;
+                              default: return STD_RET_ERROR;
+                        }
+
+                        atoi(argv, base, value);
+
+                        return STD_RET_OK;
+                  }
+
+                  return STD_RET_OK;
+            }
+
+            argv++;
+      }
+
+      return STD_RET_ERROR;
 }
 
 

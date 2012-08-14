@@ -88,7 +88,7 @@ const regAppData_t appList[] =
  * @return application informations needed to run
  */
 //================================================================================================//
-regAppData_t REGAPP_GetAppData(const ch_t *appName)
+regAppData_t GetAppData(const ch_t *appName)
 {
       u32_t i;
 
@@ -115,7 +115,7 @@ regAppData_t REGAPP_GetAppData(const ch_t *appName)
  * @return number of exist application
  */
 //================================================================================================//
-u32_t REGAPP_GetAppList(ch_t *nameList, u32_t size)
+u32_t GetAppList(ch_t *nameList, u32_t size)
 {
       if (ARRAY_SIZE(appList) == 0)
             return 0;
