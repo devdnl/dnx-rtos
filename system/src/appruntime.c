@@ -314,14 +314,16 @@ stdRet_t ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *resul
 {
       u8_t  base;
 
+      /* check argument correctness */
       if (!argv || parseAs >= PARSE_AS_UNKNOWN || !result)
             return STD_RET_ERROR;
 
       u32_t findArgSize = strlen(findArg);
 
+      /* scan argv line */
       while (*argv != ASCII_NULL)
       {
-            /* if find character which open string, parser must find string end */
+            /* if find character which open string, parser must find end of a string */
             if (*argv == '"')
             {
                   ch_t *stringEnd;
@@ -334,6 +336,7 @@ stdRet_t ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *resul
                         argv = stringEnd + 1;
             }
 
+            /* check if current argument is found */
             if (strncmp(argv, findArg, findArgSize) == 0)
             {
                   argv += findArgSize;
