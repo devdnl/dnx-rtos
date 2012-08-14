@@ -476,13 +476,13 @@ static u32_t vsnfprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t 
       ch_t        *stream = (ch_t*)streamStdout;
 
 
-      while ((character = *format++) != '\0')
+      while ((character = *format++) != ASCII_NULL)
       {
             if (character != '%')
             {
-                  if (character == '\n')
+                  if (character == ASCII_LF)
                   {
-                        putCharacter('\r');
+                        putCharacter(ASCII_CR);
                   }
 
                   putCharacter(character);
@@ -569,8 +569,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
       {
             if (character != '%')
             {
-                  if (character == '\n')
-                        fputChar(stdout, '\r');
+                  if (character == ASCII_LF)
+                        fputChar(stdout, ASCII_CR);
 
                   fputChar(stdout, character);
             }
@@ -598,8 +598,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                               else if (character == ASCII_CR || character == ASCII_LF)
                               {
                                     *dec *= sign;
-                                    fputChar(stdout, '\r');
-                                    fputChar(stdout, '\n');
+                                    fputChar(stdout, ASCII_CR);
+                                    fputChar(stdout, ASCII_LF);
                                     goto fscan_end;
                               }
                               else if ((character == ASCII_BS) && (streamLen > 1))
@@ -655,8 +655,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                               }
                               else if (character == ASCII_CR || character == ASCII_LF)
                               {
-                                    fputChar(stdout, '\r');
-                                    fputChar(stdout, '\n');
+                                    fputChar(stdout, ASCII_CR);
+                                    fputChar(stdout, ASCII_LF);
                                     goto fscan_end;
                               }
                               else if ((character == ASCII_BS) && (streamLen > 1))
@@ -707,8 +707,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                               }
                               else if (character == ASCII_CR || character == ASCII_LF)
                               {
-                                    fputChar(stdout, '\r');
-                                    fputChar(stdout, '\n');
+                                    fputChar(stdout, ASCII_CR);
+                                    fputChar(stdout, ASCII_LF);
                                     goto fscan_end;
                               }
                               else if ((character == ASCII_BS) && (streamLen > 1))
@@ -754,8 +754,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                               if (character == ASCII_CR || character == ASCII_LF)
                               {
                                     *(string++) = 0x00;
-                                    fputChar(stdout, '\r');
-                                    fputChar(stdout, '\n');
+                                    fputChar(stdout, ASCII_CR);
+                                    fputChar(stdout, ASCII_LF);
                                     goto fscan_end;
                               }
                               else if ((character == ASCII_BS) && (streamLen > 1))

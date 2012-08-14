@@ -78,6 +78,11 @@ void PrintPrompt(void)
 //================================================================================================//
 /**
  * @brief Function find internal terminal commands
+ *
+ * @param *cmd          command
+ * @param *arg          argument list
+ *
+ * @return operation status
  */
 //================================================================================================//
 cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
@@ -99,10 +104,19 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
             return CMD_EXECUTED;
       }
 
-      /* stack mesurement ----------------------------------------------------------------------- */
+      /* stack measurement ---------------------------------------------------------------------- */
       if (strcmp("stack", cmd) == 0)
       {
             print("Free stack: %d\n", SystemGetStackFreeSpace());
+            return CMD_EXECUTED;
+      }
+
+      /* system reboot -------------------------------------------------------------------------- */
+      if (strcmp("reboot", cmd) == 0)
+      {
+            print("Reboting...\n");
+            Sleep(1000);
+            SystemReboot();
             return CMD_EXECUTED;
       }
 
@@ -113,6 +127,11 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 /**
  * @brief Function find external commands (registered applications)
+ *
+ * @param *cmd          command
+ * @param *arg          argument list
+ *
+ * @return operation status
  */
 //================================================================================================//
 cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)

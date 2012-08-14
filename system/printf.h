@@ -50,6 +50,8 @@ extern "C" {
 
 /** VT100 terminal commands */
 #define enableLineWrap(level)       level##print("\x1B[?7h")
+#define setNewLineMode(level)       level##print("\x1B[20h")
+#define setLineFeedMode(level)      level##print("\x1B[20l")
 #define clrscr(level)               level##print("\x1B[2J")
 #define eraseLine(level)            level##print("\x1B[2K")
 #define eraseLineEnd(level)         level##print("\x1B[K")

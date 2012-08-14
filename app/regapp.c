@@ -39,6 +39,7 @@ extern "C" {
 #include "clear.h"
 #include "freemem.h"
 #include "date.h"
+#include "ls.h"
 
 
 /*==================================================================================================
@@ -65,6 +66,7 @@ const regAppData_t appList[] =
       {CLEAR_NAME   , clear   , CLEAR_STACK_SIZE   },
       {FREEMEM_NAME,  freemem,  FREEMEM_STACK_SIZE },
       {DATE_NAME,     date,     DATE_STACK_SIZE    },
+      {LS_NAME,       ls,       LS_STACK_SIZE      },
 };
 
 
@@ -79,7 +81,11 @@ const regAppData_t appList[] =
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function find in the application list selected application's parameters
+ *
+ * @param *appName            application name
+ *
+ * @return application informations needed to run
  */
 //================================================================================================//
 regAppData_t REGAPP_GetAppData(const ch_t *appName)
@@ -97,6 +103,54 @@ regAppData_t REGAPP_GetAppData(const ch_t *appName)
       regAppData_t appNULL = {NULL, NULL, 0};
 
       return appNULL;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Send application list
+ *
+ * @param *nameList           list of exist application
+ *
+ * @return number of exist application
+ */
+//================================================================================================//
+u32_t REGAPP_GetAppList(ch_t *nameList, u32_t size)
+{
+      if (ARRAY_SIZE(appList) == 0)
+            return 0;
+
+      if (size)
+            size--;
+
+      u32_t app;
+      for (app = 0; app < ARRAY_SIZE(appList); app++)
+      {
+            u32_t i;
+            for (i = 0; i < strlen(appList[app].appName); i++)
+            {
+                  if (size)
+                  {
+                        *(nameList++) = appList[app].appName[i];
+                        size--;
+                  }
+                  else
+                  {
+                        *(nameList) = ASCII_NULL;
+                        return app;
+                  }
+
+                  size--;
+            }
+
+            if (size--)
+                  *(nameList++) = ASCII_CR;
+
+            if (size--)
+                  *(nameList++) = ASCII_LF;
+      }
+
+      return app;
 }
 
 

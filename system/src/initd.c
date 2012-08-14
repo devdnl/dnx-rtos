@@ -90,7 +90,7 @@ void Initd(void *arg)
       UART_Open(UART_DEV_1);
       kprintEnable();
 
-      /* VT100 terminal confiugration */
+      /* VT100 terminal configuration */
       clrscr(k);
       enableLineWrap(k);
 
@@ -156,7 +156,7 @@ void Initd(void *arg)
             kprint("Probably no enough free space. Restarting board...");
             TaskResumeAll();
             TaskDelay(5000);
-            NVIC_SystemReset();
+            SystemReboot();
       }
       else
       {

@@ -85,7 +85,7 @@
 #define UART_DEFAULT_MULTICOM_ADDRESS           0
 
 /** baud rate */
-#define UART_DEFAULT_BAUDRATE                   9600
+#define UART_DEFAULT_BAUDRATE                   460800
 
 /** CTS hardware flow control enable (1) or disable (0) */
 #define UART_DEFAULT_CTS_ENABLE                 0

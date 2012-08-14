@@ -61,6 +61,7 @@ typedef struct
                                      Exported function prototypes
 ==================================================================================================*/
 extern regAppData_t REGAPP_GetAppData(const ch_t *appName);
+extern u32_t        REGAPP_GetAppList(ch_t *nameList, u32_t size);
 
 
 #ifdef __cplusplus

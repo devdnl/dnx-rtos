@@ -1,7 +1,7 @@
-#ifndef CLEAR_H_
-#define CLEAR_H_
+#ifndef LS_H_
+#define LS_H_
 /*=============================================================================================*//**
-@file    clear.h
+@file    ls.h
 
 @author  Daniel Zorychta
 
@@ -40,10 +40,10 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define CLEAR_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
+#define LS_STACK_SIZE                     (2 * MINIMAL_STACK_SIZE)
 
 /** define application name */
-#define CLEAR_NAME                     "clear"
+#define LS_NAME                           "ls"
 
 
 /*==================================================================================================
@@ -59,14 +59,14 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern APPLICATION(clear);
+extern APPLICATION(ls);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CLEAR_H_ */
+#endif
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

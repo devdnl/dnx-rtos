@@ -34,6 +34,7 @@ CSRC = $(sort \
 	app/clear/clear.c \
 	app/date/date.c \
 	app/freemem/freemem.c \
+	app/ls/ls.c \
    app/terminal/terminal.c \
    app/lwiptest/lwiptest.c \
    app/http/httpde.c \
