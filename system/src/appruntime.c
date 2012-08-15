@@ -338,6 +338,19 @@ stdRet_t ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *resul
                         argv = stringEnd + 1;
             }
 
+            /* check that argument is short or long */
+            if (*argv == '-' && *(argv + 1) == '-')
+            {
+                  argv += 2;
+
+                  if (findArgSize == 1)
+                        argv++;
+            }
+            else if (*argv == '-' && findArgSize == 1)
+            {
+                  argv++;
+            }
+
             /* check if current argument is found */
             if (strncmp(argv, findArg, findArgSize) == 0)
             {

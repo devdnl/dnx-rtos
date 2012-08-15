@@ -73,12 +73,12 @@ stdRet_t appmain(ch_t *argv)
       bcdTime_t  time;
       bcdDate_t  date;
 
-      if ( (ParseArgsAs(argv, "--help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-         ||(ParseArgsAs(argv, "-h",     PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+      if ( (ParseArgsAs(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+         ||(ParseArgsAs(argv, "h",     PARSE_AS_EXIST, NULL) == STD_RET_OK) )
       {
             print("Help\n");
       }
-      else if (ParseArgsAs(argv, "--set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+      else if (ParseArgsAs(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
       {
             i32_t ahours   = 0;
             i32_t aminutes = 0;
@@ -87,13 +87,13 @@ stdRet_t appmain(ch_t *argv)
             i32_t amonth   = 1;
             i32_t adate    = 1;
 
-            ParseArgsAs(argv, "-H", PARSE_AS_HEX, &ahours);
-            ParseArgsAs(argv, "-m", PARSE_AS_HEX, &aminutes);
-            ParseArgsAs(argv, "-S", PARSE_AS_HEX, &aseconds);
+            ParseArgsAs(argv, "H", PARSE_AS_HEX, &ahours);
+            ParseArgsAs(argv, "m", PARSE_AS_HEX, &aminutes);
+            ParseArgsAs(argv, "s", PARSE_AS_HEX, &aseconds);
 
-            ParseArgsAs(argv, "-Y", PARSE_AS_HEX, &ayear);
-            ParseArgsAs(argv, "-M", PARSE_AS_HEX, &amonth);
-            ParseArgsAs(argv, "-D", PARSE_AS_HEX, &adate);
+            ParseArgsAs(argv, "Y", PARSE_AS_HEX, &ayear);
+            ParseArgsAs(argv, "M", PARSE_AS_HEX, &amonth);
+            ParseArgsAs(argv, "D", PARSE_AS_HEX, &adate);
 
             print("%x2-%x2-20%x2, %x2:%x2:%x2\n", adate, amonth, ayear, ahours, aminutes, aseconds);
 
