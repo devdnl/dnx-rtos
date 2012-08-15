@@ -122,7 +122,7 @@ static bcdDate_t currentDate;
  * If bit 7 (CH) is set necessary is clear CH bit to enable oscillator
  **/
 //================================================================================================//
-void DS1307_Init(void)
+stdRet_t DS1307_Init(void)
 {
       u8_t     tmp;
       stdRet_t status;
@@ -170,6 +170,8 @@ void DS1307_Init(void)
       }
 
       resetAttr(k);
+
+      return status;
 }
 
 

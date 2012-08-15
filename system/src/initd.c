@@ -36,6 +36,7 @@ extern "C" {
 #include "ether.h"
 #include "netconf.h"
 #include "ds1307.h"
+#include "MPL115A2.h"
 
 #include "lwiptest.h"
 #include "httpde.h"
@@ -143,6 +144,8 @@ void Initd(void *arg)
       initd_net_end:
 
       DS1307_Init();
+
+      MPL115A2_Init();
 
       /*--------------------------------------------------------------------------------------------
        * starting terminal

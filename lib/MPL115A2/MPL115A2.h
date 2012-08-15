@@ -1,11 +1,11 @@
-#ifndef DS1307_H_
-#define DS1307_H_
+#ifndef MPL115A2_H_
+#define MPL115A2_H_
 /*=============================================================================================*//**
-@file    ds1307.h
+@file    MPL115A2.h
 
 @author  Daniel Zorychta
 
-@brief   This file support DS1307
+@brief   This file support temperature and pressure sensor - MPL115A2
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -37,31 +37,13 @@ extern "C" {
 
 
 /*==================================================================================================
-                                  Exported symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
-/** define DS1307 RAM size */
-#define DS1307_RAM_SIZE             (REG_RAM_END - REG_RAM_BEGIN)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** time structure */
-typedef struct time_struct
-{
-      u8_t seconds;     /**< [BCD] */
-      u8_t minutes;     /**< [BCD] */
-      u8_t hours;       /**< [BCD] */
-} bcdTime_t;
-
-/** date structure */
-typedef struct date_struct
-{
-      u8_t weekday;     /**< [BCD] */
-      u8_t day;         /**< [BCD] */
-      u8_t month;       /**< [BCD] */
-      u8_t year;        /**< [BCD] */
-} bcdDate_t;
 
 
 /*==================================================================================================
@@ -72,19 +54,15 @@ typedef struct date_struct
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t  DS1307_Init(void);
-extern bcdTime_t DS1307_GetTime(void);
-extern stdRet_t  DS1307_SetTime(bcdTime_t time);
-extern bcdDate_t DS1307_GetDate(void);
-extern stdRet_t  DS1307_SetDate(bcdDate_t date);
-extern stdRet_t  DS1307_ReadRAM(u8_t *dst, u8_t size, u8_t seek);
-extern stdRet_t  DS1307_WriteRAM(u8_t *src, u8_t size, u8_t seek);
+extern stdRet_t MPL115A2_Init(void);
+extern stdRet_t MPL115A2_GetTemperature(u16_t *temperature);
+extern stdRet_t MPL115A2_GetPressure(u16_t *pressure);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* DS1307_H_ */
+#endif /* MPL115A2_H_ */
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/
