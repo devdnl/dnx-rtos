@@ -102,8 +102,8 @@ void Initd(void *arg)
       TaskDelay(1000);
 
       /* info about system start */
-      kprint("initd [%d]: kernel print started\n", TaskGetTickCount());
-      kprint("initd [%d]: init daemon started\n", TaskGetTickCount());
+      kprint("[%d] initd: kernel print started\n", TaskGetTickCount());
+      kprint("[%d] initd: init daemon started\n", TaskGetTickCount());
 
       /*--------------------------------------------------------------------------------------------
        * user initialization
@@ -147,7 +147,7 @@ void Initd(void *arg)
       /*--------------------------------------------------------------------------------------------
        * starting terminal
        *------------------------------------------------------------------------------------------*/
-      kprint("initd [%d]: starting interactive console... ", TaskGetTickCount());
+      kprint("[%d] initd: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
       stdRet_t status;
@@ -167,7 +167,7 @@ void Initd(void *arg)
       }
 
       /* initd info about stack usage */
-      kprint("initd [%d]: free stack: %d\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
+      kprint("[%d] initd: free stack: %d\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
@@ -204,13 +204,13 @@ void Initd(void *arg)
             if (appHdl->exitCode != STD_RET_UNKNOWN)
             {
                   if (appHdl->exitCode == STD_RET_OK)
-                        kprint("\ninitd [%d]: terminal was terminated.\n", TaskGetTickCount());
+                        kprint("\n[%d] initd: terminal was terminated.\n", TaskGetTickCount());
                   else
-                        kprint("\ninitd [%d]: terminal was terminated with error.\n", TaskGetTickCount());
+                        kprint("\n[%d] initd: terminal was terminated with error.\n", TaskGetTickCount());
 
                   FreeAppStdio(appHdl);
 
-                  kprint("initd [%d]: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
+                  kprint("[%d] initd: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
 
                   vTaskEndScheduler();
 

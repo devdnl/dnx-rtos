@@ -280,17 +280,7 @@ stdRet_t FreeAppStdio(appArgs_t *appArgs)
 //================================================================================================//
 void TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode)
 {
-      u32_t killTries = 100;
-
-      while (killTries)
-      {
-            if (appArgument->stdout->Level)
-                  TaskDelay(10);
-            else
-                  break;
-
-            killTries--;
-      }
+      fsflush(appArgument->stdout);
 
       /* set exit code */
       appArgument->exitCode = exitCode;
@@ -312,7 +302,7 @@ void TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode)
  * @retval STD_RET_ERROR      cannot find argument specified
  */
 //================================================================================================//
-stdRet_t ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
+stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
 {
       u8_t  base;
 

@@ -362,7 +362,7 @@ void fputChar(stdioFIFO_t *stdout, ch_t c)
                   else
                   {
                         TaskResumeAll();
-                        TaskDelay(10);
+                        TaskDelay(5);
                   }
             }
       }
@@ -433,7 +433,7 @@ ch_t fgetChar(stdioFIFO_t *stdin)
                   else
                   {
                         TaskResumeAll();
-                        TaskDelay(10);
+                        TaskDelay(5);
                   }
             }
       }
@@ -474,6 +474,22 @@ ch_t ufgetChar(stdioFIFO_t *stdin)
       }
 
       return out;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Waiting for STDIO flush
+ *
+ * @param stdioFIFO_t *stdio
+ */
+//================================================================================================//
+void fsflush(stdioFIFO_t *stdio)
+{
+       while (stdio->Level)
+       {
+             TaskDelay(1);
+       }
 }
 
 

@@ -90,6 +90,7 @@ CSRC = $(sort \
    lib/STM32_ETH_Driver/stm32_eth.c \
    lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    lib/STM32F10x_StdPeriph_Driver/misc.c \
+   lib/utils/utils.c \
    system/src/appruntime.c \
    system/src/hooks.c \
    system/src/idle.c \

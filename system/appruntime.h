@@ -74,7 +74,7 @@ extern appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status);
 extern appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status);
 extern stdRet_t  FreeAppStdio(appArgs_t *appArgs);
 extern void      TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode);
-extern stdRet_t  ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
+extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 
 
 #ifdef __cplusplus

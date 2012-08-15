@@ -34,6 +34,7 @@ extern "C"
  ==================================================================================================*/
 #include "ds1307.h"
 #include "i2c.h"
+#include "utils.h"
 
 
 /*==================================================================================================
@@ -92,7 +93,7 @@ enum ds1307_reg_enum
 /*==================================================================================================
  Local function prototypes
  ==================================================================================================*/
-static u8_t WeekDay(u32_t year, u32_t month, u32_t day);
+static u8_t WeekDay(u16_t year, u8_t month, u8_t day);
 
 
 /*==================================================================================================
@@ -263,10 +264,9 @@ stdRet_t DS1307_SetTime(bcdTime_t time)
  * @return current time
  **/
 //================================================================================================//
-u8_t tmp[4]; /* TEST dlaczego musi byc 5 zeby dobrze odczytac 4 rejestry? */
 bcdDate_t DS1307_GetDate(void)
 {
-//      u8_t tmp[4]; /* TEST dlaczego musi byc 5 zeby dobrze odczytac 4 rejestry? */
+      u8_t tmp[4];
 
       /* try to open port */
       if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
@@ -318,7 +318,9 @@ stdRet_t DS1307_SetDate(bcdDate_t date)
                   goto DS1307_SetDate_ClosePort;
 
             /* set new date */
-            tmp[0] = WeekDay(date.year, date.month, date.day);
+            tmp[0] = WeekDay(UTL_BCD2Byte(date.year ) + 2000,
+                             UTL_BCD2Byte(date.month),
+                             UTL_BCD2Byte(date.day  ) );
             tmp[1] = date.day;
             tmp[2] = date.month;
             tmp[3] = date.year;
@@ -435,9 +437,9 @@ stdRet_t DS1307_WriteRAM(u8_t *src, u8_t size, u8_t seek)
  * @return week day
  */
 //================================================================================================//
-static u8_t WeekDay(u32_t year, u32_t month, u32_t day)
+static u8_t WeekDay(u16_t year, u8_t month, u8_t day)
 {
-      u32_t z, c;
+      u16_t z, c;
 
       if (month < 3)
       {
@@ -451,9 +453,9 @@ static u8_t WeekDay(u32_t year, u32_t month, u32_t day)
       }
 
       /* compute week day */
-      u32_t w = /*floor*/((23 * month) / 9) + day + 4 + year + /*floor*/(z / 4) - /*floor*/(z / 100) + /*floor*/(z / 400) - c;
+      u16_t w = ((23 * month) / 9) + day + 4 + year + (z / 4) - (z / 100) + (z / 400) - c;
 
-      return w % 7;
+      return (w % 7) + 1;
 }
 
 

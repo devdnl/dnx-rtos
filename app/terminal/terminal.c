@@ -141,7 +141,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
       appArgs_t *appHdlCpy;
 
       /* waiting for empty stdout */
-      Sleep(10);
+      fsflush(stdout);
 
       appHdl = Exec(cmd, arg, &appHdlStatus);
 
@@ -153,7 +153,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
-                  Sleep(100);
+                  Sleep(10);
             }
 
             FreeAppStdio(appHdlCpy);

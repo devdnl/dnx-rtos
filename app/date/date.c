@@ -33,6 +33,7 @@ extern "C" {
 ==================================================================================================*/
 #include "date.h"
 #include "ds1307.h"
+#include "utils.h"
 #include <string.h>
 
 /* Begin of application section declaration */
@@ -66,15 +67,15 @@ APP_SEC_BEGIN
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      const ch_t *weekDay[] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
-      const ch_t *months[]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+      const ch_t *weekDayNames[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+      const ch_t *monthsNames[]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
       bcdTime_t  time;
       bcdDate_t  date;
 
-      if ( (ParseArgsAs(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-         ||(ParseArgsAs(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+      if ( (ParseArg(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+         ||(ParseArg(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) )
       {
             print("Syntax: %s [OPTION]...\n", DATE_NAME);
             print("Print actual time and date.\n");
@@ -87,8 +88,8 @@ stdRet_t appmain(ch_t *argv)
             print("  -D,           day\n");
             print("       --stack  print free stack\n");
       }
-      else if ( (ParseArgsAs(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-              ||(ParseArgsAs(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+      else if ( (ParseArg(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+              ||(ParseArg(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
       {
             i32_t ahours   = 0;
             i32_t aminutes = 0;
@@ -97,31 +98,60 @@ stdRet_t appmain(ch_t *argv)
             i32_t amonth   = 1;
             i32_t adate    = 1;
 
-            ParseArgsAs(argv, "H", PARSE_AS_HEX, &ahours);
-            ParseArgsAs(argv, "m", PARSE_AS_HEX, &aminutes);
-            ParseArgsAs(argv, "s", PARSE_AS_HEX, &aseconds);
+            ParseArg(argv, "H", PARSE_AS_DEC, &ahours);
+            ParseArg(argv, "m", PARSE_AS_DEC, &aminutes);
+            ParseArg(argv, "s", PARSE_AS_DEC, &aseconds);
 
-            ParseArgsAs(argv, "Y", PARSE_AS_HEX, &ayear);
-            ParseArgsAs(argv, "M", PARSE_AS_HEX, &amonth);
-            ParseArgsAs(argv, "D", PARSE_AS_HEX, &adate);
+            ParseArg(argv, "Y", PARSE_AS_DEC, &ayear);
+            ParseArg(argv, "M", PARSE_AS_DEC, &amonth);
+            ParseArg(argv, "D", PARSE_AS_DEC, &adate);
 
-            print("%x2-%x2-20%x2, %x2:%x2:%x2\n", adate, amonth, ayear, ahours, aminutes, aseconds);
+            /* check time range */
+            if (ahours > 23)
+                  ahours = 23;
 
-            time.hours   = ahours;
-            time.minutes = aminutes;
-            time.seconds = aseconds;
-            date.year    = ayear;
-            date.month   = amonth;
-            date.day     = adate;
+            if (aminutes > 59)
+                  aminutes = 59;
+
+            if (aseconds > 59)
+                  aseconds = 59;
+
+            /* check date range */
+            if (ayear > 99)
+                  ayear = 99;
+
+            if (amonth > 12)
+                  amonth = 12;
+            else if (amonth < 1)
+                  amonth = 1;
+
+            if (adate > 31)
+                  adate = 31;
+            else if (adate < 1)
+                  adate = 1;
+
+            /* convert values to BCD */
+            time.hours   = UTL_Byte2BCD(ahours);
+            time.minutes = UTL_Byte2BCD(aminutes);
+            time.seconds = UTL_Byte2BCD(aseconds);
+            date.year    = UTL_Byte2BCD(ayear);
+            date.month   = UTL_Byte2BCD(amonth);
+            date.day     = UTL_Byte2BCD(adate);
 
             if ( (DS1307_SetTime(time) != STD_RET_OK)
                ||(DS1307_SetDate(date) != STD_RET_OK) )
-                  print("Set time error.\n");
+                  print("ERROR: unable to set RTC\n");
+            else
+                  print("Done.\n");
       }
       else
       {
+            /* show time */
             time = DS1307_GetTime();
             date = DS1307_GetDate();
+
+            u8_t month   = UTL_BCD2Byte(date.month);
+            u8_t weekday = UTL_BCD2Byte(date.weekday);
 
             if (date.day == 0)
                   date.day++;
@@ -130,14 +160,13 @@ stdRet_t appmain(ch_t *argv)
                   date.month++;
 
             print("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
-                  weekDay[date.weekday-1], date.day, months[date.month-1], date.year,
+                  weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
                   time.hours, time.minutes, time.seconds);
       }
 
-      if (ParseArgsAs(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-      {
+      /* show stack free space if requested */
+      if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
             print("Stack free: %d\n", SystemGetStackFreeSpace());
-      }
 
       return STD_RET_OK;
 }
