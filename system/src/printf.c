@@ -208,9 +208,9 @@ ch_t *atoi(ch_t *string, u8_t base, i32_t *value)
 
             /* check character range */
             if (character >= 'a')
-                  character -= 'a';
+                  character -= 'a' - 10;
             else if (character >= 'A')
-                  character -= 'A';
+                  character -= 'A' - 10;
             else if (character >= '0')
                   character -= '0';
             else

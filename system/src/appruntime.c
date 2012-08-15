@@ -119,9 +119,10 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
       appHandle->stdout->RxIdx    = 0;
       appHandle->stdout->TxIdx    = 0;
       appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
+      appHandle->ChildTaskHandle  = NULL;
 
       /* start application task */
-      if (TaskCreate(app, appName, stackSize, appHandle, 2, appHandle->ChildTaskHandle) != pdPASS)
+      if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
       {
             Free(appHandle->stdin);
             Free(appHandle->stdout);
@@ -171,9 +172,10 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
       appHandle->stdin            = NULL;
       appHandle->stdout           = NULL;
       appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
+      appHandle->ChildTaskHandle  = NULL;
 
       /* start daemon task */
-      if (TaskCreate(app, appName, stackSize, appHandle, 2, appHandle->ChildTaskHandle) != pdPASS)
+      if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
       {
             Free(appHandle);
             appHandle = NULL;
@@ -315,7 +317,7 @@ stdRet_t ParseArgsAs(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *resul
       u8_t  base;
 
       /* check argument correctness */
-      if (!argv || parseAs >= PARSE_AS_UNKNOWN || !result)
+      if (!argv || parseAs >= PARSE_AS_UNKNOWN || (parseAs == PARSE_AS_EXIST ? 0 : !result))
             return STD_RET_ERROR;
 
       u32_t findArgSize = strlen(findArg);

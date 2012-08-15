@@ -219,6 +219,10 @@ stdRet_t appmain(ch_t *argv)
                   *(arg++) = ASCII_NULL;
                   arg += strspn(arg, " ");
             }
+            else
+            {
+                  arg = strchr(cmd, ASCII_NULL);
+            }
 
             /* check internal commands */
             if ((cmdStatus = FindInternalCmd(cmd, arg)) == CMD_EXECUTED)

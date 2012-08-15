@@ -36,6 +36,7 @@ extern "C" {
 #include "gpio.h"
 #include "uart.h"
 #include "initd.h"
+#include "misc.h"
 
 
 /*==================================================================================================
@@ -94,8 +95,8 @@ int main(void)
 static void InitSystem(void)
 {
       /* set interrupt vectors and NVIC priority */
-      SCB->VTOR  = 0x00 | (0x00 & (uint32_t)0x1FFFFF80);
-      SCB->AIRCR = 0x05FA0000 | 0x300;
+      NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
+      NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
       /* PLL initialization */
       if (PLL_Init(PLL_DEV_NONE) != STD_RET_OK)

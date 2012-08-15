@@ -52,6 +52,7 @@ CSRC = $(sort \
    kernel/timers.c \
    kernel/portable/GCC/ARM_CM3/port.c \
    kernel/portable/MemMang/heap_2.c \
+   lib/ds1307/ds1307.c \
    lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
@@ -88,6 +89,7 @@ CSRC = $(sort \
    lib/lwip/port/net.c \
    lib/STM32_ETH_Driver/stm32_eth.c \
    lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
+   lib/STM32F10x_StdPeriph_Driver/misc.c \
    system/src/appruntime.c \
    system/src/hooks.c \
    system/src/idle.c \
@@ -204,6 +206,7 @@ SIZE = arm-none-eabi-size
 # C compiler flags
 CFLAGS_micro = -c -mcpu=$(CPU) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
                -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
+               -fpack-struct \
                -D$(MCU) -D$(TARGET) -DGCC_ARMCM3
 
 CFLAGS_qemu  = $(CFLAGS_micro)
@@ -215,7 +218,7 @@ CXXFLAGS_quemu =
 
 # linker flags
 LFLAGS_micro = -mcpu=$(CPU) -mthumb -T$(LD_SCRIPT_$(TARGET)) -g -nostartfiles -Wl,--gc-sections -Wall \
-               -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+               -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch -fpack-struct \
                -D$(TARGET) -DGCC_ARMCM3
 
 LFLAGS_qemu  = $(LFLAGS_micro)

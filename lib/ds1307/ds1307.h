@@ -1,11 +1,11 @@
-#ifndef SYSTYPES_H_
-#define SYSTYPES_H_
+#ifndef DS1307_H_
+#define DS1307_H_
 /*=============================================================================================*//**
-@file    systypes.h
+@file    ds1307.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains all system types
+@brief   This file support DS1307
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,59 +33,35 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "FreeRTOSConfig.h"
+#include "system.h"
 
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/** define DS1307 RAM size */
+#define DS1307_RAM_SIZE             (REG_RAM_END - REG_RAM_BEGIN)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** default system status */
-enum status_enum
+/** time structure */
+typedef struct time_struct
 {
-   STD_RET_OK                 = 0,
-   STD_RET_ERROR              = 1,
-   STD_RET_ALLOCERROR         = 2,
-   STD_RET_UNKNOWN            = 127,
-};
+      u8_t seconds;     /**< [BCD] */
+      u8_t minutes;     /**< [BCD] */
+      u8_t hours;       /**< [BCD] */
+} bcdTime_t;
 
-
-/** universal status type */
-typedef signed char stdRet_t;
-
-
-/** device number type */
-typedef u8_t dev_t;
-
-
-/** IO request type */
-typedef u8_t IORq_t;
-
-
-/** stdio FIFO type */
-typedef struct stdioFIFO_struct
+/** date structure */
+typedef struct date_struct
 {
-      u16_t Level;                                  /* load level */
-      u16_t TxIdx;                                  /* fifo Tx index */
-      u16_t RxIdx;                                  /* fifo Rx index */
-      ch_t  Buffer[configSTDIO_BUFFER_SIZE];        /* fifo buffer */
-} stdioFIFO_t;
-
-
-/** application standard arguments type */
-typedef struct appArgs_struct
-{
-      void        *arg;                         /* pointer to the argument */
-      stdioFIFO_t *stdin;                       /* stdin fifo */
-      stdioFIFO_t *stdout;                      /* stdout fifo */
-      void        *ChildTaskHandle;             /* FreeRTOS task handling for children */
-      void        *ParentTaskHandle;            /* FreeRTOS task handling for parent */
-      stdRet_t exitCode;                        /* exit code */
-} appArgs_t;
+      u8_t weekday;     /**< [BCD] */
+      u8_t day;         /**< [BCD] */
+      u8_t month;       /**< [BCD] */
+      u8_t year;        /**< [BCD] */
+} bcdDate_t;
 
 
 /*==================================================================================================
@@ -96,13 +72,19 @@ typedef struct appArgs_struct
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-
+extern void      DS1307_Init(void);
+extern bcdTime_t DS1307_GetTime(void);
+extern stdRet_t  DS1307_SetTime(bcdTime_t time);
+extern bcdDate_t DS1307_GetDate(void);
+extern stdRet_t  DS1307_SetDate(bcdDate_t date);
+extern stdRet_t  DS1307_ReadRAM(u8_t *dst, u8_t size, u8_t seek);
+extern stdRet_t  DS1307_WriteRAM(u8_t *src, u8_t size, u8_t seek);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SYSTYPES_H_ */
+#endif /* DS1307_H_ */
 /*==================================================================================================
-                                            End of file
+                                             End of file
 ==================================================================================================*/

@@ -389,7 +389,6 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
             if (PortHandle[dev].Lock == TaskGetPID())
             {
                   I2C_t *i2cPtr = PortHandle[dev].Address;
-                  u8_t  *data   = (u8_t *)dst;
 
                   /* start condition */
                   if ((status = StartCondition(i2cPtr,
@@ -425,7 +424,7 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
                         goto I2C_Read_end;
 
                   /* receive bytes */
-                  if ((status = ReadData(i2cPtr, data, size)) != STD_RET_OK)
+                  if ((status = ReadData(i2cPtr, dst, size)) != STD_RET_OK)
                         goto I2C_Read_end;
 
                   /* stop condition */
@@ -635,13 +634,15 @@ static stdRet_t SendData(I2C_t *i2c, u8_t *src, size_t size)
 //================================================================================================//
 static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size)
 {
-      stdRet_t status = STD_RET_OK;
+      stdRet_t status  = STD_RET_OK;
       u8_t     timeout;
 
       /* send buffer */
-      while (size--)
+      do
       {
-            for (timeout = 100; timeout > 0; timeout--)
+            timeout = 200;
+
+            while (timeout--)
             {
                   if (i2c->SR1 & I2C_SR1_RXNE)
                   {
@@ -660,6 +661,29 @@ static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size)
                   {
                         TaskDelay(10);
                   }
+            }
+
+            size--;
+      }
+      while (size);
+
+      /* waiting for finish receiving NACK */
+      timeout = 200;
+
+      while (timeout--)
+      {
+            if (i2c->SR1 & I2C_SR1_RXNE)
+            {
+                  if ((status = CheckStatus(i2c, timeout)) != STD_RET_OK)
+                        goto ReadData_end;
+
+                  timeout = i2c->DR;
+
+                  break;
+            }
+            else
+            {
+                  TaskDelay(10);
             }
       }
 

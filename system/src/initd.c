@@ -35,6 +35,7 @@ extern "C" {
 #include "uart.h"
 #include "ether.h"
 #include "netconf.h"
+#include "ds1307.h"
 
 #include "lwiptest.h"
 #include "httpde.h"
@@ -81,8 +82,7 @@ void Initd(void *arg)
       (void) arg;
 
       /* short delay and lock task scheduling */
-      TaskDelay(2000);
-      TaskSuspendAll();
+      TaskDelay(1000);
 
       /*--------------------------------------------------------------------------------------------
        * initialization kprint()
@@ -99,6 +99,7 @@ void Initd(void *arg)
 
       kprint("By "); fontCyan(k); kprint("Daniel Zorychta ");
       fontYellow(k); kprint("<daniel.zorychta@gmail.com>\n\n"); resetAttr(k);
+      TaskDelay(1000);
 
       /* info about system start */
       kprint("initd [%d]: kernel print started\n", TaskGetTickCount());
@@ -141,6 +142,8 @@ void Initd(void *arg)
 
       initd_net_end:
 
+      DS1307_Init();
+
       /*--------------------------------------------------------------------------------------------
        * starting terminal
        *------------------------------------------------------------------------------------------*/
@@ -169,8 +172,6 @@ void Initd(void *arg)
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
-      TaskResumeAll();
-
       for (;;)
       {
             ch_t   data;
