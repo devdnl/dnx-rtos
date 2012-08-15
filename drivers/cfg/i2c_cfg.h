@@ -48,7 +48,7 @@ extern "C" {
 #define I2C_PERIPHERAL_FREQ               (36)
 
 /** set SCL frequency [Hz] */
-#define I2C_DEFAULT_SCL_FREQ              (50000)
+#define I2C_DEFAULT_SCL_FREQ              (100000UL)
 
 
 /*==================================================================================================

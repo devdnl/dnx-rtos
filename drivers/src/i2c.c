@@ -408,16 +408,13 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
                      TaskDelay(1);
                   }
 
-                  /* stop condition */
-                  StopCondition(i2cPtr);
-
                   /* check if is only 1 byte to send */
                   if (size == 1)
                         i2cPtr->CR1 &= ~(I2C_CR1_ACK);
                   else
                         i2cPtr->CR1 |= I2C_CR1_ACK;
 
-                  /* start condition */
+                  /* repeat start condition */
                   if ((status = StartCondition(i2cPtr,
                                                (PortHandle[dev].SlaveAddress << 1) | 0x01
                                               ) ) != STD_RET_OK)
