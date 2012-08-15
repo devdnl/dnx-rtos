@@ -38,7 +38,7 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define MPL115A2_ADDRESS            (0xC0 >> 1)
+#define MPL115A2_ADDRESS            0x60
 #define I2C_NUMBER                  I2C_DEV_1
 
 
@@ -72,7 +72,7 @@ enum registers_enum
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-/* coefficient values readed from device */
+/* coefficient values received from device */
 u16_t a0;
 u16_t b1;
 u16_t b2;
@@ -111,6 +111,12 @@ stdRet_t MPL115A2_Init(void)
             /* read coefficient values */
             if ((status = I2C_Read(I2C_NUMBER, &tmp, 8, REG_A0_MSB)) != STD_RET_OK)
                   goto MPL115A2_Init_Error;
+
+            /* parse received data */
+            a0  = (tmp[0] << 8) | tmp[1];
+            b1  = (tmp[2] << 8) | tmp[3];
+            b2  = (tmp[4] << 8) | tmp[5];
+            c12 = (tmp[6] << 8) | tmp[7];
 
             /* operation success */
             fontGreen(k);
