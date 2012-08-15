@@ -40,7 +40,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define DATE_STACK_SIZE               (20 * MINIMAL_STACK_SIZE)
+#define DATE_STACK_SIZE               (4 * MINIMAL_STACK_SIZE)
 
 /** define application name */
 #define DATE_NAME                     "date"

@@ -67,8 +67,8 @@ APP_SEC_BEGIN
 stdRet_t appmain(ch_t *argv)
 {
       const ch_t *weekDay[] = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
-      const ch_t *months[]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-                               "Aug", "Sep", "Oct", "Nov", "Dec"};
+      const ch_t *months[]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
       bcdTime_t  time;
       bcdDate_t  date;
@@ -78,13 +78,14 @@ stdRet_t appmain(ch_t *argv)
       {
             print("Syntax: %s [OPTION]...\n", DATE_NAME);
             print("Print actual time and date.\n");
-            print("  -S,  --set   set RTC time and date\n");
-            print("  -H,          hours\n");
-            print("  -m,          minutes\n");
-            print("  -s,          seconds\n");
-            print("  -Y,          year\n");
-            print("  -M,          month\n");
-            print("  -D,          day\n");
+            print("  -S,  --set    set RTC time and date\n");
+            print("  -H,           hours\n");
+            print("  -m,           minutes\n");
+            print("  -s,           seconds\n");
+            print("  -Y,           year\n");
+            print("  -M,           month\n");
+            print("  -D,           day\n");
+            print("       --stack  print free stack\n");
       }
       else if ( (ParseArgsAs(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
               ||(ParseArgsAs(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
@@ -131,6 +132,11 @@ stdRet_t appmain(ch_t *argv)
             print("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
                   weekDay[date.weekday-1], date.day, months[date.month-1], date.year,
                   time.hours, time.minutes, time.seconds);
+      }
+
+      if (ParseArgsAs(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+      {
+            print("Stack free: %d\n", SystemGetStackFreeSpace());
       }
 
       return STD_RET_OK;
