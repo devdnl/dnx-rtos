@@ -333,6 +333,44 @@ void fputChar(stdioFIFO_t *stdout, ch_t c)
 {
       if (stdout)
       {
+            while (TRUE)
+            {
+                  TaskSuspendAll();
+
+                  if (stdout->Level < configSTDIO_BUFFER_SIZE)
+                  {
+                        stdout->Buffer[stdout->TxIdx++] = c;
+
+                        if (stdout->TxIdx >= configSTDIO_BUFFER_SIZE)
+                              stdout->TxIdx = 0;
+
+                        stdout->Level++;
+
+                        TaskResumeAll();
+                        return;
+                  }
+                  else
+                  {
+                        TaskResumeAll();
+                        TaskDelay(10);
+                  }
+            }
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Unblocked function put character into stdout stream
+ *
+ * @param *stdout             stdout
+ * @param c                   character
+ */
+//================================================================================================//
+void ufputChar(stdioFIFO_t *stdout, ch_t c)
+{
+      if (stdout)
+      {
             TaskSuspendAll();
 
             if (stdout->Level < configSTDIO_BUFFER_SIZE)
@@ -345,11 +383,6 @@ void fputChar(stdioFIFO_t *stdout, ch_t c)
                   stdout->Level++;
 
                   TaskResumeAll();
-            }
-            else
-            {
-                  TaskResumeAll();
-                  TaskDelay(10);
             }
       }
 }

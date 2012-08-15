@@ -74,11 +74,20 @@ stdRet_t appmain(ch_t *argv)
       bcdDate_t  date;
 
       if ( (ParseArgsAs(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-         ||(ParseArgsAs(argv, "h",     PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+         ||(ParseArgsAs(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) )
       {
-            print("Help\n");
+            print("Syntax: %s [OPTION]...\n", DATE_NAME);
+            print("Print actual time and date.\n");
+            print("  -S,  --set   set RTC\n");
+            print("  -h,          hours\n");
+            print("  -m,          minutes\n");
+            print("  -s,          seconds\n");
+            print("  -Y,          year\n");
+            print("  -M,          month\n");
+            print("  -D,          day\n");
       }
-      else if (ParseArgsAs(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+      else if ( (ParseArgsAs(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+              ||(ParseArgsAs(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
       {
             i32_t ahours   = 0;
             i32_t aminutes = 0;
@@ -87,7 +96,7 @@ stdRet_t appmain(ch_t *argv)
             i32_t amonth   = 1;
             i32_t adate    = 1;
 
-            ParseArgsAs(argv, "H", PARSE_AS_HEX, &ahours);
+            ParseArgsAs(argv, "h", PARSE_AS_HEX, &ahours);
             ParseArgsAs(argv, "m", PARSE_AS_HEX, &aminutes);
             ParseArgsAs(argv, "s", PARSE_AS_HEX, &aseconds);
 
@@ -119,8 +128,9 @@ stdRet_t appmain(ch_t *argv)
             if (date.month == 0)
                   date.month++;
 
-            print("%s, %x2 %s 20%x2, %x2:%x2:%x2\n", weekDay[date.weekday-1], date.day, months[date.month-1],
-                                                     date.year, time.hours, time.minutes, time.seconds);
+            print("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
+                  weekDay[date.weekday-1], date.day, months[date.month-1], date.year,
+                  time.hours, time.minutes, time.seconds);
       }
 
       return STD_RET_OK;

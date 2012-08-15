@@ -105,6 +105,7 @@ extern u32_t kprint(const ch_t *format, ...);
 extern u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...);
 extern void  kprintEnable(void);
 extern void  fputChar(stdioFIFO_t *stdout, ch_t c);
+extern void  ufputChar(stdioFIFO_t *stdout, ch_t c);
 extern ch_t  fgetChar(stdioFIFO_t *stdin);
 extern ch_t  ufgetChar(stdioFIFO_t *stdin);
 extern void  fclearSTDIO(stdioFIFO_t *stdio);

@@ -174,24 +174,14 @@ void Initd(void *arg)
        *------------------------------------------------------------------------------------------*/
       for (;;)
       {
-            ch_t   data;
+            ch_t   character;
             bool_t stdoutEmpty = FALSE;
             bool_t RxFIFOEmpty = FALSE;
 
             /* STDOUT support ------------------------------------------------------------------- */
-            TaskSuspendAll();
-
-            if (appHdl->stdout->Level > 0)
+            if ((character = ufgetChar(appHdl->stdout)) != ASCII_CANCEL)
             {
-                  data = appHdl->stdout->Buffer[appHdl->stdout->RxIdx++];
-
-                  if (appHdl->stdout->RxIdx >= configSTDIO_BUFFER_SIZE)
-                        appHdl->stdout->RxIdx = 0;
-
-                  appHdl->stdout->Level--;
-
-                  UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &data);
-
+                  UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &character);
                   stdoutEmpty = FALSE;
             }
             else
@@ -199,25 +189,10 @@ void Initd(void *arg)
                   stdoutEmpty = TRUE;
             }
 
-            TaskResumeAll();
-
             /* STDIN support -------------------------------------------------------------------- */
-            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &data) == STD_RET_OK)
+            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &character) == STD_RET_OK)
             {
-                  TaskSuspendAll();
-
-                  if (appHdl->stdin->Level < configSTDIO_BUFFER_SIZE)
-                  {
-                        appHdl->stdin->Buffer[appHdl->stdin->TxIdx++] = data;
-
-                        if (appHdl->stdin->TxIdx >= configSTDIO_BUFFER_SIZE)
-                              appHdl->stdin->TxIdx = 0;
-
-                        appHdl->stdin->Level++;
-                  }
-
-                  TaskResumeAll();
-
+                  ufputChar(appHdl->stdin, character);
                   RxFIFOEmpty = FALSE;
             }
             else
