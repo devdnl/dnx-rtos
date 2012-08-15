@@ -177,17 +177,27 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zero
 //================================================================================================//
 ch_t *atoi(ch_t *string, u8_t base, i32_t *value)
 {
-      ch_t  character;
-      i32_t sign = 1;
+      ch_t   character;
+      i32_t  sign      = 1;
+      bool_t charFound = FALSE;
 
       *value = 0;
 
       if (base < 2 && base > 16)
             goto atoi_end;
 
-      for (;;)
+      while ((character = *string) != ASCII_NULL)
       {
-            character = *string;
+            /* if space exist, atoi continue finding correct character */
+            if ((character == ' ') && (charFound == FALSE))
+            {
+                  string++;
+                  continue;
+            }
+            else
+            {
+                  charFound = TRUE;
+            }
 
             /* check signum */
             if (character == '-')
@@ -611,6 +621,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
             {
                   character = *format++;
 
+                  u8_t inCmdStep = 0;
+
                   if (character == 'd' || character == 'u')
                   {
                         i32_t  *dec = (i32_t*)var;
@@ -784,6 +796,31 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                         {
                               character = fgetChar(stdin);
 
+                              /* check command Arrow Up */
+                              if ((character == ASCII_ESC) && (inCmdStep == 0))
+                              {
+                                    inCmdStep++;
+                                    *(string++) = character;
+                                    continue;
+                              }
+                              else if ((character == '[') && (inCmdStep == 1))
+                              {
+                                 inCmdStep++;
+                                 *(string++) = character;
+                                 continue;
+                              }
+                              else if ((character == 'A') && (inCmdStep == 2))
+                              {
+                                 *(string++) = character;
+                                 goto fscan_end;
+                              }
+                              else
+                              {
+                                    inCmdStep = 0;
+                              }
+
+
+                              /* put character */
                               if (character == ASCII_CR || character == ASCII_LF)
                               {
                                     *(string++) = 0x00;

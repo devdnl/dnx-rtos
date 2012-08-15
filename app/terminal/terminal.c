@@ -183,14 +183,22 @@ stdRet_t appmain(ch_t *argv)
 
       cmdStatus_t cmdStatus;
       ch_t        *line;
+      ch_t        *history;
       ch_t        *cmd;
       ch_t        *arg;
 
       /* allocate memory for input line */
-      line = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      line    = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      history = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
 
-      if (!line)
+      if (!line || !history)
       {
+            if (line)
+                  Free(line);
+
+            if (history)
+                  Free(history);
+
             print("No enough free memory\n");
             return STD_RET_ERROR;
       }
@@ -198,6 +206,8 @@ stdRet_t appmain(ch_t *argv)
       {
             print("Welcome to board - kernel FreeRTOS (tty1)\n");
       }
+
+      memset(history, ASCII_NULL, PROMPT_LINE_SIZE);
 
       /* main loop ------------------------------------------------------------------------------ */
       for (;;)
@@ -208,6 +218,27 @@ stdRet_t appmain(ch_t *argv)
 
             /* waiting for command */
             scan("%s3", line);
+
+            /* check that history was call */
+            if (strcmp(line, "\x1B[A") == 0)
+            {
+                  ch_t character;
+
+                  strcpy(line, history);
+                  print("%s", history);
+
+                  do
+                  {
+                        character = getChar();
+                  }
+                  while (!(character == ASCII_LF || character == ASCII_CR));
+
+                  print("\n");
+            }
+            else
+            {
+                  memcpy(history, line, PROMPT_LINE_SIZE);
+            }
 
             /* finds all spaces before command */
             cmd = line;

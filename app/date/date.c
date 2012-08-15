@@ -78,8 +78,8 @@ stdRet_t appmain(ch_t *argv)
       {
             print("Syntax: %s [OPTION]...\n", DATE_NAME);
             print("Print actual time and date.\n");
-            print("  -S,  --set   set RTC\n");
-            print("  -h,          hours\n");
+            print("  -S,  --set   set RTC time and date\n");
+            print("  -H,          hours\n");
             print("  -m,          minutes\n");
             print("  -s,          seconds\n");
             print("  -Y,          year\n");
@@ -96,7 +96,7 @@ stdRet_t appmain(ch_t *argv)
             i32_t amonth   = 1;
             i32_t adate    = 1;
 
-            ParseArgsAs(argv, "h", PARSE_AS_HEX, &ahours);
+            ParseArgsAs(argv, "H", PARSE_AS_HEX, &ahours);
             ParseArgsAs(argv, "m", PARSE_AS_HEX, &aminutes);
             ParseArgsAs(argv, "s", PARSE_AS_HEX, &aseconds);
 
