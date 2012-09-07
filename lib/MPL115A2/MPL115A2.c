@@ -41,6 +41,15 @@ extern "C" {
 #define MPL115A2_ADDRESS            0x60
 #define I2C_NUMBER                  I2C_DEV_1
 
+/** multiplier used to remove fraction */
+#define MULTIPLIER                  100
+
+/** ADC temperature value @ 25C multiplied by 100 (605.75 * 100) */
+#define ADC25C                      60575
+
+/** degree per ADC count multiplied by 100 (-5.35 * 100) */
+#define TEMP_A_FACTOR               (i16_t)-535
+
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -103,7 +112,7 @@ stdRet_t MPL115A2_Init(void)
       /* try to open port */
       if ((status = I2C_Open(I2C_NUMBER)) == STD_RET_OK)
       {
-            /* set DS1307 address */
+            /* set MPL115A2 address */
             tmp[0] = MPL115A2_ADDRESS;
             if ((status = I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0])) != STD_RET_OK)
                   goto MPL115A2_Init_Error;
@@ -148,25 +157,66 @@ stdRet_t MPL115A2_Init(void)
 /**
  * @brief Get temperature
  *
- * @param[out] *temperature
+ * @param[out] *temperature   range: -128..+127^C; resolution: 1^C
  *
  * @retval STD_RET_OK         read success
  * @retval STD_RET_ERROR      error occur
  */
 //================================================================================================//
-stdRet_t MPL115A2_GetTemperature(u16_t *temperature)
+stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
 {
-      return STD_RET_ERROR;
+      stdRet_t status = STD_RET_ERROR;
+      u8_t     tmp[2];
+      u16_t    temp;
+
+      /* try to open port */
+      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
+      {
+            /* set MPL115A2 address */
+            tmp[0] = MPL115A2_ADDRESS;
+            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                  goto MPL115A2_GetTemperature_ClosePort;
+
+            /* start new conversion */
+            tmp[0] = 0x01;
+            if (I2C_Write(I2C_NUMBER, &tmp, 1, REG_CONVERT) != STD_RET_OK)
+                  goto MPL115A2_GetTemperature_ClosePort;
+
+            Sleep(5);
+
+            /* load temperature */
+            tmp[0] = 0x00;
+            tmp[1] = 0x00;
+            if (I2C_Read(I2C_NUMBER, &tmp, sizeof(tmp), REG_TADC_MSB) != STD_RET_OK)
+                  goto MPL115A2_GetTemperature_ClosePort;
+
+            /* binds temperature */
+            temp = (((tmp[0] << 8) | tmp[1]) >> 6);
+            *temperature = (i8_t)(((i16_t)(temp * MULTIPLIER - ADC25C)) / TEMP_A_FACTOR);
+
+            /* close port */
+            MPL115A2_GetTemperature_ClosePort:
+            I2C_Close(I2C_NUMBER);
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Get Pressure
+ *
+ * @param[out] *pressure      range: 50..115kPa: resolution: 1kPa
+ *
+ * @retval STD_RET_OK         read success
+ * @retval STD_RET_ERROR      error occur
  */
 //================================================================================================//
-stdRet_t MPL115A2_GetPressure(u16_t *pressure)
+stdRet_t MPL115A2_GetPressure(u8_t *pressure)
 {
+      /* DNLTODO obliczyc cisnienie */
       return STD_RET_ERROR;
 }
 

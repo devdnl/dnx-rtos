@@ -55,8 +55,8 @@ extern "C" {
                                      Exported function prototypes
 ==================================================================================================*/
 extern stdRet_t MPL115A2_Init(void);
-extern stdRet_t MPL115A2_GetTemperature(u16_t *temperature);
-extern stdRet_t MPL115A2_GetPressure(u16_t *pressure);
+extern stdRet_t MPL115A2_GetTemperature(i8_t *temperature);
+extern stdRet_t MPL115A2_GetPressure(u8_t *pressure);
 
 #ifdef __cplusplus
 }
