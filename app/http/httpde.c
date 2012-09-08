@@ -173,12 +173,6 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
 
                         pbuf_free(p);
 
-                        if (strncmp(fname, "/", 5) == 0)
-                        {
-                              fs_open("/index.html", &file);
-                              snprint(fname, sizeof(fname), "/index.html");
-                        }
-
                         if (!fs_open(fname, &file))
                         {
                               if (strncmp(fname, "/", 5) == 0)
