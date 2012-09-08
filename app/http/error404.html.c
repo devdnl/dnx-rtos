@@ -2,7 +2,7 @@ const ch_t error404_html[] =
 "<html>\
 <head>\
 <title>Weather station</title>\
-<META HTTP-EQUIV='refresh' content='2' CONTENT='text/html; charset=iso-8859-2'>\
+<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-2'>\
 </head>\
 <body bgcolor='#151515' text='silver'>\
 <br>\

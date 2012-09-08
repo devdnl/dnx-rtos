@@ -173,10 +173,24 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
 
                         pbuf_free(p);
 
+                        if (strncmp(fname, "/", 5) == 0)
+                        {
+                              fs_open("/index.html", &file);
+                              snprint(fname, sizeof(fname), "/index.html");
+                        }
+
                         if (!fs_open(fname, &file))
                         {
-                              fs_open("/404.html", &file);
-                              snprint(fname, sizeof(fname), "/404.html");
+                              if (strncmp(fname, "/", 5) == 0)
+                              {
+                                    fs_open("/index.html", &file);
+                                    snprint(fname, sizeof(fname), "/index.html");
+                              }
+                              else
+                              {
+                                    fs_open("/404.html", &file);
+                                    snprint(fname, sizeof(fname), "/404.html");
+                              }
                         }
                         hs->file = file.data;
                         hs->left = file.len;
