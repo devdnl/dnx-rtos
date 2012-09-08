@@ -34,6 +34,6 @@ AS A RESULT OF A SYSTEM FAILURE, DIRECTLY OR INDIRECTLY DUE TO THE USE OF FS_GEN
 #include "index.html.c"
 
 /* file tree */
-static const struct fsdata_file file_header_gif[] = {{NULL, "/header.gif", header_gif, /*sizeof(header_gif)*/ 2500}};
+static const struct fsdata_file file_header_gif[] = {{NULL, "/header.gif", header_gif, sizeof(header_gif)}};
 static const struct fsdata_file file_index_html[] = {{file_header_gif, "/index.html", index_html, sizeof(index_html)}};
 #define FS_ROOT file_index_html

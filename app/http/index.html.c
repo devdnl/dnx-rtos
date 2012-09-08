@@ -10,6 +10,7 @@ const ch_t index_html[] =
 <tr>\
 <td align='center'>\
 <h1>Weather station</h1>\
+<img src='header.gif'>\
 <hr color='#202020'/>\
 </td>\
 </tr>\
