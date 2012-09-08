@@ -117,7 +117,7 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
       if (strcmp("reboot", cmd) == 0)
       {
             print("Reboting...\n");
-            Sleep(1000);
+            Sleep(800);
             SystemReboot();
             return CMD_EXECUTED;
       }
@@ -129,7 +129,24 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 
             if (MPL115A2_GetTemperature(&temp) == STD_RET_OK)
             {
-                  print("Temperature: %d^C; 0x%x\n", (i32_t)temp, (u32_t)temp);
+                  print("Temperature: %d^C\n", (i32_t)temp);
+            }
+            else
+            {
+                  print("Read failure\n");
+            }
+
+            return CMD_EXECUTED;
+      }
+
+      /* DNLTEST pressure -------------------------------------------------------------------- */
+      if (strcmp("pres", cmd) == 0)
+      {
+            u32_t pres = 0;
+
+            if (MPL115A2_GetPressure(&pres) == STD_RET_OK)
+            {
+                  print("Pressure: %d hPa\n", (u32_t)pres);
             }
             else
             {

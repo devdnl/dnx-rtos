@@ -69,6 +69,10 @@ enum registers_enum
       REG_B2_LSB   = 0x09,
       REG_C12_MSB  = 0x0A,
       REG_C12_LSB  = 0x0B,
+      REG_C11_MSB  = 0x0C,
+      REG_C11_LSB  = 0x0D,
+      REG_C22_MSB  = 0x0E,
+      REG_C22_LSB  = 0x0F,
       REG_CONVERT  = 0x12,
 };
 
@@ -82,10 +86,10 @@ enum registers_enum
                                       Local object definitions
 ==================================================================================================*/
 /* coefficient values received from device */
-u16_t a0;
-u16_t b1;
-u16_t b2;
-u16_t c12;
+i16_t a0;
+i16_t b1;
+i16_t b2;
+i16_t c12;
 
 
 /*==================================================================================================
@@ -185,8 +189,6 @@ stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
             Sleep(5);
 
             /* load temperature */
-            tmp[0] = 0x00;
-            tmp[1] = 0x00;
             if (I2C_Read(I2C_NUMBER, &tmp, sizeof(tmp), REG_TADC_MSB) != STD_RET_OK)
                   goto MPL115A2_GetTemperature_ClosePort;
 
@@ -208,16 +210,62 @@ stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
 /**
  * @brief Get Pressure
  *
- * @param[out] *pressure      range: 50..115kPa: resolution: 1kPa
+ * @param[out] *pressure      range: 500..1150hPa: resolution: 10hPa
  *
  * @retval STD_RET_OK         read success
  * @retval STD_RET_ERROR      error occur
  */
 //================================================================================================//
-stdRet_t MPL115A2_GetPressure(u8_t *pressure)
+stdRet_t MPL115A2_GetPressure(u32_t *pressure)
 {
-      /* DNLTODO obliczyc cisnienie */
-      return STD_RET_ERROR;
+      stdRet_t status = STD_RET_ERROR;
+      u8_t     tmp[4];
+      u16_t    Tadc;
+      u16_t    Padc;
+
+      /* try to open port */
+      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
+      {
+            /* set MPL115A2 address */
+            tmp[0] = MPL115A2_ADDRESS;
+            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                  goto MPL115A2_GetPressure_ClosePort;
+
+            /* start new conversion */
+            tmp[0] = 0x01;
+            if (I2C_Write(I2C_NUMBER, &tmp, 1, REG_CONVERT) != STD_RET_OK)
+                  goto MPL115A2_GetPressure_ClosePort;
+
+            Sleep(5);
+
+            /* load temperature */
+            if (I2C_Read(I2C_NUMBER, &tmp, sizeof(tmp), REG_PADC_MSB) != STD_RET_OK)
+                  goto MPL115A2_GetPressure_ClosePort;
+
+            /* binds pressure */
+            Padc = ((tmp[0] << 8) | tmp[1]) >> 6;
+
+            /* binds temperature */
+            Tadc = ((tmp[2] << 8) | tmp[3]) >> 6;
+
+            i32_t si_a11   = (int)b1;
+            i32_t si_c12x2 = (int)c12 * (int)Tadc;
+            i32_t si_a1    = (int)(((((int)si_a11<<11) + (int)si_c12x2)) >> 11); //lt3>>11;
+            i32_t si_a2    = ((int)b2 >> 1);
+            i32_t si_a1x1  = (int)si_a1 * (int)Padc;
+            i32_t si_y1    = (((int)a0<<10) + (int)si_a1x1) >> 10;
+            i32_t si_a2x2  = (int)si_a2 * (int)Tadc;
+            i32_t siPcomp  = (((int)si_y1<<10) + (int)si_a2x2) >> 13;
+
+            *pressure = ((650 * siPcomp) / 1023) + 500;
+
+            /* close port */
+            MPL115A2_GetPressure_ClosePort:
+            I2C_Close(I2C_NUMBER);
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 #ifdef __cplusplus

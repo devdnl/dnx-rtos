@@ -56,7 +56,7 @@ extern "C" {
 ==================================================================================================*/
 extern stdRet_t MPL115A2_Init(void);
 extern stdRet_t MPL115A2_GetTemperature(i8_t *temperature);
-extern stdRet_t MPL115A2_GetPressure(u8_t *pressure);
+extern stdRet_t MPL115A2_GetPressure(u32_t *pressure);
 
 #ifdef __cplusplus
 }
