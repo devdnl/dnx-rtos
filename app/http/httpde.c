@@ -50,6 +50,9 @@ struct http_state
 };
 
 
+ch_t htmlBuffer[2048];
+
+
 /*-----------------------------------------------------------------------------------*/
 static void conn_err(void *arg, err_t err)
 {
@@ -245,6 +248,52 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                         }
                         hs->file = file.data;
                         hs->left = file.len;
+
+                        /* check that file is a HTML file */
+                        if (strncmp(strchr(fname, '.'), ".html", 5) == 0)
+                        {
+                              /* allocate new buffer for page */
+                              i32_t i = 0;
+                              u32_t n = 0;
+                              ch_t  *pagePtr = htmlBuffer;
+                              u32_t pageSize = 0;
+
+                              for (i = 0; i < file.len; i++)
+                              {
+                                    if (strncmp(&file.data[i], "<?", 2) == 0)
+                                    {
+                                          i += 2;
+                                          n = 0;
+
+                                          if (strncmp(&file.data[i], "temp/?>", 7) == 0)
+                                          {
+                                                i += 6;
+                                                n = snprint(pagePtr, 50, "temperatura");
+                                          }
+                                          else if (strncmp(&file.data[i], "pres/?>", 7) == 0)
+                                          {
+                                                i += 6;
+                                                n = snprint(pagePtr, 50, "cisnienie");
+                                          }
+                                          else if (strncmp(&file.data[i], "date/?>", 7) == 0)
+                                          {
+                                                i += 6;
+                                                n = snprint(pagePtr, 50, "date_app");
+                                          }
+
+                                          pagePtr  += n;
+                                          pageSize += n;
+                                    }
+                                    else
+                                    {
+                                          *pagePtr++ = file.data[i];
+                                          pageSize++;
+                                    }
+                              }
+
+                              hs->file = htmlBuffer;
+                              hs->left = pageSize;
+                        }
 
                         send_data(pcb, hs);
 
