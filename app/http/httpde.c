@@ -138,7 +138,6 @@ static err_t http_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
 /*-----------------------------------------------------------------------------------*/
 static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 {
-      int i, j;
       char *data;
       char fname[40];
       struct fs_file file = { 0, 0 };
@@ -155,72 +154,11 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
             {
                   data = p->payload;
 
-//                  if (strncmp(data, "GET /STM32F107ADC", 17) == 0)
-//                  {
-//                        pbuf_free(p);
-//
-//                        fs_open("/STM32F107ADC.html", &file);
-//
-//                        hs->file = file.data;
-//                        hs->left = file.len;
-//
-//                        send_data(pcb, hs);
-//
-//                        /* Tell TCP that we wish be to informed of data that has been
-//                         successfully sent by a call to the http_sent() function. */
-//                        tcp_sent(pcb, http_sent);
-//                  }
-//                  else if (strncmp(data, "GET /method=get", 15) == 0)
-//                  {
-//                        i = 15;
-//
-//                        while (data[i] != 0x20/* */)
-//                        {
-//                              i++;
-//                              if (data[i] == 0x6C /* l */)
-//                              {
-//                                    i++;
-//                                    if (data[i] == 0x65 /* e */)
-//                                    {
-//                                          i++;
-//                                          if (data[i] == 0x64 /* d*/)
-//                                          {
-//                                                i += 2;
-//                                                if (data[i] == 0x31 /* 1 */)
-//                                                {
-//                                                }
-//
-//                                                if (data[i] == 0x32 /* 2 */)
-//                                                {
-//                                                }
-//
-//                                                if (data[i] == 0x33 /* 3 */)
-//                                                {
-//                                                }
-//
-//                                                if (data[i] == 0x34 /* 4 */)
-//                                                {
-//                                                }
-//                                          }
-//                                    }
-//                              }
-//                        }
-//
-//                        pbuf_free(p);
-//
-//                        fs_open("/STM32F107LED.html", &file);
-//
-//                        hs->file = file.data;
-//                        hs->left = file.len;
-//
-//                        send_data(pcb, hs);
-//
-//                        /* Tell TCP that we wish be to informed of data that has been
-//                         successfully sent by a call to the http_sent() function. */
-//                        tcp_sent(pcb, http_sent);
-//                  }
-                  /*else*/ if (strncmp(data, "GET ", 4) == 0)
+                  if (strncmp(data, "GET ", 4) == 0)
                   {
+                        i32_t i = 0;
+                        u32_t n = 0;
+
                         for (i = 0; i < 40; i++)
                         {
                               if (  ((char *) data + 4)[i] == ' '
@@ -231,22 +169,14 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                               }
                         }
 
-                        i = 0;
-                        j = 0;
-
-                        do
-                        {
-                              fname[i] = ((char *) data + 4)[j];
-                              j++;
-                              i++;
-                        }
-                        while (fname[i - 1] != 0 && i < 40);
+                        strcpy(fname, (ch_t *)data + 4);
 
                         pbuf_free(p);
 
                         if (!fs_open(fname, &file))
                         {
-                              fs_open("/index.html", &file);
+                              fs_open("/404.html", &file);
+                              snprint(fname, sizeof(fname), "/404.html");
                         }
                         hs->file = file.data;
                         hs->left = file.len;
@@ -255,8 +185,6 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                         if (strncmp(strchr(fname, '.'), ".html", 5) == 0)
                         {
                               /* allocate new buffer for page */
-                              i32_t i = 0;
-                              u32_t n = 0;
                               ch_t  *pagePtr = htmlBuffer;
                               u32_t pageSize = 0;
 
