@@ -77,7 +77,7 @@ static void send_data(struct tcp_pcb *pcb, struct http_state *hs)
       err_t err;
       u16_t len;
 
-      /* We cannot send more data than space avaliable in the send buffer. */
+      /* We cannot send more data than space available in the send buffer. */
       if (tcp_sndbuf(pcb) < hs->left)
       {
             len = tcp_sndbuf(pcb);
@@ -143,7 +143,6 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
 
       if (err == ERR_OK && p != NULL)
       {
-
             /* Inform TCP that we have taken the data. */
             tcp_recved(pcb, p->tot_len);
 
@@ -151,23 +150,23 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
             {
                   data = p->payload;
 
-                  if (strncmp(data, "GET /STM32F107ADC", 17) == 0)
-                  {
-                        pbuf_free(p);
-
-                        fs_open("/STM32F107ADC.html", &file);
-
-                        hs->file = file.data;
-                        hs->left = file.len;
-
-                        send_data(pcb, hs);
-
-                        /* Tell TCP that we wish be to informed of data that has been
-                         successfully sent by a call to the http_sent() function. */
-                        tcp_sent(pcb, http_sent);
-                  }
-                  else if (strncmp(data, "GET /method=get", 15) == 0)
-                  {
+//                  if (strncmp(data, "GET /STM32F107ADC", 17) == 0)
+//                  {
+//                        pbuf_free(p);
+//
+//                        fs_open("/STM32F107ADC.html", &file);
+//
+//                        hs->file = file.data;
+//                        hs->left = file.len;
+//
+//                        send_data(pcb, hs);
+//
+//                        /* Tell TCP that we wish be to informed of data that has been
+//                         successfully sent by a call to the http_sent() function. */
+//                        tcp_sent(pcb, http_sent);
+//                  }
+//                  else if (strncmp(data, "GET /method=get", 15) == 0)
+//                  {
 //                        i = 15;
 //
 //                        while (data[i] != 0x20/* */)
@@ -201,21 +200,21 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
 //                                    }
 //                              }
 //                        }
-
-                        pbuf_free(p);
-
-                        fs_open("/STM32F107LED.html", &file);
-
-                        hs->file = file.data;
-                        hs->left = file.len;
-
-                        send_data(pcb, hs);
-
-                        /* Tell TCP that we wish be to informed of data that has been
-                         successfully sent by a call to the http_sent() function. */
-                        tcp_sent(pcb, http_sent);
-                  }
-                  else if (strncmp(data, "GET ", 4) == 0)
+//
+//                        pbuf_free(p);
+//
+//                        fs_open("/STM32F107LED.html", &file);
+//
+//                        hs->file = file.data;
+//                        hs->left = file.len;
+//
+//                        send_data(pcb, hs);
+//
+//                        /* Tell TCP that we wish be to informed of data that has been
+//                         successfully sent by a call to the http_sent() function. */
+//                        tcp_sent(pcb, http_sent);
+//                  }
+                  /*else*/ if (strncmp(data, "GET ", 4) == 0)
                   {
                         for (i = 0; i < 40; i++)
                         {
@@ -242,7 +241,7 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
 
                         if (!fs_open(fname, &file))
                         {
-                              fs_open("/STM32F107.html", &file);
+                              fs_open("/index.html", &file);
                         }
                         hs->file = file.data;
                         hs->left = file.len;
