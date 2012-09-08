@@ -210,18 +210,16 @@ stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
 /**
  * @brief Get Pressure
  *
- * @param[out] *pressure      range: 500..1150hPa: resolution: 10hPa
+ * @param[out] *pressure      range: 500..1150hPa
  *
  * @retval STD_RET_OK         read success
  * @retval STD_RET_ERROR      error occur
  */
 //================================================================================================//
-stdRet_t MPL115A2_GetPressure(u32_t *pressure)
+stdRet_t MPL115A2_GetPressure(u16_t *pressure)
 {
       stdRet_t status = STD_RET_ERROR;
       u8_t     tmp[4];
-      u16_t    Tadc;
-      u16_t    Padc;
 
       /* try to open port */
       if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
@@ -243,21 +241,21 @@ stdRet_t MPL115A2_GetPressure(u32_t *pressure)
                   goto MPL115A2_GetPressure_ClosePort;
 
             /* binds pressure */
-            Padc = ((tmp[0] << 8) | tmp[1]) >> 6;
+            u16_t Padc = ((tmp[0] << 8) | tmp[1]) >> 6;
 
             /* binds temperature */
-            Tadc = ((tmp[2] << 8) | tmp[3]) >> 6;
+            u16_t Tadc = ((tmp[2] << 8) | tmp[3]) >> 6;
 
-            i32_t si_a11   = (int)b1;
-            i32_t si_c12x2 = (int)c12 * (int)Tadc;
-            i32_t si_a1    = (int)(((((int)si_a11<<11) + (int)si_c12x2)) >> 11); //lt3>>11;
-            i32_t si_a2    = ((int)b2 >> 1);
-            i32_t si_a1x1  = (int)si_a1 * (int)Padc;
-            i32_t si_y1    = (((int)a0<<10) + (int)si_a1x1) >> 10;
-            i32_t si_a2x2  = (int)si_a2 * (int)Tadc;
-            i32_t siPcomp  = (((int)si_y1<<10) + (int)si_a2x2) >> 13;
+            /* compute pressure */
+            i32_t si_c12x2 = c12 * Tadc;
+            i32_t si_a1    = (((b1 << 11) + si_c12x2) >> 11);
+            i32_t si_a2    = b2 >> 1;
+            i32_t si_a1x1  = si_a1 * Padc;
+            i32_t si_y1    = ((a0 << 10) + si_a1x1) >> 10;
+            i32_t si_a2x2  = si_a2 * Tadc;
+            i32_t siPcomp  = ((si_y1 << 10) + si_a2x2) >> 13;
 
-            *pressure = ((650 * siPcomp) / 1023) + 500;
+            *pressure = (u16_t)((650 * siPcomp) / 1023) + 500;
 
             /* close port */
             MPL115A2_GetPressure_ClosePort:

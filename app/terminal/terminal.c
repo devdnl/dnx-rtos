@@ -142,7 +142,7 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
       /* DNLTEST pressure -------------------------------------------------------------------- */
       if (strcmp("pres", cmd) == 0)
       {
-            u32_t pres = 0;
+            u16_t pres = 0;
 
             if (MPL115A2_GetPressure(&pres) == STD_RET_OK)
             {
