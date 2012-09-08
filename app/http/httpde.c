@@ -41,6 +41,8 @@
 #include "httpde.h"
 #include "lwip/tcp.h"
 #include "fsdata.c"
+#include "MPL115A2.h"
+#include "ds1307.h"
 #include <string.h>
 
 struct http_state
@@ -268,17 +270,30 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                                           if (strncmp(&file.data[i], "temp/?>", 7) == 0)
                                           {
                                                 i += 6;
-                                                n = snprint(pagePtr, 50, "temperatura");
+                                                i8_t temp = 0;
+                                                MPL115A2_GetTemperature(&temp);
+                                                n = snprint(pagePtr, 50, "%d", (i32_t)temp);
                                           }
                                           else if (strncmp(&file.data[i], "pres/?>", 7) == 0)
                                           {
                                                 i += 6;
-                                                n = snprint(pagePtr, 50, "cisnienie");
+                                                u16_t pressure = 0;
+                                                MPL115A2_GetPressure(&pressure);
+                                                n = snprint(pagePtr, 50, "%d", (u32_t)pressure);
                                           }
                                           else if (strncmp(&file.data[i], "date/?>", 7) == 0)
                                           {
                                                 i += 6;
-                                                n = snprint(pagePtr, 50, "date_app");
+
+                                                bcdTime_t time = DS1307_GetTime();
+                                                bcdDate_t date = DS1307_GetDate();
+
+                                                n = snprint(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
+                                                            date.day,
+                                                            date.month,
+                                                            date.year,
+                                                            time.hours,
+                                                            time.minutes);
                                           }
 
                                           pagePtr  += n;
