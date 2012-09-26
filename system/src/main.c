@@ -104,9 +104,6 @@ static void InitSystem(void)
 
       /* GPIO and AFIO initialization */
       GPIO_Init(GPIO_DEV_NONE);
-
-      /* initialize UART driver */
-      UART_Init(UART_DEV_1);
 }
 
 
