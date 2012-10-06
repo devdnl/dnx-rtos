@@ -98,7 +98,7 @@ stdRet_t LwIP_Init(void)
       struct ip_addr gw;
       uint8_t macaddress[6] = {0, 0, 0, 0, 0, 1};
 
-      kprint("Configuring LwIP TCP/IP stack... ");
+      kprint("Configuring lwIP TCP/IP stack... ");
 
       lwip_init();
 
@@ -126,14 +126,18 @@ stdRet_t LwIP_Init(void)
        */
       if (netif_add(&netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &ethernet_input) == NULL)
       {
-            fontRed(k);
-            kprint("FAILED\n");
-            resetAttr(k);
             goto LwIP_Init_exit_Failure;
       }
 
       /* registers the default network interface */
       netif_set_default(&netif);
+
+      /* start task which periodically perform LwIP */
+      xTaskHandle LwIPDeamonHdl;
+      if (TaskCreate(LwIP_Daemon, "lwipd", 4*MINIMAL_STACK_SIZE, NULL, 2, &LwIPDeamonHdl) != pdPASS)
+      {
+            goto LwIP_Init_exit_Failure;
+      }
 
       #if LWIP_DHCP
       /*
@@ -142,15 +146,64 @@ stdRet_t LwIP_Init(void)
        * intervals after starting the client. You can peek in the netif->dhcp struct for the actual
        * DHCP status.
        */
-      dhcp_start(&netif);
+      kprint("\nStarting DHCP Client..");
+      if (ERR_MEM == dhcp_start(&netif))
+      {
+            TaskDelete(LwIPDeamonHdl);
+            goto LwIP_Init_exit_Failure;
+      }
+
+      /* waiting for DHCP connection */
+      u8_t times = 5;
+      while (netif.dhcp->state != DHCP_BOUND && times > 0)
+      {
+            kprint(".");
+            TaskDelay(1000);
+            times--;
+      }
+
+      /* checking that DHCP connect */
+      if (times > 0)
+      {
+            fontGreen(k);
+            kprint(" SUCCESS\n");
+            resetAttr(k);
+
+            ip_addr_set(&ipaddr,  &netif.ip_addr);
+            ip_addr_set(&netmask, &netif.netmask);
+            ip_addr_set(&gw,      &netif.gw);
+      }
+      else
+      {
+            dhcp_release(&netif);
+            dhcp_stop(&netif);
+
+            fontRed(k);
+            kprint("FAILED\n");
+            resetAttr(k);
+
+            kprint("Setting static IP...\n");
+            IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
+            IP4_ADDR(&netmask, 255, 255, 255, 0  );
+            IP4_ADDR(&gw     , 192, 168, 0  , 1  );
+
+            netif_set_addr(&netif, &ipaddr, &netmask, &gw);
+      }
       #endif
 
       /* when the netif is fully configured this function must be called.*/
       netif_set_up(&netif);
 
-      /* start task which periodically perform LwIP */
-      if (TaskCreate(LwIP_Daemon, "lwipd", 4*MINIMAL_STACK_SIZE, NULL, 2, NULL) != pdPASS)
-            goto LwIP_Init_exit_Failure;
+      kprint("Hostname  : %s\n", netif.hostname);
+      kprint("MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n", macaddress[0], macaddress[1], macaddress[2],
+                                                      macaddress[3], macaddress[4], macaddress[5]);
+      kprint("IP Address: %d.%d.%d.%d\n", ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
+                                          ip4_addr3(&ipaddr),  ip4_addr4(&ipaddr));
+      kprint("Net Mask  : %d.%d.%d.%d\n", ip4_addr1(&netmask), ip4_addr2(&netmask),
+                                          ip4_addr3(&netmask), ip4_addr4(&netmask));
+      kprint("Gateway   : %d.%d.%d.%d\n", ip4_addr1(&gw),      ip4_addr2(&gw),
+                                          ip4_addr3(&gw),      ip4_addr4(&gw));
+      kprint("lwIP configuration: ");
 
       /* configuration finished successfully */
       fontGreen(k);
@@ -160,6 +213,9 @@ stdRet_t LwIP_Init(void)
 
       /* error occur */
       LwIP_Init_exit_Failure:
+      fontRed(k);
+      kprint("FAILED\n");
+      resetAttr(k);
       return STD_RET_ERROR;
 }
 
