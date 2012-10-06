@@ -113,9 +113,9 @@ stdRet_t LwIP_Init(void)
       netmask.addr = 0;
       gw.addr      = 0;
       #else
-      IP4_ADDR(&ipaddr , 172, 2  , 2  , 20 );
+      IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
       IP4_ADDR(&netmask, 255, 255, 255, 0  );
-      IP4_ADDR(&gw     , 172, 2  , 0  , 1  );
+      IP4_ADDR(&gw     , 192, 168, 0  , 1  );
       #endif
 
       Set_MAC_Address(macaddress);

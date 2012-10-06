@@ -269,9 +269,6 @@ stdRet_t MPL115A2_GetPressure(u16_t *pressure)
 #ifdef __cplusplus
 }
 #endif
-#ifdef __cplusplus
-}
-#endif
 
 /*==================================================================================================
                                             End of file
