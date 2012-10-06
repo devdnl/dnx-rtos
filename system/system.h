@@ -94,7 +94,8 @@ extern "C" {
 #define SystemAppSuspend()                vTaskSuspend(NULL)
 #define SystemLockContent()               vTaskSuspendAll()
 #define SystemUnlockContent()             xTaskResumeAll()
-#define SystemGetFreeHeapSize()           xPortGetFreeHeapSize()
+#define SystemGetFreeMemSize()            xPortGetFreeHeapSize()
+#define SystemGetMemSize()                configTOTAL_HEAP_SIZE
 #define SystemReboot()                    NVIC_SystemReset()
 
 

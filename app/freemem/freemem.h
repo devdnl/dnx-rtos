@@ -43,7 +43,7 @@ extern "C" {
 #define FREEMEM_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
 
 /** define application name */
-#define FREEMEM_NAME                     "freemem"
+#define FREEMEM_NAME                     "free"
 
 
 /*==================================================================================================

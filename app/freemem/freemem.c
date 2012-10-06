@@ -62,7 +62,10 @@ stdRet_t appmain(ch_t *argv)
 {
       (void) argv;
 
-      print("Free memory: %d bytes\n", SystemGetFreeHeapSize());
+      print("Free memory : %d of %d bytes\n", SystemGetFreeMemSize(), SystemGetMemSize());
+      u32_t percentUsage = (((u32_t)SystemGetMemSize() - (u32_t)SystemGetFreeMemSize()) * 100) /
+                           (u32_t)SystemGetMemSize();
+      print("Memory usage: %d%%\n", percentUsage);
 
       return STD_RET_OK;
 }
