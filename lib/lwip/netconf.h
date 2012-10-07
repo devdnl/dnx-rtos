@@ -56,6 +56,7 @@ extern "C" {
 ==================================================================================================*/
 extern stdRet_t LwIP_Init(void);
 extern void     LwIP_SetReceiveFlag(void);
+extern ch_t     *LwIP_GetHostname(void);
 
 #ifdef __cplusplus
 }

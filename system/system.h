@@ -43,6 +43,7 @@ extern "C" {
 #include "semphr.h"
 #include "printf.h"
 #include "appruntime.h"
+#include "netconf.h"
 
 
 /*==================================================================================================
@@ -97,6 +98,7 @@ extern "C" {
 #define SystemGetFreeMemSize()            xPortGetFreeHeapSize()
 #define SystemGetMemSize()                configTOTAL_HEAP_SIZE
 #define SystemReboot()                    NVIC_SystemReset()
+#define SystemGetHostname()               LwIP_GetHostname()
 
 
 /** application preamble */

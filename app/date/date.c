@@ -166,7 +166,7 @@ stdRet_t appmain(ch_t *argv)
 
       /* show stack free space if requested */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-            print("Free stack: %d\n", SystemGetStackFreeSpace());
+            print("Free stack: %d levels\n", SystemGetStackFreeSpace());
 
       return STD_RET_OK;
 }

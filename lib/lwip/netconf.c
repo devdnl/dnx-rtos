@@ -225,6 +225,19 @@ void LwIP_SetReceiveFlag(void)
 
 //================================================================================================//
 /**
+ * @brief Returns pointer to the hostname
+ *
+ * @return pointer to the Hostname string
+ */
+//================================================================================================//
+ch_t *LwIP_GetHostname(void)
+{
+      return netif.hostname;
+}
+
+
+//================================================================================================//
+/**
  * @brief LwIP periodic task (lwip daemon)
  *
  * @param argument list

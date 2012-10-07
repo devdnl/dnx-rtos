@@ -72,7 +72,7 @@ typedef enum
 void PrintPrompt(void)
 {
       fontGreen();
-      print("root@board: ");
+      print("root@%s: ", SystemGetHostname());
       resetAttr();
 }
 
@@ -240,7 +240,7 @@ stdRet_t appmain(ch_t *argv)
       }
       else
       {
-            print("Welcome to board - kernel FreeRTOS (tty1)\n");
+            print("Welcome to %s - kernel FreeRTOS (tty1)\n", SystemGetHostname());
       }
 
       memset(history, ASCII_NULL, PROMPT_LINE_SIZE);
