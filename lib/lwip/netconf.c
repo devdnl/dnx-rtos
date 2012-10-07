@@ -98,7 +98,7 @@ stdRet_t LwIP_Init(void)
       struct ip_addr gw;
       uint8_t macaddress[6] = {0, 0, 0, 0, 0, 1};
 
-      kprint("Configuring lwIP TCP/IP stack... ");
+      kprint("Configuring lwIP TCP/IP stack...");
 
       lwip_init();
 
@@ -165,9 +165,7 @@ stdRet_t LwIP_Init(void)
       /* checking that DHCP connect */
       if (times > 0)
       {
-            fontGreen(k);
-            kprint(" SUCCESS\n");
-            resetAttr(k);
+            kprintOK();
 
             ip_addr_set(&ipaddr,  &netif.ip_addr);
             ip_addr_set(&netmask, &netif.netmask);
@@ -178,9 +176,7 @@ stdRet_t LwIP_Init(void)
             dhcp_release(&netif);
             dhcp_stop(&netif);
 
-            fontRed(k);
-            kprint("FAILED\n");
-            resetAttr(k);
+            kprintFail();
 
             kprint("Setting static IP...\n");
             IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
@@ -206,16 +202,12 @@ stdRet_t LwIP_Init(void)
       kprint("lwIP configuration: ");
 
       /* configuration finished successfully */
-      fontGreen(k);
-      kprint("SUCCESS\n");
-      resetAttr(k);
+      kprintOK();
       return STD_RET_OK;
 
       /* error occur */
       LwIP_Init_exit_Failure:
-      fontRed(k);
-      kprint("FAILED\n");
-      resetAttr(k);
+      kprintFail();
       return STD_RET_ERROR;
 }
 

@@ -76,7 +76,7 @@ stdRet_t ETHER_Init(dev_t eth)
 {
       (void) eth;
 
-      kprint("Ethernet interface configuration... ");
+      kprint("Ethernet interface configuration...");
 
       /* enable Ethernet clock */
       RCC->AHBENR |= RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN;
@@ -139,13 +139,13 @@ stdRet_t ETHER_Init(dev_t eth)
             /* Enable the Ethernet Rx Interrupt */
             ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
 
-            fontGreen(k); kprint("SUCCESS\n"); resetAttr(k);
+            kprintOK();
 
             return STD_RET_OK;
       }
       else
       {
-            fontRed(k); kprint("FAILED\n"); resetAttr(k);
+            kprintFail();
 
             return STD_RET_ERROR;
       }

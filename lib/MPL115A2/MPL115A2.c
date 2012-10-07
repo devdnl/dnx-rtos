@@ -111,7 +111,7 @@ stdRet_t MPL115A2_Init(void)
       stdRet_t status;
       u8_t     tmp[8];
 
-      kprint("Initializing MPL115A2... ");
+      kprint("Initializing MPL115A2...");
 
       /* try to open port */
       if ((status = I2C_Open(I2C_NUMBER)) == STD_RET_OK)
@@ -132,14 +132,12 @@ stdRet_t MPL115A2_Init(void)
             c12 = (tmp[6] << 8) | tmp[7];
 
             /* operation success */
-            fontGreen(k);
-            kprint("SUCCESS\n");
+            kprintOK();
             goto MPL115A2_Init_ClosePort;
 
             /* error occur */
             MPL115A2_Init_Error:
-            fontRed(k);
-            kprint("FAILURE (%d)\n", status);
+            kprintErrorNo(status);
 
             /* close port */
             MPL115A2_Init_ClosePort:
@@ -147,11 +145,8 @@ stdRet_t MPL115A2_Init(void)
       }
       else
       {
-            fontRed(k);
-            kprint("FAILURE (%d)\n", status);
+            kprintErrorNo(status);
       }
-
-      resetAttr(k);
 
       return status;
 }

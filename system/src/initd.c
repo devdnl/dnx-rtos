@@ -129,18 +129,15 @@ void Initd(void *arg)
 //      }
 //      resetAttr(k);
 
-      kprint("Starting httpde... ");
+      kprint("Starting httpde...");
       if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
       {
-            fontGreen(k);
-            kprint("SUCCESS\n");
+            kprintOK();
       }
       else
       {
-            fontRed(k);
-            kprint("FAILED\n");
+            kprintFail();
       }
-      resetAttr(k);
 
       initd_net_end:
 
@@ -159,7 +156,7 @@ void Initd(void *arg)
 
       if (status != STD_RET_OK)
       {
-            fontRed(k); kprint("FAILED\n"); resetAttr(k);
+            kprintFail();
             kprint("Probably no enough free space. Restarting board...");
             TaskResumeAll();
             TaskDelay(5000);
@@ -167,7 +164,7 @@ void Initd(void *arg)
       }
       else
       {
-            fontGreen(k); kprint("SUCCESS\n"); resetAttr(k);
+            kprintOK();
       }
 
       /* initd info about stack usage */

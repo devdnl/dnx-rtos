@@ -102,6 +102,9 @@ extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8
 extern ch_t *atoi(ch_t *string, u8_t base, i32_t *value);
 extern u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...);
 extern u32_t kprint(const ch_t *format, ...);
+extern u32_t kprintOK(void);
+extern u32_t kprintFail(void);
+extern u32_t kprintErrorNo(i8_t errorNo);
 extern u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...);
 extern void  kprintEnable(void);
 extern void  fputChar(stdioFIFO_t *stdout, ch_t c);

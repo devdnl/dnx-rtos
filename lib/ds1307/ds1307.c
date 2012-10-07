@@ -127,7 +127,7 @@ stdRet_t DS1307_Init(void)
       u8_t     tmp;
       stdRet_t status;
 
-      kprint("Initializing RTC... ");
+      kprint("Initializing RTC...");
 
       /* try to open port */
       if ((status = I2C_Open(I2C_NUMBER)) == STD_RET_OK)
@@ -150,14 +150,12 @@ stdRet_t DS1307_Init(void)
             }
 
             /* operation success */
-            fontGreen(k);
-            kprint("SUCCESS\n");
+            kprintOK();
             goto DS1307_Init_ClosePort;
 
             /* error occur */
             DS1307_Init_Error:
-            fontRed(k);
-            kprint("FAILURE (%d)\n", status);
+            kprintErrorNo(status);
 
             /* close port */
             DS1307_Init_ClosePort:
@@ -165,11 +163,8 @@ stdRet_t DS1307_Init(void)
       }
       else
       {
-            fontRed(k);
-            kprint("FAILURE (%d)\n", status);
+            kprintErrorNo(status);
       }
-
-      resetAttr(k);
 
       return status;
 }

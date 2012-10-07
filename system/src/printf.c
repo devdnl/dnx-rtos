@@ -333,6 +333,45 @@ u32_t kprint(const ch_t *format, ...)
 
 //================================================================================================//
 /**
+ * @brief Function send kernel message with success on terminal
+ *
+ * @retval number of written characters
+ */
+//================================================================================================//
+u32_t kprintOK(void)
+{
+      return kprint("\r\x1B[72C[\x1B[32m  OK  \x1B[0m]\n");
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function send kernel message with failure on terminal
+ *
+ * @retval number of written characters
+ */
+//================================================================================================//
+u32_t kprintFail(void)
+{
+      return kprint("\r\x1B[72C[\x1B[31m FAIL \x1B[0m]\n");
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function send kernel message with error number on terminal
+ *
+ * @retval number of written characters
+ */
+//================================================================================================//
+u32_t kprintErrorNo(i8_t errorNo)
+{
+      return kprint("\r\x1B[72C[\x1B[31m Er%d \x1B[0m]\n", errorNo);
+}
+
+
+//================================================================================================//
+/**
  * @brief Function put character into stdout stream
  *
  * @param *stdout             stdout
