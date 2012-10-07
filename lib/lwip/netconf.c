@@ -72,7 +72,10 @@ static volatile u32_t DHCPfineTimer   = 0;
 static volatile u32_t DHCPcoarseTimer = 0;
 #endif
 
-static bool_t packetReceived = FALSE;
+static bool_t packetReceived  = FALSE;
+static bool_t netifInit       = FALSE;
+
+static ch_t *defaultHostname = "localhost";
 
 
 /*==================================================================================================
@@ -189,6 +192,7 @@ stdRet_t LwIP_Init(void)
 
       /* when the netif is fully configured this function must be called.*/
       netif_set_up(&netif);
+      netifInit = TRUE;
 
       kprint("Hostname  : %s\n", netif.hostname);
       kprint("MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n", macaddress[0], macaddress[1], macaddress[2],
@@ -232,7 +236,14 @@ void LwIP_SetReceiveFlag(void)
 //================================================================================================//
 ch_t *LwIP_GetHostname(void)
 {
-      return netif.hostname;
+      if (netifInit)
+      {
+            return netif.hostname;
+      }
+      else
+      {
+            return defaultHostname;
+      }
 }
 
 
