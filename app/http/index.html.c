@@ -4,17 +4,16 @@ const ch_t index_html[] =
 <title>Weather station</title>\
 <META HTTP-EQUIV='refresh' content='2' CONTENT='text/html; charset=iso-8859-2'>\
 </head>\
-<body bgcolor='#151515' text='silver'>\
+<body bgcolor='white' text='black'>\
 <br>\
-<table bgcolor='black' width='600' align='center'>\
+<table bgcolor='silver' width='600' align='center'>\
 <tr>\
 <td align='center'>\
 <h1>Weather station</h1>\
-<img src='header.gif'>\
-<hr color='#202020'/>\
+<img src='header.gif'/>\
 </td>\
 </tr>\
-<tr bgcolor='#101010'>\
+<tr bgcolor='gray'>\
 <td align='center'>\
 <font size='5'>\
 <?date/?><br>\

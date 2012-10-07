@@ -4,9 +4,9 @@ const ch_t error404_html[] =
 <title>Weather station</title>\
 <meta http-equiv='Content-Type' content='text/html; charset=iso-8859-2'>\
 </head>\
-<body bgcolor='#151515' text='silver'>\
+<body bgcolor='white' text='black'>\
 <br>\
-<table bgcolor='black' width='600' align='center'>\
+<table bgcolor='silver' width='600' align='center'>\
 <tr>\
 <td align='center'>\
 <h1>Weather station</h1>\
@@ -14,7 +14,7 @@ const ch_t error404_html[] =
 <hr color='#202020'/>\
 </td>\
 </tr>\
-<tr bgcolor='#101010'>\
+<tr bgcolor='gray'>\
 <td align='center'>\
 <font size='5'>\
 404 error: File not found<br>\
