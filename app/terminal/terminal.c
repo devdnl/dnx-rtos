@@ -30,8 +30,6 @@
 #include "terminal.h"
 #include <string.h>
 
-#include "MPL115A2.h" /* DNLTEST wywalic po testach czujnika */
-
 /* Begin of application section declaration */
 APPLICATION(terminal)
 APP_SEC_BEGIN
@@ -119,40 +117,6 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
             print("Reboting...\n");
             Sleep(500);
             SystemReboot();
-            return CMD_EXECUTED;
-      }
-
-      /* DNLTEST temperature -------------------------------------------------------------------- */
-      if (strcmp("temp", cmd) == 0)
-      {
-            i8_t temp = 0;
-
-            if (MPL115A2_GetTemperature(&temp) == STD_RET_OK)
-            {
-                  print("Temperature: %d^C\n", (i32_t)temp);
-            }
-            else
-            {
-                  print("Read failure\n");
-            }
-
-            return CMD_EXECUTED;
-      }
-
-      /* DNLTEST pressure -------------------------------------------------------------------- */
-      if (strcmp("pres", cmd) == 0)
-      {
-            u16_t pres = 0;
-
-            if (MPL115A2_GetPressure(&pres) == STD_RET_OK)
-            {
-                  print("Pressure: %d hPa\n", (u32_t)pres);
-            }
-            else
-            {
-                  print("Read failure\n");
-            }
-
             return CMD_EXECUTED;
       }
 

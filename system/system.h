@@ -72,8 +72,8 @@ extern "C" {
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetStackFreeSpace(taskID)     uxTaskGetStackHighWaterMark(taskID)
 #define GetFreeHeapSize()                 xPortGetFreeHeapSize()
-//#define Malloc(size)                      pvPortMalloc(size) DNLTEST
-//#define Free(pv)                          vPortFree(pv) DNLTEST
+#define Malloc(size)                      pvPortMalloc(size)
+#define Free(pv)                          vPortFree(pv)
 
 #define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
         xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)

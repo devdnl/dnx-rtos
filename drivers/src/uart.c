@@ -665,7 +665,7 @@ stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
       if ((unsigned)usartName < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (1/*PortHandle[usartName].Lock == TaskGetPID()*/) /* DNLTEST */
+            if (PortHandle[usartName].Lock == TaskGetPID())
             {
                   /* load data from FIFO */
                   if (size)
