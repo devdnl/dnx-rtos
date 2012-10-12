@@ -64,19 +64,30 @@ stdRet_t appmain(ch_t *argv)
 {
       (void) argv;
 
+      stdRet_t status = STD_RET_ERROR;
+
       ch_t *appList = (ch_t*)Malloc(INPUT_BUFFER_SIZE * sizeof(ch_t));
 
-      memset(appList, 0, INPUT_BUFFER_SIZE);
+      if (appList != NULL)
+      {
+            memset(appList, 0, INPUT_BUFFER_SIZE);
 
-      GetAppList(appList, INPUT_BUFFER_SIZE);
+            GetAppList(appList, INPUT_BUFFER_SIZE);
 
-      fontCyan();
-      print("%s", appList);
-      resetAttr();
+            fontCyan();
+            print("%s", appList);
+            resetAttr();
 
-      Free(appList);
+            Free(appList);
 
-      return STD_RET_OK;
+            status = STD_RET_OK;
+      }
+      else
+      {
+            print("No enough free memory\n");
+      }
+
+      return status;
 }
 
 /* End of application section declaration */

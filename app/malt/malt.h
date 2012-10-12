@@ -1,11 +1,11 @@
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef MALT_H_
+#define MALT_H_
 /*=============================================================================================*//**
-@file    utils.h
+@file    malt.h
 
 @author  Daniel Zorychta
 
-@brief   Software tools
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -39,6 +39,11 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/** define stack size for this application */
+#define MALT_STACK_SIZE                (10 * MINIMAL_STACK_SIZE)
+
+/** define application name */
+#define MALT_NAME                      "malt"
 
 
 /*==================================================================================================
@@ -54,15 +59,14 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern u8_t  UTL_Byte2BCD(u8_t value);
-extern u8_t  UTL_BCD2Byte(u8_t BCD);
-extern u32_t UTL_GetRandom(void);
+extern APPLICATION(malt);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UTILS_H_ */
+#endif /* CLEAR_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

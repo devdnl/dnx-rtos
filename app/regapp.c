@@ -40,6 +40,7 @@ extern "C" {
 #include "freemem.h"
 #include "date.h"
 #include "ls.h"
+#include "malt.h"
 
 
 /*==================================================================================================
@@ -67,6 +68,7 @@ const regAppData_t appList[] =
       {FREEMEM_NAME,  freemem,  FREEMEM_STACK_SIZE },
       {DATE_NAME,     date,     DATE_STACK_SIZE    },
       {LS_NAME,       ls,       LS_STACK_SIZE      },
+      {MALT_NAME,     malt,     MALT_STACK_SIZE    },
 };
 
 

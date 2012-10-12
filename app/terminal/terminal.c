@@ -117,7 +117,7 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
       if (strcmp("reboot", cmd) == 0)
       {
             print("Reboting...\n");
-            Sleep(800);
+            Sleep(500);
             SystemReboot();
             return CMD_EXECUTED;
       }
@@ -172,18 +172,20 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
-      stdRet_t  appHdlStatus;
-      appArgs_t *appHdl;
-      appArgs_t *appHdlCpy;
+      stdRet_t    appHdlStatus;
+      appArgs_t   *appHdl;
+      stdioFIFO_t *appstdout;
+      stdioFIFO_t *appstdin;
 
       /* waiting for empty stdout */
       fsflush(stdout);
 
       appHdl = Exec(cmd, arg, &appHdlStatus);
 
-      if (appHdlStatus == STD_RET_OK)
+      if (appHdlStatus == STD_RET_OK && appHdl)
       {
-            appHdlCpy      = appHdl;
+            appstdin       = appHdl->stdin;
+            appstdout      = appHdl->stdout;
             appHdl->stdin  = stdin;
             appHdl->stdout = stdout;
 
@@ -192,7 +194,10 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
                   Sleep(10);
             }
 
-            FreeAppStdio(appHdlCpy);
+            appHdl->stdin  = appstdin;
+            appHdl->stdout = appstdout;
+
+            FreeAppStdio(appHdl);
 
             return CMD_EXECUTED;
       }
@@ -215,8 +220,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void) argv;
-
+      stdRet_t    termStatus = STD_RET_OK;
       cmdStatus_t cmdStatus;
       ch_t        *line;
       ch_t        *history;
@@ -230,18 +234,21 @@ stdRet_t appmain(ch_t *argv)
       if (!line || !history)
       {
             if (line)
+            {
                   Free(line);
+            }
 
             if (history)
+            {
                   Free(history);
+            }
 
             print("No enough free memory\n");
-            return STD_RET_ERROR;
+            termStatus = STD_RET_ERROR;
+            goto Terminal_Exit;
       }
-      else
-      {
-            print("Welcome to %s - kernel FreeRTOS (tty1)\n", SystemGetHostname());
-      }
+
+      print("Welcome to %s - kernel FreeRTOS (tty1)\n", SystemGetHostname());
 
       memset(history, ASCII_NULL, PROMPT_LINE_SIZE);
 
@@ -293,13 +300,19 @@ stdRet_t appmain(ch_t *argv)
 
             /* check internal commands */
             if ((cmdStatus = FindInternalCmd(cmd, arg)) == CMD_EXECUTED)
+            {
                   continue;
+            }
             else if (cmdStatus == CMD_EXIT)
+            {
                   break;
+            }
 
             /* check external commands */
             if ((cmdStatus = FindExternalCmd(cmd, arg)) == CMD_EXECUTED)
+            {
                   continue;
+            }
 
             /* check status */
             if (cmdStatus == CMD_ALLOC_ERROR)
@@ -315,8 +328,18 @@ stdRet_t appmain(ch_t *argv)
             }
       }
 
+      /* free used memory */
       Free(line);
-      return STD_RET_OK;
+      Free(history);
+
+      /* if stack size is debugging */
+      if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+      {
+            print("Free stack: %d levels\n", SystemGetStackFreeSpace());
+      }
+
+      Terminal_Exit:
+      return termStatus;
 }
 
 /* End of application section declaration */

@@ -81,15 +81,21 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
 
       /* check pointers values */
       if (!app || !appName || !stackSize || !status)
+      {
             goto RunAsApp_end;
+      }
 
       /* allocate memory for application handler */
       appHandle = (appArgs_t *)Malloc(sizeof(appArgs_t));
 
       if (!appHandle)
+      {
             goto RunAsApp_end;
+      }
       else
+      {
             appHandle->arg = NULL;
+      }
 
       /* allocate memory for STDIO */
       appHandle->stdin  = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
@@ -98,10 +104,14 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
       if (!appHandle->stdin || !appHandle->stdout)
       {
             if (!appHandle->stdin)
+            {
                   Free(appHandle->stdin);
+            }
 
             if (!appHandle->stdout)
+            {
                   Free(appHandle->stdout);
+            }
 
             Free(appHandle);
             appHandle = NULL;
@@ -158,13 +168,17 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
 
       /* check pointers values */
       if (!app|| !appName  || !stackSize || !status)
+      {
             goto RunAsDaemon_end;
+      }
 
       /* allocate memory for application handler */
       appHandle = (appArgs_t *)Malloc(sizeof(appArgs_t));
 
       if (!appHandle)
+      {
             goto RunAsDaemon_end;
+      }
 
       /* set default values */
       appHandle->arg              = arg;
@@ -182,7 +196,7 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
             goto RunAsDaemon_end;
       }
 
-      status = STD_RET_OK;
+      *status = STD_RET_OK;
 
       RunAsDaemon_end:
             return appHandle;
@@ -204,7 +218,7 @@ appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status)
 {
       regAppData_t appData = GetAppData(name);
 
-      if (appData.appPtr == NULL)
+      if (appData.appPtr == NULL || appData.stackSize < MINIMAL_STACK_SIZE)
       {
             *status = STD_RET_ERROR;
             return NULL;

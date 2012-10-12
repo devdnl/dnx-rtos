@@ -97,6 +97,25 @@ u8_t UTL_BCD2Byte(u8_t BCD)
       return ((BCD >> 4) * 10) + (BCD & 0x0F);
 }
 
+
+//================================================================================================//
+/**
+ * @brief Generate random value
+ *
+ * @return random value
+ */
+//================================================================================================//
+u32_t UTL_GetRandom(void)
+{
+     static u32_t m_w = 156416;     /* must not be zero */
+     static u32_t m_z = 12415641;   /* must not be zero */
+
+     m_z = 36969 * (m_z & 65535) + (m_z >> 16);
+     m_w = 18000 * (m_w & 65535) + (m_w >> 16);
+     return (m_z << 16) + m_w;  /* 32-bit result */
+}
+
+
 #ifdef __cplusplus
 }
 #endif

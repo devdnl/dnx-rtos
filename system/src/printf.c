@@ -936,6 +936,21 @@ void fclearSTDIO(stdioFIFO_t *stdio)
 }
 
 
+
+void *Malloc(size_t size)
+{
+      void *ptr = pvPortMalloc(size);
+      kprint("Malloc: %x\n", ptr);
+      return ptr;
+}
+
+void  Free(void *ptr)
+{
+      kprint("Freeing: %x\n", ptr);
+      vPortFree(ptr);
+}
+
+
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

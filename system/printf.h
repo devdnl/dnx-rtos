@@ -115,6 +115,8 @@ extern void  fsflush(stdioFIFO_t *stdio);
 extern void  fclearSTDIO(stdioFIFO_t *stdio);
 extern u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *var);
 
+extern void *Malloc(size_t size);
+extern void  Free(void *ptr);
 
 #ifdef __cplusplus
 }
