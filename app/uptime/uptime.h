@@ -1,11 +1,11 @@
-#ifndef HOOKS_H_
-#define HOOKS_H_
+#ifndef UPTIME_H_
+#define UPTIME_H_
 /*=============================================================================================*//**
-@file    hooks.h
+@file    uptime.h
 
 @author  Daniel Zorychta
 
-@brief   This file support all system's hooks
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,7 +27,7 @@
 *//*==============================================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==================================================================================================
@@ -39,6 +39,11 @@
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/** define stack size for this application */
+#define UPTIME_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
+
+/** define application name */
+#define UPTIME_NAME                     "uptime"
 
 
 /*==================================================================================================
@@ -54,15 +59,14 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName );
-extern void vApplicationTickHook(void);
-extern u32_t GetUptimeCnt(void);
+extern APPLICATION(uptime);
+
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
-#endif /* HOOKS_H_ */
+#endif /* UPTIME_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

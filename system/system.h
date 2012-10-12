@@ -44,6 +44,7 @@ extern "C" {
 #include "printf.h"
 #include "appruntime.h"
 #include "netconf.h"
+#include "hooks.h"
 
 
 /*==================================================================================================
@@ -99,7 +100,7 @@ extern "C" {
 #define SystemGetMemSize()                configTOTAL_HEAP_SIZE
 #define SystemReboot()                    NVIC_SystemReset()
 #define SystemGetHostname()               LwIP_GetHostname()
-
+#define SystemGetUptime()                 GetUptimeCnt()
 
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)

@@ -41,6 +41,7 @@ extern "C" {
 #include "date.h"
 #include "ls.h"
 #include "malt.h"
+#include "uptime.h"
 
 
 /*==================================================================================================
@@ -69,6 +70,7 @@ const regAppData_t appList[] =
       {DATE_NAME,     date,     DATE_STACK_SIZE    },
       {LS_NAME,       ls,       LS_STACK_SIZE      },
       {MALT_NAME,     malt,     MALT_STACK_SIZE    },
+      {UPTIME_NAME,   uptime,   UPTIME_STACK_SIZE  },
 };
 
 

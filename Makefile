@@ -37,6 +37,7 @@ CSRC = $(sort \
    app/ls/ls.c \
    app/malt/malt.c \
    app/terminal/terminal.c \
+   app/uptime/uptime.c \
    app/lwiptest/lwiptest.c \
    app/http/httpde.c \
    app/httpd/httpd.c \

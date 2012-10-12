@@ -1,11 +1,9 @@
-#ifndef HOOKS_H_
-#define HOOKS_H_
 /*=============================================================================================*//**
-@file    hooks.h
+@file    uptime.c
 
 @author  Daniel Zorychta
 
-@brief   This file support all system's hooks
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -26,43 +24,62 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-   extern "C" {
-#endif
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
+#include "clear.h"
+#include <string.h>
 
+#include "ds1307.h"
+
+/* Begin of application section declaration */
+APPLICATION(uptime)
+APP_SEC_BEGIN
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                  Exported types, enums definitions
+                                   Local types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported object declarations
+                                      Local object definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported function prototypes
+                                        Function definitions
 ==================================================================================================*/
-extern void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName );
-extern void vApplicationTickHook(void);
-extern u32_t GetUptimeCnt(void);
 
-#ifdef __cplusplus
-   }
-#endif
+//================================================================================================//
+/**
+ * @brief clear main function
+ */
+//================================================================================================//
+stdRet_t appmain(ch_t *argv)
+{
+      (void) argv;
 
-#endif /* HOOKS_H_ */
+      bcdTime_t time = DS1307_GetTime();
+      u32_t uptime   = SystemGetUptime();
+      u32_t udays    = (uptime / (3600 * 24));
+      u32_t uhrs     = (uptime / 3600) % 24;
+      u32_t umins    = (uptime / 60) % 60;
+
+      print("%x2:%x2:%x2, up %ud %u2:%u2\n",
+            time.hours, time.minutes, time.seconds,
+            udays, uhrs, umins);
+
+      return STD_RET_OK;
+}
+
+/* End of application section declaration */
+APP_SEC_END
+
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

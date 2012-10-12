@@ -59,6 +59,8 @@ extern "C" {
 #define resetAttr(level)            level##print("\x1B[0m")
 #define fontBlink(level)            level##print("\x1B[5m")
 #define fontUnderl(level)           level##print("\x1B[4m")
+#define fontNormal(level)           level##print("\x1B[0m")
+#define fontBold(level)             level##print("\x1B[1m")
 #define fontBlack(level)            level##print("\x1B[30m")
 #define fontRed(level)              level##print("\x1B[31m")
 #define fontGreen(level)            level##print("\x1B[32m")
