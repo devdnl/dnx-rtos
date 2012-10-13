@@ -45,6 +45,7 @@ extern "C" {
 #include "appruntime.h"
 #include "netconf.h"
 #include "hooks.h"
+#include "memman.h"
 
 
 /*==================================================================================================
@@ -72,9 +73,9 @@ extern "C" {
 #define TaskGetPID()                      xTaskGetPID()
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetStackFreeSpace(taskID)     uxTaskGetStackHighWaterMark(taskID)
-#define GetFreeHeapSize()                 xPortGetFreeHeapSize()
-#define Malloc(size)                      pvPortMalloc(size)
-#define Free(pv)                          vPortFree(pv)
+//#define GetFreeHeapSize()                 xPortGetFreeHeapSize()
+//#define Malloc(size)                      pvPortMalloc(size)
+//#define Free(pv)                          vPortFree(pv)
 
 #define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
         xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
@@ -96,7 +97,7 @@ extern "C" {
 #define SystemAppSuspend()                vTaskSuspend(NULL)
 #define SystemLockContent()               vTaskSuspendAll()
 #define SystemUnlockContent()             xTaskResumeAll()
-#define SystemGetFreeMemSize()            xPortGetFreeHeapSize()
+#define SystemGetFreeMemSize()            GetFreeHeapSize()
 #define SystemGetMemSize()                configTOTAL_HEAP_SIZE
 #define SystemReboot()                    NVIC_SystemReset()
 #define SystemGetHostname()               LwIP_GetHostname()

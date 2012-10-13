@@ -53,7 +53,6 @@ CSRC = $(sort \
    kernel/tasks.c \
    kernel/timers.c \
    kernel/portable/GCC/ARM_CM3/port.c \
-   kernel/portable/MemMang/heap_2.c \
    lib/ds1307/ds1307.c \
    lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
@@ -99,6 +98,7 @@ CSRC = $(sort \
    system/src/idle.c \
    system/src/initd.c \
    system/src/main.c \
+   system/src/memman.c \
    system/src/printf.c \
    )
 

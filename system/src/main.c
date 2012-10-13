@@ -98,6 +98,9 @@ static void InitSystem(void)
       NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
       NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
+      /* dynamic memory managment initialization */
+      memman_init();
+
       /* PLL initialization */
       if (PLL_Init(PLL_DEV_NONE) != STD_RET_OK)
             while (TRUE);
