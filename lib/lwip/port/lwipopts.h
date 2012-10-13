@@ -69,6 +69,13 @@
 a lot of data that needs to be copied, this should be set high. */
 //#define MEM_SIZE                (10*1024)
 
+/**
+* MEMP_MEM_MALLOC==1: Use mem_malloc/mem_free instead of the lwip pool allocator.
+* Especially useful with MEM_LIBC_MALLOC but handle with care regarding execution
+* speed and usage from interrupts!
+*/
+#define MEMP_MEM_MALLOC                 1
+
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
    should be set high. */

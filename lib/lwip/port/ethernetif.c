@@ -122,14 +122,14 @@ volatile int arp_end_time;
 uint8_t MACaddr[6];
 
 /* Ethernet Rx & Tx DMA Descriptors */
-ETH_DMADESCTypeDef DMARxDscrTab[ETH_RXBUFNB];
-ETH_DMADESCTypeDef DMATxDscrTab[ETH_TXBUFNB];
+ETH_DMADESCTypeDef *DMARxDscrTab;
+ETH_DMADESCTypeDef *DMATxDscrTab;
 
 /* Ethernet buffers */
-uint8_t Rx_Buff[ETH_RXBUFNB][ETH_MAX_PACKET_SIZE];
-uint8_t Tx_Buff[ETH_TXBUFNB][ETH_MAX_PACKET_SIZE];
+uint8_t *Rx_Buff;
+uint8_t *Tx_Buff;
 
-ETH_DMADESCTypeDef *DMATxDesc = DMATxDscrTab;
+//ETH_DMADESCTypeDef *DMATxDesc = DMATxDscrTab;
 extern ETH_DMADESCTypeDef *DMATxDescToSet;
 extern ETH_DMADESCTypeDef *DMARxDescToGet;
 
@@ -173,6 +173,17 @@ void Set_MAC_Address(uint8_t* macadd)
 //================================================================================================//
 static void low_level_init(struct netif *netif)
 {
+      /* allocate memory */
+      Rx_Buff = (uint8_t*)Malloc(sizeof(uint8_t) * ETH_RXBUFNB * ETH_MAX_PACKET_SIZE);
+      Tx_Buff = (uint8_t*)Malloc(sizeof(uint8_t) * ETH_TXBUFNB * ETH_MAX_PACKET_SIZE);
+      DMARxDscrTab = (ETH_DMADESCTypeDef*)Malloc(sizeof(ETH_DMADESCTypeDef) * ETH_RXBUFNB);
+      DMATxDscrTab = (ETH_DMADESCTypeDef*)Malloc(sizeof(ETH_DMADESCTypeDef) * ETH_TXBUFNB);
+
+      if (!Rx_Buff || !Tx_Buff || !DMARxDscrTab || !DMATxDscrTab)
+      {
+            return;
+      }
+
       /* set MAC hardware address length */
       netif->hwaddr_len = ETHARP_HWADDR_LEN;
 
@@ -192,10 +203,10 @@ static void low_level_init(struct netif *netif)
       netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 
       /* Initialize Tx Descriptors list: Chain Mode */
-      ETH_DMATxDescChainInit(DMATxDscrTab, &Tx_Buff[0][0], ETH_TXBUFNB);
+      ETH_DMATxDescChainInit(DMATxDscrTab, Tx_Buff, ETH_TXBUFNB);
 
       /* Initialize Rx Descriptors list: Chain Mode  */
-      ETH_DMARxDescChainInit(DMARxDscrTab, &Rx_Buff[0][0], ETH_RXBUFNB);
+      ETH_DMARxDescChainInit(DMARxDscrTab, Rx_Buff, ETH_RXBUFNB);
 
       /* Enable Ethernet Rx interrrupt */
       {
