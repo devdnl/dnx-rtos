@@ -71,7 +71,7 @@ extern "C" {
                                    Local symbolic constants/macros
 ==================================================================================================*/
 /** HEAP size */
-#define MEM_SIZE configTOTAL_HEAP_SIZE
+#define HEAP_SIZE configTOTAL_HEAP_SIZE
 
 /** MEM_ALIGNMENT: should be set to the alignment of the CPU for which
    lwIP is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
@@ -103,7 +103,7 @@ extern "C" {
 /** some alignment macros: we define them here for better source code layout */
 #define BLOCK_MIN_SIZE_ALIGNED      MEM_ALIGN_SIZE(BLOCK_MIN_SIZE)
 #define SIZEOF_STRUCT_MEM           MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED            MEM_ALIGN_SIZE(MEM_SIZE)
+#define MEM_SIZE_ALIGNED            MEM_ALIGN_SIZE(HEAP_SIZE)
 
 /** heap protection */
 #define MEM_FREE_PROTECT()          TaskEnterCritical()
@@ -610,7 +610,7 @@ void *Calloc(size_t count, size_t size)
 //================================================================================================//
 u32_t GetFreeHeapSize(void)
 {
-      return (MEM_SIZE - used_mem);
+      return (HEAP_SIZE - used_mem);
 }
 
 

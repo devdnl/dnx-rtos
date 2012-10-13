@@ -70,7 +70,6 @@ CSRC = $(sort \
    lib/lwip/core/udp.c \
    lib/lwip/core/dhcp.c \
    lib/lwip/core/init.c \
-   lib/lwip/core/mem.c \
    lib/lwip/core/memp.c \
    lib/lwip/core/netif.c \
    lib/lwip/core/pbuf.c \
