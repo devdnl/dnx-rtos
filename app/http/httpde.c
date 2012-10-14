@@ -52,7 +52,8 @@ struct http_state
 };
 
 
-ch_t htmlBuffer[2048];
+//ch_t htmlBuffer[2048];
+ch_t *htmlBuffer;
 
 
 /*-----------------------------------------------------------------------------------*/
@@ -308,6 +309,13 @@ void httpd_init(void *argv)
       (void) argv;
 
       struct tcp_pcb *pcb;
+
+      htmlBuffer = (ch_t*)Malloc(2048);
+
+      if (htmlBuffer == NULL)
+      {
+            TaskTerminate();
+      }
 
       pcb = tcp_new();
       tcp_bind(pcb, IP_ADDR_ANY, 80);
