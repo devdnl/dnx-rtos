@@ -34,6 +34,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "i2c_cfg.h"
+#include "stm32f10x.h"
 #include "system.h"
 
 

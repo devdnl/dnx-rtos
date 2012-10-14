@@ -67,15 +67,8 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
-#include "pll_cfg.h"
-
-
-/*-----------------------------------------------------------
- * My specific definitions
- *----------------------------------------------------------*/
-#define configSTDIO_BUFFER_SIZE                 100
-#define constKPRINT_BUFFER_SIZE                 80
-
+#include "pll_cfg.h"          /* CPU_TARGET_FREQ */
+#include "memman.h"           /* dynamic memory management */
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -95,7 +88,7 @@
 #define configTICK_RATE_HZ                      ( ( portTickType ) 1000 )
 #define configMAX_PRIORITIES                    ( ( unsigned portBASE_TYPE ) 5 )
 #define configMINIMAL_STACK_SIZE                ( ( unsigned short ) 40 )
-#define configTOTAL_HEAP_SIZE                   (size_t)(60*1024)
+#define configTOTAL_HEAP_SIZE                   MEMMAN_HEAP_SIZE
 #define configMAX_TASK_NAME_LEN                 ( 16 )
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_16_BIT_TICKS                  0
@@ -139,12 +132,6 @@ NVIC value of 255. */
 #define xPortPendSVHandler                      PendSV_Handler
 #define xPortSysTickHandler                     SysTick_Handler
 #define vPortSVCHandler                         SVC_Handler
-
-#define pvPortMalloc(xSize)                     Malloc(xSize)
-#define vPortFree(pv)                           Free(pv)
-#define vPortInitialiseBlocks()                 memman_init()
-#define xPortGetFreeHeapSize()                  GetFreeHeapSize()
-
 
 #endif /* FREERTOS_CONFIG_H */
 

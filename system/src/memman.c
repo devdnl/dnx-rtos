@@ -70,13 +70,10 @@ extern "C" {
 /*==================================================================================================
                                    Local symbolic constants/macros
 ==================================================================================================*/
-/** HEAP size */
-#define HEAP_SIZE configTOTAL_HEAP_SIZE
-
 /** MEM_ALIGNMENT: should be set to the alignment of the CPU for which
-   lwIP is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
+   program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
    byte alignment -> define MEM_ALIGNMENT to 2. */
-#define MEM_ALIGNMENT           4
+#define MEM_ALIGNMENT               4
 
 /** Calculate memory size for an aligned buffer - returns the next highest
  * multiple of MEM_ALIGNMENT (e.g. MEM_ALIGN_SIZE(3) and
@@ -98,20 +95,20 @@ extern "C" {
 /** All allocated blocks will be BLOCK_MIN_SIZE bytes big, at least!
  * BLOCK_MIN_SIZE can be overridden to suit your needs. Smaller values save space,
  * larger values could prevent too small blocks to fragment the RAM too much. */
-#define BLOCK_MIN_SIZE             12
+#define BLOCK_MIN_SIZE              12
 
 /** some alignment macros: we define them here for better source code layout */
 #define BLOCK_MIN_SIZE_ALIGNED      MEM_ALIGN_SIZE(BLOCK_MIN_SIZE)
 #define SIZEOF_STRUCT_MEM           MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED            MEM_ALIGN_SIZE(HEAP_SIZE)
+#define MEM_SIZE_ALIGNED            MEM_ALIGN_SIZE(MEMMAN_HEAP_SIZE)
 
 /** heap protection */
-#define MEM_FREE_PROTECT()          TaskEnterCritical()
-#define MEM_FREE_UNPROTECT()        TaskExitCritical()
+#define MEM_FREE_PROTECT()          vTaskSuspendAll()
+#define MEM_FREE_UNPROTECT()        xTaskResumeAll()
 
 /** heap protection */
-#define MEM_ALLOC_PROTECT()         TaskEnterCritical()
-#define MEM_ALLOC_UNPROTECT()       TaskExitCritical()
+#define MEM_ALLOC_PROTECT()         vTaskSuspendAll()
+#define MEM_ALLOC_UNPROTECT()       xTaskResumeAll()
 
 /** RAM usage modifications */
 #define MEM_STATS_INC_USED(size)    used_mem += size
@@ -130,12 +127,12 @@ typedef u32_t ptr_t;
  * we only use the macro SIZEOF_STRUCT_MEM, which automatically alignes.
  */
 struct mem {
-  /** index (-> ram[next]) of the next struct */
-  size_t next;
-  /** index (-> ram[prev]) of the previous struct */
-  size_t prev;
-  /** 1: this area is used; 0: this area is unused */
-  u8_t used;
+      /** index (-> ram[next]) of the next struct */
+      size_t next;
+      /** index (-> ram[prev]) of the previous struct */
+      size_t prev;
+      /** 1: this area is used; 0: this area is unused */
+      u8_t used;
 };
 
 
@@ -257,7 +254,6 @@ void memman_init(void)
       lfree = (struct mem *)(void *)ram;
 
       //  if(sys_mutex_new(&mem_mutex) != ERR_OK) {
-      //    LWIP_ASSERT("failed to create mem_mutex", 0);
       //  }
 }
 
@@ -273,7 +269,6 @@ void memman_init(void)
 void Free(void *rmem)
 {
       struct mem *mem;
-      //  MEM_FREE_DECL_PROTECT();
 
       if (rmem == NULL)
       {
@@ -610,7 +605,7 @@ void *Calloc(size_t count, size_t size)
 //================================================================================================//
 u32_t GetFreeHeapSize(void)
 {
-      return (HEAP_SIZE - used_mem);
+      return (MEMMAN_HEAP_SIZE - used_mem);
 }
 
 

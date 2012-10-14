@@ -33,7 +33,13 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "FreeRTOSConfig.h"
+
+
+/*==================================================================================================
+                                  Exported symbolic constants/macros
+==================================================================================================*/
+#define configSTDIO_BUFFER_SIZE           100
+#define constKPRINT_BUFFER_SIZE           80
 
 
 /*==================================================================================================
@@ -84,7 +90,7 @@ typedef struct appArgs_struct
       stdioFIFO_t *stdout;                      /* stdout fifo */
       void        *ChildTaskHandle;             /* FreeRTOS task handling for children */
       void        *ParentTaskHandle;            /* FreeRTOS task handling for parent */
-      stdRet_t exitCode;                        /* exit code */
+      stdRet_t    exitCode;                     /* exit code */
 } appArgs_t;
 
 

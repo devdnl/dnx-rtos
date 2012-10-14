@@ -35,8 +35,6 @@ extern "C" {
 ==================================================================================================*/
 #include "basic_types.h"
 #include "systypes.h"
-#include "stm32f10x.h"
-#include "pll_cfg.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -45,7 +43,7 @@ extern "C" {
 #include "appruntime.h"
 #include "netconf.h"
 #include "hooks.h"
-#include "memman.h"
+#include "stm32f10x.h"
 
 
 /*==================================================================================================
@@ -73,9 +71,6 @@ extern "C" {
 #define TaskGetPID()                      xTaskGetPID()
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetStackFreeSpace(taskID)     uxTaskGetStackHighWaterMark(taskID)
-//#define GetFreeHeapSize()                 xPortGetFreeHeapSize()
-//#define Malloc(size)                      pvPortMalloc(size)
-//#define Free(pv)                          vPortFree(pv)
 
 #define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
         xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)

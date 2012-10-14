@@ -52,7 +52,8 @@ struct http_state
 };
 
 
-ch_t htmlBuffer[2048];
+//ch_t htmlBuffer[2048];
+ch_t *htmlBuffer;
 
 
 /*-----------------------------------------------------------------------------------*/
@@ -193,7 +194,11 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                         if (strncmp(strchr(fname, '.'), ".html", 5) == 0)
                         {
                               /* allocate new buffer for page */
-                              ch_t  *pagePtr = htmlBuffer;
+                              if (htmlBuffer == NULL)
+                              {
+                                    htmlBuffer = (ch_t *)Malloc(2048 * sizeof(u8_t));
+                              }
+//                              ch_t  *pagePtr = htmlBuffer;
                               u32_t pageSize = 0;
 
                               for (i = 0; i < file.len; i++)
@@ -208,14 +213,14 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                                                 i += 6;
                                                 i8_t temp = 0;
                                                 MPL115A2_GetTemperature(&temp);
-                                                n = snprint(pagePtr, 50, "%d", (i32_t)temp);
+                                                n = snprint(htmlBuffer, 50, "%d", (i32_t)temp);
                                           }
                                           else if (strncmp(&file.data[i], "pres/?>", 7) == 0)
                                           {
                                                 i += 6;
                                                 u16_t pressure = 0;
                                                 MPL115A2_GetPressure(&pressure);
-                                                n = snprint(pagePtr, 50, "%d", (u32_t)pressure);
+                                                n = snprint(htmlBuffer, 50, "%d", (u32_t)pressure);
                                           }
                                           else if (strncmp(&file.data[i], "date/?>", 7) == 0)
                                           {
@@ -224,7 +229,7 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                                                 bcdTime_t time = DS1307_GetTime();
                                                 bcdDate_t date = DS1307_GetDate();
 
-                                                n = snprint(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
+                                                n = snprint(htmlBuffer, 50, "%x2-%x2-20%x2, %x2:%x2\n",
                                                             date.day,
                                                             date.month,
                                                             date.year,
@@ -232,12 +237,12 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                                                             time.minutes);
                                           }
 
-                                          pagePtr  += n;
+                                          htmlBuffer  += n;
                                           pageSize += n;
                                     }
                                     else
                                     {
-                                          *pagePtr++ = file.data[i];
+                                          *htmlBuffer++ = file.data[i];
                                           pageSize++;
                                     }
                               }
