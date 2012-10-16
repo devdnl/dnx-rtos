@@ -321,7 +321,11 @@ static PortHandle_t PortHandle[] =
 
 //================================================================================================//
 /**
- * @brief Initialize USART devices. Not used, initialization will done at port open
+ * @brief Initialize USART devices. Here is created USART driver node
+ *
+ * @param usartName     device number
+ *
+ * @retval STD_RET_OK
  */
 //================================================================================================//
 stdRet_t UART_Init(dev_t usartName)
@@ -952,6 +956,23 @@ stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 
 //================================================================================================//
 /**
+ * @brief Release USART devices. Here is removed driver node and reseted device
+ *
+ * @param usartName     device number
+ *
+ * @retval STD_RET_OK
+ */
+//================================================================================================//
+stdRet_t UART_Release(dev_t usartName)
+{
+      (void) usartName;
+
+      return STD_RET_OK;
+}
+
+
+//================================================================================================//
+/**
  * @brief USART1 Interrupt
  */
 //================================================================================================//
@@ -1022,11 +1043,6 @@ void UART5_IRQHandler(void)
       IRQCode(UART5, UART_DEV_5);
 }
 #endif
-#endif
-
-
-#ifdef __cplusplus
-   }
 #endif
 
 #ifdef __cplusplus

@@ -41,9 +41,10 @@ extern "C" {
 #include "semphr.h"
 #include "printf.h"
 #include "appruntime.h"
+#include "cpu.h"
+
 #include "netconf.h"
 #include "hooks.h"
-#include "stm32f10x.h"
 
 
 /*==================================================================================================
@@ -94,7 +95,6 @@ extern "C" {
 #define SystemUnlockContent()             xTaskResumeAll()
 #define SystemGetFreeMemSize()            GetFreeHeapSize()
 #define SystemGetMemSize()                configTOTAL_HEAP_SIZE
-#define SystemReboot()                    NVIC_SystemReset()
 #define SystemGetHostname()               LwIP_GetHostname()
 #define SystemGetUptime()                 GetUptimeCnt()
 

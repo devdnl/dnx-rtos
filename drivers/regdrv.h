@@ -1,11 +1,11 @@
-#ifndef APPRUNTIME_H_
-#define APPRUNTIME_H_
+#ifndef REGDRV_H_
+#define REGDRV_H_
 /*=============================================================================================*//**
-@file    appruntime.h
+@file    regdrv.h
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief   This file is used to registration drivers
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,33 +33,17 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
-#include "systypes.h"
-#include "projdefs.h"
+#include "system.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** simpler definition of terminating application */
-#define Exit(exitCode)                    TerminateApplication(appArgument, exitCode)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** type which define parse possiblities */
-typedef enum parseType_enum
-{
-      PARSE_AS_BIN,
-      PARSE_AS_OCT,
-      PARSE_AS_DEC,
-      PARSE_AS_HEX,
-      PARSE_AS_STRING,
-      PARSE_AS_CHAR,
-      PARSE_AS_EXIST,
-      PARSE_AS_UNKNOWN
-} parseType_t;
 
 
 /*==================================================================================================
@@ -70,19 +54,15 @@ typedef enum parseType_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status);
-extern appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status);
-extern appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status);
-extern appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status);
-extern stdRet_t  FreeAppStdio(appArgs_t *appArgs);
-extern void      TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode);
-extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
+extern stdRet_t InitDrv(const ch_t *drvName);
+extern stdRet_t ReleaseDrv(const ch_t *drvName);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* APPRUNTIME_H_ */
+#endif /* REGDRV_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

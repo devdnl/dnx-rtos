@@ -1,11 +1,11 @@
 /*=============================================================================================*//**
-@file    mian.c
+@file    regdrv.c
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief   This file is used to registration drivers
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,24 +29,31 @@ extern "C" {
 #endif
 
 /*==================================================================================================
-                                             Include files
+                                            Include files
 ==================================================================================================*/
-#include "system.h"
-#include "pll.h"
-#include "gpio.h"
+#include "regdrv.h"
+#include "systypes.h"
+#include <string.h>
+
+/* include here drivers headers */
 #include "uart.h"
-#include "initd.h"
-#include "misc.h"
 
 
 /*==================================================================================================
-                                   Local symbolic constants/macros
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+typedef struct
+{
+      ch_t *drvName;
+      stdRet_t (*init)(dev_t);
+      stdRet_t (*release)(dev_t);
+      dev_t device;
+}regDrv_t;
 
 
 /*==================================================================================================
@@ -57,6 +64,10 @@ extern "C" {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+const regDrv_t drvList[] =
+{
+      {"uart1", UART_Init, UART_Release, UART_DEV_1},
+};
 
 
 /*==================================================================================================
@@ -65,38 +76,68 @@ extern "C" {
 
 
 /*==================================================================================================
-                                         Function definitions
+                                        Function definitions
 ==================================================================================================*/
 
 //================================================================================================//
 /**
- * @brief Main function
+ * @brief Function find driver name and then initialize device
+ *
+ * @param *drvName            driver name
+ *
+ * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //================================================================================================//
-int main(void)
+stdRet_t InitDrv(const ch_t *drvName)
 {
-      /* set interrupt vectors and NVIC priority */
-      NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
-      NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+      stdRet_t status = STD_RET_ERROR;
+      u32_t i;
 
-      /* PLL initialization */
-      if (PLL_Init(PLL_DEV_NONE) != STD_RET_OK)
-            while (TRUE);
+      if (drvName)
+      {
+            for (i = 0; i < ARRAY_SIZE(drvList); i++)
+            {
+                  if (strcmp(drvList[i].drvName, drvName) == 0)
+                  {
+                        status = drvList[i].init(drvList[i].device);
+                        break;
+                  }
+            }
+      }
 
-      /* GPIO and AFIO initialization */
-      GPIO_Init(GPIO_DEV_NONE);
-
-      /* dynamic memory management initialization */
-      memman_init();
-
-      /* create main task */
-      TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 3, NULL);
-
-      /* start OS */
-      vTaskStartScheduler();
-
-      return 0;
+      return status;
 }
+
+
+//================================================================================================//
+/**
+ * @brief Function find driver name and then release device
+ *
+ * @param *drvName            driver name
+ *
+ * @return driver depending value, all not equal to STD_RET_OK are errors
+ */
+//================================================================================================//
+stdRet_t ReleaseDrv(const ch_t *drvName)
+{
+      stdRet_t status = STD_RET_ERROR;
+      u32_t i;
+
+      if (drvName)
+      {
+            for (i = 0; i < ARRAY_SIZE(drvList); i++)
+            {
+                  if (strcmp(drvList[i].drvName, drvName) == 0)
+                  {
+                        status = drvList[i].release(drvList[i].device);
+                        break;
+                  }
+            }
+      }
+
+      return status;
+}
+
 
 
 #ifdef __cplusplus
@@ -104,5 +145,5 @@ int main(void)
 #endif
 
 /*==================================================================================================
-                                             End of file
+                                            End of file
 ==================================================================================================*/

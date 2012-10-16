@@ -42,11 +42,12 @@ CSRC = $(sort \
    app/http/httpde.c \
    app/httpd/httpd.c \
    cpu/stm32/stm32f10x_vectors.c \
-   drivers/src/ether.c \
-   drivers/src/gpio.c \
-   drivers/src/i2c.c \
-   drivers/src/pll.c \
-   drivers/src/uart.c \
+   drivers/regdrv.c \
+   drivers/ether/ether.c \
+   drivers/gpio/gpio.c \
+   drivers/i2c/i2c.c \
+   drivers/pll/pll.c \
+   drivers/uart/uart.c \
    kernel/croutine.c \
    kernel/list.c \
    kernel/queue.c \
@@ -93,6 +94,7 @@ CSRC = $(sort \
    lib/STM32F10x_StdPeriph_Driver/misc.c \
    lib/utils/utils.c \
    system/src/appruntime.c \
+   system/src/cpu.c \
    system/src/hooks.c \
    system/src/idle.c \
    system/src/initd.c \
@@ -121,8 +123,6 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    cfg \
    cpu \
    cpu/CMSIS \
-   drivers \
-   drivers/cfg \
    kernel/include \
    lib/lwip \
    lib/lwip/include \

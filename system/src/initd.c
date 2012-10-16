@@ -32,6 +32,8 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "initd.h"
+#include "regdrv.h"
+
 #include "uart.h"
 #include "ether.h"
 #include "netconf.h"
@@ -83,12 +85,13 @@ void Initd(void *arg)
       (void) arg;
 
       /* short delay and lock task scheduling */
-      TaskDelay(1000);
+      TaskDelay(800);
 
       /*--------------------------------------------------------------------------------------------
        * initialization kprint()
        *------------------------------------------------------------------------------------------*/
-      UART_Init(UART_DEV_1);
+      InitDrv("uart1");
+//      UART_Init(UART_DEV_1);
       UART_Open(UART_DEV_1);
       kprintEnable();
 
