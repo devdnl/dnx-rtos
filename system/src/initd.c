@@ -59,7 +59,6 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static i8_t decodeFn(ch_t character);
 
 
 /*==================================================================================================
@@ -115,12 +114,7 @@ void Initd(void *arg)
       /* short delay and lock task scheduling */
       TaskDelay(800);
 
-      /*--------------------------------------------------------------------------------------------
-       * initialization kprint()
-       *------------------------------------------------------------------------------------------*/
-      InitDrv("uart1");
-//      UART_Init(UART_DEV_1);
-      UART_Open(UART_DEV_1);
+      /* initialization kprint() */
       kprintEnable();
 
       /* VT100 terminal configuration */
@@ -135,18 +129,18 @@ void Initd(void *arg)
       TaskDelay(1000);
 
       /* info about system start */
-      kprint("[%d] initd: kernel print started\n", TaskGetTickCount());
       kprint("[%d] initd: init daemon started\n", TaskGetTickCount());
+      kprint("[%d] initd: kernel print started on ttyd\n", TaskGetTickCount());
 
       /*--------------------------------------------------------------------------------------------
        * user initialization
        *------------------------------------------------------------------------------------------*/
-//      if (ETHER_Init(ETH_DEV_1) != STD_RET_OK)
-//            goto initd_net_end;
-//
-//      if (LwIP_Init() != STD_RET_OK)
-//            goto initd_net_end;
-//
+      if (ETHER_Init(ETH_DEV_1) != STD_RET_OK)
+            goto initd_net_end;
+
+      if (LwIP_Init() != STD_RET_OK)
+            goto initd_net_end;
+
 //      kprint("Starting telnetd... ");
 //      if (TaskCreate(telnetd, "telnetd", TELNETD_STACK_SIZE, NULL, 2, NULL) == pdPASS)
 //      {
@@ -159,22 +153,22 @@ void Initd(void *arg)
 //            kprint("FAILED\n");
 //      }
 //      resetAttr(k);
-//
-//      kprint("Starting httpde...");
-//      if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
-//      {
-//            kprintOK();
-//      }
-//      else
-//      {
-//            kprintFail();
-//      }
-//
-//      initd_net_end:
-//
-//      DS1307_Init();
-//
-//      MPL115A2_Init();
+
+      kprint("Starting httpde...");
+      if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+      {
+            kprintOK();
+      }
+      else
+      {
+            kprintFail();
+      }
+
+      initd_net_end:
+
+      DS1307_Init();
+
+      MPL115A2_Init();
 
       /*--------------------------------------------------------------------------------------------
        * starting terminal
@@ -208,14 +202,14 @@ void Initd(void *arg)
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
-      u8_t   currentTTY  = 0;
-      ch_t   character;
-      bool_t stdoutEmpty = FALSE;
-      bool_t RxFIFOEmpty = FALSE;
+//      u8_t   currentTTY  = 0;
+//      ch_t   character;
+//      bool_t stdoutEmpty = FALSE;
+//      bool_t RxFIFOEmpty = FALSE;
 
       for (;;)
       {
-
+            Sleep(1000);
             /* STDOUT support ------------------------------------------------------------------- */
 //            if ((character = ufgetChar(appHdl->stdout)) != ASCII_CANCEL)
 //            {
@@ -226,42 +220,42 @@ void Initd(void *arg)
 //            {
 //                  stdoutEmpty = TRUE;
 //            }
-
-            if (TTY_CheckNewMsg(currentTTY))
-            {
-                  ch_t *msg = TTY_GetMsg(currentTTY, TTY_LAST_MSG);
-
-                  if (msg)
-                  {
-                        UART_Write(UART_DEV_1, msg, strlen(msg), 0);
-                  }
-            }
-
-            /* STDIN support -------------------------------------------------------------------- */
-            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &character) == STD_RET_OK)
-            {
+//
+//            if (TTY_CheckNewMsg(currentTTY))
+//            {
+//                  ch_t *msg = TTY_GetMsg(currentTTY, TTY_LAST_MSG);
+//
+//                  if (msg)
+//                  {
+//                        UART_Write(UART_DEV_1, msg, strlen(msg), 0);
+//                  }
+//            }
+//
+//            /* STDIN support -------------------------------------------------------------------- */
+//            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &character) == STD_RET_OK)
+//            {
 //                  i8_t keyFn = decodeFn(character);
-
-                  if (character >= '0' && character <= '4')
-                  {
-                        if (currentTTY != (character - '0'))
-                        {
-                              currentTTY = character - '0';
-
-                              ch_t *clrscr = "\x1B[2J";
-                              UART_Write(UART_DEV_1, clrscr, strlen(clrscr), 0);
-
-                              for (u8_t i = 0; i < TTY_MSGS; i++)
-                              {
-                                    ch_t *msg = TTY_GetMsg(currentTTY, i);
-
-                                    if (msg)
-                                    {
-                                          UART_Write(UART_DEV_1, msg, strlen(msg), 0);
-                                    }
-                              }
-                        }
-                  }
+//
+//                  if (character >= '0' && character <= '4')
+//                  {
+//                        if (currentTTY != (character - '0'))
+//                        {
+//                              currentTTY = character - '0';
+//
+//                              ch_t *clrscr = "\x1B[2J";
+//                              UART_Write(UART_DEV_1, clrscr, strlen(clrscr), 0);
+//
+//                              for (u8_t i = 0; i < TTY_MSGS; i++)
+//                              {
+//                                    ch_t *msg = TTY_GetMsg(currentTTY, i);
+//
+//                                    if (msg)
+//                                    {
+//                                          UART_Write(UART_DEV_1, msg, strlen(msg), 0);
+//                                    }
+//                              }
+//                        }
+//                  }
 
 //                  if (keyFn == -1)
 //                  {
@@ -272,7 +266,7 @@ void Initd(void *arg)
 //                  {
 //                        currentTTY = keyFn - 1;
 //                  }
-            }
+//            }
 //            else
 //            {
 //                  RxFIFOEmpty = TRUE;
@@ -302,74 +296,7 @@ void Initd(void *arg)
       }
 
       /* this should never happen */
-      TaskTerminate();
-}
-
-
-
-static i8_t decodeFn(ch_t character)
-{
-      static u8_t funcStep;
-
-      /* try detect function keys ^[OP */
-      switch (funcStep)
-      {
-            case 0:
-            {
-                  if (character == ASCII_ESC)
-                        funcStep++;
-                  else
-                        funcStep = 0;
-                  break;
-            }
-
-//            case 1:
-//            {
-//                  if (character == '[')
-//                        funcStep++;
-//                  else
-//                        funcStep = 0;
-//                  break;
-//            }
-
-            case 1:
-            {
-                  if (character == 'O')
-                        funcStep++;
-                  else
-                        funcStep = 0;
-                  break;
-            }
-
-            case 2:
-            {
-                  if (character == 'P')
-                  {
-                        return 1;
-                  }
-                  else if (character == 'Q')
-                  {
-                        return 2;
-                  }
-                  else if (character == 'R')
-                  {
-                        return 3;
-                  }
-                  else if (character == 'S')
-                  {
-                        return 4;
-                  }
-                  break;
-            }
-
-            default:
-                  funcStep = 0;
-      }
-
-      if (funcStep)
-            return 0;
-      else
-            return -1;
+//      TaskTerminate();
 }
 
 

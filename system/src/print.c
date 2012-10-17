@@ -27,19 +27,17 @@
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "printf.h"
-#include "FreeRTOSConfig.h"
+#include "print.h"
+#include "basic_types.h"
+#include "systypes.h"
 #include <string.h>
 #include "memman.h"
 #include "tty.h"
-#include "uart.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-/** define function which provide terminal output */
-#define SEND_BUFFER(buffer, size)         UART_Write(UART_DEV_1, buffer, size, 0)
 
 
 /*==================================================================================================
@@ -318,18 +316,15 @@ u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...)
 //================================================================================================//
 u32_t kprint(const ch_t *format, ...)
 {
-//      ch_t    buffer[constKPRINT_BUFFER_SIZE];
       va_list args;
       u32_t   n = 0;
 
-      ch_t *buffer = (ch_t*)Calloc(constKPRINT_BUFFER_SIZE, sizeof(ch_t));
-
-      if (buffer)
+      if (kprintEnabled)
       {
-            if (kprintEnabled)
-            {
-//                  memset(buffer, 0, constKPRINT_BUFFER_SIZE);
+            ch_t *buffer = (ch_t*)Calloc(constKPRINT_BUFFER_SIZE, sizeof(ch_t));
 
+            if (buffer)
+            {
                   va_start(args, format);
                   n = vsnprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
                   va_end(args);
@@ -342,10 +337,8 @@ u32_t kprint(const ch_t *format, ...)
                         TTY_AddMsg(0, msg);
                   }
 
-//                  SEND_BUFFER(buffer, strlen(buffer));
+                  Free(buffer);
             }
-
-            Free(buffer);
       }
 
       return n;

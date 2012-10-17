@@ -33,6 +33,9 @@ extern "C" {
 ==================================================================================================*/
 #include "tty.h"
 #include "memman.h"
+#include "regdrv.h"
+#include "uart.h"
+#include <string.h>
 
 
 /*==================================================================================================
@@ -49,21 +52,196 @@ struct ttyEntry
 };
 
 
+typedef enum
+{
+      TTY1_SELECTED,
+      TTY2_SELECTED,
+      TTY3_SELECTED,
+      TTY4_SELECTED,
+      TTY_SEL_PEND,
+      TTY_SEL_NONE
+} decode_t;
+
+
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static bool_t CreateTTY(u8_t tty);
+static void     RefreshTTY(u8_t tty);
+static bool_t   CreateTTY(u8_t tty);
+static decode_t decodeFn(ch_t character);
 
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-static struct ttyEntry *ttyTerm[TTY_COUNT] = {NULL, NULL, NULL, NULL};
-static bool_t ttyNewMsg[TTY_COUNT];
+static struct ttyEntry *ttyTerm[TTY_COUNT];
+static u8_t   ttyNewMsg[TTY_COUNT];
+static u8_t   ttyMsgCnt[TTY_COUNT];
+
 
 /*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
+
+//================================================================================================//
+/**
+ * @brief TTY daemon
+ */
+//================================================================================================//
+void ttyd(void *arg)
+{
+      (void) arg;
+
+      u8_t   currentTTY = 0;
+      ch_t   character  = 0;
+      u8_t   msgcnt     = 0;
+      bool_t rxbfrempty = FALSE;
+
+      InitDrv("uart1");
+      UART_Open(UART_DEV_1);
+
+      for (;;)
+      {
+            /* STDOUT support ------------------------------------------------------------------- */
+            if ((msgcnt = TTY_CheckNewMsg(currentTTY)) > 0)
+            {
+                  ch_t *msg = TTY_GetMsg(currentTTY, ttyMsgCnt[currentTTY] - msgcnt);
+
+                  if (msg)
+                  {
+                        UART_Write(UART_DEV_1, msg, strlen(msg), 0);
+                  }
+            }
+
+            /* STDIN support -------------------------------------------------------------------- */
+            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &character) == STD_RET_OK)
+            {
+                  decode_t keyfn = decodeFn(character);
+
+                  if (keyfn == TTY_SEL_NONE)
+                  {
+                        /* send to program */
+                  }
+                  else if (keyfn <= TTY4_SELECTED && keyfn != currentTTY)
+                  {
+                        currentTTY = keyfn;
+                        RefreshTTY(currentTTY);
+                  }
+            }
+            else
+            {
+                  rxbfrempty = TRUE;
+            }
+
+            /* check that can go to short sleep */
+            if (TTY_CheckNewMsg(currentTTY) == 0 && rxbfrempty)
+                  Sleep(10);
+      }
+
+      /* this should never happen */
+      TaskTerminate();
+}
+
+
+//================================================================================================//
+/**
+ * @brief Refresh selected TTY
+ *
+ * @param tty     number of terminal
+ */
+//================================================================================================//
+static void RefreshTTY(u8_t tty)
+{
+      ch_t *clrscr = "\x1B[2J";
+      UART_Write(UART_DEV_1, clrscr, strlen(clrscr), 0);
+
+      for (u8_t i = 0; i < TTY_MSGS; i++)
+      {
+            ch_t *msg = TTY_GetMsg(tty, i);
+
+            if (msg)
+            {
+                  UART_Write(UART_DEV_1, msg, strlen(msg), 0);
+            }
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Check if pushed button is F1-F4
+ *
+ * @param character     button
+ */
+//================================================================================================//
+static decode_t decodeFn(ch_t character)
+{
+      static u8_t funcStep = 0;
+      decode_t state = TTY_SEL_NONE;
+
+      /* try detect function keys ^[OP */
+      switch (funcStep)
+      {
+            case 0:
+            {
+                  if (character == ASCII_ESC)
+                  {
+                        funcStep++;
+                        state = TTY_SEL_PEND;
+                  }
+                  else
+                  {
+                        funcStep = 0;
+                  }
+                  break;
+            }
+
+            case 1:
+            {
+                  if (character == 'O')
+                  {
+                        funcStep++;
+                        state = TTY_SEL_PEND;
+                  }
+                  else
+                  {
+                        funcStep = 0;
+                  }
+                  break;
+            }
+
+            case 2:
+            {
+                  if (character == 'P')
+                  {
+                        state = TTY1_SELECTED;
+                  }
+                  else if (character == 'Q')
+                  {
+                        state = TTY2_SELECTED;
+                  }
+                  else if (character == 'R')
+                  {
+                        state = TTY3_SELECTED;
+                  }
+                  else if (character == 'S')
+                  {
+                        state = TTY4_SELECTED;
+                  }
+
+                  funcStep = 0;
+                  break;
+            }
+
+            default:
+            {
+                  funcStep = 0;
+            }
+      }
+
+      return state;
+}
+
 
 //================================================================================================//
 /**
@@ -121,7 +299,6 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                   if (ttyTerm[tty]->line[i] == NULL)
                   {
                         ttyTerm[tty]->line[i] = msg;
-                        ttyNewMsg[tty] = TRUE;
                         goto AddTermMsg_end;
                   }
             }
@@ -138,10 +315,15 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
             }
 
             ttyTerm[tty]->line[TTY_MSGS - 1] = msg;
-            ttyNewMsg[tty] = TRUE;
+
+            AddTermMsg_end:
+            if (ttyMsgCnt[tty] < TTY_MSGS)
+                  ttyMsgCnt[tty]++;
+
+            if (ttyNewMsg[tty] < TTY_MSGS)
+                  ttyNewMsg[tty]++;
       }
 
-      AddTermMsg_end:
       return;
 }
 
@@ -214,9 +396,9 @@ ch_t *TTY_GetMsg(u8_t tty, u8_t msg)
             }
       }
 
-      if (ptr)
+      if (ptr && ttyNewMsg[tty] > 0)
       {
-            ttyNewMsg[tty] = FALSE;
+            ttyNewMsg[tty]--;
       }
 
       return ptr;
@@ -246,7 +428,8 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
                               else
                                     ttyTerm[tty]->line[0] = newmsg;
 
-                              ttyNewMsg[tty] = TRUE;
+                              if (ttyNewMsg[tty] < TTY_MSGS)
+                                    ttyNewMsg[tty]++;
                         }
                   }
             }
@@ -259,11 +442,10 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
  * @brief Function check if new message is received
  *
  * @param tty           terminal number
- * @retval TRUE         new message was received
- * @retval FALSE        nothing new
+ * @return number of new messages
  */
 //================================================================================================//
-bool_t TTY_CheckNewMsg(u8_t tty)
+u8_t TTY_CheckNewMsg(u8_t tty)
 {
       if (tty < TTY_COUNT)
       {
@@ -271,7 +453,7 @@ bool_t TTY_CheckNewMsg(u8_t tty)
       }
       else
       {
-            return FALSE;
+            return 0;
       }
 }
 

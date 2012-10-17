@@ -100,7 +100,7 @@ CSRC = $(sort \
    system/src/initd.c \
    system/src/main.c \
    system/src/memman.c \
-   system/src/printf.c \
+   system/src/print.c \
    system/src/tty.c \
    )
 

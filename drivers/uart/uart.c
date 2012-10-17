@@ -687,7 +687,7 @@ stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
                               }
                               else
                               {
-//                                    TaskDelay(1);
+//                                    TaskDelay(1); /* DNLFIXME to powinno byc zrobione na DMA */
                               }
                         }
                         while (size);

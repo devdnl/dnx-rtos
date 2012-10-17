@@ -393,6 +393,23 @@ stdRet_t GPIO_IOCtl(dev_t dev, IORq_t ioRq, void *data)
 
 //================================================================================================//
 /**
+ * @brief Release GPIO devices. Here is removed driver node and reseted device
+ *
+ * @param dev           device number
+ *
+ * @retval STD_RET_OK
+ */
+//================================================================================================//
+stdRet_t GPIO_Release(dev_t dev)
+{
+      (void) dev;
+
+      return STD_RET_OK;
+}
+
+
+//================================================================================================//
+/**
  * @brief Initialize GPIOx
  *
  * @param[in] *gpio_p      GPIO address

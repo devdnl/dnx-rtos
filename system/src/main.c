@@ -32,11 +32,10 @@ extern "C" {
                                              Include files
 ==================================================================================================*/
 #include "system.h"
-#include "pll.h"
-#include "gpio.h"
-#include "uart.h"
+#include "regdrv.h"
 #include "initd.h"
 #include "misc.h"
+#include "tty.h"
 
 
 /*==================================================================================================
@@ -80,17 +79,18 @@ int main(void)
       NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
       /* PLL initialization */
-      if (PLL_Init(PLL_DEV_NONE) != STD_RET_OK)
+      if (InitDrv("pll") != STD_RET_OK)
             while (TRUE);
 
       /* GPIO and AFIO initialization */
-      GPIO_Init(GPIO_DEV_NONE);
+      InitDrv("gpio");
 
       /* dynamic memory management initialization */
       memman_init();
 
       /* create main task */
-      TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 3, NULL);
+      TaskCreate(ttyd,  TTYD_NAME,  TTYD_STACK_SIZE,  NULL, 3, NULL);
+      TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 2, NULL);
 
       /* start OS */
       vTaskStartScheduler();

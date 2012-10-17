@@ -37,6 +37,8 @@ extern "C" {
 
 /* include here drivers headers */
 #include "uart.h"
+#include "gpio.h"
+#include "pll.h"
 
 
 /*==================================================================================================
@@ -64,9 +66,11 @@ typedef struct
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-const regDrv_t drvList[] =
+static const regDrv_t drvList[] =
 {
-      {"uart1", UART_Init, UART_Release, UART_DEV_1},
+      {"uart1", UART_Init, UART_Release, UART_DEV_1   },
+      {"gpio",  GPIO_Init, GPIO_Release, GPIO_DEV_NONE},
+      {"pll",   PLL_Init,  PLL_Release,  PLL_DEV_NONE },
 };
 
 
