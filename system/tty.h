@@ -50,10 +50,11 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void  AddTermMsg(u8_t tty, ch_t *msg);
-extern void  ClearTerm(u8_t tty);
-extern ch_t  *GetTermMsg(u8_t tty, u8_t msg);
-extern void  ModifyLastMsg(u8_t tty, ch_t *newmsg);
+extern void   TTY_AddMsg(u8_t tty, ch_t *msg);
+extern void   TTY_Clear(u8_t tty);
+extern ch_t   *TTY_GetMsg(u8_t tty, u8_t msg);
+extern void   TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg);
+extern bool_t TTY_CheckNewMsg(u8_t tty);
 
 #ifdef __cplusplus
 }

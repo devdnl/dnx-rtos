@@ -30,6 +30,8 @@
 #include "printf.h"
 #include "FreeRTOSConfig.h"
 #include <string.h>
+#include "memman.h"
+#include "tty.h"
 #include "uart.h"
 
 
@@ -316,19 +318,34 @@ u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...)
 //================================================================================================//
 u32_t kprint(const ch_t *format, ...)
 {
-      ch_t    buffer[constKPRINT_BUFFER_SIZE];
+//      ch_t    buffer[constKPRINT_BUFFER_SIZE];
       va_list args;
       u32_t   n = 0;
 
-      if (kprintEnabled)
+      ch_t *buffer = (ch_t*)Calloc(constKPRINT_BUFFER_SIZE, sizeof(ch_t));
+
+      if (buffer)
       {
-            memset(buffer, 0, constKPRINT_BUFFER_SIZE);
+            if (kprintEnabled)
+            {
+//                  memset(buffer, 0, constKPRINT_BUFFER_SIZE);
 
-            va_start(args, format);
-            n = vsnprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
-            va_end(args);
+                  va_start(args, format);
+                  n = vsnprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
+                  va_end(args);
 
-            SEND_BUFFER(buffer, strlen(buffer));
+                  ch_t *msg = (ch_t*)Calloc((n + 1), sizeof(ch_t));
+
+                  if (msg)
+                  {
+                        memcpy(msg, buffer, n + 1);
+                        TTY_AddMsg(0, msg);
+                  }
+
+//                  SEND_BUFFER(buffer, strlen(buffer));
+            }
+
+            Free(buffer);
       }
 
       return n;

@@ -103,7 +103,7 @@ static bool_t CreateTTY(u8_t tty)
  * @param *msg       pointer to the data with msg
  */
 //================================================================================================//
-void AddTermMsg(u8_t tty, ch_t *msg)
+void TTY_AddMsg(u8_t tty, ch_t *msg)
 {
       if (tty < TTY_COUNT && msg)
       {
@@ -153,7 +153,7 @@ void AddTermMsg(u8_t tty, ch_t *msg)
  * @param tty        terminal number
  */
 //================================================================================================//
-void ClearTerm(u8_t tty)
+void TTY_Clear(u8_t tty)
 {
       if (tty < TTY_COUNT)
       {
@@ -178,7 +178,7 @@ void ClearTerm(u8_t tty)
  * @return pointer to the message
  */
 //================================================================================================//
-ch_t *GetTermMsg(u8_t tty, u8_t msg)
+ch_t *TTY_GetMsg(u8_t tty, u8_t msg)
 {
       ch_t *ptr = NULL;
 
@@ -192,16 +192,31 @@ ch_t *GetTermMsg(u8_t tty, u8_t msg)
                   }
                   else
                   {
+                        /* check if last message exist */
+                        if (ttyTerm[tty]->line[TTY_MSGS - 1])
+                        {
+                              ptr = ttyTerm[tty]->line[TTY_MSGS - 1];
+                        }
+
+                        /* last message is not on TTY boundary */
                         for (u8_t i = 0; i < TTY_MSGS; i++)
                         {
                               if (ttyTerm[tty]->line[i] == NULL)
                               {
                                     if (i > 0)
-                                       ptr = ttyTerm[tty]->line[i - 1];
+                                    {
+                                          ptr = ttyTerm[tty]->line[i - 1];
+                                          break;
+                                    }
                               }
                         }
                   }
             }
+      }
+
+      if (ptr)
+      {
+            ttyNewMsg[tty] = FALSE;
       }
 
       return ptr;
@@ -216,7 +231,7 @@ ch_t *GetTermMsg(u8_t tty, u8_t msg)
  * @param newmsg     new message
  */
 //================================================================================================//
-void  ModifyLastMsg(u8_t tty, ch_t *newmsg)
+void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
 {
       if (tty < TTY_COUNT && newmsg)
       {
@@ -235,6 +250,28 @@ void  ModifyLastMsg(u8_t tty, ch_t *newmsg)
                         }
                   }
             }
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function check if new message is received
+ *
+ * @param tty           terminal number
+ * @retval TRUE         new message was received
+ * @retval FALSE        nothing new
+ */
+//================================================================================================//
+bool_t TTY_CheckNewMsg(u8_t tty)
+{
+      if (tty < TTY_COUNT)
+      {
+            return ttyNewMsg[tty];
+      }
+      else
+      {
+            return FALSE;
       }
 }
 
