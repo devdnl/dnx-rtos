@@ -161,7 +161,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
             appHdl->stdin  = appstdin;
             appHdl->stdout = appstdout;
 
-            FreeAppStdio(appHdl);
+            FreeStdio(appHdl);
 
             return CMD_EXECUTED;
       }

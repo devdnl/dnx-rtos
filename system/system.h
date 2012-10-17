@@ -107,9 +107,6 @@ extern "C" {
                                           stdioFIFO_t *stdout = ((appArgs_t *)appArgument)->stdout;\
                                           ch_t        *argv   = ((appArgs_t *)appArgument)->arg
 
-/** array element count */
-#define ARRAY_SIZE(array)                 (sizeof(array)/sizeof(array[0]))
-
 
 /*==================================================================================================
                                   Exported types, enums definitions

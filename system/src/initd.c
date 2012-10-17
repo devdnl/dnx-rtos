@@ -33,6 +33,7 @@ extern "C" {
 ==================================================================================================*/
 #include "initd.h"
 #include "regdrv.h"
+#include "tty.h"
 
 #include "uart.h"
 #include "ether.h"
@@ -212,7 +213,7 @@ void Initd(void *arg)
                   else
                         kprint("\n[%d] initd: terminal was terminated with error.\n", TaskGetTickCount());
 
-                  FreeAppStdio(appHdl);
+                  FreeStdio(appHdl);
 
                   kprint("[%d] initd: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
 

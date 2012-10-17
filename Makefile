@@ -101,6 +101,7 @@ CSRC = $(sort \
    system/src/main.c \
    system/src/memman.c \
    system/src/printf.c \
+   system/src/tty.c \
    )
 
 ####################################################################################################

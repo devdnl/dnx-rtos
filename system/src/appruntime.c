@@ -263,7 +263,7 @@ appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status)
  * @retval STD_STATUS_ERROR         freed error, bad pointer
  */
 //================================================================================================//
-stdRet_t FreeAppStdio(appArgs_t *appArgs)
+stdRet_t FreeStdio(appArgs_t *appArgs)
 {
       if (appArgs)
       {

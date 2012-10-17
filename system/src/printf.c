@@ -172,7 +172,11 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zero
  * When function find any other character than number (depended of actual base) immediately finished
  * operation and return pointer when bad character was found
  *
- * @param
+ * @param[in]  *string       string to decode
+ * @param[in]  base          decode base
+ * @param[out] *value        pointer to result
+ *
+ * @return pointer in string when operation was finished
  */
 //================================================================================================//
 ch_t *atoi(ch_t *string, u8_t base, i32_t *value)
