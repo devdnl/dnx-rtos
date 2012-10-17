@@ -155,10 +155,9 @@ void Initd(void *arg)
       kprint("[%d] initd: starting interactive console... ", TaskGetTickCount());
 
       /* try to start terminal */
-      stdRet_t status;
-      appArgs_t *appHdl = Exec("terminal", NULL, &status);
+      appArgs_t *appHdl = Exec("terminal", NULL);
 
-      if (status != STD_RET_OK)
+      if (appHdl == NULL)
       {
             kprintFail();
             kprint("Probably no enough free space. Restarting board...");

@@ -69,18 +69,16 @@
  * @param[in]  *appName             application name
  * @param[in]  stackSize            application stack size
  * @param[in]  *arg                 application arguments
- * @param[out] *status        status
  *
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status)
+appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
-      *status = STD_RET_ALLOCERROR;
       appArgs_t *appHandle = NULL;
 
       /* check pointers values */
-      if (!app || !appName || !stackSize || !status)
+      if (!app || !appName || !stackSize)
       {
             goto RunAsApp_end;
       }
@@ -141,8 +139,6 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
             goto RunAsApp_end;
       }
 
-      *status = STD_RET_OK;
-
       RunAsApp_end:
             return appHandle;
 }
@@ -156,18 +152,16 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
  * @param[in]  *appName              application name
  * @param[in]  stackSize             application stack size
  * @param[in]  *arg                  application arguments
- * @param[out] *status        status
  *
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg, stdRet_t *status)
+appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
-      *status = STD_RET_ALLOCERROR;
       appArgs_t *appHandle = NULL;
 
       /* check pointers values */
-      if (!app|| !appName  || !stackSize || !status)
+      if (!app|| !appName  || !stackSize)
       {
             goto RunAsDaemon_end;
       }
@@ -196,8 +190,6 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
             goto RunAsDaemon_end;
       }
 
-      *status = STD_RET_OK;
-
       RunAsDaemon_end:
             return appHandle;
 }
@@ -209,22 +201,20 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
  *
  * @param[in]  *name          task name
  * @param[in]  *argv          task arguments
- * @param[out] *status        status
  *
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status)
+appArgs_t *Exec(const ch_t *name, ch_t *argv)
 {
       regAppData_t appData = GetAppData(name);
 
       if (appData.appPtr == NULL || appData.stackSize < MINIMAL_STACK_SIZE)
       {
-            *status = STD_RET_ERROR;
             return NULL;
       }
 
-      return RunAsApp(appData.appPtr, appData.appName, appData.stackSize, argv, status);
+      return RunAsApp(appData.appPtr, appData.appName, appData.stackSize, argv);
 }
 
 
@@ -234,22 +224,20 @@ appArgs_t *Exec(const ch_t *name, ch_t *argv, stdRet_t *status)
  *
  * @param[in]  *name          task name
  * @param[in]  *argv          task arguments
- * @param[out] *status        status
  *
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *Execd(const ch_t *name, ch_t *argv, stdRet_t *status)
+appArgs_t *Execd(const ch_t *name, ch_t *argv)
 {
       regAppData_t appData = GetAppData(name);
 
       if (appData.appPtr == NULL)
       {
-            *status = STD_RET_ERROR;
             return NULL;
       }
 
-      return RunAsDaemon(appData.appPtr, appData.appName, appData.stackSize, argv, status);
+      return RunAsDaemon(appData.appPtr, appData.appName, appData.stackSize, argv);
 }
 
 

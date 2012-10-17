@@ -53,7 +53,7 @@ extern "C" {
 extern void  AddTermMsg(u8_t tty, ch_t *msg);
 extern void  ClearTerm(u8_t tty);
 extern ch_t  *GetTermMsg(u8_t tty, u8_t msg);
-extern void  ModifyLastMsg(u8_t tty, u8_t newmsg);
+extern void  ModifyLastMsg(u8_t tty, ch_t *newmsg);
 
 #ifdef __cplusplus
 }

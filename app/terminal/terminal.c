@@ -136,7 +136,6 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
-      stdRet_t    appHdlStatus;
       appArgs_t   *appHdl;
       stdioFIFO_t *appstdout;
       stdioFIFO_t *appstdin;
@@ -144,9 +143,9 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
       /* waiting for empty stdout */
       fsflush(stdout);
 
-      appHdl = Exec(cmd, arg, &appHdlStatus);
+      appHdl = Exec(cmd, arg);
 
-      if (appHdlStatus == STD_RET_OK && appHdl)
+      if (appHdl)
       {
             appstdin       = appHdl->stdin;
             appstdout      = appHdl->stdout;
@@ -165,7 +164,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
             return CMD_EXECUTED;
       }
-      else if (appHdlStatus == STD_RET_ALLOCERROR)
+      else if (appHdl == NULL)
       {
             return CMD_ALLOC_ERROR;
       }

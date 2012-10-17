@@ -216,7 +216,7 @@ ch_t *GetTermMsg(u8_t tty, u8_t msg)
  * @param newmsg     new message
  */
 //================================================================================================//
-void  ModifyLastMsg(u8_t tty, u8_t newmsg)
+void  ModifyLastMsg(u8_t tty, ch_t *newmsg)
 {
       if (tty < TTY_COUNT && newmsg)
       {
@@ -227,9 +227,9 @@ void  ModifyLastMsg(u8_t tty, u8_t newmsg)
                         if (ttyTerm[tty]->line[i] == NULL)
                         {
                               if (i > 0)
-                                 ttyTerm[tty]->line[i - 1] = newmsg;
+                                    ttyTerm[tty]->line[i - 1] = newmsg;
                               else
-                                 ttyTerm[tty]->line[0] = newmsg;
+                                    ttyTerm[tty]->line[0] = newmsg;
 
                               ttyNewMsg[tty] = TRUE;
                         }
