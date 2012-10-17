@@ -49,7 +49,7 @@
                                       Local function prototypes
 ==================================================================================================*/
 static void reverseBuffer(ch_t *begin, ch_t *end);
-static u32_t vsnfprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg);
+static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg);
 
 
 /*==================================================================================================
@@ -269,7 +269,7 @@ u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
       if (stream)
       {
             va_start(args, format);
-            n = vsnfprint(FALSE, stream, size, format, args);
+            n = vsnprint(FALSE, stream, size, format, args);
             va_end(args);
       }
 
@@ -296,7 +296,7 @@ u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...)
       if (stdout)
       {
             va_start(args, format);
-            n = vsnfprint(TRUE, stdout, 0, format, args);
+            n = vsnprint(TRUE, stdout, 0, format, args);
             va_end(args);
       }
 
@@ -325,7 +325,7 @@ u32_t kprint(const ch_t *format, ...)
             memset(buffer, 0, constKPRINT_BUFFER_SIZE);
 
             va_start(args, format);
-            n = vsnfprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
+            n = vsnprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
             va_end(args);
 
             SEND_BUFFER(buffer, strlen(buffer));
@@ -549,7 +549,7 @@ void fsflush(stdioFIFO_t *stdio)
  * @return number of printed characters
  */
 //================================================================================================//
-static u32_t vsnfprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg)
+static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg)
 {
       #define putCharacter(character)                       \
             if (stdio)                                      \

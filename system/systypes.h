@@ -72,6 +72,16 @@ typedef u8_t dev_t;
 typedef u8_t IORq_t;
 
 
+/** file type */
+typedef struct
+{
+      stdRet_t (*close)(dev_t);
+      size_t   (*write)(dev_t, void*, size_t, size_t);
+      size_t   (*read)(dev_t, void*, size_t, size_t);
+      stdRet_t (*ioctl)(dev_t, IORq_t, void*);
+} FILE_t;
+
+
 /** stdio FIFO type */
 typedef struct stdioFIFO_struct
 {
