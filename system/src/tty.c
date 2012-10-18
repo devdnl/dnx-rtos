@@ -49,6 +49,8 @@ extern "C" {
 struct ttyEntry
 {
       ch_t *line[TTY_MSGS];
+      u8_t newMsg;
+      u8_t msgCnt;
 };
 
 
@@ -75,9 +77,7 @@ static decode_t decodeFn(ch_t character);
                                       Local object definitions
 ==================================================================================================*/
 static struct ttyEntry *ttyTerm[TTY_COUNT];
-static u8_t   ttyNewMsg[TTY_COUNT];
-static u8_t   ttyMsgCnt[TTY_COUNT];
-static u8_t   currentTTY;
+static u8_t currentTTY;
 
 
 /*==================================================================================================
@@ -94,7 +94,7 @@ void ttyd(void *arg)
       (void) arg;
 
       ch_t   character  = 0;
-      u8_t   msgcnt     = 0;
+      u8_t   msgs       = 0;
       bool_t rxbfrempty = FALSE;
 
       InitDrv("uart1");
@@ -103,9 +103,9 @@ void ttyd(void *arg)
       for (;;)
       {
             /* STDOUT support ------------------------------------------------------------------- */
-            if ((msgcnt = TTY_CheckNewMsg(currentTTY)) > 0)
+            if ((msgs = TTY_CheckNewMsg(currentTTY)) > 0)
             {
-                  ch_t *msg = TTY_GetMsg(currentTTY, ttyMsgCnt[currentTTY] - msgcnt);
+                  ch_t *msg = TTY_GetMsg(currentTTY, ttyTerm[currentTTY]->msgCnt - msgs);
 
                   if (msg)
                   {
@@ -294,7 +294,7 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
             }
 
             /* find free entry */ /* DNLTEST */
-            if (ttyMsgCnt >= TTY_MSGS)
+            if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
             {
                   if (ttyTerm[tty]->line[0])
                   {
@@ -310,7 +310,7 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
             }
             else
             {
-                  ttyTerm[tty]->line[ttyMsgCnt] = msg;
+                  ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = msg;
             }
 
 
@@ -337,11 +337,11 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
 //            ttyTerm[tty]->line[TTY_MSGS - 1] = msg;
 //
             AddTermMsg_end:
-            if (ttyMsgCnt[tty] < TTY_MSGS)
-                  ttyMsgCnt[tty]++;
+            if (ttyTerm[tty]->msgCnt < TTY_MSGS)
+                  ttyTerm[tty]->msgCnt++;
 
-            if (ttyNewMsg[tty] < TTY_MSGS)
-                  ttyNewMsg[tty]++;
+            if (ttyTerm[tty]->newMsg < TTY_MSGS)
+                  ttyTerm[tty]->newMsg++;
       }
 
       return;
@@ -367,8 +367,8 @@ void TTY_Clear(u8_t tty)
                   ttyTerm[tty]->line[i] = NULL;
             }
 
-            ttyMsgCnt = 0;
-            ttyNewMsg = 0;
+            ttyTerm[tty]->msgCnt = 0;
+            ttyTerm[tty]->newMsg = 0;
       }
 }
 
@@ -397,7 +397,7 @@ ch_t *TTY_GetMsg(u8_t tty, u8_t msg)
                   }
                   else
                   {
-                        ptr = ttyTerm[tty]->line[ttyMsgCnt[tty] - 1]; /* DNLTEST */
+                        ptr = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1]; /* DNLTEST */
 //                        /* check if last message exist */
 //                        if (ttyTerm[tty]->line[TTY_MSGS - 1])
 //                        {
@@ -420,9 +420,9 @@ ch_t *TTY_GetMsg(u8_t tty, u8_t msg)
             }
       }
 
-      if (ptr && ttyNewMsg[tty] > 0)
+      if (ptr && ttyTerm[tty]->newMsg > 0)
       {
-            ttyNewMsg[tty]--;
+            ttyTerm[tty]->newMsg--;
       }
 
       return ptr;
@@ -441,13 +441,13 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
 {
       if (tty < TTY_COUNT && newmsg)
       {
-            if (ttyTerm[tty] && ttyMsgCnt[tty])
+            if (ttyTerm[tty] && ttyTerm[tty]->msgCnt)
             {
                   /* DNLTEST */
-                  if (ttyTerm[tty]->line[ttyMsgCnt[tty] - 1])
+                  if (ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1])
                   {
-                        Free(ttyTerm[tty]->line[ttyMsgCnt[tty] - 1]);
-                        ttyTerm[tty]->line[ttyMsgCnt[tty] - 1] = newmsg;
+                        Free(ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1]);
+                        ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1] = newmsg;
                   }
 //                  /* check if last message exist */
 //                  if (ttyMsgCnt[tty] == (TTY_MSGS - 1))
@@ -469,8 +469,8 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
 //                        }
 //                  }
 
-                  if (ttyNewMsg[tty] < TTY_MSGS)
-                        ttyNewMsg[tty]++;
+                  if (ttyTerm[tty]->newMsg < TTY_MSGS)
+                        ttyTerm[tty]->newMsg++;
             }
       }
 }
@@ -488,7 +488,7 @@ u8_t TTY_CheckNewMsg(u8_t tty)
 {
       if (tty < TTY_COUNT)
       {
-            return ttyNewMsg[tty];
+            return ttyTerm[tty]->newMsg;
       }
       else
       {
