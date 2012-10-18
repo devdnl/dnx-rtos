@@ -42,6 +42,7 @@ extern "C" {
 #include "print.h"
 #include "appruntime.h"
 #include "cpu.h"
+#include "vfs.h"
 
 #include "netconf.h"
 #include "hooks.h"

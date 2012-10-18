@@ -62,7 +62,12 @@ extern "C" {
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function open selected file
+ *
+ * @param *name         file path
+ * @param *mode         file mode
+ *
+ * @retval NULL if file can't be created
  */
 //================================================================================================//
 FILE_t *fopen(const ch_t *name, const ch_t *mode)
@@ -109,7 +114,12 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function close opened file
+ *
+ * @param *file               pinter to file
+ *
+ * @retval STD_RET_OK         file closed successfully
+ * @retval STD_RET_ERROR      file not closed
  */
 //================================================================================================//
 stdRet_t fclose(FILE_t *file)
@@ -131,7 +141,14 @@ stdRet_t fclose(FILE_t *file)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function write data to file
+ *
+ * @param *ptr                address to data (src)
+ * @param size                item size
+ * @param nitems              number of items
+ * @param *file               pointer to file object
+ *
+ * @return STD_RET_OK or 0 if write finished successfully, otherwise > 0
  */
 //================================================================================================//
 size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
@@ -150,7 +167,14 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function read data from file
+ *
+ * @param *ptr                address to data (dst)
+ * @param size                item size
+ * @param nitems              number of items
+ * @param *file               pointer to file object
+ *
+ * @return number of read items DNLFIXME implement: function shall return number of read items
  */
 //================================================================================================//
 size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
@@ -163,13 +187,20 @@ size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
             }
       }
 
-      return STD_RET_ERROR;
+      return 0;
 }
 
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function set seek value
+ *
+ * @param *file               file object
+ * @param offset              seek value
+ * @param mode                seek mode DNLFIXME implement: seek mode
+ *
+ * @retval STD_RET_OK         seek moved successfully
+ * @retval STD_RET_ERROR      error occured
  */
 //================================================================================================//
 stdRet_t fseek(FILE_t *file, i32_t offset, i32_t mode)
@@ -190,7 +221,14 @@ stdRet_t fseek(FILE_t *file, i32_t offset, i32_t mode)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function support not standard operations
+ *
+ * @param *file               file
+ * @param rq                  request
+ * @param *data               pointer to datas
+ *
+ * @retval STD_RET_OK         success
+ * @retval STD_RET_XX         error
  */
 //================================================================================================//
 stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
