@@ -77,6 +77,7 @@ static decode_t decodeFn(ch_t character);
 static struct ttyEntry *ttyTerm[TTY_COUNT];
 static u8_t   ttyNewMsg[TTY_COUNT];
 static u8_t   ttyMsgCnt[TTY_COUNT];
+static u8_t   currentTTY;
 
 
 /*==================================================================================================
@@ -92,7 +93,6 @@ void ttyd(void *arg)
 {
       (void) arg;
 
-      u8_t   currentTTY = 0;
       ch_t   character  = 0;
       u8_t   msgcnt     = 0;
       bool_t rxbfrempty = FALSE;
@@ -419,19 +419,28 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
       {
             if (ttyTerm[tty])
             {
-                  for (u8_t i = 0; i < TTY_MSGS; i++)
+                  /* check if last message exist */
+                  if (ttyMsgCnt[tty] == (TTY_MSGS - 1))
                   {
-                        if (ttyTerm[tty]->line[i] == NULL)
+                        Free(ttyTerm[tty]->line[TTY_MSGS - 1]);
+                        ttyTerm[tty]->line[TTY_MSGS - 1] = newmsg;
+                  }
+                  else
+                  {
+                        for (u8_t i = 0; i < TTY_MSGS; i++)
                         {
-                              if (i > 0)
-                                    ttyTerm[tty]->line[i - 1] = newmsg;
-                              else
-                                    ttyTerm[tty]->line[0] = newmsg;
-
-                              if (ttyNewMsg[tty] < TTY_MSGS)
-                                    ttyNewMsg[tty]++;
+                              if (ttyTerm[tty]->line[i] == NULL)
+                              {
+                                    if (i > 0)
+                                          ttyTerm[tty]->line[i - 1] = newmsg;
+                                    else
+                                          ttyTerm[tty]->line[0] = newmsg;
+                              }
                         }
                   }
+
+                  if (ttyNewMsg[tty] < TTY_MSGS)
+                        ttyNewMsg[tty]++;
             }
       }
 }
@@ -455,6 +464,19 @@ u8_t TTY_CheckNewMsg(u8_t tty)
       {
             return 0;
       }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns current TTY
+ *
+ * @return current TTY
+ */
+//================================================================================================//
+u8_t TTY_GetCurrTTY(void)
+{
+      return currentTTY;
 }
 
 

@@ -56,6 +56,7 @@ static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *
                                       Local object definitions
 ==================================================================================================*/
 static bool_t kprintEnabled = FALSE;
+static u8_t   kprintTTY;
 
 
 /*==================================================================================================
@@ -69,12 +70,36 @@ static bool_t kprintEnabled = FALSE;
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Enable kprint functionality
  */
 //================================================================================================//
-void kprintEnable(void)
+void EnableKprint(void)
 {
       kprintEnabled = TRUE;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Disable kprint functionality
+ */
+//================================================================================================//
+void DisableKprint(void)
+{
+      kprintEnabled = FALSE;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Change kprint terminal
+ *
+ * @param tty     kprint terminal number
+ */
+//================================================================================================//
+void ChangeKprintTTY(u8_t tty)
+{
+      kprintTTY = tty;
 }
 
 
@@ -334,7 +359,7 @@ u32_t kprint(const ch_t *format, ...)
                   if (msg)
                   {
                         memcpy(msg, buffer, n + 1);
-                        TTY_AddMsg(0, msg);
+                        TTY_AddMsg(kprintTTY, msg);
                   }
 
                   Free(buffer);

@@ -115,7 +115,7 @@ void Initd(void *arg)
       TaskDelay(800);
 
       /* initialization kprint() */
-      kprintEnable();
+      EnableKprint();
 
       /* VT100 terminal configuration */
       clrscr(k);
