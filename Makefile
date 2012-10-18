@@ -43,6 +43,8 @@ CSRC = $(sort \
    app/httpd/httpd.c \
    cpu/stm32/stm32f10x_vectors.c \
    drivers/regdrv.c \
+   drivers/ds1307/ds1307rtc.c \
+   drivers/ds1307/ds1307nvm.c \
    drivers/ether/ether.c \
    drivers/gpio/gpio.c \
    drivers/i2c/i2c.c \
@@ -54,7 +56,6 @@ CSRC = $(sort \
    kernel/tasks.c \
    kernel/timers.c \
    kernel/portable/GCC/ARM_CM3/port.c \
-   lib/ds1307/ds1307.c \
    lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \

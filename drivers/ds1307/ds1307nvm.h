@@ -1,11 +1,11 @@
-#ifndef DS1307_H_
-#define DS1307_H_
+#ifndef DS1307NVM_H_
+#define DS1307NVM_H_
 /*=============================================================================================*//**
-@file    ds1307.h
+@file    ds1307nvm.h
 
 @author  Daniel Zorychta
 
-@brief   This file support DS1307
+@brief   This file support DS1307 NVM
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,35 +33,18 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "ds1307nvm_def.h"
 #include "system.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-/** define DS1307 RAM size */
-#define DS1307_RAM_SIZE             (REG_RAM_END - REG_RAM_BEGIN)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** time structure */
-typedef struct time_struct
-{
-      u8_t seconds;     /**< [BCD] */
-      u8_t minutes;     /**< [BCD] */
-      u8_t hours;       /**< [BCD] */
-} bcdTime_t;
-
-/** date structure */
-typedef struct date_struct
-{
-      u8_t weekday;     /**< [BCD] */
-      u8_t day;         /**< [BCD] */
-      u8_t month;       /**< [BCD] */
-      u8_t year;        /**< [BCD] */
-} bcdDate_t;
 
 
 /*==================================================================================================
@@ -72,19 +55,19 @@ typedef struct date_struct
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t  DS1307_Init(void);
-extern bcdTime_t DS1307_GetTime(void);
-extern stdRet_t  DS1307_SetTime(bcdTime_t time);
-extern bcdDate_t DS1307_GetDate(void);
-extern stdRet_t  DS1307_SetDate(bcdDate_t date);
-extern stdRet_t  DS1307_ReadRAM(u8_t *dst, u8_t size, u8_t seek);
-extern stdRet_t  DS1307_WriteRAM(u8_t *src, u8_t size, u8_t seek);
+extern stdRet_t DS1307NVM_Init(dev_t dev);
+extern stdRet_t DS1307NVM_Open(dev_t dev);
+extern stdRet_t DS1307NVM_Close(dev_t dev);
+extern stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t seek);
+extern stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t seek);
+extern stdRet_t DS1307NVM_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
+extern stdRet_t DS1307NVM_Release(dev_t dev);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* DS1307_H_ */
+#endif /* DS1307NVM_H_ */
 /*==================================================================================================
                                              End of file
 ==================================================================================================*/
