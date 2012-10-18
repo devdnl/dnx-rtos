@@ -1,11 +1,11 @@
-#ifndef UART_H_
-#define UART_H_
+#ifndef VFS_H_
+#define VFS_H_
 /*=============================================================================================*//**
-@file    usart.h
+@file    vfs.h
 
 @author  Daniel Zorychta
 
-@brief   This file support USART peripherals
+@brief   This file support virtual file system
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,50 +33,13 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "uart_cfg.h"
-#include "uart_def.h"
-#include "stm32f10x.h"
-#include "system.h"
+#include "basic_types.h"
+#include "systypes.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** port names */
-enum UART_DEV_NUMBER_ENUM
-{
-      #ifdef RCC_APB2ENR_USART1EN
-      #if (UART_1_ENABLE > 0)
-            UART_DEV_1,
-      #endif
-      #endif
-
-      #ifdef RCC_APB1ENR_USART2EN
-      #if (UART_2_ENABLE > 0)
-            UART_DEV_2,
-      #endif
-      #endif
-
-      #ifdef RCC_APB1ENR_USART3EN
-      #if (UART_3_ENABLE > 0)
-            UART_DEV_3,
-      #endif
-      #endif
-
-      #ifdef RCC_APB1ENR_UART4EN
-      #if (UART_4_ENABLE > 0)
-            UART_DEV_4,
-      #endif
-      #endif
-
-      #ifdef RCC_APB1ENR_UART5EN
-      #if (UART_5_ENABLE > 0)
-            UART_DEV_5,
-      #endif
-      #endif
-
-      UART_DEV_LAST
-};
 
 
 /*==================================================================================================
@@ -87,19 +50,19 @@ enum UART_DEV_NUMBER_ENUM
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t UART_Init(dev_t usartName);
-extern stdRet_t UART_Open(dev_t usartName);
-extern stdRet_t UART_Close(dev_t usartName);
-extern stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek);
-extern stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek);
-extern stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data);
-extern stdRet_t UART_Release(dev_t usartName);
+extern FILE_t   *fopen(const ch_t *name, const ch_t *mode);
+extern stdRet_t fclose(FILE_t *file);
+extern size_t   fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
+extern size_t   fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
+extern stdRet_t fseek(FILE_t *file, i32_t offset, i32_t mode);
+extern stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_H_ */
+#endif /* VFS_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

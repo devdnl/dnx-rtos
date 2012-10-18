@@ -49,6 +49,21 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+typedef struct
+{
+      ch_t     *drvName;
+      stdRet_t (*init)(dev_t);
+      stdRet_t (*open)(dev_t);
+      stdRet_t (*close)(dev_t);
+      stdRet_t (*write)(dev_t, void*, size_t, size_t);
+      stdRet_t (*read)(dev_t, void*, size_t, size_t);
+      stdRet_t (*ioctl)(dev_t, IORq_t, void*);
+      stdRet_t (*release)(dev_t);
+      dev_t    device;
+} regDrv_t;
+
+
+
 
 
 /*==================================================================================================
@@ -61,10 +76,16 @@ extern "C" {
 ==================================================================================================*/
 static const regDrv_t drvList[] =
 {
-      {"uart1", UART_Init, UART_Release, UART_DEV_1   },
-      {"gpio",  GPIO_Init, GPIO_Release, GPIO_DEV_NONE},
-      {"pll",   PLL_Init,  PLL_Release,  PLL_DEV_NONE },
+      {"uart1", UART_Init, UART_Open, UART_Close, UART_Write, UART_Read, UART_IOCtl, UART_Release, UART_DEV_1   },
+      {"gpio",  GPIO_Init, GPIO_Open, GPIO_Close, GPIO_Write, GPIO_Read, GPIO_IOCtl, GPIO_Release, GPIO_DEV_NONE},
+      {"pll",   PLL_Init,  PLL_Open,  PLL_Close,  PLL_Write,  PLL_Read,  PLL_IOCtl,  PLL_Release,  PLL_DEV_NONE },
 };
+
+
+static struct devName_struct
+{
+      ch_t *node[ARRAY_SIZE(drvList)];
+} *devName;
 
 
 /*==================================================================================================
@@ -86,22 +107,39 @@ static const regDrv_t drvList[] =
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //================================================================================================//
-stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
+stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
 {
       stdRet_t status = STD_RET_ERROR;
       u32_t i;
 
-      if (drvName)
+      if (drvName && nodeName)
       {
+            if (devName == NULL)
+            {
+                  devName = (struct devName_struct*)Malloc(ARRAY_SIZE(drvList) * sizeof(ch_t*));
+
+                  if (devName == NULL)
+                  {
+                        goto InitDrv_End;
+                  }
+            }
+
             for (i = 0; i < ARRAY_SIZE(drvList); i++)
             {
                   if (strcmp(drvList[i].drvName, drvName) == 0)
                   {
                         status = drvList[i].init(drvList[i].device);
+
+                        if (status == STD_RET_OK)
+                        {
+                              devName->node[i] = nodeName;
+                        }
                         break;
                   }
             }
       }
+
+      InitDrv_End:
 
       return status;
 }
@@ -128,6 +166,12 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
                   if (strcmp(drvList[i].drvName, drvName) == 0)
                   {
                         status = drvList[i].release(drvList[i].device);
+
+                        if (status == STD_RET_OK && devName->node[i])
+                        {
+                              Free(devName->node[i]);
+                              devName->node[i] = NULL;
+                        }
                         break;
                   }
             }
@@ -137,9 +181,44 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
 }
 
 
-regDrv_t *GetDrvData(const ch_t *drvNode)
+//================================================================================================//
+/**
+ * @brief Function returns regisered driver list
+ *
+ * @param *drvNode            name of driver in /dev/ path
+ *
+ * @return driver depending value, all not equal to STD_RET_OK are errors
+ */
+//================================================================================================//
+regDrvData_t GetDrvData(const ch_t *drvNode)
 {
-      return NULL; /* DNLTODO */
+      regDrvData_t drvPtrs;
+      drvPtrs.open   = NULL;
+      drvPtrs.close  = NULL;
+      drvPtrs.write  = NULL;
+      drvPtrs.read   = NULL;
+      drvPtrs.ioctl  = NULL;
+      drvPtrs.device = 0;
+
+      if (drvNode)
+      {
+            for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
+            {
+                  if (strcmp(devName->node[i], drvNode) == 0)
+                  {
+                        drvPtrs.open   = drvList[i].open;
+                        drvPtrs.close  = drvList[i].close;
+                        drvPtrs.write  = drvList[i].write;
+                        drvPtrs.read   = drvList[i].read;
+                        drvPtrs.ioctl  = drvList[i].ioctl;
+                        drvPtrs.device = drvList[i].device;
+
+                        break;
+                  }
+            }
+      }
+
+      return drvPtrs;
 }
 
 

@@ -1,11 +1,11 @@
-#ifndef REGDRV_H_
-#define REGDRV_H_
+#ifndef UART_DEF_H_
+#define UART_DEF_H_
 /*=============================================================================================*//**
-@file    regdrv.h
+@file    usart_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration drivers
+@brief   This file support statuses and request of USART peripherals
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,10 +33,6 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
-
-/* include here device request list */
-#include "uart_def.h"
 
 
 /*==================================================================================================
@@ -47,15 +43,44 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-typedef struct
+/** statuses */
+enum UART_STATUS_enum
 {
-      stdRet_t (*open)(dev_t);
-      stdRet_t (*close)(dev_t);
-      stdRet_t (*write)(dev_t, void*, size_t, size_t);
-      stdRet_t (*read)(dev_t, void*, size_t, size_t);
-      stdRet_t (*ioctl)(dev_t, IORq_t, void*);
-      dev_t    device;
-} regDrvData_t;
+      UART_STATUS_PORTNOTEXIST          = -1,
+      UART_STATUS_PORTLOCKED            = -2,
+      UART_STATUS_INCORRECTSIZE         = -3,
+      UART_STATUS_NOFREEMEM             = -4,
+      UART_STATUS_BADRQ                 = -5,
+      UART_STATUS_BUFFEREMPTY           = -6,
+};
+
+
+/** IO request for UART driver */
+enum UART_IORq_enum
+{
+      UART_IORQ_ENABLE_WAKEUP_IDLE,                   /* no arg       */
+      UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK,           /* no arg       */
+      UART_IORQ_ENABLE_PARITY_CHECK,                  /* no arg       */
+      UART_IORQ_DISABLE_PARITY_CHECK,                 /* no arg       */
+      UART_IORQ_SET_ODD_PARITY,                       /* no arg       */
+      UART_IORQ_SET_EVEN_PARITY,                      /* no arg       */
+      UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE,          /* no arg       */
+      UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE,         /* no arg       */
+      UART_IORQ_ENABLE_LIN_MODE,                      /* no arg       */
+      UART_IORQ_DISABLE_LIN_MODE,                     /* no arg       */
+      UART_IORQ_SET_1_STOP_BIT,                       /* no arg       */
+      UART_IORQ_SET_2_STOP_BITS,                      /* no arg       */
+      UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS,         /* no arg       */
+      UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS,         /* no arg       */
+      UART_IORQ_SET_ADDRESS_NODE,                     /* in u8_t arg  */
+      UART_IORQ_ENABLE_CTS,                           /* no arg       */
+      UART_IORQ_DISABLE_CTS,                          /* no arg       */
+      UART_IORQ_ENABLE_RTS,                           /* no arg       */
+      UART_IORQ_DISABLE_RTS,                          /* no arg       */
+      UART_IORQ_GET_BYTE,                             /* out u8_t arg */
+      UART_IORQ_SEND_BYTE,                            /* in 8_t arg   */
+      UART_IORQ_SET_BAUDRATE,                         /* in u32_t arg */
+};
 
 
 /*==================================================================================================
@@ -66,16 +91,13 @@ typedef struct
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t     InitDrv(const ch_t *drvName, ch_t *nodeName);
-extern stdRet_t     ReleaseDrv(const ch_t *drvName);
-extern regDrvData_t GetDrvData(const ch_t *drvNode);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGDRV_H_ */
+#endif /* UART_DEF_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

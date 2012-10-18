@@ -77,10 +77,11 @@ typedef u8_t IORq_t;
 typedef struct
 {
       stdRet_t (*close)(dev_t);
-      size_t   (*write)(dev_t, void*, size_t, size_t);
-      size_t   (*read)(dev_t, void*, size_t, size_t);
+      stdRet_t (*write)(dev_t, void*, size_t, size_t);
+      stdRet_t (*read)(dev_t, void*, size_t, size_t);
       stdRet_t (*ioctl)(dev_t, IORq_t, void*);
       u32_t    fd;
+      size_t   seek;
 } FILE_t;
 
 

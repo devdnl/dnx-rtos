@@ -321,7 +321,7 @@ static PortHandle_t PortHandle[] =
 
 //================================================================================================//
 /**
- * @brief Initialize USART devices. Here is created USART driver node
+ * @brief Initialize USART devices
  *
  * @param usartName     device number
  *
@@ -956,7 +956,7 @@ stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 
 //================================================================================================//
 /**
- * @brief Release USART devices. Here is removed driver node and reseted device
+ * @brief Release USART devices
  *
  * @param usartName     device number
  *

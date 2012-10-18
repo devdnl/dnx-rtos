@@ -78,15 +78,15 @@ int main(void)
       NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
       NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
+      /* dynamic memory management initialization */
+      memman_init();
+
       /* PLL initialization */
-      if (InitDrv("pll") != STD_RET_OK)
+      if (InitDrv("pll", "pll") != STD_RET_OK)
             while (TRUE);
 
       /* GPIO and AFIO initialization */
-      InitDrv("gpio");
-
-      /* dynamic memory management initialization */
-      memman_init();
+      InitDrv("gpio", "gpio");
 
       /* create main task */
       TaskCreate(ttyd,  TTYD_NAME,  TTYD_STACK_SIZE,  NULL, 3, NULL);

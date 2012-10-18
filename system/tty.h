@@ -43,7 +43,7 @@ extern "C" {
 #define TTY_LAST_MSG          0xFF
 
 #define TTYD_NAME             "ttyd"
-#define TTYD_STACK_SIZE       MINIMAL_STACK_SIZE
+#define TTYD_STACK_SIZE       2*MINIMAL_STACK_SIZE
 
 
 /*==================================================================================================
@@ -57,7 +57,6 @@ extern "C" {
 extern void ttyd(void *arg);
 extern void TTY_AddMsg(u8_t tty, ch_t *msg);
 extern void TTY_Clear(u8_t tty);
-//extern ch_t *TTY_GetMsg(u8_t tty, u8_t msg); DNLTEST
 extern void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg);
 extern u8_t TTY_CheckNewMsg(u8_t tty);
 extern u8_t TTY_GetCurrTTY(void);
@@ -66,7 +65,7 @@ extern u8_t TTY_GetCurrTTY(void);
 }
 #endif
 
-#endif /* CPU_H_ */
+#endif /* TTY_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/
