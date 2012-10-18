@@ -34,6 +34,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "gpio_cfg.h"
+#include "gpio_def.h"
 #include "system.h"
 
 

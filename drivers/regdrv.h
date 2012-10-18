@@ -35,8 +35,12 @@ extern "C" {
 ==================================================================================================*/
 #include "system.h"
 
-/* include here device request list */
+/* include here device definition/request list */
 #include "uart_def.h"
+#include "pll_def.h"
+#include "i2c_def.h"
+#include "gpio_def.h"
+#include "ether_def.h"
 
 
 /*==================================================================================================

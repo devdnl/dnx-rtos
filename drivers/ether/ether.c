@@ -32,7 +32,6 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "ether.h"
-#include "ether_cfg.h"
 #include "stm32_eth.h"
 #include "netconf.h"
 #include "lwipopts.h"
@@ -70,6 +69,11 @@ extern "C" {
 //================================================================================================//
 /**
  * @brief Initialise unit
+ *
+ * @param eth                 ethernet number
+ *
+ * @retval STD_RET_OK         success
+ * @retval STD_RET_ERROR      error
  */
 //================================================================================================//
 stdRet_t ETHER_Init(dev_t eth)
@@ -248,6 +252,24 @@ stdRet_t ETHER_IOCtl(dev_t dev, IORq_t ioRq, void *data)
       (void)dev;
       (void)ioRq;
       (void)data;
+
+      return STD_RET_OK;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Release ethernet device
+ *
+ * @param eth                 ethernet number
+ *
+ * @retval STD_RET_OK         success
+ * @retval STD_RET_ERROR      error
+ */
+//================================================================================================//
+stdRet_t ETHER_Release(dev_t eth)
+{
+      (void) eth;
 
       return STD_RET_OK;
 }

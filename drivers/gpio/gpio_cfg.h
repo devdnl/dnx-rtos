@@ -1,7 +1,7 @@
 #ifndef GPIO_CFG_H_
 #define GPIO_CFG_H_
 /*=============================================================================================*//**
-@file    gpio.h
+@file    gpio_cfg.h
 
 @author  Daniel Zorychta
 

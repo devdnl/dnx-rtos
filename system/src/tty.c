@@ -98,15 +98,22 @@ void ttyd(void *arg)
       u8_t   msgs       = 0;
       bool_t rxbfrempty = FALSE;
 
-      InitDrv("uart1", "uart1");
+      EnableKprint();
 
-      FILE_t *uartf = fopen("/dev/uart1", NULL);
+      InitDrv("uart1", "uart");
+
+      FILE_t *uartf = fopen("/dev/uart", NULL);
 
       if (uartf == NULL)
       {
             TaskTerminate();
       }
 
+      /* configure terminal VT100: clear screen, line wrap */
+      ch_t *termCfg = "\x1B[2J\x1B[?7h";
+      fwrite(termCfg, sizeof(ch_t), strlen(termCfg), uartf);
+
+      /* main deamon loop */
       for (;;)
       {
             /* STDOUT support ------------------------------------------------------------------- */

@@ -1,13 +1,13 @@
-#ifndef PLL_H_
-#define PLL_H_
+#ifndef GPIO_DEF_H_
+#define GPIO_DEF_H_
 /*=============================================================================================*//**
-@file    pll.h
+@file    gpio_def.h
 
 @author  Daniel Zorychta
 
-@brief   File support PLL
+@brief   This driver support GPIO definitions
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,49 +33,33 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
-#include "pll_cfg.h"
-#include "pll_def.h"
 
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** PLL exit statuses */
-#define PLL_STATUS_HSE_ERROR              -1
-#define PLL_STATUS_PLL_ERROR              -2
-#define PLL_STATUS_PLL2_ERROR             -3
-#define PLL_STATUS_PLL3_ERROR             -4
-#define PLL_STATUS_PLL_SW_ERROR           -5
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** devices names */
-enum PLL_DEV_NUMBER_enum
-{
-      PLL_DEV_NONE,
-      PLL_DEV_LAST
-};
+
+
+/*==================================================================================================
+                                     Exported object declarations
+==================================================================================================*/
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t PLL_Init(dev_t dev);
-extern stdRet_t PLL_Open(dev_t dev);
-extern stdRet_t PLL_Close(dev_t dev);
-extern stdRet_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek);
-extern stdRet_t PLL_Read(dev_t dev, void *dst, size_t size, size_t seek);
-extern stdRet_t PLL_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t PLL_Release(dev_t dev);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PLL_H_ */
+#endif /* GPIO_DEF_H_ */
 /*==================================================================================================
-                                            End of file
+                                             End of file
 ==================================================================================================*/

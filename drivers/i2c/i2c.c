@@ -748,6 +748,24 @@ static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout)
 }
 
 
+//================================================================================================//
+/**
+ * @brief Release I2C peripheral
+ *
+ * @param[in] dev           I2C device
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t I2C_Release(dev_t dev)
+{
+      (void) dev;
+
+      return STD_RET_OK;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

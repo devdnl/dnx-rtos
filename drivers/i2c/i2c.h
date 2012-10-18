@@ -34,6 +34,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "i2c_cfg.h"
+#include "i2c_def.h"
 #include "stm32f10x.h"
 #include "system.h"
 
@@ -65,52 +66,16 @@ enum I2C_DEV_NUMBER_enum
 };
 
 
-/** statuses */
-enum I2C_STATUS_enum
-{
-      I2C_STATUS_PORTNOTEXIST       = -1,
-      I2C_STATUS_PORTLOCKED         = -2,
-      I2C_STATUS_NOFREEMEM          = -3,
-      I2C_STATUS_BADRQ              = -4,
-      I2C_STATUS_BADARG             = -5,
-      I2C_STATUS_TIMEOUT            = -6,
-      I2C_STATUS_OVERRUN            = -7,
-      I2C_STATUS_ACK_FAILURE        = -8,
-      I2C_STATUS_ARB_LOST           = -9,
-      I2C_STATUS_BUS_ERROR          = -10,
-      I2C_STATUS_ERROR              = -11,
-};
-
-
-/** IO request for I2C driver */
-enum I2C_IORq_enum
-{
-      I2C_IORQ_SETSLAVEADDR,                                /* [in]  u8_t slave address */
-      I2C_IORQ_GETSLAVEADDR,                                /* [out] u8_t slave address */
-      I2C_IORQ_SETSCLFREQ,                                  /* [in]  u32_t SCL frequency [Hz] */
-};
-
-
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
 extern stdRet_t I2C_Init(dev_t dev);
-
-
 extern stdRet_t I2C_Open(dev_t dev);
-
-
 extern stdRet_t I2C_Close(dev_t dev);
-
-
 extern stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek);
-
-
 extern stdRet_t I2C_Read(dev_t dev , void *dst, size_t size, size_t seek);
-
-
 extern stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
-
+extern stdRet_t I2C_Release(dev_t dev);
 
 #ifdef __cplusplus
 }

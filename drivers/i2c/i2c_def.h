@@ -1,11 +1,11 @@
-#ifndef PLL_H_
-#define PLL_H_
+#ifndef I2C_DEF_H_
+#define I2C_DEF_H_
 /*=============================================================================================*//**
-@file    pll.h
+@file    i2c_def.h
 
 @author  Daniel Zorychta
 
-@brief   File support PLL
+@brief   This driver support I2C definitions
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,49 +33,47 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
-#include "pll_cfg.h"
-#include "pll_def.h"
 
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                           I2C Definitions
 ==================================================================================================*/
-/** PLL exit statuses */
-#define PLL_STATUS_HSE_ERROR              -1
-#define PLL_STATUS_PLL_ERROR              -2
-#define PLL_STATUS_PLL2_ERROR             -3
-#define PLL_STATUS_PLL3_ERROR             -4
-#define PLL_STATUS_PLL_SW_ERROR           -5
-
-
-/*==================================================================================================
-                                  Exported types, enums definitions
-==================================================================================================*/
-/** devices names */
-enum PLL_DEV_NUMBER_enum
+/** statuses */
+enum I2C_STATUS_enum
 {
-      PLL_DEV_NONE,
-      PLL_DEV_LAST
+      I2C_STATUS_PORTNOTEXIST       = -1,
+      I2C_STATUS_PORTLOCKED         = -2,
+      I2C_STATUS_NOFREEMEM          = -3,
+      I2C_STATUS_BADRQ              = -4,
+      I2C_STATUS_BADARG             = -5,
+      I2C_STATUS_TIMEOUT            = -6,
+      I2C_STATUS_OVERRUN            = -7,
+      I2C_STATUS_ACK_FAILURE        = -8,
+      I2C_STATUS_ARB_LOST           = -9,
+      I2C_STATUS_BUS_ERROR          = -10,
+      I2C_STATUS_ERROR              = -11,
+};
+
+
+/** IO request for I2C driver */
+enum I2C_IORq_enum
+{
+      I2C_IORQ_SETSLAVEADDR,                                /* [in]  u8_t slave address */
+      I2C_IORQ_GETSLAVEADDR,                                /* [out] u8_t slave address */
+      I2C_IORQ_SETSCLFREQ,                                  /* [in]  u32_t SCL frequency [Hz] */
 };
 
 
 /*==================================================================================================
-                                     Exported function prototypes
+                                           Error handling
 ==================================================================================================*/
-extern stdRet_t PLL_Init(dev_t dev);
-extern stdRet_t PLL_Open(dev_t dev);
-extern stdRet_t PLL_Close(dev_t dev);
-extern stdRet_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek);
-extern stdRet_t PLL_Read(dev_t dev, void *dst, size_t size, size_t seek);
-extern stdRet_t PLL_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t PLL_Release(dev_t dev);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PLL_H_ */
+#endif /* I2C_DEF_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/
