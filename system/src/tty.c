@@ -100,6 +100,10 @@ void ttyd(void *arg)
 
       EnableKprint();
 
+      /* something about board and system */
+      kprint("Board powered by \x1B[32mFreeRTOS\n");
+      kprint("By \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
+
       InitDrv("uart1", "uart");
 
       FILE_t *uartf = fopen("/dev/uart", NULL);

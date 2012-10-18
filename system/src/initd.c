@@ -108,32 +108,14 @@ void Initd(void *arg)
 {
       (void) arg;
 
-//      stdRet_t netOK = STD_RET_OK;
-
-      /* short delay and lock task scheduling */
-//      TaskDelay(800);
-
+      /* user initialization */
       InitDrv("i2c1", "i2c");
 
-      /* something about board and system */
-      kprint("\nBoard powered by "); fontGreen(k); kprint("FreeRTOS\n"); resetAttr(k);
-
-      kprint("By "); fontCyan(k); kprint("Daniel Zorychta ");
-      fontYellow(k); kprint("<daniel.zorychta@gmail.com>\n\n"); resetAttr(k);
-
-      /* info about system start */
-      kprint("[%d] initd: init daemon started\n", TaskGetTickCount());
-      kprint("[%d] initd: kernel print started on ttyd\n", TaskGetTickCount());
-
-      /*--------------------------------------------------------------------------------------------
-       * user initialization
-       *------------------------------------------------------------------------------------------*/
       if (InitDrv("eth0", "eth0") != STD_RET_OK)
             goto initd_net_end;
 
       if (LwIP_Init() != STD_RET_OK)
             goto initd_net_end;
-
 
       kprint("Starting httpde...");
       if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
