@@ -105,7 +105,7 @@ void ttyd(void *arg)
             /* STDOUT support ------------------------------------------------------------------- */
             if ((msgs = TTY_CheckNewMsg(currentTTY)) > 0)
             {
-                  ch_t *msg = TTY_GetMsg(currentTTY, ttyTerm[currentTTY]->msgCnt - msgs);
+                  ch_t *msg = ttyTerm[currentTTY]->line[ttyTerm[currentTTY]->msgCnt - msgs]; // DNLTEST TTY_GetMsg(currentTTY, ttyTerm[currentTTY]->msgCnt - msgs);
 
                   if (msg)
                   {
@@ -157,7 +157,7 @@ static void RefreshTTY(u8_t tty)
 
       for (u8_t i = 0; i < TTY_MSGS; i++)
       {
-            ch_t *msg = TTY_GetMsg(tty, i);
+            ch_t *msg = ttyTerm[tty]->line[i];// TTY_GetMsg(tty, i); DNLTEST
 
             if (msg)
             {
@@ -276,6 +276,7 @@ static bool_t CreateTTY(u8_t tty)
 //================================================================================================//
 /**
  * @brief Adds message to selected terminal
+ * Function allocate own buffer for message to separate itself from application message buffer
  *
  * @param tty        terminal number
  * @param *msg       pointer to the data with msg
@@ -294,23 +295,30 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
             }
 
             /* find free entry */ /* DNLTEST */
-            if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
-            {
-                  if (ttyTerm[tty]->line[0])
-                  {
-                        Free(ttyTerm[tty]->line[0]);
-                  }
+            ch_t *localMsg = (ch_t*)Malloc(sizeof(ch_t) * strlen(msg));
 
-                  for (u8_t i = 0; i < TTY_MSGS; i++)
-                  {
-                        ttyTerm[tty]->line[i] = ttyTerm[tty]->line[i + 1];
-                  }
-
-                  ttyTerm[tty]->line[TTY_MSGS - 1] = msg;
-            }
-            else
+            if (localMsg)
             {
-                  ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = msg;
+                  strcpy(localMsg, msg);
+
+                  if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
+                  {
+                        if (ttyTerm[tty]->line[0])
+                        {
+                              Free(ttyTerm[tty]->line[0]);
+                        }
+
+                        for (u8_t i = 0; i < TTY_MSGS; i++)
+                        {
+                              ttyTerm[tty]->line[i] = ttyTerm[tty]->line[i + 1];
+                        }
+
+                        ttyTerm[tty]->line[TTY_MSGS - 1] = localMsg;
+                  }
+                  else
+                  {
+                        ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = localMsg;
+                  }
             }
 
 
@@ -359,79 +367,83 @@ void TTY_Clear(u8_t tty)
 {
       if (tty < TTY_COUNT)
       {
-            for (u8_t i = 0; i < TTY_MSGS; i++)
-            {
-                  if (ttyTerm[tty]->line)
-                     Free(ttyTerm[tty]->line);
-
-                  ttyTerm[tty]->line[i] = NULL;
-            }
-
-            ttyTerm[tty]->msgCnt = 0;
-            ttyTerm[tty]->newMsg = 0;
-      }
-}
-
-
-//================================================================================================//
-/**
- * @brief Gets message from terminal
- *
- * @param tty        terminal number
- * @param msg        message number
- *
- * @return pointer to the message
- */
-//================================================================================================//
-ch_t *TTY_GetMsg(u8_t tty, u8_t msg)
-{
-      ch_t *ptr = NULL;
-
-      if (tty < TTY_COUNT && (msg < TTY_MSGS || msg == TTY_LAST_MSG))
-      {
             if (ttyTerm[tty])
             {
-                  if (msg != TTY_LAST_MSG)
+                  for (u8_t i = 0; i < TTY_MSGS; i++)
                   {
-                        ptr = ttyTerm[tty]->line[msg];
+                        if (ttyTerm[tty]->line)
+                           Free(ttyTerm[tty]->line);
+
+                        ttyTerm[tty]->line[i] = NULL;
                   }
-                  else
-                  {
-                        ptr = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1]; /* DNLTEST */
-//                        /* check if last message exist */
-//                        if (ttyTerm[tty]->line[TTY_MSGS - 1])
-//                        {
-//                              ptr = ttyTerm[tty]->line[TTY_MSGS - 1];
-//                        }
-//
-//                        /* last message is not on TTY boundary */
-//                        for (u8_t i = 0; i < TTY_MSGS; i++)
-//                        {
-//                              if (ttyTerm[tty]->line[i] == NULL)
-//                              {
-//                                    if (i > 0)
-//                                    {
-//                                          ptr = ttyTerm[tty]->line[i - 1];
-//                                          break;
-//                                    }
-//                              }
-//                        }
-                  }
+
+                  ttyTerm[tty]->msgCnt = 0;
+                  ttyTerm[tty]->newMsg = 0;
             }
       }
-
-      if (ptr && ttyTerm[tty]->newMsg > 0)
-      {
-            ttyTerm[tty]->newMsg--;
-      }
-
-      return ptr;
 }
+
+
+////================================================================================================//
+///**
+// * @brief Gets message from terminal
+// *
+// * @param tty        terminal number
+// * @param msg        message number
+// *
+// * @return pointer to the message
+// */
+////================================================================================================//
+//ch_t *TTY_GetMsg(u8_t tty, u8_t msg)
+//{
+//      ch_t *ptr = NULL;
+//
+//      if (tty < TTY_COUNT && (msg < TTY_MSGS || msg == TTY_LAST_MSG))
+//      {
+//            if (ttyTerm[tty])
+//            {
+//                  if (msg != TTY_LAST_MSG)
+//                  {
+//                        ptr = ttyTerm[tty]->line[msg];
+//                  }
+//                  else
+//                  {
+//                        ptr = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1]; /* DNLTEST */
+////                        /* check if last message exist */
+////                        if (ttyTerm[tty]->line[TTY_MSGS - 1])
+////                        {
+////                              ptr = ttyTerm[tty]->line[TTY_MSGS - 1];
+////                        }
+////
+////                        /* last message is not on TTY boundary */
+////                        for (u8_t i = 0; i < TTY_MSGS; i++)
+////                        {
+////                              if (ttyTerm[tty]->line[i] == NULL)
+////                              {
+////                                    if (i > 0)
+////                                    {
+////                                          ptr = ttyTerm[tty]->line[i - 1];
+////                                          break;
+////                                    }
+////                              }
+////                        }
+//                  }
+//            }
+//      }
+//
+//      if (ptr && ttyTerm[tty]->newMsg > 0)
+//      {
+//            ttyTerm[tty]->newMsg--;
+//      }
+//
+//      return ptr;
+//}
 
 
 //================================================================================================//
 /**
  * @brief Modify last message
+ * Function allocate own buffer for message to separate itself from application message buffer
  *
  * @param tty        terminal number
  * @param newmsg     new message
@@ -444,10 +456,17 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
             if (ttyTerm[tty] && ttyTerm[tty]->msgCnt)
             {
                   /* DNLTEST */
-                  if (ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1])
+                  ch_t *localMsg = (ch_t*)Malloc(sizeof(ch_t) * strlen(newmsg));
+
+                  if (localMsg)
                   {
-                        Free(ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1]);
-                        ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1] = newmsg;
+                        strcpy(localMsg, newmsg);
+
+                        if (ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1])
+                        {
+                              Free(ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1]);
+                              ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1] = localMsg;
+                        }
                   }
 //                  /* check if last message exist */
 //                  if (ttyMsgCnt[tty] == (TTY_MSGS - 1))

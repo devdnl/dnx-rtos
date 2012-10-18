@@ -354,13 +354,7 @@ u32_t kprint(const ch_t *format, ...)
                   n = vsnprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
                   va_end(args);
 
-                  ch_t *msg = (ch_t*)Calloc((n + 1), sizeof(ch_t));
-
-                  if (msg)
-                  {
-                        memcpy(msg, buffer, n + 1);
-                        TTY_AddMsg(kprintTTY, msg);
-                  }
+                  TTY_AddMsg(kprintTTY, buffer);
 
                   Free(buffer);
             }
