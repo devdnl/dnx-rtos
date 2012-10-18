@@ -44,6 +44,13 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+typedef struct
+{
+      ch_t *drvName;
+      stdRet_t (*init)(dev_t);
+      stdRet_t (*release)(dev_t);
+      dev_t device;
+} regDrv_t;
 
 
 /*==================================================================================================
@@ -54,7 +61,7 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t InitDrv(const ch_t *drvName);
+extern stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName);
 extern stdRet_t ReleaseDrv(const ch_t *drvName);
 
 

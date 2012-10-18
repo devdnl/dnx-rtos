@@ -49,13 +49,6 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
-typedef struct
-{
-      ch_t *drvName;
-      stdRet_t (*init)(dev_t);
-      stdRet_t (*release)(dev_t);
-      dev_t device;
-}regDrv_t;
 
 
 /*==================================================================================================
@@ -88,11 +81,12 @@ static const regDrv_t drvList[] =
  * @brief Function find driver name and then initialize device
  *
  * @param *drvName            driver name
+ * @param *nodeName           file name in /dev/ directory
  *
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //================================================================================================//
-stdRet_t InitDrv(const ch_t *drvName)
+stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
 {
       stdRet_t status = STD_RET_ERROR;
       u32_t i;
@@ -140,6 +134,12 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
       }
 
       return status;
+}
+
+
+regDrv_t *GetDrvData(const ch_t *drvNode)
+{
+      return NULL; /* DNLTODO */
 }
 
 
