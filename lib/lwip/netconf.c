@@ -101,8 +101,6 @@ stdRet_t LwIP_Init(void)
       struct ip_addr gw;
       uint8_t macaddress[6] = {0, 0, 0, 0, 0, 1};
 
-      kprint("Configuring lwIP TCP/IP stack...");
-
       lwip_init();
 
       /* Initializes the dynamic memory heap defined by MEM_SIZE.*/
@@ -149,7 +147,7 @@ stdRet_t LwIP_Init(void)
        * intervals after starting the client. You can peek in the netif->dhcp struct for the actual
        * DHCP status.
        */
-      kprint("\nStarting DHCP Client..");
+      kprint("Starting DHCP Client..");
       if (ERR_MEM == dhcp_start(&netif))
       {
             TaskDelete(LwIPDeamonHdl);

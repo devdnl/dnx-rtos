@@ -54,6 +54,16 @@ extern "C" {
 #define NULL                              ((void*)0)
 #endif
 
+/** RESET definition */
+#ifndef RESET
+#define RESET                             (0)
+#endif
+
+/** SET definition */
+#ifndef SET
+#define SET                               (!RESET)
+#endif
+
 /** array element count */
 #define ARRAY_SIZE(array)                 (sizeof(array)/sizeof(array[0]))
 
@@ -63,6 +73,9 @@ extern "C" {
 ==================================================================================================*/
 /** define boolean type */
 typedef uint8_t bool_t;
+
+/** define flag type */
+typedef uint8_t flag_t;
 
 /** define character type */
 typedef char char_t;

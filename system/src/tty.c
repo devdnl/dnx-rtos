@@ -48,9 +48,10 @@ extern "C" {
 ==================================================================================================*/
 struct ttyEntry
 {
-      ch_t *line[TTY_MSGS];
-      u8_t newMsg;
-      u8_t msgCnt;
+      ch_t   *line[TTY_MSGS];
+      u8_t   newMsg;
+      u8_t   msgCnt;
+      flag_t refScr;
 };
 
 
@@ -101,7 +102,7 @@ void ttyd(void *arg)
       EnableKprint();
 
       /* something about board and system */
-      kprint("Board powered by \x1B[32mFreeRTOS\n");
+      kprint("Board powered by \x1B[32mFreeRTOS\x1B[0m\n");
       kprint("By \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
 
       InitDrv("uart1", "uart");
@@ -117,13 +118,21 @@ void ttyd(void *arg)
       ch_t *termCfg = "\x1B[2J\x1B[?7h";
       fwrite(termCfg, sizeof(ch_t), strlen(termCfg), uartf);
 
-      /* main deamon loop */
+      /* main daemon loop */
       for (;;)
       {
+            ch_t *msg;
+
             /* STDOUT support ------------------------------------------------------------------- */
-            if ((msgs = TTY_CheckNewMsg(currentTTY)) > 0)
+            if (ttyTerm[currentTTY]->refScr == SET)
             {
-                  ch_t *msg = GetMsg(currentTTY, ttyTerm[currentTTY]->msgCnt - msgs);
+                  RefreshTTY(currentTTY, uartf);
+
+                  ttyTerm[currentTTY]->refScr = RESET;
+            }
+            else if ((msgs = TTY_CheckNewMsg(currentTTY)) > 0)
+            {
+                  msg = GetMsg(currentTTY, ttyTerm[currentTTY]->msgCnt - msgs);
 
                   if (msg)
                   {
@@ -338,7 +347,7 @@ static ch_t *GetMsg(u8_t tty, u8_t msg)
  * @param *msg       pointer to the data with msg
  */
 //================================================================================================//
-void TTY_AddMsg(u8_t tty, ch_t *msg) /* DNLTODO msg split if \n not occur at last msg */
+void TTY_AddMsg(u8_t tty, ch_t *msg)
 {
       if (tty < TTY_COUNT && msg)
       {
@@ -367,6 +376,8 @@ void TTY_AddMsg(u8_t tty, ch_t *msg) /* DNLTODO msg split if \n not occur at las
                         Free(lastmsg);
 
                         ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1] = modmsg;
+
+                        ttyTerm[tty]->refScr = SET;
                   }
             }
             else
@@ -399,10 +410,10 @@ void TTY_AddMsg(u8_t tty, ch_t *msg) /* DNLTODO msg split if \n not occur at las
 
                   if (ttyTerm[tty]->msgCnt < TTY_MSGS)
                         ttyTerm[tty]->msgCnt++;
-            }
 
-            if (ttyTerm[tty]->newMsg < TTY_MSGS)
-                  ttyTerm[tty]->newMsg++;
+                  if (ttyTerm[tty]->newMsg < TTY_MSGS)
+                        ttyTerm[tty]->newMsg++;
+            }
       }
 
       AddTermMsg_end:
