@@ -153,7 +153,7 @@ stdRet_t DS1307NVM_Close(dev_t dev)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
 
@@ -163,7 +163,7 @@ stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t seek)
 
       if (lock == (u32_t)TaskGetPID())
       {
-            if (src && size)
+            if (src && size && nitems)
             {
                   /* try open port */
                   if ((i2c = fopen(I2CFILE, NULL)) != NULL)
@@ -175,7 +175,7 @@ stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t seek)
 
                         /* write data into RAM */
                         fseek(i2c, REG_RAM_BEGIN + seek, 0);
-                        if (fwrite(src, sizeof(u8_t), size, i2c) != STD_RET_OK)
+                        if (fwrite(src, size, nitems, i2c) != STD_RET_OK)
                               goto WriteRAM_ClosePort;
 
                         status = STD_RET_OK;
@@ -204,7 +204,7 @@ stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
 
@@ -214,7 +214,7 @@ stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t seek)
 
       if (lock == (u32_t)TaskGetPID())
       {
-            if (dst && size)
+            if (dst && size && nitems)
             {
                   /* try open port */
                   if ((i2c = fopen(I2CFILE, NULL)) != NULL)
@@ -226,7 +226,7 @@ stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t seek)
 
                         /* read data from RAM */
                         fseek(i2c, REG_RAM_BEGIN + seek, 0);
-                        if (fread(dst, sizeof(u8_t), size, i2c) != STD_RET_OK)
+                        if (fread(dst, size, nitems, i2c) != STD_RET_OK)
                               goto ReadRAM_ClosePort;
 
                         status = STD_RET_OK;

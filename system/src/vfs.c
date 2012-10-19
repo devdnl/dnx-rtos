@@ -158,7 +158,7 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
       {
             if (file->write)
             {
-                  return file->write(file->fd, ptr, size * nitems, file->seek);
+                  return file->write(file->fd, ptr, size, nitems, file->seek);
             }
       }
 
@@ -185,7 +185,8 @@ size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
       {
             if (file->read)
             {
-                  return file->read(file->fd, (void*)ptr, size * nitems, file->seek);
+                  u32_t n = file->read(file->fd, ptr, size, nitems, file->seek);
+                  return n;
             }
       }
 

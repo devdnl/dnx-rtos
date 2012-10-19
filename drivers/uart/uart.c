@@ -323,14 +323,14 @@ static PortHandle_t PortHandle[] =
 /**
  * @brief Initialize USART devices
  *
- * @param usartName     device number
+ * @param dev     device number
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t UART_Init(dev_t usartName)
+stdRet_t UART_Init(dev_t dev)
 {
-      (void) usartName;
+      (void) dev;
 
       return STD_RET_OK;
 }
@@ -340,7 +340,7 @@ stdRet_t UART_Init(dev_t usartName)
 /**
  * @brief Opens specified port and initialize default settings
  *
- * @param[in]  usartName                  USART name (number)
+ * @param[in]  dev                  USART name (number)
  *
  * @retval STD_STATUS_OK                  operation success
  * @retval UART_STATUS_PORTLOCKED         port locked for other task
@@ -348,29 +348,29 @@ stdRet_t UART_Init(dev_t usartName)
  * @retval UART_STATUS_NOFREEMEM          no enough free memory to allocate RxBuffer
  */
 //================================================================================================//
-stdRet_t UART_Open(dev_t usartName)
+stdRet_t UART_Open(dev_t dev)
 {
       stdRet_t status    = UART_STATUS_PORTNOTEXIST;
       USART_t  *usartPtr = NULL;
 
       /* check port range */
-      if ((unsigned)usartName < UART_DEV_LAST)
+      if ((unsigned)dev < UART_DEV_LAST)
       {
             /* lock task switching */
             TaskSuspendAll();
 
             /* check that port is free */
-            if (PortHandle[usartName].Lock == PORT_FREE)
+            if (PortHandle[dev].Lock == PORT_FREE)
             {
                   /* registered port for current task */
-                  PortHandle[usartName].Lock = TaskGetPID();
+                  PortHandle[dev].Lock = TaskGetPID();
                   TaskResumeAll();
 
                   /* set task handle for IRQs */
-                  PortHandle[usartName].TaskHandle = TaskGetCurrentTaskHandle();
+                  PortHandle[dev].TaskHandle = TaskGetCurrentTaskHandle();
 
                   /* enable UART clock */
-                  switch (usartName)
+                  switch (dev)
                   {
                         #ifdef RCC_APB2ENR_USART1EN
                         #if (UART_1_ENABLE > 0)
@@ -417,7 +417,7 @@ stdRet_t UART_Open(dev_t usartName)
                   }
 
                   /* set port address */
-                  usartPtr = PortHandle[usartName].Address;
+                  usartPtr = PortHandle[dev].Address;
 
                   /* default settings */
                   if ((u32_t)usartPtr == USART1_BASE)
@@ -452,16 +452,16 @@ stdRet_t UART_Open(dev_t usartName)
                   UARTEnable();
 
                   /* allocate memory for RX buffer */
-                  PortHandle[usartName].RxFIFO.Buffer = (u8_t*)Malloc(UART_RX_BUFFER_SIZE);
+                  PortHandle[dev].RxFIFO.Buffer = (u8_t*)Malloc(UART_RX_BUFFER_SIZE);
 
-                  if (PortHandle[usartName].RxFIFO.Buffer == NULL)
+                  if (PortHandle[dev].RxFIFO.Buffer == NULL)
                   {
                         status = UART_STATUS_NOFREEMEM;
                         goto UART_Open_End;
                   }
 
                   /* enable interrupts */
-                  switch (usartName)
+                  switch (dev)
                   {
                         #ifdef RCC_APB2ENR_USART1EN
                         #if (UART_1_ENABLE > 0)
@@ -520,7 +520,7 @@ stdRet_t UART_Open(dev_t usartName)
             {
                   TaskResumeAll();
 
-                  if (PortHandle[usartName].Lock == TaskGetPID())
+                  if (PortHandle[dev].Lock == TaskGetPID())
                         status = STD_RET_OK;
                   else
                         status = UART_STATUS_PORTLOCKED;
@@ -536,25 +536,25 @@ UART_Open_End:
 /**
  * @brief Function close opened port
  *
- * @param[in]  usartName                  USART name (number)
+ * @param[in]  dev                  USART name (number)
  *
  * @retval STD_STATUS_OK                  operation success
  * @retval UART_STATUS_PORTLOCKED         port locked for other task
  * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
  */
 //================================================================================================//
-stdRet_t UART_Close(dev_t usartName)
+stdRet_t UART_Close(dev_t dev)
 {
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
-      if ((unsigned)usartName < UART_DEV_LAST)
+      if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[usartName].Lock == TaskGetPID())
+            if (PortHandle[dev].Lock == TaskGetPID())
             {
                   /* turn off device */
-                  switch (usartName)
+                  switch (dev)
                   {
                         #ifdef RCC_APB2ENR_USART1EN
                         #if (UART_1_ENABLE > 0)
@@ -616,20 +616,20 @@ stdRet_t UART_Close(dev_t usartName)
                   }
 
                   /* free used memory for buffer */
-                  Free(PortHandle[usartName].RxFIFO.Buffer);
-                  PortHandle[usartName].RxFIFO.Buffer = NULL;
-                  PortHandle[usartName].RxFIFO.Level  = 0;
-                  PortHandle[usartName].RxFIFO.RxIdx  = 0;
-                  PortHandle[usartName].RxFIFO.TxIdx  = 0;
+                  Free(PortHandle[dev].RxFIFO.Buffer);
+                  PortHandle[dev].RxFIFO.Buffer = NULL;
+                  PortHandle[dev].RxFIFO.Level  = 0;
+                  PortHandle[dev].RxFIFO.RxIdx  = 0;
+                  PortHandle[dev].RxFIFO.TxIdx  = 0;
 
                   /* unlock device */
-                  PortHandle[usartName].Lock = PORT_FREE;
+                  PortHandle[dev].Lock = PORT_FREE;
 
                   /* delete from task handle */
-                  PortHandle[usartName].TaskHandle = NULL;
+                  PortHandle[dev].TaskHandle = NULL;
 
                   /* delete tx buffer */
-                  PortHandle[usartName].TxBuffer.TxSrcPtr = NULL;
+                  PortHandle[dev].TxBuffer.TxSrcPtr = NULL;
 
                   status = STD_RET_OK;
             }
@@ -647,7 +647,7 @@ stdRet_t UART_Close(dev_t usartName)
 /**
  * @brief Write data to UART (ISR or DMA)
  *
- * @param[in]  usartName                  USART name (number)
+ * @param[in]  dev                  USART name (number)
  * @param[in]  *src                       source buffer
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
@@ -658,39 +658,40 @@ stdRet_t UART_Close(dev_t usartName)
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
+stdRet_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
 
       stdRet_t status    = UART_STATUS_PORTNOTEXIST;
-      USART_t     *usartPtr = NULL;
+      USART_t  *usartPtr = NULL;
 
       /* check port range */
-      if ((unsigned)usartName < UART_DEV_LAST)
+      if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[usartName].Lock == TaskGetPID())
+            if (PortHandle[dev].Lock == TaskGetPID())
             {
                   /* load data from FIFO */
-                  if (size)
+                  if (nitems && size)
                   {
                          /* set port address */
-                        usartPtr = PortHandle[usartName].Address;
-                        u8_t *dataPtr = (u8_t*)src;
+                        usartPtr = PortHandle[dev].Address;
+                        u8_t *dataPtr  = (u8_t*)src;
+                        u32_t dataSize = nitems * size;
 
                         do
                         {
                               if (usartPtr->SR & USART_SR_TXE)
                               {
                                     usartPtr->DR = *(dataPtr++);
-                                    size--;
+                                    dataSize--;
                               }
                               else
                               {
 //                                    TaskDelay(1); /* DNLFIXME in UART Tx use DMA */
                               }
                         }
-                        while (size);
+                        while (dataSize);
 
                         status = STD_RET_OK;
                   }
@@ -713,7 +714,7 @@ stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
 /**
  * @brief Read data from UART Rx buffer
  *
- * @param[in]  usartName                  USART name (number)
+ * @param[in]  dev                  USART name (number)
  * @param[out] *dst                       destination buffer
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
@@ -724,23 +725,24 @@ stdRet_t UART_Write(dev_t usartName, void *src, size_t size, size_t seek)
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
+stdRet_t UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
 
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
-      if ((unsigned)usartName < UART_DEV_LAST)
+      if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[usartName].Lock == TaskGetPID())
+            if (PortHandle[dev].Lock == TaskGetPID())
             {
                   /* load data from FIFO */
-                  if (size)
+                  if (nitems && size)
                   {
-                        RxFIFO_t *RxFIFO = &PortHandle[usartName].RxFIFO;
-                        u8_t     *dstPtr = (u8_t*)dst;
+                        RxFIFO_t *RxFIFO  = &PortHandle[dev].RxFIFO;
+                        u8_t     *dstPtr  = (u8_t*)dst;
+                        u32_t    dataSize = nitems * size;
 
                         do
                         {
@@ -755,7 +757,7 @@ stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
 
                                     RxFIFO->Level--;
 
-                                    size--;
+                                    dataSize--;
 
                                     TaskExitCritical();
                               }
@@ -765,7 +767,7 @@ stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
                                     TaskSuspend(THIS_TASK);
                               }
                         }
-                        while (size);
+                        while (dataSize);
 
                         status = STD_RET_OK;
                   }
@@ -788,7 +790,7 @@ stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
 /**
  * @brief Direct IO control
  *
- * @param[in]     usartName               USART name (number)
+ * @param[in]     dev               USART name (number)
  * @param[in,out] ioRQ                    IO request
  * @param[in,out] *data                   IO data (arguments, results, etc)
  *
@@ -799,17 +801,17 @@ stdRet_t UART_Read(dev_t usartName, void *dst, size_t size, size_t seek)
  * @retval UART_STATUS_BADRQ              bad request
  */
 //================================================================================================//
-stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
+stdRet_t UART_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
 {
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
-      if ((unsigned)usartName < UART_DEV_LAST)
+      if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[usartName].Lock == TaskGetPID())
+            if (PortHandle[dev].Lock == TaskGetPID())
             {
-                  USART_t *usartPtr = PortHandle[usartName].Address;
+                  USART_t *usartPtr = PortHandle[dev].Address;
 
                   status = STD_RET_OK;
 
@@ -893,7 +895,7 @@ stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_GET_BYTE:
                         {
-                              RxFIFO_t *RxFIFO = &PortHandle[usartName].RxFIFO;
+                              RxFIFO_t *RxFIFO = &PortHandle[dev].RxFIFO;
 
                               TaskEnterCritical();
 
@@ -917,7 +919,7 @@ stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_SEND_BYTE:
                         {
-                              usartPtr = PortHandle[usartName].Address;
+                              usartPtr = PortHandle[dev].Address;
 
                               while (!(usartPtr->SR & USART_SR_TXE))
                                     TaskDelay(1);
@@ -929,7 +931,7 @@ stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_SET_BAUDRATE:
                         {
-                             usartPtr = PortHandle[usartName].Address;
+                             usartPtr = PortHandle[dev].Address;
 
                              if ((u32_t)usartPtr == USART1_BASE)
                                    SetBaudRate(UART_PCLK2_FREQ, *(u32_t*)data);
@@ -958,14 +960,14 @@ stdRet_t UART_IOCtl(dev_t usartName, IORq_t ioRQ, void *data)
 /**
  * @brief Release USART devices
  *
- * @param usartName     device number
+ * @param dev     device number
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t UART_Release(dev_t usartName)
+stdRet_t UART_Release(dev_t dev)
 {
-      (void) usartName;
+      (void) dev;
 
       return STD_RET_OK;
 }

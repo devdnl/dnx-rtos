@@ -200,12 +200,13 @@ stdRet_t PLL_Close(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t PLL_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)src;
       (void)size;
       (void)seek;
+      (void)nitems;
 
       return STD_RET_OK;
 }
@@ -223,12 +224,13 @@ stdRet_t PLL_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t PLL_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)dst;
       (void)size;
       (void)seek;
+      (void)nitems;
 
       return STD_RET_OK;
 }

@@ -201,12 +201,13 @@ stdRet_t DS1307RTC_Close(dev_t dev)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)src;
       (void)size;
       (void)seek;
+      (void)nitems;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -227,12 +228,13 @@ stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)dst;
       (void)size;
       (void)seek;
+      (void)nitems;
 
       stdRet_t status = STD_RET_ERROR;
 

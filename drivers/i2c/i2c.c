@@ -296,7 +296,7 @@ stdRet_t I2C_Close(dev_t dev)
  * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
-stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       stdRet_t status = I2C_STATUS_PORTNOTEXIST;
 
@@ -304,7 +304,7 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check arguments */
-            if (!src || !size)
+            if (!src || !size || !nitems)
             {
                   status = I2C_STATUS_BADARG;
                   goto I2C_Write_end;
@@ -329,7 +329,7 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
                         goto I2C_Write_end;
 
                   /* send data */
-                  if ((status = SendData(i2cPtr, data, size)) != STD_RET_OK)
+                  if ((status = SendData(i2cPtr, data, nitems * size)) != STD_RET_OK)
                         goto I2C_Write_end;
 
                   /* stop condition */
@@ -370,7 +370,7 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
-stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       stdRet_t status = I2C_STATUS_PORTNOTEXIST;
 
@@ -378,7 +378,7 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check arguments */
-            if (!dst || !size)
+            if (!dst || !size || !nitems)
             {
                   status = I2C_STATUS_BADARG;
                   goto I2C_Read_end;
@@ -408,7 +408,7 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
                   }
 
                   /* check if is only 1 byte to send */
-                  if (size == 1)
+                  if (nitems * size == 1)
                         i2cPtr->CR1 &= ~(I2C_CR1_ACK);
                   else
                         i2cPtr->CR1 |= I2C_CR1_ACK;
@@ -420,7 +420,7 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t seek)
                         goto I2C_Read_end;
 
                   /* receive bytes */
-                  if ((status = ReadData(i2cPtr, dst, size)) != STD_RET_OK)
+                  if ((status = ReadData(i2cPtr, dst, nitems * size)) != STD_RET_OK)
                         goto I2C_Read_end;
 
                   /* stop condition */

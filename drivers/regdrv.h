@@ -77,7 +77,6 @@ extern stdRet_t     InitDrv(const ch_t *drvName, ch_t *nodeName);
 extern stdRet_t     ReleaseDrv(const ch_t *drvName);
 extern regDrvData_t GetDrvData(const ch_t *drvNode);
 
-
 #ifdef __cplusplus
 }
 #endif

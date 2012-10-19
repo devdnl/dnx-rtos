@@ -76,10 +76,10 @@ typedef u8_t IORq_t;
 /** file type */
 typedef struct
 {
-      stdRet_t (*close)(dev_t);
-      stdRet_t (*write)(dev_t, void*, size_t, size_t);
-      stdRet_t (*read)(dev_t, void*, size_t, size_t);
-      stdRet_t (*ioctl)(dev_t, IORq_t, void*);
+      stdRet_t (*close)(dev_t dev);
+      size_t   (*write)(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*read )(dev_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
+      stdRet_t (*ioctl)(dev_t dev, IORq_t iorq, void *data);
       u32_t    fd;
       size_t   seek;
 } FILE_t;
@@ -124,6 +124,7 @@ typedef struct date_struct
       u8_t month;       /**< [BCD] */
       u8_t year;        /**< [BCD] */
 } bcdDate_t;
+
 
 /*==================================================================================================
                                      Exported object declarations

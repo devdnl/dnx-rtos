@@ -72,8 +72,8 @@ enum I2C_DEV_NUMBER_enum
 extern stdRet_t I2C_Init(dev_t dev);
 extern stdRet_t I2C_Open(dev_t dev);
 extern stdRet_t I2C_Close(dev_t dev);
-extern stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t seek);
-extern stdRet_t I2C_Read(dev_t dev , void *dst, size_t size, size_t seek);
+extern stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
+extern stdRet_t I2C_Read(dev_t dev , void *dst, size_t size, size_t nitems, size_t seek);
 extern stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
 extern stdRet_t I2C_Release(dev_t dev);
 

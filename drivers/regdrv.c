@@ -151,7 +151,7 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
       {
             if (devName == NULL)
             {
-                  devName = (struct devName_struct*)Malloc(ARRAY_SIZE(drvList) * sizeof(ch_t*));
+                  devName = (struct devName_struct*)Calloc(1, sizeof(struct devName_struct));
 
                   if (devName == NULL)
                   {
@@ -256,8 +256,6 @@ regDrvData_t GetDrvData(const ch_t *drvNode)
 
       return drvPtrs;
 }
-
-
 
 #ifdef __cplusplus
 }
