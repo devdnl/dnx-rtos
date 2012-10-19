@@ -388,12 +388,13 @@ static stdRet_t SetTime(bcdTime_t *time)
             tmp[2] = time->hours;
 
             fseek(i2c, REG_SECONDS, 0);
-            if (fwrite(tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
-                  goto SetTime_ClosePort;
 
-            rtc->time = *time;
+            if (fwrite(tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == ARRAY_SIZE(tmp))
+            {
+                  rtc->time = *time;
 
-            status = STD_RET_OK;
+                  status = STD_RET_OK;
+            }
 
             /* close port */
             SetTime_ClosePort:
@@ -428,13 +429,14 @@ static bcdDate_t GetDate(void)
 
             /* load date */
             fseek(i2c, REG_DAY, 0);
-            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
-                  goto GetDate_ClosePort;
 
-            rtc->date.weekday = tmp[0];
-            rtc->date.day     = tmp[1];
-            rtc->date.month   = tmp[2];
-            rtc->date.year    = tmp[3];
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == ARRAY_SIZE(tmp))
+            {
+                  rtc->date.weekday = tmp[0];
+                  rtc->date.day     = tmp[1];
+                  rtc->date.month   = tmp[2];
+                  rtc->date.year    = tmp[3];
+            }
 
             /* close port */
             GetDate_ClosePort:
@@ -478,12 +480,12 @@ static stdRet_t SetDate(bcdDate_t *date)
             tmp[3] = date->year;
 
             fseek(i2c, REG_DAY, 0);
-            if (fwrite(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
-                  goto SetDate_ClosePort;
+            if (fwrite(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == ARRAY_SIZE(tmp))
+            {
+                  rtc->date = *date;
 
-            rtc->date = *date;
-
-            status = STD_RET_OK;
+                  status = STD_RET_OK;
+            }
 
             /* close port */
             SetDate_ClosePort:

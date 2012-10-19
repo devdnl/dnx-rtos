@@ -250,6 +250,7 @@ typedef struct PortHandle_struct
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+/* DNLFIXME fix: global variable must be in dynamic memory */
 /** port localizations */
 static PortHandle_t PortHandle[] =
 {
