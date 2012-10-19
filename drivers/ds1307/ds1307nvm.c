@@ -98,7 +98,7 @@ stdRet_t DS1307NVM_Init(dev_t dev)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Open(dev_t dev)
+stdRet_t DS1307NVM_Open(dev_t dev)
 {
       (void)dev;
 
@@ -123,7 +123,7 @@ stdRet_t DS1307RTC_Open(dev_t dev)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Close(dev_t dev)
+stdRet_t DS1307NVM_Close(dev_t dev)
 {
       (void)dev;
 
@@ -153,7 +153,7 @@ stdRet_t DS1307RTC_Close(dev_t dev)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t seek)
+stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t seek)
 {
       (void)dev;
 
@@ -204,7 +204,7 @@ stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t seek)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t seek)
+stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t seek)
 {
       (void)dev;
 
@@ -254,7 +254,7 @@ stdRet_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t seek)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
+stdRet_t DS1307NVM_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
 {
       (void)dev;
       (void)ioRQ;
@@ -273,7 +273,7 @@ stdRet_t DS1307RTC_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Release(dev_t dev)
+stdRet_t DS1307NVM_Release(dev_t dev)
 {
       (void) dev;
 
