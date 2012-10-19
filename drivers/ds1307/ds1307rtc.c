@@ -98,7 +98,7 @@ stdRet_t DS1307RTC_Init(dev_t dev)
 
       kprint("Initializing RTC...");
 
-      rtc = Malloc(sizeof(struct rtc_struct));
+      rtc = Calloc(1, sizeof(struct rtc_struct));
 
       if (rtc)
       {
@@ -112,7 +112,7 @@ stdRet_t DS1307RTC_Init(dev_t dev)
 
                   /* read second register */
                   fseek(i2c, REG_SECONDS, 0);
-                  if (fread(&tmp, sizeof(tmp), 1, i2c) != STD_RET_OK)
+                  if (fread(&tmp, sizeof(tmp), 1, i2c) != 1)
                         goto DS1307_Init_Error;
 
                   /* enable oscillator if disabled */
@@ -120,7 +120,7 @@ stdRet_t DS1307RTC_Init(dev_t dev)
                   {
                         tmp = 0x00;
                         fseek(i2c, REG_SECONDS, 0);
-                        if (fwrite(&tmp, sizeof(tmp), 1, i2c) != STD_RET_OK)
+                        if (fwrite(&tmp, sizeof(tmp), 1, i2c) != 1)
                               goto DS1307_Init_Error;
                   }
 
@@ -341,12 +341,13 @@ static bcdTime_t GetTime(void)
 
             /* load time */
             fseek(i2c, REG_SECONDS, 0);
-            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != STD_RET_OK)
-                  goto GetTime_ClosePort;
 
-            rtc->time.hours   = tmp[2];
-            rtc->time.minutes = tmp[1];
-            rtc->time.seconds = tmp[0];
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == ARRAY_SIZE(tmp))
+            {
+                  rtc->time.hours   = tmp[2];
+                  rtc->time.minutes = tmp[1];
+                  rtc->time.seconds = tmp[0];
+            }
 
             /* close port */
             GetTime_ClosePort:
@@ -387,7 +388,7 @@ static stdRet_t SetTime(bcdTime_t *time)
             tmp[2] = time->hours;
 
             fseek(i2c, REG_SECONDS, 0);
-            if (fwrite(tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != STD_RET_OK)
+            if (fwrite(tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
                   goto SetTime_ClosePort;
 
             rtc->time = *time;
@@ -427,7 +428,7 @@ static bcdDate_t GetDate(void)
 
             /* load date */
             fseek(i2c, REG_DAY, 0);
-            if (fread(&tmp, sizeof(u8_t), sizeof(tmp), i2c) != STD_RET_OK)
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
                   goto GetDate_ClosePort;
 
             rtc->date.weekday = tmp[0];
@@ -477,7 +478,7 @@ static stdRet_t SetDate(bcdDate_t *date)
             tmp[3] = date->year;
 
             fseek(i2c, REG_DAY, 0);
-            if (fwrite(&tmp, sizeof(u8_t), sizeof(tmp), i2c) != STD_RET_OK)
+            if (fwrite(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
                   goto SetDate_ClosePort;
 
             rtc->date = *date;

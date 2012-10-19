@@ -124,7 +124,7 @@ stdRet_t MPL115A2_Init(void)
 
             /* read coefficient values */
             fseek(i2c, REG_A0_MSB, 0);
-            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == sizeof(tmp))
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
                   goto MPL115A2_Init_Error;
 
             /* parse received data */
@@ -182,14 +182,14 @@ stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
             /* start new conversion */
             tmp[0] = 0x01;
             fseek(i2c, REG_CONVERT, 0);
-            if (fwrite(&tmp, sizeof(u8_t), 1, i2c) == 1)
+            if (fwrite(&tmp, sizeof(u8_t), 1, i2c) != 1)
                   goto MPL115A2_GetTemperature_ClosePort;
 
             Sleep(5);
 
             /* load temperature */
             fseek(i2c, REG_TADC_MSB, 0);
-            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == sizeof(tmp))
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
                   goto MPL115A2_GetTemperature_ClosePort;
 
             /* binds temperature */
@@ -233,14 +233,14 @@ stdRet_t MPL115A2_GetPressure(u16_t *pressure)
             /* start new conversion */
             tmp[0] = 0x01;
             fseek(i2c, REG_CONVERT, 0);
-            if (fwrite(&tmp, sizeof(u8_t), 1, i2c) == 1)
+            if (fwrite(&tmp, sizeof(u8_t), 1, i2c) != 1)
                   goto MPL115A2_GetPressure_ClosePort;
 
             Sleep(5);
 
             /* load temperature */
             fseek(i2c, REG_PADC_MSB, 0);
-            if (fread(&tmp, sizeof(u8_t), sizeof(tmp), i2c) == sizeof(tmp))
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != ARRAY_SIZE(tmp))
                   goto MPL115A2_GetPressure_ClosePort;
 
             /* binds pressure */
