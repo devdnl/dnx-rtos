@@ -33,7 +33,8 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
+#include "basic_types.h"
+#include "systypes.h"
 
 /* include here device definition/request list */
 #include "uart_def.h"
@@ -41,6 +42,8 @@ extern "C" {
 #include "i2c_def.h"
 #include "gpio_def.h"
 #include "ether_def.h"
+#include "ds1307rtc_def.h"
+#include "ds1307nvm_def.h"
 
 
 /*==================================================================================================

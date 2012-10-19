@@ -149,6 +149,7 @@ stdRet_t fclose(FILE_t *file)
  * @param *file               pointer to file object
  *
  * @return STD_RET_OK or 0 if write finished successfully, otherwise > 0
+ * DNLFIXME implement: seek modification after write
  */
 //================================================================================================//
 size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
@@ -175,6 +176,7 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @param *file               pointer to file object
  *
  * @return number of read items DNLFIXME implement: function shall return number of read items
+ * DNLFIXME implement: seek modification after read
  */
 //================================================================================================//
 size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)

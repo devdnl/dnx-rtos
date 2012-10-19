@@ -44,25 +44,6 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** time structure */
-typedef struct time_struct
-{
-      u8_t seconds;     /**< [BCD] */
-      u8_t minutes;     /**< [BCD] */
-      u8_t hours;       /**< [BCD] */
-} bcdTime_t;
-
-
-/** date structure */
-typedef struct date_struct
-{
-      u8_t weekday;     /**< [BCD] */
-      u8_t day;         /**< [BCD] */
-      u8_t month;       /**< [BCD] */
-      u8_t year;        /**< [BCD] */
-} bcdDate_t;
-
-
 /** RTC requests */
 enum RTC_IORQ_enum
 {

@@ -147,8 +147,8 @@ stdRet_t appmain(ch_t *argv)
       else
       {
             /* show time */
-            time = DS1307_GetTime();
-            date = DS1307_GetDate();
+//            time = DS1307_GetTime();
+//            date = DS1307_GetDate();
 
             u8_t month   = UTL_BCD2Byte(date.month);
             u8_t weekday = UTL_BCD2Byte(date.weekday);

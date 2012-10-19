@@ -34,13 +34,13 @@ extern "C"
 ==================================================================================================*/
 #include "ds1307.h"
 #include "ds1307rtc.h"
-#include "vfs.h"
 #include "i2c_def.h"
 
 
 /*==================================================================================================
  Local symbolic constants/macros
 ==================================================================================================*/
+#define I2CFILE                     "/dev/i2c"
 #define BCD2BYTE(bcd)               (((bcd >> 4) * 10) + (bcd & 0x0F))
 
 
@@ -52,17 +52,21 @@ extern "C"
 /*==================================================================================================
  Local function prototypes
 ==================================================================================================*/
-static u8_t WeekDay(u16_t year, u8_t month, u8_t day);
+static u8_t      WeekDay(u16_t year, u8_t month, u8_t day);
+static bcdTime_t GetTime(void);
+static stdRet_t  SetTime(bcdTime_t *time);
+static bcdDate_t GetDate(void);
+static stdRet_t  SetDate(bcdDate_t *date);
 
 
 /*==================================================================================================
  Local object definitions
 ==================================================================================================*/
-/** current time */
-static bcdTime_t currentTime;
-
-/** current date */
-static bcdDate_t currentDate;
+struct rtc_struct
+{
+      bcdTime_t time;
+      bcdDate_t date;
+} *rtc;
 
 
 /*==================================================================================================
@@ -94,38 +98,50 @@ stdRet_t DS1307RTC_Init(dev_t dev)
 
       kprint("Initializing RTC...");
 
-      /* try to open port */
-      if ((i2c = fopen("/dev/i2c", NULL)) != NULL)
+      rtc = Malloc(sizeof(struct rtc_struct));
+
+      if (rtc)
       {
-            /* set DS1307 address */
-            tmp = DS1307_ADDRESS;
-            if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp) != STD_RET_OK)
-                  goto DS1307_Init_Error;
-
-            /* read second register */
-            fseek(i2c, REG_SECONDS, 0);
-            if (fread(&tmp, sizeof(tmp), 1, i2c) != STD_RET_OK)
-                  goto DS1307_Init_Error;
-
-            /* enable oscillator if disabled */
-            if (tmp & DS1307_REG_SECONDS_CH_BM)
+            /* try to open port */
+            if ((i2c = fopen(I2CFILE, NULL)) != NULL)
             {
-                  tmp = 0x00;
-                  if ((status = I2C_Write(I2C_NUMBER, &tmp, 1, REG_SECONDS)) != STD_RET_OK)
+                  /* set DS1307 address */
+                  tmp = DS1307_ADDRESS;
+                  if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp) != STD_RET_OK)
                         goto DS1307_Init_Error;
+
+                  /* read second register */
+                  fseek(i2c, REG_SECONDS, 0);
+                  if (fread(&tmp, sizeof(tmp), 1, i2c) != STD_RET_OK)
+                        goto DS1307_Init_Error;
+
+                  /* enable oscillator if disabled */
+                  if (tmp & DS1307_REG_SECONDS_CH_BM)
+                  {
+                        tmp = 0x00;
+                        fseek(i2c, REG_SECONDS, 0);
+                        if (fwrite(&tmp, sizeof(tmp), 1, i2c) != STD_RET_OK)
+                              goto DS1307_Init_Error;
+                  }
+
+                  /* operation success */
+                  kprintOK();
+                  status = STD_RET_OK;
+                  goto DS1307_Init_ClosePort;
+
+                  /* error occur */
+                  DS1307_Init_Error:
+                  kprintFail();
+
+                  /* close port */
+                  DS1307_Init_ClosePort:
+                  fclose(i2c);
             }
-
-            /* operation success */
-            kprintOK();
-            goto DS1307_Init_ClosePort;
-
-            /* error occur */
-            DS1307_Init_Error:
-            kprintErrorNo(status);
-
-            /* close port */
-            DS1307_Init_ClosePort:
-            I2C_Close(I2C_NUMBER);
+            else
+            {
+                  Free(rtc);
+                  kprintFail();
+            }
       }
       else
       {
@@ -242,9 +258,41 @@ stdRet_t DS1307RTC_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
 
       stdRet_t status = STD_RET_ERROR;
 
-      switch (ioRQ)
+      if (rtc != NULL)
       {
+            switch (ioRQ)
+            {
+                  case RTC_IORQ_GETTIME:
+                  {
+                        bcdTime_t *time = (bcdTime_t*)data;
+                        *time  = GetTime();
+                        status = STD_RET_OK;
+                        break;
+                  }
 
+                  case RTC_IORQ_SETTIME:
+                  {
+                        status = SetTime(data);
+                        break;
+                  }
+
+                  case RTC_IORQ_GETDATE:
+                  {
+                        bcdDate_t *date = (bcdDate_t*)data;
+                        *date = GetDate();
+                        status = STD_RET_OK;
+                        break;
+                  }
+
+                  case RTC_IORQ_SETDATE:
+                  {
+                        status = SetDate(data);
+                        break;
+                  }
+
+                  default:
+                        break;
+            }
       }
 
       return status;
@@ -264,179 +312,189 @@ stdRet_t DS1307RTC_Release(dev_t dev)
 {
       (void) dev;
 
+      if (rtc != NULL)
+      {
+            Free(rtc);
+      }
+
       return STD_RET_OK;
 }
 
 
+//================================================================================================//
+/**
+ * @brief Return current time
+ *
+ * If driver is free function read data directly from RTC, otherwise sends last read value.
+ *
+ * @return current time
+ **/
+//================================================================================================//
+static bcdTime_t GetTime(void)
+{
+      u8_t tmp[3];
+      FILE_t *i2c;
+
+      /* try to open port */
+      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      {
+            /* set DS1307 address */
+            tmp[0] = DS1307_ADDRESS;
+            if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                  goto GetTime_ClosePort;
+
+            /* load time */
+            fseek(i2c, REG_SECONDS, 0);
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != STD_RET_OK)
+                  goto GetTime_ClosePort;
+
+            rtc->time.hours   = tmp[2];
+            rtc->time.minutes = tmp[1];
+            rtc->time.seconds = tmp[0];
+
+            /* close port */
+            GetTime_ClosePort:
+            fclose(i2c);
+      }
+
+      return rtc->time;
+}
 
 
+//================================================================================================//
+/**
+ * @brief Write new time to RTC
+ *
+ * @param time  new time
+ *
+ * @retval STD_RET_OK         success
+ * @retval STD_RET_ERROR      failure
+ **/
+//================================================================================================//
+static stdRet_t SetTime(bcdTime_t *time)
+{
+      stdRet_t status = STD_RET_ERROR;
+      u8_t     tmp[3];
+      FILE_t   *i2c;
 
-////================================================================================================//
-///**
-// * @brief Return current time
-// *
-// * If driver is free function read data directly from RTC, otherwise sends last read value.
-// *
-// * @return current time
-// **/
-////================================================================================================//
-//bcdTime_t DS1307_GetTime(void)
-//{
-//      u8_t tmp[3];
-//
-//      /* try to open port */
-//      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
-//      {
-//            /* set DS1307 address */
-//            tmp[0] = DS1307_ADDRESS;
-//            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
-//                  goto DS1307_GetTime_ClosePort;
-//
-//            /* load time */
-//            if (I2C_Read(I2C_NUMBER, &tmp, sizeof(tmp), REG_SECONDS) != STD_RET_OK)
-//                  goto DS1307_GetTime_ClosePort;
-//
-//            currentTime.hours   = tmp[2];
-//            currentTime.minutes = tmp[1];
-//            currentTime.seconds = tmp[0];
-//
-//            /* close port */
-//            DS1307_GetTime_ClosePort:
-//            I2C_Close(I2C_NUMBER);
-//      }
-//
-//      return currentTime;
-//}
-//
-//
-////================================================================================================//
-///**
-// * @brief Write new time to RTC
-// *
-// * @param time  new time
-// *
-// * @retval STD_RET_OK         success
-// * @retval STD_RET_ERROR      failure
-// **/
-////================================================================================================//
-//stdRet_t DS1307_SetTime(bcdTime_t time)
-//{
-//      stdRet_t status = STD_RET_ERROR;
-//      u8_t     tmp[3];
-//
-//      /* try open port */
-//      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
-//      {
-//            /* set DS1307 address */
-//            tmp[0] = DS1307_ADDRESS;
-//            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
-//                  goto DS1307_SetTime_ClosePort;
-//
-//            /* set new time */
-//            tmp[0] = time.seconds;
-//            tmp[1] = time.minutes;
-//            tmp[2] = time.hours;
-//
-//            if (I2C_Write(I2C_NUMBER, &tmp, sizeof(tmp), REG_SECONDS) != STD_RET_OK)
-//                  goto DS1307_SetTime_ClosePort;
-//
-//            currentTime = time;
-//
-//            status = STD_RET_OK;
-//
-//            /* close port */
-//            DS1307_SetTime_ClosePort:
-//            I2C_Close(I2C_NUMBER);
-//      }
-//
-//      return status;
-//}
-//
-//
-////================================================================================================//
-///**
-// * @brief Return current date
-// *
-// * If driver is free function read data directly from RTC, otherwise sends last read value.
-// *
-// * @return current time
-// **/
-////================================================================================================//
-//bcdDate_t DS1307_GetDate(void)
-//{
-//      u8_t tmp[4];
-//
-//      /* try to open port */
-//      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
-//      {
-//            /* set DS1307 address */
-//            tmp[0] = DS1307_ADDRESS;
-//            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
-//                  goto DS1307_GetDate_ClosePort;
-//
-//            /* load date */
-//            if (I2C_Read(I2C_NUMBER, &tmp, sizeof(tmp), REG_DAY) != STD_RET_OK)
-//                  goto DS1307_GetDate_ClosePort;
-//
-//            currentDate.weekday = tmp[0];
-//            currentDate.day     = tmp[1];
-//            currentDate.month   = tmp[2];
-//            currentDate.year    = tmp[3];
-//
-//            /* close port */
-//            DS1307_GetDate_ClosePort:
-//            I2C_Close(I2C_NUMBER);
-//      }
-//
-//      return currentDate;
-//}
-//
-//
-////================================================================================================//
-///**
-// * @brief Write new date to RTC
-// *
-// * @param date  new date
-// *
-// * @retval STD_RET_OK         success
-// * @retval STD_RET_ERROR      failure
-// **/
-////================================================================================================//
-//stdRet_t DS1307_SetDate(bcdDate_t date)
-//{
-//      stdRet_t status = STD_RET_ERROR;
-//      u8_t     tmp[4];
-//
-//      /* try open port */
-//      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
-//      {
-//            /* set DS1307 address */
-//            tmp[0] = DS1307_ADDRESS;
-//            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
-//                  goto DS1307_SetDate_ClosePort;
-//
-//            /* set new date */
-//            tmp[0] = WeekDay(BCD2BYTE(date.year ) + 2000,
-//                             BCD2BYTE(date.month),
-//                             BCD2BYTE(date.day  ) );
-//            tmp[1] = date.day;
-//            tmp[2] = date.month;
-//            tmp[3] = date.year;
-//
-//            if (I2C_Write(I2C_NUMBER, &tmp, sizeof(tmp), REG_DAY) != STD_RET_OK)
-//                  goto DS1307_SetDate_ClosePort;
-//
-//            currentDate = date;
-//
-//            status = STD_RET_OK;
-//
-//            /* close port */
-//            DS1307_SetDate_ClosePort:
-//            I2C_Close(I2C_NUMBER);
-//      }
-//
-//      return status;
-//}
+      /* try open port */
+      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      {
+            /* set DS1307 address */
+            tmp[0] = DS1307_ADDRESS;
+            if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                  goto SetTime_ClosePort;
+
+            /* set new time */
+            tmp[0] = time->seconds;
+            tmp[1] = time->minutes;
+            tmp[2] = time->hours;
+
+            fseek(i2c, REG_SECONDS, 0);
+            if (fwrite(tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) != STD_RET_OK)
+                  goto SetTime_ClosePort;
+
+            rtc->time = *time;
+
+            status = STD_RET_OK;
+
+            /* close port */
+            SetTime_ClosePort:
+            fclose(i2c);
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Return current date
+ *
+ * If driver is free function read data directly from RTC, otherwise sends last read value.
+ *
+ * @return current time
+ **/
+//================================================================================================//
+static bcdDate_t GetDate(void)
+{
+      u8_t tmp[4];
+      FILE_t *i2c;
+
+      /* try to open port */
+      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      {
+            /* set DS1307 address */
+            tmp[0] = DS1307_ADDRESS;
+            if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                  goto GetDate_ClosePort;
+
+            /* load date */
+            fseek(i2c, REG_DAY, 0);
+            if (fread(&tmp, sizeof(u8_t), sizeof(tmp), i2c) != STD_RET_OK)
+                  goto GetDate_ClosePort;
+
+            rtc->date.weekday = tmp[0];
+            rtc->date.day     = tmp[1];
+            rtc->date.month   = tmp[2];
+            rtc->date.year    = tmp[3];
+
+            /* close port */
+            GetDate_ClosePort:
+            fclose(i2c);
+      }
+
+      return rtc->date;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Write new date to RTC
+ *
+ * @param *date  new date
+ *
+ * @retval STD_RET_OK         success
+ * @retval STD_RET_ERROR      failure
+ **/
+//================================================================================================//
+static stdRet_t SetDate(bcdDate_t *date)
+{
+      stdRet_t status = STD_RET_ERROR;
+      u8_t     tmp[4];
+      FILE_t   *i2c;
+
+      /* try open port */
+      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      {
+            /* set DS1307 address */
+            tmp[0] = DS1307_ADDRESS;
+            if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                  goto SetDate_ClosePort;
+
+            /* set new date */
+            tmp[0] = WeekDay(BCD2BYTE(date->year ) + 2000,
+                             BCD2BYTE(date->month),
+                             BCD2BYTE(date->day  ) );
+            tmp[1] = date->day;
+            tmp[2] = date->month;
+            tmp[3] = date->year;
+
+            fseek(i2c, REG_DAY, 0);
+            if (fwrite(&tmp, sizeof(u8_t), sizeof(tmp), i2c) != STD_RET_OK)
+                  goto SetDate_ClosePort;
+
+            rtc->date = *date;
+
+            status = STD_RET_OK;
+
+            /* close port */
+            SetDate_ClosePort:
+            fclose(i2c);
+      }
+
+      return status;
+}
 
 
 //================================================================================================//

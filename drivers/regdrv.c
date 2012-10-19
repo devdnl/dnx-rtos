@@ -41,6 +41,8 @@ extern "C" {
 #include "pll.h"
 #include "i2c.h"
 #include "ether.h"
+#include "ds1307rtc.h"
+#include "ds1307nvm.h"
 
 
 /*==================================================================================================
@@ -65,9 +67,6 @@ typedef struct
 } regDrv_t;
 
 
-
-
-
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
@@ -78,11 +77,41 @@ typedef struct
 ==================================================================================================*/
 static const regDrv_t drvList[] =
 {
-      {"uart1", UART_Init,  UART_Open,  UART_Close,  UART_Write,  UART_Read,  UART_IOCtl,  UART_Release,  UART_DEV_1   },
-      {"gpio",  GPIO_Init,  GPIO_Open,  GPIO_Close,  GPIO_Write,  GPIO_Read,  GPIO_IOCtl,  GPIO_Release,  GPIO_DEV_NONE},
-      {"pll",   PLL_Init,   PLL_Open,   PLL_Close,   PLL_Write,   PLL_Read,   PLL_IOCtl,   PLL_Release,   PLL_DEV_NONE },
-      {"i2c1",  I2C_Init,   I2C_Open,   I2C_Close,   I2C_Write,   I2C_Read,   I2C_IOCtl,   I2C_Release,   I2C_DEV_1    },
-      {"eth0",  ETHER_Init, ETHER_Open, ETHER_Close, ETHER_Write, ETHER_Read, ETHER_IOCtl, ETHER_Release, ETH_DEV_1    },
+      {
+             "uart1",               UART_Init,              UART_Open,
+             UART_Close,            UART_Write,             UART_Read,
+             UART_IOCtl,            UART_Release,           UART_DEV_1
+      },
+      {
+             "gpio",                GPIO_Init,              GPIO_Open,
+             GPIO_Close,            GPIO_Write,             GPIO_Read,
+             GPIO_IOCtl,            GPIO_Release,           GPIO_DEV_NONE
+      },
+      {
+             "pll",                 PLL_Init,               PLL_Open,
+             PLL_Close,             PLL_Write,              PLL_Read,
+             PLL_IOCtl,             PLL_Release,            PLL_DEV_NONE
+      },
+      {
+             "i2c1",                I2C_Init,               I2C_Open,
+             I2C_Close,             I2C_Write,              I2C_Read,
+             I2C_IOCtl,             I2C_Release,            I2C_DEV_1
+      },
+      {
+             "eth0",                ETHER_Init,             ETHER_Open,
+             ETHER_Close,           ETHER_Write,            ETHER_Read,
+             ETHER_IOCtl,           ETHER_Release,          ETH_DEV_1
+      },
+      {
+             "ds1307rtc",           DS1307RTC_Init,         DS1307RTC_Open,
+             DS1307RTC_Close,       DS1307RTC_Write,        DS1307RTC_Read,
+             DS1307RTC_IOCtl,       DS1307RTC_Release,      DS1307RTC_DEV_NONE
+      },
+      {
+             "ds1307nvm",           DS1307NVM_Init,         DS1307NVM_Open,
+             DS1307NVM_Close,       DS1307NVM_Write,        DS1307NVM_Read,
+             DS1307NVM_IOCtl,       DS1307NVM_Release,      DS1307NVM_DEV_NONE
+      },
 };
 
 

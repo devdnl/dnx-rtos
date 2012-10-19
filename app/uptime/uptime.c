@@ -30,8 +30,6 @@
 #include "clear.h"
 #include <string.h>
 
-#include "ds1307.h"
-
 /* Begin of application section declaration */
 APPLICATION(uptime)
 APP_SEC_BEGIN
@@ -64,17 +62,35 @@ stdRet_t appmain(ch_t *argv)
 {
       (void) argv;
 
-      bcdTime_t time = DS1307_GetTime();
-      u32_t uptime   = SystemGetUptime();
-      u32_t udays    = (uptime / (3600 * 24));
-      u32_t uhrs     = (uptime / 3600) % 24;
-      u32_t umins    = (uptime / 60) % 60;
+      stdRet_t  status = STD_RET_ERROR;
+      bcdTime_t time;
+      FILE_t    *rtc;
 
-      print("%x2:%x2:%x2, up %ud %u2:%u2\n",
-            time.hours, time.minutes, time.seconds,
-            udays, uhrs, umins);
+      rtc = fopen("/dev/rtc", NULL);
 
-      return STD_RET_OK;
+      if (rtc)
+      {
+         ioctl(rtc, RTC_IORQ_GETTIME, &time);
+
+         u32_t uptime   = SystemGetUptime();
+         u32_t udays    = (uptime / (3600 * 24));
+         u32_t uhrs     = (uptime / 3600) % 24;
+         u32_t umins    = (uptime / 60) % 60;
+
+         print("%x2:%x2:%x2, up %ud %u2:%u2\n",
+               time.hours, time.minutes, time.seconds,
+               udays, uhrs, umins);
+
+         fclose(rtc);
+
+         status = STD_RET_OK;
+      }
+      else
+      {
+            print("Cannont open rtc device!\n");
+      }
+
+      return status;
 }
 
 /* End of application section declaration */

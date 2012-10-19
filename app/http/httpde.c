@@ -222,8 +222,20 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                                           {
                                                 i += 6;
 
-                                                bcdTime_t time = DS1307_GetTime();
-                                                bcdDate_t date = DS1307_GetDate();
+                                                bcdTime_t time;
+                                                bcdDate_t date;
+                                                FILE_t *rtc = fopen("/dev/rtc", NULL);
+
+                                                if (rtc)
+                                                {
+                                                      ioctl(rtc, RTC_IORQ_GETTIME, &time);
+                                                      ioctl(rtc, RTC_IORQ_GETDATE, &date);
+                                                }
+                                                else
+                                                {
+                                                      memset(&time, 0x00, sizeof(time));
+                                                      memset(&date, 0x00, sizeof(date));
+                                                }
 
                                                 n = snprint(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
                                                             date.day,
