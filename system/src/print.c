@@ -346,7 +346,7 @@ u32_t kprint(const ch_t *format, ...)
 
       if (kprintEnabled)
       {
-            ch_t *buffer = (ch_t*)Calloc(constKPRINT_BUFFER_SIZE, sizeof(ch_t));
+            ch_t *buffer = Calloc(constKPRINT_BUFFER_SIZE, sizeof(ch_t));
 
             if (buffer)
             {

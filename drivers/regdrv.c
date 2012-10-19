@@ -150,7 +150,7 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
       {
             if (devName == NULL)
             {
-                  devName = (struct devName_struct*)Calloc(1, sizeof(struct devName_struct));
+                  devName = Calloc(1, sizeof(struct devName_struct));
 
                   if (devName == NULL)
                   {
@@ -171,7 +171,7 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
                         }
                         else
                         {
-                              kprint("Create node /dev/%s error\n", nodeName);
+                              kprint("Create node /dev/%s failed\n", nodeName);
                         }
                         break;
                   }

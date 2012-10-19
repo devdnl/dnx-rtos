@@ -105,7 +105,7 @@ u8_t UTL_BCD2Byte(u8_t BCD)
  * @return random value
  */
 //================================================================================================//
-u32_t UTL_GetRandom(void)
+u32_t UTL_GetRandom(void) /* DNLFIXME fix: this function must be implemented as driver /dev/urandom */
 {
      static u32_t m_w = 156416;     /* must not be zero */
      static u32_t m_z = 12415641;   /* must not be zero */

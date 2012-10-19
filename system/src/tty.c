@@ -69,7 +69,7 @@ typedef enum
                                       Local function prototypes
 ==================================================================================================*/
 static void     RefreshTTY(u8_t tty, FILE_t *file);
-static bool_t   CreateTTY(u8_t tty);
+static stdRet_t CreateTTY(u8_t tty);
 static decode_t decodeFn(ch_t character);
 static ch_t     *GetMsg(u8_t tty, u8_t msg);
 
@@ -153,7 +153,9 @@ void ttyd(void *arg)
 
             /* check that can go to short sleep */
             if (TTY_CheckNewMsg(currentTTY) == 0 && rxbfrempty)
+            {
                   Sleep(10);
+            }
       }
 
       /* this should never happen */
@@ -271,19 +273,19 @@ static decode_t decodeFn(ch_t character)
  * @retval FALSE  terminal not created
  */
 //================================================================================================//
-static bool_t CreateTTY(u8_t tty)
+static stdRet_t CreateTTY(u8_t tty)
 {
-      bool_t status = FALSE;
+      bool_t status = STD_RET_ERROR;
 
       if (tty < TTY_COUNT)
       {
             if (ttyTerm[tty] == NULL)
             {
-                  ttyTerm[tty] = (struct ttyEntry*)Calloc(1, sizeof(struct ttyEntry));
+                  ttyTerm[tty] = Calloc(1, sizeof(struct ttyEntry));
 
                   if (ttyTerm[tty])
                   {
-                        status = TRUE;
+                        status = STD_RET_OK;
                   }
             }
       }
@@ -336,53 +338,74 @@ static ch_t *GetMsg(u8_t tty, u8_t msg)
  * @param *msg       pointer to the data with msg
  */
 //================================================================================================//
-void TTY_AddMsg(u8_t tty, ch_t *msg)
+void TTY_AddMsg(u8_t tty, ch_t *msg) /* DNLTODO msg split if \n not occur at last msg */
 {
       if (tty < TTY_COUNT && msg)
       {
             if (ttyTerm[tty] == NULL)
             {
-                   if (CreateTTY(tty) == FALSE)
+                   if (CreateTTY(tty) == STD_RET_ERROR)
                    {
                          goto AddTermMsg_end;
                    }
             }
 
-            /* find free entry */
-            ch_t *localMsg = (ch_t*)Malloc(sizeof(ch_t) * strlen(msg) + 1);
+            /* check if previous message has not line end (\n) */
+            ch_t *lastmsg = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1];
 
-            if (localMsg)
+            if ( (ttyTerm[tty]->msgCnt > 0) && (*(lastmsg + strlen(lastmsg) - 1) != '\n') )
             {
-                  strcpy(localMsg, msg);
+                  size_t newsize = strlen(lastmsg) + strlen(msg) + 1;
 
-                  if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
+                  ch_t *modmsg = Malloc(newsize);
+
+                  if (modmsg)
                   {
-                        if (ttyTerm[tty]->line[0])
-                        {
-                              Free(ttyTerm[tty]->line[0]);
-                        }
+                        strcpy(modmsg, lastmsg);
+                        strcat(modmsg, msg);
 
-                        for (u8_t i = 0; i < TTY_MSGS; i++)
-                        {
-                              ttyTerm[tty]->line[i] = ttyTerm[tty]->line[i + 1];
-                        }
+                        Free(lastmsg);
 
-                        ttyTerm[tty]->line[TTY_MSGS - 1] = localMsg;
-                  }
-                  else
-                  {
-                        ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = localMsg;
+                        ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1] = modmsg;
                   }
             }
+            else
+            {
+                  ch_t *localMsg = Malloc(sizeof(ch_t) * strlen(msg) + 1);
 
-            AddTermMsg_end:
-            if (ttyTerm[tty]->msgCnt < TTY_MSGS)
-                  ttyTerm[tty]->msgCnt++;
+                  if (localMsg)
+                  {
+                        strcpy(localMsg, msg);
+
+                        if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
+                        {
+                              if (ttyTerm[tty]->line[0])
+                              {
+                                    Free(ttyTerm[tty]->line[0]);
+                              }
+
+                              for (u8_t i = 0; i < TTY_MSGS; i++)
+                              {
+                                    ttyTerm[tty]->line[i] = ttyTerm[tty]->line[i + 1];
+                              }
+
+                              ttyTerm[tty]->line[TTY_MSGS - 1] = localMsg;
+                        }
+                        else
+                        {
+                              ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = localMsg;
+                        }
+                  }
+
+                  if (ttyTerm[tty]->msgCnt < TTY_MSGS)
+                        ttyTerm[tty]->msgCnt++;
+            }
 
             if (ttyTerm[tty]->newMsg < TTY_MSGS)
                   ttyTerm[tty]->newMsg++;
       }
 
+      AddTermMsg_end:
       return;
 }
 
@@ -430,7 +453,7 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
       {
             if (ttyTerm[tty] && ttyTerm[tty]->msgCnt)
             {
-                  ch_t *localMsg = (ch_t*)Malloc(sizeof(ch_t) * strlen(newmsg));
+                  ch_t *localMsg = Malloc(sizeof(ch_t) * strlen(newmsg));
 
                   if (localMsg)
                   {

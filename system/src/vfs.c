@@ -79,7 +79,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
 
       if (name)
       {
-            file = (FILE_t*)Calloc(1, sizeof(FILE_t));
+            file = Calloc(1, sizeof(FILE_t));
 
             if (file != NULL)
             {

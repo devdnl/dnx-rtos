@@ -103,7 +103,7 @@ stdRet_t appmain(ch_t *argv)
                         for (u8_t i = 0; i < ARRAY_SIZE(test); i++)
                         {
                               test[i].size = GetRandom();
-                              test[i].ptr  = (u8_t*)Malloc(test[i].size);
+                              test[i].ptr  = Malloc(test[i].size);
 
                               if (test[i].ptr == NULL)
                               {
