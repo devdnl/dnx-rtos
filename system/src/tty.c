@@ -203,7 +203,7 @@ static decode_t decodeFn(ch_t character)
       {
             case 0:
             {
-                  if (character == ASCII_ESC)
+                  if (character == 0x1B)
                   {
                         funcStep++;
                         state = TTY_SEL_PEND;

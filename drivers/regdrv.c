@@ -75,6 +75,7 @@ typedef struct
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+/* driver registration */
 static const regDrv_t drvList[] =
 {
       {
@@ -115,6 +116,7 @@ static const regDrv_t drvList[] =
 };
 
 
+/* drivers node names */
 static struct devName_struct
 {
       ch_t *node[ARRAY_SIZE(drvList)];

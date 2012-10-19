@@ -110,6 +110,8 @@ void Initd(void *arg)
 
       /* user initialization */
       InitDrv("i2c1", "i2c");
+      InitDrv("ds1307rtc", "rtc");
+      InitDrv("ds1307nvm", "nvm");
 
       if (InitDrv("eth0", "eth0") != STD_RET_OK)
             goto initd_net_end;
