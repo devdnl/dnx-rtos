@@ -49,14 +49,21 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
-/** type which contain port information */
-typedef struct PortHandle_struct
+/** i2c control structure */
+struct i2cCtrl
 {
       I2C_t       *Address;             /* peripheral address */
       xTaskHandle TaskHandle;           /* task handle variable for IRQ */
       u16_t       Lock;                 /* port reservation */
       u8_t        SlaveAddress;         /* slave address */
-} PortHandle_t;
+      stdRet_t    status;               /* last operation status */
+};
+
+/** type which contain port information */
+typedef struct PortHandler
+{
+      struct i2cCtrl *port[I2C_DEV_LAST];
+} PortHandler_t;
 
 
 /*==================================================================================================
@@ -72,35 +79,19 @@ static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout);
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-/* DNLTODO fix: global variables must be in dynamic memory */
-/** port localizations */
-static PortHandle_t PortHandle[] =
+/* addresses of I2C devices */
+static const I2C_t *i2cAddr[I2C_DEV_LAST] =
 {
-      #ifdef RCC_APB1ENR_I2C1EN
-      #if (I2C1_ENABLE > 0)
-      {
-            .Address      = I2C1,
-            .TaskHandle   = NULL,
-            .Lock         = PORT_FREE,
-            .SlaveAddress = 0,
-      },
-      #endif
-      #endif
-
-      #ifdef RCC_APB1ENR_I2C2EN
-      #if (I2C2_ENABLE > 0)
-      {
-            .Address      = I2C2,
-            .TaskHandle   = NULL,
-            .Lock         = PORT_FREE,
-            .SlaveAddress = 0,
-      },
-      #endif
-      #endif
+#ifdef I2C_DEV_1_DEFINED
+      I2C1,
+#endif
+#ifdef I2C_DEV_2_DEFINED
+      I2C2,
+#endif
 };
 
-/* last status */
-static stdRet_t status;
+/* pointer to allocated memory for driver */
+static PortHandler_t *i2c;
 
 
 /*==================================================================================================
@@ -119,9 +110,34 @@ static stdRet_t status;
 //================================================================================================//
 stdRet_t I2C_Init(dev_t dev)
 {
-      (void) dev;
+      stdRet_t status = STD_RET_ERROR;
 
-      return STD_RET_OK;
+      if (i2c == NULL)
+      {
+            i2c = Calloc(1, sizeof(PortHandler_t));
+
+            if (i2c == NULL)
+                  goto I2C_Init_end;
+      }
+
+      if (dev < I2C_DEV_LAST)
+      {
+            if (i2c->port[dev] == NULL)
+            {
+                  i2c->port[dev] = Calloc(1, sizeof(struct i2cCtrl));
+
+                  if (i2c->port[dev] != NULL)
+                  {
+                        i2c->port[dev]->Address = (I2C_t*)i2cAddr[dev];
+                        i2c->port[dev]->Lock    = PORT_FREE;
+
+                        status = STD_RET_OK;
+                  }
+            }
+      }
+
+      I2C_Init_end:
+      return status;
 }
 
 
@@ -148,15 +164,15 @@ stdRet_t I2C_Open(dev_t dev)
             TaskSuspendAll();
 
             /* check that port is free */
-            if (PortHandle[dev].Lock == PORT_FREE)
+            if (i2c->port[dev]->Lock == PORT_FREE)
             {
                   /* registered port for current task */
-                  PortHandle[dev].Lock = TaskGetPID();
+                  i2c->port[dev]->Lock = TaskGetPID();
 
                   TaskResumeAll();
 
                   /* set task handle for IRQs */
-                  PortHandle[dev].TaskHandle = TaskGetCurrentTaskHandle();
+                  i2c->port[dev]->TaskHandle = TaskGetCurrentTaskHandle();
 
                   /* enable I2C clock */
                   switch (dev)
@@ -182,7 +198,7 @@ stdRet_t I2C_Open(dev_t dev)
                   }
 
                   /* set port address */
-                  i2cPtr = PortHandle[dev].Address;
+                  i2cPtr = i2c->port[dev]->Address;
 
                   /* set default port settings */
                   i2cPtr->CR1   |= I2C_CR1_SWRST;
@@ -199,7 +215,7 @@ stdRet_t I2C_Open(dev_t dev)
             {
                   TaskResumeAll();
 
-                  if (PortHandle[dev].Lock == TaskGetPID())
+                  if (i2c->port[dev]->Lock == TaskGetPID())
                         status = STD_RET_OK;
                   else
                         status = I2C_STATUS_PORTLOCKED;
@@ -230,10 +246,10 @@ stdRet_t I2C_Close(dev_t dev)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
+            if (i2c->port[dev]->Lock == TaskGetPID())
             {
                   /* set port address */
-                  i2cPtr = PortHandle[dev].Address;
+                  i2cPtr = i2c->port[dev]->Address;
 
                   /* disable I2C device */
                   i2cPtr->CR1 |= I2C_CR1_SWRST;
@@ -264,10 +280,10 @@ stdRet_t I2C_Close(dev_t dev)
                   }
 
                   /* unlock device */
-                  PortHandle[dev].Lock = PORT_FREE;
+                  i2c->port[dev]->Lock = PORT_FREE;
 
                   /* delete from task handle */
-                  PortHandle[dev].TaskHandle = NULL;
+                  i2c->port[dev]->TaskHandle = NULL;
 
                   status = STD_RET_OK;
             }
@@ -300,21 +316,22 @@ size_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
       {
-            /* check arguments */
-            if (!src || !size || !nitems)
+              /* check that port is reserved for this task */
+            if (i2c->port[dev]->Lock == TaskGetPID())
             {
-                  status = I2C_STATUS_BADARG;
-                  goto I2C_Write_end;
-            }
+                  I2C_t *i2cPtr     = i2c->port[dev]->Address;
+                  u8_t  *data       = (u8_t *)src;
+                  stdRet_t *i2cstat = &i2c->port[dev]->status;
 
-            /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
-            {
-                  I2C_t *i2cPtr = PortHandle[dev].Address;
-                  u8_t  *data   = (u8_t *)src;
+                  /* check arguments */
+                  if (!src || !size || !nitems)
+                  {
+                        i2c->port[dev]->status = I2C_STATUS_BADARG;
+                        goto I2C_Write_end;
+                  }
 
                   /* start condition */
-                  if ((status = StartCondition(i2cPtr, (PortHandle[dev].SlaveAddress << 1) & 0xFE))
+                  if ((*i2cstat = StartCondition(i2cPtr, (i2c->port[dev]->SlaveAddress << 1) & 0xFE))
                      != STD_RET_OK)
                   {
                         goto I2C_Write_end;
@@ -323,13 +340,13 @@ size_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
                   /* send register address */
                   u8_t regAddr = seek;
 
-                  if ((status = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
+                  if ((*i2cstat = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
                   {
                         goto I2C_Write_end;
                   }
 
                   /* send data */
-                  if ((status = SendData(i2cPtr, data, nitems * size)) != STD_RET_OK)
+                  if ((*i2cstat = SendData(i2cPtr, data, nitems * size)) != STD_RET_OK)
                   {
                         goto I2C_Write_end;
                   }
@@ -344,14 +361,6 @@ size_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 
                   n = nitems;
             }
-            else
-            {
-                  status = I2C_STATUS_PORTLOCKED;
-            }
-      }
-      else
-      {
-            status = I2C_STATUS_PORTNOTEXIST;
       }
 
       I2C_Write_end:
@@ -378,28 +387,30 @@ size_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
       {
-            /* check arguments */
-            if (!dst || !size || !nitems)
-            {
-                  status = I2C_STATUS_BADARG;
-                  goto I2C_Read_end;
-            }
-
             /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
+            if (i2c->port[dev]->Lock == TaskGetPID())
             {
-                  I2C_t *i2cPtr = PortHandle[dev].Address;
+                  I2C_t *i2cPtr     = i2c->port[dev]->Address;
+                  stdRet_t *i2cstat = &i2c->port[dev]->status;
+
+                  /* check arguments */
+                  if (!dst || !size || !nitems)
+                  {
+                        *i2cstat = I2C_STATUS_BADARG;
+                        goto I2C_Read_end;
+                  }
 
                   /* start condition */
-                  if ((status = StartCondition(i2cPtr,
-                                               (PortHandle[dev].SlaveAddress << 1) & 0xFE
-                                               ) ) != STD_RET_OK)
+                  if ((*i2cstat = StartCondition(i2cPtr, (i2c->port[dev]->SlaveAddress << 1) & 0xFE) )
+                     != STD_RET_OK)
+                  {
                         goto I2C_Read_end;
+                  }
 
                   /* send register address */
                   u8_t regAddr = seek;
 
-                  if ((status = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
+                  if ((*i2cstat = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
                         goto I2C_Read_end;
 
                   /* waiting for data send was finished */
@@ -415,13 +426,14 @@ size_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
                         i2cPtr->CR1 |= I2C_CR1_ACK;
 
                   /* repeat start condition */
-                  if ((status = StartCondition(i2cPtr,
-                                               (PortHandle[dev].SlaveAddress << 1) | 0x01
-                                              ) ) != STD_RET_OK)
+                  if ((*i2cstat = StartCondition(i2cPtr,(i2c->port[dev]->SlaveAddress << 1) | 0x01) )
+                     != STD_RET_OK)
+                  {
                         goto I2C_Read_end;
+                  }
 
                   /* receive bytes */
-                  if ((status = ReadData(i2cPtr, dst, nitems * size)) != STD_RET_OK)
+                  if ((*i2cstat = ReadData(i2cPtr, dst, nitems * size)) != STD_RET_OK)
                         goto I2C_Read_end;
 
                   /* stop condition */
@@ -429,14 +441,6 @@ size_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 
                   n = nitems;
             }
-            else
-            {
-                  status = I2C_STATUS_PORTLOCKED;
-            }
-      }
-      else
-      {
-            status = I2C_STATUS_PORTNOTEXIST;
       }
 
       I2C_Read_end:
@@ -470,9 +474,9 @@ stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
+            if (i2c->port[dev]->Lock == TaskGetPID())
             {
-                  I2C_t *i2cPtr = PortHandle[dev].Address;
+                  I2C_t *i2cPtr = i2c->port[dev]->Address;
 
                   status = STD_RET_OK;
 
@@ -480,13 +484,13 @@ stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
                   {
                         case I2C_IORQ_SETSLAVEADDR:
                         {
-                              PortHandle[dev].SlaveAddress = *((u8_t *)data);
+                              i2c->port[dev]->SlaveAddress = *((u8_t *)data);
                               break;
                         }
 
                         case I2C_IORQ_GETSLAVEADDR:
                         {
-                              *((u8_t *)data) = PortHandle[dev].SlaveAddress;
+                              *((u8_t *)data) = i2c->port[dev]->SlaveAddress;
                               break;
                         }
 
@@ -773,9 +777,32 @@ static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout)
 //================================================================================================//
 stdRet_t I2C_Release(dev_t dev)
 {
-      (void) dev;
+      stdRet_t status = STD_RET_ERROR;
 
-      return STD_RET_OK;
+      if (i2c && dev < I2C_DEV_LAST)
+      {
+            /* free i2c device data */
+            if (i2c->port[dev])
+            {
+                  Free(i2c->port[dev]);
+                  i2c->port[dev] = NULL;
+                  status = STD_RET_OK;
+            }
+
+            /* check if all devices are not used, if yes then free handler */
+            for (u8_t i = 0; i < I2C_DEV_LAST; i++)
+            {
+                  if (i2c->port[i] != NULL)
+                        goto I2C_Release_End;
+            }
+
+            /* free i2c handler */
+            Free(i2c);
+            i2c = NULL;
+      }
+
+      I2C_Release_End:
+      return status;
 }
 
 
