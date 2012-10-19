@@ -59,8 +59,8 @@ typedef struct
       stdRet_t (*init)(dev_t);
       stdRet_t (*open)(dev_t);
       stdRet_t (*close)(dev_t);
-      stdRet_t (*write)(dev_t, void*, size_t, size_t);
-      stdRet_t (*read)(dev_t, void*, size_t, size_t);
+      size_t   (*write)(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*read )(dev_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
       stdRet_t (*ioctl)(dev_t, IORq_t, void*);
       stdRet_t (*release)(dev_t);
       dev_t    device;

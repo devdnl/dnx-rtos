@@ -197,11 +197,10 @@ stdRet_t DS1307RTC_Close(dev_t dev)
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
  *
- * @retval STD_RET_OK                     operation success
- * @retval STD_RET_ERROR                  error
+ * @retval number of written nitems
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)src;
@@ -209,9 +208,7 @@ stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_
       (void)seek;
       (void)nitems;
 
-      stdRet_t status = STD_RET_ERROR;
-
-      return status;
+      return 0;
 }
 
 
@@ -224,11 +221,10 @@ stdRet_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
  *
- * @retval STD_RET_OK                     operation success
- * @retval STD_RET_ERROR                  error
+ * @retval number of written nitems
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)dst;
@@ -236,9 +232,7 @@ stdRet_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t
       (void)seek;
       (void)nitems;
 
-      stdRet_t status = STD_RET_ERROR;
-
-      return status;
+      return 0;
 }
 
 

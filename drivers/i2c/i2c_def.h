@@ -61,6 +61,7 @@ enum I2C_IORq_enum
       I2C_IORQ_SETSLAVEADDR,                                /* [in]  u8_t slave address */
       I2C_IORQ_GETSLAVEADDR,                                /* [out] u8_t slave address */
       I2C_IORQ_SETSCLFREQ,                                  /* [in]  u32_t SCL frequency [Hz] */
+      I2C_IORQ_GETSTATUS,                                   /* [out] stdRet_t status */
 };
 
 

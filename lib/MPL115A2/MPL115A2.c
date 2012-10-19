@@ -39,7 +39,7 @@ extern "C" {
                                   Local symbolic constants/macros
 ==================================================================================================*/
 #define MPL115A2_ADDRESS            0x60
-#define I2C_NUMBER                  I2C_DEV_1
+#define I2CFILE                     "/dev/i2c"
 
 /** multiplier used to remove fraction */
 #define MULTIPLIER                  100
@@ -108,21 +108,23 @@ i16_t c12;
 //================================================================================================//
 stdRet_t MPL115A2_Init(void)
 {
-      stdRet_t status;
+      stdRet_t status = STD_RET_ERROR;
       u8_t     tmp[8];
+      FILE_t   *i2c;
 
       kprint("Initializing MPL115A2...");
 
       /* try to open port */
-      if ((status = I2C_Open(I2C_NUMBER)) == STD_RET_OK)
+      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
       {
             /* set MPL115A2 address */
             tmp[0] = MPL115A2_ADDRESS;
-            if ((status = I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0])) != STD_RET_OK)
+            if ((status = ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp[0])) != STD_RET_OK)
                   goto MPL115A2_Init_Error;
 
             /* read coefficient values */
-            if ((status = I2C_Read(I2C_NUMBER, &tmp, 8, REG_A0_MSB)) != STD_RET_OK)
+            fseek(i2c, REG_A0_MSB, 0);
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == sizeof(tmp))
                   goto MPL115A2_Init_Error;
 
             /* parse received data */
@@ -141,7 +143,7 @@ stdRet_t MPL115A2_Init(void)
 
             /* close port */
             MPL115A2_Init_ClosePort:
-            I2C_Close(I2C_NUMBER);
+            fclose(i2c);
       }
       else
       {
@@ -167,24 +169,27 @@ stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
       stdRet_t status = STD_RET_ERROR;
       u8_t     tmp[2];
       u16_t    temp;
+      FILE_t   *i2c;
 
       /* try to open port */
-      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
+      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
       {
             /* set MPL115A2 address */
             tmp[0] = MPL115A2_ADDRESS;
-            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+            if ((status = ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp[0])) != STD_RET_OK)
                   goto MPL115A2_GetTemperature_ClosePort;
 
             /* start new conversion */
             tmp[0] = 0x01;
-            if (I2C_Write(I2C_NUMBER, &tmp, 1, REG_CONVERT) != STD_RET_OK)
+            fseek(i2c, REG_CONVERT, 0);
+            if (fwrite(&tmp, sizeof(u8_t), 1, i2c) == 1)
                   goto MPL115A2_GetTemperature_ClosePort;
 
             Sleep(5);
 
             /* load temperature */
-            if (I2C_Read(I2C_NUMBER, &tmp, sizeof(tmp), REG_TADC_MSB) != STD_RET_OK)
+            fseek(i2c, REG_TADC_MSB, 0);
+            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == sizeof(tmp))
                   goto MPL115A2_GetTemperature_ClosePort;
 
             /* binds temperature */
@@ -193,7 +198,7 @@ stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
 
             /* close port */
             MPL115A2_GetTemperature_ClosePort:
-            I2C_Close(I2C_NUMBER);
+            fclose(i2c);
             status = STD_RET_OK;
       }
 
@@ -215,24 +220,27 @@ stdRet_t MPL115A2_GetPressure(u16_t *pressure)
 {
       stdRet_t status = STD_RET_ERROR;
       u8_t     tmp[4];
+      FILE_t   *i2c;
 
       /* try to open port */
-      if (I2C_Open(I2C_NUMBER) == STD_RET_OK)
+      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
       {
             /* set MPL115A2 address */
             tmp[0] = MPL115A2_ADDRESS;
-            if (I2C_IOCtl(I2C_NUMBER, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+            if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
                   goto MPL115A2_GetPressure_ClosePort;
 
             /* start new conversion */
             tmp[0] = 0x01;
-            if (I2C_Write(I2C_NUMBER, &tmp, 1, REG_CONVERT) != STD_RET_OK)
+            fseek(i2c, REG_CONVERT, 0);
+            if (fwrite(&tmp, sizeof(u8_t), 1, i2c) == 1)
                   goto MPL115A2_GetPressure_ClosePort;
 
             Sleep(5);
 
             /* load temperature */
-            if (I2C_Read(I2C_NUMBER, &tmp, sizeof(tmp), REG_PADC_MSB) != STD_RET_OK)
+            fseek(i2c, REG_PADC_MSB, 0);
+            if (fread(&tmp, sizeof(u8_t), sizeof(tmp), i2c) == sizeof(tmp))
                   goto MPL115A2_GetPressure_ClosePort;
 
             /* binds pressure */
@@ -254,7 +262,7 @@ stdRet_t MPL115A2_GetPressure(u16_t *pressure)
 
             /* close port */
             MPL115A2_GetPressure_ClosePort:
-            I2C_Close(I2C_NUMBER);
+            fclose(i2c);
             status = STD_RET_OK;
       }
 

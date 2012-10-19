@@ -199,10 +199,10 @@ stdRet_t ETHER_Close(dev_t dev)
  * @param size    size
  * @param seek    seek
  *
- * @retval STD_STATUS_OK
+ * @retval number of written nitems
  */
 //================================================================================================//
-stdRet_t ETHER_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t ETHER_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)src;
@@ -210,7 +210,7 @@ stdRet_t ETHER_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t se
       (void)seek;
       (void)nitems;
 
-      return STD_RET_OK;
+      return 0;
 }
 
 
@@ -223,10 +223,10 @@ stdRet_t ETHER_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t se
  * @param size    size
  * @param seek    seek
  *
- * @retval STD_STATUS_OK
+ * @retval number of read nitems
  */
 //================================================================================================//
-stdRet_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)dst;
@@ -234,7 +234,7 @@ stdRet_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t see
       (void)seek;
       (void)nitems;
 
-      return STD_RET_OK;
+      return 0;
 }
 
 

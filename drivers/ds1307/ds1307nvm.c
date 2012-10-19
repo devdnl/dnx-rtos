@@ -56,7 +56,8 @@ extern "C"
 /*==================================================================================================
  Local object definitions
  ==================================================================================================*/
-u32_t lock;
+static u32_t    lock;
+static stdRet_t status;
 
 
 /*==================================================================================================
@@ -149,20 +150,21 @@ stdRet_t DS1307NVM_Close(dev_t dev)
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
  *
- * @retval STD_RET_OK                     operation success
- * @retval STD_RET_ERROR                  error
+ * @retval number of written nitems
  */
 //================================================================================================//
-stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
 
-      stdRet_t status = STD_RET_ERROR;
-      u8_t     tmp;
-      FILE_t   *i2c;
+      size_t n = 0;
+      u8_t   tmp;
+      FILE_t *i2c;
 
       if (lock == (u32_t)TaskGetPID())
       {
+            status = STD_RET_ERROR;
+
             if (src && size && nitems)
             {
                   /* try open port */
@@ -179,6 +181,7 @@ stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t nitems, size_
                               goto WriteRAM_ClosePort;
 
                         status = STD_RET_OK;
+                        n = nitems;
 
                         /* close port */
                         WriteRAM_ClosePort:
@@ -187,7 +190,7 @@ stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t nitems, size_
             }
       }
 
-      return status;
+      return n;
 }
 
 
@@ -200,20 +203,21 @@ stdRet_t DS1307NVM_Write(dev_t dev, void *src, size_t size, size_t nitems, size_
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
  *
- * @retval STD_RET_OK                     operation success
- * @retval STD_RET_ERROR                  error
+ * @retval number of read nitems
  */
 //================================================================================================//
-stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
 
-      stdRet_t status = STD_RET_ERROR;
-      u8_t     tmp;
-      FILE_t   *i2c;
+      size_t n = 0;
+      u8_t   tmp;
+      FILE_t *i2c;
 
       if (lock == (u32_t)TaskGetPID())
       {
+            status = STD_RET_ERROR;
+
             if (dst && size && nitems)
             {
                   /* try open port */
@@ -230,6 +234,7 @@ stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t
                               goto ReadRAM_ClosePort;
 
                         status = STD_RET_OK;
+                        n = nitems;
 
                         /* close port */
                         ReadRAM_ClosePort:
@@ -238,7 +243,7 @@ stdRet_t DS1307NVM_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t
             }
       }
 
-      return status;
+      return n;
 }
 
 

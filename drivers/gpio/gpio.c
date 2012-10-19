@@ -333,10 +333,10 @@ stdRet_t GPIO_Close(dev_t dev)
  * @param size    size
  * @param seek    seek
  *
- * @retval STD_STATUS_OK
+ * @retval number of written nitems
  */
 //================================================================================================//
-stdRet_t GPIO_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t GPIO_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)src;
@@ -344,7 +344,7 @@ stdRet_t GPIO_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t see
       (void)seek;
       (void)nitems;
 
-      return STD_RET_OK;
+      return 0;
 }
 
 
@@ -357,10 +357,10 @@ stdRet_t GPIO_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t see
  * @param size    size
  * @param seek    seek
  *
- * @retval STD_STATUS_OK
+ * @retval number of read nitems
  */
 //================================================================================================//
-stdRet_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)dst;
@@ -368,7 +368,7 @@ stdRet_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek
       (void)seek;
       (void)nitems;
 
-      return STD_RET_OK;
+      return 0;
 }
 
 

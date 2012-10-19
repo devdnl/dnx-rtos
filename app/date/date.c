@@ -32,7 +32,6 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "date.h"
-#include "ds1307.h"
 #include "utils.h"
 #include <string.h>
 
@@ -71,104 +70,114 @@ stdRet_t appmain(ch_t *argv)
       const ch_t *monthsNames[]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-      bcdTime_t  time;
-      bcdDate_t  date;
+      stdRet_t  status = STD_RET_OK;
+      bcdTime_t time;
+      bcdDate_t date;
+      FILE_t    *rtc;
 
-      if ( (ParseArg(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-         ||(ParseArg(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+      rtc = fopen("dev/rtc", NULL);
+
+      if (rtc)
       {
-            print("Syntax: %s [OPTION]...\n", DATE_NAME);
-            print("Print actual time and date.\n");
-            print("  -S,  --set    set RTC time and date\n");
-            print("  -H,           hours\n");
-            print("  -m,           minutes\n");
-            print("  -s,           seconds\n");
-            print("  -Y,           year\n");
-            print("  -M,           month\n");
-            print("  -D,           day\n");
-            print("       --stack  print free stack\n");
-      }
-      else if ( (ParseArg(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-              ||(ParseArg(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
-      {
-            i32_t ahours   = 0;
-            i32_t aminutes = 0;
-            i32_t aseconds = 0;
-            i32_t ayear    = 0;
-            i32_t amonth   = 1;
-            i32_t adate    = 1;
+            if ( (ParseArg(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+               ||(ParseArg(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+            {
+                  print("Syntax: %s [OPTION]...\n", DATE_NAME);
+                  print("Print actual time and date.\n");
+                  print("  -S,  --set    set RTC time and date\n");
+                  print("  -H,           hours\n");
+                  print("  -m,           minutes\n");
+                  print("  -s,           seconds\n");
+                  print("  -Y,           year\n");
+                  print("  -M,           month\n");
+                  print("  -D,           day\n");
+                  print("       --stack  print free stack\n");
+            }
+            else if ( (ParseArg(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+                    ||(ParseArg(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+            {
+                  i32_t ahours   = 0;
+                  i32_t aminutes = 0;
+                  i32_t aseconds = 0;
+                  i32_t ayear    = 0;
+                  i32_t amonth   = 1;
+                  i32_t adate    = 1;
 
-            ParseArg(argv, "H", PARSE_AS_DEC, &ahours);
-            ParseArg(argv, "m", PARSE_AS_DEC, &aminutes);
-            ParseArg(argv, "s", PARSE_AS_DEC, &aseconds);
+                  ParseArg(argv, "H", PARSE_AS_DEC, &ahours);
+                  ParseArg(argv, "m", PARSE_AS_DEC, &aminutes);
+                  ParseArg(argv, "s", PARSE_AS_DEC, &aseconds);
 
-            ParseArg(argv, "Y", PARSE_AS_DEC, &ayear);
-            ParseArg(argv, "M", PARSE_AS_DEC, &amonth);
-            ParseArg(argv, "D", PARSE_AS_DEC, &adate);
+                  ParseArg(argv, "Y", PARSE_AS_DEC, &ayear);
+                  ParseArg(argv, "M", PARSE_AS_DEC, &amonth);
+                  ParseArg(argv, "D", PARSE_AS_DEC, &adate);
 
-            /* check time range */
-            if (ahours > 23)
-                  ahours = 23;
+                  /* check time range */
+                  if (ahours > 23)
+                        ahours = 23;
 
-            if (aminutes > 59)
-                  aminutes = 59;
+                  if (aminutes > 59)
+                        aminutes = 59;
 
-            if (aseconds > 59)
-                  aseconds = 59;
+                  if (aseconds > 59)
+                        aseconds = 59;
 
-            /* check date range */
-            if (ayear > 99)
-                  ayear = 99;
+                  /* check date range */
+                  if (ayear > 99)
+                        ayear = 99;
 
-            if (amonth > 12)
-                  amonth = 12;
-            else if (amonth < 1)
-                  amonth = 1;
+                  if (amonth > 12)
+                        amonth = 12;
+                  else if (amonth < 1)
+                        amonth = 1;
 
-            if (adate > 31)
-                  adate = 31;
-            else if (adate < 1)
-                  adate = 1;
+                  if (adate > 31)
+                        adate = 31;
+                  else if (adate < 1)
+                        adate = 1;
 
-            /* convert values to BCD */
-            time.hours   = UTL_Byte2BCD(ahours);
-            time.minutes = UTL_Byte2BCD(aminutes);
-            time.seconds = UTL_Byte2BCD(aseconds);
-            date.year    = UTL_Byte2BCD(ayear);
-            date.month   = UTL_Byte2BCD(amonth);
-            date.day     = UTL_Byte2BCD(adate);
+                  /* convert values to BCD */
+                  time.hours   = UTL_Byte2BCD(ahours);
+                  time.minutes = UTL_Byte2BCD(aminutes);
+                  time.seconds = UTL_Byte2BCD(aseconds);
+                  date.year    = UTL_Byte2BCD(ayear);
+                  date.month   = UTL_Byte2BCD(amonth);
+                  date.day     = UTL_Byte2BCD(adate);
 
-            if ( (DS1307_SetTime(time) != STD_RET_OK)
-               ||(DS1307_SetDate(date) != STD_RET_OK) )
-                  print("ERROR: unable to set RTC\n");
+                  if ( (ioctl(rtc, RTC_IORQ_SETTIME, &time) != STD_RET_OK)
+                     ||(ioctl(rtc, RTC_IORQ_SETDATE, &date) != STD_RET_OK) )
+                  {
+                        print("ERROR: unable to set RTC\n");
+                        status = STD_RET_ERROR;
+                  }
+            }
             else
-                  print("Done.\n");
-      }
-      else
-      {
-            /* show time */
-//            time = DS1307_GetTime();
-//            date = DS1307_GetDate();
+            {
+                  /* show time */
+                  ioctl(rtc, RTC_IORQ_GETTIME, &time);
+                  ioctl(rtc, RTC_IORQ_GETDATE, &date);
 
-            u8_t month   = UTL_BCD2Byte(date.month);
-            u8_t weekday = UTL_BCD2Byte(date.weekday);
+                  u8_t month   = UTL_BCD2Byte(date.month);
+                  u8_t weekday = UTL_BCD2Byte(date.weekday);
 
-            if (date.day == 0)
-                  date.day++;
+                  if (date.day == 0)
+                        date.day++;
 
-            if (date.month == 0)
-                  date.month++;
+                  if (date.month == 0)
+                        date.month++;
 
-            print("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
-                  weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
-                  time.hours, time.minutes, time.seconds);
+                  print("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
+                        weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
+                        time.hours, time.minutes, time.seconds);
+            }
       }
 
       /* show stack free space if requested */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+      {
             print("Free stack: %d levels\n", SystemGetStackFreeSpace());
+      }
 
-      return STD_RET_OK;
+      return status;
 }
 
 /* End of application section declaration */

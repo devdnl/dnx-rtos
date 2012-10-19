@@ -658,12 +658,12 @@ stdRet_t UART_Close(dev_t dev)
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-stdRet_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
 
-      stdRet_t status    = UART_STATUS_PORTNOTEXIST;
-      USART_t  *usartPtr = NULL;
+      size_t  n = 0;
+      USART_t *usartPtr = NULL;
 
       /* check port range */
       if ((unsigned)dev < UART_DEV_LAST)
@@ -685,6 +685,7 @@ stdRet_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t see
                               {
                                     usartPtr->DR = *(dataPtr++);
                                     dataSize--;
+                                    n++;
                               }
                               else
                               {
@@ -693,20 +694,12 @@ stdRet_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t see
                         }
                         while (dataSize);
 
-                        status = STD_RET_OK;
+                        n /= size;
                   }
-                  else
-                  {
-                        status = UART_STATUS_INCORRECTSIZE;
-                  }
-            }
-            else
-            {
-                  status = UART_STATUS_PORTLOCKED;
             }
       }
 
-      return status;
+      return n;
 }
 
 
@@ -725,11 +718,11 @@ stdRet_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t see
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-stdRet_t UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
 
-      stdRet_t status = UART_STATUS_PORTNOTEXIST;
+      size_t n = 0;
 
       /* check port range */
       if ((unsigned)dev < UART_DEV_LAST)
@@ -759,6 +752,8 @@ stdRet_t UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek
 
                                     dataSize--;
 
+                                    n++;
+
                                     TaskExitCritical();
                               }
                               else
@@ -769,20 +764,12 @@ stdRet_t UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek
                         }
                         while (dataSize);
 
-                        status = STD_RET_OK;
+                        n /= size;
                   }
-                  else
-                  {
-                        status = UART_STATUS_INCORRECTSIZE;
-                  }
-            }
-            else
-            {
-                  status = UART_STATUS_PORTLOCKED;
             }
       }
 
-      return status;
+      return n;
 }
 
 

@@ -33,6 +33,7 @@ extern "C" {
 ==================================================================================================*/
 #include "vfs.h"
 #include "regdrv.h"
+#include "memman.h"
 #include <string.h>
 
 
@@ -149,20 +150,22 @@ stdRet_t fclose(FILE_t *file)
  * @param *file               pointer to file object
  *
  * @return STD_RET_OK or 0 if write finished successfully, otherwise > 0
- * DNLFIXME implement: seek modification after write
  */
 //================================================================================================//
 size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
+      size_t n = 0;
+
       if (ptr && size && nitems && file)
       {
             if (file->write)
             {
-                  return file->write(file->fd, ptr, size, nitems, file->seek);
+                  n = file->write(file->fd, ptr, size, nitems, file->seek);
+                  file->seek += n;
             }
       }
 
-      return STD_RET_ERROR;
+      return n;
 }
 
 
@@ -175,22 +178,23 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @param nitems              number of items
  * @param *file               pointer to file object
  *
- * @return number of read items DNLFIXME implement: function shall return number of read items
- * DNLFIXME implement: seek modification after read
+ * @return number of read items
  */
 //================================================================================================//
 size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
+      size_t n = 0;
+
       if (ptr && size && nitems && file)
       {
             if (file->read)
             {
-                  u32_t n = file->read(file->fd, ptr, size, nitems, file->seek);
-                  return n;
+                  n = file->read(file->fd, ptr, size, nitems, file->seek);
+                  file->seek += n;
             }
       }
 
-      return 0;
+      return n;
 }
 
 

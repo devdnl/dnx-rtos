@@ -60,8 +60,8 @@ enum GPIO_DEV_NUMBER_enum
 extern stdRet_t GPIO_Init(dev_t dev);
 extern stdRet_t GPIO_Open(dev_t dev);
 extern stdRet_t GPIO_Close(dev_t dev);
-extern stdRet_t GPIO_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern stdRet_t GPIO_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek);
+extern size_t   GPIO_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   GPIO_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek);
 extern stdRet_t GPIO_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
 extern stdRet_t GPIO_Release(dev_t dev);
 

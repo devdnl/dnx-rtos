@@ -72,6 +72,7 @@ static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout);
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+/* DNLTODO fix: global variables must be in dynamic memory */
 /** port localizations */
 static PortHandle_t PortHandle[] =
 {
@@ -97,6 +98,9 @@ static PortHandle_t PortHandle[] =
       #endif
       #endif
 };
+
+/* last status */
+static stdRet_t status;
 
 
 /*==================================================================================================
@@ -286,19 +290,12 @@ stdRet_t I2C_Close(dev_t dev)
  * @param[in] size          data size
  * @param[in] seek          register address
  *
- * @retval STD_RET_OK                     operation success
- * @retval I2C_STATUS_PORTNOTEXIST        port not exist
- * @retval I2C_STATUS_PORTLOCKED          port locked
- * @retval I2C_STATUS_OVERRUN             overrun
- * @retval I2C_STATUS_ACK_FAILURE         ack failure
- * @retval I2C_STATUS_ARB_LOST            arbitration lost error
- * @retval I2C_STATUS_BUS_ERROR           bus error
- * @retval I2C_STATUS_ERROR               more than 1 error
+ * @retval number of written nitems
  */
 //================================================================================================//
-stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
-      stdRet_t status = I2C_STATUS_PORTNOTEXIST;
+      size_t n = 0;
 
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
@@ -317,37 +314,48 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek
                   u8_t  *data   = (u8_t *)src;
 
                   /* start condition */
-                  if ((status = StartCondition(i2cPtr,
-                                               (PortHandle[dev].SlaveAddress << 1) & 0xFE
-                                              ) ) != STD_RET_OK)
+                  if ((status = StartCondition(i2cPtr, (PortHandle[dev].SlaveAddress << 1) & 0xFE))
+                     != STD_RET_OK)
+                  {
                         goto I2C_Write_end;
+                  }
 
                   /* send register address */
                   u8_t regAddr = seek;
 
                   if ((status = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
+                  {
                         goto I2C_Write_end;
+                  }
 
                   /* send data */
                   if ((status = SendData(i2cPtr, data, nitems * size)) != STD_RET_OK)
+                  {
                         goto I2C_Write_end;
+                  }
 
                   /* stop condition */
                   while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
                   {
-                     TaskDelay(1);
+                        TaskDelay(1);
                   }
 
                   StopCondition(i2cPtr);
+
+                  n = nitems;
             }
             else
             {
                   status = I2C_STATUS_PORTLOCKED;
             }
       }
+      else
+      {
+            status = I2C_STATUS_PORTNOTEXIST;
+      }
 
       I2C_Write_end:
-            return status;
+            return n;
 }
 
 
@@ -360,19 +368,12 @@ stdRet_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek
  * @param[in ] size          data size
  * @param[in ] seek          register address
  *
- * @retval STD_RET_OK                     operation success
- * @retval I2C_STATUS_PORTNOTEXIST        port not exist
- * @retval I2C_STATUS_PORTLOCKED          port locked
- * @retval I2C_STATUS_OVERRUN             overrun
- * @retval I2C_STATUS_ACK_FAILURE         ack failure
- * @retval I2C_STATUS_ARB_LOST            arbitration lost error
- * @retval I2C_STATUS_BUS_ERROR           bus error
- * @retval I2C_STATUS_ERROR               more than 1 error
+ * @retval number of written nitems
  */
 //================================================================================================//
-stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      stdRet_t status = I2C_STATUS_PORTNOTEXIST;
+      size_t n = 0;
 
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
@@ -392,7 +393,7 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
                   /* start condition */
                   if ((status = StartCondition(i2cPtr,
                                                (PortHandle[dev].SlaveAddress << 1) & 0xFE
-                                              ) ) != STD_RET_OK)
+                                               ) ) != STD_RET_OK)
                         goto I2C_Read_end;
 
                   /* send register address */
@@ -404,7 +405,7 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
                   /* waiting for data send was finished */
                   while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
                   {
-                     TaskDelay(1);
+                        TaskDelay(1);
                   }
 
                   /* check if is only 1 byte to send */
@@ -425,15 +426,21 @@ stdRet_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 
                   /* stop condition */
                   StopCondition(i2cPtr);
+
+                  n = nitems;
             }
             else
             {
                   status = I2C_STATUS_PORTLOCKED;
             }
       }
+      else
+      {
+            status = I2C_STATUS_PORTNOTEXIST;
+      }
 
       I2C_Read_end:
-            return status;
+            return n;
 }
 
 
@@ -486,6 +493,12 @@ stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
                         case I2C_IORQ_SETSCLFREQ:
                         {
                               i2cPtr->CCR = SetSCLFreq(*((u32_t *)data));
+                              break;
+                        }
+
+                        case I2C_IORQ_GETSTATUS:
+                        {
+                              *(stdRet_t*)data = status;
                               break;
                         }
 
