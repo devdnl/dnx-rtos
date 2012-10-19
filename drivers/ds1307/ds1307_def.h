@@ -1,11 +1,11 @@
-#ifndef DS1307RTC_H_
-#define DS1307RTC_H_
+#ifndef DS1307_DEF_H_
+#define DS1307_DEF_H_
 /*=============================================================================================*//**
-@file    ds1307rtc.h
+@file    ds1307_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support DS1307 especially RTC
+@brief   This file support DS1307 definitions
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,18 +33,27 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "ds1307rtc_def.h"
-#include "system.h"
+#include "basic_types.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-#define DS1307RTC_DEV_NONE       0
+/** define DS1307 RAM size */
+#define NVM_RAM_SIZE                56
+
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/** ds1307 RTC requests */
+enum RTC_IORQ_enum
+{
+      RTC_IORQ_GETTIME,                   /* out bcdTime_t */
+      RTC_IORQ_SETTIME,                   /* in  bcdTime_t */
+      RTC_IORQ_GETDATE,                   /* out bcdDate_t */
+      RTC_IORQ_SETDATE,                   /* in  bcdDate_t */
+};
 
 
 /*==================================================================================================
@@ -55,19 +64,12 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t DS1307RTC_Init(dev_t dev);
-extern stdRet_t DS1307RTC_Open(dev_t dev);
-extern stdRet_t DS1307RTC_Close(dev_t dev);
-extern size_t   DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t DS1307RTC_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t DS1307RTC_Release(dev_t dev);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* DS1307RTC_H_ */
+#endif /* DS1307_DEF_H_ */
 /*==================================================================================================
                                              End of file
 ==================================================================================================*/

@@ -43,8 +43,7 @@ CSRC = $(sort \
    app/httpd/httpd.c \
    cpu/stm32/stm32f10x_vectors.c \
    drivers/regdrv.c \
-   drivers/ds1307/ds1307rtc.c \
-   drivers/ds1307/ds1307nvm.c \
+   drivers/ds1307/ds1307.c \
    drivers/ether/ether.c \
    drivers/gpio/gpio.c \
    drivers/i2c/i2c.c \

@@ -5,7 +5,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support DS1307 NVM
+@brief   This file support DS1307
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,59 +33,20 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "ds1307_def.h"
+#include "system.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-/** DS1307 write address */
-#define DS1307_ADDRESS              0x68
-
-/** DS1307 I2C interface number */
-#define I2C_NUMBER                  I2C_DEV_1
-
-/** define CH bit */
-#define DS1307_REG_SECONDS_CH_BP    7
-#define DS1307_REG_SECONDS_CH_BM    (1 << DS1307_REG_SECONDS_CH_BP)
-
-/** define PM bit */
-#define DS1307_REG_HOURS_PM_BP      5
-#define DS1307_REG_HOURS_PM_BM      (1 << DS1307_REG_HOURS_PM_BP)
-
-/** define RS0 bit */
-#define DS1307_REG_CTRL_RS0_BP      0
-#define DS1307_REG_CTRL_RS0_BM      (1 << DS1307_REG_CTRL_RS0_BP)
-
-/** define RS1 bit */
-#define DS1307_REG_CTRL_RS1_BP      1
-#define DS1307_REG_CTRL_RS1_BM      (1 << DS1307_REG_CTRL_RS1_BP)
-
-/** define SQWE bit */
-#define DS1307_REG_CTRL_SQWE_BP     4
-#define DS1307_REG_CTRL_SQWE_BM     (1 << DS1307_REG_CTRL_SQWE_BP)
-
-/** define OUT bit */
-#define DS1307_REG_CTRL_OUT_BP      7
-#define DS1307_REG_CTRL_OUT_BM      (1 << DS1307_REG_CTRL_OUT_BP)
+#define DS1307_DEV_RTC        0
+#define DS1307_DEV_NVM        1
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** define registers addresses in DS1307 */
-enum ds1307_reg_enum
-{
-      REG_SECONDS   = 0x00,
-      REG_MINUTES   = 0x01,
-      REG_HOURS     = 0x02,
-      REG_DAY       = 0x03,
-      REG_DATE      = 0x04,
-      REG_MONTH     = 0x05,
-      REG_YEAR      = 0x06,
-      REG_CTRL      = 0x07,
-      REG_RAM_BEGIN = 0x08,
-      REG_RAM_END   = 0x40
-};
 
 
 /*==================================================================================================
@@ -96,6 +57,13 @@ enum ds1307_reg_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
+extern stdRet_t DS1307_Init(dev_t dev);
+extern stdRet_t DS1307_Open(dev_t dev);
+extern stdRet_t DS1307_Close(dev_t dev);
+extern size_t   DS1307_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   DS1307_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t DS1307_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
+extern stdRet_t DS1307_Release(dev_t dev);
 
 
 #ifdef __cplusplus

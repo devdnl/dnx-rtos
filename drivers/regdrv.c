@@ -41,8 +41,7 @@ extern "C" {
 #include "pll.h"
 #include "i2c.h"
 #include "ether.h"
-#include "ds1307rtc.h"
-#include "ds1307nvm.h"
+#include "ds1307.h"
 
 
 /*==================================================================================================
@@ -104,14 +103,14 @@ static const regDrv_t drvList[] =
              ETHER_IOCtl,           ETHER_Release,          ETH_DEV_1
       },
       {
-             "ds1307rtc",           DS1307RTC_Init,         DS1307RTC_Open,
-             DS1307RTC_Close,       DS1307RTC_Write,        DS1307RTC_Read,
-             DS1307RTC_IOCtl,       DS1307RTC_Release,      DS1307RTC_DEV_NONE
+             "ds1307nvm",           DS1307_Init,            DS1307_Open,
+             DS1307_Close,          DS1307_Write,           DS1307_Read,
+             DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_NVM
       },
       {
-             "ds1307nvm",           DS1307NVM_Init,         DS1307NVM_Open,
-             DS1307NVM_Close,       DS1307NVM_Write,        DS1307NVM_Read,
-             DS1307NVM_IOCtl,       DS1307NVM_Release,      DS1307NVM_DEV_NONE
+             "ds1307rtc",           DS1307_Init,            DS1307_Open,
+             DS1307_Close,          DS1307_Write,           DS1307_Read,
+             DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_RTC
       },
 };
 
@@ -169,6 +168,10 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
                         {
                               devName->node[i] = nodeName;
                               kprint("Created node /dev/%s\n", nodeName);
+                        }
+                        else
+                        {
+                              kprint("Create node /dev/%s error\n", nodeName);
                         }
                         break;
                   }

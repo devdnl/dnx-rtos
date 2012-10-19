@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
- @file    ds1307rtc.c
+ @file    ds1307.c
 
  @author  Daniel Zorychta
 
- @brief   This file support DS1307 RTC
+ @brief   This file support DS1307
 
  @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -30,27 +30,75 @@ extern "C"
 #endif
 
 /*==================================================================================================
- Include files
+                                            Include files
 ==================================================================================================*/
 #include "ds1307.h"
-#include "ds1307rtc.h"
 #include "i2c_def.h"
 
 
 /*==================================================================================================
- Local symbolic constants/macros
+                                  Exported symbolic constants/macros
 ==================================================================================================*/
 #define I2CFILE                     "/dev/i2c"
 #define BCD2BYTE(bcd)               (((bcd >> 4) * 10) + (bcd & 0x0F))
 
+/** DS1307 write address */
+#define DS1307_ADDRESS              0x68
+
+/** DS1307 I2C interface number */
+#define I2C_NUMBER                  I2C_DEV_1
+
+/** define CH bit */
+#define DS1307_REG_SECONDS_CH_BP    7
+#define DS1307_REG_SECONDS_CH_BM    (1 << DS1307_REG_SECONDS_CH_BP)
+
+/** define PM bit */
+#define DS1307_REG_HOURS_PM_BP      5
+#define DS1307_REG_HOURS_PM_BM      (1 << DS1307_REG_HOURS_PM_BP)
+
+/** define RS0 bit */
+#define DS1307_REG_CTRL_RS0_BP      0
+#define DS1307_REG_CTRL_RS0_BM      (1 << DS1307_REG_CTRL_RS0_BP)
+
+/** define RS1 bit */
+#define DS1307_REG_CTRL_RS1_BP      1
+#define DS1307_REG_CTRL_RS1_BM      (1 << DS1307_REG_CTRL_RS1_BP)
+
+/** define SQWE bit */
+#define DS1307_REG_CTRL_SQWE_BP     4
+#define DS1307_REG_CTRL_SQWE_BM     (1 << DS1307_REG_CTRL_SQWE_BP)
+
+/** define OUT bit */
+#define DS1307_REG_CTRL_OUT_BP      7
+#define DS1307_REG_CTRL_OUT_BM      (1 << DS1307_REG_CTRL_OUT_BP)
+
 
 /*==================================================================================================
- Local types, enums definitions
+                                  Local types, enums definitions
+==================================================================================================*/
+/** define registers addresses in DS1307 */
+enum ds1307_reg_enum
+{
+      REG_SECONDS   = 0x00,
+      REG_MINUTES   = 0x01,
+      REG_HOURS     = 0x02,
+      REG_DAY       = 0x03,
+      REG_DATE      = 0x04,
+      REG_MONTH     = 0x05,
+      REG_YEAR      = 0x06,
+      REG_CTRL      = 0x07,
+      REG_RAM_BEGIN = 0x08,
+      REG_RAM_END   = 0x40
+};
+
+
+/*==================================================================================================
+                                   Local types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
- Local function prototypes
+                                     Local function prototypes
 ==================================================================================================*/
 static u8_t      WeekDay(u16_t year, u8_t month, u8_t day);
 static bcdTime_t GetTime(void);
@@ -60,22 +108,27 @@ static stdRet_t  SetDate(bcdDate_t *date);
 
 
 /*==================================================================================================
- Local object definitions
+                                     Local object definitions
 ==================================================================================================*/
-struct rtc_struct
+/* structure used to control RTC and NVM */
+static struct rtc_struct
 {
       bcdTime_t time;
       bcdDate_t date;
+      u32_t     lock;
+      bool_t    nvmInit;
+      bool_t    rtcInit;
 } *rtc;
 
 
+
 /*==================================================================================================
- Exported object definitions
+                                   Exported object definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
- Function definitions
+                                     Function definitions
 ==================================================================================================*/
 
 //================================================================================================//
@@ -88,64 +141,67 @@ struct rtc_struct
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Init(dev_t dev)
+stdRet_t DS1307_Init(dev_t dev)
 {
-      (void)dev;
-
       stdRet_t status = STD_RET_ERROR;
-      u8_t     tmp;
-      FILE_t   *i2c;
 
-      kprint("Initializing RTC...");
+      u8_t   tmp;
+      FILE_t *i2c;
 
-      rtc = Calloc(1, sizeof(struct rtc_struct));
+      if (rtc == NULL)
+      {
+            rtc = Calloc(1, sizeof(struct rtc_struct));
+      }
 
       if (rtc)
       {
-            /* try to open port */
-            if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+            if (dev == DS1307_DEV_RTC)
             {
-                  /* set DS1307 address */
-                  tmp = DS1307_ADDRESS;
-                  if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp) != STD_RET_OK)
-                        goto DS1307_Init_Error;
-
-                  /* read second register */
-                  fseek(i2c, REG_SECONDS, 0);
-                  if (fread(&tmp, sizeof(tmp), 1, i2c) != 1)
-                        goto DS1307_Init_Error;
-
-                  /* enable oscillator if disabled */
-                  if (tmp & DS1307_REG_SECONDS_CH_BM)
+                  /* try to open port */
+                  if ((i2c = fopen(I2CFILE, NULL)) != NULL)
                   {
-                        tmp = 0x00;
+                        /* set DS1307 address */
+                        tmp = DS1307_ADDRESS;
+                        if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp) != STD_RET_OK)
+                        {
+                              goto DS1307_Init_CloseFile;
+                        }
+
+                        /* read second register */
                         fseek(i2c, REG_SECONDS, 0);
-                        if (fwrite(&tmp, sizeof(tmp), 1, i2c) != 1)
-                              goto DS1307_Init_Error;
+
+                        if (fread(&tmp, sizeof(u8_t), 1, i2c) != 1)
+                        {
+                              goto DS1307_Init_CloseFile;
+                        }
+
+                        /* enable oscillator if disabled */
+                        if (tmp & DS1307_REG_SECONDS_CH_BM)
+                        {
+                              tmp = 0x00;
+                              fseek(i2c, REG_SECONDS, 0);
+
+                              if (fwrite(&tmp, sizeof(u8_t), 1, i2c) != 1)
+                              {
+                                    goto DS1307_Init_CloseFile;
+                              }
+                        }
+
+                        /* operation success */
+                        status = STD_RET_OK;
+                        rtc->rtcInit = TRUE;
+
+                        /* close port */
+                        DS1307_Init_CloseFile:
+                        fclose(i2c);
                   }
-
-                  /* operation success */
-                  kprintOK();
-                  status = STD_RET_OK;
-                  goto DS1307_Init_ClosePort;
-
-                  /* error occur */
-                  DS1307_Init_Error:
-                  kprintFail();
-
-                  /* close port */
-                  DS1307_Init_ClosePort:
-                  fclose(i2c);
             }
-            else
+            else if (dev == DS1307_DEV_NVM)
             {
-                  Free(rtc);
-                  kprintFail();
+                  rtc->nvmInit = TRUE;
+                  rtc->lock = EMPTY_TASK;
+                  status = STD_RET_OK;
             }
-      }
-      else
-      {
-            kprintFail();
       }
 
       return status;
@@ -156,17 +212,34 @@ stdRet_t DS1307RTC_Init(dev_t dev)
 /**
  * @brief Opens specified port and initialize default settings
  *
- * @param[in]  dev                        RTC name (number)
+ * @param[in]  dev                        dev name (number)
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Open(dev_t dev)
+stdRet_t DS1307_Open(dev_t dev)
 {
-      (void)dev;
+      stdRet_t status = STD_RET_ERROR;
 
-      return STD_RET_OK;
+      if (dev == DS1307_DEV_NVM)
+      {
+            TaskSuspendAll();
+
+            if (rtc->lock == EMPTY_TASK)
+            {
+                  rtc->lock = TaskGetPID();
+                  status = STD_RET_OK;
+            }
+
+            TaskResumeAll();
+      }
+      else if (dev == DS1307_DEV_RTC)
+      {
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 
@@ -174,17 +247,30 @@ stdRet_t DS1307RTC_Open(dev_t dev)
 /**
  * @brief Function close opened port
  *
- * @param[in]  dev                        RTC name (number)
+ * @param[in]  dev                        dev name (number)
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Close(dev_t dev)
+stdRet_t DS1307_Close(dev_t dev)
 {
-      (void)dev;
+      stdRet_t status = STD_RET_ERROR;
 
-      return STD_RET_OK;
+      if (dev == DS1307_DEV_NVM)
+      {
+            if (rtc->lock == (u32_t)TaskGetPID())
+            {
+                  rtc->lock = EMPTY_TASK;
+                  status = STD_RET_OK;
+            }
+      }
+      else if (dev == DS1307_DEV_RTC)
+      {
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 
@@ -192,23 +278,48 @@ stdRet_t DS1307RTC_Close(dev_t dev)
 /**
  * @brief Write data to UART (ISR or DMA)
  *
- * @param[in]  dev                        RTC name (number)
+ * @param[in]  dev                        dev name (number)
  * @param[in]  *src                       source buffer
- * @param[in]  size                       buffer size
+ * @param[in]  size                       item size
+ * @param[in]  nitems                     number of items
  * @param[in]  seek                       seek
  *
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t DS1307_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
-      (void)src;
-      (void)size;
-      (void)seek;
-      (void)nitems;
+      size_t n = 0;
+      u8_t   tmp;
+      FILE_t *i2c;
 
-      return 0;
+      if (dev == DS1307_DEV_NVM)
+      {
+            if (rtc->lock == (u32_t)TaskGetPID())
+            {
+                  if (src && size && nitems)
+                  {
+                        /* try open port */
+                        if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+                        {
+                              /* set DS1307 address */
+                              tmp = DS1307_ADDRESS;
+                              if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp) != STD_RET_OK)
+                                    goto WriteRAM_ClosePort;
+
+                              /* write data into RAM */
+                              fseek(i2c, REG_RAM_BEGIN + seek, 0);
+                              n = fwrite(src, size, nitems, i2c);
+
+                              /* close port */
+                              WriteRAM_ClosePort:
+                              fclose(i2c);
+                        }
+                  }
+            }
+      }
+
+      return n;
 }
 
 
@@ -221,18 +332,42 @@ size_t DS1307RTC_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t 
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
  *
- * @retval number of written nitems
+ * @retval number of read nitems
  */
 //================================================================================================//
-size_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t DS1307_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
-      (void)dst;
-      (void)size;
-      (void)seek;
-      (void)nitems;
+      size_t n = 0;
+      u8_t   tmp;
+      FILE_t *i2c;
 
-      return 0;
+      if (dev == DS1307_DEV_NVM)
+      {
+            if (rtc->lock == (u32_t)TaskGetPID())
+            {
+                  if (dst && size && nitems)
+                  {
+                        /* try open port */
+                        if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+                        {
+                              /* set DS1307 address */
+                              tmp = DS1307_ADDRESS;
+                              if (ioctl(i2c, I2C_IORQ_SETSLAVEADDR, &tmp) != STD_RET_OK)
+                                    goto ReadRAM_ClosePort;
+
+                              /* read data from RAM */
+                              fseek(i2c, REG_RAM_BEGIN + seek, 0);
+                              n = fread(dst, size, nitems, i2c);
+
+                              /* close port */
+                              ReadRAM_ClosePort:
+                              fclose(i2c);
+                        }
+                  }
+            }
+      }
+
+      return n;
 }
 
 
@@ -248,46 +383,47 @@ size_t DS1307RTC_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t s
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307RTC_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
+stdRet_t DS1307_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
 {
-      (void) dev;
-
       stdRet_t status = STD_RET_ERROR;
 
-      if (rtc != NULL)
+      if (dev == DS1307_DEV_RTC)
       {
-            switch (ioRQ)
+            if (rtc != NULL)
             {
-                  case RTC_IORQ_GETTIME:
+                  switch (ioRQ)
                   {
-                        bcdTime_t *time = (bcdTime_t*)data;
-                        *time  = GetTime();
-                        status = STD_RET_OK;
-                        break;
-                  }
+                        case RTC_IORQ_GETTIME:
+                        {
+                              bcdTime_t *time = (bcdTime_t*)data;
+                              *time  = GetTime();
+                              status = STD_RET_OK;
+                              break;
+                        }
 
-                  case RTC_IORQ_SETTIME:
-                  {
-                        status = SetTime(data);
-                        break;
-                  }
+                        case RTC_IORQ_SETTIME:
+                        {
+                              status = SetTime(data);
+                              break;
+                        }
 
-                  case RTC_IORQ_GETDATE:
-                  {
-                        bcdDate_t *date = (bcdDate_t*)data;
-                        *date = GetDate();
-                        status = STD_RET_OK;
-                        break;
-                  }
+                        case RTC_IORQ_GETDATE:
+                        {
+                              bcdDate_t *date = (bcdDate_t*)data;
+                              *date = GetDate();
+                              status = STD_RET_OK;
+                              break;
+                        }
 
-                  case RTC_IORQ_SETDATE:
-                  {
-                        status = SetDate(data);
-                        break;
-                  }
+                        case RTC_IORQ_SETDATE:
+                        {
+                              status = SetDate(data);
+                              break;
+                        }
 
-                  default:
-                        break;
+                        default:
+                              break;
+                  }
             }
       }
 
@@ -304,16 +440,26 @@ stdRet_t DS1307RTC_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t DS1307RTC_Release(dev_t dev)
+stdRet_t DS1307_Release(dev_t dev)
 {
-      (void) dev;
+      stdRet_t status = STD_RET_ERROR;
 
-      if (rtc != NULL)
+      if (dev == DS1307_DEV_RTC)
       {
-            Free(rtc);
+            rtc->nvmInit = FALSE;
+      }
+      else if (dev == DS1307_DEV_NVM)
+      {
+            rtc->rtcInit = FALSE;
       }
 
-      return STD_RET_OK;
+      if (!rtc->rtcInit && !rtc->nvmInit)
+      {
+            Free(rtc);
+            rtc = NULL;
+      }
+
+      return status;
 }
 
 
