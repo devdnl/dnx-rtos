@@ -178,11 +178,13 @@ void Initd(void *arg)
       {
             if (chr)
             {
-                  *chr = TTY_GetCharacter(TTY_GetCurrTTY());
+                  u8_t tty = TTY_GetCurrTTY();
+
+                  *chr = TTY_GetCharacter(tty);
 
                   if (*chr)
                   {
-                        TTY_AddMsg(TTY_GetCurrTTY(), chr);
+                        TTY_AddMsg(tty, chr);
                   }
             }
 

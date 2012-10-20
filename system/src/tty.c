@@ -52,7 +52,7 @@ struct ttyEntry
       ch_t   *line[TTY_MSGS];
       u8_t   newMsg;
       u8_t   msgCnt;
-      flag_t refScr;
+      flag_t refLine;
 
       struct
       {
@@ -135,10 +135,8 @@ void ttyd(void *arg)
             struct ttyEntry *tty = ttyTerm[currentTTY];
 
             /* STDOUT support ------------------------------------------------------------------- */
-            if (tty->refScr == SET)
+            if (tty->refLine == SET)
             {
-//                  RefreshTTY(currentTTY, uartf);
-
                   /* cursor off, carriage return, line erase from cursor */
                   msg = "\x1B[?25l\r\x1B[K";
                   fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
@@ -151,7 +149,7 @@ void ttyd(void *arg)
                   msg = "\x1B[?25h";
                   fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
 
-                  tty->refScr = RESET;
+                  tty->refLine = RESET;
             }
             else if (tty->newMsg > 0)
             {
@@ -355,6 +353,8 @@ static ch_t *GetMsg(u8_t tty, u8_t msg)
 {
       ch_t *ptr = NULL;
 
+      TaskSuspendAll();
+
       if (tty < TTY_COUNT && (msg < TTY_MSGS || msg == TTY_LAST_MSG) && ttyTerm[tty])
       {
             if (msg != TTY_LAST_MSG)
@@ -371,6 +371,8 @@ static ch_t *GetMsg(u8_t tty, u8_t msg)
       {
             ttyTerm[tty]->newMsg--;
       }
+
+      TaskResumeAll();
 
       return ptr;
 }
@@ -398,15 +400,16 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
             }
 
             /* wait to refresh last modified/joined line */
-            while (ttyTerm[tty]->refScr == SET)
+            while ((ttyTerm[tty]->refLine == SET) && (tty == currentTTY))
             {
                   Sleep(10);
             }
 
             /* check if previous message has not line end (\n) */
-            ch_t *lastmsg = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1];
+            u8_t msgcnt   = ttyTerm[tty]->msgCnt;
+            ch_t *lastmsg = ttyTerm[tty]->line[msgcnt - 1];
 
-            if ( (ttyTerm[tty]->msgCnt > 0) && (*(lastmsg + strlen(lastmsg) - 1) != '\n') )
+            if ( (msgcnt > 0) && (*(lastmsg + strlen(lastmsg) - 1) != '\n') )
             {
                   size_t newsize = strlen(lastmsg) + strlen(msg) + 1;
 
@@ -417,11 +420,24 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                         strcpy(modmsg, lastmsg);
                         strcat(modmsg, msg);
 
+                        /* wait to all new messages are showed */
+                        while (ttyTerm[tty]->newMsg && (tty == currentTTY))
+                        {
+                              Sleep(10);
+                        }
+
+                        TaskSuspendAll();
+
                         Free(lastmsg);
 
-                        ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1] = modmsg;
+                        ttyTerm[tty]->line[msgcnt - 1] = modmsg;
 
-                        ttyTerm[tty]->refScr = SET;
+                        if (tty == currentTTY)
+                        {
+                              ttyTerm[tty]->refLine = SET;
+                        }
+
+                        TaskResumeAll();
                   }
             }
             else
@@ -431,6 +447,8 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                   if (localMsg)
                   {
                         strcpy(localMsg, msg);
+
+                        TaskSuspendAll();
 
                         if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
                         {
@@ -450,13 +468,15 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                         {
                               ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = localMsg;
                         }
+
+                        if (ttyTerm[tty]->msgCnt < TTY_MSGS)
+                              ttyTerm[tty]->msgCnt++;
+
+                        if (ttyTerm[tty]->newMsg < TTY_MSGS)
+                              ttyTerm[tty]->newMsg++;
+
+                        TaskResumeAll();
                   }
-
-                  if (ttyTerm[tty]->msgCnt < TTY_MSGS)
-                        ttyTerm[tty]->msgCnt++;
-
-                  if (ttyTerm[tty]->newMsg < TTY_MSGS)
-                        ttyTerm[tty]->newMsg++;
             }
       }
 
