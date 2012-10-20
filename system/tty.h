@@ -60,7 +60,7 @@ extern void TTY_AddMsg(u8_t tty, ch_t *msg);
 extern void TTY_Clear(u8_t tty);
 extern void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg);
 extern u8_t TTY_GetCurrTTY(void);
-extern ch_t TTY_GetCharacter(u8_t tty);
+extern ch_t TTY_GetChr(u8_t tty);
 
 #ifdef __cplusplus
 }

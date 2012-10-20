@@ -108,6 +108,10 @@ void Initd(void *arg)
 {
       (void) arg;
 
+      u8_t currtty = -1;
+      ch_t *string[TTY_COUNT];
+      appArgs_t *apphdl[TTY_COUNT];
+
       /* user initialization */
       InitDrv("i2c1", "i2c");
       InitDrv("ds1307rtc", "rtc");
@@ -130,8 +134,6 @@ void Initd(void *arg)
       }
 
       initd_net_end:
-
-//      DS1307_Init();
 
       MPL115A2_Init();
 
@@ -160,8 +162,8 @@ void Initd(void *arg)
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
 
-      TaskCreate(test1, "testTTY0", MINIMAL_STACK_SIZE, NULL, 3, NULL);
-      TaskCreate(test2, "testTTY1", MINIMAL_STACK_SIZE, NULL, 3, NULL);
+//      TaskCreate(test1, "testTTY0", MINIMAL_STACK_SIZE, NULL, 3, NULL);
+//      TaskCreate(test2, "testTTY1", MINIMAL_STACK_SIZE, NULL, 3, NULL);
 
 
       /*--------------------------------------------------------------------------------------------
@@ -172,33 +174,65 @@ void Initd(void *arg)
 //      bool_t stdoutEmpty = FALSE;
 //      bool_t RxFIFOEmpty = FALSE;
 
-      ch_t *chr = Calloc(2, 1);
+      /* clear main variables */
+      memset(string, 0x00, sizeof(string));
+      memset(apphdl, 0x00, sizeof(apphdl));
 
       for (;;)
       {
-            if (chr)
+            /* load application in created TTY */
+            u8_t lasttty = currtty;
+            if (lasttty != (currtty = TTY_GetCurrTTY()))
             {
-                  u8_t tty = TTY_GetCurrTTY();
-
-                  *chr = TTY_GetCharacter(tty);
-
-                  if (*chr)
+                  if (string[currtty] == NULL)
                   {
-                        TTY_AddMsg(tty, chr);
+                        string[currtty] = Calloc(100, sizeof(ch_t));
+                  }
+
+                  if (string[currtty])
+                  {
+                        if (apphdl[currtty] == NULL)
+                        {
+                              apphdl[currtty] = Exec("terminal", NULL);
+                        }
+
+                        if (!apphdl[currtty])
+                        {
+                              Free(string[currtty]);
+                              kprint("Not enough free memory to start application\n");
+                        }
+                  }
+                  else
+                  {
+                        kprint("Not enough free memory to start application\n");
                   }
             }
 
-            Sleep(10);
             /* STDOUT support ------------------------------------------------------------------- */
-//            if ((character = ufgetChar(appHdl->stdout)) != ASCII_CANCEL)
-//            {
-//                  UART_IOCtl(UART_DEV_1, UART_IORQ_SEND_BYTE, &character);
-//                  stdoutEmpty = FALSE;
-//            }
-//            else
-//            {
-//                  stdoutEmpty = TRUE;
-//            }
+            for (u8_t i = 0; i < TTY_COUNT; i++)
+            {
+                  if (apphdl[i])
+                  {
+                        ch_t chr;
+
+                        if ((chr = ufgetChar(apphdl[i]->stdout)) != ASCII_CANCEL)
+                        {
+                              *(string[i] + 0) = chr;
+                              *(string[i] + 1) = 0;
+                              TTY_AddMsg(i, string[i]);
+                        }
+                  }
+            }
+
+            /* STDIN support -------------------------------------------------------------------- */
+            ch_t chr = TTY_GetChr(currtty);
+
+            if (chr)
+            {
+                  fputChar(apphdl[currtty]->stdin, chr);
+            }
+
+            Sleep(1);
 //
 //            if (TTY_CheckNewMsg(currentTTY))
 //            {

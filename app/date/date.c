@@ -75,7 +75,7 @@ stdRet_t appmain(ch_t *argv)
       bcdDate_t date;
       FILE_t    *rtc;
 
-      rtc = fopen("dev/rtc", NULL);
+      rtc = fopen("/dev/rtc", NULL);
 
       if (rtc)
       {
@@ -169,6 +169,10 @@ stdRet_t appmain(ch_t *argv)
                         weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
                         time.hours, time.minutes, time.seconds);
             }
+      }
+      else
+      {
+            print("Unable to open RTC file\n");
       }
 
       /* show stack free space if requested */

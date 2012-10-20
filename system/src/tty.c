@@ -137,8 +137,8 @@ void ttyd(void *arg)
             /* STDOUT support ------------------------------------------------------------------- */
             if (tty->refLine == SET)
             {
-                  /* cursor off, carriage return, line erase from cursor */
-                  msg = "\x1B[?25l\r\x1B[K";
+                  /* cursor off, carriage return, line erase from cursor, font attributes reset */
+                  msg = "\x1B[?25l\r\x1B[K\x1B[0m";
                   fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
 
                   /* refresh line */
@@ -217,7 +217,7 @@ void ttyd(void *arg)
 //================================================================================================//
 static void RefreshTTY(u8_t tty, FILE_t *file)
 {
-      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H";
+      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H\x1B[0m";
 
       fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
 
@@ -568,7 +568,7 @@ u8_t TTY_GetCurrTTY(void)
  * @return current TTY
  */
 //================================================================================================//
-ch_t TTY_GetCharacter(u8_t tty)
+ch_t TTY_GetChr(u8_t tty)
 {
       ch_t chr = 0;
 

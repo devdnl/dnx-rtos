@@ -164,10 +164,6 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
             return CMD_EXECUTED;
       }
-      else if (appHdl == NULL)
-      {
-            return CMD_ALLOC_ERROR;
-      }
       else
       {
             return CMD_NOT_EXIST;
@@ -191,8 +187,8 @@ stdRet_t appmain(ch_t *argv)
       ch_t        *arg;
 
       /* allocate memory for input line */
-      line    = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
-      history = (ch_t *)Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      line    = Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      history = Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
 
       if (!line || !history)
       {

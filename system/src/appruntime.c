@@ -84,7 +84,7 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
       }
 
       /* allocate memory for application handler */
-      appHandle = (appArgs_t *)Malloc(sizeof(appArgs_t));
+      appHandle = Calloc(1, sizeof(appArgs_t));
 
       if (!appHandle)
       {
@@ -96,8 +96,8 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
       }
 
       /* allocate memory for STDIO */
-      appHandle->stdin  = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
-      appHandle->stdout = (stdioFIFO_t *)Malloc(sizeof(stdioFIFO_t));
+      appHandle->stdin  = Calloc(1, sizeof(stdioFIFO_t));
+      appHandle->stdout = Calloc(1, sizeof(stdioFIFO_t));
 
       if (!appHandle->stdin || !appHandle->stdout)
       {
@@ -120,12 +120,6 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
       /* initialize stdio data */
       appHandle->arg              = arg;
       appHandle->exitCode         = STD_RET_UNKNOWN;
-      appHandle->stdin->Level     = 0;
-      appHandle->stdin->RxIdx     = 0;
-      appHandle->stdin->TxIdx     = 0;
-      appHandle->stdout->Level    = 0;
-      appHandle->stdout->RxIdx    = 0;
-      appHandle->stdout->TxIdx    = 0;
       appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
       appHandle->ChildTaskHandle  = NULL;
 
@@ -167,7 +161,7 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
       }
 
       /* allocate memory for application handler */
-      appHandle = (appArgs_t *)Malloc(sizeof(appArgs_t));
+      appHandle = Calloc(1, sizeof(appArgs_t));
 
       if (!appHandle)
       {
