@@ -97,6 +97,7 @@ extern void  *Calloc(size_t count, size_t size);
 extern void  *Trim(void *rmem, size_t newsize);
 extern void  Free(void *mem);
 extern u32_t GetFreeHeapSize(void);
+extern u32_t GetUsedHeapSize(void);
 
 #ifdef __cplusplus
 }

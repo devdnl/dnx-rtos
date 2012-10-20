@@ -609,6 +609,19 @@ u32_t GetFreeHeapSize(void)
 }
 
 
+//================================================================================================//
+/**
+ * @brief Function return used memory
+ *
+ * @return used memory count
+ */
+//================================================================================================//
+u32_t GetUsedHeapSize(void)
+{
+      return used_mem;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

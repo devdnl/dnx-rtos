@@ -96,17 +96,17 @@ extern "C" {
 #define SystemLockContent()               vTaskSuspendAll()
 #define SystemUnlockContent()             xTaskResumeAll()
 #define SystemGetFreeMemSize()            GetFreeHeapSize()
+#define SystemGetUsedMemSize()            GetUsedHeapSize()
 #define SystemGetMemSize()                configTOTAL_HEAP_SIZE
 #define SystemGetHostname()               LwIP_GetHostname()
 #define SystemGetUptime()                 GetUptimeCnt()
 
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)
-#define APP_SEC_BEGIN                     { InitApp(); clearSTDIN();
+#define APP_SEC_BEGIN                     { InitApp();
 #define APP_SEC_END                       Exit(appmain(argv));}
 
-#define InitApp()                         stdioFIFO_t *stdin  = ((appArgs_t *)appArgument)->stdin; \
-                                          stdioFIFO_t *stdout = ((appArgs_t *)appArgument)->stdout;\
+#define InitApp()                         u8_t tty  = ((appArgs_t *)appArgument)->tty; \
                                           ch_t        *argv   = ((appArgs_t *)appArgument)->arg
 
 

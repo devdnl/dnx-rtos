@@ -28,8 +28,6 @@
                                             Include files
 ==================================================================================================*/
 #include "print.h"
-#include "basic_types.h"
-#include "systypes.h"
 #include <string.h>
 #include "memman.h"
 #include "tty.h"
@@ -48,8 +46,8 @@
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static void reverseBuffer(ch_t *begin, ch_t *end);
-static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg);
+static void  reverseBuffer(ch_t *begin, ch_t *end);
+static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg);
 
 
 /*==================================================================================================
@@ -97,7 +95,7 @@ void DisableKprint(void)
  * @param tty     kprint terminal number
  */
 //================================================================================================//
-void ChangeKprintTTY(u8_t tty)
+void ChangekprintTTY(u8_t tty)
 {
       kprintTTY = tty;
 }
@@ -294,7 +292,7 @@ u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
       if (stream)
       {
             va_start(args, format);
-            n = vsnprint(FALSE, stream, size, format, args);
+            n = vsnprint(stream, size, format, args);
             va_end(args);
       }
 
@@ -306,23 +304,30 @@ u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 /**
  * @brief Function send on a standard output string
  *
- * @param *stdout             stdout
+ * @param tty                 virtual terminal number
  * @param *format             formated text
  * @param ...                 format arguments
  *
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...)
+u32_t tprint(u8_t tty, const ch_t *format, ...)
 {
       va_list args;
-      u32_t n = 0;
+      u32_t n    = 0;
 
-      if (stdout)
+      u32_t size = strlen(format) + 100;
+      ch_t *str  = Calloc(1, size);
+
+      if (str)
       {
             va_start(args, format);
-            n = vsnprint(TRUE, stdout, 0, format, args);
+            n = vsnprint(str, size, format, args);
             va_end(args);
+
+            TTY_AddMsg(tty, str);
+
+            Free(str);
       }
 
       return n;
@@ -351,7 +356,7 @@ u32_t kprint(const ch_t *format, ...)
             if (buffer)
             {
                   va_start(args, format);
-                  n = vsnprint(FALSE, buffer, KPRINT_BUFFER_SIZE, format, args);
+                  n = vsnprint(buffer, KPRINT_BUFFER_SIZE, format, args);
                   va_end(args);
 
                   TTY_AddMsg(kprintTTY, buffer);
@@ -405,172 +410,67 @@ u32_t kprintErrorNo(i8_t errorNo)
 
 //================================================================================================//
 /**
- * @brief Function put character into stdout stream
+ * @brief Function put character into virtual terminal
  *
- * @param *stdout             stdout
+ * @param tty                 virtual terminal
  * @param c                   character
  */
 //================================================================================================//
-void fputChar(stdioFIFO_t *stdout, ch_t c)
+void tputChar(u8_t tty, ch_t c)
 {
-      if (stdout)
-      {
-            while (TRUE)
-            {
-                  TaskSuspendAll();
+      ch_t chr[2] = {c, 0};
 
-                  if (stdout->Level < STDIO_BUFFER_SIZE)
-                  {
-                        stdout->Buffer[stdout->TxIdx++] = c;
-
-                        if (stdout->TxIdx >= STDIO_BUFFER_SIZE)
-                              stdout->TxIdx = 0;
-
-                        stdout->Level++;
-
-                        TaskResumeAll();
-                        return;
-                  }
-                  else
-                  {
-                        TaskResumeAll();
-                        TaskDelay(5);
-                  }
-            }
-      }
+      TTY_AddMsg(tty, chr);
 }
 
 
 //================================================================================================//
 /**
- * @brief Unblocked function put character into stdout stream
+ * @brief Function get character from virtual terminal
  *
- * @param *stdout             stdout
- * @param c                   character
- */
-//================================================================================================//
-void ufputChar(stdioFIFO_t *stdout, ch_t c)
-{
-      if (stdout)
-      {
-            TaskSuspendAll();
-
-            if (stdout->Level < STDIO_BUFFER_SIZE)
-            {
-                  stdout->Buffer[stdout->TxIdx++] = c;
-
-                  if (stdout->TxIdx >= STDIO_BUFFER_SIZE)
-                        stdout->TxIdx = 0;
-
-                  stdout->Level++;
-
-                  TaskResumeAll();
-            }
-      }
-}
-
-
-//================================================================================================//
-/**
- * @brief Function get character from stdin stream
- *
- * @param *stdin            stdin
+ * @param tty            virtual terminal number
  *
  * @retval character
  */
 //================================================================================================//
-ch_t fgetChar(stdioFIFO_t *stdin)
+ch_t tgetChar(u8_t tty)
 {
-      ch_t out = ASCII_CANCEL;
+      u8_t chr = 0;
 
-      if (stdin)
+      while (TRUE)
       {
-            while (TRUE)
+            chr = TTY_GetChr(tty);
+
+            if (chr)
             {
-                  TaskSuspendAll();
-
-                  if (stdin->Level > 0)
-                  {
-                        out = stdin->Buffer[stdin->RxIdx++];
-
-                        if (stdin->RxIdx >= STDIO_BUFFER_SIZE)
-                              stdin->RxIdx = 0;
-
-                        stdin->Level--;
-
-                        TaskResumeAll();
-
-                        goto fgetChar_end;
-                  }
-                  else
-                  {
-                        TaskResumeAll();
-                        TaskDelay(5);
-                  }
+                  break;
             }
       }
 
-      fgetChar_end:
-            return out;
+      return chr;
 }
 
 
 //================================================================================================//
 /**
- * @brief Function get character from stdin stream in the unblocking mode
+ * @brief Function get character from virtual terminal in unblocking mode
  *
- * @param *stdin            stdin
+ * @param tty            virtual terminal number
  *
  * @retval character
  */
 //================================================================================================//
-ch_t ufgetChar(stdioFIFO_t *stdin)
+ch_t utgetChar(u8_t tty)
 {
-      ch_t out = ASCII_CANCEL;
-
-      if (stdin)
-      {
-            TaskSuspendAll();
-
-            if (stdin->Level > 0)
-            {
-                  out = stdin->Buffer[stdin->RxIdx++];
-
-                  if (stdin->RxIdx >= STDIO_BUFFER_SIZE)
-                        stdin->RxIdx = 0;
-
-                  stdin->Level--;
-            }
-
-            TaskResumeAll();
-      }
-
-      return out;
+      return TTY_GetChr(tty);
 }
 
 
 //================================================================================================//
 /**
- * @brief Waiting for STDIO flush
+ * @brief Function convert arguments to stream
  *
- * @param stdioFIFO_t *stdio
- */
-//================================================================================================//
-void fsflush(stdioFIFO_t *stdio)
-{
-       while (stdio->Level)
-       {
-             TaskDelay(1);
-       }
-}
-
-
-//================================================================================================//
-/**
- * @brief Function convert arguments to the stdio (vsnprintf)
- *
- * @param[in] stdio          TRUE to enable STDIO
- * @param[in] *streamStdout  buffer for stream or stdout
+ * @param[in] *stream        buffer for stream
  * @param[in] size           buffer size
  * @param[in] *format        message format
  * @param[in] arg            argument list
@@ -578,34 +478,25 @@ void fsflush(stdioFIFO_t *stdio)
  * @return number of printed characters
  */
 //================================================================================================//
-static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *format, va_list arg)
+static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
 {
-      #define putCharacter(character)                       \
-            if (stdio)                                      \
-            {                                               \
-                  fputChar(stdout, character);              \
-            }                                               \
-            else                                            \
-            {                                               \
-                  if (streamLen < size)                     \
-                  {                                         \
-                        *stream++ = character;              \
-                  }                                         \
-                  else                                      \
-                  {                                         \
-                        *stream = 0;                        \
-                        goto vsnfprint_end;                 \
-                  }                                         \
-            }                                               \
-            streamLen++
+      #define putCharacter(character)           \
+      {                                         \
+            if (streamLen < size)               \
+            {                                   \
+                  *stream++ = character;        \
+            }                                   \
+            else                                \
+            {                                   \
+                  *stream = 0;                  \
+                  goto vsnprint_end;            \
+            }                                   \
+            streamLen++;                        \
+      }
 
 
       ch_t  character;
       u32_t streamLen = 1;
-
-      stdioFIFO_t *stdout = (stdioFIFO_t*)streamStdout;
-      ch_t        *stream = (ch_t*)streamStdout;
-
 
       while ((character = *format++) != ASCII_NULL)
       {
@@ -671,7 +562,7 @@ static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *
             }
       }
 
-      vsnfprint_end:
+      vsnprint_end:
             return (streamLen - 1);
 
       #undef putChar
@@ -682,8 +573,7 @@ static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *
 /**
  * @brief Function convert arguments to the stdio and gets data from stdin
  *
- * @param[in]  *stdin         stdin
- * @param[in]  *stdout        stdout
+ * @param[in]  tty            virtual terminal number
  * @param[in]  size           buffer size
  * @param[in]  *format        message format
  * @param[in]  *var           output
@@ -691,53 +581,53 @@ static u32_t vsnprint(bool_t stdio, void *streamStdout, u32_t size, const ch_t *
  * @return number of printed characters
  */
 //================================================================================================//
-u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *var)
+u32_t tscan(u8_t tty, const ch_t *format, void *var)
 {
-      ch_t  character;
+      ch_t  chr;
       u32_t streamLen = 1;
 
-      while ((character = *format++) != '\0')
+      while ((chr = *format++) != '\0')
       {
-            if (character != '%')
+            if (chr != '%')
             {
-                  if (character == ASCII_LF)
-                        fputChar(stdout, ASCII_CR);
+                  if (chr == ASCII_LF)
+                        tputChar(tty, ASCII_CR);
 
-                  fputChar(stdout, character);
+                  tputChar(tty, chr);
             }
             else
             {
-                  character = *format++;
+                  chr = *format++;
 
                   u8_t inCmdStep = 0;
 
-                  if (character == 'd' || character == 'u')
+                  if (chr == 'd' || chr == 'u')
                   {
                         i32_t  *dec = (i32_t*)var;
                         i32_t  sign = 1;
-                        bool_t uint = (character == 'u' ? TRUE : FALSE);
+                        bool_t uint = (chr == 'u' ? TRUE : FALSE);
 
                         *dec = 0;
 
                         while (TRUE)
                         {
-                              character = fgetChar(stdin);
+                              chr = tgetChar(tty);
 
-                              if (  (character >= '0' && character <= '9')
-                                 || (character == '-' && !uint && sign == 1) )
+                              if (  (chr >= '0' && chr <= '9')
+                                 || (chr == '-' && !uint && sign == 1) )
                               {
-                                    fputChar(stdout, character);
+                                    tputChar(tty, chr);
                               }
-                              else if (character == ASCII_CR || character == ASCII_LF)
+                              else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *dec *= sign;
-                                    fputChar(stdout, ASCII_CR);
-                                    fputChar(stdout, ASCII_LF);
-                                    goto fscan_end;
+                                    tputChar(tty, ASCII_CR);
+                                    tputChar(tty, ASCII_LF);
+                                    goto tscan_end;
                               }
-                              else if ((character == ASCII_BS) && (streamLen > 1))
+                              else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    fprint(stdout, "%c\x1B[K", character);
+                                    tprint(tty, "%c\x1B[K", chr);
 
                                     if (streamLen == 2 && sign == -1)
                                           sign = 1;
@@ -751,26 +641,26 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                                     continue;
                               }
 
-                              if (character == '-' && sign == 1 && !uint)
+                              if (chr == '-' && sign == 1 && !uint)
                               {
                                     sign = -1;
                               }
 
-                              if (character >= '0' && character <= '9')
+                              if (chr >= '0' && chr <= '9')
                               {
-                                    character -= '0';
+                                    chr -= '0';
 
                                     *dec *= 10;
-                                    *dec += character;
+                                    *dec += chr;
                               }
 
                               streamLen++;
                         }
 
-                        goto fscan_end;
+                        goto tscan_end;
                   }
 
-                  if (character == 'x')
+                  if (chr == 'x')
                   {
                         u32_t *hex = (u32_t *)var;
 
@@ -778,23 +668,23 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
 
                         while (TRUE)
                         {
-                              character = fgetChar(stdin);
+                              chr = tgetChar(tty);
 
-                              if (  ((character >= '0') && (character <= '9'))
-                                 || ((character >= 'A') && (character <= 'F'))
-                                 || ((character >= 'a') && (character <= 'f')) )
+                              if (  ((chr >= '0') && (chr <= '9'))
+                                 || ((chr >= 'A') && (chr <= 'F'))
+                                 || ((chr >= 'a') && (chr <= 'f')) )
                               {
-                                    fputChar(stdout, character);
+                                    tputChar(tty, chr);
                               }
-                              else if (character == ASCII_CR || character == ASCII_LF)
+                              else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    fputChar(stdout, ASCII_CR);
-                                    fputChar(stdout, ASCII_LF);
-                                    goto fscan_end;
+                                    tputChar(tty, ASCII_CR);
+                                    tputChar(tty, ASCII_LF);
+                                    goto tscan_end;
                               }
-                              else if ((character == ASCII_BS) && (streamLen > 1))
+                              else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    fprint(stdout, "%c\x1B[K", character);
+                                    tprint(tty, "%c\x1B[K", chr);
                                     *hex >>= 4;
                                     streamLen--;
                                     continue;
@@ -804,27 +694,27 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                                     continue;
                               }
 
-                              if ((character >= 'A') && (character <= 'F'))
+                              if ((chr >= 'A') && (chr <= 'F'))
                               {
-                                    character = character - 'A' + 0x0A;
+                                    chr = chr - 'A' + 0x0A;
                               }
-                              else if ((character >= 'a') && (character <= 'f'))
+                              else if ((chr >= 'a') && (chr <= 'f'))
                               {
-                                    character = character - 'a' + 0x0A;
+                                    chr = chr - 'a' + 0x0A;
                               }
-                              else if ((character >= '0') && (character <= '9'))
+                              else if ((chr >= '0') && (chr <= '9'))
                               {
-                                    character -= '0';
+                                    chr -= '0';
                               }
 
                               *hex <<= 4;
-                              *hex |= character;
+                              *hex |= chr;
 
                               streamLen++;
                         }
                   }
 
-                  if (character == 'b')
+                  if (chr == 'b')
                   {
                         u32_t *bin = (u32_t *)var;
 
@@ -832,21 +722,21 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
 
                         while (TRUE)
                         {
-                              character = fgetChar(stdin);
+                              chr = tgetChar(tty);
 
-                              if (character == '0' || character == '1')
+                              if (chr == '0' || chr == '1')
                               {
-                                    fputChar(stdout, character);
+                                    tputChar(tty, chr);
                               }
-                              else if (character == ASCII_CR || character == ASCII_LF)
+                              else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    fputChar(stdout, ASCII_CR);
-                                    fputChar(stdout, ASCII_LF);
-                                    goto fscan_end;
+                                    tputChar(tty, ASCII_CR);
+                                    tputChar(tty, ASCII_LF);
+                                    goto tscan_end;
                               }
-                              else if ((character == ASCII_BS) && (streamLen > 1))
+                              else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    fprint(stdout, "%c\x1B[K", character);
+                                    tprint(tty, "%c\x1B[K", chr);
                                     *bin >>= 1;
                                     streamLen--;
                                     continue;
@@ -856,16 +746,16 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
                                     continue;
                               }
 
-                              character -= '0';
+                              chr -= '0';
 
                               *bin <<= 1;
-                              *bin |= character;
+                              *bin |= chr;
 
                               streamLen++;
                         }
                   }
 
-                  if (character == 's')
+                  if (chr == 's')
                   {
                         u16_t free = *(format++);
 
@@ -882,25 +772,25 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
 
                         while (TRUE)
                         {
-                              character = fgetChar(stdin);
+                              chr = tgetChar(tty);
 
                               /* check command Arrow Up */
-                              if ((character == ASCII_ESC) && (inCmdStep == 0))
+                              if ((chr == ASCII_ESC) && (inCmdStep == 0))
                               {
                                     inCmdStep++;
-                                    *(string++) = character;
+                                    *(string++) = chr;
                                     continue;
                               }
-                              else if ((character == '[') && (inCmdStep == 1))
+                              else if ((chr == '[') && (inCmdStep == 1))
                               {
                                  inCmdStep++;
-                                 *(string++) = character;
+                                 *(string++) = chr;
                                  continue;
                               }
-                              else if ((character == 'A') && (inCmdStep == 2))
+                              else if ((chr == 'A') && (inCmdStep == 2))
                               {
-                                 *(string++) = character;
-                                 goto fscan_end;
+                                 *(string++) = chr;
+                                 goto tscan_end;
                               }
                               else
                               {
@@ -909,27 +799,27 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
 
 
                               /* put character */
-                              if (character == ASCII_CR || character == ASCII_LF)
+                              if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *(string++) = 0x00;
-                                    fputChar(stdout, ASCII_CR);
-                                    fputChar(stdout, ASCII_LF);
-                                    goto fscan_end;
+                                    tputChar(tty, ASCII_CR);
+                                    tputChar(tty, ASCII_LF);
+                                    goto tscan_end;
                               }
-                              else if ((character == ASCII_BS) && (streamLen > 1))
+                              else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    fprint(stdout, "%c\x1B[K", character);
+                                    tprint(tty, "%c\x1B[K", chr);
                                     *(--string) = 0x00;
                                     streamLen--;
                                     free++;
                                     continue;
                               }
-                              else if (character >= ' ')
+                              else if (chr >= ' ')
                               {
                                     if (free)
                                     {
-                                          fputChar(stdout, character);
-                                          *(string++) = character;
+                                          tputChar(tty, chr);
+                                          *(string++) = chr;
                                           free--;
                                     }
                               }
@@ -944,28 +834,8 @@ u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *v
             }
       }
 
-      fscan_end:
+      tscan_end:
             return (streamLen - 1);
-}
-
-
-//================================================================================================//
-/**
- * @brief Clear stdin buffer
- *
- * @param *stdin              stdin
- */
-//================================================================================================//
-void fclearSTDIO(stdioFIFO_t *stdio)
-{
-      if (stdio)
-      {
-            TaskSuspendAll();
-            stdio->Level = 0;
-            stdio->RxIdx = 0;
-            stdio->TxIdx = 0;
-            TaskResumeAll();
-      }
 }
 
 

@@ -34,6 +34,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include <stddef.h>
+#include "basic_types.h"
 
 
 /*==================================================================================================
@@ -85,25 +86,14 @@ typedef struct
 } FILE_t;
 
 
-/** stdio FIFO type */
-typedef struct stdioFIFO_struct
-{
-      u16_t Level;                              /* load level */
-      u16_t TxIdx;                              /* fifo Tx index */
-      u16_t RxIdx;                              /* fifo Rx index */
-      ch_t  Buffer[STDIO_BUFFER_SIZE];          /* fifo buffer */
-} stdioFIFO_t;
-
-
 /** application standard arguments type */
 typedef struct appArgs_struct
 {
-      void        *arg;                         /* pointer to the argument */
-      stdioFIFO_t *stdin;                       /* stdin fifo */
-      stdioFIFO_t *stdout;                      /* stdout fifo */
-      void        *ChildTaskHandle;             /* FreeRTOS task handling for children */
-      void        *ParentTaskHandle;            /* FreeRTOS task handling for parent */
-      stdRet_t    exitCode;                     /* exit code */
+      void *arg;                      /* pointer to the argument */
+      u8_t tty;                       /* stdin fifo */
+      void *ChildTaskHandle;          /* FreeRTOS task handling for children */
+      void *ParentTaskHandle;         /* FreeRTOS task handling for parent */
+      stdRet_t    exitCode;           /* exit code */
 } appArgs_t;
 
 

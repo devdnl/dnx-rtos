@@ -72,31 +72,6 @@ extern "C" {
                                         Function definitions
 ==================================================================================================*/
 
-void test1(void *arg)
-{
-      (void) arg;
-
-      for (;;)
-      {
-            TTY_AddMsg(0, "Test TTY0\r\n");
-            Sleep(1000);
-      }
-}
-
-
-
-void test2(void *arg)
-{
-      (void) arg;
-
-      for (;;)
-      {
-            TTY_AddMsg(1, "-=Test TTY1=-\r\n");
-            Sleep(2000);
-      }
-}
-
-
 //================================================================================================//
 /**
  * @brief Task which initialise high-level devices/applications etc
@@ -108,8 +83,7 @@ void Initd(void *arg)
 {
       (void) arg;
 
-      u8_t currtty = -1;
-      ch_t *string[TTY_COUNT];
+      u8_t      currtty = -1;
       appArgs_t *apphdl[TTY_COUNT];
 
       /* user initialization */
@@ -137,179 +111,70 @@ void Initd(void *arg)
 
       MPL115A2_Init();
 
-      /*--------------------------------------------------------------------------------------------
-       * starting terminal
-       *------------------------------------------------------------------------------------------*/
-//      kprint("[%d] initd: starting interactive console... ", TaskGetTickCount());
-
-      /* try to start terminal */
-//      appArgs_t *appHdl = Exec("terminal", NULL);
-//
-//      if (appHdl == NULL)
-//      {
-//            kprintFail();
-//            kprint("Probably no enough free space. Restarting board...");
-//            TaskResumeAll();
-//            TaskDelay(5000);
-//            SystemReboot();
-//      }
-//      else
-//      {
-//            kprintOK();
-//      }
-
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
+      /* change TTY for kprint to last TTY */
+      ChangekprintTTY(TTY_COUNT - 1);
 
-//      TaskCreate(test1, "testTTY0", MINIMAL_STACK_SIZE, NULL, 3, NULL);
-//      TaskCreate(test2, "testTTY1", MINIMAL_STACK_SIZE, NULL, 3, NULL);
-
+      kprint("kprint() on TTY4\n");
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
-//      u8_t   currentTTY  = 0;
-//      ch_t   character;
-//      bool_t stdoutEmpty = FALSE;
-//      bool_t RxFIFOEmpty = FALSE;
-
-      /* clear main variables */
-      memset(string, 0x00, sizeof(string));
       memset(apphdl, 0x00, sizeof(apphdl));
 
       for (;;)
       {
-            /* load application in created TTY */
-            u8_t lasttty = currtty;
-            if (lasttty != (currtty = TTY_GetCurrTTY()))
-            {
-                  if (string[currtty] == NULL)
-                  {
-                        string[currtty] = Calloc(100, sizeof(ch_t));
-                  }
+            /* load application if new TTY was created */
+            currtty = TTY_GetCurrTTY();
 
-                  if (string[currtty])
+            if (currtty < TTY_COUNT - 1)
+            {
+                  if (apphdl[currtty] == NULL)
                   {
+                        kprint("Starting application on new terminal: TTY%d\n", currtty + 1);
+
+                        apphdl[currtty] = Exec("terminal", NULL);
+
                         if (apphdl[currtty] == NULL)
                         {
-                              apphdl[currtty] = Exec("terminal", NULL);
-                        }
-
-                        if (!apphdl[currtty])
-                        {
-                              Free(string[currtty]);
                               kprint("Not enough free memory to start application\n");
                         }
-                  }
-                  else
-                  {
-                        kprint("Not enough free memory to start application\n");
+                        else
+                        {
+                              apphdl[currtty]->tty = currtty;
+                        }
                   }
             }
 
-            /* STDOUT support ------------------------------------------------------------------- */
+            /* application monitoring */
             for (u8_t i = 0; i < TTY_COUNT; i++)
             {
                   if (apphdl[i])
                   {
-                        ch_t chr;
-
-                        if ((chr = ufgetChar(apphdl[i]->stdout)) != ASCII_CANCEL)
+                        if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
                         {
-                              *(string[i] + 0) = chr;
-                              *(string[i] + 1) = 0;
-                              TTY_AddMsg(i, string[i]);
+                              kprint("Application closed\n");
+
+                              FreeApphdl(apphdl[i]);
+                              apphdl[i] = NULL;
+
+                              if (currtty > 0 && currtty == i)
+                              {
+                                    kprint("Cleaning TTY%d\n", currtty + 1);
+                                    TTY_ChangeTTY(0);
+                                    TTY_Clear(currtty);
+                              }
                         }
                   }
             }
 
-            /* STDIN support -------------------------------------------------------------------- */
-            ch_t chr = TTY_GetChr(currtty);
-
-            if (chr)
-            {
-                  fputChar(apphdl[currtty]->stdin, chr);
-            }
-
-            Sleep(1);
-//
-//            if (TTY_CheckNewMsg(currentTTY))
-//            {
-//                  ch_t *msg = TTY_GetMsg(currentTTY, TTY_LAST_MSG);
-//
-//                  if (msg)
-//                  {
-//                        UART_Write(UART_DEV_1, msg, strlen(msg), 0);
-//                  }
-//            }
-//
-//            /* STDIN support -------------------------------------------------------------------- */
-//            if (UART_IOCtl(UART_DEV_1, UART_IORQ_GET_BYTE, &character) == STD_RET_OK)
-//            {
-//                  i8_t keyFn = decodeFn(character);
-//
-//                  if (character >= '0' && character <= '4')
-//                  {
-//                        if (currentTTY != (character - '0'))
-//                        {
-//                              currentTTY = character - '0';
-//
-//                              ch_t *clrscr = "\x1B[2J";
-//                              UART_Write(UART_DEV_1, clrscr, strlen(clrscr), 0);
-//
-//                              for (u8_t i = 0; i < TTY_MSGS; i++)
-//                              {
-//                                    ch_t *msg = TTY_GetMsg(currentTTY, i);
-//
-//                                    if (msg)
-//                                    {
-//                                          UART_Write(UART_DEV_1, msg, strlen(msg), 0);
-//                                    }
-//                              }
-//                        }
-//                  }
-
-//                  if (keyFn == -1)
-//                  {
-////                        ufputChar(appHdl->stdin, character);
-//                        RxFIFOEmpty = FALSE;
-//                  }
-//                  else if (keyFn > 0)
-//                  {
-//                        currentTTY = keyFn - 1;
-//                  }
-//            }
-//            else
-//            {
-//                  RxFIFOEmpty = TRUE;
-//            }
-
-            /* application monitoring ----------------------------------------------------------- */
-//            if (appHdl->exitCode != STD_RET_UNKNOWN)
-//            {
-//                  if (appHdl->exitCode == STD_RET_OK)
-//                        kprint("\n[%d] initd: terminal was terminated.\n", TaskGetTickCount());
-//                  else
-//                        kprint("\n[%d] initd: terminal was terminated with error.\n", TaskGetTickCount());
-//
-//                  FreeStdio(appHdl);
-//
-//                  kprint("[%d] initd: disable FreeRTOS scheduler. Bye.\n", TaskGetTickCount());
-//
-//                  vTaskEndScheduler();
-//
-//                  while (TRUE)
-//                        TaskDelay(1000);
-//            }
-
-            /* wait state */
-//            if (stdoutEmpty && RxFIFOEmpty)
-//                  TaskDelay(1);
+            TaskDelay(10);
       }
 
       /* this should never happen */
-//      TaskTerminate();
+      TaskTerminate();
 }
 
 

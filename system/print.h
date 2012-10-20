@@ -34,19 +34,18 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include <stdarg.h>
-#include "system.h"
+#include "basic_types.h"
+#include "systypes.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-#define print(...)                  fprint(stdout, __VA_ARGS__)
-#define scan(format, result)        fscan(stdin, stdout, format, result)
-#define putChar(c)                  fputChar(stdout, c)
-#define getChar()                   fgetChar(stdin)
-#define ugetChar()                  ufgetChar(stdin)
-#define clearSTDIN()                fclearSTDIO(stdin)
-#define clearSTDOUT()               fclearSTDIO(stdout)
+#define print(...)                  tprint(tty, __VA_ARGS__)
+#define scan(format, result)        tscan(tty, format, result)
+#define putChar(c)                  tputChar(tty, c)
+#define getChar()                   tgetChar(tty)
+#define ugetChar()                  utgetChar(tty)
 
 /** VT100 terminal commands */
 #define enableLineWrap(level)       level##print("\x1B[?7h")
@@ -107,17 +106,14 @@ extern u32_t kprint(const ch_t *format, ...);
 extern u32_t kprintOK(void);
 extern u32_t kprintFail(void);
 extern u32_t kprintErrorNo(i8_t errorNo);
-extern u32_t fprint(stdioFIFO_t *stdout, const ch_t *format, ...);
+extern u32_t tprint(u8_t tty, const ch_t *format, ...);
 extern void  EnableKprint(void);
 extern void  DisableKprint(void);
-extern void  ChangeKprintTTY(u8_t tty);
-extern void  fputChar(stdioFIFO_t *stdout, ch_t c);
-extern void  ufputChar(stdioFIFO_t *stdout, ch_t c);
-extern ch_t  fgetChar(stdioFIFO_t *stdin);
-extern ch_t  ufgetChar(stdioFIFO_t *stdin);
-extern void  fsflush(stdioFIFO_t *stdio);
-extern void  fclearSTDIO(stdioFIFO_t *stdio);
-extern u32_t fscan(stdioFIFO_t *stdin, stdioFIFO_t *stdout, const ch_t *format, void *var);
+extern void  ChangekprintTTY(u8_t tty);
+extern void  tputChar(u8_t tty, ch_t c);
+extern ch_t  tgetChar(u8_t tty);
+extern ch_t  utgetChar(u8_t tty);
+extern u32_t tscan(u8_t tty, const ch_t *format, void *var);
 
 #ifdef __cplusplus
 }

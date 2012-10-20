@@ -74,7 +74,7 @@ extern appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize
 extern appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
 extern appArgs_t *Exec(const ch_t *name, ch_t *argv);
 extern appArgs_t *Execd(const ch_t *name, ch_t *argv);
-extern stdRet_t  FreeStdio(appArgs_t *appArgs);
+extern stdRet_t  FreeApphdl(appArgs_t *appArgs);
 extern void      TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode);
 extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 

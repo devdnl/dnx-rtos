@@ -95,39 +95,16 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
             appHandle->arg = NULL;
       }
 
-      /* allocate memory for STDIO */
-      appHandle->stdin  = Calloc(1, sizeof(stdioFIFO_t));
-      appHandle->stdout = Calloc(1, sizeof(stdioFIFO_t));
-
-      if (!appHandle->stdin || !appHandle->stdout)
-      {
-            if (!appHandle->stdin)
-            {
-                  Free(appHandle->stdin);
-            }
-
-            if (!appHandle->stdout)
-            {
-                  Free(appHandle->stdout);
-            }
-
-            Free(appHandle);
-            appHandle = NULL;
-
-            goto RunAsApp_end;
-      }
-
       /* initialize stdio data */
       appHandle->arg              = arg;
       appHandle->exitCode         = STD_RET_UNKNOWN;
       appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
       appHandle->ChildTaskHandle  = NULL;
+      appHandle->tty              = -1;
 
       /* start application task */
       if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
       {
-            Free(appHandle->stdin);
-            Free(appHandle->stdout);
             Free(appHandle);
             appHandle = NULL;
             goto RunAsApp_end;
@@ -171,8 +148,7 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
       /* set default values */
       appHandle->arg              = arg;
       appHandle->exitCode         = STD_RET_UNKNOWN;
-      appHandle->stdin            = NULL;
-      appHandle->stdout           = NULL;
+      appHandle->tty              = -1;
       appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
       appHandle->ChildTaskHandle  = NULL;
 
@@ -237,24 +213,18 @@ appArgs_t *Execd(const ch_t *name, ch_t *argv)
 
 //================================================================================================//
 /**
- * @brief Function freed STDIO buffers
+ * @brief Function free application handler
  *
- * @param *appArgs      pointer to the appArgs structure which contains pointers to the STDIO
+ * @param *appArgs      pointer to the appArgs structure which contains application handler
  *
  * @retval STD_STATUS_OK            freed success
  * @retval STD_STATUS_ERROR         freed error, bad pointer
  */
 //================================================================================================//
-stdRet_t FreeStdio(appArgs_t *appArgs)
+stdRet_t FreeApphdl(appArgs_t *appArgs)
 {
       if (appArgs)
       {
-            if (appArgs->stdin)
-                  Free(appArgs->stdin);
-
-            if (appArgs->stdout)
-                  Free(appArgs->stdout);
-
             Free(appArgs);
 
             return STD_RET_OK;
@@ -276,8 +246,6 @@ stdRet_t FreeStdio(appArgs_t *appArgs)
 //================================================================================================//
 void TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode)
 {
-      fsflush(appArgument->stdout);
-
       /* set exit code */
       appArgument->exitCode = exitCode;
 

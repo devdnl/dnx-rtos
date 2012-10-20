@@ -89,6 +89,7 @@ static ch_t     *GetMsg(u8_t tty, u8_t msg);
 ==================================================================================================*/
 static struct ttyEntry *ttyTerm[TTY_COUNT];
 static u8_t currentTTY;
+static i8_t sugTTY;
 
 
 /*==================================================================================================
@@ -104,11 +105,14 @@ void ttyd(void *arg)
 {
       (void) arg;
 
+      sugTTY = -1;
+
       ch_t     chr        = 0;
       bool_t   rxbfrempty = FALSE;
       ch_t     *msg;
       FILE_t   *uartf;
       decode_t keyfn;
+      struct ttyEntry *tty = NULL;
 
       EnableKprint();
 
@@ -132,7 +136,18 @@ void ttyd(void *arg)
       /* main daemon loop */
       for (;;)
       {
-            struct ttyEntry *tty = ttyTerm[currentTTY];
+            if (ttyTerm[currentTTY] == NULL)
+            {
+                  if (CreateTTY(currentTTY) != STD_RET_OK)
+                  {
+                        Sleep(100);
+                        continue;
+                  }
+            }
+            else
+            {
+                  tty = ttyTerm[currentTTY];
+            }
 
             /* STDOUT support ------------------------------------------------------------------- */
             if (tty->refLine == SET)
@@ -171,7 +186,7 @@ void ttyd(void *arg)
                         /* send to program */
                         TaskSuspendAll();
 
-                        if (tty->fifo.level < TTY_OUT_BFR_SIZE)
+                        if (tty->fifo.level <= TTY_OUT_BFR_SIZE)
                         {
                               tty->fifo.buffer[tty->fifo.txidx++] = chr;
 
@@ -196,10 +211,18 @@ void ttyd(void *arg)
                   rxbfrempty = TRUE;
             }
 
+            /* external terminal switch */
+            if (sugTTY != -1)
+            {
+                  currentTTY = sugTTY;
+                  sugTTY = -1;
+                  RefreshTTY(currentTTY, uartf);
+            }
+
             /* check that can go to short sleep */
             if (tty->newMsg == 0 && rxbfrempty)
             {
-                  Sleep(10);
+                  Sleep(20);
             }
       }
 
@@ -452,10 +475,7 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
 
                         if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
                         {
-                              if (ttyTerm[tty]->line[0])
-                              {
-                                    Free(ttyTerm[tty]->line[0]);
-                              }
+                              Free(ttyTerm[tty]->line[0]);
 
                               for (u8_t i = 0; i < TTY_MSGS; i++)
                               {
@@ -498,16 +518,20 @@ void TTY_Clear(u8_t tty)
       {
             if (ttyTerm[tty])
             {
+                  TaskSuspendAll();
+
                   for (u8_t i = 0; i < TTY_MSGS; i++)
                   {
                         if (ttyTerm[tty]->line)
-                           Free(ttyTerm[tty]->line);
+                           Free(ttyTerm[tty]->line[i]);
 
                         ttyTerm[tty]->line[i] = NULL;
                   }
 
                   ttyTerm[tty]->msgCnt = 0;
                   ttyTerm[tty]->newMsg = 0;
+
+                  TaskResumeAll();
             }
       }
 }
@@ -594,6 +618,21 @@ ch_t TTY_GetChr(u8_t tty)
       }
 
       return chr;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function try to change terminal
+ *
+ */
+//================================================================================================//
+void TTY_ChangeTTY(u8_t tty)
+{
+      if (tty < TTY_COUNT)
+      {
+            sugTTY = tty;
+      }
 }
 
 
