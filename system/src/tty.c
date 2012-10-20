@@ -41,6 +41,7 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define TTY_OUT_BFR_SIZE            16
 
 
 /*==================================================================================================
@@ -52,6 +53,14 @@ struct ttyEntry
       u8_t   newMsg;
       u8_t   msgCnt;
       flag_t refScr;
+
+      struct
+      {
+            u16_t level;
+            ch_t  buffer[TTY_OUT_BFR_SIZE];
+            u16_t txidx;
+            u16_t rxidx;
+      } fifo;
 };
 
 
@@ -95,9 +104,11 @@ void ttyd(void *arg)
 {
       (void) arg;
 
-      ch_t   character  = 0;
-      u8_t   msgs       = 0;
-      bool_t rxbfrempty = FALSE;
+      ch_t     chr        = 0;
+      bool_t   rxbfrempty = FALSE;
+      ch_t     *msg;
+      FILE_t   *uartf;
+      decode_t keyfn;
 
       EnableKprint();
 
@@ -107,32 +118,44 @@ void ttyd(void *arg)
 
       InitDrv("uart1", "uart");
 
-      FILE_t *uartf = fopen("/dev/uart", NULL);
+      uartf = fopen("/dev/uart", NULL);
 
       if (uartf == NULL)
       {
             TaskTerminate();
       }
 
-      /* configure terminal VT100: clear screen, line wrap */
-      ch_t *termCfg = "\x1B[2J\x1B[?7h";
+      /* configure terminal VT100: clear screen, line wrap, cursor HOME */
+      ch_t *termCfg = "\x1B[2J\x1B[?7h\x1B[H";
       fwrite(termCfg, sizeof(ch_t), strlen(termCfg), uartf);
 
       /* main daemon loop */
       for (;;)
       {
-            ch_t *msg;
+            struct ttyEntry *tty = ttyTerm[currentTTY];
 
             /* STDOUT support ------------------------------------------------------------------- */
-            if (ttyTerm[currentTTY]->refScr == SET)
+            if (tty->refScr == SET)
             {
-                  RefreshTTY(currentTTY, uartf);
+//                  RefreshTTY(currentTTY, uartf);
 
-                  ttyTerm[currentTTY]->refScr = RESET;
+                  /* cursor off, carriage return, line erase from cursor */
+                  msg = "\x1B[?25l\r\x1B[K";
+                  fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
+
+                  /* refresh line */
+                  msg = GetMsg(currentTTY, TTY_LAST_MSG);
+                  fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
+
+                  /* cursor on */
+                  msg = "\x1B[?25h";
+                  fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
+
+                  tty->refScr = RESET;
             }
-            else if ((msgs = TTY_CheckNewMsg(currentTTY)) > 0)
+            else if (tty->newMsg > 0)
             {
-                  msg = GetMsg(currentTTY, ttyTerm[currentTTY]->msgCnt - msgs);
+                  msg = GetMsg(currentTTY, tty->msgCnt - tty->newMsg);
 
                   if (msg)
                   {
@@ -141,13 +164,28 @@ void ttyd(void *arg)
             }
 
             /* STDIN support -------------------------------------------------------------------- */
-            if (ioctl(uartf, UART_IORQ_GET_BYTE, &character) == STD_RET_OK)
+            if (ioctl(uartf, UART_IORQ_GET_BYTE, &chr) == STD_RET_OK)
             {
-                  decode_t keyfn = decodeFn(character);
+                  keyfn = decodeFn(chr);
 
                   if (keyfn == TTY_SEL_NONE)
                   {
                         /* send to program */
+                        TaskSuspendAll();
+
+                        if (tty->fifo.level < TTY_OUT_BFR_SIZE)
+                        {
+                              tty->fifo.buffer[tty->fifo.txidx++] = chr;
+
+                              if (tty->fifo.txidx >= TTY_OUT_BFR_SIZE)
+                              {
+                                    tty->fifo.txidx = 0;
+                              }
+
+                              tty->fifo.level++;
+                        }
+
+                        TaskResumeAll();
                   }
                   else if (keyfn <= TTY4_SELECTED && keyfn != currentTTY)
                   {
@@ -161,7 +199,7 @@ void ttyd(void *arg)
             }
 
             /* check that can go to short sleep */
-            if (TTY_CheckNewMsg(currentTTY) == 0 && rxbfrempty)
+            if (tty->newMsg == 0 && rxbfrempty)
             {
                   Sleep(10);
             }
@@ -181,7 +219,7 @@ void ttyd(void *arg)
 //================================================================================================//
 static void RefreshTTY(u8_t tty, FILE_t *file)
 {
-      ch_t *clrscr = "\x1B[2J";
+      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H";
 
       fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
 
@@ -359,6 +397,12 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                    }
             }
 
+            /* wait to refresh last modified/joined line */
+            while (ttyTerm[tty]->refScr == SET)
+            {
+                  Sleep(10);
+            }
+
             /* check if previous message has not line end (\n) */
             ch_t *lastmsg = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1];
 
@@ -486,27 +530,6 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
 
 //================================================================================================//
 /**
- * @brief Function check if new message is received
- *
- * @param tty           terminal number
- * @return number of new messages
- */
-//================================================================================================//
-u8_t TTY_CheckNewMsg(u8_t tty)
-{
-      if (tty < TTY_COUNT && ttyTerm[tty])
-      {
-            return ttyTerm[tty]->newMsg;
-      }
-      else
-      {
-            return 0;
-      }
-}
-
-
-//================================================================================================//
-/**
  * @brief Function returns current TTY
  *
  * @return current TTY
@@ -515,6 +538,42 @@ u8_t TTY_CheckNewMsg(u8_t tty)
 u8_t TTY_GetCurrTTY(void)
 {
       return currentTTY;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns incoming characters
+ *
+ * @return current TTY
+ */
+//================================================================================================//
+ch_t TTY_GetCharacter(u8_t tty)
+{
+      ch_t chr = 0;
+
+      if (tty < TTY_COUNT)
+      {
+            struct ttyEntry *ctty = ttyTerm[tty];
+
+            TaskSuspendAll();
+
+            if (ctty->fifo.level > 0)
+            {
+                  chr = ctty->fifo.buffer[ctty->fifo.rxidx++];
+
+                  if (ctty->fifo.rxidx >= TTY_OUT_BFR_SIZE)
+                  {
+                        ctty->fifo.rxidx = 0;
+                  }
+
+                  ctty->fifo.level--;
+            }
+
+            TaskResumeAll();
+      }
+
+      return chr;
 }
 
 

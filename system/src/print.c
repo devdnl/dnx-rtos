@@ -346,12 +346,12 @@ u32_t kprint(const ch_t *format, ...)
 
       if (kprintEnabled)
       {
-            ch_t *buffer = Calloc(constKPRINT_BUFFER_SIZE, sizeof(ch_t));
+            ch_t *buffer = Calloc(KPRINT_BUFFER_SIZE, sizeof(ch_t));
 
             if (buffer)
             {
                   va_start(args, format);
-                  n = vsnprint(FALSE, buffer, constKPRINT_BUFFER_SIZE, format, args);
+                  n = vsnprint(FALSE, buffer, KPRINT_BUFFER_SIZE, format, args);
                   va_end(args);
 
                   TTY_AddMsg(kprintTTY, buffer);
@@ -419,11 +419,11 @@ void fputChar(stdioFIFO_t *stdout, ch_t c)
             {
                   TaskSuspendAll();
 
-                  if (stdout->Level < configSTDIO_BUFFER_SIZE)
+                  if (stdout->Level < STDIO_BUFFER_SIZE)
                   {
                         stdout->Buffer[stdout->TxIdx++] = c;
 
-                        if (stdout->TxIdx >= configSTDIO_BUFFER_SIZE)
+                        if (stdout->TxIdx >= STDIO_BUFFER_SIZE)
                               stdout->TxIdx = 0;
 
                         stdout->Level++;
@@ -455,11 +455,11 @@ void ufputChar(stdioFIFO_t *stdout, ch_t c)
       {
             TaskSuspendAll();
 
-            if (stdout->Level < configSTDIO_BUFFER_SIZE)
+            if (stdout->Level < STDIO_BUFFER_SIZE)
             {
                   stdout->Buffer[stdout->TxIdx++] = c;
 
-                  if (stdout->TxIdx >= configSTDIO_BUFFER_SIZE)
+                  if (stdout->TxIdx >= STDIO_BUFFER_SIZE)
                         stdout->TxIdx = 0;
 
                   stdout->Level++;
@@ -493,7 +493,7 @@ ch_t fgetChar(stdioFIFO_t *stdin)
                   {
                         out = stdin->Buffer[stdin->RxIdx++];
 
-                        if (stdin->RxIdx >= configSTDIO_BUFFER_SIZE)
+                        if (stdin->RxIdx >= STDIO_BUFFER_SIZE)
                               stdin->RxIdx = 0;
 
                         stdin->Level--;
@@ -536,7 +536,7 @@ ch_t ufgetChar(stdioFIFO_t *stdin)
             {
                   out = stdin->Buffer[stdin->RxIdx++];
 
-                  if (stdin->RxIdx >= configSTDIO_BUFFER_SIZE)
+                  if (stdin->RxIdx >= STDIO_BUFFER_SIZE)
                         stdin->RxIdx = 0;
 
                   stdin->Level--;

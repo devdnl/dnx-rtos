@@ -172,9 +172,21 @@ void Initd(void *arg)
 //      bool_t stdoutEmpty = FALSE;
 //      bool_t RxFIFOEmpty = FALSE;
 
+      ch_t *chr = Calloc(2, 1);
+
       for (;;)
       {
-            Sleep(1000);
+            if (chr)
+            {
+                  *chr = TTY_GetCharacter(TTY_GetCurrTTY());
+
+                  if (*chr)
+                  {
+                        TTY_AddMsg(TTY_GetCurrTTY(), chr);
+                  }
+            }
+
+            Sleep(10);
             /* STDOUT support ------------------------------------------------------------------- */
 //            if ((character = ufgetChar(appHdl->stdout)) != ASCII_CANCEL)
 //            {

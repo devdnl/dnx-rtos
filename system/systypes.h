@@ -39,8 +39,8 @@ extern "C" {
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-#define configSTDIO_BUFFER_SIZE           100
-#define constKPRINT_BUFFER_SIZE           80
+#define STDIO_BUFFER_SIZE                 100
+#define KPRINT_BUFFER_SIZE                80
 
 
 /*==================================================================================================
@@ -88,10 +88,10 @@ typedef struct
 /** stdio FIFO type */
 typedef struct stdioFIFO_struct
 {
-      u16_t Level;                                  /* load level */
-      u16_t TxIdx;                                  /* fifo Tx index */
-      u16_t RxIdx;                                  /* fifo Rx index */
-      ch_t  Buffer[configSTDIO_BUFFER_SIZE];        /* fifo buffer */
+      u16_t Level;                              /* load level */
+      u16_t TxIdx;                              /* fifo Tx index */
+      u16_t RxIdx;                              /* fifo Rx index */
+      ch_t  Buffer[STDIO_BUFFER_SIZE];          /* fifo buffer */
 } stdioFIFO_t;
 
 
