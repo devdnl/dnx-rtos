@@ -87,7 +87,7 @@ stdRet_t appmain(ch_t *argv)
       }
       else
       {
-            printf("Cannont open rtc device!\n");
+            printf("Cannot open rtc device!\n");
       }
 
       return status;

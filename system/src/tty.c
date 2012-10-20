@@ -53,6 +53,7 @@ struct ttyEntry
       u8_t   newMsg;
       u8_t   msgCnt;
       flag_t refLine;
+      flag_t lock;
 
       struct
       {
@@ -82,6 +83,8 @@ static void     RefreshTTY(u8_t tty, FILE_t *file);
 static stdRet_t CreateTTY(u8_t tty);
 static decode_t decodeFn(ch_t character);
 static ch_t     *GetMsg(u8_t tty, u8_t msg);
+static void     WaitForAccess(u8_t tty);
+static void     GiveAccess(u8_t tty);
 
 
 /*==================================================================================================
@@ -183,8 +186,7 @@ void ttyd(void *arg)
 
                   if (keyfn == TTY_SEL_NONE)
                   {
-                        /* send to program */
-                        TaskSuspendAll();
+                        WaitForAccess(currentTTY);
 
                         if (tty->fifo.level <= TTY_OUT_BFR_SIZE)
                         {
@@ -198,12 +200,21 @@ void ttyd(void *arg)
                               tty->fifo.level++;
                         }
 
-                        TaskResumeAll();
+                        GiveAccess(currentTTY);
                   }
                   else if (keyfn <= TTY4_SELECTED && keyfn != currentTTY)
                   {
                         currentTTY = keyfn;
-                        RefreshTTY(currentTTY, uartf);
+
+                        if (ttyTerm[currentTTY] == NULL)
+                        {
+                              CreateTTY(currentTTY);
+                        }
+
+                        if (ttyTerm[currentTTY])
+                        {
+                              RefreshTTY(currentTTY, uartf);
+                        }
                   }
             }
             else
@@ -211,7 +222,7 @@ void ttyd(void *arg)
                   rxbfrempty = TRUE;
             }
 
-            /* external terminal switch */
+            /* external trigger: terminal switch */
             if (sugTTY != -1)
             {
                   currentTTY = sugTTY;
@@ -219,7 +230,7 @@ void ttyd(void *arg)
                   RefreshTTY(currentTTY, uartf);
             }
 
-            /* check that can go to short sleep */
+            /* check that task can go to short sleep */
             if (tty->newMsg == 0 && rxbfrempty)
             {
                   Sleep(20);
@@ -229,6 +240,49 @@ void ttyd(void *arg)
       /* this should never happen */
       TaskTerminate();
 }
+
+
+//================================================================================================//
+/**
+ * @brief Function wait to safety access to data
+ *
+ * @param tty     number of terminal
+ */
+//================================================================================================//
+static void WaitForAccess(u8_t tty)
+{
+      while (TRUE)
+      {
+            TaskSuspendAll();
+            if (ttyTerm[tty]->lock == SET)
+            {
+                  TaskResumeAll();
+                  Sleep(1);
+            }
+            else
+            {
+                  ttyTerm[tty]->lock = SET;
+                  TaskResumeAll();
+                  break;
+            }
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function give safety access to data
+ *
+ * @param tty     number of terminal
+ */
+//================================================================================================//
+static void GiveAccess(u8_t tty)
+{
+      TaskSuspendAll();
+      ttyTerm[tty]->lock = RESET;
+      TaskResumeAll();
+}
+
 
 
 //================================================================================================//
@@ -376,7 +430,7 @@ static ch_t *GetMsg(u8_t tty, u8_t msg)
 {
       ch_t *ptr = NULL;
 
-      TaskSuspendAll();
+      WaitForAccess(tty);
 
       if (tty < TTY_COUNT && (msg < TTY_MSGS || msg == TTY_LAST_MSG) && ttyTerm[tty])
       {
@@ -395,7 +449,7 @@ static ch_t *GetMsg(u8_t tty, u8_t msg)
             ttyTerm[tty]->newMsg--;
       }
 
-      TaskResumeAll();
+      GiveAccess(tty);
 
       return ptr;
 }
@@ -434,6 +488,14 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
 
             if ( (msgcnt > 0) && (*(lastmsg + strlen(lastmsg) - 1) != '\n') )
             {
+                  /* wait for all new messages are showed */
+                  while (ttyTerm[tty]->newMsg && (tty == currentTTY))
+                  {
+                        Sleep(10);
+                  }
+
+                  WaitForAccess(tty);
+
                   size_t newsize = strlen(lastmsg) + strlen(msg) + 1;
 
                   ch_t *modmsg = Malloc(newsize);
@@ -443,14 +505,6 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                         strcpy(modmsg, lastmsg);
                         strcat(modmsg, msg);
 
-                        /* wait to all new messages are showed */
-                        while (ttyTerm[tty]->newMsg && (tty == currentTTY))
-                        {
-                              Sleep(10);
-                        }
-
-                        TaskSuspendAll();
-
                         Free(lastmsg);
 
                         ttyTerm[tty]->line[msgcnt - 1] = modmsg;
@@ -459,8 +513,6 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                         {
                               ttyTerm[tty]->refLine = SET;
                         }
-
-                        TaskResumeAll();
                   }
             }
             else
@@ -471,7 +523,7 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                   {
                         strcpy(localMsg, msg);
 
-                        TaskSuspendAll();
+                        WaitForAccess(tty);
 
                         if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
                         {
@@ -490,14 +542,18 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                         }
 
                         if (ttyTerm[tty]->msgCnt < TTY_MSGS)
+                        {
                               ttyTerm[tty]->msgCnt++;
+                        }
 
                         if (ttyTerm[tty]->newMsg < TTY_MSGS)
+                        {
                               ttyTerm[tty]->newMsg++;
-
-                        TaskResumeAll();
+                        }
                   }
             }
+
+            GiveAccess(tty);
       }
 
       AddTermMsg_end:
@@ -518,12 +574,14 @@ void TTY_Clear(u8_t tty)
       {
             if (ttyTerm[tty])
             {
-                  TaskSuspendAll();
+                  WaitForAccess(tty);
 
                   for (u8_t i = 0; i < TTY_MSGS; i++)
                   {
                         if (ttyTerm[tty]->line)
+                        {
                            Free(ttyTerm[tty]->line[i]);
+                        }
 
                         ttyTerm[tty]->line[i] = NULL;
                   }
@@ -531,7 +589,7 @@ void TTY_Clear(u8_t tty)
                   ttyTerm[tty]->msgCnt = 0;
                   ttyTerm[tty]->newMsg = 0;
 
-                  TaskResumeAll();
+                  GiveAccess(tty);
             }
       }
 }
@@ -548,9 +606,11 @@ void TTY_Clear(u8_t tty)
 //================================================================================================//
 void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
 {
-      if (tty < TTY_COUNT && newmsg)
+      if (tty < TTY_COUNT && newmsg && ttyTerm[tty])
       {
-            if (ttyTerm[tty] && ttyTerm[tty]->msgCnt)
+            WaitForAccess(tty);
+
+            if (ttyTerm[tty]->msgCnt)
             {
                   ch_t *localMsg = Malloc(sizeof(ch_t) * strlen(newmsg));
 
@@ -566,8 +626,12 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
                   }
 
                   if (ttyTerm[tty]->newMsg < TTY_MSGS)
+                  {
                         ttyTerm[tty]->newMsg++;
+                  }
             }
+
+            GiveAccess(tty);
       }
 }
 
@@ -596,11 +660,11 @@ ch_t TTY_GetChr(u8_t tty)
 {
       ch_t chr = 0;
 
-      if (tty < TTY_COUNT)
+      if (tty < TTY_COUNT && ttyTerm[tty])
       {
-            struct ttyEntry *ctty = ttyTerm[tty];
+            WaitForAccess(tty);
 
-            TaskSuspendAll();
+            struct ttyEntry *ctty = ttyTerm[tty];
 
             if (ctty->fifo.level > 0)
             {
@@ -614,7 +678,7 @@ ch_t TTY_GetChr(u8_t tty)
                   ctty->fifo.level--;
             }
 
-            TaskResumeAll();
+            GiveAccess(tty);
       }
 
       return chr;
@@ -631,7 +695,9 @@ void TTY_ChangeTTY(u8_t tty)
 {
       if (tty < TTY_COUNT)
       {
+            WaitForAccess(tty);
             sugTTY = tty;
+            GiveAccess(tty);
       }
 }
 

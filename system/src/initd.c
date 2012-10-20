@@ -143,34 +143,34 @@ void Initd(void *arg)
                         }
                         else
                         {
+                              kprint("Application started on TTY%d\n", currtty + 1);
                               apphdl[currtty]->tty = currtty;
                         }
                   }
             }
 
             /* application monitoring */
-            for (u8_t i = 0; i < TTY_COUNT; i++)
+            for (u8_t i = 0; i < TTY_COUNT - 1; i++)
             {
                   if (apphdl[i])
                   {
                         if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
                         {
-                              kprint("Application closed\n");
+                              kprint("Application closed on TTY%d\n", currtty + 1);
 
                               FreeApphdl(apphdl[i]);
                               apphdl[i] = NULL;
 
-                              if (currtty > 0 && currtty == i)
-                              {
-                                    kprint("Cleaning TTY%d\n", currtty + 1);
-                                    TTY_ChangeTTY(0);
-                                    TTY_Clear(currtty);
-                              }
+                              TTY_ChangeTTY(0);
                         }
+                  }
+                  else
+                  {
+                        TTY_Clear(i);
                   }
             }
 
-            TaskDelay(10);
+            TaskDelay(200);
       }
 
       /* this should never happen */

@@ -86,32 +86,25 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
       /* allocate memory for application handler */
       appHandle = Calloc(1, sizeof(appArgs_t));
 
-      if (!appHandle)
+      if (appHandle)
       {
-            goto RunAsApp_end;
-      }
-      else
-      {
-            appHandle->arg = NULL;
-      }
+            /* initialize stdio data */
+            appHandle->arg              = arg;
+            appHandle->exitCode         = STD_RET_UNKNOWN;
+            appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
+            appHandle->ChildTaskHandle  = NULL;
+            appHandle->tty              = -1;
 
-      /* initialize stdio data */
-      appHandle->arg              = arg;
-      appHandle->exitCode         = STD_RET_UNKNOWN;
-      appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
-      appHandle->ChildTaskHandle  = NULL;
-      appHandle->tty              = -1;
-
-      /* start application task */
-      if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
-      {
-            Free(appHandle);
-            appHandle = NULL;
-            goto RunAsApp_end;
+            /* start application task */
+            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
+            {
+                  Free(appHandle);
+                  appHandle = NULL;
+            }
       }
 
       RunAsApp_end:
-            return appHandle;
+      return appHandle;
 }
 
 
@@ -140,28 +133,25 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
       /* allocate memory for application handler */
       appHandle = Calloc(1, sizeof(appArgs_t));
 
-      if (!appHandle)
+      if (appHandle)
       {
-            goto RunAsDaemon_end;
-      }
+            /* set default values */
+            appHandle->arg              = arg;
+            appHandle->exitCode         = STD_RET_UNKNOWN;
+            appHandle->tty              = -1;
+            appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
+            appHandle->ChildTaskHandle  = NULL;
 
-      /* set default values */
-      appHandle->arg              = arg;
-      appHandle->exitCode         = STD_RET_UNKNOWN;
-      appHandle->tty              = -1;
-      appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
-      appHandle->ChildTaskHandle  = NULL;
-
-      /* start daemon task */
-      if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
-      {
-            Free(appHandle);
-            appHandle = NULL;
-            goto RunAsDaemon_end;
+            /* start daemon task */
+            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
+            {
+                  Free(appHandle);
+                  appHandle = NULL;
+            }
       }
 
       RunAsDaemon_end:
-            return appHandle;
+      return appHandle;
 }
 
 
@@ -225,6 +215,11 @@ stdRet_t FreeApphdl(appArgs_t *appArgs)
 {
       if (appArgs)
       {
+            if (appArgs->ChildTaskHandle)
+            {
+                  TaskDelete(appArgs->ChildTaskHandle);
+            }
+
             Free(appArgs);
 
             return STD_RET_OK;
@@ -248,6 +243,7 @@ void TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode)
 {
       /* set exit code */
       appArgument->exitCode = exitCode;
+      appArgument->ChildTaskHandle = NULL;
 
       TaskTerminate();
 }

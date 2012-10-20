@@ -68,7 +68,7 @@ stdRet_t appmain(ch_t *argv)
       printf("Total: %d\n", SystemGetMemSize());
       printf("Free : %d\n", free);
       printf("Used : %d\n", used);
-      printf("Memory usage: %d%%\n", (used * 100)/SystemGetFreeMemSize());
+      printf("Memory usage: %d%%\n", (used * 100)/SystemGetMemSize());
 
       return STD_RET_OK;
 }

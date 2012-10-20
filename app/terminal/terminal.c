@@ -138,25 +138,44 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
       appArgs_t *appHdl;
 
-      appHdl = Exec(cmd, arg);
-
-      if (appHdl)
+      for (u16_t i = 0; i < 10000; i++)
       {
-            appHdl->tty = tty;
+            appHdl = Exec(cmd, arg);
 
-            while (appHdl->exitCode == STD_RET_UNKNOWN)
+            if (appHdl)
             {
-                  Sleep(10);
+                  appHdl->tty = tty;
+
+                  while (appHdl->exitCode == STD_RET_UNKNOWN)
+                  {
+                        Sleep(10);
+                  }
+
+                  FreeApphdl(appHdl);
             }
-
-            FreeApphdl(appHdl);
-
-            return CMD_EXECUTED;
       }
-      else
-      {
-            return CMD_NOT_EXIST;
-      }
+
+      return CMD_EXECUTED;
+
+//      appHdl = Exec(cmd, arg);
+//
+//      if (appHdl)
+//      {
+//            appHdl->tty = tty;
+//
+//            while (appHdl->exitCode == STD_RET_UNKNOWN)
+//            {
+//                  Sleep(10);
+//            }
+//
+//            FreeApphdl(appHdl);
+//
+//            return CMD_EXECUTED;
+//      }
+//      else
+//      {
+//            return CMD_NOT_EXIST;
+//      }
 }
 
 

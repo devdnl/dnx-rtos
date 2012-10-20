@@ -208,6 +208,7 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
 
                         if (status == STD_RET_OK && devName->node[i])
                         {
+                              kprint("Removed node /dev/%s\n", devName->node[i]);
                               Free(devName->node[i]);
                               devName->node[i] = NULL;
                         }
