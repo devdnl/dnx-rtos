@@ -75,7 +75,7 @@ stdRet_t appmain(ch_t *argv)
             GetAppList(appList, INPUT_BUFFER_SIZE);
 
             fontCyan();
-            print("%s", appList);
+            printf("%s", appList);
             resetAttr();
 
             Free(appList);
@@ -84,7 +84,7 @@ stdRet_t appmain(ch_t *argv)
       }
       else
       {
-            print("No enough free memory\n");
+            printf("No enough free memory\n");
       }
 
       return status;

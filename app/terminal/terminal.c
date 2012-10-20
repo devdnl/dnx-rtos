@@ -70,7 +70,7 @@ typedef enum
 void PrintPrompt(void)
 {
       fontGreen();
-      print("root@%s: ", SystemGetHostname());
+      printf("root@%s: ", SystemGetHostname());
       resetAttr();
 }
 
@@ -90,7 +90,7 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
       /* exit command --------------------------------------------------------------------------- */
       if (strcmp("exit", cmd) == 0)
       {
-            print("Exit\n");
+            printf("Exit\n");
             return CMD_EXIT;
       }
 
@@ -98,23 +98,23 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
       if (strcmp("echo", cmd) == 0)
       {
             if (arg)
-                  print("%s\n", arg);
+                  printf("%s\n", arg);
             else
-                  print("\n");
+                  printf("\n");
             return CMD_EXECUTED;
       }
 
       /* stack measurement ---------------------------------------------------------------------- */
       if (strcmp("stack", cmd) == 0)
       {
-            print("Free stack: %d\n", SystemGetStackFreeSpace());
+            printf("Free stack: %d\n", SystemGetStackFreeSpace());
             return CMD_EXECUTED;
       }
 
       /* system reboot -------------------------------------------------------------------------- */
       if (strcmp("reboot", cmd) == 0)
       {
-            print("Reboting...\n");
+            printf("Reboting...\n");
             Sleep(500);
             SystemReboot();
             return CMD_EXECUTED;
@@ -191,12 +191,12 @@ stdRet_t appmain(ch_t *argv)
                   Free(history);
             }
 
-            print("No enough free memory\n");
+            printf("No enough free memory\n");
             termStatus = STD_RET_ERROR;
             goto Terminal_Exit;
       }
 
-      print("Welcome to %s - kernel FreeRTOS (tty%d)\n", SystemGetHostname(), tty + 1);
+      printf("Welcome to %s - kernel FreeRTOS (tty%d)\n", SystemGetHostname(), tty + 1);
 
       memset(history, ASCII_NULL, PROMPT_LINE_SIZE);
 
@@ -208,7 +208,7 @@ stdRet_t appmain(ch_t *argv)
             PrintPrompt();
 
             /* waiting for command */
-            scan("%s3", line);
+            scanf("%s3", line);
 
             /* check that history was call */
             if (strcmp(line, "\x1B[A") == 0)
@@ -216,7 +216,7 @@ stdRet_t appmain(ch_t *argv)
                   ch_t character;
 
                   strcpy(line, history);
-                  print("%s", history);
+                  printf("%s", history);
 
                   do
                   {
@@ -224,7 +224,7 @@ stdRet_t appmain(ch_t *argv)
                   }
                   while (!(character == ASCII_LF || character == ASCII_CR));
 
-                  print("\n");
+                  printf("\n");
             }
             else
             {
@@ -265,13 +265,13 @@ stdRet_t appmain(ch_t *argv)
             /* check status */
             if (cmdStatus == CMD_ALLOC_ERROR)
             {
-                  print("Not enough free memory to run application.\n");
+                  printf("Not enough free memory to run application.\n");
             }
             else if (cmdStatus == CMD_NOT_EXIST)
             {
                   if (strlen(cmd) != 0)
                   {
-                        print("\"%s\" is unknown command.\n", cmd);
+                        printf("\"%s\" is unknown command.\n", cmd);
                   }
             }
       }
@@ -283,7 +283,7 @@ stdRet_t appmain(ch_t *argv)
       /* if stack size is debugging */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
       {
-            print("Free stack: %d levels\n", SystemGetStackFreeSpace());
+            printf("Free stack: %d levels\n", SystemGetStackFreeSpace());
       }
 
       Terminal_Exit:

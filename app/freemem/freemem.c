@@ -65,10 +65,10 @@ stdRet_t appmain(ch_t *argv)
       u32_t free = SystemGetFreeMemSize();
       u32_t used = SystemGetUsedMemSize();
 
-      print("Total: %d\n", SystemGetMemSize());
-      print("Free : %d\n", free);
-      print("Used : %d\n", used);
-      print("Memory usage: %d%%\n", (used * 100)/SystemGetFreeMemSize());
+      printf("Total: %d\n", SystemGetMemSize());
+      printf("Free : %d\n", free);
+      printf("Used : %d\n", used);
+      printf("Memory usage: %d%%\n", (used * 100)/SystemGetFreeMemSize());
 
       return STD_RET_OK;
 }

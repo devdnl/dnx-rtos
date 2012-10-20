@@ -77,7 +77,7 @@ stdRet_t appmain(ch_t *argv)
          u32_t uhrs     = (uptime / 3600) % 24;
          u32_t umins    = (uptime / 60) % 60;
 
-         print("%x2:%x2:%x2, up %ud %u2:%u2\n",
+         printf("%x2:%x2:%x2, up %ud %u2:%u2\n",
                time.hours, time.minutes, time.seconds,
                udays, uhrs, umins);
 
@@ -87,7 +87,7 @@ stdRet_t appmain(ch_t *argv)
       }
       else
       {
-            print("Cannont open rtc device!\n");
+            printf("Cannont open rtc device!\n");
       }
 
       return status;

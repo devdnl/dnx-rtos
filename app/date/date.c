@@ -82,16 +82,16 @@ stdRet_t appmain(ch_t *argv)
             if ( (ParseArg(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
                ||(ParseArg(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) )
             {
-                  print("Syntax: %s [OPTION]...\n", DATE_NAME);
-                  print("Print actual time and date.\n");
-                  print("  -S,  --set    set RTC time and date\n");
-                  print("  -H,           hours\n");
-                  print("  -m,           minutes\n");
-                  print("  -s,           seconds\n");
-                  print("  -Y,           year\n");
-                  print("  -M,           month\n");
-                  print("  -D,           day\n");
-                  print("       --stack  print free stack\n");
+                  printf("Syntax: %s [OPTION]...\n", DATE_NAME);
+                  printf("Print actual time and date.\n");
+                  printf("  -S,  --set    set RTC time and date\n");
+                  printf("  -H,           hours\n");
+                  printf("  -m,           minutes\n");
+                  printf("  -s,           seconds\n");
+                  printf("  -Y,           year\n");
+                  printf("  -M,           month\n");
+                  printf("  -D,           day\n");
+                  printf("       --stack  print free stack\n");
             }
             else if ( (ParseArg(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
                     ||(ParseArg(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
@@ -146,7 +146,7 @@ stdRet_t appmain(ch_t *argv)
                   if ( (ioctl(rtc, RTC_IORQ_SETTIME, &time) != STD_RET_OK)
                      ||(ioctl(rtc, RTC_IORQ_SETDATE, &date) != STD_RET_OK) )
                   {
-                        print("ERROR: unable to set RTC\n");
+                        printf("ERROR: unable to set RTC\n");
                         status = STD_RET_ERROR;
                   }
             }
@@ -165,20 +165,20 @@ stdRet_t appmain(ch_t *argv)
                   if (date.month == 0)
                         date.month++;
 
-                  print("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
+                  printf("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
                         weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
                         time.hours, time.minutes, time.seconds);
             }
       }
       else
       {
-            print("Unable to open RTC file\n");
+            printf("Unable to open RTC file\n");
       }
 
       /* show stack free space if requested */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
       {
-            print("Free stack: %d levels\n", SystemGetStackFreeSpace());
+            printf("Free stack: %d levels\n", SystemGetStackFreeSpace());
       }
 
       return status;

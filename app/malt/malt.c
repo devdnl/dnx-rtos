@@ -78,9 +78,9 @@ u16_t GetRandom(void)
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      print("Program used to test malloc() and free() functions in random size block.\n");
+      printf("Program used to test malloc() and free() functions in random size block.\n");
 //      print("HEAP address: %x - %x\n", GetHeapBegin(), GetHeapEnd());
-      print("Press (s) to start or (e) to exit.\n");
+      printf("Press (s) to start or (e) to exit.\n");
 
       while (TRUE)
       {
@@ -108,7 +108,7 @@ stdRet_t appmain(ch_t *argv)
                               if (test[i].ptr == NULL)
                               {
                                     fontYellow();
-                                    print("\nptr%d error: NULL; alloc size %d; free mem %d",
+                                    printf("\nptr%d error: NULL; alloc size %d; free mem %d",
                                           i, test[i].size, SystemGetFreeMemSize());
                                     resetAttr();
                               }
@@ -140,7 +140,7 @@ stdRet_t appmain(ch_t *argv)
                                     if (*(ptr++) != test[i].patt)
                                     {
                                           fontBlue();
-                                          print("\nptr%d error: bad pattern", i);
+                                          printf("\nptr%d error: bad pattern", i);
                                           resetAttr();
 
                                           break;
@@ -160,7 +160,7 @@ stdRet_t appmain(ch_t *argv)
                         /* progress */
                         if (count % 1000 == 0)
                         {
-                              print("\r%d tests", count / 1000);
+                              printf("\r%d tests", count / 1000);
                         }
 
                         count += sizeof(test);
@@ -172,10 +172,10 @@ stdRet_t appmain(ch_t *argv)
 
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
       {
-            print("\nFree stack: %d levels", SystemGetStackFreeSpace());
+            printf("\nFree stack: %d levels", SystemGetStackFreeSpace());
       }
 
-      print("\nExiting...\n");
+      printf("\nExiting...\n");
 
       return STD_RET_OK;
 }
