@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    cpu.c
+@file    top.c
 
 @author  Daniel Zorychta
 
-@brief   This file support CPU control
+@brief   Application show CPU load
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,31 +24,24 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "cpu.h"
-#include "stm32f10x.h"
+#include "top.h"
+#include "regapp.h"
+#include <string.h>
 
+/* Begin of application section declaration */
+APPLICATION(top)
+APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define APB1FREQ                    36000000UL
-#define TIM2FREQ                    10000UL
 
 
 /*==================================================================================================
                                    Local types, enums definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                      Local function prototypes
 ==================================================================================================*/
 
 
@@ -63,52 +56,21 @@ extern "C" {
 
 //================================================================================================//
 /**
- * @brief Restart CPU
+ * @brief clear main function
  */
 //================================================================================================//
-void SystemReboot(void)
+stdRet_t appmain(ch_t *argv)
 {
-      NVIC_SystemReset();
+      (void) argv;
+
+      stdRet_t status = STD_RET_ERROR;
+
+
+      return status;
 }
 
-
-//================================================================================================//
-/**
- * @brief Start counter used in CPU load measurement
- */
-//================================================================================================//
-void RunTimeStatsCfgCnt(void)
-{
-      /* enable clock */
-      RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
-
-      /* reset timer */
-      RCC->APB1RSTR |= RCC_APB1RSTR_TIM2RST;
-      RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
-
-      /* configure timer */
-      TIM2->PSC = APB1FREQ/TIM2FREQ;
-      TIM2->ARR = 0xFFFF;
-      TIM2->CR1 = TIM_CR1_CEN;
-}
-
-
-//================================================================================================//
-/**
- * @brief Gets value from counter used in CPU load measurement
- *
- * @return timer value
- */
-//================================================================================================//
-uint16_t RunTimeStatsGetCnt(void)
-{
-      return TIM2->CNT;
-}
-
-
-#ifdef __cplusplus
-}
-#endif
+/* End of application section declaration */
+APP_SEC_END
 
 /*==================================================================================================
                                             End of file

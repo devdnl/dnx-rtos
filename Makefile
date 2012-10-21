@@ -41,6 +41,7 @@ CSRC = $(sort \
    app/lwiptest/lwiptest.c \
    app/http/httpde.c \
    app/httpd/httpd.c \
+   app/top/top.c \
    cpu/stm32/stm32f10x_vectors.c \
    drivers/regdrv.c \
    drivers/ds1307/ds1307.c \

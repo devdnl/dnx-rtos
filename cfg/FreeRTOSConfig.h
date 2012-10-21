@@ -69,6 +69,7 @@
 
 #include "pll_cfg.h"          /* CPU_TARGET_FREQ */
 #include "memman.h"           /* dynamic memory management */
+#include "cpu.h"
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -101,7 +102,7 @@
 #define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configQUEUE_REGISTRY_SIZE               0
-#define configGENERATE_RUN_TIME_STATS           0
+#define configGENERATE_RUN_TIME_STATS           1
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -132,6 +133,10 @@ NVIC value of 255. */
 #define xPortPendSVHandler                      PendSV_Handler
 #define xPortSysTickHandler                     SysTick_Handler
 #define vPortSVCHandler                         SVC_Handler
+
+/* required functions in cpu load stats */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      RunTimeStatsCfgCnt();
+#define portGET_RUN_TIME_COUNTER_VALUE()              RunTimeStatsGetCnt();
 
 #endif /* FREERTOS_CONFIG_H */
 

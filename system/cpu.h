@@ -48,8 +48,9 @@
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void SystemReboot(void);
-
+extern void     SystemReboot(void);
+extern void     RunTimeStatsCfgCnt(void);
+extern uint16_t RunTimeStatsGetCnt(void);
 
 #ifdef __cplusplus
    }
