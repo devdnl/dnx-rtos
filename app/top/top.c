@@ -67,7 +67,7 @@ stdRet_t appmain(ch_t *argv)
 
       u32_t size     = 50 * SystemGetTaskCount();
       ch_t  *buffer  = Calloc(size, sizeof(ch_t));
-      u8_t  divcnt   = 8;
+      u8_t  divcnt   = 10;
 
       if (buffer)
       {
@@ -92,7 +92,6 @@ stdRet_t appmain(ch_t *argv)
                   }
                   else
                   {
-                        SystemGetRunTimeStats(buffer);
                         divcnt++;
                   }
             }
