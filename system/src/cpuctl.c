@@ -87,7 +87,7 @@ void RunTimeStatsCfgCnt(void)
       RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
 
       /* configure timer */
-      TIM2->PSC = APB1FREQ/TIM2FREQ;
+      TIM2->PSC = (APB1FREQ/TIM2FREQ) - 1;
       TIM2->ARR = 0xFFFF;
       TIM2->CR1 = TIM_CR1_CEN;
 }

@@ -65,19 +65,36 @@ stdRet_t appmain(ch_t *argv)
 
       stdRet_t status = STD_RET_ERROR;
 
-      u32_t size    = 50 * SystemGetTaskCount();
-      ch_t  *buffer = Calloc(size, sizeof(ch_t));
+      u32_t size     = 50 * SystemGetTaskCount();
+      ch_t  *buffer  = Calloc(size, sizeof(ch_t));
+      u8_t  divcnt   = 8;
 
       if (buffer)
       {
-            SystemGetRunTimeStats(buffer);
-
             while (ugetChar() != 'q')
             {
-                  Sleep(1000);
-                  SystemGetRunTimeStats(buffer);
-                  printf("\x1B[2J\x1B[HName\t\tTime\t\tUsage\n%s\nPress q to quit\n", buffer);
-                  memset(buffer, 0, size);
+                  Sleep(100);
+
+                  if (divcnt >= 10)
+                  {
+                        SystemGetRunTimeStats(buffer);
+
+                        printf("\x1B[2J\x1B[HPress q to quit\n");
+
+                        printf("Total tasks: %u\n", SystemGetTaskCount());
+
+                        printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
+                               SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
+
+                        printf("Name\t\tTime\t\tUsage\n%s\n", buffer);
+
+                        divcnt = 0;
+                  }
+                  else
+                  {
+                        SystemGetRunTimeStats(buffer);
+                        divcnt++;
+                  }
             }
 
             status = STD_RET_OK;

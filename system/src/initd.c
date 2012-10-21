@@ -170,7 +170,7 @@ void Initd(void *arg)
                   }
             }
 
-            TaskDelay(200);
+            TaskDelay(500);
       }
 
       /* this should never happen */
