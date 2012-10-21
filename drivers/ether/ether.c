@@ -76,7 +76,7 @@ extern "C" {
  * @retval STD_RET_ERROR      error
  */
 //================================================================================================//
-stdRet_t ETHER_Init(dev_t eth)
+stdRet_t ETHER_Init(nod_t eth)
 {
       (void) eth;
 
@@ -165,7 +165,7 @@ stdRet_t ETHER_Init(dev_t eth)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t ETHER_Open(dev_t dev)
+stdRet_t ETHER_Open(nod_t dev)
 {
       (void)dev;
 
@@ -182,7 +182,7 @@ stdRet_t ETHER_Open(dev_t dev)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t ETHER_Close(dev_t dev)
+stdRet_t ETHER_Close(nod_t dev)
 {
       (void)dev;
 
@@ -202,7 +202,7 @@ stdRet_t ETHER_Close(dev_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t ETHER_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t ETHER_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)src;
@@ -226,7 +226,7 @@ size_t ETHER_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t ETHER_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
       (void)dst;
@@ -249,7 +249,7 @@ size_t ETHER_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t ETHER_IOCtl(dev_t dev, IORq_t ioRq, void *data)
+stdRet_t ETHER_IOCtl(nod_t dev, IORq_t ioRq, void *data)
 {
       (void)dev;
       (void)ioRq;
@@ -269,7 +269,7 @@ stdRet_t ETHER_IOCtl(dev_t dev, IORq_t ioRq, void *data)
  * @retval STD_RET_ERROR      error
  */
 //================================================================================================//
-stdRet_t ETHER_Release(dev_t eth)
+stdRet_t ETHER_Release(nod_t eth)
 {
       (void) eth;
 

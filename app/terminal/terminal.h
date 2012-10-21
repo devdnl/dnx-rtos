@@ -43,7 +43,7 @@ extern "C" {
 #define TERMINAL_STACK_SIZE               (3 * MINIMAL_STACK_SIZE)
 
 /** define application name */
-#define TERMINAL_NAME                     "terminal"
+#define TERMINAL_NAME                     "term"
 
 
 /*==================================================================================================

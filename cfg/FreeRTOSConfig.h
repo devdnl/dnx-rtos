@@ -69,7 +69,8 @@
 
 #include "pll_cfg.h"          /* CPU_TARGET_FREQ */
 #include "memman.h"           /* dynamic memory management */
-#include "cpu.h"
+#include "cpuctl.h"
+#include "print.h"
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -135,8 +136,9 @@ NVIC value of 255. */
 #define vPortSVCHandler                         SVC_Handler
 
 /* required functions in cpu load stats */
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      RunTimeStatsCfgCnt();
-#define portGET_RUN_TIME_COUNTER_VALUE()              RunTimeStatsGetCnt();
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      RunTimeStatsCfgCnt()
+#define portGET_RUN_TIME_COUNTER_VALUE()              RunTimeStatsGetCnt()
+#define sprintf(ptr, format, ...)                     snprint(ptr, 65535, format, __VA_ARGS__)
 
 #endif /* FREERTOS_CONFIG_H */
 

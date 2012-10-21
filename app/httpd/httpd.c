@@ -96,7 +96,7 @@ APPLICATION(httpd)
 
             if (!socket)
             {
-                  print("Bad socket.\n");
+                  printf("Bad socket.\n");
                   Sleep(1000);
                   continue;
             }
@@ -105,7 +105,7 @@ APPLICATION(httpd)
             {
                   if (NET_GetTCPStatus(socket, &status) != STD_RET_OK)
                   {
-                        print("Get status error.\n");
+                        printf("Get status error.\n");
                         Sleep(1000);
                         NET_CloseTCPSocket(socket);
                         goto AGAIN;
@@ -113,7 +113,7 @@ APPLICATION(httpd)
 
                   if (status.flag.BindAccepted)
                   {
-                        print("Bind accepted\n");
+                        printf("Bind accepted\n");
 
                         for (;;)
                         {
@@ -121,23 +121,23 @@ APPLICATION(httpd)
 
                               if (status.flag.ConnectionError)
                               {
-                                    print("Closed TCP\n");
+                                    printf("Closed TCP\n");
                                     NET_TCPClose(socket);
                               }
 
                               if (status.flag.DataPosted)
                               {
-                                    print("data posted\n");
+                                    printf("data posted\n");
                                     NET_TCPClose(socket);
                               }
 
                               if (status.flag.DataReceived)
                               {
-                                    print("Data received\n");
+                                    printf("Data received\n");
 
                                     if (NET_TCPAcceptReceived(socket) == STD_RET_ERROR)
                                     {
-                                          print("TCPAcceptReceived error\n");
+                                          printf("TCPAcceptReceived error\n");
                                     }
                                     else
                                     {
@@ -145,7 +145,7 @@ APPLICATION(httpd)
 
                                           if (strncmp(data, "GET /hello", 10) == 0)
                                           {
-                                                print("Sending page\n");
+                                                printf("Sending page\n");
 
                                                 NET_FreeReceivedBuffer(socket);
 
@@ -159,7 +159,7 @@ APPLICATION(httpd)
 
                               if (status.flag.Poll)
                               {
-                                    print("Polling\n");
+                                    printf("Polling\n");
                                     NET_TCPAcceptPoll(socket);
                               }
                         }

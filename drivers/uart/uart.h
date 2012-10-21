@@ -87,13 +87,13 @@ enum UART_DEV_NUMBER_ENUM
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t UART_Init(dev_t dev);
-extern stdRet_t UART_Open(dev_t dev);
-extern stdRet_t UART_Close(dev_t dev);
-extern size_t   UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t UART_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t UART_Release(dev_t dev);
+extern stdRet_t UART_Init(nod_t dev);
+extern stdRet_t UART_Open(nod_t dev);
+extern stdRet_t UART_Close(nod_t dev);
+extern size_t   UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
+extern stdRet_t UART_Release(nod_t dev);
 
 #ifdef __cplusplus
 }

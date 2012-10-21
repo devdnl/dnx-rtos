@@ -48,6 +48,9 @@
 ==================================================================================================*/
 static void  reverseBuffer(ch_t *begin, ch_t *end);
 static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg);
+static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired);
+static ch_t *atoi(ch_t *string, u8_t base, i32_t *value);
+static u32_t CalcFormatSize(const ch_t *format, va_list arg);
 
 
 /*==================================================================================================
@@ -133,7 +136,7 @@ static void reverseBuffer(ch_t *begin, ch_t *end)
  * @return pointer in the buffer
  */
 //================================================================================================//
-ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired)
+static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired)
 {
       static const ch_t digits[] = "0123456789ABCDEF";
 
@@ -202,7 +205,7 @@ ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zero
  * @return pointer in string when operation was finished
  */
 //================================================================================================//
-ch_t *atoi(ch_t *string, u8_t base, i32_t *value)
+static ch_t *atoi(ch_t *string, u8_t base, i32_t *value)
 {
       ch_t   character;
       i32_t  sign      = 1;
@@ -274,6 +277,64 @@ ch_t *atoi(ch_t *string, u8_t base, i32_t *value)
 
 //================================================================================================//
 /**
+ * @brief Function convert arguments to stream
+ *
+ * @param[in] *format        message format
+ * @param[in] arg            argument list
+ *
+ * @return size of snprint result
+ */
+//================================================================================================//
+static u32_t CalcFormatSize(const ch_t *format, va_list arg)
+{
+      ch_t  chr;
+      u32_t size = 1;
+
+      while ((chr = *format++) != ASCII_NULL)
+      {
+            if (chr != '%')
+            {
+                  if (chr == '\n')
+                  {
+                        size += 2;
+                  }
+                  else
+                  {
+                        size++;
+                  }
+            }
+            else
+            {
+                  chr = *format++;
+
+                  if (chr == '%' || chr == 'c')
+                  {
+                        chr = va_arg(arg, i32_t);
+                        size++;
+                        continue;
+                  }
+
+                  if (chr == 's')
+                  {
+                        size += strlen(va_arg(arg, ch_t*));
+                        continue;
+                  }
+
+                  if (chr == 'd' || chr == 'x' || chr == 'u')
+                  {
+                        chr = va_arg(arg, i32_t);
+                        size += 11;
+                        continue;
+                  }
+            }
+      }
+
+      return size;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function send to buffer formated output string
  *
  * @param *stream             output buffer
@@ -316,7 +377,10 @@ u32_t printt(u8_t tty, const ch_t *format, ...)
       va_list args;
       u32_t n    = 0;
 
-      u32_t size = strlen(format) + 100;
+      va_start(args, format);
+      u32_t size = CalcFormatSize(format, args);
+      va_end(args);
+
       ch_t *str  = Calloc(1, size);
 
       if (str)
@@ -351,12 +415,16 @@ u32_t kprint(const ch_t *format, ...)
 
       if (kprintEnabled)
       {
-            ch_t *buffer = Calloc(KPRINT_BUFFER_SIZE, sizeof(ch_t));
+            va_start(args, format);
+            u32_t size = CalcFormatSize(format, args);
+            va_end(args);
+
+            ch_t *buffer = Calloc(size, sizeof(ch_t));
 
             if (buffer)
             {
                   va_start(args, format);
-                  n = vsnprint(buffer, KPRINT_BUFFER_SIZE, format, args);
+                  n = vsnprint(buffer, size, format, args);
                   va_end(args);
 
                   TTY_AddMsg(kprintTTY, buffer);
@@ -486,53 +554,53 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
 {
       #define putCharacter(character)           \
       {                                         \
-            if (streamLen < size)               \
+            if (slen < size)                    \
             {                                   \
                   *stream++ = character;        \
+                  slen++;                       \
             }                                   \
             else                                \
             {                                   \
-                  *stream = 0;                  \
                   goto vsnprint_end;            \
             }                                   \
-            streamLen++;                        \
       }
 
 
-      ch_t  character;
-      u32_t streamLen = 1;
+      ch_t  chr;
+      u32_t slen = 1;
 
-      while ((character = *format++) != ASCII_NULL)
+      /* analyze format */
+      while ((chr = *format++) != ASCII_NULL)
       {
-            if (character != '%')
+            if (chr != '%')
             {
-                  if (character == ASCII_LF)
+                  if (chr == ASCII_LF)
                   {
                         putCharacter(ASCII_CR);
                   }
 
-                  putCharacter(character);
+                  putCharacter(chr);
             }
             else
             {
-                  character = *format++;
+                  chr = *format++;
 
-                  if (character == '%' || character == 'c')
+                  if (chr == '%' || chr == 'c')
                   {
-                        if (character == 'c')
-                              character = va_arg(arg, i32_t);
+                        if (chr == 'c')
+                              chr = va_arg(arg, i32_t);
 
-                        putCharacter(character);
+                        putCharacter(chr);
 
                         continue;
                   }
 
-                  if (character == 's' || character == 'd' || character == 'x' || character == 'u')
+                  if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u')
                   {
                         ch_t result[11];
                         ch_t *resultPtr;
 
-                        if (character == 's')
+                        if (chr == 's')
                         {
                               resultPtr = va_arg(arg, ch_t*);
                         }
@@ -550,15 +618,15 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
                                     format--;
                               }
 
-                              u8_t   base  = ((character == 'd') || (character == 'u') ? 10 : 16);
-                              bool_t uint  = ((character == 'x') || (character == 'u') ? TRUE : FALSE);
+                              u8_t   base  = ((chr == 'd') || (chr == 'u') ? 10 : 16);
+                              bool_t uint  = ((chr == 'x') || (chr == 'u') ? TRUE : FALSE);
 
                               resultPtr = itoa(va_arg(arg, i32_t), result, base, uint, zeros);
                         }
 
-                        while ((character = *resultPtr++))
+                        while ((chr = *resultPtr++))
                         {
-                              putCharacter(character);
+                              putCharacter(chr);
                         }
 
                         continue;
@@ -567,7 +635,8 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
       }
 
       vsnprint_end:
-            return (streamLen - 1);
+      *stream = 0;
+      return (slen - 1);
 
       #undef putChar
 }

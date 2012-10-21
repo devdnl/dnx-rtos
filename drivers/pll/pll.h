@@ -63,13 +63,13 @@ enum PLL_DEV_NUMBER_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t PLL_Init(dev_t dev);
-extern stdRet_t PLL_Open(dev_t dev);
-extern stdRet_t PLL_Close(dev_t dev);
-extern size_t   PLL_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   PLL_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t PLL_IOCtl(dev_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t PLL_Release(dev_t dev);
+extern stdRet_t PLL_Init(nod_t dev);
+extern stdRet_t PLL_Open(nod_t dev);
+extern stdRet_t PLL_Close(nod_t dev);
+extern size_t   PLL_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   PLL_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t PLL_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
+extern stdRet_t PLL_Release(nod_t dev);
 
 #ifdef __cplusplus
 }

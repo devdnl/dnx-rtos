@@ -329,7 +329,7 @@ static PortHandle_t PortHandle[] =
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t UART_Init(dev_t dev)
+stdRet_t UART_Init(nod_t dev)
 {
       (void) dev;
 
@@ -349,7 +349,7 @@ stdRet_t UART_Init(dev_t dev)
  * @retval UART_STATUS_NOFREEMEM          no enough free memory to allocate RxBuffer
  */
 //================================================================================================//
-stdRet_t UART_Open(dev_t dev)
+stdRet_t UART_Open(nod_t dev)
 {
       stdRet_t status    = UART_STATUS_PORTNOTEXIST;
       USART_t  *usartPtr = NULL;
@@ -544,7 +544,7 @@ UART_Open_End:
  * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
  */
 //================================================================================================//
-stdRet_t UART_Close(dev_t dev)
+stdRet_t UART_Close(nod_t dev)
 {
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
@@ -659,7 +659,7 @@ stdRet_t UART_Close(dev_t dev)
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-size_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
 
@@ -719,7 +719,7 @@ size_t UART_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @retval UART_STATUS_INCORRECTSIZE      incorrect size
  */
 //================================================================================================//
-size_t UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
 
@@ -789,7 +789,7 @@ size_t UART_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @retval UART_STATUS_BADRQ              bad request
  */
 //================================================================================================//
-stdRet_t UART_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
+stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 {
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
@@ -953,7 +953,7 @@ stdRet_t UART_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t UART_Release(dev_t dev)
+stdRet_t UART_Release(nod_t dev)
 {
       (void) dev;
 

@@ -482,6 +482,12 @@ void TTY_AddMsg(u8_t tty, ch_t *msg)
                   Sleep(10);
             }
 
+            /* check if screen is cleared */
+            if (strncmp("\x1B[2J", msg, 4) == 0)
+            {
+                  TTY_Clear(tty);
+            }
+
             /* check if previous message has not line end (\n) */
             u8_t msgcnt   = ttyTerm[tty]->msgCnt;
             ch_t *lastmsg = ttyTerm[tty]->line[msgcnt - 1];
@@ -580,7 +586,7 @@ void TTY_Clear(u8_t tty)
                   {
                         if (ttyTerm[tty]->line)
                         {
-                           Free(ttyTerm[tty]->line[i]);
+                              Free(ttyTerm[tty]->line[i]);
                         }
 
                         ttyTerm[tty]->line[i] = NULL;

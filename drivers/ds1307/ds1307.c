@@ -141,7 +141,7 @@ static struct rtc_struct
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_Init(dev_t dev)
+stdRet_t DS1307_Init(nod_t dev)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -218,7 +218,7 @@ stdRet_t DS1307_Init(dev_t dev)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_Open(dev_t dev)
+stdRet_t DS1307_Open(nod_t dev)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -253,7 +253,7 @@ stdRet_t DS1307_Open(dev_t dev)
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_Close(dev_t dev)
+stdRet_t DS1307_Close(nod_t dev)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -287,7 +287,7 @@ stdRet_t DS1307_Close(dev_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t DS1307_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t DS1307_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       size_t n = 0;
       u8_t   tmp;
@@ -335,7 +335,7 @@ size_t DS1307_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t see
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t DS1307_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t DS1307_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       size_t n = 0;
       u8_t   tmp;
@@ -383,7 +383,7 @@ size_t DS1307_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
+stdRet_t DS1307_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -440,7 +440,7 @@ stdRet_t DS1307_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t DS1307_Release(dev_t dev)
+stdRet_t DS1307_Release(nod_t dev)
 {
       stdRet_t status = STD_RET_ERROR;
 

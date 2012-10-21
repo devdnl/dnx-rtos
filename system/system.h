@@ -100,6 +100,8 @@ extern "C" {
 #define SystemGetMemSize()                configTOTAL_HEAP_SIZE
 #define SystemGetHostname()               LwIP_GetHostname()
 #define SystemGetUptime()                 GetUptimeCnt()
+#define SystemGetTaskCount()              uxTaskGetNumberOfTasks()
+#define SystemGetRunTimeStats(ptr)        vTaskGetRunTimeStats((signed char*)ptr)
 
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)

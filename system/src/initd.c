@@ -135,7 +135,7 @@ void Initd(void *arg)
                   {
                         kprint("Starting application on new terminal: TTY%d\n", currtty + 1);
 
-                        apphdl[currtty] = Exec("terminal", NULL);
+                        apphdl[currtty] = Exec("term", NULL);
 
                         if (apphdl[currtty] == NULL)
                         {

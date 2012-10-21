@@ -57,13 +57,13 @@ enum ETH_DEV_NUMBER_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t ETHER_Init(dev_t eth);
-extern stdRet_t ETHER_Open(dev_t eth);
-extern stdRet_t ETHER_Close(dev_t eth);
-extern size_t   ETHER_Write(dev_t eth, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   ETHER_Read(dev_t eth, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t ETHER_IOCtl(dev_t eth, IORq_t ioRQ, void *data);
-extern stdRet_t ETHER_Release(dev_t eth);
+extern stdRet_t ETHER_Init(nod_t eth);
+extern stdRet_t ETHER_Open(nod_t eth);
+extern stdRet_t ETHER_Close(nod_t eth);
+extern size_t   ETHER_Write(nod_t eth, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   ETHER_Read(nod_t eth, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t ETHER_IOCtl(nod_t eth, IORq_t ioRQ, void *data);
+extern stdRet_t ETHER_Release(nod_t eth);
 
 #ifdef __cplusplus
 }

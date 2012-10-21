@@ -55,12 +55,12 @@ extern "C" {
 ==================================================================================================*/
 typedef struct
 {
-      stdRet_t (*open)(dev_t);
-      stdRet_t (*close)(dev_t);
-      size_t   (*write)(dev_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(dev_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(dev_t, IORq_t, void*);
-      dev_t    device;
+      stdRet_t (*open)(nod_t);
+      stdRet_t (*close)(nod_t);
+      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
+      stdRet_t (*ioctl)(nod_t, IORq_t, void*);
+      nod_t    device;
 } regDrvData_t;
 
 

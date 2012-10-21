@@ -65,6 +65,27 @@ stdRet_t appmain(ch_t *argv)
 
       stdRet_t status = STD_RET_ERROR;
 
+      u32_t size    = 50 * SystemGetTaskCount();
+      ch_t  *buffer = Calloc(size, sizeof(ch_t));
+
+      if (buffer)
+      {
+            SystemGetRunTimeStats(buffer);
+
+            while (ugetChar() != 'q')
+            {
+                  Sleep(1000);
+                  SystemGetRunTimeStats(buffer);
+                  printf("\x1B[2J\x1B[HName\t\tTime\t\tUsage\n%s\nPress q to quit\n", buffer);
+                  memset(buffer, 0, size);
+            }
+
+            status = STD_RET_OK;
+      }
+      else
+      {
+            printf("No enough free memory!\n");
+      }
 
       return status;
 }

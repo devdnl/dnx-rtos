@@ -108,7 +108,7 @@ static PortHandler_t *i2c;
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t I2C_Init(dev_t dev)
+stdRet_t I2C_Init(nod_t dev)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -152,7 +152,7 @@ stdRet_t I2C_Init(dev_t dev)
  * @retval I2C_STATUS_PORTLOCKED          port locked
  */
 //================================================================================================//
-stdRet_t I2C_Open(dev_t dev)
+stdRet_t I2C_Open(nod_t dev)
 {
       stdRet_t status  = I2C_STATUS_PORTNOTEXIST;
       I2C_t    *i2cPtr = NULL;
@@ -237,7 +237,7 @@ stdRet_t I2C_Open(dev_t dev)
  * @retval I2C_STATUS_PORTLOCKED          port locked
  */
 //================================================================================================//
-stdRet_t I2C_Close(dev_t dev)
+stdRet_t I2C_Close(nod_t dev)
 {
       stdRet_t status  = I2C_STATUS_PORTNOTEXIST;
       I2C_t    *i2cPtr = NULL;
@@ -309,7 +309,7 @@ stdRet_t I2C_Close(dev_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t I2C_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       size_t n = 0;
 
@@ -380,7 +380,7 @@ size_t I2C_Write(dev_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
       size_t n = 0;
 
@@ -466,7 +466,7 @@ size_t I2C_Read(dev_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
-stdRet_t I2C_IOCtl(dev_t dev, IORq_t ioRQ, void *data)
+stdRet_t I2C_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 {
       stdRet_t status = I2C_STATUS_PORTNOTEXIST;
 
@@ -775,7 +775,7 @@ static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t I2C_Release(dev_t dev)
+stdRet_t I2C_Release(nod_t dev)
 {
       stdRet_t status = STD_RET_ERROR;
 
