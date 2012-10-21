@@ -447,7 +447,7 @@ ch_t getChart(u8_t tty)
             }
             else
             {
-                  Sleep(10);
+                  Sleep(25);
             }
       }
 
