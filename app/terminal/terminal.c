@@ -69,9 +69,7 @@ typedef enum
 //================================================================================================//
 void PrintPrompt(void)
 {
-      fontGreen();
-      printf("root@%s: ", SystemGetHostname());
-      resetAttr();
+      printf("\x1B[32mroot@%s:\x1B[0m ", SystemGetHostname());
 }
 
 
@@ -138,44 +136,25 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
       appArgs_t *appHdl;
 
-      for (u16_t i = 0; i < 10000; i++)
+      appHdl = Exec(cmd, arg);
+
+      if (appHdl)
       {
-            appHdl = Exec(cmd, arg);
+            appHdl->tty = tty;
 
-            if (appHdl)
+            while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
-                  appHdl->tty = tty;
-
-                  while (appHdl->exitCode == STD_RET_UNKNOWN)
-                  {
-                        Sleep(10);
-                  }
-
-                  FreeApphdl(appHdl);
+                  Sleep(10);
             }
+
+            FreeApphdl(appHdl);
+
+            return CMD_EXECUTED;
       }
-
-      return CMD_EXECUTED;
-
-//      appHdl = Exec(cmd, arg);
-//
-//      if (appHdl)
-//      {
-//            appHdl->tty = tty;
-//
-//            while (appHdl->exitCode == STD_RET_UNKNOWN)
-//            {
-//                  Sleep(10);
-//            }
-//
-//            FreeApphdl(appHdl);
-//
-//            return CMD_EXECUTED;
-//      }
-//      else
-//      {
-//            return CMD_NOT_EXIST;
-//      }
+      else
+      {
+            return CMD_NOT_EXIST;
+      }
 }
 
 

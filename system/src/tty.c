@@ -612,7 +612,7 @@ void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
 
             if (ttyTerm[tty]->msgCnt)
             {
-                  ch_t *localMsg = Malloc(sizeof(ch_t) * strlen(newmsg));
+                  ch_t *localMsg = Calloc(strlen(newmsg), sizeof(ch_t));
 
                   if (localMsg)
                   {

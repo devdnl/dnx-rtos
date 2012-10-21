@@ -445,6 +445,10 @@ ch_t getChart(u8_t tty)
             {
                   break;
             }
+            else
+            {
+                  Sleep(10);
+            }
       }
 
       return chr;
