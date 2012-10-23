@@ -77,7 +77,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
 
       FILE_t *file = NULL;
 
-      if (name)
+      if (name && mode)
       {
             file = Calloc(1, sizeof(FILE_t));
 
@@ -85,6 +85,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
             {
                   ch_t *slash = strchr(name + 1, '/');
 
+                  /* check if path is device */
                   if (strncmp("/dev", name, slash - name) == 0)
                   {
                         regDrvData_t drvdata = GetDrvData(slash + 1);
@@ -102,9 +103,53 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                               }
                         }
                   }
+                  /* file does not exist */
+                  else
+                  {
+                        Free(file);
+                        file = NULL;
+                  }
 
-                  Free(file);
-                  file = NULL;
+                  /* check mode */
+                  if (file)
+                  {
+                        /* open for reading */
+                        if (strncmp("r", mode, 2) == 0)
+                        {
+                              file->write = NULL;
+                        }
+                        /* open for writing (file need not exist) */
+                        else if (strncmp("w", mode, 2) == 0)
+                        {
+                              file->read = NULL;
+                        }
+                        /* open for appending (file need not exist) */
+                        else if (strncmp("a", mode, 2) == 0)
+                        {
+                              file->read = NULL;
+                        }
+                        /* open for reading and writing, start at beginning */
+                        else if (strncmp("r+", mode, 2) == 0)
+                        {
+                              /* nothing to change */
+                        }
+                        /* open for reading and writing (overwrite file) */
+                        else if (strncmp("w+", mode, 2) == 0)
+                        {
+                              /* nothing to change */
+                        }
+                        /* open for reading and writing (append if file exists) */
+                        else if (strncmp("a+", mode, 2) == 0)
+                        {
+                              /* nothing to change */
+                        }
+                        /* invalid mode */
+                        else
+                        {
+                              Free(file);
+                              file = NULL;
+                        }
+                  }
             }
       }
 
