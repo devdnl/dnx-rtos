@@ -89,7 +89,6 @@ int main(void)
       InitDrv("gpio", "gpio");
 
       /* create main task */
-      TaskCreate(ttyd,  TTYD_NAME,  TTYD_STACK_SIZE,  NULL, 3, NULL);
       TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 2, NULL);
 
       /* start OS */

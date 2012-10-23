@@ -90,12 +90,10 @@ static void  ClearTTY(u8_t dev);
 static void  WaitForAccess(u8_t dev);
 static void  GiveAccess(u8_t dev);
 static void  AddMsg(u8_t dev, ch_t *msg, u8_t back);
-static void  RefreshTTY(u8_t dev, FILE_t *file);
 static dfn_t decFn(ch_t character);
-static void  ChangeTTY(u8_t dev);
 
 static ch_t  *GetMsg(u8_t tty, u8_t msg);
-
+static void  RefreshTTY(u8_t dev, FILE_t *file);
 
 
 
@@ -362,14 +360,23 @@ size_t TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 //================================================================================================//
 stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 {
-      (void)data;
-
       stdRet_t status = STD_RET_ERROR;
 
       if (dev < TTY_LAST)
       {
             switch (ioRQ)
             {
+                  /* return current TTY */
+                  case TTY_IORQ_GETCURRENTTTY:
+                        *((u8_t*)data) = term->currentTTY;
+                        status = STD_RET_OK;
+                        break;
+
+                  /* set active terminal */
+                  case TTY_IORQ_SETACTIVETTY:
+                        term->changeTTY = *((u8_t*)data);
+                        break;
+
                   default:
                         break;
             }
@@ -778,8 +785,6 @@ static dfn_t decFn(ch_t character)
 
 
 
-
-
 //================================================================================================//
 /**
  * @brief Refresh selected TTY
@@ -847,69 +852,6 @@ static dfn_t decFn(ch_t character)
 //
 //      return ptr;
 //}
-
-
-//================================================================================================//
-/**
- * @brief Function returns current TTY
- *
- * @return current TTY
- */
-//================================================================================================//
-static u8_t GetCurrTTY(void)
-{
-      return term->currentTTY;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function returns incoming characters
- *
- * @return current TTY
- */
-//================================================================================================//
-ch_t TTY_GetChr(u8_t tty)
-{
-      ch_t chr = 0;
-
-      if (tty < TTY_COUNT && ttyTerm[tty])
-      {
-            WaitForAccess(tty);
-
-            struct ttyEntry *ctty = ttyTerm[tty];
-
-            if (ctty->fifo.level > 0)
-            {
-                  chr = ctty->fifo.buffer[ctty->fifo.rxidx++];
-
-                  if (ctty->fifo.rxidx >= TTY_OUT_BFR_SIZE)
-                  {
-                        ctty->fifo.rxidx = 0;
-                  }
-
-                  ctty->fifo.level--;
-            }
-
-            GiveAccess(tty);
-      }
-
-      return chr;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function try to change terminal
- *
- */
-//================================================================================================//
-static void ChangeTTY(u8_t dev)
-{
-      WaitForAccess(dev);
-      term->changeTTY = dev;
-      GiveAccess(dev);
-}
 
 
 #ifdef __cplusplus
