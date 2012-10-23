@@ -86,11 +86,21 @@ void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
       u8_t      currtty = -1;
       appArgs_t *apphdl[TTY_COUNT];
 
-      /* user initialization */
+      /* driver initialization */
       InitDrv("uart1", "ttyS0");
+      InitDrv("tty0", "tty0");
+      kprintEnableOn("/dev/tty0");
+      InitDrv("tty1", "tty1");
+      InitDrv("tty2", "tty2");
+      InitDrv("tty3", "tty3");
       InitDrv("i2c1", "i2c");
       InitDrv("ds1307rtc", "rtc");
       InitDrv("ds1307nvm", "nvm");
+
+      /* something about board and system */
+      kprint("\nBoard powered by \x1B[32mFreeRTOS\x1B[0m\n");
+      kprint("By \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
+
 
       if (InitDrv("eth0", "eth0") != STD_RET_OK)
             goto initd_net_end;

@@ -38,6 +38,8 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define FILE                        "/dev/ttyS0"
+
 #define TTY_OUT_BFR_SIZE            16
 
 
@@ -91,8 +93,9 @@ static void  WaitForAccess(u8_t dev);
 static void  GiveAccess(u8_t dev);
 static void  AddMsg(u8_t dev, ch_t *msg, u8_t back);
 static dfn_t decFn(ch_t character);
+static u8_t  GetMsgIdx(u8_t dev, u8_t back);
 
-static ch_t  *GetMsg(u8_t tty, u8_t msg);
+
 static void  RefreshTTY(u8_t dev, FILE_t *file);
 
 
@@ -442,70 +445,55 @@ static void ttyd(void *arg)
 {
       (void) arg;
 
-      sugTTY = -1;
+      ch_t   chr        = 0;
+      bool_t rxbfrempty = FALSE;
+      ch_t   *msg;
+      FILE_t *ttys;
+      dfn_t  keyfn;
 
-      ch_t     chr        = 0;
-      bool_t   rxbfrempty = FALSE;
-      ch_t     *msg;
-      FILE_t   *uartf;
-      dfn_t keyfn;
-      struct ttyEntry *tty = NULL;
-
-      EnableKprint();
-
-      /* something about board and system */
-      kprint("Board powered by \x1B[32mFreeRTOS\x1B[0m\n");
-      kprint("By \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
-
-      InitDrv("uart1", "uart");
-
-      uartf = fopen("/dev/uart", NULL);
-
-      if (uartf == NULL)
+      /* try open selected file */
+      while (TRUE)
       {
-            TaskTerminate();
+            ttys = fopen(FILE, "r+");
+
+            if (ttys != NULL)
+            {
+                  break;
+            }
+
+            Sleep(250);
       }
 
       /* configure terminal VT100: clear screen, line wrap, cursor HOME */
       ch_t *termCfg = "\x1B[2J\x1B[?7h\x1B[H";
-      fwrite(termCfg, sizeof(ch_t), strlen(termCfg), uartf);
+      fwrite(termCfg, sizeof(ch_t), strlen(termCfg), ttys);
 
       /* main daemon loop */
       for (;;)
       {
-            if (ttyTerm[currentTTY] == NULL)
-            {
-                  if (CreateTTY(currentTTY) != STD_RET_OK)
-                  {
-                        Sleep(100);
-                        continue;
-                  }
-            }
-            else
-            {
-                  tty = ttyTerm[currentTTY];
-            }
+            /* pointer to current terminal */
+            struct ttyEntry *ttyPtr = term->tty[term->currentTTY];
 
             /* STDOUT support ------------------------------------------------------------------- */
-            if (tty->refLine == SET)
+            if ((ttyPtr->refLstLn == SET) && ttyPtr)
             {
                   /* cursor off, carriage return, line erase from cursor, font attributes reset */
                   msg = "\x1B[?25l\r\x1B[K\x1B[0m";
-                  fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
+                  fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
 
                   /* refresh line */
-                  msg = GetMsg(currentTTY, TTY_LAST_MSG);
-                  fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
+                  msg = GetMsgIdx(term->currentTTY, 0);
+                  fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
 
                   /* cursor on */
                   msg = "\x1B[?25h";
                   fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
 
-                  tty->refLine = RESET;
+                  ttyPtr->refLine = RESET;
             }
-            else if (tty->newMsg > 0)
+            else if (ttyPtr->newMsg > 0)
             {
-                  msg = GetMsg(currentTTY, tty->msgCnt - tty->newMsg);
+                  msg = GetMsg(currentTTY, ttyPtr->msgCnt - ttyPtr->newMsg);
 
                   if (msg)
                   {
@@ -522,16 +510,16 @@ static void ttyd(void *arg)
                   {
                         WaitForAccess(currentTTY);
 
-                        if (tty->fifo.level <= TTY_OUT_BFR_SIZE)
+                        if (ttyPtr->fifo.level <= TTY_OUT_BFR_SIZE)
                         {
-                              tty->fifo.buffer[tty->fifo.txidx++] = chr;
+                              ttyPtr->fifo.buffer[ttyPtr->fifo.txidx++] = chr;
 
-                              if (tty->fifo.txidx >= TTY_OUT_BFR_SIZE)
+                              if (ttyPtr->fifo.txidx >= TTY_OUT_BFR_SIZE)
                               {
-                                    tty->fifo.txidx = 0;
+                                    ttyPtr->fifo.txidx = 0;
                               }
 
-                              tty->fifo.level++;
+                              ttyPtr->fifo.level++;
                         }
 
                         GiveAccess(currentTTY);
@@ -565,7 +553,7 @@ static void ttyd(void *arg)
             }
 
             /* check that task can go to short sleep */
-            if (tty->newMsg == 0 && rxbfrempty)
+            if (ttyPtr->newMsg == 0 && rxbfrempty)
             {
                   Sleep(20);
             }
@@ -644,7 +632,7 @@ static void GiveAccess(u8_t dev)
 
 //================================================================================================//
 /**
- * @brief Refresh selected TTY
+ * @brief Add new message or modifi existing
  *
  * @param dev           number of terminal
  * @param *msg          message
@@ -691,6 +679,34 @@ static void AddMsg(u8_t dev, ch_t *msg, u8_t back)
                   }
             }
       }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Get last or selected message
+ *
+ * @param dev           number of terminal
+ * @param back          number of lines from current index
+ *
+ * @return index to message
+ */
+//================================================================================================//
+static u8_t GetMsgIdx(u8_t dev, u8_t back)
+{
+      u8_t ridx;
+
+      /* check if index underflow when calculating with back */
+      if ((i8_t)(term->tty[dev]->wrIdx - back) <= 0)
+      {
+            ridx = TTY_MAX_LINES - (back - term->tty[dev]->wrIdx) - 1;
+      }
+      else
+      {
+            ridx = term->tty[dev]->wrIdx - back - 1;
+      }
+
+      return ridx;
 }
 
 

@@ -56,7 +56,6 @@ static u32_t CalcFormatSize(const ch_t *format, va_list arg);
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-static bool_t kprintEnabled = FALSE;
 static FILE_t *kprintFile;
 
 
@@ -74,9 +73,20 @@ static FILE_t *kprintFile;
  * @brief Enable kprint functionality
  */
 //================================================================================================//
-void EnableKprint(void)
+void kprintEnableOn(ch_t *file)
 {
-      kprintEnabled = TRUE;
+      /* close file if opened */
+      if (kprintFile)
+      {
+            fclose(kprintFile);
+            kprintFile = NULL;
+      }
+
+      /* open new file */
+      if (kprintFile == NULL)
+      {
+            kprintFile = fopen(file, "r");
+      }
 }
 
 
@@ -85,22 +95,10 @@ void EnableKprint(void)
  * @brief Disable kprint functionality
  */
 //================================================================================================//
-void DisableKprint(void)
+void kprintDisable(void)
 {
-      kprintEnabled = FALSE;
-}
-
-
-//================================================================================================//
-/**
- * @brief Change kprint terminal
- *
- * @param tty     kprint terminal number
- */
-//================================================================================================//
-void ChangekprintFile(FILE_t *file)
-{
-      kprintFile = file;
+      fclose(kprintFile);
+      kprintFile = NULL;
 }
 
 
@@ -413,7 +411,7 @@ u32_t kprint(const ch_t *format, ...)
       va_list args;
       u32_t   n = 0;
 
-      if (kprintEnabled)
+      if (kprintFile)
       {
             va_start(args, format); /* DNLFIXME check: maybe is possible to insert this in called function */
             u32_t size = CalcFormatSize(format, args);
