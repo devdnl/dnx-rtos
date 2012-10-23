@@ -56,7 +56,7 @@ struct termHdl
             flag_t lock;                        /* access lock */
 
             /* FIFO used in keyboard read */
-            struct
+            struct inputfifo
             {
                   u16_t level;
                   ch_t  buffer[TTY_OUT_BFR_SIZE];
@@ -222,6 +222,8 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
 
+      size_t n = 0;
+
       if (dev < TTY_LAST && src && size && nitems)
       {
             /* wait for refresh last modified/joined line */
@@ -237,10 +239,10 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
             }
 
             /* check if previous message had not line end (\n) */
-            u8_t msgcnt   = term->ttt[tty]->msgCnt;
-            ch_t *lastmsg = ttyTerm[tty]->line[msgcnt - 1];
+            u8_t lstidx   = term->tty[dev]->wrIdx;
+            ch_t *lastmsg = term->tty[dev]->line[lstidx - 1];
 
-            if ( (msgcnt > 0) && (*(lastmsg + strlen(lastmsg) - 1) != '\n') )
+            if ( (*(lastmsg + strlen(lastmsg) - 1) != '\n') )
             {
                   /* wait for all new messages are showed */
                   while (term->tty[dev]->newMsgCnt && (dev == term->currentTTY))
@@ -249,72 +251,48 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                   }
 
 
-                  WaitForAccess(tty);
+                  WaitForAccess(dev);
 
-                  size_t newsize = strlen(lastmsg) + strlen(msg) + 1;
+                  size_t newsize = strlen(lastmsg) + size + 1;
 
                   ch_t *modmsg = Malloc(newsize);
 
                   if (modmsg)
                   {
                         strcpy(modmsg, lastmsg);
-                        strcat(modmsg, msg);
+                        strncat(modmsg, src, size);
+                        *(modmsg + newsize - 1) = '\0';
 
                         Free(lastmsg);
 
-                        AddM
+                        AddMsg(dev, modmsg, lstidx - term->tty[dev]->wrIdx);
 
-                        ttyTerm[tty]->line[msgcnt - 1] = modmsg;
-
-                        if (tty == currentTTY)
+                        if (dev == term->currentTTY)
                         {
-                              ttyTerm[tty]->refLine = SET;
+                              term->tty[dev]->refLstLn = SET;
                         }
                   }
             }
             else
             {
-                  ch_t *localMsg = Malloc(sizeof(ch_t) * strlen(msg) + 1);
+                  ch_t *localMsg = Malloc(sizeof(ch_t) * size + 1);
 
                   if (localMsg)
                   {
-                        strcpy(localMsg, msg);
+                        strncpy(localMsg, src, size + 1);
 
-                        WaitForAccess(tty);
+                        WaitForAccess(dev);
 
-                        if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
-                        {
-                              Free(ttyTerm[tty]->line[0]);
-
-                              for (u8_t i = 0; i < TTY_MSGS; i++)
-                              {
-                                    ttyTerm[tty]->line[i] = ttyTerm[tty]->line[i + 1];
-                              }
-
-                              ttyTerm[tty]->line[TTY_MSGS - 1] = localMsg;
-                        }
-                        else
-                        {
-                              ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = localMsg;
-                        }
-
-                        if (ttyTerm[tty]->msgCnt < TTY_MSGS)
-                        {
-                              ttyTerm[tty]->msgCnt++;
-                        }
-
-                        if (ttyTerm[tty]->newMsg < TTY_MSGS)
-                        {
-                              ttyTerm[tty]->newMsg++;
-                        }
+                        AddMsg(dev, localMsg, 0);
                   }
             }
 
-            GiveAccess(tty);
+            GiveAccess(dev);
+
+            n = size;
       }
 
-      AddTermMsg_end:
-      return;
+      return n;
 }
 
 
@@ -324,7 +302,7 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  *
  * @param[in]  dev                        TTY number
  * @param[in]  *dst                       destination buffer
- * @param[in]  size                       buffer size
+ * @param[in]  size                       item size
  * @param[in]  nitems                     number of items
  * @param[in]  seek                       seek
  *
@@ -333,7 +311,40 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 //================================================================================================//
 size_t TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 {
+      (void)seek;
 
+      size_t n = 0;
+
+      if (dev < TTY_LAST && dst && size && nitems)
+      {
+            WaitForAccess(dev);
+
+            struct inputfifo *input = &term->tty[dev]->input;
+
+            while ((input->level > 0) && (nitems > 0))
+            {
+                  *((ch_t*)dst) = input->buffer[input->rxidx++];
+
+                  dst += size;
+
+                  if (input->rxidx >= TTY_OUT_BFR_SIZE)
+                  {
+                        input->rxidx = 0;
+                  }
+
+                  input->level--;
+
+                  nitems--;
+
+                  n++;
+            }
+
+            n /= size;
+
+            GiveAccess(dev);
+      }
+
+      return n;
 }
 
 
@@ -639,6 +650,7 @@ static void AddMsg(u8_t dev, ch_t *msg, u8_t back)
       {
             u8_t widx;
 
+            /* check if index underflow when calculating with back */
             if ((i8_t)(term->tty[dev]->wrIdx - back) < 0)
             {
                   widx = TTY_MAX_LINES - (back - term->tty[dev]->wrIdx);
@@ -648,39 +660,30 @@ static void AddMsg(u8_t dev, ch_t *msg, u8_t back)
                   widx = term->tty[dev]->wrIdx - back;
             }
 
-            term->tty[dev]->line[widx - 1] = msg;
+            /* free last message */
+            Free(term->tty[dev]->line[widx]);
 
+            /* add new message */
+            term->tty[dev]->line[widx] = msg;
+
+            /* if back message wasn't changed */
             if (back == 0)
             {
+                  /* increase write index */
                   term->tty[dev]->wrIdx++;
+
+                  if (term->tty[dev]->wrIdx >= TTY_MAX_LINES)
+                  {
+                        term->tty[dev]->wrIdx = 0;
+                  }
+
+                  /* increase new message counter */
+                  if (term->tty[dev]->newMsgCnt < TTY_MAX_LINES)
+                  {
+                        term->tty[dev]->newMsgCnt++;
+                  }
             }
       }
-}
-
-
-//================================================================================================//
-/**
- * @brief Refresh selected TTY
- *
- * @param tty     number of terminal
- */
-//================================================================================================//
-static void RefreshTTY(u8_t dev, FILE_t *file)
-{
-      /* DNLTODO implement terminal refresh */
-//      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H\x1B[0m";
-//
-//      fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
-//
-//      for (u8_t i = 0; i < TTY_LAST; i++)
-//      {
-//            ch_t *msg = GetMsg(tty, i);
-//
-//            if (msg)
-//            {
-//                  fwrite(msg, sizeof(ch_t), strlen(msg), file);
-//            }
-//      }
 }
 
 
@@ -761,195 +764,88 @@ static dfn_t decFn(ch_t character)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //================================================================================================//
 /**
- * @brief Gets message from terminal
+ * @brief Refresh selected TTY
  *
- * @param tty        terminal number
- * @param msg        message number
- *
- * @return pointer to the message
+ * @param tty     number of terminal
  */
 //================================================================================================//
-static ch_t *GetMsg(u8_t tty, u8_t msg)
-{
-      ch_t *ptr = NULL;
-
-      WaitForAccess(tty);
-
-      if (tty < TTY_COUNT && (msg < TTY_MSGS || msg == TTY_LAST_MSG) && ttyTerm[tty])
-      {
-            if (msg != TTY_LAST_MSG)
-            {
-                  ptr = ttyTerm[tty]->line[msg];
-            }
-            else
-            {
-                  ptr = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1];
-            }
-      }
-
-      if (ptr && ttyTerm[tty]->newMsg > 0)
-      {
-            ttyTerm[tty]->newMsg--;
-      }
-
-      GiveAccess(tty);
-
-      return ptr;
-}
-
-
-////================================================================================================//
-///**
-// * @brief Adds message to selected terminal
-// * Function allocate own buffer for message to separate itself from application message buffer
-// *
-// * @param tty        terminal number
-// * @param *msg       pointer to the data with msg
-// */
-////================================================================================================//
-//void TTY_AddMsg(u8_t tty, ch_t *msg)
+//static void RefreshTTY(u8_t dev, FILE_t *file)
 //{
-//      if (tty < TTY_COUNT && msg)
+//      /* DNLTODO implement terminal refresh */
+//      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H\x1B[0m";
+//
+//      fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
+//
+//      for (u8_t i = 0; i < TTY_LAST; i++)
 //      {
-//            if (ttyTerm[tty] == NULL)
+//            ch_t *msg = GetMsg(tty, i);
+//
+//            if (msg)
 //            {
-//                   if (CreateTTY(tty) == STD_RET_ERROR)
-//                   {
-//                         goto AddTermMsg_end;
-//                   }
+//                  fwrite(msg, sizeof(ch_t), strlen(msg), file);
 //            }
-//
-//            /* wait to refresh last modified/joined line */
-//            while ((ttyTerm[tty]->refLine == SET) && (tty == currentTTY))
-//            {
-//                  Sleep(10);
-//            }
-//
-//            /* check if screen is cleared */
-//            if (strncmp("\x1B[2J", msg, 4) == 0)
-//            {
-//                  TTY_Clear(tty);
-//            }
-//
-//            /* check if previous message has not line end (\n) */
-//            u8_t msgcnt   = ttyTerm[tty]->msgCnt;
-//            ch_t *lastmsg = ttyTerm[tty]->line[msgcnt - 1];
-//
-//            if ( (msgcnt > 0) && (*(lastmsg + strlen(lastmsg) - 1) != '\n') )
-//            {
-//                  /* wait for all new messages are showed */
-//                  while (ttyTerm[tty]->newMsg && (tty == currentTTY))
-//                  {
-//                        Sleep(10);
-//                  }
-//
-//                  WaitForAccess(tty);
-//
-//                  size_t newsize = strlen(lastmsg) + strlen(msg) + 1;
-//
-//                  ch_t *modmsg = Malloc(newsize);
-//
-//                  if (modmsg)
-//                  {
-//                        strcpy(modmsg, lastmsg);
-//                        strcat(modmsg, msg);
-//
-//                        Free(lastmsg);
-//
-//                        ttyTerm[tty]->line[msgcnt - 1] = modmsg;
-//
-//                        if (tty == currentTTY)
-//                        {
-//                              ttyTerm[tty]->refLine = SET;
-//                        }
-//                  }
-//            }
-//            else
-//            {
-//                  ch_t *localMsg = Malloc(sizeof(ch_t) * strlen(msg) + 1);
-//
-//                  if (localMsg)
-//                  {
-//                        strcpy(localMsg, msg);
-//
-//                        WaitForAccess(tty);
-//
-//                        if (ttyTerm[tty]->msgCnt >= TTY_MSGS)
-//                        {
-//                              Free(ttyTerm[tty]->line[0]);
-//
-//                              for (u8_t i = 0; i < TTY_MSGS; i++)
-//                              {
-//                                    ttyTerm[tty]->line[i] = ttyTerm[tty]->line[i + 1];
-//                              }
-//
-//                              ttyTerm[tty]->line[TTY_MSGS - 1] = localMsg;
-//                        }
-//                        else
-//                        {
-//                              ttyTerm[tty]->line[ttyTerm[tty]->msgCnt] = localMsg;
-//                        }
-//
-//                        if (ttyTerm[tty]->msgCnt < TTY_MSGS)
-//                        {
-//                              ttyTerm[tty]->msgCnt++;
-//                        }
-//
-//                        if (ttyTerm[tty]->newMsg < TTY_MSGS)
-//                        {
-//                              ttyTerm[tty]->newMsg++;
-//                        }
-//                  }
-//            }
-//
-//            GiveAccess(tty);
 //      }
-//
-//      AddTermMsg_end:
-//      return;
 //}
 
 
+
+
+
+
 ////================================================================================================//
 ///**
-// * @brief Modify last message
-// * Function allocate own buffer for message to separate itself from application message buffer
+// * @brief Gets message from terminal
 // *
 // * @param tty        terminal number
-// * @param newmsg     new message
+// * @param msg        message number
+// *
+// * @return pointer to the message
 // */
 ////================================================================================================//
-//void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg)
+//static ch_t *GetMsg(u8_t tty, u8_t msg)
 //{
-//      if (tty < TTY_COUNT && newmsg && ttyTerm[tty])
+//      ch_t *ptr = NULL;
+//
+//      WaitForAccess(tty);
+//
+//      if (tty < TTY_COUNT && (msg < TTY_MSGS || msg == TTY_LAST_MSG) && ttyTerm[tty])
 //      {
-//            WaitForAccess(tty);
-//
-//            if (ttyTerm[tty]->msgCnt)
+//            if (msg != TTY_LAST_MSG)
 //            {
-//                  ch_t *localMsg = Calloc(strlen(newmsg), sizeof(ch_t));
-//
-//                  if (localMsg)
-//                  {
-//                        strcpy(localMsg, newmsg);
-//
-//                        if (ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1])
-//                        {
-//                              Free(ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1]);
-//                              ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1] = localMsg;
-//                        }
-//                  }
-//
-//                  if (ttyTerm[tty]->newMsg < TTY_MSGS)
-//                  {
-//                        ttyTerm[tty]->newMsg++;
-//                  }
+//                  ptr = ttyTerm[tty]->line[msg];
 //            }
-//
-//            GiveAccess(tty);
+//            else
+//            {
+//                  ptr = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1];
+//            }
 //      }
+//
+//      if (ptr && ttyTerm[tty]->newMsg > 0)
+//      {
+//            ttyTerm[tty]->newMsg--;
+//      }
+//
+//      GiveAccess(tty);
+//
+//      return ptr;
 //}
 
 
