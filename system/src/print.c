@@ -73,7 +73,7 @@ static FILE_t *kprintFile;
  * @brief Enable kprint functionality
  */
 //================================================================================================//
-void kprintEnableOn(ch_t *file)
+void kprintEnableOn(ch_t *filename)
 {
       /* close file if opened */
       if (kprintFile)
@@ -85,7 +85,7 @@ void kprintEnableOn(ch_t *file)
       /* open new file */
       if (kprintFile == NULL)
       {
-            kprintFile = fopen(file, "r");
+            kprintFile = fopen(filename, "r");
       }
 }
 

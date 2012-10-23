@@ -107,7 +107,7 @@ extern u32_t kprintOK(void);
 extern u32_t kprintFail(void);
 extern u32_t kprintErrorNo(i8_t errorNo);
 extern u32_t printt(FILE_t *file, const ch_t *format, ...);
-extern void  kprintEnableOn(void);
+extern void  kprintEnableOn(ch_t *filename);
 extern void  kprintDisable(void);
 extern void  putChart(FILE_t *stdout, ch_t c);
 extern ch_t  getChart(FILE_t *stdin);

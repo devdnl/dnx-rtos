@@ -68,7 +68,7 @@ enum tty_list
       #endif
 
       #if TTY_NUMBER_OF_VT > 4
-      #error "Change number of registered drivers in regdrv.c!"
+      #error "TTY support 4 virtual terminals!"
       #endif
       TTY_LAST
 };

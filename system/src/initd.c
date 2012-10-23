@@ -33,7 +33,6 @@ extern "C" {
 ==================================================================================================*/
 #include "initd.h"
 #include "regdrv.h"
-#include "tty.h"
 #include <string.h>
 
 #include "netconf.h"
@@ -83,9 +82,6 @@ void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
 {
       (void) arg;
 
-      u8_t      currtty = -1;
-      appArgs_t *apphdl[TTY_COUNT];
-
       /* driver initialization */
       InitDrv("uart1", "ttyS0");
       InitDrv("tty0", "tty0");
@@ -100,7 +96,6 @@ void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
       /* something about board and system */
       kprint("\nBoard powered by \x1B[32mFreeRTOS\x1B[0m\n");
       kprint("By \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
-
 
       if (InitDrv("eth0", "eth0") != STD_RET_OK)
             goto initd_net_end;
@@ -133,6 +128,8 @@ void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
+      u8_t      currtty = -1;
+      appArgs_t *apphdl[TTY_LAST];
       memset(apphdl, 0x00, sizeof(apphdl));
 
       for (;;)

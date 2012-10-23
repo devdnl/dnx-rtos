@@ -39,13 +39,13 @@ extern "C" {
                                   Local symbolic constants/macros
 ==================================================================================================*/
 #define FILE                        "/dev/ttyS0"
-
 #define TTY_OUT_BFR_SIZE            16
 
 
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+/* memory structure */
 struct termHdl
 {
       struct ttyEntry
@@ -73,6 +73,7 @@ struct termHdl
 };
 
 
+/* key detector results */
 typedef enum
 {
       TTY1_SELECTED,
@@ -94,15 +95,13 @@ static void  GiveAccess(u8_t dev);
 static void  AddMsg(u8_t dev, ch_t *msg, u8_t back);
 static dfn_t decFn(ch_t character);
 static u8_t  GetMsgIdx(u8_t dev, u8_t back);
-
-
 static void  RefreshTTY(u8_t dev, FILE_t *file);
-
 
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+/* memory used by driver */
 static struct termHdl *term;
 
 
@@ -482,60 +481,67 @@ static void ttyd(void *arg)
                   fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
 
                   /* refresh line */
-                  msg = GetMsgIdx(term->currentTTY, 0);
+                  msg = ttyPtr->line[GetMsgIdx(term->currentTTY, 0)];
                   fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
 
                   /* cursor on */
                   msg = "\x1B[?25h";
-                  fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
+                  fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
 
-                  ttyPtr->refLine = RESET;
+                  ttyPtr->refLstLn = RESET;
             }
-            else if (ttyPtr->newMsg > 0)
+            else if ((ttyPtr->newMsgCnt > 0) && ttyPtr)
             {
-                  msg = GetMsg(currentTTY, ttyPtr->msgCnt - ttyPtr->newMsg);
+                  msg = ttyPtr->line[GetMsgIdx(term->currentTTY, ttyPtr->newMsgCnt)];
+
+                  if (ttyPtr->newMsgCnt)
+                  {
+                        ttyPtr->newMsgCnt--;
+                  }
 
                   if (msg)
                   {
-                        fwrite(msg, sizeof(ch_t), strlen(msg), uartf);
+                        fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
                   }
             }
 
             /* STDIN support -------------------------------------------------------------------- */
-            if (ioctl(uartf, UART_IORQ_GET_BYTE, &chr) == STD_RET_OK)
+            if (ioctl(ttys, UART_IORQ_GET_BYTE, &chr) == STD_RET_OK)
             {
                   keyfn = decFn(chr);
 
-                  if (keyfn == TTY_SEL_NONE)
+                  /* no Fn key was detected */
+                  if (keyfn == TTY_SEL_NONE && ttyPtr)
                   {
-                        WaitForAccess(currentTTY);
+                        WaitForAccess(term->currentTTY);
 
-                        if (ttyPtr->fifo.level <= TTY_OUT_BFR_SIZE)
+                        if (ttyPtr->input.level < TTY_OUT_BFR_SIZE)
                         {
-                              ttyPtr->fifo.buffer[ttyPtr->fifo.txidx++] = chr;
+                              ttyPtr->input.buffer[ttyPtr->input.txidx++] = chr;
 
-                              if (ttyPtr->fifo.txidx >= TTY_OUT_BFR_SIZE)
+                              if (ttyPtr->input.txidx >= TTY_OUT_BFR_SIZE)
                               {
-                                    ttyPtr->fifo.txidx = 0;
+                                    ttyPtr->input.txidx = 0;
                               }
 
-                              ttyPtr->fifo.level++;
+                              ttyPtr->input.level++;
                         }
 
-                        GiveAccess(currentTTY);
+                        GiveAccess(term->currentTTY);
                   }
-                  else if (keyfn <= TTY4_SELECTED && keyfn != currentTTY)
+                  /* Fn key was hit */
+                  else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->currentTTY) )
                   {
-                        currentTTY = keyfn;
+                        term->currentTTY = keyfn;
 
-                        if (ttyTerm[currentTTY] == NULL)
+                        if (term->tty[term->currentTTY] == NULL)
                         {
-                              CreateTTY(currentTTY);
+                              TTY_Open(keyfn);
                         }
 
-                        if (ttyTerm[currentTTY])
+                        if (term->tty[term->currentTTY])
                         {
-                              RefreshTTY(currentTTY, uartf);
+                              RefreshTTY(term->currentTTY, ttys);
                         }
                   }
             }
@@ -545,15 +551,15 @@ static void ttyd(void *arg)
             }
 
             /* external trigger: terminal switch */
-            if (sugTTY != -1)
+            if ((term->changeTTY != -1) && ttyPtr)
             {
-                  currentTTY = sugTTY;
-                  sugTTY = -1;
-                  RefreshTTY(currentTTY, uartf);
+                  term->currentTTY = term->changeTTY;
+                  term->changeTTY  = -1;
+                  RefreshTTY(term->currentTTY, ttys);
             }
 
-            /* check that task can go to short sleep */
-            if (ttyPtr->newMsg == 0 && rxbfrempty)
+            /* check if task can go to short sleep */
+            if ((ttyPtr->newMsgCnt == 0) && rxbfrempty)
             {
                   Sleep(20);
             }
@@ -714,7 +720,7 @@ static u8_t GetMsgIdx(u8_t dev, u8_t back)
 /**
  * @brief Check if pushed button is F1-F4
  *
- * @param character     button
+ * @param character     button part of code
  */
 //================================================================================================//
 static dfn_t decFn(ch_t character)
@@ -786,88 +792,34 @@ static dfn_t decFn(ch_t character)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //================================================================================================//
 /**
  * @brief Refresh selected TTY
  *
- * @param tty     number of terminal
+ * @param dev     number of terminal
  */
 //================================================================================================//
-//static void RefreshTTY(u8_t dev, FILE_t *file)
-//{
-//      /* DNLTODO implement terminal refresh */
-//      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H\x1B[0m";
-//
-//      fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
-//
-//      for (u8_t i = 0; i < TTY_LAST; i++)
-//      {
-//            ch_t *msg = GetMsg(tty, i);
-//
-//            if (msg)
-//            {
-//                  fwrite(msg, sizeof(ch_t), strlen(msg), file);
-//            }
-//      }
-//}
+static void RefreshTTY(u8_t dev, FILE_t *file)
+{
+      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H\x1B[0m";
 
+      fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
 
+      for (i8_t i = TTY_MAX_LINES - 1; i >= 0; i--)
+      {
+            ch_t *msg = term->tty[dev]->line[GetMsgIdx(term->currentTTY, i)];
 
+            if (msg)
+            {
+                  fwrite(msg, sizeof(ch_t), strlen(msg), file);
+            }
 
-
-
-////================================================================================================//
-///**
-// * @brief Gets message from terminal
-// *
-// * @param tty        terminal number
-// * @param msg        message number
-// *
-// * @return pointer to the message
-// */
-////================================================================================================//
-//static ch_t *GetMsg(u8_t tty, u8_t msg)
-//{
-//      ch_t *ptr = NULL;
-//
-//      WaitForAccess(tty);
-//
-//      if (tty < TTY_COUNT && (msg < TTY_MSGS || msg == TTY_LAST_MSG) && ttyTerm[tty])
-//      {
-//            if (msg != TTY_LAST_MSG)
-//            {
-//                  ptr = ttyTerm[tty]->line[msg];
-//            }
-//            else
-//            {
-//                  ptr = ttyTerm[tty]->line[ttyTerm[tty]->msgCnt - 1];
-//            }
-//      }
-//
-//      if (ptr && ttyTerm[tty]->newMsg > 0)
-//      {
-//            ttyTerm[tty]->newMsg--;
-//      }
-//
-//      GiveAccess(tty);
-//
-//      return ptr;
-//}
+            if (term->tty[dev]->newMsgCnt > 0)
+            {
+                  term->tty[dev]->newMsgCnt--;
+            }
+      }
+}
 
 
 #ifdef __cplusplus
