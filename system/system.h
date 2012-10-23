@@ -81,6 +81,7 @@ extern "C" {
 #define TaskDelayUntil(pPreviousWakeTime, TimeIncrement) \
         vTaskDelayUntil(pPreviousWakeTime, TimeIncrement)
 
+#define Priority(prio)                    (prio + (configMAX_PRIORITIES / 2))
 
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      vTaskDelay(delay)
@@ -117,6 +118,7 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+typedef xTaskHandle taskHdl_t;
 
 
 /*==================================================================================================

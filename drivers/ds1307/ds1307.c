@@ -40,6 +40,7 @@ extern "C"
                                   Exported symbolic constants/macros
 ==================================================================================================*/
 #define I2CFILE                     "/dev/i2c"
+#define I2CFILEMODE                 "r+"
 #define BCD2BYTE(bcd)               (((bcd >> 4) * 10) + (bcd & 0x0F))
 
 /** DS1307 write address */
@@ -158,7 +159,7 @@ stdRet_t DS1307_Init(nod_t dev)
             if (dev == DS1307_DEV_RTC)
             {
                   /* try to open port */
-                  if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+                  if ((i2c = fopen(I2CFILE, I2CFILEMODE)) != NULL)
                   {
                         /* set DS1307 address */
                         tmp = DS1307_ADDRESS;
@@ -300,7 +301,7 @@ size_t DS1307_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t see
                   if (src && size && nitems)
                   {
                         /* try open port */
-                        if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+                        if ((i2c = fopen(I2CFILE, I2CFILEMODE)) != NULL)
                         {
                               /* set DS1307 address */
                               tmp = DS1307_ADDRESS;
@@ -348,7 +349,7 @@ size_t DS1307_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek
                   if (dst && size && nitems)
                   {
                         /* try open port */
-                        if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+                        if ((i2c = fopen(I2CFILE, I2CFILEMODE)) != NULL)
                         {
                               /* set DS1307 address */
                               tmp = DS1307_ADDRESS;
@@ -478,7 +479,7 @@ static bcdTime_t GetTime(void)
       FILE_t *i2c;
 
       /* try to open port */
-      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      if ((i2c = fopen(I2CFILE, I2CFILEMODE)) != NULL)
       {
             /* set DS1307 address */
             tmp[0] = DS1307_ADDRESS;
@@ -521,7 +522,7 @@ static stdRet_t SetTime(bcdTime_t *time)
       FILE_t   *i2c;
 
       /* try open port */
-      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      if ((i2c = fopen(I2CFILE, I2CFILEMODE)) != NULL)
       {
             /* set DS1307 address */
             tmp[0] = DS1307_ADDRESS;
@@ -566,7 +567,7 @@ static bcdDate_t GetDate(void)
       FILE_t *i2c;
 
       /* try to open port */
-      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      if ((i2c = fopen(I2CFILE, I2CFILEMODE)) != NULL)
       {
             /* set DS1307 address */
             tmp[0] = DS1307_ADDRESS;
@@ -610,7 +611,7 @@ static stdRet_t SetDate(bcdDate_t *date)
       FILE_t   *i2c;
 
       /* try open port */
-      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      if ((i2c = fopen(I2CFILE, I2CFILEMODE)) != NULL)
       {
             /* set DS1307 address */
             tmp[0] = DS1307_ADDRESS;

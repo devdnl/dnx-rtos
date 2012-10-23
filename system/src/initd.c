@@ -87,6 +87,7 @@ void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
       appArgs_t *apphdl[TTY_COUNT];
 
       /* user initialization */
+      InitDrv("uart1", "ttyS0");
       InitDrv("i2c1", "i2c");
       InitDrv("ds1307rtc", "rtc");
       InitDrv("ds1307nvm", "nvm");

@@ -42,6 +42,7 @@ extern "C" {
 #include "i2c.h"
 #include "ether.h"
 #include "ds1307.h"
+#include "tty.h"
 
 
 /*==================================================================================================
@@ -112,6 +113,34 @@ static const regDrv_t drvList[] =
              DS1307_Close,          DS1307_Write,           DS1307_Read,
              DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_RTC
       },
+      #if (TTY_NUMBER_OF_VT > 0)
+      {
+             "tty0",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_0
+      },
+      #endif
+      #if (TTY_NUMBER_OF_VT > 1)
+      {
+             "tty1",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_1
+      },
+      #endif
+      #if (TTY_NUMBER_OF_VT > 2)
+      {
+             "tty2",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_2
+      },
+      #endif
+      #if (TTY_NUMBER_OF_VT > 3)
+      {
+             "tty3",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_3
+      },
+      #endif
 };
 
 

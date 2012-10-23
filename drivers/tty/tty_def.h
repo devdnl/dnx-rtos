@@ -1,11 +1,11 @@
-#ifndef TTY_H_
-#define TTY_H_
+#ifndef TTY_DEF_H_
+#define TTY_DEF_H_
 /*=============================================================================================*//**
-@file    tty.h
+@file    tty_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support virtual terminal
+@brief   This file support global definitions of TTY
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,18 +33,41 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
-#include "system.h"
+
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-#define TTY_COUNT             4
-#define TTY_MSGS              40
-#define TTY_LAST_MSG          0xFF
+/** define TTY max supported lines */
+#define TTY_MAX_LINES               40
 
-#define TTYD_NAME             "ttyd"
-#define TTYD_STACK_SIZE       2*MINIMAL_STACK_SIZE
+/** define number of virtual terminals */
+#define TTY_NUMBER_OF_VT            4
+
+/** devices number */
+enum tty_list
+{
+      #if TTY_NUMBER_OF_VT > 0
+      TTY_DEV_0,
+      #endif
+
+      #if TTY_NUMBER_OF_VT > 1
+      TTY_DEV_1,
+      #endif
+
+      #if TTY_NUMBER_OF_VT > 2
+      TTY_DEV_2,
+      #endif
+
+      #if TTY_NUMBER_OF_VT > 3
+      TTY_DEV_3,
+      #endif
+
+      #if TTY_NUMBER_OF_VT > 4
+      #error "Change number of registered drivers in regdrv.c!"
+      #endif
+      TTY_LAST
+};
 
 
 /*==================================================================================================
@@ -53,21 +76,20 @@ extern "C" {
 
 
 /*==================================================================================================
+                                     Exported object declarations
+==================================================================================================*/
+
+
+/*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void ttyd(void *arg);
-extern void TTY_AddMsg(u8_t tty, ch_t *msg);
-extern void TTY_Clear(u8_t tty);
-extern void TTY_ModifyLastMsg(u8_t tty, ch_t *newmsg);
-extern u8_t TTY_GetCurrTTY(void);
-extern ch_t TTY_GetChr(u8_t tty);
-extern void TTY_ChangeTTY(u8_t tty);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TTY_H_ */
+#endif /* TTY_DEF_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/
