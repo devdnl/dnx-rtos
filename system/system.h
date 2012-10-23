@@ -108,8 +108,10 @@ extern "C" {
 #define APP_SEC_BEGIN                     { InitApp();
 #define APP_SEC_END                       Exit(appmain(argv));}
 
-#define InitApp()                         u8_t tty  = ((appArgs_t *)appArgument)->tty; \
-                                          ch_t        *argv   = ((appArgs_t *)appArgument)->arg
+#define InitApp()                         FILE_t *stdin  = ((appArgs_t*)appArgument)->stdin;  \
+                                          FILE_t *stdout = ((appArgs_t*)appArgument)->stdout; \
+                                          ch_t   *argv   = ((appArgs_t*)appArgument)->arg
+                                          /* DNLFIXME sprobowac (void)stdin; (void)stdout zeby ostrzezen nie bylo */
 
 
 /*==================================================================================================

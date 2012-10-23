@@ -93,7 +93,8 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
             appHandle->exitCode         = STD_RET_UNKNOWN;
             appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
             appHandle->ChildTaskHandle  = NULL;
-            appHandle->tty              = -1;
+            appHandle->stdin            = NULL;
+            appHandle->stdout           = NULL;
 
             /* start application task */
             if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
@@ -138,7 +139,8 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
             /* set default values */
             appHandle->arg              = arg;
             appHandle->exitCode         = STD_RET_UNKNOWN;
-            appHandle->tty              = -1;
+            appHandle->stdin            = NULL;
+            appHandle->stdout           = NULL;
             appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
             appHandle->ChildTaskHandle  = NULL;
 

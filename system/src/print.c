@@ -57,7 +57,7 @@ static u32_t CalcFormatSize(const ch_t *format, va_list arg);
                                       Local object definitions
 ==================================================================================================*/
 static bool_t kprintEnabled = FALSE;
-static u8_t   kprintTTY;
+static FILE_t *kprintFile;
 
 
 /*==================================================================================================
@@ -98,9 +98,9 @@ void DisableKprint(void)
  * @param tty     kprint terminal number
  */
 //================================================================================================//
-void ChangekprintTTY(u8_t tty)
+void ChangekprintFile(FILE_t *file)
 {
-      kprintTTY = tty;
+      kprintFile = file;
 }
 
 
@@ -365,14 +365,14 @@ u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 /**
  * @brief Function send on a standard output string
  *
- * @param tty                 virtual terminal number
+ * @param *file               virtual terminal file
  * @param *format             formated text
  * @param ...                 format arguments
  *
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t printt(u8_t tty, const ch_t *format, ...)
+u32_t printt(FILE_t *file, const ch_t *format, ...)
 {
       va_list args;
       u32_t n    = 0;
@@ -389,7 +389,7 @@ u32_t printt(u8_t tty, const ch_t *format, ...)
             n = vsnprint(str, size, format, args);
             va_end(args);
 
-            TTY_AddMsg(tty, str);
+            fwrite(str, sizeof(ch_t), size, file);
 
             Free(str);
       }
@@ -427,7 +427,7 @@ u32_t kprint(const ch_t *format, ...)
                   n = vsnprint(buffer, size, format, args);
                   va_end(args);
 
-                  TTY_AddMsg(kprintTTY, buffer);
+                  fwrite(buffer, sizeof(ch_t), size, kprintFile);
 
                   Free(buffer);
             }
@@ -480,15 +480,15 @@ u32_t kprintErrorNo(i8_t errorNo)
 /**
  * @brief Function put character into virtual terminal
  *
- * @param tty                 virtual terminal
+ * @param stdout              file to virtual terminal
  * @param c                   character
  */
 //================================================================================================//
-void putChart(u8_t tty, ch_t c)
+void putChart(FILE_t *stdout, ch_t c)
 {
       ch_t chr[2] = {c, 0};
 
-      TTY_AddMsg(tty, chr);
+      fwrite(chr, sizeof(ch_t), ARRAY_SIZE(chr), stdout);
 }
 
 
@@ -496,20 +496,18 @@ void putChart(u8_t tty, ch_t c)
 /**
  * @brief Function get character from virtual terminal
  *
- * @param tty            virtual terminal number
+ * @param stdin            virtual terminal (keyboard)
  *
  * @retval character
  */
 //================================================================================================//
-ch_t getChart(u8_t tty)
+ch_t getChart(FILE_t *stdin)
 {
-      u8_t chr = 0;
+      ch_t chr = 0;
 
       while (TRUE)
       {
-            chr = TTY_GetChr(tty);
-
-            if (chr)
+            if ((fread(&chr, sizeof(ch_t), 1, stdin) == 1) && chr)
             {
                   break;
             }
@@ -532,9 +530,13 @@ ch_t getChart(u8_t tty)
  * @retval character
  */
 //================================================================================================//
-ch_t ugetChart(u8_t tty)
+ch_t ugetChart(FILE_t *stdin)
 {
-      return TTY_GetChr(tty);
+      ch_t chr = 0;
+
+      fread(&chr, sizeof(ch_t), 1, stdin);
+
+      return chr;
 }
 
 
@@ -646,7 +648,8 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
 /**
  * @brief Function convert arguments to the stdio and gets data from stdin
  *
- * @param[in]  tty            virtual terminal number
+ * @param[in]  *stdin         file of virtual terminal (keyboard)
+ * @param[in]  *stdout        file of virtual terminal (screen)
  * @param[in]  size           buffer size
  * @param[in]  *format        message format
  * @param[in]  *var           output
@@ -654,7 +657,7 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
  * @return number of printed characters
  */
 //================================================================================================//
-u32_t scant(u8_t tty, const ch_t *format, void *var)
+u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 {
       ch_t  chr;
       u32_t streamLen = 1;
@@ -664,9 +667,11 @@ u32_t scant(u8_t tty, const ch_t *format, void *var)
             if (chr != '%')
             {
                   if (chr == ASCII_LF)
-                        putChart(tty, ASCII_CR);
+                  {
+                        putChart(stdout, ASCII_CR);
+                  }
 
-                  putChart(tty, chr);
+                  putChart(stdout, chr);
             }
             else
             {
@@ -684,23 +689,23 @@ u32_t scant(u8_t tty, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(tty);
+                              chr = getChart(stdin);
 
                               if (  (chr >= '0' && chr <= '9')
                                  || (chr == '-' && !uint && sign == 1) )
                               {
-                                    putChart(tty, chr);
+                                    putChart(stdout, chr);
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *dec *= sign;
-                                    putChart(tty, ASCII_CR);
-                                    putChart(tty, ASCII_LF);
+                                    putChart(stdin, ASCII_CR);
+                                    putChart(stdin, ASCII_LF);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    printt(tty, "%c\x1B[K", chr);
+                                    printt(stdout, "%c\x1B[K", chr);
 
                                     if (streamLen == 2 && sign == -1)
                                           sign = 1;
@@ -741,23 +746,23 @@ u32_t scant(u8_t tty, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(tty);
+                              chr = getChart(stdin);
 
                               if (  ((chr >= '0') && (chr <= '9'))
                                  || ((chr >= 'A') && (chr <= 'F'))
                                  || ((chr >= 'a') && (chr <= 'f')) )
                               {
-                                    putChart(tty, chr);
+                                    putChart(stdout, chr);
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    putChart(tty, ASCII_CR);
-                                    putChart(tty, ASCII_LF);
+                                    putChart(stdout, ASCII_CR);
+                                    putChart(stdout, ASCII_LF);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    printt(tty, "%c\x1B[K", chr);
+                                    printt(stdout, "%c\x1B[K", chr);
                                     *hex >>= 4;
                                     streamLen--;
                                     continue;
@@ -795,21 +800,21 @@ u32_t scant(u8_t tty, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(tty);
+                              chr = getChart(stdin);
 
                               if (chr == '0' || chr == '1')
                               {
-                                    putChart(tty, chr);
+                                    putChart(stdin, chr);
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    putChart(tty, ASCII_CR);
-                                    putChart(tty, ASCII_LF);
+                                    putChart(stdout, ASCII_CR);
+                                    putChart(stdout, ASCII_LF);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    printt(tty, "%c\x1B[K", chr);
+                                    printt(stdout, "%c\x1B[K", chr);
                                     *bin >>= 1;
                                     streamLen--;
                                     continue;
@@ -845,7 +850,7 @@ u32_t scant(u8_t tty, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(tty);
+                              chr = getChart(stdin);
 
                               /* check command Arrow Up */
                               if ((chr == ASCII_ESC) && (inCmdStep == 0))
@@ -875,13 +880,13 @@ u32_t scant(u8_t tty, const ch_t *format, void *var)
                               if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *(string++) = 0x00;
-                                    putChart(tty, ASCII_CR);
-                                    putChart(tty, ASCII_LF);
+                                    putChart(stdout, ASCII_CR);
+                                    putChart(stdout, ASCII_LF);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    printt(tty, "%c\x1B[K", chr);
+                                    printt(stdout, "%c\x1B[K", chr);
                                     *(--string) = 0x00;
                                     streamLen--;
                                     free++;
@@ -891,7 +896,7 @@ u32_t scant(u8_t tty, const ch_t *format, void *var)
                               {
                                     if (free)
                                     {
-                                          putChart(tty, chr);
+                                          putChart(stdout, chr);
                                           *(string++) = chr;
                                           free--;
                                     }

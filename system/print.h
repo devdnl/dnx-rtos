@@ -41,11 +41,11 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-#define printf(...)                 printt(tty, __VA_ARGS__)
-#define scanf(format, result)       scant(tty, format, result)
-#define putChar(c)                  putChart(tty, c)
-#define getChar()                   getChart(tty)
-#define ugetChar()                  ugetChart(tty)
+#define printf(...)                 printt(stdout, __VA_ARGS__)
+#define scanf(format, result)       scant(stdin, stdout, format, result)
+#define putChar(c)                  putChart(stdout, c)
+#define getChar()                   getChart(stdin)
+#define ugetChar()                  ugetChart(stdin)
 
 /** VT100 terminal commands */
 #define enableLineWrap()            printf("\x1B[?7h")
@@ -106,14 +106,14 @@ extern u32_t kprint(const ch_t *format, ...);
 extern u32_t kprintOK(void);
 extern u32_t kprintFail(void);
 extern u32_t kprintErrorNo(i8_t errorNo);
-extern u32_t printt(u8_t tty, const ch_t *format, ...);
+extern u32_t printt(FILE_t *file, const ch_t *format, ...);
 extern void  EnableKprint(void);
 extern void  DisableKprint(void);
-extern void  ChangekprintTTY(u8_t tty);
-extern void  putChart(u8_t tty, ch_t c);
-extern ch_t  getChart(u8_t tty);
-extern ch_t  ugetChart(u8_t tty);
-extern u32_t scant(u8_t tty, const ch_t *format, void *var);
+extern void  ChangekprintFile(FILE_t *file);
+extern void  putChart(FILE_t *stdout, ch_t c);
+extern ch_t  getChart(FILE_t *stdin);
+extern ch_t  ugetChart(FILE_t *stdin);
+extern u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var);
 
 #ifdef __cplusplus
 }

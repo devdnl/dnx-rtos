@@ -79,7 +79,7 @@ extern "C" {
  * applications' stdios with hardware layer.
  */
 //================================================================================================//
-void Initd(void *arg)
+void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
 {
       (void) arg;
 
@@ -115,7 +115,7 @@ void Initd(void *arg)
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
-      ChangekprintTTY(TTY_COUNT - 1);
+//      ChangekprintFile(TTY_COUNT - 1);
 
       kprint("kprint() on TTY4\n");
 
@@ -144,7 +144,7 @@ void Initd(void *arg)
                         else
                         {
                               kprint("Application started on TTY%d\n", currtty + 1);
-                              apphdl[currtty]->tty = currtty;
+//                              apphdl[currtty]->tty = currtty;
                         }
                   }
             }
