@@ -94,8 +94,16 @@ void Initd(void *arg)
       InitDrv("ds1307nvm", "nvm");
 
       /* something about board and system */
-      kprint("\nBoard powered by \x1B[32mFreeRTOS\x1B[0m\n");
-      kprint("By \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
+      kprint("\n\x1B[32m");
+      kprint(".--------. .--. .---. .--. .--. ,--. ,--,\n");
+      kprint("|__    __| |  | |    \\|  | |  | \\   V  /\n");
+      kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
+      kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
+      kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
+      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'\n\n\x1B[0m");
+
+      kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
+      kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
 
       if (InitDrv("eth0", "eth0") != STD_RET_OK)
             goto initd_net_end;
@@ -121,9 +129,8 @@ void Initd(void *arg)
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
-//      ChangekprintFile(TTY_COUNT - 1);
-
-      kprint("kprint() on TTY4\n");
+      kprintEnableOn("/dev/tty3");
+      kprint("kprint() on TTY3\n");
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
@@ -185,8 +192,8 @@ void Initd(void *arg)
                               FreeApphdl(apphdl[i]);
                               apphdl[i] = NULL;
 
-//                              ioctl(ttyx[i], TTY_IORQ_CLEARTTY, NULL);
-//                              fclose(ttyx[i]);
+                              ioctl(ttyx[i], TTY_IORQ_CLEARTTY, NULL);
+                              fclose(ttyx[i]);
                               ttyx[i] = NULL;
 
                               ctty = 0;

@@ -42,6 +42,7 @@ extern "C" {
 ==================================================================================================*/
 #define MPL115A2_ADDRESS            0x60
 #define I2CFILE                     "/dev/i2c"
+#define FILEMODE                    "r+"
 
 /** multiplier used to remove fraction */
 #define MULTIPLIER                  100
@@ -117,7 +118,7 @@ stdRet_t MPL115A2_Init(void)
       kprint("Initializing MPL115A2...");
 
       /* try to open port */
-      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      if ((i2c = fopen(I2CFILE, FILEMODE)) != NULL)
       {
             /* set MPL115A2 address */
             tmp[0] = MPL115A2_ADDRESS;
@@ -174,7 +175,7 @@ stdRet_t MPL115A2_GetTemperature(i8_t *temperature)
       FILE_t   *i2c;
 
       /* try to open port */
-      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      if ((i2c = fopen(I2CFILE, FILEMODE)) != NULL)
       {
             /* set MPL115A2 address */
             tmp[0] = MPL115A2_ADDRESS;
@@ -225,7 +226,7 @@ stdRet_t MPL115A2_GetPressure(u16_t *pressure)
       FILE_t   *i2c;
 
       /* try to open port */
-      if ((i2c = fopen(I2CFILE, NULL)) != NULL)
+      if ((i2c = fopen(I2CFILE, FILEMODE)) != NULL)
       {
             /* set MPL115A2 address */
             tmp[0] = MPL115A2_ADDRESS;

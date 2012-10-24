@@ -485,7 +485,6 @@ u32_t kprintErrorNo(i8_t errorNo)
 void putChart(FILE_t *stdout, ch_t c)
 {
       ch_t chr[2] = {c, 0};
-
       fwrite(chr, sizeof(ch_t), ARRAY_SIZE(chr), stdout);
 //      ioctl(stdout, TTY_IORQ_PUTCHAR, &c);
 }
