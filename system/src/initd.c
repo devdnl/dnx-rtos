@@ -142,61 +142,58 @@ void Initd(void *arg)
 
       for (;;)
       {
-            kprint("Test\n");
-            ch_t chr = 'r';
-            ioctl(tty, TTY_IORQ_PUTCHAR, &chr);
-//            /* load application if new TTY was created */
-//            ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
-//
-//            if (ctty < TTY_LAST)
-//            {
-//                  if (apphdl[ctty] == NULL)
-//                  {
-//                        if (ttyx[ctty] == NULL)
-//                        {
-//                              ch_t path[16];
-//                              snprint(path, sizeof(path), "/dev/tty%c", '0' + ctty);
-//                              ttyx[ctty] = fopen(path, "r+");
-//                        }
-//
-//                        kprint("Starting application on new terminal: TTY%d\n", ctty);
-//
-//                        apphdl[ctty] = Exec("term", NULL);
-//
-//                        if (apphdl[ctty] == NULL)
-//                        {
-//                              kprint("Not enough free memory to start application\n");
-//                        }
-//                        else
-//                        {
-//                              kprint("Application started on TTY%d\n", ctty);
-//                              apphdl[ctty]->stdin  = ttyx[ctty];
-//                              apphdl[ctty]->stdout = ttyx[ctty];
-//                        }
-//                  }
-//            }
-//
-//            /* application monitoring */
-//            for (u8_t i = 0; i < TTY_LAST; i++)
-//            {
-//                  if (apphdl[i])
-//                  {
-//                        if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
-//                        {
-//                              kprint("Application closed on TTY%d\n", ctty);
-//
-//                              FreeApphdl(apphdl[i]);
-//                              apphdl[i] = NULL;
-//
+            /* load application if new TTY was created */
+            ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
+
+            if (ctty < TTY_LAST)
+            {
+                  if (apphdl[ctty] == NULL)
+                  {
+                        if (ttyx[ctty] == NULL)
+                        {
+                              ch_t path[16];
+                              snprint(path, sizeof(path), "/dev/tty%c", '0' + ctty);
+                              ttyx[ctty] = fopen(path, "r+");
+                        }
+
+                        kprint("Starting application on new terminal: TTY%d\n", ctty);
+
+                        apphdl[ctty] = Exec("term", NULL);
+
+                        if (apphdl[ctty] == NULL)
+                        {
+                              kprint("Not enough free memory to start application\n");
+                        }
+                        else
+                        {
+                              kprint("Application started on TTY%d\n", ctty);
+                              apphdl[ctty]->stdin  = ttyx[ctty];
+                              apphdl[ctty]->stdout = ttyx[ctty];
+                        }
+                  }
+            }
+
+            /* application monitoring */
+            for (u8_t i = 0; i < TTY_LAST; i++)
+            {
+                  if (apphdl[i])
+                  {
+                        if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
+                        {
+                              kprint("Application closed on TTY%d\n", ctty);
+
+                              FreeApphdl(apphdl[i]);
+                              apphdl[i] = NULL;
+
 //                              ioctl(ttyx[i], TTY_IORQ_CLEARTTY, NULL);
 //                              fclose(ttyx[i]);
-//                              ttyx[i] = NULL;
-//
-//                              ctty = 0;
-//                              ioctl(tty, TTY_IORQ_SETACTIVETTY, &ctty);
-//                        }
-//                  }
-//            }
+                              ttyx[i] = NULL;
+
+                              ctty = 0;
+                              ioctl(tty, TTY_IORQ_SETACTIVETTY, &ctty);
+                        }
+                  }
+            }
 
             TaskDelay(1000);
       }

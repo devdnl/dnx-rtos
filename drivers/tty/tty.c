@@ -235,6 +235,12 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 
       if (dev < TTY_LAST && src && size && nitems)
       {
+            /* check if screen is cleared */
+            if (strncmp("\x1B[2J", src, 4) == 0)
+            {
+                  ClearTTY(dev);
+            }
+
             WaitForAccess(dev);
 
             ch_t *msg = Malloc(nitems);
@@ -359,11 +365,15 @@ stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                         ch_t *lstmsg = term->tty[dev]->line[term->tty[dev]->wrIdx - 1];
 
                         /* if backspace */
-                        if (*chr == 0x08)
-                        {
-                              lstmsg[strlen(lstmsg) - 2] = '\0';
-                        }
-                        else
+//                        if (*chr == 0x08)
+//                        {
+//                              lstmsg[strlen(lstmsg) - 2] = '\0';
+//                        }
+//                        else if (*chr == '\n' || *chr == '\r')
+//                        {
+//                              /* nothing to do */
+//                        }
+//                        else
                         {
                               ch_t *newmsg = Malloc(strlen(lstmsg) + 2);
 
@@ -474,6 +484,8 @@ static void ttyd(void *arg)
       /* configure terminal VT100: clear screen, line wrap, cursor HOME */
       ch_t *termCfg = "\x1B[2J\x1B[?7h\x1B[H";
       fwrite(termCfg, sizeof(ch_t), strlen(termCfg), ttys);
+
+      GetTermSize(ttys);
 
       /* main daemon loop */
       for (;;)
@@ -727,13 +739,13 @@ static u8_t GetMsgIdx(u8_t dev, u8_t back)
       u8_t ridx;
 
       /* check if index underflow when calculating with back */
-      if ((i8_t)(term->tty[dev]->wrIdx - (i8_t)back) <= (i8_t)0)
+      if (term->tty[dev]->wrIdx < back)
       {
-            ridx = TTY_MAX_LINES - (back - term->tty[dev]->wrIdx) - 1;
+            ridx = TTY_MAX_LINES - (back - term->tty[dev]->wrIdx);
       }
       else
       {
-            ridx = term->tty[dev]->wrIdx - back - 1;
+            ridx = term->tty[dev]->wrIdx - back;
       }
 
       return ridx;
@@ -825,6 +837,8 @@ static dfn_t decFn(ch_t character)
 //================================================================================================//
 static void RefreshTTY(u8_t dev, FILE_t *file)
 {
+      GetTermSize(file);
+
       ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H\x1B[0m";
 
       fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
@@ -859,8 +873,8 @@ static void GetTermSize(FILE_t *ttysfile)
       term->col = 80;
       term->row = 24;
 
-      /* save cursor position, set max col and row position, query cursor position */
-      ch_t *rq = "\x1B[s\x1B[250;250H\x1B[6n";
+      /* save cursor position, cursor off, set max col and row position, query cursor position */
+      ch_t *rq = "\x1B[s\x1B[?25l\x1B[250;250H\x1B[6n";
       fwrite(rq, sizeof(ch_t), strlen(rq), ttysfile);
 
       /* buffer for response */
@@ -908,12 +922,12 @@ static void GetTermSize(FILE_t *ttysfile)
             return;
       }
 
-      /* restore cursor position */
-      rq = "\x1B[u";
+      /* restore cursor position, cursor on */
+      rq = "\x1B[u\x1B[?25h";
       fwrite(rq, sizeof(ch_t), strlen(rq), ttysfile);
 
       /* find response begin */
-      ch_t *seek = strchr(resp, '\x1B');
+      ch_t *seek = strchr(resp, '[');
       seek++;
 
       u8_t row = 0;
