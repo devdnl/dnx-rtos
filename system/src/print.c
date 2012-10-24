@@ -85,7 +85,7 @@ void kprintEnableOn(ch_t *filename)
       /* open new file */
       if (kprintFile == NULL)
       {
-            kprintFile = fopen(filename, "r");
+            kprintFile = fopen(filename, "w");
       }
 }
 

@@ -111,8 +111,8 @@ extern "C" {
 
 #define InitApp()                         FILE_t *stdin  = ((appArgs_t*)appArgument)->stdin;  \
                                           FILE_t *stdout = ((appArgs_t*)appArgument)->stdout; \
-                                          ch_t   *argv   = ((appArgs_t*)appArgument)->arg
-                                          /* DNLFIXME sprobowac (void)stdin; (void)stdout zeby ostrzezen nie bylo */
+                                          ch_t   *argv   = ((appArgs_t*)appArgument)->arg;    \
+                                          (void)stdin; (void)stdout; (void)argv
 
 
 /*==================================================================================================

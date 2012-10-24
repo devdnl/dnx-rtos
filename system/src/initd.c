@@ -82,36 +82,37 @@ void Initd(void *arg)
 {
       (void) arg;
 
-      /* driver initialization */
+      /* early initialization - terminal support */
       InitDrv("uart1", "ttyS0");
       InitDrv("tty0", "tty0");
       kprintEnableOn("/dev/tty0");
+
+      /* something about board and system */
+      kprint("\x1B[32m\x1B[1m");
+      kprint(".--------. .--. .---. .--. .--. ,--. ,--,\n");
+      kprint("|__    __| |  | |    \\|  | |  | \\   V  /\n");
+      kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
+      kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
+      kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
+      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'\x1B[0m\n\n");
+
+      kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
+      kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
+
+      /* driver initialization */
       InitDrv("tty1", "tty1");
       InitDrv("tty2", "tty2");
       InitDrv("tty3", "tty3");
       InitDrv("i2c1", "i2c");
       InitDrv("ds1307rtc", "rtc");
       InitDrv("ds1307nvm", "nvm");
+      InitDrv("eth0", "eth0");
 
-      /* something about board and system */
-      kprint("\n\x1B[32m");
-      kprint(".--------. .--. .---. .--. .--. ,--. ,--,\n");
-      kprint("|__    __| |  | |    \\|  | |  | \\   V  /\n");
-      kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
-      kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
-      kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
-      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'\n\n\x1B[0m");
-
-      kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
-      kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
-
-      if (InitDrv("eth0", "eth0") != STD_RET_OK)
+      /* library initializations */
+      if (LwIP_Init() != STD_RET_OK) /* FIXME this shall looks better */
             goto initd_net_end;
 
-      if (LwIP_Init() != STD_RET_OK)
-            goto initd_net_end;
-
-      kprint("Starting httpde...");
+      kprint("Starting httpde..."); /* FIXME create httpd as really deamon application */
       if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
       {
             kprintOK();
@@ -123,7 +124,7 @@ void Initd(void *arg)
 
       initd_net_end:
 
-      MPL115A2_Init();
+      MPL115A2_Init(); /* FIXME implement as driver */
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
@@ -152,7 +153,7 @@ void Initd(void *arg)
             /* load application if new TTY was created */
             ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
 
-            if (ctty < TTY_LAST)
+            if (ctty < TTY_LAST - 1)
             {
                   if (apphdl[ctty] == NULL)
                   {
@@ -181,7 +182,7 @@ void Initd(void *arg)
             }
 
             /* application monitoring */
-            for (u8_t i = 0; i < TTY_LAST; i++)
+            for (u8_t i = 0; i < TTY_LAST - 1; i++)
             {
                   if (apphdl[i])
                   {

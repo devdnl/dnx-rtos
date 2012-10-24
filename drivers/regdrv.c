@@ -200,7 +200,7 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
                         }
                         else
                         {
-                              kprint("Create node /dev/%s failed\n", nodeName);
+                              kprint("\x1B[31mCreate node /dev/%s failed\x1B[0m\n", nodeName);
                         }
                         break;
                   }
@@ -227,7 +227,7 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
       stdRet_t status = STD_RET_ERROR;
       u32_t i;
 
-      if (drvName)
+      if (drvName && devName)
       {
             for (i = 0; i < ARRAY_SIZE(drvList); i++)
             {
@@ -259,8 +259,10 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //================================================================================================//
-regDrvData_t GetDrvData(const ch_t *drvNode)
+stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata)
 {
+      stdRet_t status = STD_RET_ERROR;
+
       regDrvData_t drvPtrs;
       drvPtrs.open   = NULL;
       drvPtrs.close  = NULL;
@@ -282,12 +284,16 @@ regDrvData_t GetDrvData(const ch_t *drvNode)
                         drvPtrs.ioctl  = drvList[i].ioctl;
                         drvPtrs.device = drvList[i].device;
 
+                        *drvdata = drvPtrs;
+
+                        status = STD_RET_OK;
+
                         break;
                   }
             }
       }
 
-      return drvPtrs;
+      return status;
 }
 
 #ifdef __cplusplus

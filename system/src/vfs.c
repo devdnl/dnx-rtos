@@ -86,11 +86,13 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   ch_t *slash = strchr(name + 1, '/');
 
                   /* check if path is device */
+                  stdRet_t stat = STD_RET_ERROR;
+
                   if (strncmp("/dev", name, slash - name) == 0)
                   {
-                        regDrvData_t drvdata = GetDrvData(slash + 1);
+                        regDrvData_t drvdata;
 
-                        if (drvdata.open)
+                        if ((stat = GetDrvData(slash + 1, &drvdata)) == STD_RET_OK)
                         {
                               if (drvdata.open(drvdata.device) == STD_RET_OK)
                               {
@@ -99,19 +101,19 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                                     file->ioctl = drvdata.ioctl;
                                     file->read  = drvdata.read;
                                     file->write = drvdata.write;
-                                    goto fopen_end;
+
+                                    stat = STD_RET_OK;
                               }
                         }
                   }
+
                   /* file does not exist */
-                  else
+                  if (stat == STD_RET_ERROR)
                   {
                         Free(file);
                         file = NULL;
                   }
-
-                  /* check mode */
-                  if (file)
+                  else
                   {
                         /* open for reading */
                         if (strncmp("r", mode, 2) == 0)
@@ -153,7 +155,6 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
             }
       }
 
-      fopen_end:
       return file;
 }
 
