@@ -78,7 +78,7 @@ extern "C" {
  * applications' stdios with hardware layer.
  */
 //================================================================================================//
-void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
+void Initd(void *arg)
 {
       (void) arg;
 
@@ -128,55 +128,72 @@ void Initd(void *arg) /* DNLTODO implementacja na plikach /dev/tty1 */
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
-      u8_t      currtty = -1;
+      u8_t ctty = -1;
+
       appArgs_t *apphdl[TTY_LAST];
       memset(apphdl, 0x00, sizeof(apphdl));
 
+      FILE_t *tty;
+      FILE_t *ttyx[TTY_LAST];
+      memset(ttyx, 0x00, sizeof(ttyx));
+
+      tty     = fopen("/dev/tty0", "r+");
+      ttyx[0] = tty;
+
       for (;;)
       {
-            /* load application if new TTY was created */
-            currtty = TTY_GetCurrTTY();
-
-            if (currtty < TTY_COUNT - 1)
-            {
-                  if (apphdl[currtty] == NULL)
-                  {
-                        kprint("Starting application on new terminal: TTY%d\n", currtty + 1);
-
-                        apphdl[currtty] = Exec("term", NULL);
-
-                        if (apphdl[currtty] == NULL)
-                        {
-                              kprint("Not enough free memory to start application\n");
-                        }
-                        else
-                        {
-                              kprint("Application started on TTY%d\n", currtty + 1);
-//                              apphdl[currtty]->tty = currtty;
-                        }
-                  }
-            }
-
-            /* application monitoring */
-            for (u8_t i = 0; i < TTY_COUNT - 1; i++)
-            {
-                  if (apphdl[i])
-                  {
-                        if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
-                        {
-                              kprint("Application closed on TTY%d\n", currtty + 1);
-
-                              FreeApphdl(apphdl[i]);
-                              apphdl[i] = NULL;
-
-                              TTY_ChangeTTY(0);
-                        }
-                  }
-                  else
-                  {
-                        TTY_Clear(i);
-                  }
-            }
+//            /* load application if new TTY was created */
+//            ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
+//
+//            if (ctty < TTY_LAST)
+//            {
+//                  if (apphdl[ctty] == NULL)
+//                  {
+//                        if (ttyx[ctty] == NULL)
+//                        {
+//                              ch_t path[16];
+//                              snprint(path, sizeof(path), "/dev/tty%c", '0' + ctty);
+//                              ttyx[ctty] = fopen(path, "r+");
+//                        }
+//
+//                        kprint("Starting application on new terminal: TTY%d\n", ctty);
+//
+//                        apphdl[ctty] = Exec("term", NULL);
+//
+//                        if (apphdl[ctty] == NULL)
+//                        {
+//                              kprint("Not enough free memory to start application\n");
+//                        }
+//                        else
+//                        {
+//                              kprint("Application started on TTY%d\n", ctty);
+//                              apphdl[ctty]->stdin  = ttyx[ctty];
+//                              apphdl[ctty]->stdout = ttyx[ctty];
+//                        }
+//                  }
+//            }
+//
+//            /* application monitoring */
+//            for (u8_t i = 0; i < TTY_LAST; i++)
+//            {
+//                  if (apphdl[i])
+//                  {
+//                        if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
+//                        {
+//                              kprint("Application closed on TTY%d\n", ctty);
+//
+//                              FreeApphdl(apphdl[i]);
+//                              apphdl[i] = NULL;
+//
+//                              ioctl(ttyx[i], TTY_IORQ_CLEARTTY, NULL);
+//                              fclose(ttyx[i]);
+//                              ttyx[i] = NULL;
+//
+//                              ctty = 0;
+//                              ioctl(tty, TTY_IORQ_SETACTIVETTY, &ctty);
+//                        }
+//                  }
+//            }
 
             TaskDelay(500);
       }
