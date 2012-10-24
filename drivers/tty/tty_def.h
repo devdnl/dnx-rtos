@@ -80,6 +80,7 @@ enum TTY_IORQ_enum
       TTY_IORQ_GETCURRENTTTY,                   /* [out] u8_t */
       TTY_IORQ_SETACTIVETTY,                    /* [in ] u8_t */
       TTY_IORQ_CLEARTTY,                        /* none */
+      TTY_IORQ_PUTCHAR,                         /* [in]  u8_t */
 };
 
 

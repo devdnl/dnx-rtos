@@ -142,6 +142,9 @@ void Initd(void *arg)
 
       for (;;)
       {
+            kprint("Test\n");
+            ch_t chr = 'r';
+            ioctl(tty, TTY_IORQ_PUTCHAR, &chr);
 //            /* load application if new TTY was created */
 //            ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
 //
@@ -195,7 +198,7 @@ void Initd(void *arg)
 //                  }
 //            }
 
-            TaskDelay(500);
+            TaskDelay(1000);
       }
 
       /* this should never happen */

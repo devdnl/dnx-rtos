@@ -71,7 +71,7 @@ extern "C" {
 #define TaskSuspendAll()                  vTaskSuspendAll()
 #define TaskResumeAll()                   xTaskResumeAll()
 #define TaskGetTickCount()                xTaskGetTickCount()
-#define TaskGetPID()                      xTaskGetPID()
+#define TaskGetPID()                      (u32_t)xTaskGetPID()
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetStackFreeSpace(taskID)     uxTaskGetStackHighWaterMark(taskID)
 
