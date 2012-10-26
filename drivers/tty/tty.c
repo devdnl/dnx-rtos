@@ -443,6 +443,41 @@ stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                         break;
                   }
 
+                  /* clear last line */
+                  case TTY_IORQ_CLEARLASTLINE:
+                  {
+                        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
+                        {
+                              ch_t *msg = Malloc(2);
+
+                              if (msg)
+                              {
+                                    msg[0] = '\r';
+                                    msg[1] = '\0';
+
+                                    /* move message pointer back */
+                                    TTY(dev)->wrIdx--;
+
+                                    if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
+                                    {
+                                          TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
+                                    }
+
+                                    /* if no message to refresh setup refresh only one */
+                                    if (TTY(dev)->newMsgCnt == 0)
+                                    {
+                                          TTY(dev)->refLstLn = SET;
+                                    }
+
+                                    AddMsg(dev, msg, FALSE);
+                              }
+
+                              GiveRecMutex(TTY(dev)->mtx);
+                        }
+
+                        break;
+                  }
+
                   default:
                   {
                         status = STD_RET_ERROR;
