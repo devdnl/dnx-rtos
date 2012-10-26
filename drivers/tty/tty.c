@@ -137,8 +137,9 @@ stdRet_t TTY_Init(nod_t dev)
                         if (TaskCreate(ttyd, TTYD_NAME,    TTYD_STACK_SIZE,
                                        NULL, Priority(-1), &term->taskHdl) == OS_OK )
                         {
-                              term->col = 80;
-                              term->row = 24;
+                              term->col   = 80;
+                              term->row   = 24;
+                              term->chTTY = -1;
 
                               status = STD_RET_OK;
                         }
@@ -417,44 +418,29 @@ stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                         break;
                   }
 
-                  /* insert char to current line */
-                  case TTY_IORQ_PUTCHAR:
+                  /* terminal size - number of columns */
+                  case TTY_IORQ_GETCOL:
                   {
-                        ch_t *chr = (ch_t*)data;
+                        *((u8_t*)data) = term->col;
+                        break;
+                  }
 
-                        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
-                        {
-                              ch_t *lstmsg = TTY(dev)->line[TTY(dev)->wrIdx - 1];
+                  /* terminal size - number of rows */
+                  case TTY_IORQ_GETROW:
+                  {
+                        *((u8_t*)data) = term->row;
+                        break;
+                  }
 
-                              /* if backspace */
-      //                        if (*chr == 0x08)
-      //                        {
-      //                              lstmsg[strlen(lstmsg) - 2] = '\0';
-      //                        }
-      //                        else if (*chr == '\n' || *chr == '\r')
-      //                        {
-      //                              /* nothing to do */
-      //                        }
-      //                        else
-                              {
-                                    ch_t *newmsg = Malloc(strlen(lstmsg) + 2);
+                  /* clear screen */
+                  case TTY_IORQ_CLEARSCR:
+                  {
+                        ClearTTY(dev);
 
-                                    if (newmsg)
-                                    {
-                                          strcpy(newmsg, lstmsg);
-                                          size_t slen = strlen(newmsg);
-                                          newmsg[slen + 0] = *chr;
-                                          newmsg[slen + 1] = '\0';
+                        /* this forces screen refresh */
+                        term->chTTY = term->curTTY;
 
-                                          Free(lstmsg);
-                                          TTY(dev)->line[TTY(dev)->wrIdx - 1] = newmsg;
-                                    }
-                              }
-
-                              TTY(dev)->refLstLn = SET;
-
-                              GiveRecMutex(TTY(dev)->mtx);
-                        }
+                        break;
                   }
 
                   default:
@@ -490,7 +476,7 @@ stdRet_t TTY_Release(nod_t dev)
             {
                   for (u8_t i = 0; i < TTY_MAX_LINES; i++)
                   {
-                        Free(TTY(dev)->line);
+                        Free(TTY(dev)->line[i]);
                   }
             }
 
@@ -527,7 +513,7 @@ static void ttyd(void *arg)
 {
       (void) arg;
 
-      ch_t   chr        = 0;
+      ch_t   chr;
       bool_t rxbfrempty = FALSE;
       ch_t   *msg;
       FILE_t *ttys;
@@ -656,7 +642,7 @@ static void ttyd(void *arg)
             /* check if task can go to short TaskDelay */
             if ((ttyPtr->newMsgCnt == 0) && rxbfrempty)
             {
-                  TaskDelay(20);
+                  TaskDelay(10);
             }
       }
 
@@ -884,7 +870,7 @@ static void RefreshTTY(u8_t dev, FILE_t *file)
 
       if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
       {
-            for (i8_t i = TTY_MAX_LINES - 1; i >= 0; i--)
+            for (i8_t i = TTY_MAX_LINES - 1; i > 0; i--)
             {
                   ch_t *msg = TTY(dev)->line[GetMsgIdx(term->curTTY, i)];
 
@@ -892,12 +878,9 @@ static void RefreshTTY(u8_t dev, FILE_t *file)
                   {
                         fwrite(msg, sizeof(ch_t), strlen(msg), file);
                   }
-
-                  if (TTY(dev)->newMsgCnt > 0)
-                  {
-                        TTY(dev)->newMsgCnt--;
-                  }
             }
+
+            TTY(dev)->newMsgCnt = 0;
 
             GiveRecMutex(TTY(dev)->mtx);
       }
