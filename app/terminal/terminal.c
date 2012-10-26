@@ -134,7 +134,7 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
-      appArgs_t *appHdl;
+      app_t *appHdl;
 
       appHdl = Exec(cmd, arg);
 

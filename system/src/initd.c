@@ -138,14 +138,18 @@ void Initd(void *arg)
        *------------------------------------------------------------------------------------------*/
       u8_t ctty = -1;
 
-      appArgs_t *apphdl[TTY_LAST];
+      app_t *apphdl[TTY_LAST];
       memset(apphdl, 0x00, sizeof(apphdl));
 
       FILE_t *tty;
       FILE_t *ttyx[TTY_LAST];
       memset(ttyx, 0x00, sizeof(ttyx));
 
-      tty     = fopen("/dev/tty0", "r+");
+      while ((tty = fopen("/dev/tty0", "r+")) == NULL)
+      {
+            Sleep(200);
+      }
+
       ttyx[0] = tty;
 
       for (;;)

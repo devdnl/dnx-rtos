@@ -90,7 +90,7 @@ extern "C" {
 #define TakeSemBin(sem, blocktime)        xSemaphoreTake(sem, (portTickType) blocktime)
 #define TakeSemCnt(sem, blocktime)        xSemaphoreTake(sem, (portTickType) blocktime)
 #define TakeMutex(mutex, blocktime)       xSemaphoreTake(sem, (portTickType) blocktime)
-#define TakeRecMutex(mutex, blocktime)    SemaphoreTakeRecursive(mutex, (portTickType) blocktime)
+#define TakeRecMutex(mutex, blocktime)    xSemaphoreTakeRecursive(mutex, (portTickType) blocktime)
 #define GiveSemBin(sem)                   xSemaphoreGive(sem)
 #define GiveSemCnt(sem)                   xSemaphoreGive(sem)
 #define GiveMutex(mutex)                  xSemaphoreGive(mutex)
@@ -98,13 +98,16 @@ extern "C" {
 #define GiveSemBinFromISR(sem, woke)      xSemaphoreGiveFromISR(sem, woke)
 #define GiveSemCntFromISR(sem, woke)      xSemaphoreGiveFromISR(sem, woke)
 
+#define OS_OK                             pdTRUE
+#define OS_NOT_OK                         pdFALSE
+
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-typedef xTaskHandle      tskhdl_t;
-typedef xSemaphoreHandle semhdl_t;
-typedef xSemaphoreHandle mtxhdl_t;
+typedef xTaskHandle      task_t;
+typedef xSemaphoreHandle sem_t;
+typedef xSemaphoreHandle mutex_t;
 
 
 /*==================================================================================================

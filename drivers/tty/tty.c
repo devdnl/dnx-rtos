@@ -41,6 +41,9 @@ extern "C" {
 #define FILE                        "/dev/ttyS0"
 #define TTY_OUT_BFR_SIZE            16
 
+#define TTY(number)                 term->tty[number]
+#define BLOCK_TIME                  10000
+
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -50,12 +53,11 @@ struct termHdl
 {
       struct ttyEntry
       {
-            ch_t   *line[TTY_MAX_LINES];        /* line buffer */
-            u8_t   wrIdx;                       /* write index */
-            u8_t   newMsgCnt;                   /* new message counter */
-
-            flag_t refLstLn;                    /* request to refresh last line */
-            flag_t lock;                        /* access lock */
+            ch_t    *line[TTY_MAX_LINES];        /* line buffer */
+            u8_t    wrIdx;                       /* write index */
+            u8_t    newMsgCnt;                   /* new message counter */
+            flag_t  refLstLn;                    /* request to refresh last line */
+            mutex_t mtx;                        /* resources security */
 
             /* FIFO used in keyboard read */
             struct inputfifo
@@ -67,11 +69,11 @@ struct termHdl
             } input;
       } *tty[TTY_LAST];
 
-      u8_t currentTTY;
-      i8_t changeTTY;
+      u8_t curTTY;
+      i8_t chTTY;
       u8_t col;
       u8_t row;
-      tskhdl_t taskHdl;
+      task_t taskHdl;
 };
 
 
@@ -92,8 +94,6 @@ typedef enum
 ==================================================================================================*/
 static void  ttyd(void *arg);
 static void  ClearTTY(u8_t dev);
-static void  WaitForAccess(u8_t dev);
-static void  GiveAccess(u8_t dev);
 static void  AddMsg(u8_t dev, ch_t *msg);
 static dfn_t decFn(ch_t character);
 static u8_t  GetMsgIdx(u8_t dev, u8_t back);
@@ -135,10 +135,11 @@ stdRet_t TTY_Init(nod_t dev)
                   if (term)
                   {
                         if (TaskCreate(ttyd, TTYD_NAME,    TTYD_STACK_SIZE,
-                                       NULL, Priority(-1), &term->taskHdl) )
+                                       NULL, Priority(-1), &term->taskHdl) == OS_OK )
                         {
                               term->col = 80;
                               term->row = 24;
+
                               status = STD_RET_OK;
                         }
                         else
@@ -175,12 +176,25 @@ stdRet_t TTY_Open(nod_t dev)
       {
             if (term)
             {
-                  if (term->tty[dev] == NULL)
+                  if (TTY(dev) == NULL)
                   {
-                        term->tty[dev] = Calloc(1, sizeof(struct ttyEntry));
-                  }
+                        TTY(dev) = Calloc(1, sizeof(struct ttyEntry));
 
-                  if (term->tty[dev])
+                        if (TTY(dev))
+                        {
+                              TTY(dev)->mtx = CreateRecMutex();
+
+                              if (TTY(dev)->mtx != NULL)
+                              {
+                                    status = STD_RET_OK;
+                              }
+                              else
+                              {
+                                    Free(TTY(dev));
+                              }
+                        }
+                  }
+                  else
                   {
                         status = STD_RET_OK;
                   }
@@ -235,25 +249,26 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 
       if (dev < TTY_LAST && src && size && nitems)
       {
-            /* check if screen is cleared */
-            if (strncmp("\x1B[2J", src, 4) == 0)
+            if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  ClearTTY(dev);
+                  /* check if screen is cleared */
+                  if (strncmp("\x1B[2J", src, 4) == 0)
+                  {
+                        ClearTTY(dev);
+                  }
+
+                  ch_t *msg = Malloc(nitems);
+
+                  if (msg)
+                  {
+                        strncpy(msg, src, nitems);
+                        AddMsg(dev, msg);
+                  }
+
+                  n = nitems;
+
+                  GiveRecMutex(TTY(dev)->mtx);
             }
-
-            WaitForAccess(dev);
-
-            ch_t *msg = Malloc(nitems);
-
-            if (msg)
-            {
-                  strncpy(msg, src, nitems);
-                  AddMsg(dev, msg);
-            }
-
-            GiveAccess(dev);
-
-            n = nitems;
       }
 
       return n;
@@ -281,31 +296,32 @@ size_t TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 
       if (dev < TTY_LAST && dst && size && nitems)
       {
-            WaitForAccess(dev);
-
-            struct inputfifo *input = &term->tty[dev]->input;
-
-            while ((input->level > 0) && (nitems > 0))
+            if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  *((ch_t*)dst) = input->buffer[input->rxidx++];
+                  struct inputfifo *input = &TTY(dev)->input;
 
-                  dst += size;
-
-                  if (input->rxidx >= TTY_OUT_BFR_SIZE)
+                  while ((input->level > 0) && (nitems > 0))
                   {
-                        input->rxidx = 0;
+                        *((ch_t*)dst) = input->buffer[input->rxidx++];
+
+                        dst += size;
+
+                        if (input->rxidx >= TTY_OUT_BFR_SIZE)
+                        {
+                              input->rxidx = 0;
+                        }
+
+                        input->level--;
+
+                        nitems--;
+
+                        n++;
                   }
 
-                  input->level--;
+                  n /= size;
 
-                  nitems--;
-
-                  n++;
+                  GiveRecMutex(TTY(dev)->mtx);
             }
-
-            n /= size;
-
-            GiveAccess(dev);
       }
 
       return n;
@@ -337,14 +353,14 @@ stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                   /* return current TTY */
                   case TTY_IORQ_GETCURRENTTTY:
                   {
-                        *((u8_t*)data) = term->currentTTY;
+                        *((u8_t*)data) = term->curTTY;
                         break;
                   }
 
                   /* set active terminal */
                   case TTY_IORQ_SETACTIVETTY:
                   {
-                        term->changeTTY = *((u8_t*)data);
+                        term->chTTY = *((u8_t*)data);
                         break;
                   }
 
@@ -360,38 +376,39 @@ stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                   {
                         ch_t *chr = (ch_t*)data;
 
-                        WaitForAccess(dev);
-
-                        ch_t *lstmsg = term->tty[dev]->line[term->tty[dev]->wrIdx - 1];
-
-                        /* if backspace */
-//                        if (*chr == 0x08)
-//                        {
-//                              lstmsg[strlen(lstmsg) - 2] = '\0';
-//                        }
-//                        else if (*chr == '\n' || *chr == '\r')
-//                        {
-//                              /* nothing to do */
-//                        }
-//                        else
+                        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
                         {
-                              ch_t *newmsg = Malloc(strlen(lstmsg) + 2);
+                              ch_t *lstmsg = TTY(dev)->line[TTY(dev)->wrIdx - 1];
 
-                              if (newmsg)
+                              /* if backspace */
+      //                        if (*chr == 0x08)
+      //                        {
+      //                              lstmsg[strlen(lstmsg) - 2] = '\0';
+      //                        }
+      //                        else if (*chr == '\n' || *chr == '\r')
+      //                        {
+      //                              /* nothing to do */
+      //                        }
+      //                        else
                               {
-                                    strcpy(newmsg, lstmsg);
-                                    size_t slen = strlen(newmsg);
-                                    newmsg[slen + 0] = *chr;
-                                    newmsg[slen + 1] = '\0';
+                                    ch_t *newmsg = Malloc(strlen(lstmsg) + 2);
 
-                                    Free(lstmsg);
-                                    term->tty[dev]->line[term->tty[dev]->wrIdx - 1] = newmsg;
+                                    if (newmsg)
+                                    {
+                                          strcpy(newmsg, lstmsg);
+                                          size_t slen = strlen(newmsg);
+                                          newmsg[slen + 0] = *chr;
+                                          newmsg[slen + 1] = '\0';
+
+                                          Free(lstmsg);
+                                          TTY(dev)->line[TTY(dev)->wrIdx - 1] = newmsg;
+                                    }
                               }
+
+                              TTY(dev)->refLstLn = SET;
+
+                              GiveRecMutex(TTY(dev)->mtx);
                         }
-
-                        term->tty[dev]->refLstLn = SET;
-
-                        GiveAccess(dev);
                   }
 
                   default:
@@ -423,15 +440,17 @@ stdRet_t TTY_Release(nod_t dev)
       if (dev < TTY_LAST)
       {
             /* free unused terminal */
-            if (term->tty[dev])
+            if (TTY(dev))
             {
                   for (u8_t i = 0; i < TTY_MAX_LINES; i++)
                   {
-                        Free(term->tty[dev]->line);
+                        Free(TTY(dev)->line);
                   }
             }
 
-            Free(term->tty[dev]);
+            DeleteRecMutex(TTY(dev)->mtx);
+
+            Free(TTY(dev));
 
             status = STD_RET_OK;
 
@@ -478,11 +497,11 @@ static void ttyd(void *arg)
                   break;
             }
 
-            Sleep(250);
+            TaskDelay(250);
       }
 
-      /* configure terminal VT100: clear screen, line wrap, cursor HOME */
-      ch_t *termCfg = "\x1B[2J\x1B[?7h\x1B[H";
+      /* configure terminal VT100: reset attributes, clear screen, line wrap, cursor HOME */
+      ch_t *termCfg = "\x1B[0m\x1B[2J\x1B[?7h\x1B[H";
       fwrite(termCfg, sizeof(ch_t), strlen(termCfg), ttys);
 
       GetTermSize(ttys);
@@ -491,7 +510,7 @@ static void ttyd(void *arg)
       for (;;)
       {
             /* pointer to current terminal */
-            struct ttyEntry *ttyPtr = term->tty[term->currentTTY];
+            struct ttyEntry *ttyPtr = TTY(term->curTTY);
 
             /* STDOUT support ------------------------------------------------------------------- */
             if ((ttyPtr->refLstLn == SET) && ttyPtr)
@@ -501,7 +520,7 @@ static void ttyd(void *arg)
                   fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
 
                   /* refresh line */
-                  msg = ttyPtr->line[GetMsgIdx(term->currentTTY, 0)];
+                  msg = ttyPtr->line[GetMsgIdx(term->curTTY, 0)];
                   fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
 
                   /* cursor on */
@@ -512,7 +531,7 @@ static void ttyd(void *arg)
             }
             else if ((ttyPtr->newMsgCnt > 0) && ttyPtr)
             {
-                  msg = ttyPtr->line[GetMsgIdx(term->currentTTY, ttyPtr->newMsgCnt)];
+                  msg = ttyPtr->line[GetMsgIdx(term->curTTY, ttyPtr->newMsgCnt)];
 
                   if (ttyPtr->newMsgCnt)
                   {
@@ -533,35 +552,36 @@ static void ttyd(void *arg)
                   /* no Fn key was detected */
                   if (keyfn == TTY_SEL_NONE && ttyPtr)
                   {
-                        WaitForAccess(term->currentTTY);
-
-                        if (ttyPtr->input.level < TTY_OUT_BFR_SIZE)
+                        if (TakeRecMutex(TTY(term->curTTY)->mtx, BLOCK_TIME) == OS_OK)
                         {
-                              ttyPtr->input.buffer[ttyPtr->input.txidx++] = chr;
-
-                              if (ttyPtr->input.txidx >= TTY_OUT_BFR_SIZE)
+                              if (ttyPtr->input.level < TTY_OUT_BFR_SIZE)
                               {
-                                    ttyPtr->input.txidx = 0;
+                                    ttyPtr->input.buffer[ttyPtr->input.txidx++] = chr;
+
+                                    if (ttyPtr->input.txidx >= TTY_OUT_BFR_SIZE)
+                                    {
+                                          ttyPtr->input.txidx = 0;
+                                    }
+
+                                    ttyPtr->input.level++;
                               }
 
-                              ttyPtr->input.level++;
+                              GiveRecMutex(TTY(term->curTTY)->mtx);
                         }
-
-                        GiveAccess(term->currentTTY);
                   }
                   /* Fn key was hit */
-                  else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->currentTTY) )
+                  else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->curTTY) )
                   {
-                        term->currentTTY = keyfn;
+                        term->curTTY = keyfn;
 
-                        if (term->tty[term->currentTTY] == NULL)
+                        if (TTY(keyfn) == NULL)
                         {
                               TTY_Open(keyfn);
                         }
 
-                        if (term->tty[term->currentTTY])
+                        if (TTY(keyfn))
                         {
-                              RefreshTTY(term->currentTTY, ttys);
+                              RefreshTTY(keyfn, ttys);
                         }
                   }
             }
@@ -571,17 +591,17 @@ static void ttyd(void *arg)
             }
 
             /* external trigger: terminal switch */
-            if ((term->changeTTY != -1) && ttyPtr)
+            if ((term->chTTY != -1) && ttyPtr)
             {
-                  term->currentTTY = term->changeTTY;
-                  term->changeTTY  = -1;
-                  RefreshTTY(term->currentTTY, ttys);
+                  term->curTTY = term->chTTY;
+                  term->chTTY  = -1;
+                  RefreshTTY(term->curTTY, ttys);
             }
 
-            /* check if task can go to short sleep */
+            /* check if task can go to short TaskDelay */
             if ((ttyPtr->newMsgCnt == 0) && rxbfrempty)
             {
-                  Sleep(20);
+                  TaskDelay(20);
             }
       }
 
@@ -599,61 +619,20 @@ static void ttyd(void *arg)
 //================================================================================================//
 static void ClearTTY(u8_t dev)
 {
-      WaitForAccess(dev);
-
-      for (u8_t i = 0; i < TTY_LAST; i++)
+      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
       {
-            Free(term->tty[dev]->line[i]);
-            term->tty[dev]->line[i] = NULL;
-      }
-
-      term->tty[dev]->newMsgCnt = 0;
-      term->tty[dev]->wrIdx = 0;
-      term->tty[dev]->refLstLn = RESET;
-
-      GiveAccess(dev);
-}
-
-
-//================================================================================================//
-/**
- * @brief Function wait to safety access to data
- *
- * @param dev     number of terminal
- */
-//================================================================================================//
-static void WaitForAccess(u8_t dev)
-{
-      while (TRUE)
-      {
-            TaskSuspendAll();
-            if (term->tty[dev]->lock == SET)
+            for (u8_t i = 0; i < TTY_LAST; i++)
             {
-                  TaskResumeAll();
-                  Sleep(2);
+                  Free(TTY(dev)->line[i]);
+                  TTY(dev)->line[i] = NULL;
             }
-            else
-            {
-                  term->tty[dev]->lock = SET;
-                  TaskResumeAll();
-                  break;
-            }
+
+            TTY(dev)->newMsgCnt = 0;
+            TTY(dev)->wrIdx = 0;
+            TTY(dev)->refLstLn = RESET;
+
+            GiveRecMutex(TTY(dev)->mtx);
       }
-}
-
-
-//================================================================================================//
-/**
- * @brief Function give safety access to data
- *
- * @param tty     number of terminal
- */
-//================================================================================================//
-static void GiveAccess(u8_t dev)
-{
-      TaskSuspendAll();
-      term->tty[dev]->lock = RESET;
-      TaskResumeAll();
 }
 
 
@@ -673,7 +652,7 @@ static void AddMsg(u8_t dev, ch_t *msg)
       /* find all messages which are not ended by LF (this is common line) */
       for (u8_t i = 0; i < TTY_MAX_LINES; i++)
       {
-            ch_t *lastmsg = term->tty[dev]->line[wridx++];
+            ch_t *lastmsg = TTY(dev)->line[wridx++];
 
             if (wridx >= TTY_MAX_LINES)
             {
@@ -696,11 +675,11 @@ static void AddMsg(u8_t dev, ch_t *msg)
       }
 
       /* free current line and group if exist */
-      wridx = term->tty[dev]->wrIdx;
+      wridx = TTY(dev)->wrIdx;
       while (mgcnt--)
       {
-            Free(term->tty[dev]->line[wridx]);
-            term->tty[dev]->line[wridx++] = NULL;
+            Free(TTY(dev)->line[wridx]);
+            TTY(dev)->line[wridx++] = NULL;
 
             if (wridx >= TTY_MAX_LINES)
             {
@@ -709,17 +688,17 @@ static void AddMsg(u8_t dev, ch_t *msg)
       }
 
       /* add new message */
-      term->tty[dev]->line[term->tty[dev]->wrIdx++] = msg;
+      TTY(dev)->line[TTY(dev)->wrIdx++] = msg;
 
-      if (term->tty[dev]->wrIdx >= TTY_MAX_LINES)
+      if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
       {
-            term->tty[dev]->wrIdx = 0;
+            TTY(dev)->wrIdx = 0;
       }
 
       /* increase new message counter */
-      if (term->tty[dev]->newMsgCnt < TTY_MAX_LINES)
+      if (TTY(dev)->newMsgCnt < TTY_MAX_LINES)
       {
-            term->tty[dev]->newMsgCnt++;
+            TTY(dev)->newMsgCnt++;
       }
 }
 
@@ -739,13 +718,13 @@ static u8_t GetMsgIdx(u8_t dev, u8_t back)
       u8_t ridx;
 
       /* check if index underflow when calculating with back */
-      if (term->tty[dev]->wrIdx < back)
+      if (TTY(dev)->wrIdx < back)
       {
-            ridx = TTY_MAX_LINES - (back - term->tty[dev]->wrIdx);
+            ridx = TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
       }
       else
       {
-            ridx = term->tty[dev]->wrIdx - back;
+            ridx = TTY(dev)->wrIdx - back;
       }
 
       return ridx;
@@ -839,22 +818,23 @@ static void RefreshTTY(u8_t dev, FILE_t *file)
 {
       GetTermSize(file);
 
-      ch_t *clrscr = "\x1B[2J\x1B[?7h\x1B[H\x1B[0m";
+      /* reset attributes, clear screen, line wrap, cursor HOME */
+      ch_t *clrscr = "\x1B[0m\x1B[2J\x1B[?7h\x1B[H";
 
       fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
 
       for (i8_t i = TTY_MAX_LINES - 1; i >= 0; i--)
       {
-            ch_t *msg = term->tty[dev]->line[GetMsgIdx(term->currentTTY, i)];
+            ch_t *msg = TTY(dev)->line[GetMsgIdx(term->curTTY, i)];
 
             if (msg)
             {
                   fwrite(msg, sizeof(ch_t), strlen(msg), file);
             }
 
-            if (term->tty[dev]->newMsgCnt > 0)
+            if (TTY(dev)->newMsgCnt > 0)
             {
-                  term->tty[dev]->newMsgCnt--;
+                  TTY(dev)->newMsgCnt--;
             }
       }
 }
@@ -887,7 +867,7 @@ static void GetTermSize(FILE_t *ttysfile)
       {
             if (ioctl(ttysfile, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK)
             {
-                  Sleep(100);
+                  TaskDelay(100);
             }
 
       } while (--try && chr != '\x1B');
@@ -906,7 +886,7 @@ static void GetTermSize(FILE_t *ttysfile)
 
             while ((ioctl(ttysfile, UART_IORQ_GET_BYTE, respPtr) != STD_RET_OK) && try)
             {
-                  Sleep(10);
+                  TaskDelay(10);
                   try--;
             }
 

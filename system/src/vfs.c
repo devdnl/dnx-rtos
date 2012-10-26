@@ -92,7 +92,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   {
                         regDrvData_t drvdata;
 
-                        if ((stat = GetDrvData(slash + 1, &drvdata)) == STD_RET_OK)
+                        if (GetDrvData(slash + 1, &drvdata) == STD_RET_OK)
                         {
                               if (drvdata.open(drvdata.device) == STD_RET_OK)
                               {
@@ -108,7 +108,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   }
 
                   /* file does not exist */
-                  if (stat == STD_RET_ERROR)
+                  if (stat != STD_RET_OK)
                   {
                         Free(file);
                         file = NULL;

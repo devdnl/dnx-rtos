@@ -96,7 +96,7 @@ typedef struct appArgs_struct
       void *ChildTaskHandle;        /* FreeRTOS task handling for children */
       void *ParentTaskHandle;       /* FreeRTOS task handling for parent */
       stdRet_t    exitCode;         /* exit code */
-} appArgs_t;
+} app_t;
 
 
 /** time structure */

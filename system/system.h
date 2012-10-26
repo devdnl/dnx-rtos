@@ -72,9 +72,9 @@ extern "C" {
 #define APP_SEC_BEGIN                     { InitApp();
 #define APP_SEC_END                       Exit(appmain(argv));}
 
-#define InitApp()                         FILE_t *stdin  = ((appArgs_t*)appArgument)->stdin;  \
-                                          FILE_t *stdout = ((appArgs_t*)appArgument)->stdout; \
-                                          ch_t   *argv   = ((appArgs_t*)appArgument)->arg;    \
+#define InitApp()                         FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
+                                          FILE_t *stdout = ((app_t*)appArgument)->stdout; \
+                                          ch_t   *argv   = ((app_t*)appArgument)->arg;    \
                                           (void)stdin; (void)stdout; (void)argv
 
 
