@@ -1,11 +1,11 @@
-#ifndef REGDRV_H_
-#define REGDRV_H_
+#ifndef MPL115A2_DEF_H_
+#define MPL115A2_DEF_H_
 /*=============================================================================================*//**
-@file    regdrv.h
+@file    mpl115a2-def.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration drivers
+@brief   This file support temperature and pressure sensor - MPL115A2
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,18 +33,6 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
-#include "systypes.h"
-
-/* include here device definition/request list */
-#include "uart_def.h"
-#include "pll_def.h"
-#include "i2c_def.h"
-#include "gpio_def.h"
-#include "ether_def.h"
-#include "ds1307_def.h"
-#include "tty_def.h"
-#include "mpl115a2_def.h"
 
 
 /*==================================================================================================
@@ -55,15 +43,11 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-typedef struct
+enum MPL115A2_IORQ_enum
 {
-      stdRet_t (*open)(nod_t);
-      stdRet_t (*close)(nod_t);
-      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(nod_t, IORq_t, void*);
-      nod_t    device;
-} regDrvData_t;
+      MPL115A2_IORQ_GETTEMP,              /* [out] i8_t  */
+      MPL115A2_IORQ_GETPRES,              /* [out] i16_t */
+};
 
 
 /*==================================================================================================
@@ -74,15 +58,13 @@ typedef struct
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName);
-extern stdRet_t ReleaseDrv(const ch_t *drvName);
-extern stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGDRV_H_ */
+#endif /* MPL115A2_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

@@ -51,6 +51,7 @@ CSRC = $(sort \
    drivers/pll/pll.c \
    drivers/tty/tty.c \
    drivers/uart/uart.c \
+   drivers/mpl115a2/mpl115a2.c \
    kernel/croutine.c \
    kernel/list.c \
    kernel/queue.c \
@@ -90,7 +91,6 @@ CSRC = $(sort \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
    lib/lwip/port/net.c \
-   lib/MPL115A2/MPL115A2.c \
    lib/STM32_ETH_Driver/stm32_eth.c \
    lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    lib/STM32F10x_StdPeriph_Driver/misc.c \
