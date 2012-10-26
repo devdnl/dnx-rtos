@@ -676,7 +676,7 @@ static void ClearTTY(u8_t dev)
 {
       if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
       {
-            for (u8_t i = 0; i < TTY_LAST; i++)
+            for (u8_t i = 0; i < TTY_MAX_LINES; i++)
             {
                   Free(TTY(dev)->line[i]);
                   TTY(dev)->line[i] = NULL;
