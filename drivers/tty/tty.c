@@ -71,7 +71,7 @@ struct termHdl
       i8_t changeTTY;
       u8_t col;
       u8_t row;
-      taskHdl_t taskHdl;
+      tskhdl_t taskHdl;
 };
 
 
