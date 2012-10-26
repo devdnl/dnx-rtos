@@ -249,6 +249,9 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 
       if (dev < TTY_LAST && src && size && nitems)
       {
+            while (TTY(dev)->refLstLn == SET && dev == term->curTTY)
+                  TaskDelay(10);
+
             if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   ch_t *msg;
@@ -301,17 +304,23 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                               strncpy(msg, src, nitems);
                         }
 
-                        if (TTY(dev)->newMsgCnt)
+                        if (TTY(dev)->refLstLn == SET)
                         {
-                              TTY(dev)->refLstLn = RESET;
-
                               TTY(dev)->newMsgCnt++;
-
-                              if (TTY(dev)->newMsgCnt >= TTY_MAX_LINES)
-                              {
-                                    TTY(dev)->newMsgCnt = 0;
-                              }
+                              TTY(dev)->refLstLn = RESET;
                         }
+
+//                        if (TTY(dev)->newMsgCnt)
+//                        {
+//                              TTY(dev)->refLstLn = RESET;
+//
+//                              TTY(dev)->newMsgCnt++;
+//
+//                              if (TTY(dev)->newMsgCnt >= TTY_MAX_LINES)
+//                              {
+//                                    TTY(dev)->newMsgCnt = 0;
+//                              }
+//                        }
 
                         AddMsg(dev, msg, TRUE);
                   }
