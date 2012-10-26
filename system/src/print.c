@@ -754,8 +754,8 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    putChart(stdout, ASCII_CR);
-                                    putChart(stdout, ASCII_LF);
+                                    ch_t *endl = "\r\n";
+                                    fwrite(endl, sizeof(ch_t), strlen(endl), stdout);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))

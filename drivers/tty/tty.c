@@ -94,7 +94,7 @@ typedef enum
 ==================================================================================================*/
 static void  ttyd(void *arg);
 static void  ClearTTY(u8_t dev);
-static void  AddMsg(u8_t dev, ch_t *msg);
+static void  AddMsg(u8_t dev, ch_t *msg, bool_t incMsgCnt);
 static dfn_t decFn(ch_t character);
 static u8_t  GetMsgIdx(u8_t dev, u8_t back);
 static void  RefreshTTY(u8_t dev, FILE_t *file);
@@ -251,18 +251,69 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
       {
             if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
+                  ch_t *msg;
+
                   /* check if screen is cleared */
                   if (strncmp("\x1B[2J", src, 4) == 0)
                   {
                         ClearTTY(dev);
                   }
 
-                  ch_t *msg = Malloc(nitems);
+                  ch_t   *lstmsg = TTY(dev)->line[GetMsgIdx(dev, 1)];
+                  size_t msgsize = strlen(lstmsg);
 
-                  if (msg)
+                  if (lstmsg && (*(lstmsg + msgsize - 1) != '\n'))
                   {
-                        strncpy(msg, src, nitems);
-                        AddMsg(dev, msg);
+                        msgsize += nitems + 1;
+
+                        TTY(dev)->wrIdx--;
+
+                        if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
+                        {
+                              TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
+                        }
+
+//                        TTY(dev)->newMsgCnt--;
+//                        if (TTY(dev)->newMsgCnt >= TTY_MAX_LINES)
+                        if (TTY(dev)->newMsgCnt == 0)
+                        {
+//                              TTY(dev)->newMsgCnt = 0;
+                              TTY(dev)->refLstLn = SET;
+                        }
+
+                        msg = Malloc(msgsize);
+
+                        if (msg)
+                        {
+                              strcpy(msg, lstmsg);
+                              strncat(msg, src, nitems + 1);
+                              Free(lstmsg);
+                        }
+
+                        AddMsg(dev, msg, FALSE);
+                  }
+                  else
+                  {
+                        msg = Malloc(nitems);
+
+                        if (msg)
+                        {
+                              strncpy(msg, src, nitems);
+                        }
+
+                        if (TTY(dev)->newMsgCnt)
+                        {
+                              TTY(dev)->refLstLn = RESET;
+
+                              TTY(dev)->newMsgCnt++;
+
+                              if (TTY(dev)->newMsgCnt >= TTY_MAX_LINES)
+                              {
+                                    TTY(dev)->newMsgCnt = 0;
+                              }
+                        }
+
+                        AddMsg(dev, msg, TRUE);
                   }
 
                   n = nitems;
@@ -513,37 +564,41 @@ static void ttyd(void *arg)
             struct ttyEntry *ttyPtr = TTY(term->curTTY);
 
             /* STDOUT support ------------------------------------------------------------------- */
-            if ((ttyPtr->refLstLn == SET) && ttyPtr)
-            {
-                  /* cursor off, carriage return, line erase from cursor, font attributes reset */
-                  msg = "\x1B[?25l\r\x1B[K\x1B[0m";
-                  fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
-
-                  /* refresh line */
-                  msg = ttyPtr->line[GetMsgIdx(term->curTTY, 0)];
-                  fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
-
-                  /* cursor on */
-                  msg = "\x1B[?25h";
-                  fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
-
-                  ttyPtr->refLstLn = RESET;
-            }
-            else if ((ttyPtr->newMsgCnt > 0) && ttyPtr)
+            if ((ttyPtr->newMsgCnt > 0) && ttyPtr)
             {
                   if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
                   {
                         msg = ttyPtr->line[GetMsgIdx(term->curTTY, ttyPtr->newMsgCnt)];
 
-                        if (ttyPtr->newMsgCnt)
-                        {
-                              ttyPtr->newMsgCnt--;
-                        }
+                        ttyPtr->newMsgCnt--;
 
                         if (msg)
                         {
                               fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
                         }
+
+                        ttyPtr->refLstLn = RESET;
+
+                        GiveRecMutex(ttyPtr->mtx);
+                  }
+            }
+            else if ((ttyPtr->refLstLn == SET) && ttyPtr)
+            {
+                  if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
+                  {
+                        /* cursor off, carriage return, line erase from cursor, font attributes reset */
+                        msg = "\x1B[?25l\r\x1B[K\x1B[0m";
+                        fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
+
+                        /* refresh line */
+                        msg = ttyPtr->line[GetMsgIdx(term->curTTY, 1)];
+                        fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
+
+                        /* cursor on */
+                        msg = "\x1B[?25h";
+                        fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
+
+                        ttyPtr->refLstLn = RESET;
 
                         GiveRecMutex(ttyPtr->mtx);
                   }
@@ -647,9 +702,10 @@ static void ClearTTY(u8_t dev)
  *
  * @param dev           number of terminal
  * @param *msg          message
+ * @param incMsgCnt     TRUE: increase msg counter; FALSE no increase
  */
 //================================================================================================//
-static void AddMsg(u8_t dev, ch_t *msg)
+static void AddMsg(u8_t dev, ch_t *msg, bool_t incMsgCnt)
 {
       u8_t wridx = term->tty[dev]->wrIdx;
       u8_t mgcnt = 1;
@@ -701,9 +757,12 @@ static void AddMsg(u8_t dev, ch_t *msg)
       }
 
       /* increase new message counter */
-      if (TTY(dev)->newMsgCnt < TTY_MAX_LINES)
+      if (incMsgCnt)
       {
-            TTY(dev)->newMsgCnt++;
+            if (TTY(dev)->newMsgCnt < TTY_MAX_LINES)
+            {
+                  TTY(dev)->newMsgCnt++;
+            }
       }
 }
 
@@ -722,19 +781,14 @@ static u8_t GetMsgIdx(u8_t dev, u8_t back)
 {
       u8_t ridx = 0;
 
-      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
+      /* check if index underflow when calculating with back */
+      if (TTY(dev)->wrIdx < back)
       {
-            /* check if index underflow when calculating with back */
-            if (TTY(dev)->wrIdx < back)
-            {
-                  ridx = TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
-            }
-            else
-            {
-                  ridx = TTY(dev)->wrIdx - back;
-            }
-
-            GiveRecMutex(TTY(dev)->mtx);
+            ridx = TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
+      }
+      else
+      {
+            ridx = TTY(dev)->wrIdx - back;
       }
 
       return ridx;
