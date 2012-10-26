@@ -49,6 +49,7 @@ CSRC = $(sort \
    drivers/gpio/gpio.c \
    drivers/i2c/i2c.c \
    drivers/pll/pll.c \
+   drivers/tty/tty.c \
    drivers/uart/uart.c \
    kernel/croutine.c \
    kernel/list.c \
@@ -102,7 +103,6 @@ CSRC = $(sort \
    system/src/main.c \
    system/src/memman.c \
    system/src/print.c \
-   system/src/tty.c \
    system/src/vfs.c \
    )
 

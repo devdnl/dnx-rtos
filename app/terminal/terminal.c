@@ -134,13 +134,14 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
-      appArgs_t *appHdl;
+      app_t *appHdl;
 
       appHdl = Exec(cmd, arg);
 
       if (appHdl)
       {
-            appHdl->tty = tty;
+            appHdl->stdin  = stdin;
+            appHdl->stdout = stdout;
 
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
@@ -194,7 +195,7 @@ stdRet_t appmain(ch_t *argv)
             goto Terminal_Exit;
       }
 
-      printf("Welcome to %s - kernel FreeRTOS (tty%d)\n", SystemGetHostname(), tty + 1);
+      printf("Welcome to %s - kernel FreeRTOS (tty%dTODO)\n", SystemGetHostname(), 1);
 
       memset(history, ASCII_NULL, PROMPT_LINE_SIZE);
 

@@ -66,7 +66,7 @@ stdRet_t appmain(ch_t *argv)
       bcdTime_t time;
       FILE_t    *rtc;
 
-      rtc = fopen("/dev/rtc", NULL);
+      rtc = fopen("/dev/rtc", "r");
 
       if (rtc)
       {

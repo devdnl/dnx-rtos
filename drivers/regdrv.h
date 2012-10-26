@@ -43,6 +43,7 @@ extern "C" {
 #include "gpio_def.h"
 #include "ether_def.h"
 #include "ds1307_def.h"
+#include "tty_def.h"
 
 
 /*==================================================================================================
@@ -72,9 +73,9 @@ typedef struct
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t     InitDrv(const ch_t *drvName, ch_t *nodeName);
-extern stdRet_t     ReleaseDrv(const ch_t *drvName);
-extern regDrvData_t GetDrvData(const ch_t *drvNode);
+extern stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName);
+extern stdRet_t ReleaseDrv(const ch_t *drvName);
+extern stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata);
 
 #ifdef __cplusplus
 }

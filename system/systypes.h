@@ -40,8 +40,9 @@ extern "C" {
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-#define STDIO_BUFFER_SIZE                 100
-#define KPRINT_BUFFER_SIZE                80
+/* disable conflicting types from standard libraries */
+#undef stdin
+#undef stdout
 
 
 /*==================================================================================================
@@ -89,12 +90,13 @@ typedef struct
 /** application standard arguments type */
 typedef struct appArgs_struct
 {
-      void *arg;                      /* pointer to the argument */
-      u8_t tty;                       /* stdin fifo */
-      void *ChildTaskHandle;          /* FreeRTOS task handling for children */
-      void *ParentTaskHandle;         /* FreeRTOS task handling for parent */
-      stdRet_t    exitCode;           /* exit code */
-} appArgs_t;
+      void *arg;                    /* pointer to the argument */
+      FILE_t *stdin;                /* file used only to read keyboard */
+      FILE_t *stdout;               /* file used only to write to terminal */
+      void *ChildTaskHandle;        /* FreeRTOS task handling for children */
+      void *ParentTaskHandle;       /* FreeRTOS task handling for parent */
+      stdRet_t    exitCode;         /* exit code */
+} app_t;
 
 
 /** time structure */

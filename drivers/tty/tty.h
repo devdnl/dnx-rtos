@@ -1,11 +1,11 @@
-#ifndef APPRUNTIME_H_
-#define APPRUNTIME_H_
+#ifndef TTY_H_
+#define TTY_H_
 /*=============================================================================================*//**
-@file    appruntime.h
+@file    tty.h
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief   This file support virtual terminal
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,56 +33,40 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "tty_def.h"
 #include "basic_types.h"
-#include "systypes.h"
-#include "projdefs.h"
+#include "system.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** simpler definition of terminating application */
-#define Exit(exitCode)                    TerminateApplication(appArgument, exitCode)
+#define TTYD_NAME             "ttyd"
+#define TTYD_STACK_SIZE       2*MINIMAL_STACK_SIZE
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** type which define parse possiblities */
-typedef enum parseType_enum
-{
-      PARSE_AS_BIN,
-      PARSE_AS_OCT,
-      PARSE_AS_DEC,
-      PARSE_AS_HEX,
-      PARSE_AS_STRING,
-      PARSE_AS_CHAR,
-      PARSE_AS_EXIST,
-      PARSE_AS_UNKNOWN
-} parseType_t;
 
-
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern app_t *Exec(const ch_t *name, ch_t *argv);
-extern app_t *Execd(const ch_t *name, ch_t *argv);
-extern stdRet_t  FreeApphdl(app_t *appArgs);
-extern void      TerminateApplication(app_t *appArgument, stdRet_t exitCode);
-extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
+extern stdRet_t TTY_Init(nod_t dev);
+extern stdRet_t TTY_Open(nod_t dev);
+extern stdRet_t TTY_Close(nod_t dev);
+extern size_t   TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
+extern stdRet_t TTY_Release(nod_t dev);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* APPRUNTIME_H_ */
+#endif /* TTY_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

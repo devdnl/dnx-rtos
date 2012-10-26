@@ -101,6 +101,18 @@ stdRet_t LwIP_Init(void)
       struct ip_addr gw;
       uint8_t macaddress[6] = {0, 0, 0, 0, 0, 1};
 
+      /* check if Ethernet interface exist */
+      FILE_t *eth = fopen("/dev/eth0", "r");
+
+      if (eth == NULL)
+      {
+            kprint("lwIP: Ethernet interface does not exist!");
+            goto LwIP_Init_exit_Failure;
+      }
+
+      fclose(eth);
+
+
       lwip_init();
 
       /* Initializes the dynamic memory heap defined by MEM_SIZE.*/

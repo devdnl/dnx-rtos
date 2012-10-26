@@ -73,9 +73,9 @@
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
-      appArgs_t *appHandle = NULL;
+      app_t *appHandle = NULL;
 
       /* check pointers values */
       if (!app || !appName || !stackSize)
@@ -84,7 +84,7 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
       }
 
       /* allocate memory for application handler */
-      appHandle = Calloc(1, sizeof(appArgs_t));
+      appHandle = Calloc(1, sizeof(app_t));
 
       if (appHandle)
       {
@@ -93,7 +93,8 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
             appHandle->exitCode         = STD_RET_UNKNOWN;
             appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
             appHandle->ChildTaskHandle  = NULL;
-            appHandle->tty              = -1;
+            appHandle->stdin            = NULL;
+            appHandle->stdout           = NULL;
 
             /* start application task */
             if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
@@ -120,9 +121,9 @@ appArgs_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void 
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
-      appArgs_t *appHandle = NULL;
+      app_t *appHandle = NULL;
 
       /* check pointers values */
       if (!app|| !appName  || !stackSize)
@@ -131,14 +132,15 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
       }
 
       /* allocate memory for application handler */
-      appHandle = Calloc(1, sizeof(appArgs_t));
+      appHandle = Calloc(1, sizeof(app_t));
 
       if (appHandle)
       {
             /* set default values */
             appHandle->arg              = arg;
             appHandle->exitCode         = STD_RET_UNKNOWN;
-            appHandle->tty              = -1;
+            appHandle->stdin            = NULL;
+            appHandle->stdout           = NULL;
             appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
             appHandle->ChildTaskHandle  = NULL;
 
@@ -165,7 +167,7 @@ appArgs_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *Exec(const ch_t *name, ch_t *argv)
+app_t *Exec(const ch_t *name, ch_t *argv)
 {
       regAppData_t appData = GetAppData(name);
 
@@ -188,7 +190,7 @@ appArgs_t *Exec(const ch_t *name, ch_t *argv)
  * @return application handler
  */
 //================================================================================================//
-appArgs_t *Execd(const ch_t *name, ch_t *argv)
+app_t *Execd(const ch_t *name, ch_t *argv)
 {
       regAppData_t appData = GetAppData(name);
 
@@ -211,7 +213,7 @@ appArgs_t *Execd(const ch_t *name, ch_t *argv)
  * @retval STD_STATUS_ERROR         freed error, bad pointer
  */
 //================================================================================================//
-stdRet_t FreeApphdl(appArgs_t *appArgs)
+stdRet_t FreeApphdl(app_t *appArgs)
 {
       if (appArgs)
       {
@@ -239,7 +241,7 @@ stdRet_t FreeApphdl(appArgs_t *appArgs)
  * @param exitCode            return value
  */
 //================================================================================================//
-void TerminateApplication(appArgs_t *appArgument, stdRet_t exitCode)
+void TerminateApplication(app_t *appArgument, stdRet_t exitCode)
 {
       /* set exit code */
       appArgument->exitCode = exitCode;

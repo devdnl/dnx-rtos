@@ -42,6 +42,7 @@ extern "C" {
 #include "i2c.h"
 #include "ether.h"
 #include "ds1307.h"
+#include "tty.h"
 
 
 /*==================================================================================================
@@ -112,6 +113,34 @@ static const regDrv_t drvList[] =
              DS1307_Close,          DS1307_Write,           DS1307_Read,
              DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_RTC
       },
+      #if (TTY_NUMBER_OF_VT > 0)
+      {
+             "tty0",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_0
+      },
+      #endif
+      #if (TTY_NUMBER_OF_VT > 1)
+      {
+             "tty1",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_1
+      },
+      #endif
+      #if (TTY_NUMBER_OF_VT > 2)
+      {
+             "tty2",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_2
+      },
+      #endif
+      #if (TTY_NUMBER_OF_VT > 3)
+      {
+             "tty3",                TTY_Init,               TTY_Open,
+             TTY_Close,             TTY_Write,              TTY_Read,
+             TTY_IOCtl,             TTY_Release,            TTY_DEV_3
+      },
+      #endif
 };
 
 
@@ -171,7 +200,7 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
                         }
                         else
                         {
-                              kprint("Create node /dev/%s failed\n", nodeName);
+                              kprint("\x1B[31mCreate node /dev/%s failed\x1B[0m\n", nodeName);
                         }
                         break;
                   }
@@ -198,7 +227,7 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
       stdRet_t status = STD_RET_ERROR;
       u32_t i;
 
-      if (drvName)
+      if (drvName && devName)
       {
             for (i = 0; i < ARRAY_SIZE(drvList); i++)
             {
@@ -230,8 +259,10 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //================================================================================================//
-regDrvData_t GetDrvData(const ch_t *drvNode)
+stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata)
 {
+      stdRet_t status = STD_RET_ERROR;
+
       regDrvData_t drvPtrs;
       drvPtrs.open   = NULL;
       drvPtrs.close  = NULL;
@@ -253,12 +284,16 @@ regDrvData_t GetDrvData(const ch_t *drvNode)
                         drvPtrs.ioctl  = drvList[i].ioctl;
                         drvPtrs.device = drvList[i].device;
 
+                        *drvdata = drvPtrs;
+
+                        status = STD_RET_OK;
+
                         break;
                   }
             }
       }
 
-      return drvPtrs;
+      return status;
 }
 
 #ifdef __cplusplus

@@ -224,7 +224,7 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
 
                                                 bcdTime_t time;
                                                 bcdDate_t date;
-                                                FILE_t *rtc = fopen("/dev/rtc", NULL);
+                                                FILE_t *rtc = fopen("/dev/rtc", "r");
 
                                                 if (rtc)
                                                 {

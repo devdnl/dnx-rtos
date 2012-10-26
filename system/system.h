@@ -1,7 +1,7 @@
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 /*=============================================================================================*//**
-@file    gpio.h
+@file    oswrap.h
 
 @author  Daniel Zorychta
 
@@ -35,81 +35,47 @@ extern "C" {
 ==================================================================================================*/
 #include "basic_types.h"
 #include "systypes.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
+#include "memman.h"
+#include "oswrap.h"
 #include "print.h"
 #include "appruntime.h"
 #include "cpu.h"
 #include "regdrv.h"
 #include "vfs.h"
-
-#include "netconf.h"
 #include "hooks.h"
+#include "netconf.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-#define MINIMAL_STACK_SIZE                configMINIMAL_STACK_SIZE
-#define THIS_TASK                         NULL
-#define EMPTY_TASK                        UINT32_MAX
-
-/** TASK LEVEL DEFINITIONS */
-#define TaskTerminate()                   vTaskDelete(NULL)
-#define TaskDelete(taskID)                vTaskDelete(taskID)
-#define TaskDelay(delay)                  vTaskDelay(delay)
-#define TaskSuspend(taskID)               vTaskSuspend(taskID)
-#define TaskResume(taskID)                vTaskResume(taskID)
-#define TaskResumeFromISR(taskID)         xTaskResumeFromISR(taskID)
-#define TaskYield()                       taskYIELD()
-#define TaskEnterCritical()               taskENTER_CRITICAL()
-#define TaskExitCritical()                taskEXIT_CRITICAL()
-#define TaskDisableIRQ()                  taskDISABLE_INTERRUPTS()
-#define TaskEnableIRQ()                   taskENABLE_INTERRUPTS()
-#define TaskSuspendAll()                  vTaskSuspendAll()
-#define TaskResumeAll()                   xTaskResumeAll()
-#define TaskGetTickCount()                xTaskGetTickCount()
-#define TaskGetPID()                      xTaskGetPID()
-#define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
-#define TaskGetStackFreeSpace(taskID)     uxTaskGetStackHighWaterMark(taskID)
-
-#define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
-        xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
-
-#define TaskDelayUntil(pPreviousWakeTime, TimeIncrement) \
-        vTaskDelayUntil(pPreviousWakeTime, TimeIncrement)
-
-
 /** APPLICATION LEVEL DEFINITIONS */
-#define Sleep(delay)                      vTaskDelay(delay)
-#define SystemGetTickCount()              xTaskGetTickCount()
-#define SystemGetStackFreeSpace()         uxTaskGetStackHighWaterMark(THIS_TASK)
-#define SystemEnterCritical()             taskENTER_CRITICAL()
-#define SystemExitCritical()              taskEXIT_CRITICAL()
-#define SystemDisableIRQ()                taskDISABLE_INTERRUPTS()
-#define SystemEnableIRQ()                 taskENABLE_INTERRUPTS()
-#define SystemGetPID()                    xTaskGetPID()
-#define SystemGetAppHandle()              xTaskGetCurrentTaskHandle()
-#define SystemAppSuspend()                vTaskSuspend(NULL)
-#define SystemLockContent()               vTaskSuspendAll()
-#define SystemUnlockContent()             xTaskResumeAll()
+#define Sleep(delay)                      TaskDelay(delay)
+#define SystemGetStackFreeSpace()         TaskGetStackFreeSpace(THIS_TASK)
+#define SystemEnterCritical()             TaskEnterCritical()
+#define SystemExitCritical()              TaskExitCritical()
+#define SystemDisableIRQ()                TaskDisableIRQ()
+#define SystemEnableIRQ()                 TaskEnableIRQ()
+#define SystemGetPID()                    TaskGetPID()
+#define SystemGetAppHandle()              TaskGetCurrentTaskHandle()
+#define SystemAppSuspend()                TaskSuspend(NULL)
 #define SystemGetFreeMemSize()            GetFreeHeapSize()
 #define SystemGetUsedMemSize()            GetUsedHeapSize()
-#define SystemGetMemSize()                configTOTAL_HEAP_SIZE
+#define SystemGetMemSize()                MEMMAN_HEAP_SIZE
 #define SystemGetHostname()               LwIP_GetHostname()
 #define SystemGetUptime()                 GetUptimeCnt()
-#define SystemGetTaskCount()              uxTaskGetNumberOfTasks()
-#define SystemGetRunTimeStats(ptr)        vTaskGetRunTimeStats((signed char*)ptr)
+#define SystemGetTaskCount()              TaskGetNumberOfTasks()
+#define SystemGetRunTimeStats(dst)        TaskGetRunTimeStats(dst)
 
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)
 #define APP_SEC_BEGIN                     { InitApp();
 #define APP_SEC_END                       Exit(appmain(argv));}
 
-#define InitApp()                         u8_t tty  = ((appArgs_t *)appArgument)->tty; \
-                                          ch_t        *argv   = ((appArgs_t *)appArgument)->arg
+#define InitApp()                         FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
+                                          FILE_t *stdout = ((app_t*)appArgument)->stdout; \
+                                          ch_t   *argv   = ((app_t*)appArgument)->arg;    \
+                                          (void)stdin; (void)stdout; (void)argv
 
 
 /*==================================================================================================

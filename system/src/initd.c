@@ -33,7 +33,6 @@ extern "C" {
 ==================================================================================================*/
 #include "initd.h"
 #include "regdrv.h"
-#include "tty.h"
 #include <string.h>
 
 #include "netconf.h"
@@ -83,21 +82,37 @@ void Initd(void *arg)
 {
       (void) arg;
 
-      u8_t      currtty = -1;
-      appArgs_t *apphdl[TTY_COUNT];
+      /* early initialization - terminal support */
+      InitDrv("uart1", "ttyS0");
+      InitDrv("tty0", "tty0");
+      kprintEnableOn("/dev/tty0");
 
-      /* user initialization */
+      /* something about board and system */
+      kprint("\x1B[32m\x1B[1m");
+      kprint(".--------. .--. .---. .--. .--. ,--. ,--,\n");
+      kprint("|__    __| |  | |    \\|  | |  | \\   V  /\n");
+      kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
+      kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
+      kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
+      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'\x1B[0m\n\n");
+
+      kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
+      kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
+
+      /* driver initialization */
+      InitDrv("tty1", "tty1");
+      InitDrv("tty2", "tty2");
+      InitDrv("tty3", "tty3");
       InitDrv("i2c1", "i2c");
       InitDrv("ds1307rtc", "rtc");
       InitDrv("ds1307nvm", "nvm");
+      InitDrv("eth0", "eth0");
 
-      if (InitDrv("eth0", "eth0") != STD_RET_OK)
+      /* library initializations */
+      if (LwIP_Init() != STD_RET_OK) /* FIXME this shall looks better */
             goto initd_net_end;
 
-      if (LwIP_Init() != STD_RET_OK)
-            goto initd_net_end;
-
-      kprint("Starting httpde...");
+      kprint("Starting httpde..."); /* FIXME create httpd as really deamon application */
       if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
       {
             kprintOK();
@@ -109,68 +124,90 @@ void Initd(void *arg)
 
       initd_net_end:
 
-      MPL115A2_Init();
+      MPL115A2_Init(); /* FIXME implement as driver */
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
-      ChangekprintTTY(TTY_COUNT - 1);
-
-      kprint("kprint() on TTY4\n");
+      kprintEnableOn("/dev/tty3");
+      kprint("kprint() on TTY3\n");
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
+      u8_t ctty = -1;
+
+      app_t *apphdl[TTY_LAST];
       memset(apphdl, 0x00, sizeof(apphdl));
+
+      FILE_t *tty;
+      FILE_t *ttyx[TTY_LAST];
+      memset(ttyx, 0x00, sizeof(ttyx));
+
+      while ((tty = fopen("/dev/tty0", "r+")) == NULL)
+      {
+            Sleep(200);
+      }
+
+      ttyx[0] = tty;
 
       for (;;)
       {
             /* load application if new TTY was created */
-            currtty = TTY_GetCurrTTY();
+            ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
 
-            if (currtty < TTY_COUNT - 1)
+            if (ctty < TTY_LAST - 1)
             {
-                  if (apphdl[currtty] == NULL)
+                  if (apphdl[ctty] == NULL)
                   {
-                        kprint("Starting application on new terminal: TTY%d\n", currtty + 1);
+                        if (ttyx[ctty] == NULL)
+                        {
+                              ch_t path[16];
+                              snprint(path, sizeof(path), "/dev/tty%c", '0' + ctty);
+                              ttyx[ctty] = fopen(path, "r+");
+                        }
 
-                        apphdl[currtty] = Exec("term", NULL);
+                        kprint("Starting application on new terminal: TTY%d\n", ctty);
 
-                        if (apphdl[currtty] == NULL)
+                        apphdl[ctty] = Exec("term", NULL);
+
+                        if (apphdl[ctty] == NULL)
                         {
                               kprint("Not enough free memory to start application\n");
                         }
                         else
                         {
-                              kprint("Application started on TTY%d\n", currtty + 1);
-                              apphdl[currtty]->tty = currtty;
+                              kprint("Application started on TTY%d\n", ctty);
+                              apphdl[ctty]->stdin  = ttyx[ctty];
+                              apphdl[ctty]->stdout = ttyx[ctty];
                         }
                   }
             }
 
             /* application monitoring */
-            for (u8_t i = 0; i < TTY_COUNT - 1; i++)
+            for (u8_t i = 0; i < TTY_LAST - 1; i++)
             {
                   if (apphdl[i])
                   {
                         if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
                         {
-                              kprint("Application closed on TTY%d\n", currtty + 1);
+                              kprint("Application closed on TTY%d\n", ctty);
 
                               FreeApphdl(apphdl[i]);
                               apphdl[i] = NULL;
 
-                              TTY_ChangeTTY(0);
+                              ioctl(ttyx[i], TTY_IORQ_CLEARTTY, NULL);
+                              fclose(ttyx[i]);
+                              ttyx[i] = NULL;
+
+                              ctty = 0;
+                              ioctl(tty, TTY_IORQ_SETACTIVETTY, &ctty);
                         }
-                  }
-                  else
-                  {
-                        TTY_Clear(i);
                   }
             }
 
-            TaskDelay(500);
+            TaskDelay(1000);
       }
 
       /* this should never happen */
