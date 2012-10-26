@@ -249,9 +249,11 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 
       if (dev < TTY_LAST && src && size && nitems)
       {
+            /* if current TTY is showing wait to show refreshed line */
             while (TTY(dev)->refLstLn == SET && dev == term->curTTY)
                   TaskDelay(10);
 
+            /* wait for secure access to data */
             if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   ch_t *msg;
@@ -262,6 +264,7 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                         ClearTTY(dev);
                   }
 
+                  /* check that last message had no line end */
                   ch_t   *lstmsg = TTY(dev)->line[GetMsgIdx(dev, 1)];
                   size_t msgsize = strlen(lstmsg);
 
@@ -269,6 +272,7 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                   {
                         msgsize += nitems + 1;
 
+                        /* move message pointer back */
                         TTY(dev)->wrIdx--;
 
                         if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
@@ -276,53 +280,35 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                               TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
                         }
 
-//                        TTY(dev)->newMsgCnt--;
-//                        if (TTY(dev)->newMsgCnt >= TTY_MAX_LINES)
+                        /* if no message to refresh setup refresh only one */
                         if (TTY(dev)->newMsgCnt == 0)
                         {
-//                              TTY(dev)->newMsgCnt = 0;
                               TTY(dev)->refLstLn = SET;
                         }
 
+                        /* join to messages together */
                         msg = Malloc(msgsize);
 
                         if (msg)
                         {
                               strcpy(msg, lstmsg);
                               strncat(msg, src, nitems + 1);
-                              Free(lstmsg);
                         }
 
+                        /* free last message and add new on the same place */
                         AddMsg(dev, msg, FALSE);
                   }
                   else
                   {
+                        /* add new message */
                         msg = Malloc(nitems);
 
                         if (msg)
                         {
                               strncpy(msg, src, nitems);
+
+                              AddMsg(dev, msg, TRUE);
                         }
-
-                        if (TTY(dev)->refLstLn == SET)
-                        {
-                              TTY(dev)->newMsgCnt++;
-                              TTY(dev)->refLstLn = RESET;
-                        }
-
-//                        if (TTY(dev)->newMsgCnt)
-//                        {
-//                              TTY(dev)->refLstLn = RESET;
-//
-//                              TTY(dev)->newMsgCnt++;
-//
-//                              if (TTY(dev)->newMsgCnt >= TTY_MAX_LINES)
-//                              {
-//                                    TTY(dev)->newMsgCnt = 0;
-//                              }
-//                        }
-
-                        AddMsg(dev, msg, TRUE);
                   }
 
                   n = nitems;
