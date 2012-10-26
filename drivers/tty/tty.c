@@ -531,16 +531,21 @@ static void ttyd(void *arg)
             }
             else if ((ttyPtr->newMsgCnt > 0) && ttyPtr)
             {
-                  msg = ttyPtr->line[GetMsgIdx(term->curTTY, ttyPtr->newMsgCnt)];
-
-                  if (ttyPtr->newMsgCnt)
+                  if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
                   {
-                        ttyPtr->newMsgCnt--;
-                  }
+                        msg = ttyPtr->line[GetMsgIdx(term->curTTY, ttyPtr->newMsgCnt)];
 
-                  if (msg)
-                  {
-                        fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
+                        if (ttyPtr->newMsgCnt)
+                        {
+                              ttyPtr->newMsgCnt--;
+                        }
+
+                        if (msg)
+                        {
+                              fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
+                        }
+
+                        GiveRecMutex(ttyPtr->mtx);
                   }
             }
 
@@ -715,16 +720,21 @@ static void AddMsg(u8_t dev, ch_t *msg)
 //================================================================================================//
 static u8_t GetMsgIdx(u8_t dev, u8_t back)
 {
-      u8_t ridx;
+      u8_t ridx = 0;
 
-      /* check if index underflow when calculating with back */
-      if (TTY(dev)->wrIdx < back)
+      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
       {
-            ridx = TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
-      }
-      else
-      {
-            ridx = TTY(dev)->wrIdx - back;
+            /* check if index underflow when calculating with back */
+            if (TTY(dev)->wrIdx < back)
+            {
+                  ridx = TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
+            }
+            else
+            {
+                  ridx = TTY(dev)->wrIdx - back;
+            }
+
+            GiveRecMutex(TTY(dev)->mtx);
       }
 
       return ridx;
@@ -823,19 +833,24 @@ static void RefreshTTY(u8_t dev, FILE_t *file)
 
       fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
 
-      for (i8_t i = TTY_MAX_LINES - 1; i >= 0; i--)
+      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
       {
-            ch_t *msg = TTY(dev)->line[GetMsgIdx(term->curTTY, i)];
-
-            if (msg)
+            for (i8_t i = TTY_MAX_LINES - 1; i >= 0; i--)
             {
-                  fwrite(msg, sizeof(ch_t), strlen(msg), file);
+                  ch_t *msg = TTY(dev)->line[GetMsgIdx(term->curTTY, i)];
+
+                  if (msg)
+                  {
+                        fwrite(msg, sizeof(ch_t), strlen(msg), file);
+                  }
+
+                  if (TTY(dev)->newMsgCnt > 0)
+                  {
+                        TTY(dev)->newMsgCnt--;
+                  }
             }
 
-            if (TTY(dev)->newMsgCnt > 0)
-            {
-                  TTY(dev)->newMsgCnt--;
-            }
+            GiveRecMutex(TTY(dev)->mtx);
       }
 }
 
