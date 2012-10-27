@@ -373,23 +373,26 @@ u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
 u32_t printt(FILE_t *file, const ch_t *format, ...)
 {
       va_list args;
-      u32_t n    = 0;
+      u32_t n = 0;
 
-      va_start(args, format);
-      u32_t size = CalcFormatSize(format, args);
-      va_end(args);
-
-      ch_t *str  = Calloc(1, size);
-
-      if (str)
+      if (file)
       {
             va_start(args, format);
-            n = vsnprint(str, size, format, args);
+            u32_t size = CalcFormatSize(format, args);
             va_end(args);
 
-            fwrite(str, sizeof(ch_t), size, file);
+            ch_t *str  = Calloc(1, size);
 
-            Free(str);
+            if (str)
+            {
+                  va_start(args, format);
+                  n = vsnprint(str, size, format, args);
+                  va_end(args);
+
+                  fwrite(str, sizeof(ch_t), size, file);
+
+                  Free(str);
+            }
       }
 
       return n;
@@ -484,9 +487,11 @@ u32_t kprintErrorNo(i8_t errorNo)
 //================================================================================================//
 void putChart(FILE_t *stdout, ch_t c)
 {
-      ch_t chr[2] = {c, 0};
-      fwrite(chr, sizeof(ch_t), ARRAY_SIZE(chr), stdout);
-//      ioctl(stdout, TTY_IORQ_PUTCHAR, &c);
+      if (stdout)
+      {
+            ch_t chr[2] = {c, 0};
+            fwrite(chr, sizeof(ch_t), ARRAY_SIZE(chr), stdout);
+      }
 }
 
 
@@ -503,15 +508,18 @@ ch_t getChart(FILE_t *stdin)
 {
       ch_t chr = 0;
 
-      while (TRUE)
+      if (stdin)
       {
-            if ((fread(&chr, sizeof(ch_t), 1, stdin) == 1) && chr)
+            while (TRUE)
             {
-                  break;
-            }
-            else
-            {
-                  Sleep(25);
+                  if ((fread(&chr, sizeof(ch_t), 1, stdin) == 1) && chr)
+                  {
+                        break;
+                  }
+                  else
+                  {
+                        Sleep(25);
+                  }
             }
       }
 
@@ -532,7 +540,10 @@ ch_t ugetChart(FILE_t *stdin)
 {
       ch_t chr = 0;
 
-      fread(&chr, sizeof(ch_t), 1, stdin);
+      if (stdin)
+      {
+            fread(&chr, sizeof(ch_t), 1, stdin);
+      }
 
       return chr;
 }

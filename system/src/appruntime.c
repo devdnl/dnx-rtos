@@ -92,12 +92,12 @@ app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg
             appHandle->arg              = arg;
             appHandle->exitCode         = STD_RET_UNKNOWN;
             appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
-            appHandle->ChildTaskHandle  = NULL;
+            appHandle->TaskHandle       = NULL;
             appHandle->stdin            = NULL;
             appHandle->stdout           = NULL;
 
             /* start application task */
-            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
+            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->TaskHandle) != pdPASS)
             {
                   Free(appHandle);
                   appHandle = NULL;
@@ -142,10 +142,10 @@ app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *
             appHandle->stdin            = NULL;
             appHandle->stdout           = NULL;
             appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
-            appHandle->ChildTaskHandle  = NULL;
+            appHandle->TaskHandle       = NULL;
 
             /* start daemon task */
-            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->ChildTaskHandle) != pdPASS)
+            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->TaskHandle) != pdPASS)
             {
                   Free(appHandle);
                   appHandle = NULL;
@@ -217,9 +217,9 @@ stdRet_t FreeApphdl(app_t *appArgs)
 {
       if (appArgs)
       {
-            if (appArgs->ChildTaskHandle)
+            if (appArgs->TaskHandle)
             {
-                  TaskDelete(appArgs->ChildTaskHandle);
+                  TaskDelete(appArgs->TaskHandle);
             }
 
             Free(appArgs);
@@ -245,7 +245,7 @@ void TerminateApplication(app_t *appArgument, stdRet_t exitCode)
 {
       /* set exit code */
       appArgument->exitCode = exitCode;
-      appArgument->ChildTaskHandle = NULL;
+      appArgument->TaskHandle = NULL;
 
       TaskTerminate();
 }

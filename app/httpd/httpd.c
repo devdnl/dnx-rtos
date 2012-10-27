@@ -407,7 +407,7 @@ err_t http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void) argv;
+      (void)argv;
 
       struct tcp_pcb *pcb;
 

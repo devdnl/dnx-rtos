@@ -35,8 +35,6 @@ extern "C" {
 #include "regdrv.h"
 #include <string.h>
 
-#include "lwiptest.h"
-
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -109,16 +107,14 @@ void Initd(void *arg)
       if (LwIP_Init() != STD_RET_OK) /* FIXME this shall looks better */
             goto initd_net_end;
 
-      kprint("Starting httpde..."); /* FIXME create httpd as really deamon application */
-      Execd("httpd", NULL);
-//      if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
-//      {
-//            kprintOK();
-//      }
-//      else
-//      {
-//            kprintFail();
-//      }
+      if (Execd("httpd", NULL) != NULL)
+      {
+            kprint("httpd started\n");
+      }
+      else
+      {
+            kprint("\x1B[31mhttpd error\x1B[0m\n");
+      }
 
       initd_net_end:
 
