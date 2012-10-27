@@ -228,10 +228,8 @@ stdRet_t MPL115A2_Open(nod_t dev)
 
       if (dev == MPL115A2_DEV_NONE)
       {
-            if (TakeMutex(mem->mtx, BLOCK_TIME) == OS_OK)
-            {
-                  status = STD_RET_OK;
-            }
+
+            status = STD_RET_OK;
       }
 
       return status;
@@ -254,12 +252,7 @@ stdRet_t MPL115A2_Close(nod_t dev)
 
       if (dev == MPL115A2_DEV_NONE)
       {
-            if (TakeMutex(mem->mtx, BLOCK_TIME) == OS_OK)
-            {
-                  status = STD_RET_OK;
-
-                  GiveMutex(mem->mtx);
-            }
+            status = STD_RET_OK;
       }
 
       return status;
@@ -338,8 +331,6 @@ stdRet_t MPL115A2_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 
       if (dev == MPL115A2_DEV_NONE)
       {
-            status = STD_RET_OK;
-
             switch (ioRQ)
             {
                   /* return temperature */
@@ -348,6 +339,8 @@ stdRet_t MPL115A2_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                         if (TakeMutex(mem->mtx, BLOCK_TIME) == OS_OK)
                         {
                               status = GetTemperature(data);
+
+                              GiveMutex(mem->mtx);
                         }
                         break;
                   }
@@ -358,13 +351,14 @@ stdRet_t MPL115A2_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                         if (TakeMutex(mem->mtx, BLOCK_TIME) == OS_OK)
                         {
                               status = GetPressure(data);
+
+                              GiveMutex(mem->mtx);
                         }
                         break;
                   }
 
                   default:
                   {
-                        status = STD_RET_ERROR;
                         break;
                   }
             }

@@ -148,7 +148,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                         /* invalid mode */
                         else
                         {
-                              Free(file);
+                              fclose(file);
                               file = NULL;
                         }
                   }
