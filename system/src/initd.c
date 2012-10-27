@@ -35,10 +35,6 @@ extern "C" {
 #include "regdrv.h"
 #include <string.h>
 
-#include "netconf.h"
-#include "lwiptest.h"
-#include "httpde.h"
-
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -107,28 +103,17 @@ void Initd(void *arg)
       InitDrv("eth0", "eth0");
       InitDrv("mpl115a2", "sensor");
 
-      /* library initializations */
-      if (LwIP_Init() != STD_RET_OK) /* FIXME this shall looks better */
-            goto initd_net_end;
 
-      kprint("Starting httpde..."); /* FIXME create httpd as really deamon application */
-      if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+      if (LwIP_Init() == STD_RET_OK)
       {
-            kprintOK();
+            StartDeamon("httpd", NULL);
       }
-      else
-      {
-            kprintFail();
-      }
-
-      initd_net_end:
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
       kprintEnableOn("/dev/tty3");
-      kprint("kprint() on TTY3\n");
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications

@@ -290,7 +290,7 @@ stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
 
       if (file && file->ioctl)
       {
-            return file->ioctl(file->fd, rq, data);
+            status = file->ioctl(file->fd, rq, data);
       }
 
       return status;

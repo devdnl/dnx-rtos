@@ -90,12 +90,12 @@ typedef struct
 /** application standard arguments type */
 typedef struct appArgs_struct
 {
-      void *arg;                    /* pointer to the argument */
-      FILE_t *stdin;                /* file used only to read keyboard */
-      FILE_t *stdout;               /* file used only to write to terminal */
-      void *ChildTaskHandle;        /* FreeRTOS task handling for children */
-      void *ParentTaskHandle;       /* FreeRTOS task handling for parent */
-      stdRet_t    exitCode;         /* exit code */
+      void     *arg;                      /* pointer to the argument */
+      FILE_t   *stdin;                    /* file used only to read keyboard */
+      FILE_t   *stdout;                   /* file used only to write to terminal */
+      void     *TaskHandle;               /* FreeRTOS task handling for children */
+      void     *ParentTaskHandle;         /* FreeRTOS task handling for parent */
+      stdRet_t exitCode;                  /* exit code */
 } app_t;
 
 

@@ -169,10 +169,10 @@ stdRet_t appmain(ch_t *argv)
 {
       stdRet_t    termStatus = STD_RET_OK;
       cmdStatus_t cmdStatus;
-      ch_t        *line;
-      ch_t        *history;
-      ch_t        *cmd;
-      ch_t        *arg;
+      ch_t *line;
+      ch_t *history;
+      ch_t *cmd;
+      ch_t *arg;
 
       /* allocate memory for input line */
       line    = Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
@@ -195,9 +195,12 @@ stdRet_t appmain(ch_t *argv)
             goto Terminal_Exit;
       }
 
-      printf("Welcome to %s - kernel FreeRTOS (tty%dTODO)\n", SystemGetHostname(), 1);
-
       memset(history, ASCII_NULL, PROMPT_LINE_SIZE);
+
+      u32_t tty = 0;
+      ioctl(stdin, TTY_IORQ_GETCURRENTTTY, &tty);
+
+      printf("Welcome to Tinix (tty%u)\n", tty);
 
       /* main loop ------------------------------------------------------------------------------ */
       for (;;)
