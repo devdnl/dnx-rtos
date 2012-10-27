@@ -43,6 +43,7 @@ extern "C" {
 #include "malt.h"
 #include "uptime.h"
 #include "top.h"
+#include "httpd.h"
 
 
 /*==================================================================================================
@@ -73,6 +74,7 @@ const regAppData_t appList[] =
       {MALT_NAME,     malt,     MALT_STACK_SIZE    },
       {UPTIME_NAME,   uptime,   UPTIME_STACK_SIZE  },
       {TOP_NAME,      top,      TOP_STACK_SIZE     },
+      {HTTPD_NAME,    httpd,    HTTPD_STACK_SIZE   },
 };
 
 

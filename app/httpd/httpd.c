@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   HTTP server
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -23,18 +23,59 @@
 
 
 *//*==============================================================================================*/
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+/*==================================================================================================
+* Copyright (c) 2001, Swedish Institute of Computer Science.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions
+* are met:
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+* 3. Neither the name of the Institute nor the names of its contributors
+*    may be used to endorse or promote products derived from this software
+*    without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+* ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+* SUCH DAMAGE.
+*
+* http.h
+*
+* Author : Adam Dunkels <adam@sics.se>
+*
+* CHANGELOG: this file has been modified by Sergio Perez Alca�iz <serpeal@upvnet.upv.es>
+*            Departamento de Inform�tica de Sistemas y Computadores
+*            Universidad Polit�cnica de Valencia
+*            Valencia (Spain)
+*            Date: March 2003
+*
+*=================================================================================================*/
 
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
 #include "httpd.h"
-#include "net.h"
+#include "fsdata.h"
+#include "lwip/def.h"
+#include "lwip/tcp.h"
+#include "fsdata.c"
 #include <string.h>
 
+/* Begin of application section declaration */
+APPLICATION(httpd)
+APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -44,135 +85,354 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+struct http_state
+{
+      char *file;
+      u32_t left;
+};
 
-
-/*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
-
+struct fs_file {
+      char *data;
+      int len;
+};
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-static const ch_t data_hello_html[] =
-{
-"<!DOCTYPE html>\
-<html>\
-<body>\
-<h1>Hello world MAIN</h1>\
-<p>My first paragraph.</p>\
-<a href=\"./STM32F107LED.html\">LED</a>\
-<img src=\"./images/sunny.jpg\"/>\
-</body>\
-</html>"
-};
-
-/*==================================================================================================
-                                     Shared object definitions
-==================================================================================================*/
-
+ch_t *htmlBuffer;
 
 /*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
-
-//================================================================================================//
-/**
- * @brief
- */
-//================================================================================================//
-APPLICATION(httpd)
+/*-----------------------------------------------------------------------------------*/
+int fs_open(char *name, struct fs_file *file)
 {
-      InitApp();
+      struct fsdata_file_noconst *f;
 
-      (void) argv;
-
-      AGAIN:
-      for(;;)
+      for (f = (struct fsdata_file_noconst *) FS_ROOT;
+           f != NULL;
+           f = (struct fsdata_file_noconst *) f->next)
       {
-            netStatus_t status;
-
-            netSoc_t socket = NET_NewTCPSocket(IP_ADDR_ANY, 600);
-
-            if (!socket)
+            if (!strcmp(name, f->name))
             {
-                  printf("Bad socket.\n");
-                  Sleep(1000);
-                  continue;
+                  file->data = f->data;
+                  file->len = f->len;
+                  return 1;
             }
+      }
+      return 0;
+}
 
-            for (;;)
+/*-----------------------------------------------------------------------------------*/
+void conn_err(void *arg, err_t err)
+{
+      (void) arg;
+      (void) err;
+
+      struct http_state *hs;
+
+      hs = arg;
+      mem_free(hs);
+}
+/*-----------------------------------------------------------------------------------*/
+void close_conn(struct tcp_pcb *pcb, struct http_state *hs)
+{
+
+      tcp_arg(pcb, NULL);
+      tcp_sent(pcb, NULL);
+      tcp_recv(pcb, NULL);
+      mem_free(hs);
+      tcp_close(pcb);
+}
+/*-----------------------------------------------------------------------------------*/
+void send_data(struct tcp_pcb *pcb, struct http_state *hs)
+{
+      err_t err;
+      u16_t len;
+
+      /* We cannot send more data than space available in the send buffer. */
+      if (tcp_sndbuf(pcb) < hs->left)
+      {
+            len = tcp_sndbuf(pcb);
+      }
+      else
+      {
+            len = hs->left;
+      }
+
+      err = tcp_write(pcb, hs->file, len, 0);
+
+      if (err == ERR_OK)
+      {
+            hs->file += len;
+            hs->left -= len;
+      }
+}
+
+/*-----------------------------------------------------------------------------------*/
+err_t http_poll(void *arg, struct tcp_pcb *pcb)
+{
+      if (arg == NULL)
+      {
+            tcp_close(pcb);
+      }
+      else
+      {
+            send_data(pcb, (struct http_state *) arg);
+      }
+
+      return ERR_OK;
+}
+/*-----------------------------------------------------------------------------------*/
+err_t http_sent(void *arg, struct tcp_pcb *pcb, u16_t len)
+{
+      (void) len;
+
+      struct http_state *hs;
+
+      hs = arg;
+
+      if (hs->left > 0)
+      {
+            send_data(pcb, hs);
+      }
+      else
+      {
+            close_conn(pcb, hs);
+      }
+
+      return ERR_OK;
+}
+/*-----------------------------------------------------------------------------------*/
+err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
+{
+      char *data;
+      char fname[40];
+      struct fs_file file = { 0, 0 };
+      struct http_state *hs;
+
+      hs = arg;
+
+      if (err == ERR_OK && p != NULL)
+      {
+            /* Inform TCP that we have taken the data. */
+            tcp_recved(pcb, p->tot_len);
+
+            if (hs->file == NULL)
             {
-                  if (NET_GetTCPStatus(socket, &status) != STD_RET_OK)
-                  {
-                        printf("Get status error.\n");
-                        Sleep(1000);
-                        NET_CloseTCPSocket(socket);
-                        goto AGAIN;
-                  }
+                  data = p->payload;
 
-                  if (status.flag.BindAccepted)
+                  if (strncmp(data, "GET ", 4) == 0)
                   {
-                        printf("Bind accepted\n");
+                        i32_t i = 0;
+                        u32_t n = 0;
 
-                        for (;;)
+                        for (i = 0; i < 40; i++)
                         {
-                              NET_GetTCPStatus(socket, &status);
-
-                              if (status.flag.ConnectionError)
+                              if (  ((char *) data + 4)[i] == ' '
+                                 || ((char *) data + 4)[i] == '\r'
+                                 || ((char *) data + 4)[i] == '\n')
                               {
-                                    printf("Closed TCP\n");
-                                    NET_TCPClose(socket);
+                                    ((char *) data + 4)[i] = 0;
                               }
+                        }
 
-                              if (status.flag.DataPosted)
+                        strcpy(fname, (ch_t *)data + 4);
+
+                        pbuf_free(p);
+
+                        if (!fs_open(fname, &file))
+                        {
+                              if (strncmp(fname, "/", 5) == 0)
                               {
-                                    printf("data posted\n");
-                                    NET_TCPClose(socket);
+                                    fs_open("/index.html", &file);
+                                    snprint(fname, sizeof(fname), "/index.html");
                               }
-
-                              if (status.flag.DataReceived)
+                              else
                               {
-                                    printf("Data received\n");
+                                    fs_open("/404.html", &file);
+                                    snprint(fname, sizeof(fname), "/404.html");
+                              }
+                        }
+                        hs->file = file.data;
+                        hs->left = file.len;
 
-                                    if (NET_TCPAcceptReceived(socket) == STD_RET_ERROR)
+                        /* check that file is a HTML file */
+                        if (strncmp(strchr(fname, '.'), ".html", 5) == 0)
+                        {
+                              /* allocate new buffer for page */
+                              ch_t  *pagePtr = htmlBuffer;
+                              u32_t pageSize = 0;
+
+                              for (i = 0; i < file.len; i++)
+                              {
+                                    if (strncmp(&file.data[i], "<?", 2) == 0)
                                     {
-                                          printf("TCPAcceptReceived error\n");
+                                          i += 2;
+                                          n = 0;
+
+                                          FILE_t *sensor = fopen("/dev/sensor", "r");
+
+                                          if (strncmp(&file.data[i], "temp/?>", 7) == 0)
+                                          {
+                                                i += 6;
+                                                i8_t temp = 0;
+
+                                                if (sensor)
+                                                {
+                                                      ioctl(sensor, MPL115A2_IORQ_GETTEMP, &temp);
+                                                      fclose(sensor);
+                                                }
+
+                                                n = snprint(pagePtr, 50, "%d", (i32_t)temp);
+                                          }
+                                          else if (strncmp(&file.data[i], "pres/?>", 7) == 0)
+                                          {
+                                                i += 6;
+                                                u16_t pressure = 0;
+
+                                                if (sensor)
+                                                {
+                                                      ioctl(sensor, MPL115A2_IORQ_GETPRES, &pressure);
+                                                      fclose(sensor);
+                                                }
+
+                                                n = snprint(pagePtr, 50, "%d", (u32_t)pressure);
+                                          }
+                                          else if (strncmp(&file.data[i], "date/?>", 7) == 0)
+                                          {
+                                                i += 6;
+
+                                                bcdTime_t time;
+                                                bcdDate_t date;
+                                                FILE_t *rtc = fopen("/dev/rtc", "r");
+
+                                                if (rtc)
+                                                {
+                                                      ioctl(rtc, RTC_IORQ_GETTIME, &time);
+                                                      ioctl(rtc, RTC_IORQ_GETDATE, &date);
+                                                }
+                                                else
+                                                {
+                                                      memset(&time, 0x00, sizeof(time));
+                                                      memset(&date, 0x00, sizeof(date));
+                                                }
+
+                                                n = snprint(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
+                                                            date.day,
+                                                            date.month,
+                                                            date.year,
+                                                            time.hours,
+                                                            time.minutes);
+                                          }
+
+                                          pagePtr  += n;
+                                          pageSize += n;
                                     }
                                     else
                                     {
-                                          ch_t *data = NET_GetReceivedDataBuffer(socket);
-
-                                          if (strncmp(data, "GET /hello", 10) == 0)
-                                          {
-                                                printf("Sending page\n");
-
-                                                NET_FreeReceivedBuffer(socket);
-
-                                                ch_t *file = (ch_t*)&data_hello_html;
-                                                u32_t size = sizeof(data_hello_html);
-
-                                                NET_TCPWrite(socket, file, &size);
-                                          }
+                                          *pagePtr++ = file.data[i];
+                                          pageSize++;
                                     }
                               }
 
-                              if (status.flag.Poll)
-                              {
-                                    printf("Polling\n");
-                                    NET_TCPAcceptPoll(socket);
-                              }
+                              hs->file = htmlBuffer;
+                              hs->left = pageSize;
                         }
+
+                        send_data(pcb, hs);
+
+                        /* Tell TCP that we wish be to informed of data that has been
+                         successfully sent by a call to the http_sent() function. */
+                        tcp_sent(pcb, http_sent);
                   }
+                  else
+                  {
+                        close_conn(pcb, hs);
+                  }
+            }
+            else
+            {
+                  pbuf_free(p);
             }
       }
 
-      Exit(STD_RET_ERROR);
+      if (err == ERR_OK && p == NULL)
+      {
+
+            close_conn(pcb, hs);
+      }
+
+      return ERR_OK;
 }
 
-#ifdef __cplusplus
+
+/*-----------------------------------------------------------------------------------*/
+err_t http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
+{
+      (void) arg;
+      (void) err;
+
+      struct http_state *hs;
+
+      /* Allocate memory for the structure that holds the state of the connection */
+      hs = mem_malloc(sizeof(struct http_state));
+
+      if (hs == NULL)
+      {
+            return ERR_MEM;
+      }
+
+      /* Initialize the structure. */
+      hs->file = NULL;
+      hs->left = 0;
+
+      /* Tell TCP that this is the structure we wish to be passed for our callbacks */
+      tcp_arg(pcb, hs);
+
+      /* Tell TCP that we wish to be informed of incoming data by a call to the http_recv() function */
+      tcp_recv(pcb, http_recv);
+
+      tcp_err(pcb, conn_err);
+
+      tcp_poll(pcb, http_poll, 10);
+      return ERR_OK;
 }
-#endif
+
+
+//================================================================================================//
+/**
+ * @brief clear main function
+ */
+//================================================================================================//
+stdRet_t appmain(ch_t *argv)
+{
+      (void) argv;
+
+      struct tcp_pcb *pcb;
+
+      htmlBuffer = (ch_t*)Malloc(2048);
+
+      if (htmlBuffer == NULL)
+      {
+            return STD_RET_ERROR;
+      }
+
+      pcb = tcp_new();
+      tcp_bind(pcb, IP_ADDR_ANY, 80);
+      pcb = tcp_listen(pcb);
+      tcp_accept(pcb, http_accept);
+
+      while (TRUE)
+      {
+            Sleep(2000);
+      }
+
+      return STD_RET_OK;
+}
+
+/* End of application section declaration */
+APP_SEC_END
 
 /*==================================================================================================
                                             End of file

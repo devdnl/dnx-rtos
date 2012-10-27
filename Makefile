@@ -39,7 +39,6 @@ CSRC = $(sort \
    app/terminal/terminal.c \
    app/uptime/uptime.c \
    app/lwiptest/lwiptest.c \
-   app/http/httpde.c \
    app/httpd/httpd.c \
    app/top/top.c \
    cpu/stm32/stm32f10x_vectors.c \
@@ -90,7 +89,6 @@ CSRC = $(sort \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
-   lib/lwip/port/net.c \
    lib/STM32_ETH_Driver/stm32_eth.c \
    lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    lib/STM32F10x_StdPeriph_Driver/misc.c \

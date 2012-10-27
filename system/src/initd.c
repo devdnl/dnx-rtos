@@ -35,9 +35,7 @@ extern "C" {
 #include "regdrv.h"
 #include <string.h>
 
-#include "netconf.h"
 #include "lwiptest.h"
-#include "httpde.h"
 
 
 /*==================================================================================================
@@ -112,14 +110,15 @@ void Initd(void *arg)
             goto initd_net_end;
 
       kprint("Starting httpde..."); /* FIXME create httpd as really deamon application */
-      if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
-      {
-            kprintOK();
-      }
-      else
-      {
-            kprintFail();
-      }
+      Execd("httpd", NULL);
+//      if (TaskCreate(httpd_init, "httpde", HTTPDE_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+//      {
+//            kprintOK();
+//      }
+//      else
+//      {
+//            kprintFail();
+//      }
 
       initd_net_end:
 
