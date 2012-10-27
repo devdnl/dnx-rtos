@@ -33,6 +33,7 @@ extern "C" {
 ==================================================================================================*/
 #include "vfs.h"
 #include "regdrv.h"
+#include "proc.h"
 #include "memman.h"
 #include <string.h>
 
@@ -83,16 +84,17 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
 
             if (file != NULL)
             {
-                  ch_t *slash = strchr(name + 1, '/');
+                  ch_t *filename = strchr(name + 1, '/');
+                  filename++;
 
                   /* check if path is device */
                   stdRet_t stat = STD_RET_ERROR;
 
-                  if (strncmp("/dev", name, slash - name) == 0)
+                  if (strncmp("/dev/", name, filename - name) == 0)
                   {
                         regDrvData_t drvdata;
 
-                        if (GetDrvData(slash + 1, &drvdata) == STD_RET_OK)
+                        if (GetDrvData(filename, &drvdata) == STD_RET_OK)
                         {
                               if (drvdata.open(drvdata.device) == STD_RET_OK)
                               {
@@ -106,9 +108,17 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                               }
                         }
                   }
-                  else if (strncmp("/proc", name, slash - name) == 0)
+                  else if (strncmp("/proc/", name, filename - name) == 0)
                   {
-                        /* DNLTODO implement /proc */
+                        if ((file->fd = PROC_open(filename)) != 0)
+                        {
+                              file->close = PROC_close;
+                              file->ioctl = NULL;
+                              file->read  = PROC_read;
+                              file->write = PROC_write;
+
+                              stat = STD_RET_OK;
+                        }
                   }
 
                   /* file does not exist */

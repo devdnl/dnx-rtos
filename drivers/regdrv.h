@@ -60,7 +60,7 @@ typedef struct
       stdRet_t (*open)(nod_t dev);
       stdRet_t (*close)(nod_t dev);
       size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
+      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
       stdRet_t (*ioctl)(nod_t dev, IORq_t iroq, void *data);
       nod_t    device;
 } regDrvData_t;

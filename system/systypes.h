@@ -68,7 +68,7 @@ typedef signed char stdRet_t;
 
 
 /** device number type */
-typedef u8_t nod_t;
+typedef size_t nod_t;
 
 
 /** IO request type */

@@ -242,13 +242,21 @@ procfd_t PROC_open(const ch_t *name)
 }
 
 
+
+stdRet_t PROC_close(procfd_t fd)
+{
+      return STD_RET_OK;
+}
+
+
+
 size_t PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek)
 {
       return 0;
 }
 
 
-size_t PROC_read(nod_t fd, void *dst, size_t size, size_t nitmes, size_t seek)
+size_t PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
       return 0;
 }
