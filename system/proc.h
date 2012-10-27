@@ -1,11 +1,11 @@
-#ifndef REGDRV_H_
-#define REGDRV_H_
+#ifndef PROC_H_
+#define PROC_H_
 /*=============================================================================================*//**
-@file    regdrv.h
+@file    proc.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration drivers
+@brief   This file support /proc files
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -36,53 +36,40 @@ extern "C" {
 #include "basic_types.h"
 #include "systypes.h"
 
-/* include here device definition/request list */
-#include "uart_def.h"
-#include "pll_def.h"
-#include "i2c_def.h"
-#include "gpio_def.h"
-#include "ether_def.h"
-#include "ds1307_def.h"
-#include "tty_def.h"
-#include "mpl115a2_def.h"
-
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+typedef struct diren
+{
+      ch_t  *name;
+      size_t size;
+} diren_t;
+
+typedef size_t procfd_t;
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
-==================================================================================================*/
-typedef struct
-{
-      stdRet_t (*open)(nod_t dev);
-      stdRet_t (*close)(nod_t dev);
-      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(nod_t dev, IORq_t iroq, void *data);
-      nod_t    device;
-} regDrvData_t;
-
-
-/*==================================================================================================
-                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName);
-extern stdRet_t ReleaseDrv(const ch_t *drvName);
-extern stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata);
+extern stdRet_t PROC_RmFile(const ch_t *name);
+extern size_t   PROC_GetFileSize(procfd_t fd);
+extern procfd_t PROC_open(const ch_t *name);
+extern size_t   PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   PROC_read(nod_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+extern diren_t  PROC_readdir(u16_t fno);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGDRV_H_ */
+#endif /* PROC_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

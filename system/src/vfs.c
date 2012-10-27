@@ -106,6 +106,10 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                               }
                         }
                   }
+                  else if (strncmp("/proc", name, slash - name) == 0)
+                  {
+                        /* DNLTODO implement /proc */
+                  }
 
                   /* file does not exist */
                   if (stat != STD_RET_OK)
