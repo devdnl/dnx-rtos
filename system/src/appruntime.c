@@ -205,6 +205,31 @@ app_t *Execd(const ch_t *name, ch_t *argv)
 
 //================================================================================================//
 /**
+ * @brief Run task daemon as service. Function used on low level of system startup
+ *
+ * @param[in]  *name          task name
+ * @param[in]  *argv          task arguments
+ *
+ * @return application handler
+ */
+//================================================================================================//
+stdRet_t StartDeamon(const ch_t *name, ch_t *argv)
+{
+      if (Execd(name, argv) != NULL)
+      {
+            kprint("%s daemon started\n", name);
+            return STD_RET_OK;
+      }
+      else
+      {
+            kprint("\x1B[31m%s start failed\x1B[0m\n", name);
+            return STD_RET_ERROR;
+      }
+}
+
+
+//================================================================================================//
+/**
  * @brief Function free application handler
  *
  * @param *appArgs      pointer to the appArgs structure which contains application handler

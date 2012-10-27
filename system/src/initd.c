@@ -103,27 +103,17 @@ void Initd(void *arg)
       InitDrv("eth0", "eth0");
       InitDrv("mpl115a2", "sensor");
 
-      /* library initializations */
-      if (LwIP_Init() != STD_RET_OK) /* FIXME this shall looks better */
-            goto initd_net_end;
 
-      if (Execd("httpd", NULL) != NULL)
+      if (LwIP_Init() == STD_RET_OK)
       {
-            kprint("httpd started\n");
+            StartDeamon("httpd", NULL);
       }
-      else
-      {
-            kprint("\x1B[31mhttpd error\x1B[0m\n");
-      }
-
-      initd_net_end:
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
       kprintEnableOn("/dev/tty3");
-      kprint("kprint() on TTY3\n");
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
