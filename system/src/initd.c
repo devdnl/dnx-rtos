@@ -36,8 +36,6 @@ extern "C" {
 #include <string.h>
 
 #include "netconf.h"
-#include "MPL115A2.h"
-
 #include "lwiptest.h"
 #include "httpde.h"
 
@@ -107,6 +105,7 @@ void Initd(void *arg)
       InitDrv("ds1307rtc", "rtc");
       InitDrv("ds1307nvm", "nvm");
       InitDrv("eth0", "eth0");
+      InitDrv("mpl115a2", "sensor");
 
       /* library initializations */
       if (LwIP_Init() != STD_RET_OK) /* FIXME this shall looks better */
@@ -123,8 +122,6 @@ void Initd(void *arg)
       }
 
       initd_net_end:
-
-      MPL115A2_Init(); /* FIXME implement as driver */
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));

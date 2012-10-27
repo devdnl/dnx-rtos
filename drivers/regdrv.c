@@ -43,6 +43,7 @@ extern "C" {
 #include "ether.h"
 #include "ds1307.h"
 #include "tty.h"
+#include "mpl115a2.h"
 
 
 /*==================================================================================================
@@ -103,16 +104,20 @@ static const regDrv_t drvList[] =
              ETHER_Close,           ETHER_Write,            ETHER_Read,
              ETHER_IOCtl,           ETHER_Release,          ETH_DEV_1
       },
+      #ifdef DS1307_DEV_NVM
       {
              "ds1307nvm",           DS1307_Init,            DS1307_Open,
              DS1307_Close,          DS1307_Write,           DS1307_Read,
              DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_NVM
       },
+      #endif
+      #ifdef DS1307_DEV_RTC
       {
              "ds1307rtc",           DS1307_Init,            DS1307_Open,
              DS1307_Close,          DS1307_Write,           DS1307_Read,
              DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_RTC
       },
+      #endif
       #if (TTY_NUMBER_OF_VT > 0)
       {
              "tty0",                TTY_Init,               TTY_Open,
@@ -139,6 +144,13 @@ static const regDrv_t drvList[] =
              "tty3",                TTY_Init,               TTY_Open,
              TTY_Close,             TTY_Write,              TTY_Read,
              TTY_IOCtl,             TTY_Release,            TTY_DEV_3
+      },
+      #endif
+      #ifdef MPL115A2_DEV_NONE
+      {
+             "mpl115a2",            MPL115A2_Init,          MPL115A2_Open,
+             MPL115A2_Close,        MPL115A2_Write,         MPL115A2_Read,
+             MPL115A2_IOCtl,        MPL115A2_Release,       MPL115A2_DEV_NONE
       },
       #endif
 };

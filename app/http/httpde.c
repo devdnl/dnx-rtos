@@ -41,8 +41,6 @@
 #include "httpde.h"
 #include "lwip/tcp.h"
 #include "fsdata.c"
-#include "MPL115A2.h"
-#include "ds1307.h"
 #include <string.h>
 
 struct http_state
@@ -204,18 +202,32 @@ static err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err
                                           i += 2;
                                           n = 0;
 
+                                          FILE_t *sensor = fopen("/dev/sensor", "r");
+
                                           if (strncmp(&file.data[i], "temp/?>", 7) == 0)
                                           {
                                                 i += 6;
                                                 i8_t temp = 0;
-                                                MPL115A2_GetTemperature(&temp);
+
+                                                if (sensor)
+                                                {
+                                                      ioctl(sensor, MPL115A2_IORQ_GETTEMP, &temp);
+                                                      fclose(sensor);
+                                                }
+
                                                 n = snprint(pagePtr, 50, "%d", (i32_t)temp);
                                           }
                                           else if (strncmp(&file.data[i], "pres/?>", 7) == 0)
                                           {
                                                 i += 6;
                                                 u16_t pressure = 0;
-                                                MPL115A2_GetPressure(&pressure);
+
+                                                if (sensor)
+                                                {
+                                                      ioctl(sensor, MPL115A2_IORQ_GETPRES, &pressure);
+                                                      fclose(sensor);
+                                                }
+
                                                 n = snprint(pagePtr, 50, "%d", (u32_t)pressure);
                                           }
                                           else if (strncmp(&file.data[i], "date/?>", 7) == 0)

@@ -1,7 +1,7 @@
 #ifndef MPL115A2_H_
 #define MPL115A2_H_
 /*=============================================================================================*//**
-@file    MPL115A2.h
+@file    mpl115a2.h
 
 @author  Daniel Zorychta
 
@@ -33,12 +33,14 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "mpl115a2_def.h"
 #include "system.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+#define MPL115A2_DEV_NONE                 0
 
 
 /*==================================================================================================
@@ -54,9 +56,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t MPL115A2_Init(void);
-extern stdRet_t MPL115A2_GetTemperature(i8_t *temperature);
-extern stdRet_t MPL115A2_GetPressure(u16_t *pressure);
+extern stdRet_t MPL115A2_Init(nod_t dev);
+extern stdRet_t MPL115A2_Open(nod_t dev);
+extern stdRet_t MPL115A2_Close(nod_t dev);
+extern size_t   MPL115A2_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   MPL115A2_Read(nod_t dev , void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t MPL115A2_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
+extern stdRet_t MPL115A2_Release(nod_t dev);
 
 #ifdef __cplusplus
 }
