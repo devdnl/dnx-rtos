@@ -31,7 +31,7 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "regdrv.h"
+#include "regdrv.h"           /* DNLTODO correct this module, use better file allocation */
 #include "systypes.h"
 #include <string.h>
 
@@ -360,10 +360,24 @@ dirent_t REGDRV_readdir(size_t seek)
 
       if (seek < itemcnt)
       {
-            direntry.name   = devName->node[seek];
-            direntry.size   = sizeof(regDrv_t);
-            direntry.isfile = TRUE;
-            direntry.fd     = seek;
+            u8_t cnt = seek;
+            for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
+            {
+                  if (devName->node[i])
+                  {
+                        if (cnt == 0)
+                        {
+                              direntry.name   = devName->node[i];
+                              direntry.size   = sizeof(regDrv_t);
+                              direntry.isfile = TRUE;
+                              direntry.fd     = i;
+
+                              break;
+                        }
+
+                        cnt--;
+                  }
+            }
       }
 
       return direntry;

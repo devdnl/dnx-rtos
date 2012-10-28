@@ -59,6 +59,7 @@ extern stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data);
 extern DIR_t    *opendir(const ch_t *path);
 extern dirent_t readdir(DIR_t *dir);
 extern stdRet_t closedir(DIR_t *dir);
+extern stdRet_t remove(dirent_t *direntry);
 
 #ifdef __cplusplus
 }

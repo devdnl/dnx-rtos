@@ -1,7 +1,7 @@
-#ifndef LS_H_
-#define LS_H_
+#ifndef RM_H_
+#define RM_H_
 /*=============================================================================================*//**
-@file    ls.h
+@file    rm.h
 
 @author  Daniel Zorychta
 
@@ -40,10 +40,10 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define LS_STACK_SIZE                     (4 * MINIMAL_STACK_SIZE)
+#define RM_STACK_SIZE               (4 * MINIMAL_STACK_SIZE)
 
 /** define application name */
-#define LS_NAME                           "ls"
+#define RM_NAME                     "rm"
 
 
 /*==================================================================================================
@@ -59,14 +59,14 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern APPLICATION(ls);
+extern APPLICATION(rm);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* RM_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

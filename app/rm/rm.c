@@ -1,7 +1,5 @@
-#ifndef LS_H_
-#define LS_H_
 /*=============================================================================================*//**
-@file    ls.h
+@file    rm.c
 
 @author  Daniel Zorychta
 
@@ -26,47 +24,89 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
+#include "clear.h"
+#include <string.h>
 
-
-/*==================================================================================================
-                                 Exported symbolic constants/macros
-==================================================================================================*/
-/** define stack size for this application */
-#define LS_STACK_SIZE                     (4 * MINIMAL_STACK_SIZE)
-
-/** define application name */
-#define LS_NAME                           "ls"
-
+/* Begin of application section declaration */
+APPLICATION(rm)
+APP_SEC_BEGIN
 
 /*==================================================================================================
-                                  Exported types, enums definitions
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported object declarations
+                                   Local types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                     Exported function prototypes
+                                      Local object definitions
 ==================================================================================================*/
-extern APPLICATION(ls);
 
 
-#ifdef __cplusplus
+/*==================================================================================================
+                                        Function definitions
+==================================================================================================*/
+
+//================================================================================================//
+/**
+ * @brief clear main function
+ */
+//================================================================================================//
+stdRet_t appmain(ch_t *argv)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (argv)
+      {
+            /* parse directory and file name */
+            ch_t *filename = strchr(argv + 1, '/');
+
+            if (filename)
+            {
+                  *filename++ = '\0';
+
+                  ch_t *dirname = argv;
+
+                  DIR_t *dir = opendir(dirname);
+
+                  if (dir)
+                  {
+                        dirent_t diren;
+
+                        while ((diren = readdir(dir)).name != NULL)
+                        {
+                              if (strcmp(diren.name, filename) == 0)
+                              {
+                                    status = remove(&diren);
+                                    break;
+                              }
+                        }
+
+                        closedir(dir);
+                  }
+            }
+
+            if (status != STD_RET_OK)
+                  printf("Cannot remove specified file.\n");
+      }
+      else
+      {
+            printf("Enter correct filename.\n");
+      }
+
+
+      return status;
 }
-#endif
 
-#endif
+/* End of application section declaration */
+APP_SEC_END
+
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

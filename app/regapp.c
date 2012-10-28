@@ -44,6 +44,8 @@ extern "C" {
 #include "uptime.h"
 #include "top.h"
 #include "httpd.h"
+#include "touch.h"
+#include "rm.h"
 
 
 /*==================================================================================================
@@ -75,6 +77,8 @@ static const regAppData_t appList[] =
       {UPTIME_NAME,   uptime,   UPTIME_STACK_SIZE  },
       {TOP_NAME,      top,      TOP_STACK_SIZE     },
       {HTTPD_NAME,    httpd,    HTTPD_STACK_SIZE   },
+      {TOUCH_NAME,    touch,    TOUCH_STACK_SIZE   },
+      {RM_NAME,       rm,       RM_STACK_SIZE      },
 };
 
 

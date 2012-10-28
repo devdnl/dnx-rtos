@@ -523,6 +523,7 @@ dirent_t PROC_readdir(size_t seek)
                         direntry.name   = fileptr->name;
                         direntry.size   = fileptr->size;
                         direntry.isfile = TRUE;
+                        direntry.fd     = fileptr->fd;
                   }
 
                   GiveMutex(procmem->mtx);

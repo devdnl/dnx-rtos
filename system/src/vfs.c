@@ -87,93 +87,102 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
 
             if (file != NULL)
             {
-                  ch_t *filename = strchr(name + 1, '/');
-                  filename++;
-
                   /* check if path is device */
                   stdRet_t stat = STD_RET_ERROR;
 
-                  if (strncmp("/bin/", name, filename - name) == 0)
-                  {
-                        /* nothing to do */
-                  }
-                  else if (strncmp("/dev/", name, filename - name) == 0)
-                  {
-                        regDrvData_t drvdata;
+                  ch_t *filename = strchr(name + 1, '/');
 
-                        if (GetDrvData(filename, &drvdata) == STD_RET_OK)
+                  if (filename)
+                  {
+                        filename++;
+
+                        if (strncmp("/bin/", name, filename - name) == 0)
                         {
-                              if (drvdata.open(drvdata.device) == STD_RET_OK)
+                                    /* nothing to do */
+                        }
+                        else if (strncmp("/dev/", name, filename - name) == 0)
+                        {
+                              regDrvData_t drvdata;
+
+                              if (GetDrvData(filename, &drvdata) == STD_RET_OK)
                               {
-                                    file->close = drvdata.close;
-                                    file->fd    = drvdata.device;
-                                    file->ioctl = drvdata.ioctl;
-                                    file->read  = drvdata.read;
-                                    file->write = drvdata.write;
+                                    if (drvdata.open(drvdata.device) == STD_RET_OK)
+                                    {
+                                          file->close = drvdata.close;
+                                          file->fd    = drvdata.device;
+                                          file->ioctl = drvdata.ioctl;
+                                          file->read  = drvdata.read;
+                                          file->write = drvdata.write;
+
+                                          stat = STD_RET_OK;
+                                    }
+                              }
+                        }
+                        else if (strncmp("/proc/", name, filename - name) == 0)
+                        {
+                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
+                              {
+                                    file->close = PROC_close;
+                                    file->ioctl = NULL;
+                                    file->read  = PROC_read;
+                                    file->write = PROC_write;
 
                                     stat = STD_RET_OK;
                               }
                         }
-                  }
-                  else if (strncmp("/proc/", name, filename - name) == 0)
-                  {
-                        if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
+
+                        /* file does not exist */
+                        if (stat != STD_RET_OK)
                         {
-                              file->close = PROC_close;
-                              file->ioctl = NULL;
-                              file->read  = PROC_read;
-                              file->write = PROC_write;
-
-                              stat = STD_RET_OK;
+                              Free(file);
+                              file = NULL;
                         }
-                  }
+                        else
+                        {
+                              file->mode = (ch_t*)mode;
 
-                  /* file does not exist */
-                  if (stat != STD_RET_OK)
-                  {
-                        Free(file);
-                        file = NULL;
+                              /* open for reading */
+                              if (strncmp("r", mode, 2) == 0)
+                              {
+                                    file->write = NULL;
+                              }
+                              /* open for writing (file need not exist) */
+                              else if (strncmp("w", mode, 2) == 0)
+                              {
+                                    file->read = NULL;
+                              }
+                              /* open for appending (file need not exist) */
+                              else if (strncmp("a", mode, 2) == 0)
+                              {
+                                    file->read = NULL;
+                              }
+                              /* open for reading and writing, start at beginning */
+                              else if (strncmp("r+", mode, 2) == 0)
+                              {
+                                    /* nothing to change */
+                              }
+                              /* open for reading and writing (overwrite file) */
+                              else if (strncmp("w+", mode, 2) == 0)
+                              {
+                                    /* nothing to change */
+                              }
+                              /* open for reading and writing (append if file exists) */
+                              else if (strncmp("a+", mode, 2) == 0)
+                              {
+                                    /* nothing to change */
+                              }
+                              /* invalid mode */
+                              else
+                              {
+                                    fclose(file);
+                                    file = NULL;
+                              }
+                        }
                   }
                   else
                   {
-                        file->mode = (ch_t*)mode;
-
-                        /* open for reading */
-                        if (strncmp("r", mode, 2) == 0)
-                        {
-                              file->write = NULL;
-                        }
-                        /* open for writing (file need not exist) */
-                        else if (strncmp("w", mode, 2) == 0)
-                        {
-                              file->read = NULL;
-                        }
-                        /* open for appending (file need not exist) */
-                        else if (strncmp("a", mode, 2) == 0)
-                        {
-                              file->read = NULL;
-                        }
-                        /* open for reading and writing, start at beginning */
-                        else if (strncmp("r+", mode, 2) == 0)
-                        {
-                              /* nothing to change */
-                        }
-                        /* open for reading and writing (overwrite file) */
-                        else if (strncmp("w+", mode, 2) == 0)
-                        {
-                              /* nothing to change */
-                        }
-                        /* open for reading and writing (append if file exists) */
-                        else if (strncmp("a+", mode, 2) == 0)
-                        {
-                              /* nothing to change */
-                        }
-                        /* invalid mode */
-                        else
-                        {
-                              fclose(file);
-                              file = NULL;
-                        }
+                        Free(file);
+                        file = NULL;
                   }
             }
       }

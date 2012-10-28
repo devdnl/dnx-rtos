@@ -1,7 +1,7 @@
-#ifndef LS_H_
-#define LS_H_
+#ifndef TOUCH_H_
+#define TOUCH_H_
 /*=============================================================================================*//**
-@file    ls.h
+@file    touch.h
 
 @author  Daniel Zorychta
 
@@ -40,10 +40,10 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define LS_STACK_SIZE                     (4 * MINIMAL_STACK_SIZE)
+#define TOUCH_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
 
 /** define application name */
-#define LS_NAME                           "ls"
+#define TOUCH_NAME                     "touch"
 
 
 /*==================================================================================================
@@ -59,14 +59,14 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern APPLICATION(ls);
+extern APPLICATION(touch);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* TOUCH_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/
