@@ -64,7 +64,7 @@ extern "C" {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-const regAppData_t appList[] =
+static const regAppData_t appList[] =
 {
       {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
       {CLEAR_NAME   , clear   , CLEAR_STACK_SIZE   },
@@ -159,6 +159,48 @@ u32_t GetAppList(ch_t *nameList, u32_t size)
       }
 
       return app;
+}
+
+
+
+//================================================================================================//
+/**
+ * @brief Function open driver directory
+ *
+ * @param *dir          directory
+ *
+ * @return number of items
+ */
+//================================================================================================//
+void REGAPP_opendir(DIR_t *dir)
+{
+      dir->readdir = REGAPP_readdir;
+      dir->seek    = 0;
+      dir->items   = ARRAY_SIZE(appList);
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read selected item
+ *
+ * @param seek          nitem
+ * @return file attributes
+ */
+//================================================================================================//
+dirent_t REGAPP_readdir(size_t seek)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+
+      if (seek < ARRAY_SIZE(appList))
+      {
+            direntry.name = (ch_t*)appList[seek].appName;
+            direntry.size = appList[seek].stackSize * sizeof(void *);
+      }
+
+      return direntry;
 }
 
 

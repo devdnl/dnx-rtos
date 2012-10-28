@@ -308,6 +308,65 @@ stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata)
       return status;
 }
 
+
+//================================================================================================//
+/**
+ * @brief Function open driver directory
+ *
+ * @param *dir          directory
+ *
+ * @return number of items
+ */
+//================================================================================================//
+void REGDRV_opendir(DIR_t *dir)
+{
+      dir->readdir = REGDRV_readdir;
+      dir->seek    = 0;
+      dir->items   = 0;
+
+      for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
+      {
+            if (devName->node[i])
+            {
+                  dir->items++;
+            }
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read selected item
+ *
+ * @param seek          nitem
+ * @return file attributes
+ */
+//================================================================================================//
+dirent_t REGDRV_readdir(size_t seek)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+
+      u8_t itemcnt = 0;
+      for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
+      {
+            if (devName->node[i])
+            {
+                  itemcnt++;
+            }
+      }
+
+      if (seek < itemcnt)
+      {
+            direntry.name = devName->node[seek];
+            direntry.size = 0;
+      }
+
+      return direntry;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

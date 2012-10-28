@@ -77,6 +77,8 @@ typedef struct
 extern stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName);
 extern stdRet_t ReleaseDrv(const ch_t *drvName);
 extern stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata);
+extern void     REGDRV_opendir(DIR_t *dir);
+extern dirent_t REGDRV_readdir(size_t seek);
 
 #ifdef __cplusplus
 }

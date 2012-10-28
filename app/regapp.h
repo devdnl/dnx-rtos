@@ -62,7 +62,8 @@ typedef struct
 ==================================================================================================*/
 extern regAppData_t GetAppData(const ch_t *appName);
 extern u32_t        GetAppList(ch_t *nameList, u32_t size);
-
+extern void         REGAPP_opendir(DIR_t *dir);
+extern dirent_t     REGAPP_readdir(size_t seek);
 
 #ifdef __cplusplus
 }

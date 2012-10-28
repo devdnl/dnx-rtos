@@ -103,7 +103,7 @@ static stdRet_t GetPressure(u16_t *pressure);
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-struct varcon *mem;
+static struct varcon *mplmem;
 
 
 /*==================================================================================================
@@ -130,15 +130,15 @@ stdRet_t MPL115A2_Init(nod_t dev)
 
       if (dev == MPL115A2_DEV_NONE)
       {
-            if (mem == NULL)
+            if (mplmem == NULL)
             {
-                  mem = Calloc(1, sizeof(struct varcon));
+                  mplmem = Calloc(1, sizeof(struct varcon));
 
-                  if (mem)
+                  if (mplmem)
                   {
-                        mem->mtx = CreateMutex();
+                        mplmem->mtx = CreateMutex();
 
-                        if (mem->mtx)
+                        if (mplmem->mtx)
                         {
                               FILE_t *i2c;
                               u8_t   tmp[8];
@@ -156,10 +156,10 @@ stdRet_t MPL115A2_Init(nod_t dev)
                                     if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), i2c) == ARRAY_SIZE(tmp))
                                     {
                                           /* parse received data */
-                                          mem->a0  = (tmp[0] << 8) | tmp[1];
-                                          mem->b1  = (tmp[2] << 8) | tmp[3];
-                                          mem->b2  = (tmp[4] << 8) | tmp[5];
-                                          mem->c12 = (tmp[6] << 8) | tmp[7];
+                                          mplmem->a0  = (tmp[0] << 8) | tmp[1];
+                                          mplmem->b1  = (tmp[2] << 8) | tmp[3];
+                                          mplmem->b2  = (tmp[4] << 8) | tmp[5];
+                                          mplmem->c12 = (tmp[6] << 8) | tmp[7];
 
                                           status = STD_RET_OK;
                                     }
@@ -170,8 +170,8 @@ stdRet_t MPL115A2_Init(nod_t dev)
                         }
                         else
                         {
-                              Free(mem);
-                              mem = NULL;
+                              Free(mplmem);
+                              mplmem = NULL;
                         }
                   }
             }
@@ -201,11 +201,11 @@ stdRet_t MPL115A2_Release(nod_t dev)
 
       if (dev == MPL115A2_DEV_NONE)
       {
-            DeleteMutex(mem->mtx);
+            DeleteMutex(mplmem->mtx);
 
-            Free(mem);
+            Free(mplmem);
 
-            mem = NULL;
+            mplmem = NULL;
       }
 
       return status;
@@ -336,11 +336,11 @@ stdRet_t MPL115A2_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                   /* return temperature */
                   case MPL115A2_IORQ_GETTEMP:
                   {
-                        if (TakeMutex(mem->mtx, BLOCK_TIME) == OS_OK)
+                        if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK)
                         {
                               status = GetTemperature(data);
 
-                              GiveMutex(mem->mtx);
+                              GiveMutex(mplmem->mtx);
                         }
                         break;
                   }
@@ -348,11 +348,11 @@ stdRet_t MPL115A2_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                   /* return pressure */
                   case MPL115A2_IORQ_GETPRES:
                   {
-                        if (TakeMutex(mem->mtx, BLOCK_TIME) == OS_OK)
+                        if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK)
                         {
                               status = GetPressure(data);
 
-                              GiveMutex(mem->mtx);
+                              GiveMutex(mplmem->mtx);
                         }
                         break;
                   }
@@ -464,11 +464,11 @@ static stdRet_t GetPressure(u16_t *pressure)
                   u16_t Tadc = ((tmp[2] << 8) | tmp[3]) >> 6;
 
                   /* compute pressure */
-                  i32_t si_c12x2 = mem->c12 * Tadc;
-                  i32_t si_a1    = (((mem->b1 << 11) + si_c12x2) >> 11);
-                  i32_t si_a2    = mem->b2 >> 1;
+                  i32_t si_c12x2 = mplmem->c12 * Tadc;
+                  i32_t si_a1    = (((mplmem->b1 << 11) + si_c12x2) >> 11);
+                  i32_t si_a2    = mplmem->b2 >> 1;
                   i32_t si_a1x1  = si_a1 * Padc;
-                  i32_t si_y1    = ((mem->a0 << 10) + si_a1x1) >> 10;
+                  i32_t si_y1    = ((mplmem->a0 << 10) + si_a1x1) >> 10;
                   i32_t si_a2x2  = si_a2 * Tadc;
                   i32_t siPcomp  = ((si_y1 << 10) + si_a2x2) >> 13;
 

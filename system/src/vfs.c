@@ -32,6 +32,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "vfs.h"
+#include "regapp.h"
 #include "regdrv.h"
 #include "proc.h"
 #include "memman.h"
@@ -51,6 +52,8 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
+static void     ROOT_opendir(DIR_t *dir);
+static dirent_t ROOT_readdir(size_t seek);
 
 
 /*==================================================================================================
@@ -313,6 +316,54 @@ stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
 
 //================================================================================================//
 /**
+ * @brief Function open root directory
+ *
+ * @param *dir          directory
+ *
+ * @return number of items
+ */
+//================================================================================================//
+static void ROOT_opendir(DIR_t *dir)
+{
+      dir->readdir = ROOT_readdir;
+      dir->seek    = 0;
+      dir->items   = 3; /* DNLFIXME apply better solution */
+
+}
+
+//================================================================================================//
+/**
+ * @brief Function read selected item
+ *
+ * @param seek          nitem
+ * @return file attributes
+ */
+//================================================================================================//
+static dirent_t ROOT_readdir(size_t seek)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+
+      if (seek < 3)
+      {
+            switch (seek)
+            {
+                  case 0: direntry.name = "bin"; break;
+                  case 1: direntry.name = "dev"; break;
+                  case 2: direntry.name = "proc"; break;
+                  default: break;
+            }
+
+            direntry.size = 0;
+      }
+
+      return direntry;
+}
+
+
+//================================================================================================//
+/**
  * @brief
  */
 //================================================================================================//
@@ -331,15 +382,15 @@ DIR_t *opendir(const ch_t *path)
 
                   if (strcmp("/", path) == 0)
                   {
-
+                        ROOT_opendir(dir);
                   }
                   else if (strcmp("/bin", path) == 0)
                   {
-
+                        REGAPP_opendir(dir);
                   }
                   else if (strcmp("/dev", path) == 0)
                   {
-
+                        REGDRV_opendir(dir);
                   }
                   else if (strcmp("/proc", path) == 0)
                   {
