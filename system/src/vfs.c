@@ -93,7 +93,11 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   /* check if path is device */
                   stdRet_t stat = STD_RET_ERROR;
 
-                  if (strncmp("/dev/", name, filename - name) == 0)
+                  if (strncmp("/bin/", name, filename - name) == 0)
+                  {
+                        /* nothing to do */
+                  }
+                  else if (strncmp("/dev/", name, filename - name) == 0)
                   {
                         regDrvData_t drvdata;
 
@@ -327,7 +331,7 @@ static void ROOT_opendir(DIR_t *dir)
 {
       dir->readdir = ROOT_readdir;
       dir->seek    = 0;
-      dir->items   = 3; /* DNLFIXME apply better solution */
+      dir->items   = 3; /* DNLFIXME apply better solution (table) */
 
 }
 
@@ -347,7 +351,7 @@ static dirent_t ROOT_readdir(size_t seek)
 
       if (seek < 3)
       {
-            switch (seek)
+            switch (seek) /* DNLFIXME apply better solution (table) */
             {
                   case 0: direntry.name = "bin"; break;
                   case 1: direntry.name = "dev"; break;
@@ -364,7 +368,11 @@ static dirent_t ROOT_readdir(size_t seek)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function open directory
+ *
+ * @param *path         directory path
+ *
+ * @return directory object
  */
 //================================================================================================//
 DIR_t *opendir(const ch_t *path)
@@ -416,7 +424,10 @@ DIR_t *opendir(const ch_t *path)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function read next item of opened directory
+ *
+ * @param *dir          directory object
+ * @return element attributes
  */
 //================================================================================================//
 dirent_t readdir(DIR_t *dir)
@@ -437,7 +448,12 @@ dirent_t readdir(DIR_t *dir)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function close opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @retval STD_RET_OK         close success
+ * @retval STD_RET_ERROR      close error
  */
 //================================================================================================//
 stdRet_t closedir(DIR_t *dir)

@@ -197,7 +197,9 @@ dirent_t REGAPP_readdir(size_t seek)
       if (seek < ARRAY_SIZE(appList))
       {
             direntry.name = (ch_t*)appList[seek].appName;
-            direntry.size = appList[seek].stackSize * sizeof(void *);
+            direntry.size = appList[seek].stackSize * sizeof(void *)
+                          + strlen(direntry.name)
+                          + sizeof(regAppData_t);
       }
 
       return direntry;
