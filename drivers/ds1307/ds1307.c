@@ -448,10 +448,12 @@ stdRet_t DS1307_Release(nod_t dev)
       if (dev == DS1307_DEV_RTC)
       {
             rtc->nvmInit = FALSE;
+            status = STD_RET_OK;
       }
       else if (dev == DS1307_DEV_NVM)
       {
             rtc->rtcInit = FALSE;
+            status = STD_RET_OK;
       }
 
       if (!rtc->rtcInit && !rtc->nvmInit)

@@ -206,6 +206,8 @@ stdRet_t MPL115A2_Release(nod_t dev)
             Free(mplmem);
 
             mplmem = NULL;
+
+            status = STD_RET_OK;
       }
 
       return status;

@@ -282,24 +282,27 @@ stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata)
       drvPtrs.ioctl  = NULL;
       drvPtrs.device = 0;
 
-      if (drvNode)
+      if (drvNode && drvdata)
       {
             for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
             {
-                  if (strcmp(devName->node[i], drvNode) == 0)
+                  if (devName->node[i])
                   {
-                        drvPtrs.open   = drvList[i].open;
-                        drvPtrs.close  = drvList[i].close;
-                        drvPtrs.write  = drvList[i].write;
-                        drvPtrs.read   = drvList[i].read;
-                        drvPtrs.ioctl  = drvList[i].ioctl;
-                        drvPtrs.device = drvList[i].device;
+                        if (strcmp(devName->node[i], drvNode) == 0)
+                        {
+                              drvPtrs.open   = drvList[i].open;
+                              drvPtrs.close  = drvList[i].close;
+                              drvPtrs.write  = drvList[i].write;
+                              drvPtrs.read   = drvList[i].read;
+                              drvPtrs.ioctl  = drvList[i].ioctl;
+                              drvPtrs.device = drvList[i].device;
 
-                        *drvdata = drvPtrs;
+                              *drvdata = drvPtrs;
 
-                        status = STD_RET_OK;
+                              status = STD_RET_OK;
 
-                        break;
+                              break;
+                        }
                   }
             }
       }
@@ -401,7 +404,7 @@ stdRet_t REGDRV_remove(fd_t fd)
       {
             if (devName->node[fd] != NULL)
             {
-                  status = ReleaseDrv(devName->node[fd]);
+                  status = ReleaseDrv(drvList[fd].drvName);
             }
       }
 
