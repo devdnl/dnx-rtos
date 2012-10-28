@@ -159,6 +159,12 @@ stdRet_t appmain(ch_t *argv)
                   u8_t month   = UTL_BCD2Byte(date.month);
                   u8_t weekday = UTL_BCD2Byte(date.weekday);
 
+                  if (weekday == 0)
+                        weekday++;
+
+                  if (month == 0)
+                        month++;
+
                   if (date.day == 0)
                         date.day++;
 
@@ -169,6 +175,8 @@ stdRet_t appmain(ch_t *argv)
                         weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
                         time.hours, time.minutes, time.seconds);
             }
+
+            fclose(rtc);
       }
       else
       {

@@ -31,7 +31,7 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "regdrv.h"
+#include "regdrv.h"           /* DNLTODO correct this module, use better file allocation */
 #include "systypes.h"
 #include <string.h>
 
@@ -237,11 +237,10 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
 stdRet_t ReleaseDrv(const ch_t *drvName)
 {
       stdRet_t status = STD_RET_ERROR;
-      u32_t i;
 
       if (drvName && devName)
       {
-            for (i = 0; i < ARRAY_SIZE(drvList); i++)
+            for (u32_t i = 0; i < ARRAY_SIZE(drvList); i++)
             {
                   if (strcmp(drvList[i].drvName, drvName) == 0)
                   {
@@ -283,30 +282,135 @@ stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata)
       drvPtrs.ioctl  = NULL;
       drvPtrs.device = 0;
 
-      if (drvNode)
+      if (drvNode && drvdata)
       {
             for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
             {
-                  if (strcmp(devName->node[i], drvNode) == 0)
+                  if (devName->node[i])
                   {
-                        drvPtrs.open   = drvList[i].open;
-                        drvPtrs.close  = drvList[i].close;
-                        drvPtrs.write  = drvList[i].write;
-                        drvPtrs.read   = drvList[i].read;
-                        drvPtrs.ioctl  = drvList[i].ioctl;
-                        drvPtrs.device = drvList[i].device;
+                        if (strcmp(devName->node[i], drvNode) == 0)
+                        {
+                              drvPtrs.open   = drvList[i].open;
+                              drvPtrs.close  = drvList[i].close;
+                              drvPtrs.write  = drvList[i].write;
+                              drvPtrs.read   = drvList[i].read;
+                              drvPtrs.ioctl  = drvList[i].ioctl;
+                              drvPtrs.device = drvList[i].device;
 
-                        *drvdata = drvPtrs;
+                              *drvdata = drvPtrs;
 
-                        status = STD_RET_OK;
+                              status = STD_RET_OK;
 
-                        break;
+                              break;
+                        }
                   }
             }
       }
 
       return status;
 }
+
+
+//================================================================================================//
+/**
+ * @brief Function open driver directory
+ *
+ * @param *dir          directory
+ *
+ * @return number of items
+ */
+//================================================================================================//
+void REGDRV_opendir(DIR_t *dir)
+{
+      dir->readdir = REGDRV_readdir;
+      dir->seek    = 0;
+      dir->items   = 0;
+
+      for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
+      {
+            if (devName->node[i])
+            {
+                  dir->items++;
+            }
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read selected item
+ *
+ * @param seek          nitem
+ * @return file attributes
+ */
+//================================================================================================//
+dirent_t REGDRV_readdir(size_t seek)
+{
+      dirent_t direntry;
+      direntry.remove = REGDRV_remove;
+      direntry.name   = NULL;
+      direntry.size   = 0;
+      direntry.fd     = 0;
+
+      u8_t itemcnt = 0;
+      for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
+      {
+            if (devName->node[i])
+            {
+                  itemcnt++;
+            }
+      }
+
+      if (seek < itemcnt)
+      {
+            u8_t cnt = seek;
+            for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
+            {
+                  if (devName->node[i])
+                  {
+                        if (cnt == 0)
+                        {
+                              direntry.name   = devName->node[i];
+                              direntry.size   = sizeof(regDrv_t);
+                              direntry.isfile = TRUE;
+                              direntry.fd     = i;
+
+                              break;
+                        }
+
+                        cnt--;
+                  }
+            }
+      }
+
+      return direntry;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function find remove driver using file descriptor
+ *
+ * @param fd            file descriptor
+ *
+ * @return driver depending value, all not equal to STD_RET_OK are errors
+ */
+//================================================================================================//
+stdRet_t REGDRV_remove(fd_t fd)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (devName)
+      {
+            if (devName->node[fd] != NULL)
+            {
+                  status = ReleaseDrv(drvList[fd].drvName);
+            }
+      }
+
+      return status;
+}
+
 
 #ifdef __cplusplus
 }

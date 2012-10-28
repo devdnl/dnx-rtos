@@ -32,7 +32,9 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "vfs.h"
+#include "regapp.h"
 #include "regdrv.h"
+#include "proc.h"
 #include "memman.h"
 #include <string.h>
 
@@ -50,6 +52,8 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
+static void     ROOT_opendir(DIR_t *dir);
+static dirent_t ROOT_readdir(size_t seek);
 
 
 /*==================================================================================================
@@ -83,74 +87,102 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
 
             if (file != NULL)
             {
-                  ch_t *slash = strchr(name + 1, '/');
-
                   /* check if path is device */
                   stdRet_t stat = STD_RET_ERROR;
 
-                  if (strncmp("/dev", name, slash - name) == 0)
-                  {
-                        regDrvData_t drvdata;
+                  ch_t *filename = strchr(name + 1, '/');
 
-                        if (GetDrvData(slash + 1, &drvdata) == STD_RET_OK)
+                  if (filename)
+                  {
+                        filename++;
+
+                        if (strncmp("/bin/", name, filename - name) == 0)
                         {
-                              if (drvdata.open(drvdata.device) == STD_RET_OK)
+                                    /* nothing to do */
+                        }
+                        else if (strncmp("/dev/", name, filename - name) == 0)
+                        {
+                              regDrvData_t drvdata;
+
+                              if (GetDrvData(filename, &drvdata) == STD_RET_OK)
                               {
-                                    file->close = drvdata.close;
-                                    file->fd    = drvdata.device;
-                                    file->ioctl = drvdata.ioctl;
-                                    file->read  = drvdata.read;
-                                    file->write = drvdata.write;
+                                    if (drvdata.open(drvdata.device) == STD_RET_OK)
+                                    {
+                                          file->close = drvdata.close;
+                                          file->fd    = drvdata.device;
+                                          file->ioctl = drvdata.ioctl;
+                                          file->read  = drvdata.read;
+                                          file->write = drvdata.write;
+
+                                          stat = STD_RET_OK;
+                                    }
+                              }
+                        }
+                        else if (strncmp("/proc/", name, filename - name) == 0)
+                        {
+                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
+                              {
+                                    file->close = PROC_close;
+                                    file->ioctl = NULL;
+                                    file->read  = PROC_read;
+                                    file->write = PROC_write;
 
                                     stat = STD_RET_OK;
                               }
                         }
-                  }
 
-                  /* file does not exist */
-                  if (stat != STD_RET_OK)
-                  {
-                        Free(file);
-                        file = NULL;
+                        /* file does not exist */
+                        if (stat != STD_RET_OK)
+                        {
+                              Free(file);
+                              file = NULL;
+                        }
+                        else
+                        {
+                              file->mode = (ch_t*)mode;
+
+                              /* open for reading */
+                              if (strncmp("r", mode, 2) == 0)
+                              {
+                                    file->write = NULL;
+                              }
+                              /* open for writing (file need not exist) */
+                              else if (strncmp("w", mode, 2) == 0)
+                              {
+                                    file->read = NULL;
+                              }
+                              /* open for appending (file need not exist) */
+                              else if (strncmp("a", mode, 2) == 0)
+                              {
+                                    file->read = NULL;
+                              }
+                              /* open for reading and writing, start at beginning */
+                              else if (strncmp("r+", mode, 2) == 0)
+                              {
+                                    /* nothing to change */
+                              }
+                              /* open for reading and writing (overwrite file) */
+                              else if (strncmp("w+", mode, 2) == 0)
+                              {
+                                    /* nothing to change */
+                              }
+                              /* open for reading and writing (append if file exists) */
+                              else if (strncmp("a+", mode, 2) == 0)
+                              {
+                                    /* nothing to change */
+                              }
+                              /* invalid mode */
+                              else
+                              {
+                                    fclose(file);
+                                    file = NULL;
+                              }
+                        }
                   }
                   else
                   {
-                        /* open for reading */
-                        if (strncmp("r", mode, 2) == 0)
-                        {
-                              file->write = NULL;
-                        }
-                        /* open for writing (file need not exist) */
-                        else if (strncmp("w", mode, 2) == 0)
-                        {
-                              file->read = NULL;
-                        }
-                        /* open for appending (file need not exist) */
-                        else if (strncmp("a", mode, 2) == 0)
-                        {
-                              file->read = NULL;
-                        }
-                        /* open for reading and writing, start at beginning */
-                        else if (strncmp("r+", mode, 2) == 0)
-                        {
-                              /* nothing to change */
-                        }
-                        /* open for reading and writing (overwrite file) */
-                        else if (strncmp("w+", mode, 2) == 0)
-                        {
-                              /* nothing to change */
-                        }
-                        /* open for reading and writing (append if file exists) */
-                        else if (strncmp("a+", mode, 2) == 0)
-                        {
-                              /* nothing to change */
-                        }
-                        /* invalid mode */
-                        else
-                        {
-                              fclose(file);
-                              file = NULL;
-                        }
+                        Free(file);
+                        file = NULL;
                   }
             }
       }
@@ -207,7 +239,7 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
             if (file->write)
             {
                   n = file->write(file->fd, ptr, size, nitems, file->seek);
-                  file->seek += n;
+                  file->seek += n * size;
             }
       }
 
@@ -236,7 +268,7 @@ size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
             if (file->read)
             {
                   n = file->read(file->fd, ptr, size, nitems, file->seek);
-                  file->seek += n;
+                  file->seek += n * size;
             }
       }
 
@@ -291,6 +323,184 @@ stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
       if (file && file->ioctl)
       {
             status = file->ioctl(file->fd, rq, data);
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function open root directory
+ *
+ * @param *dir          directory
+ *
+ * @return number of items
+ */
+//================================================================================================//
+static void ROOT_opendir(DIR_t *dir) /* DNLFIXME apply better solution (table) */
+{
+      dir->readdir = ROOT_readdir;
+      dir->seek    = 0;
+      dir->items   = 3;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read selected item
+ *
+ * @param seek          nitem
+ * @return file attributes
+ */
+//================================================================================================//
+static dirent_t ROOT_readdir(size_t seek)
+{
+      dirent_t direntry;
+      direntry.remove = NULL;
+      direntry.name   = NULL;
+      direntry.size   = 0;
+      direntry.isfile = FALSE;
+      direntry.fd     = 0;
+
+      if (seek < 3)
+      {
+            switch (seek) /* DNLFIXME apply better solution (table) */
+            {
+                  case 0: direntry.name = "bin"; break;
+                  case 1: direntry.name = "dev"; break;
+                  case 2: direntry.name = "proc"; break;
+                  default: break;
+            }
+
+            direntry.size = 0;
+      }
+
+      return direntry;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function open directory
+ *
+ * @param *path         directory path
+ *
+ * @return directory object
+ */
+//================================================================================================//
+DIR_t *opendir(const ch_t *path)
+{
+      DIR_t *dir = NULL;
+
+      if (path)
+      {
+            dir = Calloc(1 , sizeof(DIR_t));
+
+            if (dir)
+            {
+                  /* check if path is device */
+                  stdRet_t stat = STD_RET_OK;
+
+                  if (strcmp("/", path) == 0)
+                  {
+                        ROOT_opendir(dir);
+                  }
+                  else if (strcmp("/bin", path) == 0)
+                  {
+                        REGAPP_opendir(dir);
+                  }
+                  else if (strcmp("/dev", path) == 0)
+                  {
+                        REGDRV_opendir(dir);
+                  }
+                  else if (strcmp("/proc", path) == 0)
+                  {
+                        PROC_opendir(dir);
+                  }
+                  else
+                  {
+                        stat = STD_RET_ERROR;
+                  }
+
+                  /* file does not exist */
+                  if (stat != STD_RET_OK)
+                  {
+                        Free(dir);
+                        dir = NULL;
+                  }
+            }
+      }
+
+      return dir;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read next item of opened directory
+ *
+ * @param *dir          directory object
+ * @return element attributes
+ */
+//================================================================================================//
+dirent_t readdir(DIR_t *dir)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+      direntry.fd   = 0;
+
+      if (dir->readdir)
+      {
+            direntry = dir->readdir(dir->seek);
+            dir->seek++;
+      }
+
+      return direntry;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function close opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @retval STD_RET_OK         close success
+ * @retval STD_RET_ERROR      close error
+ */
+//================================================================================================//
+stdRet_t closedir(DIR_t *dir)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (dir)
+      {
+            Free(dir);
+            status = STD_RET_OK;
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Remove file
+ *
+ * @param *direntry     localization of file description
+ *
+ * @return STD_RET_OK if success, otherwise STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t remove(dirent_t *direntry)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (direntry->remove)
+      {
+            status = direntry->remove(direntry->fd);
       }
 
       return status;

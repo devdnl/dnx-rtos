@@ -57,11 +57,11 @@ extern "C" {
 ==================================================================================================*/
 typedef struct
 {
-      stdRet_t (*open)(nod_t);
-      stdRet_t (*close)(nod_t);
+      stdRet_t (*open)(nod_t dev);
+      stdRet_t (*close)(nod_t dev);
       size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(nod_t, IORq_t, void*);
+      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t (*ioctl)(nod_t dev, IORq_t iroq, void *data);
       nod_t    device;
 } regDrvData_t;
 
@@ -77,6 +77,9 @@ typedef struct
 extern stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName);
 extern stdRet_t ReleaseDrv(const ch_t *drvName);
 extern stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata);
+extern void     REGDRV_opendir(DIR_t *dir);
+extern dirent_t REGDRV_readdir(size_t seek);
+extern stdRet_t REGDRV_remove(fd_t fd);
 
 #ifdef __cplusplus
 }

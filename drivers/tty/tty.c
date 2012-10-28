@@ -506,32 +506,45 @@ stdRet_t TTY_Release(nod_t dev)
 
       if (dev < TTY_LAST)
       {
-            /* free unused terminal */
             if (TTY(dev))
             {
-                  for (u8_t i = 0; i < TTY_MAX_LINES; i++)
+                  if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
                   {
-                        Free(TTY(dev)->line[i]);
+                        mutex_t mtx = TTY(dev)->mtx;
+
+                        /* free unused terminal */
+                        if (TTY(dev))
+                        {
+                              for (u8_t i = 0; i < TTY_MAX_LINES; i++)
+                              {
+                                    Free(TTY(dev)->line[i]);
+                              }
+                        }
+
+                        Free(TTY(dev));
+
+                        GiveRecMutex(mtx);
+                        DeleteRecMutex(mtx);
+
+                        status = STD_RET_OK;
+
+                        /* if all terminal are unused free terminal handler */
+                        for (u8_t i = 0; i < TTY_LAST; i++)
+                        {
+                              if (term->tty[i])
+                              {
+                                    goto TTY_Release_End;
+                              }
+                        }
+
+                        TaskDelete(term->taskHdl);
+                        Free(term);
                   }
             }
-
-            DeleteRecMutex(TTY(dev)->mtx);
-
-            Free(TTY(dev));
-
-            status = STD_RET_OK;
-
-            /* if all terminal are unused free terminal handler */
-            for (u8_t i = 0; i < TTY_LAST; i++)
+            else
             {
-                  if (term->tty[i])
-                  {
-                        goto TTY_Release_End;
-                  }
+                  status = STD_RET_OK;
             }
-
-            TaskDelete(term->taskHdl);
-            Free(term);
       }
 
       TTY_Release_End:

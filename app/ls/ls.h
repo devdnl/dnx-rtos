@@ -40,7 +40,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define LS_STACK_SIZE                     (2 * MINIMAL_STACK_SIZE)
+#define LS_STACK_SIZE                     (4 * MINIMAL_STACK_SIZE)
 
 /** define application name */
 #define LS_NAME                           "ls"

@@ -1,11 +1,9 @@
-#ifndef REGAPP_H_
-#define REGAPP_H_
 /*=============================================================================================*//**
-@file    regapp.h
+@file    rm.c
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration applications
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -26,50 +24,89 @@
 
 *//*==============================================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
+#include "clear.h"
+#include <string.h>
 
+/* Begin of application section declaration */
+APPLICATION(rm)
+APP_SEC_BEGIN
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                  Local symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                  Exported types, enums definitions
+                                   Local types, enums definitions
 ==================================================================================================*/
-typedef struct
+
+
+/*==================================================================================================
+                                      Local object definitions
+==================================================================================================*/
+
+
+/*==================================================================================================
+                                        Function definitions
+==================================================================================================*/
+
+//================================================================================================//
+/**
+ * @brief clear main function
+ */
+//================================================================================================//
+stdRet_t appmain(ch_t *argv)
 {
-      const ch_t *appName;
-      void       (*appPtr)(void *argv);
-      u32_t      stackSize;
-} regAppData_t;
+      stdRet_t status = STD_RET_ERROR;
+
+      if (argv)
+      {
+            /* parse directory and file name */
+            ch_t *filename = strchr(argv + 1, '/');
+
+            if (filename)
+            {
+                  *filename++ = '\0';
+
+                  ch_t *dirname = argv;
+
+                  DIR_t *dir = opendir(dirname);
+
+                  if (dir)
+                  {
+                        dirent_t diren;
+
+                        while ((diren = readdir(dir)).name != NULL)
+                        {
+                              if (strcmp(diren.name, filename) == 0)
+                              {
+                                    status = remove(&diren);
+                                    break;
+                              }
+                        }
+
+                        closedir(dir);
+                  }
+            }
+
+            if (status != STD_RET_OK)
+                  printf("Cannot remove specified file.\n");
+      }
+      else
+      {
+            printf("Enter correct filename.\n");
+      }
 
 
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported function prototypes
-==================================================================================================*/
-extern regAppData_t GetAppData(const ch_t *appName);
-extern u32_t        GetAppList(ch_t *nameList, u32_t size);
-extern void         REGAPP_opendir(DIR_t *dir);
-extern dirent_t     REGAPP_readdir(size_t seek);
-
-#ifdef __cplusplus
+      return status;
 }
-#endif
 
-#endif /* REGAPP_H_ */
+/* End of application section declaration */
+APP_SEC_END
+
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

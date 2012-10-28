@@ -49,7 +49,6 @@
 static void  reverseBuffer(ch_t *begin, ch_t *end);
 static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg);
 static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired);
-static ch_t *atoi(ch_t *string, u8_t base, i32_t *value);
 static u32_t CalcFormatSize(const ch_t *format, va_list arg);
 
 
@@ -203,7 +202,7 @@ static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8
  * @return pointer in string when operation was finished
  */
 //================================================================================================//
-static ch_t *atoi(ch_t *string, u8_t base, i32_t *value)
+ch_t *a2i(ch_t *string, u8_t base, i32_t *value)
 {
       ch_t   character;
       i32_t  sign      = 1;

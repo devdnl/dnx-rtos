@@ -1,11 +1,11 @@
-#ifndef REGAPP_H_
-#define REGAPP_H_
+#ifndef TOUCH_H_
+#define TOUCH_H_
 /*=============================================================================================*//**
-@file    regapp.h
+@file    touch.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration applications
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -39,17 +39,16 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/** define stack size for this application */
+#define TOUCH_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
+
+/** define application name */
+#define TOUCH_NAME                     "touch"
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-typedef struct
-{
-      const ch_t *appName;
-      void       (*appPtr)(void *argv);
-      u32_t      stackSize;
-} regAppData_t;
 
 
 /*==================================================================================================
@@ -60,16 +59,14 @@ typedef struct
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern regAppData_t GetAppData(const ch_t *appName);
-extern u32_t        GetAppList(ch_t *nameList, u32_t size);
-extern void         REGAPP_opendir(DIR_t *dir);
-extern dirent_t     REGAPP_readdir(size_t seek);
+extern APPLICATION(touch);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGAPP_H_ */
+#endif /* TOUCH_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

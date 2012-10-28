@@ -38,7 +38,6 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define INPUT_BUFFER_SIZE           1024
 
 
 /*==================================================================================================
@@ -62,29 +61,31 @@ APP_SEC_BEGIN
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void) argv;
-
       stdRet_t status = STD_RET_ERROR;
 
-      ch_t *appList = (ch_t*)Malloc(INPUT_BUFFER_SIZE * sizeof(ch_t));
+      DIR_t *dir = opendir(argv);
 
-      if (appList != NULL)
+      if (dir)
       {
-            memset(appList, 0, INPUT_BUFFER_SIZE);
+            dirent_t dirent;
 
-            GetAppList(appList, INPUT_BUFFER_SIZE);
+            ch_t *fcolor = "\x1B[36m";
+            ch_t *dcolor = "\x1B[33m";
 
-            fontCyan();
-            printf("%s", appList);
-            resetAttr();
+            printf("Total %u\n", dir->items);
 
-            Free(appList);
+            while ((dirent = readdir(dir)).name != NULL)
+            {
+                  printf("%s%s\x1B[0m\t\t%u\n", dirent.isfile? fcolor : dcolor, dirent.name, dirent.size);
+            }
+
+            closedir(dir);
 
             status = STD_RET_OK;
       }
       else
       {
-            printf("No enough free memory\n");
+            printf("No such directory\n");
       }
 
       return status;

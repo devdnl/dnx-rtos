@@ -68,11 +68,15 @@ typedef signed char stdRet_t;
 
 
 /** device number type */
-typedef u8_t nod_t;
+typedef size_t nod_t;
 
 
 /** IO request type */
 typedef u8_t IORq_t;
+
+
+/** file descriptor */
+typedef u32_t fd_t;
 
 
 /** file type */
@@ -82,9 +86,30 @@ typedef struct
       size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
       size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
       stdRet_t (*ioctl)(nod_t dev, IORq_t iorq, void *data);
-      u32_t    fd;
+      fd_t     fd;
       size_t   seek;
+      ch_t     *mode;
 } FILE_t;
+
+
+/** directory entry */
+typedef struct
+{
+      stdRet_t (*remove)(fd_t fd);
+      ch_t  *name;
+      size_t size;
+      bool_t isfile;
+      fd_t   fd;
+} dirent_t;
+
+
+/** dir type */
+typedef struct
+{
+      dirent_t (*readdir)(size_t seek);
+      size_t   items;
+      size_t   seek;
+} DIR_t;
 
 
 /** application standard arguments type */

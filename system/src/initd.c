@@ -106,7 +106,7 @@ void Initd(void *arg)
 
       if (LwIP_Init() == STD_RET_OK)
       {
-            StartDeamon("httpd", NULL);
+            StartDaemon("httpd", NULL);
       }
 
       /* initd info about stack usage */
@@ -133,6 +133,10 @@ void Initd(void *arg)
       }
 
       ttyx[0] = tty;
+
+
+      u8_t cnt = 0;
+
 
       for (;;)
       {
@@ -189,7 +193,7 @@ void Initd(void *arg)
                   }
             }
 
-            TaskDelay(1000);
+            TaskDelay(500);
       }
 
       /* this should never happen */

@@ -165,7 +165,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
  * @brief terminal main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution mode */
 {
       stdRet_t    termStatus = STD_RET_OK;
       cmdStatus_t cmdStatus;

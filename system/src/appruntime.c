@@ -213,7 +213,7 @@ app_t *Execd(const ch_t *name, ch_t *argv)
  * @return application handler
  */
 //================================================================================================//
-stdRet_t StartDeamon(const ch_t *name, ch_t *argv)
+stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
 {
       if (Execd(name, argv) != NULL)
       {
@@ -384,7 +384,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
                               default: return STD_RET_ERROR;
                         }
 
-                        atoi(argv, base, value);
+                        a2i(argv, base, value);
 
                         return STD_RET_OK;
                   }
