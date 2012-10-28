@@ -237,11 +237,10 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
 stdRet_t ReleaseDrv(const ch_t *drvName)
 {
       stdRet_t status = STD_RET_ERROR;
-      u32_t i;
 
       if (drvName && devName)
       {
-            for (i = 0; i < ARRAY_SIZE(drvList); i++)
+            for (u32_t i = 0; i < ARRAY_SIZE(drvList); i++)
             {
                   if (strcmp(drvList[i].drvName, drvName) == 0)
                   {
@@ -345,8 +344,10 @@ void REGDRV_opendir(DIR_t *dir)
 dirent_t REGDRV_readdir(size_t seek)
 {
       dirent_t direntry;
-      direntry.name = NULL;
-      direntry.size = 0;
+      direntry.remove = REGDRV_remove;
+      direntry.name   = NULL;
+      direntry.size   = 0;
+      direntry.fd     = 0;
 
       u8_t itemcnt = 0;
       for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
@@ -359,11 +360,38 @@ dirent_t REGDRV_readdir(size_t seek)
 
       if (seek < itemcnt)
       {
-            direntry.name = devName->node[seek];
-            direntry.size = 0;
+            direntry.name   = devName->node[seek];
+            direntry.size   = sizeof(regDrv_t);
+            direntry.isfile = TRUE;
+            direntry.fd     = seek;
       }
 
       return direntry;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function find remove driver using file descriptor
+ *
+ * @param fd            file descriptor
+ *
+ * @return driver depending value, all not equal to STD_RET_OK are errors
+ */
+//================================================================================================//
+stdRet_t REGDRV_remove(fd_t fd)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (devName)
+      {
+            if (devName->node[fd] != NULL)
+            {
+                  status = ReleaseDrv(devName->node[fd]);
+            }
+      }
+
+      return status;
 }
 
 

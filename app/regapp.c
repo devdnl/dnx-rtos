@@ -193,13 +193,15 @@ dirent_t REGAPP_readdir(size_t seek)
       dirent_t direntry;
       direntry.name = NULL;
       direntry.size = 0;
+      direntry.fd   = 0;
 
       if (seek < ARRAY_SIZE(appList))
       {
-            direntry.name = (ch_t*)appList[seek].appName;
-            direntry.size = appList[seek].stackSize * sizeof(void *)
-                          + strlen(direntry.name)
-                          + sizeof(regAppData_t);
+            direntry.name   = (ch_t*)appList[seek].appName;
+            direntry.size   = appList[seek].stackSize * sizeof(void *)
+                            + strlen(direntry.name)
+                            + sizeof(regAppData_t);
+            direntry.isfile = TRUE;
       }
 
       return direntry;

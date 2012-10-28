@@ -117,7 +117,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   }
                   else if (strncmp("/proc/", name, filename - name) == 0)
                   {
-                        if ((file->fd = PROC_open(filename, mode)) != 0)
+                        if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
                         {
                               file->close = PROC_close;
                               file->ioctl = NULL;
@@ -136,7 +136,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   }
                   else
                   {
-                        file->mode = mode;
+                        file->mode = (ch_t*)mode;
 
                         /* open for reading */
                         if (strncmp("r", mode, 2) == 0)
@@ -329,13 +329,13 @@ stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
  * @return number of items
  */
 //================================================================================================//
-static void ROOT_opendir(DIR_t *dir)
+static void ROOT_opendir(DIR_t *dir) /* DNLFIXME apply better solution (table) */
 {
       dir->readdir = ROOT_readdir;
       dir->seek    = 0;
-      dir->items   = 3; /* DNLFIXME apply better solution (table) */
-
+      dir->items   = 3;
 }
+
 
 //================================================================================================//
 /**
@@ -348,8 +348,11 @@ static void ROOT_opendir(DIR_t *dir)
 static dirent_t ROOT_readdir(size_t seek)
 {
       dirent_t direntry;
-      direntry.name = NULL;
-      direntry.size = 0;
+      direntry.remove = NULL;
+      direntry.name   = NULL;
+      direntry.size   = 0;
+      direntry.isfile = FALSE;
+      direntry.fd     = 0;
 
       if (seek < 3)
       {
@@ -437,6 +440,7 @@ dirent_t readdir(DIR_t *dir)
       dirent_t direntry;
       direntry.name = NULL;
       direntry.size = 0;
+      direntry.fd   = 0;
 
       if (dir->readdir)
       {
@@ -470,6 +474,29 @@ stdRet_t closedir(DIR_t *dir)
 
       return status;
 }
+
+
+//================================================================================================//
+/**
+ * @brief Remove file
+ *
+ * @param *direntry     localization of file description
+ *
+ * @return STD_RET_OK if success, otherwise STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t remove(dirent_t *direntry)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (direntry->remove)
+      {
+            status = direntry->remove(direntry->fd);
+      }
+
+      return status;
+}
+
 
 
 #ifdef __cplusplus

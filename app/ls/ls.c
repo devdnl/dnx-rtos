@@ -70,9 +70,14 @@ stdRet_t appmain(ch_t *argv)
       {
             dirent_t dirent;
 
+            ch_t *fcolor = "\x1B[36m";
+            ch_t *dcolor = "\x1B[33m";
+
+            printf("Total %u\n", dir->items);
+
             while ((dirent = readdir(dir)).name != NULL)
             {
-                  printf("%s\t\t%uB\n", dirent.name, dirent.size);
+                  printf("%s%s\x1B[0m\t\t%u\n", dirent.isfile? fcolor : dcolor, dirent.name, dirent.size);
             }
 
             closedir(dir);

@@ -51,7 +51,7 @@ typedef size_t procfd_t;
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t PROC_remove(const ch_t *name);
+extern stdRet_t PROC_remove(u32_t fd);
 extern size_t   PROC_GetFileSize(procfd_t fd);
 extern procfd_t PROC_open(const ch_t *name, ch_t *mode);
 extern stdRet_t PROC_close(procfd_t fd);

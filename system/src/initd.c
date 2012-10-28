@@ -106,7 +106,7 @@ void Initd(void *arg)
 
       if (LwIP_Init() == STD_RET_OK)
       {
-            StartDeamon("httpd", NULL);
+            StartDaemon("httpd", NULL);
       }
 
       /* initd info about stack usage */
@@ -192,31 +192,6 @@ void Initd(void *arg)
                         }
                   }
             }
-
-
-            /*
-             * TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-             */
-            switch (cnt)
-            {
-                  case 0: PROC_open("test1", "w"); break;
-                  case 1: PROC_open("test2", "w"); break;
-                  case 2: PROC_open("test3", "w"); break;
-                  case 3: PROC_open("test4", "w"); break;
-                  case 4: PROC_open("test5", "w"); break;
-                  case 5: PROC_open("test2", "w"); break;
-                  case 6: PROC_open("test6", "w"); break;
-                  case 7: PROC_open("test7", "w"); break;
-                  case 8: PROC_remove("test3"); break;
-                  case 9: PROC_remove("test1"); break;
-                  default: break;
-            }
-
-            cnt++;
-            /*
-             * TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-             */
-
 
             TaskDelay(500);
       }

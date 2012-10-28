@@ -79,6 +79,7 @@ extern stdRet_t ReleaseDrv(const ch_t *drvName);
 extern stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata);
 extern void     REGDRV_opendir(DIR_t *dir);
 extern dirent_t REGDRV_readdir(size_t seek);
+extern stdRet_t REGDRV_remove(fd_t fd);
 
 #ifdef __cplusplus
 }
