@@ -311,6 +311,97 @@ stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
 }
 
 
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+DIR_t *opendir(const ch_t *path)
+{
+      DIR_t *dir = NULL;
+
+      if (path)
+      {
+            dir = Calloc(1 , sizeof(DIR_t));
+
+            if (dir)
+            {
+                  /* check if path is device */
+                  stdRet_t stat = STD_RET_OK;
+
+                  if (strcmp("/", path) == 0)
+                  {
+
+                  }
+                  else if (strcmp("/bin", path) == 0)
+                  {
+
+                  }
+                  else if (strcmp("/dev", path) == 0)
+                  {
+
+                  }
+                  else if (strcmp("/proc", path) == 0)
+                  {
+                        PROC_opendir(dir);
+                  }
+                  else
+                  {
+                        stat = STD_RET_ERROR;
+                  }
+
+                  /* file does not exist */
+                  if (stat != STD_RET_OK)
+                  {
+                        Free(dir);
+                        dir = NULL;
+                  }
+            }
+      }
+
+      return dir;
+}
+
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+dirent_t readdir(DIR_t *dir)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+
+      if (dir->readdir)
+      {
+            direntry = dir->readdir(dir->seek);
+            dir->seek++;
+      }
+
+      return direntry;
+}
+
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+stdRet_t closedir(DIR_t *dir)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (dir)
+      {
+            Free(dir);
+            status = STD_RET_OK;
+      }
+
+      return status;
+}
+
 
 #ifdef __cplusplus
 }

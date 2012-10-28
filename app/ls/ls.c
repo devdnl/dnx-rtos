@@ -62,29 +62,26 @@ APP_SEC_BEGIN
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void) argv;
-
       stdRet_t status = STD_RET_ERROR;
 
-      ch_t *appList = (ch_t*)Malloc(INPUT_BUFFER_SIZE * sizeof(ch_t));
+      DIR_t *dir = opendir(argv);
 
-      if (appList != NULL)
+      if (dir)
       {
-            memset(appList, 0, INPUT_BUFFER_SIZE);
+            dirent_t dirent;
 
-            GetAppList(appList, INPUT_BUFFER_SIZE);
+            while ((dirent = readdir(dir)).name != NULL)
+            {
+                  printf("%s\t\t%uB\n", dirent.name, dirent.size);
+            }
 
-            fontCyan();
-            printf("%s", appList);
-            resetAttr();
-
-            Free(appList);
+            closedir(dir);
 
             status = STD_RET_OK;
       }
       else
       {
-            printf("No enough free memory\n");
+            printf("No such directory\n");
       }
 
       return status;

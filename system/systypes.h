@@ -87,6 +87,23 @@ typedef struct
 } FILE_t;
 
 
+/** directory entry */
+typedef struct
+{
+      ch_t  *name;
+      size_t size;
+} dirent_t;
+
+
+/** dir type */
+typedef struct
+{
+      dirent_t (*readdir)(size_t seek);
+      size_t   items;
+      size_t   seek;
+} DIR_t;
+
+
 /** application standard arguments type */
 typedef struct appArgs_struct
 {

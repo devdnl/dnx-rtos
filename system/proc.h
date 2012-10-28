@@ -40,12 +40,6 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-typedef struct diren
-{
-      ch_t  *name;
-      size_t size;
-} diren_t;
-
 typedef size_t procfd_t;
 
 
@@ -57,13 +51,14 @@ typedef size_t procfd_t;
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t PROC_RmFile(const ch_t *name);
+extern stdRet_t PROC_remove(const ch_t *name);
 extern size_t   PROC_GetFileSize(procfd_t fd);
 extern procfd_t PROC_open(const ch_t *name);
 extern stdRet_t PROC_close(procfd_t fd);
 extern size_t   PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek);
 extern size_t   PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-extern diren_t  PROC_readdir(u16_t fno);
+extern void     PROC_opendir(DIR_t *dir);
+extern dirent_t PROC_readdir(size_t seek);
 
 
 #ifdef __cplusplus

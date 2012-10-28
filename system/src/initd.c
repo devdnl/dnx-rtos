@@ -134,6 +134,10 @@ void Initd(void *arg)
 
       ttyx[0] = tty;
 
+
+      u8_t cnt = 0;
+
+
       for (;;)
       {
             /* load application if new TTY was created */
@@ -189,7 +193,32 @@ void Initd(void *arg)
                   }
             }
 
-            TaskDelay(1000);
+
+            /*
+             * TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+             */
+            switch (cnt)
+            {
+                  case 0: PROC_open("test1"); break;
+                  case 1: PROC_open("test2"); break;
+                  case 2: PROC_open("test3"); break;
+                  case 3: PROC_open("test4"); break;
+                  case 4: PROC_open("test5"); break;
+                  case 5: PROC_open("test2"); break;
+                  case 6: PROC_open("test6"); break;
+                  case 7: PROC_open("test7"); break;
+                  case 8: PROC_remove("test3"); break;
+                  case 9: PROC_remove("test1"); break;
+                  default: break;
+            }
+
+            cnt++;
+            /*
+             * TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+             */
+
+
+            TaskDelay(500);
       }
 
       /* this should never happen */

@@ -71,56 +71,51 @@ struct filehdl
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-struct filehdl *mem;
+static struct filehdl *procmem;
 
 
 /*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
-stdRet_t PROC_RmFile(const ch_t *name)
+stdRet_t PROC_remove(const ch_t *name)
 {
       stdRet_t status = STD_RET_ERROR;
 
       if (name)
       {
             /* if memory exist */
-            if (mem)
+            if (procmem && (strcmp(name, ".") != 0))
             {
                   /* try find file */
-                  struct filenode *fileptr    = mem->file;
+                  struct filenode *fileptr    = procmem->file;
                   struct filenode *fileptrprv = NULL;
 
-                  while (TRUE)
+                  while (fileptr)
                   {
-                        if (fileptr)
+                        if (strcmp(fileptr->name, name) == 0)
                         {
-                              if (strcmp(fileptr->name, name) == 0)
-                              {
-                                    if (fileptrprv)
-                                          fileptrprv->next = fileptr->next;
+                              if (fileptrprv)
+                                    fileptrprv->next = fileptr->next;
 
-                                    if (fileptr->name)
-                                          Free(fileptr->name);
+                              if (fileptr->name)
+                                    Free(fileptr->name);
 
-                                    if (fileptr->data)
-                                          Free(fileptr->data);
+                              if (fileptr->data)
+                                    Free(fileptr->data);
 
-                                    Free(fileptr);
+                              Free(fileptr);
 
-                                    status = STD_RET_OK;
+                              procmem->file->size--;
 
-                                    break;
-                              }
-                              else
-                              {
-                                    /* next file */
-                                    fileptrprv = fileptr;
-                                    fileptr    = fileptr->next;
-                              }
+                              status = STD_RET_OK;
+
+                              break;
                         }
                         else
                         {
-                              break;
+                              /* next file */
+                              fileptrprv = fileptr;
+                              fileptr    = fileptr->next;
                         }
                   }
             }
@@ -136,10 +131,10 @@ size_t PROC_GetFileSize(procfd_t fd)
 
       if (fd)
       {
-            if (mem)
+            if (procmem)
             {
                   /* try find file */
-                  struct filenode *fileptr = mem->file;
+                  struct filenode *fileptr = procmem->file;
 
                   while (fileptr)
                   {
@@ -167,28 +162,45 @@ procfd_t PROC_open(const ch_t *name)
       if (name)
       {
             /* allocate memory when not created yet */
-            if (mem == NULL)
+            if (procmem == NULL)
             {
-                  mem = Calloc(1, sizeof(struct filehdl));
+                  procmem = Calloc(1, sizeof(struct filehdl));
 
-                  if (mem)
+                  if (procmem)
                   {
-                        mem->mtx = CreateMutex();
+                        procmem->file = Calloc(1, sizeof(struct filenode));
+                        ch_t *name    = Calloc(2, sizeof(ch_t));
+                        procmem->mtx  = CreateMutex();
 
-                        if (mem->mtx == NULL)
+                        if (!procmem->file || !name || !procmem->mtx)
                         {
-                              Free(mem);
-                              mem = NULL;
+                              if (procmem->file)
+                                    Free(procmem->file);
+
+                              if (name)
+                                    Free(name);
+
+                              if (procmem->mtx)
+                                    DeleteMutex(procmem->mtx);
+                        }
+                        else
+                        {
+                              name = ".";
+                              procmem->file->data = NULL;
+                              procmem->file->fd   = ++procmem->fdcnt;
+                              procmem->file->name = name;
+                              procmem->file->next = NULL;
+                              procmem->file->size = 0;
                         }
                   }
             }
 
             /* if memory exist */
-            if (mem)
+            if (procmem)
             {
                   /* try find file */
-                  struct filenode *fileptr    = mem->file;
-                  struct filenode *fileptrprv = mem->file;
+                  struct filenode *fileptr    = procmem->file;
+                  struct filenode *fileptrprv = procmem->file;
 
                   while (fileptr)
                   {
@@ -208,16 +220,12 @@ procfd_t PROC_open(const ch_t *name)
 
                   /* file does not found - create new file */
                   struct filenode *newfile = Calloc(1, sizeof(struct filenode));
-                  ch_t *data  = Calloc(FILE_START_SIZE, sizeof(ch_t));
                   ch_t *fname = Malloc(strlen(name));
 
-                  if (!data || !newfile || !fname)
+                  if (!newfile || !fname)
                   {
                         if (newfile)
                               Free(newfile);
-
-                        if (data)
-                              Free(data);
 
                         if (fname)
                               Free(fname);
@@ -226,13 +234,17 @@ procfd_t PROC_open(const ch_t *name)
                   {
                         strcpy(fname, name);
 
-                        fileptrprv->data = data;
-                        fileptrprv->fd   = ++mem->fdcnt;
-                        fileptrprv->name = fname;
-                        fileptrprv->next = NULL;
-                        fileptrprv->size = FILE_START_SIZE;
+                        fileptrprv->next = newfile;
 
-                        fd = fileptrprv->fd;
+                        newfile->data = NULL;
+                        newfile->fd   = ++(procmem->fdcnt);
+                        newfile->name = fname;
+                        newfile->next = NULL;
+                        newfile->size = 0;
+
+                        procmem->file->size++;
+
+                        fd = newfile->fd;
                   }
             }
       }
@@ -262,13 +274,34 @@ size_t PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 }
 
 
-diren_t PROC_readdir(u16_t fno)
+void PROC_opendir(DIR_t *dir)
 {
-      diren_t dir;
-      dir.name = NULL;
-      dir.size = 0;
+      dir->readdir = PROC_readdir;
+      dir->items   = procmem->file->size;
+      dir->seek    = 1;
+}
 
-      return dir;
+
+dirent_t PROC_readdir(size_t seek)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+
+      if (seek <= procmem->file->size)
+      {
+            struct filenode *fileptr = procmem->file->next;
+
+            while (fileptr && --seek)
+            {
+                  fileptr = fileptr->next;
+            }
+
+            direntry.name = fileptr->name;
+            direntry.size = fileptr->size;
+      }
+
+      return direntry;
 }
 
 
