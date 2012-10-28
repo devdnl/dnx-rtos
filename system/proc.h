@@ -53,7 +53,7 @@ typedef size_t procfd_t;
 ==================================================================================================*/
 extern stdRet_t PROC_remove(const ch_t *name);
 extern size_t   PROC_GetFileSize(procfd_t fd);
-extern procfd_t PROC_open(const ch_t *name);
+extern procfd_t PROC_open(const ch_t *name, ch_t *mode);
 extern stdRet_t PROC_close(procfd_t fd);
 extern size_t   PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek);
 extern size_t   PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek);

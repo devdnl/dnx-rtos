@@ -190,15 +190,16 @@ size_t PROC_GetFileSize(procfd_t fd)
  * @brief Function opens file
  *
  * @param *name   file name
+ * @param *mode   file mode
  *
  * @return file description, if file does not exist return 0
  */
 //================================================================================================//
-procfd_t PROC_open(const ch_t *name)
+procfd_t PROC_open(const ch_t *name, ch_t *mode)
 {
       procfd_t fd = 0;
 
-      if (name)
+      if (name && mode)
       {
             /* allocate memory when not created yet */
             if (procmem == NULL)
@@ -249,6 +250,19 @@ procfd_t PROC_open(const ch_t *name)
                               {
                                     /* gets file descriptor */
                                     fd = fileptr->fd;
+
+                                    /* new data will be write */
+                                    if (  (strncmp("w",  mode, 2) == 0)
+                                       || (strncmp("w+", mode, 2) == 0) )
+                                    {
+                                          if (fileptr->data)
+                                          {
+                                                Free(fileptr->data);
+                                                fileptr->data = NULL;
+                                                fileptr->size = 0;
+                                          }
+                                    }
+
                                     goto open_exit;
                               }
                               else
@@ -259,33 +273,38 @@ procfd_t PROC_open(const ch_t *name)
                               }
                         }
 
-                        /* file does not found - create new file */
-                        struct filenode *newfile = Calloc(1, sizeof(struct filenode));
-                        ch_t *fname = Malloc(strlen(name));
-
-                        if (!newfile || !fname)
+                        /* create file when mode is correct */
+                        if (  (strncmp("w", mode, 2) == 0) || (strncmp("w+", mode, 2) == 0)
+                           || (strncmp("a", mode, 2) == 0) || (strncmp("a+", mode, 2) == 0) )
                         {
-                              if (newfile)
-                                    Free(newfile);
+                              /* file does not found - create new file */
+                              struct filenode *newfile = Calloc(1, sizeof(struct filenode));
+                              ch_t *fname = Malloc(strlen(name));
 
-                              if (fname)
-                                    Free(fname);
-                        }
-                        else
-                        {
-                              strcpy(fname, name);
+                              if (!newfile || !fname)
+                              {
+                                    if (newfile)
+                                          Free(newfile);
 
-                              fileptrprv->next = newfile;
+                                    if (fname)
+                                          Free(fname);
+                              }
+                              else
+                              {
+                                    strcpy(fname, name);
 
-                              newfile->data = NULL;
-                              newfile->fd   = ++(procmem->fdcnt);
-                              newfile->name = fname;
-                              newfile->next = NULL;
-                              newfile->size = 0;
+                                    fileptrprv->next = newfile;
 
-                              procmem->file->size++;
+                                    newfile->data = NULL;
+                                    newfile->fd   = ++(procmem->fdcnt);
+                                    newfile->name = fname;
+                                    newfile->next = NULL;
+                                    newfile->size = 0;
 
-                              fd = newfile->fd;
+                                    procmem->file->size++;
+
+                                    fd = newfile->fd;
+                              }
                         }
 
                         open_exit:
@@ -338,34 +357,35 @@ size_t PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek)
                   {
                         if (fileptr->fd == fd)
                         {
-                              /* check if seek is correct */
-                              if (seek > (fileptr->size / size) || fileptr->size == 0)
+                              size_t wrsize  = size * nitems;
+                              size_t filelen = fileptr->size;
+
+                              if (seek > filelen)
+                                    seek = filelen;
+
+                              if ((seek + wrsize) > filelen || fileptr->data == NULL)
                               {
-                                    seek = (fileptr->size / size);
+                                    ch_t *newdata = Malloc(filelen + wrsize);
 
-                                    ch_t *newdata = Calloc(1, fileptr->size + (size * nitems));
-
-                                    if (newdata)
+                                    if (newdata && fileptr->data)
                                     {
                                           if (fileptr->data)
                                           {
-                                                memcpy(newdata, fileptr->data, fileptr->size);
+                                                memcpy(newdata, fileptr->data, filelen);
                                                 Free(fileptr->data);
                                           }
 
+                                          memcpy(newdata + seek, src, wrsize);
+
                                           fileptr->data = newdata;
-
-                                          memcpy(fileptr->data + (size * nitems * seek), src, size * nitems);
-
-                                          n = nitems;
                                     }
                               }
                               else
                               {
-                                    memcpy(fileptr->data + (size * seek), src, size * nitems);
-
-                                    n = nitems;
+                                    memcpy(fileptr->data + seek, src, wrsize);
                               }
+
+                              n = nitems;
 
                               break;
                         }
@@ -398,7 +418,60 @@ size_t PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek)
 //================================================================================================//
 size_t PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      return 0;
+      size_t n = 0;
+
+      if (fd && dst && size && nitems)
+      {
+            if (TakeMutex(procmem->mtx, BLOCK_TIME) == OS_OK)
+            {
+                  struct filenode *fileptr = procmem->file;
+
+                  while (fileptr)
+                  {
+                        if (fileptr->fd == fd)
+                        {
+                              size_t filelen = fileptr->size;
+                              size_t items2rd;
+
+                              /* check if seek is not bigger than file length */
+                              if (seek > filelen)
+                              {
+                                    seek = filelen;
+                              }
+
+                              /* check how many items to read is on current file position */
+                              if (((filelen - seek) / size) >= nitems)
+                              {
+                                    items2rd = nitems;
+                              }
+                              else
+                              {
+                                    items2rd = (filelen - seek) / size;
+                              }
+
+                              /* copy if file buffer exist */
+                              if (fileptr->data)
+                              {
+                                    if (items2rd > 0)
+                                    {
+                                          memcpy(dst + seek, fileptr->data, items2rd * size);
+                                          n = items2rd;
+                                    }
+                              }
+
+                              break;
+                        }
+                        else
+                        {
+                              fileptr = fileptr->next;
+                        }
+                  }
+
+                  GiveMutex(procmem->mtx);
+            }
+      }
+
+      return n;
 }
 
 

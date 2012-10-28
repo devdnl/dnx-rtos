@@ -84,6 +84,7 @@ typedef struct
       stdRet_t (*ioctl)(nod_t dev, IORq_t iorq, void *data);
       u32_t    fd;
       size_t   seek;
+      ch_t     *mode;
 } FILE_t;
 
 

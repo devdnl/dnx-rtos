@@ -117,7 +117,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   }
                   else if (strncmp("/proc/", name, filename - name) == 0)
                   {
-                        if ((file->fd = PROC_open(filename)) != 0)
+                        if ((file->fd = PROC_open(filename, mode)) != 0)
                         {
                               file->close = PROC_close;
                               file->ioctl = NULL;
@@ -136,6 +136,8 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   }
                   else
                   {
+                        file->mode = mode;
+
                         /* open for reading */
                         if (strncmp("r", mode, 2) == 0)
                         {
@@ -228,7 +230,7 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
             if (file->write)
             {
                   n = file->write(file->fd, ptr, size, nitems, file->seek);
-                  file->seek += n;
+                  file->seek += n * size;
             }
       }
 
@@ -257,7 +259,7 @@ size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
             if (file->read)
             {
                   n = file->read(file->fd, ptr, size, nitems, file->seek);
-                  file->seek += n;
+                  file->seek += n * size;
             }
       }
 
