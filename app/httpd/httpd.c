@@ -100,6 +100,7 @@ struct fs_file {
                                       Local object definitions
 ==================================================================================================*/
 ch_t *htmlBuffer;
+ch_t *svgBuffer;
 
 /*==================================================================================================
                                         Function definitions
@@ -241,19 +242,35 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 
                         pbuf_free(p);
 
-                        if (!fs_open(fname, &file))
-                        {
-                              if (strncmp(fname, "/", 5) == 0)
+//                        if (strcmp(fname, "/graph.svg") == 0)
+//                        {
+//                              FILE_t *svg = fopen("/proc/graph.svg", "r");
+//
+//                              if (svg)
+//                              {
+//                                    file.len  = fread(svgBuffer, sizeof(ch_t), 512, svg);
+//                                    file.data = svgBuffer;
+//
+//                                    fclose(svg);
+//                              }
+//                        }
+//                        else
+//                        {
+                              if (!fs_open(fname, &file))
                               {
-                                    fs_open("/index.html", &file);
-                                    snprint(fname, sizeof(fname), "/index.html");
+                                    if (strncmp(fname, "/", 5) == 0)
+                                    {
+                                          fs_open("/index.html", &file);
+                                          snprint(fname, sizeof(fname), "/index.html");
+                                    }
+                                    else
+                                    {
+                                          fs_open("/404.html", &file);
+                                          snprint(fname, sizeof(fname), "/404.html");
+                                    }
                               }
-                              else
-                              {
-                                    fs_open("/404.html", &file);
-                                    snprint(fname, sizeof(fname), "/404.html");
-                              }
-                        }
+//                        }
+
                         hs->file = file.data;
                         hs->left = file.len;
 
@@ -324,6 +341,19 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                             date.year,
                                                             time.hours,
                                                             time.minutes);
+                                          }
+                                          else if (strncmp(&file.data[i], "graph/?>", 8) == 0)
+                                          {
+                                                i += 7;
+
+                                                FILE_t *svg = fopen("/proc/graph.svg", "r");
+
+                                                if (svg)
+                                                {
+                                                      n = fread(pagePtr, sizeof(ch_t), 512, svg);
+
+                                                      fclose(svg);
+                                                }
                                           }
 
                                           pagePtr  += n;
@@ -411,10 +441,17 @@ stdRet_t appmain(ch_t *argv)
 
       struct tcp_pcb *pcb;
 
-      htmlBuffer = (ch_t*)Malloc(2048);
+      htmlBuffer = Malloc(2048);
+      svgBuffer  = Malloc(512);
 
-      if (htmlBuffer == NULL)
+      if (!htmlBuffer || !svgBuffer)
       {
+            if (htmlBuffer)
+                  Free(htmlBuffer);
+
+            if (svgBuffer)
+                  Free(svgBuffer);
+
             return STD_RET_ERROR;
       }
 

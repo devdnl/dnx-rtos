@@ -52,6 +52,7 @@ extern "C" {
 ==================================================================================================*/
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      TaskDelay(delay)
+#define SleepUntil(lastTime, sleepTime)   TaskDelayUntil(lastTime, sleepTime)
 #define SystemGetStackFreeSpace()         TaskGetStackFreeSpace(THIS_TASK)
 #define SystemEnterCritical()             TaskEnterCritical()
 #define SystemExitCritical()              TaskExitCritical()
@@ -67,6 +68,8 @@ extern "C" {
 #define SystemGetUptime()                 GetUptimeCnt()
 #define SystemGetTaskCount()              TaskGetNumberOfTasks()
 #define SystemGetRunTimeStats(dst)        TaskGetRunTimeStats(dst)
+#define SystemGetOSTickCnt()              TaskGetTickCount()
+#define SystemGetAppName()                TaskGetName(THIS_APP)
 
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)

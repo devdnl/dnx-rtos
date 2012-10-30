@@ -28,6 +28,7 @@
                                             Include files
 ==================================================================================================*/
 #include "hooks.h"
+#include "oswrap.h"
 
 
 /*==================================================================================================
@@ -67,12 +68,11 @@ u32_t uptimeDiv;
  * @brief Stack overflow hook
  */
 //================================================================================================//
-void vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName)
+void vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *taskName)
 {
-      ( void ) pcTaskName;
-      ( void ) pxTask;
+      (void) pxTask;
 
-      for( ;; );
+      kprint("\x1B[31mTask %s stack overflow!\x1B[0m\n", taskName);
 }
 
 
@@ -111,7 +111,9 @@ u32_t GetUptimeCnt(void)
 //================================================================================================//
 void HardFault_Handler(void)
 {
-      while (TRUE); /* DNLTODO implement: function shall inform about hardfault event */
+      ch_t *name = TaskGetName(THIS_TASK);
+
+      kprint("\x1B[31mTask %s generated Hard Fault!\x1B[0m\n", name);
 }
 
 

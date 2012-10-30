@@ -1,5 +1,5 @@
 /*=============================================================================================*//**
-@file    clear.c
+@file    measd.c
 
 @author  Daniel Zorychta
 
@@ -31,22 +31,31 @@
 #include <string.h>
 
 /* Begin of application section declaration */
-APPLICATION(clear)
+APPLICATION(measd)
 APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define DATA_COUNT                  20
+#define FILE_BUFFER_SIZE            1024
 
 
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+struct meas
+{
+      u16_t pres;
+      i8_t  temp;
+};
 
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+u8_t wridx = 0;
+struct meas dataList[DATA_COUNT];
 
 
 /*==================================================================================================
@@ -55,15 +64,113 @@ APP_SEC_BEGIN
 
 //================================================================================================//
 /**
+ * @brief Function write data to buffer
+ */
+//================================================================================================//
+void writeData(struct meas *measurement)
+{
+      dataList[wridx++] = *measurement;
+
+      if (wridx >= DATA_COUNT)
+            wridx = 0;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read data from buffer
+ */
+//================================================================================================//
+struct meas readData(u8_t idx)
+{
+      struct meas data;
+      data.pres = 0;
+      data.temp = 0;
+
+      if (idx > DATA_COUNT)
+            idx = DATA_COUNT;
+
+      i8_t rdidx = wridx - idx;
+
+      if (rdidx < 0)
+            rdidx += DATA_COUNT;
+
+      data = dataList[rdidx];
+
+      return data;
+}
+
+
+//================================================================================================//
+/**
  * @brief clear main function
  */
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void) argv;
+      (void)argv;
 
-      /* configure terminal VT100: reset attributes, clear screen, cursor HOME */
-      printf("\x1B[0m\x1B[2J\x1B[H");
+      /* clear measurement */
+      memset(dataList, 0, sizeof(dataList));
+
+      /* prepare reference timer */
+      size_t LastWakeTime = SystemGetOSTickCnt();
+
+      for (;;)
+      {
+            FILE_t *sensor = fopen("/dev/sensor", "r");
+
+            if (sensor)
+            {
+                  struct meas data;
+                  data.pres = 0;
+                  data.temp = 0;
+
+                  while (ioctl(sensor, MPL115A2_IORQ_GETPRES, &data.pres) != STD_RET_OK)
+                        Sleep(5);
+
+                  while (ioctl(sensor, MPL115A2_IORQ_GETTEMP, &data.temp) != STD_RET_OK)
+                        Sleep(5);
+
+                  writeData(&data);
+
+                  fclose(sensor);
+            }
+
+            FILE_t *file = fopen("/proc/graph.svg", "w");
+
+            if (file)
+            {
+                  ch_t *buffer = Calloc(512, sizeof(ch_t));
+
+                  if (buffer)
+                  {
+                        u32_t seek = 0;
+
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"500px\" height=\"300px\" viewBox=\"0 0 500 300\">");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<rect width=\"500\" height=\"300\" style=\"fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0)\"/>");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<polyline points=\"");
+
+                        for (i8_t i = DATA_COUNT; i >= 0; --i)
+                        {
+                              struct meas data = readData(i);
+                              seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "%u,%u ", (DATA_COUNT * 25) - (i * 25), 150 - data.temp);
+                        }
+
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "\" style=\"fill:none;stroke:red;stroke-width:2\" />");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "</svg>");
+
+                        fwrite(buffer, sizeof(ch_t), strlen(buffer), file);
+
+                        Free(buffer);
+                  }
+
+                  fclose(file);
+            }
+
+            /* sleep in equal periods */
+            SleepUntil(&LastWakeTime, 2000);
+      }
 
       return STD_RET_OK;
 }

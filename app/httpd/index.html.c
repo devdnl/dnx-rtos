@@ -11,6 +11,7 @@ const ch_t index_html[] =
 <td align='center'>\
 <h1>Weather station</h1>\
 <img src='header.gif'/>\
+<?graph/?>\
 </td>\
 </tr>\
 <tr bgcolor='gray'>\

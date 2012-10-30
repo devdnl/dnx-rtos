@@ -46,6 +46,7 @@ extern "C" {
 #include "httpd.h"
 #include "touch.h"
 #include "rm.h"
+#include "measd.h"
 
 
 /*==================================================================================================
@@ -79,6 +80,7 @@ static const regAppData_t appList[] =
       {HTTPD_NAME,    httpd,    HTTPD_STACK_SIZE   },
       {TOUCH_NAME,    touch,    TOUCH_STACK_SIZE   },
       {RM_NAME,       rm,       RM_STACK_SIZE      },
+      {MEASD_NAME,    measd,    MEASD_STACK_SIZE   },
 };
 
 

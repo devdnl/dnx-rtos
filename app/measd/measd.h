@@ -1,7 +1,7 @@
-#ifndef CLEAR_H_
-#define CLEAR_H_
+#ifndef MEASD_H_
+#define MEASD_H_
 /*=============================================================================================*//**
-@file    clear.h
+@file    measd.h
 
 @author  Daniel Zorychta
 
@@ -40,10 +40,10 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define CLEAR_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
+#define MEASD_STACK_SIZE               (5 * MINIMAL_STACK_SIZE)
 
 /** define application name */
-#define CLEAR_NAME                     "clear"
+#define MEASD_NAME                     "measd"
 
 
 /*==================================================================================================
@@ -59,14 +59,14 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern APPLICATION(clear);
+extern APPLICATION(measd);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CLEAR_H_ */
+#endif /* MEASD_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

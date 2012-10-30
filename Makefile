@@ -36,6 +36,7 @@ CSRC = $(sort \
    app/freemem/freemem.c \
    app/ls/ls.c \
    app/malt/malt.c \
+   app/measd/measd.c \
    app/rm/rm.c \
    app/terminal/terminal.c \
    app/touch/touch.c \

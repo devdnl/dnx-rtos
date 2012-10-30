@@ -46,7 +46,7 @@ extern "C" {
 enum MPL115A2_IORQ_enum
 {
       MPL115A2_IORQ_GETTEMP,              /* [out] i8_t  */
-      MPL115A2_IORQ_GETPRES,              /* [out] i16_t */
+      MPL115A2_IORQ_GETPRES,              /* [out] u16_t */
 };
 
 
