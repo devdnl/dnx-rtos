@@ -141,7 +141,7 @@ stdRet_t appmain(ch_t *argv)
 
             if (file)
             {
-                  ch_t *buffer = Calloc(512, sizeof(ch_t));
+                  ch_t *buffer = Calloc(FILE_BUFFER_SIZE, sizeof(ch_t));
 
                   if (buffer)
                   {
@@ -149,6 +149,7 @@ stdRet_t appmain(ch_t *argv)
 
                         seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"500px\" height=\"300px\" viewBox=\"0 0 500 300\">");
                         seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<rect width=\"500\" height=\"300\" style=\"fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0)\"/>");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<line x1=\"0\" y1=\"150\" x2=\"500\" y2=\"150\" style=\"stroke:rgb(180,180,180);stroke-width:2\"/>");
                         seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<polyline points=\"");
 
                         for (i8_t i = DATA_COUNT; i >= 0; --i)

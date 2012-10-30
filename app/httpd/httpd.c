@@ -334,7 +334,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 
                                                 if (svg)
                                                 {
-                                                      n = fread(pagePtr, sizeof(ch_t), 512, svg);
+                                                      n = fread(pagePtr, sizeof(ch_t), 4096, svg);
 
                                                       fclose(svg);
                                                 }
