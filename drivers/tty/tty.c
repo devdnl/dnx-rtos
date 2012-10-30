@@ -597,6 +597,9 @@ static void ttyd(void *arg)
             {
                   if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
                   {
+                        if (ttyPtr->newMsgCnt > term->row)
+                              ttyPtr->newMsgCnt = term->row;
+
                         msg = ttyPtr->line[GetMsgIdx(term->curTTY, ttyPtr->newMsgCnt)];
 
                         ttyPtr->newMsgCnt--;
@@ -918,7 +921,14 @@ static void RefreshTTY(u8_t dev, FILE_t *file)
 
       if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
       {
-            for (i8_t i = TTY_MAX_LINES - 1; i > 0; i--)
+            i8_t rows;
+
+            if (term->row < TTY_MAX_LINES)
+                  rows = term->row;
+            else
+                  rows = TTY_MAX_LINES;
+
+            for (i8_t i = rows - 1; i > 0; i--)
             {
                   ch_t *msg = TTY(dev)->line[GetMsgIdx(term->curTTY, i)];
 

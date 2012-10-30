@@ -62,7 +62,8 @@ stdRet_t appmain(ch_t *argv)
 {
       (void) argv;
 
-      clrscr();
+      /* configure terminal VT100: reset attributes, clear screen, cursor HOME */
+      printf("\x1B[0m\x1B[2J\x1B[H");
 
       return STD_RET_OK;
 }

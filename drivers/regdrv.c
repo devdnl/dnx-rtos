@@ -217,6 +217,11 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
                         break;
                   }
             }
+
+            if (status != STD_RET_OK && i == ARRAY_SIZE(drvList))
+            {
+                  kprint("\x1B[31mDoes not found %s driver\x1B[0m\n", drvName);
+            }
       }
 
       InitDrv_End:

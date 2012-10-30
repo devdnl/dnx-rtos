@@ -486,8 +486,12 @@ size_t PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 void PROC_opendir(DIR_t *dir)
 {
       dir->readdir = PROC_readdir;
-      dir->items   = procmem->file->size;
       dir->seek    = 1;
+
+      if (procmem)
+            dir->items = procmem->file->size;
+      else
+            dir->items = 0;
 }
 
 
