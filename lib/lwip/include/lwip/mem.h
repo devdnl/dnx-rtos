@@ -38,7 +38,6 @@
 extern "C" {
 #endif
 
-
 #if MEM_LIBC_MALLOC
 
 #include <stddef.h> /* for size_t */
@@ -69,7 +68,6 @@ typedef size_t mem_size_t;
 /* MEM_SIZE would have to be aligned, but using 64000 here instead of
  * 65535 leaves some room for alignment...
  */
-#if 0
 #if MEM_SIZE > 64000L
 typedef u32_t mem_size_t;
 #define MEM_SIZE_F U32_F
@@ -77,9 +75,7 @@ typedef u32_t mem_size_t;
 typedef u16_t mem_size_t;
 #define MEM_SIZE_F U16_F
 #endif /* MEM_SIZE > 64000 */
-#endif
 
-#if 0
 #if MEM_USE_POOLS
 /** mem_init is not used when using pools instead of a heap */
 #define mem_init()
@@ -94,7 +90,6 @@ void *mem_trim(void *mem, mem_size_t size);
 void *mem_malloc(mem_size_t size);
 void *mem_calloc(mem_size_t count, mem_size_t size);
 void  mem_free(void *mem);
-#endif
 #endif /* MEM_LIBC_MALLOC */
 
 /** Calculate memory size for an aligned buffer - returns the next highest
@@ -119,7 +114,6 @@ void  mem_free(void *mem);
 #ifndef LWIP_MEM_ALIGN
 #define LWIP_MEM_ALIGN(addr) ((void *)(((mem_ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(mem_ptr_t)(MEM_ALIGNMENT-1)))
 #endif
-
 
 #ifdef __cplusplus
 }
