@@ -272,12 +272,12 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                           i += 2;
                                           n = 0;
 
-                                          FILE_t *sensor = fopen("/dev/sensor", "r");
-
                                           if (strncmp(&file.data[i], "temp/?>", 7) == 0)
                                           {
                                                 i += 6;
                                                 i8_t temp = 0;
+
+                                                FILE_t *sensor = fopen("/dev/sensor", "r");
 
                                                 if (sensor)
                                                 {
@@ -291,6 +291,8 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                           {
                                                 i += 6;
                                                 u16_t pressure = 0;
+
+                                                FILE_t *sensor = fopen("/dev/sensor", "r");
 
                                                 if (sensor)
                                                 {
@@ -312,6 +314,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 {
                                                       ioctl(rtc, RTC_IORQ_GETTIME, &time);
                                                       ioctl(rtc, RTC_IORQ_GETDATE, &date);
+                                                      fclose(rtc);
                                                 }
                                                 else
                                                 {
