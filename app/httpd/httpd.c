@@ -425,7 +425,7 @@ stdRet_t appmain(ch_t *argv)
 
       struct tcp_pcb *pcb;
 
-      htmlBuffer = Malloc(2048);
+      htmlBuffer = Malloc(4096);
 
       if (!htmlBuffer)
       {

@@ -37,8 +37,8 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define DATA_COUNT                  20
-#define FILE_BUFFER_SIZE            1024
+#define DATA_COUNT                  16
+#define FILE_BUFFER_SIZE            3096
 
 
 /*==================================================================================================
@@ -147,19 +147,57 @@ stdRet_t appmain(ch_t *argv)
                   {
                         u32_t seek = 0;
 
-                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"500px\" height=\"300px\" viewBox=\"0 0 500 300\">");
-                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<rect width=\"500\" height=\"300\" style=\"fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0)\"/>");
-                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<line x1=\"0\" y1=\"150\" x2=\"500\" y2=\"150\" style=\"stroke:rgb(180,180,180);stroke-width:2\"/>");
-                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<polyline points=\"");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"440px\" height=\"220px\" viewBox=\"0 0 440 220\">");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<rect width=\"440\" height=\"220\" style=\"fill:rgb(255,255,255);stroke-width:2;stroke:rgb(0,0,0)\"/>");
 
-                        for (i8_t i = DATA_COUNT; i >= 0; --i)
+                        for (u8_t i = 20; i <= 200; i += 20)
                         {
-                              struct meas data = readData(i);
-                              seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "%u,%u ", (DATA_COUNT * 25) - (i * 25), 150 - data.temp);
+                              seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<line x1=\"50\" y1=\"%u\" x2=\"350\" y2=\"%u\" style=\"stroke:rgb(180,180,180);stroke-width:2\"/>", i, i);
                         }
 
-                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "\" style=\"fill:none;stroke:red;stroke-width:2\" />");
-                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "</svg>");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<text x=\"5\" y=\"15\" fill=\"black\">stC</text>");
+
+                        i32_t deg = 50;
+                        for (u8_t i = 25; i <= 205; i += 20)
+                        {
+                              seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<text x=\"25\" y=\"%u\" fill=\"red\">%d</text>", i, deg);
+                              deg -= 10;
+                        }
+
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<text x=\"412\" y=\"15\" fill=\"black\">hPa</text>");
+
+                        i32_t pre = 1060;
+                        for (u8_t i = 25; i <= 205; i += 20)
+                        {
+                              seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<text x=\"355\" y=\"%u\" fill=\"blue\">%d</text>", i, pre);
+                              pre -= 20;
+                        }
+
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<polyline points=\"");
+
+                        u32_t x = 50;
+                        for (i8_t i = DATA_COUNT; i > 0; --i)
+                        {
+                              struct meas data = readData(i);
+                              seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "%u,%u ", x, 120 - (data.temp * 2));
+                              x += 20;
+                        }
+
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "\" style=\"fill:none;stroke:red;stroke-width:2\"/><polyline points=\"");
+
+                        x = 50;
+                        for (i8_t i = DATA_COUNT; i > 0; --i)
+                        {
+                              struct meas data = readData(i);
+                              seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "%u,%u ", x, 220 - (data.pres - 860));
+                              x += 20;
+                        }
+
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "\" style=\"fill:none;stroke:blue;stroke-width:2\"/>");
+
+
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<line x1=\"50\" y1=\"0\" x2=\"50\" y2=\"220\" style=\"stroke:rgb(0,0,0);stroke-width:2\"/>");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<line x1=\"350\" y1=\"0\" x2=\"350\" y2=\"220\" style=\"stroke:rgb(0,0,0);stroke-width:2\"/></svg>");
 
                         fwrite(buffer, sizeof(ch_t), strlen(buffer), file);
 
