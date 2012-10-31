@@ -37,8 +37,9 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define DATA_COUNT                  16
+#define DATA_COUNT                  51
 #define FILE_BUFFER_SIZE            3096
+#define GRAPH_X_POINT               (300/(DATA_COUNT - 1))
 
 
 /*==================================================================================================
@@ -180,7 +181,7 @@ stdRet_t appmain(ch_t *argv)
                         {
                               struct meas data = readData(i);
                               seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "%u,%u ", x, 120 - (data.temp * 2));
-                              x += 20;
+                              x += GRAPH_X_POINT;
                         }
 
                         seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "\"style=\"fill:none;stroke:red;stroke-width:2\"/><polyline points=\"");
@@ -190,7 +191,7 @@ stdRet_t appmain(ch_t *argv)
                         {
                               struct meas data = readData(i);
                               seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "%u,%u ", x, 220 - (data.pres - 860));
-                              x += 20;
+                              x += GRAPH_X_POINT;
                         }
 
                         seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "\"style=\"fill:none;stroke:blue;stroke-width:2\"/>");
