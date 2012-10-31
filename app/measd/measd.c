@@ -155,7 +155,7 @@ stdRet_t appmain(ch_t *argv)
                               seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<line x1=\"50\" y1=\"%u\" x2=\"350\" y2=\"%u\" style=\"stroke:rgb(180,180,180);stroke-width:2\"/>", i, i);
                         }
 
-                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<text x=\"5\" y=\"15\" fill=\"black\">stC</text>");
+                        seek += snprint(buffer + seek, FILE_BUFFER_SIZE, "<text x=\"5\" y=\"15\" fill=\"black\">&#176C</text>");
 
                         i32_t deg = 50;
                         for (u8_t i = 25; i <= 205; i += 20)
