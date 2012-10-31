@@ -106,6 +106,7 @@ void Initd(void *arg)
 
       if (LwIP_Init() == STD_RET_OK)
       {
+            StartDaemon("measd", NULL);
             StartDaemon("httpd", NULL);
       }
 

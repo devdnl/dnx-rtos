@@ -24,12 +24,12 @@
 #define __LWIPOPTS_H__
 
 #include "basic_types.h"
-#include "system.h"
+//#include "system.h"
 
-#define mem_init()
-#define mem_free(ptr)         Free(ptr)
-#define mem_malloc(size)      Malloc(size)
-#define mem_trim(x ,y)        Trim(x, y)
+//#define mem_init()
+//#define mem_free(ptr)         Free(ptr)
+//#define mem_malloc(size)      Malloc(size)
+//#define mem_trim(x ,y)        Trim(x, y)
 
 
 /**
@@ -67,14 +67,14 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-//#define MEM_SIZE                (10*1024)
+#define MEM_SIZE                (5*1024)
 
 /**
 * MEMP_MEM_MALLOC==1: Use mem_malloc/mem_free instead of the lwip pool allocator.
 * Especially useful with MEM_LIBC_MALLOC but handle with care regarding execution
 * speed and usage from interrupts!
 */
-#define MEMP_MEM_MALLOC                 1
+#define MEMP_MEM_MALLOC                 0
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this

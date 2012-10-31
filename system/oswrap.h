@@ -63,17 +63,16 @@ extern "C" {
 #define TaskSuspendAll()                  vTaskSuspendAll()
 #define TaskResumeAll()                   xTaskResumeAll()
 #define TaskGetTickCount()                xTaskGetTickCount()
-#define TaskGetPID()                      (u32_t)xTaskGetPID()
+#define TaskGetPID()                      (PID_t)xTaskGetPID()
+#define TaskGetName(taskhdl)              (ch_t*)pcTaskGetTaskName(taskhdl)
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetStackFreeSpace(taskID)     uxTaskGetStackHighWaterMark(taskID)
 #define TaskGetNumberOfTasks()            uxTaskGetNumberOfTasks()
 #define TaskGetRunTimeStats(dst)          vTaskGetRunTimeStats((signed char*)dst)
+#define TaskDelayUntil(lastTime, delay)   vTaskDelayUntil((portTickType*)lastTime, delay)
 
 #define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
         xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
-
-#define TaskDelayUntil(pPreviousWakeTime, TimeIncrement) \
-        vTaskDelayUntil(pPreviousWakeTime, TimeIncrement)
 
 #define Priority(prio)                    (prio + (configMAX_PRIORITIES / 2))
 

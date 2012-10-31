@@ -254,6 +254,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                     snprint(fname, sizeof(fname), "/404.html");
                               }
                         }
+
                         hs->file = file.data;
                         hs->left = file.len;
 
@@ -271,12 +272,12 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                           i += 2;
                                           n = 0;
 
-                                          FILE_t *sensor = fopen("/dev/sensor", "r");
-
                                           if (strncmp(&file.data[i], "temp/?>", 7) == 0)
                                           {
                                                 i += 6;
                                                 i8_t temp = 0;
+
+                                                FILE_t *sensor = fopen("/dev/sensor", "r");
 
                                                 if (sensor)
                                                 {
@@ -290,6 +291,8 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                           {
                                                 i += 6;
                                                 u16_t pressure = 0;
+
+                                                FILE_t *sensor = fopen("/dev/sensor", "r");
 
                                                 if (sensor)
                                                 {
@@ -311,6 +314,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 {
                                                       ioctl(rtc, RTC_IORQ_GETTIME, &time);
                                                       ioctl(rtc, RTC_IORQ_GETDATE, &date);
+                                                      fclose(rtc);
                                                 }
                                                 else
                                                 {
@@ -324,6 +328,19 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                             date.year,
                                                             time.hours,
                                                             time.minutes);
+                                          }
+                                          else if (strncmp(&file.data[i], "graph/?>", 8) == 0)
+                                          {
+                                                i += 7;
+
+                                                FILE_t *svg = fopen("/proc/graph.svg", "r");
+
+                                                if (svg)
+                                                {
+                                                      n = fread(pagePtr, sizeof(ch_t), 4096, svg);
+
+                                                      fclose(svg);
+                                                }
                                           }
 
                                           pagePtr  += n;
@@ -411,9 +428,9 @@ stdRet_t appmain(ch_t *argv)
 
       struct tcp_pcb *pcb;
 
-      htmlBuffer = (ch_t*)Malloc(2048);
+      htmlBuffer = Malloc(4096);
 
-      if (htmlBuffer == NULL)
+      if (!htmlBuffer)
       {
             return STD_RET_ERROR;
       }

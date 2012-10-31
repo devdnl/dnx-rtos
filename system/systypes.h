@@ -71,6 +71,10 @@ typedef signed char stdRet_t;
 typedef size_t nod_t;
 
 
+/** task/application ID */
+typedef size_t PID_t;
+
+
 /** IO request type */
 typedef u8_t IORq_t;
 
