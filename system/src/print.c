@@ -841,7 +841,7 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                         }
                   }
 
-                  if (chr == 's')
+                  if (chr == 's') /* DNLFIXME correct string reading in scanf, especially %23s etc */
                   {
                         u16_t free = *(format++);
 

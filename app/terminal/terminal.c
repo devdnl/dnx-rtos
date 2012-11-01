@@ -210,7 +210,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
             PrintPrompt();
 
             /* waiting for command */
-            scanf("%s3", line);
+            scanf("%s2", line);
 
             /* check that history was call */
             if (strcmp(line, "\x1B[A") == 0)
