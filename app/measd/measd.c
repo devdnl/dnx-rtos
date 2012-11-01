@@ -40,6 +40,9 @@ APP_SEC_BEGIN
 #define DATA_COUNT                  51
 #define FILE_BUFFER_SIZE            3096
 #define GRAPH_X_POINT               (300/(DATA_COUNT - 1))
+#define SLEEP_TIME                  90000UL /* = 15 min */
+#define SENSOR_FILE                 "/dev/sensor"
+#define OUTPUT_FILE                 "/proc/graph.svg"
 
 
 /*==================================================================================================
@@ -119,7 +122,7 @@ stdRet_t appmain(ch_t *argv)
 
       for (;;)
       {
-            FILE_t *sensor = fopen("/dev/sensor", "r");
+            FILE_t *sensor = fopen(SENSOR_FILE, "r");
 
             if (sensor)
             {
@@ -138,7 +141,7 @@ stdRet_t appmain(ch_t *argv)
                   fclose(sensor);
             }
 
-            FILE_t *file = fopen("/proc/graph.svg", "w");
+            FILE_t *file = fopen(OUTPUT_FILE, "w");
 
             if (file)
             {
@@ -209,7 +212,7 @@ stdRet_t appmain(ch_t *argv)
             }
 
             /* sleep in equal periods */
-            SleepUntil(&LastWakeTime, 2000);
+            SleepUntil(&LastWakeTime, SLEEP_TIME);
       }
 
       return STD_RET_OK;

@@ -65,11 +65,11 @@ stdRet_t appmain(ch_t *argv)
 
       stdRet_t status = STD_RET_ERROR;
 
-      u32_t size     = 50 * SystemGetTaskCount();
-      ch_t  *buffer  = Calloc(size, sizeof(ch_t));
-      u8_t  divcnt   = 10;
+      u32_t size   = 50 * SystemGetTaskCount();
+      u8_t  divcnt = 10;
+      ch_t  *buffer;
 
-      if (buffer)
+      if ( (buffer = Calloc(size, sizeof(ch_t))) )
       {
             while (ugetChar() != 'q')
             {
@@ -97,6 +97,8 @@ stdRet_t appmain(ch_t *argv)
             }
 
             status = STD_RET_OK;
+
+            Free(buffer);
       }
       else
       {
