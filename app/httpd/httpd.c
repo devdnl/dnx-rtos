@@ -80,6 +80,7 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define BFR_SIZE                    4096
 
 
 /*==================================================================================================
@@ -337,7 +338,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 
                                                 if (svg)
                                                 {
-                                                      n = fread(pagePtr, sizeof(ch_t), 4096, svg);
+                                                      n = fread(pagePtr, sizeof(ch_t), BFR_SIZE, svg);
 
                                                       fclose(svg);
                                                 }
@@ -428,10 +429,11 @@ stdRet_t appmain(ch_t *argv)
 
       struct tcp_pcb *pcb;
 
-      htmlBuffer = Malloc(4096);
+      htmlBuffer = Malloc(BFR_SIZE);
 
       if (!htmlBuffer)
       {
+            kprint("httpd: not enough free memory\n");
             return STD_RET_ERROR;
       }
 
