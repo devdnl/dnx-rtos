@@ -52,11 +52,11 @@ extern "C" {
 /** i2c control structure */
 struct i2cCtrl
 {
-      I2C_t       *Address;             /* peripheral address */
-      xTaskHandle TaskHandle;           /* task handle variable for IRQ */
-      u16_t       Lock;                 /* port reservation */
-      u8_t        SlaveAddress;         /* slave address */
-      stdRet_t    status;               /* last operation status */
+      I2C_t    *Address;             /* peripheral address */
+      task_t   TaskHandle;           /* task handle variable for IRQ */
+      u16_t    Lock;                 /* port reservation */
+      u8_t     SlaveAddress;         /* slave address */
+      stdRet_t status;               /* last operation status */
 };
 
 /** type which contain port information */

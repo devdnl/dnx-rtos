@@ -79,39 +79,49 @@ typedef struct
 /* driver registration */
 static const regDrv_t drvList[] =
 {
+      #ifdef UART_H_
       {
              "uart1",               UART_Init,              UART_Open,
              UART_Close,            UART_Write,             UART_Read,
              UART_IOCtl,            UART_Release,           UART_DEV_1
       },
+      #endif
+      #ifdef GPIO_H_
       {
              "gpio",                GPIO_Init,              GPIO_Open,
              GPIO_Close,            GPIO_Write,             GPIO_Read,
              GPIO_IOCtl,            GPIO_Release,           GPIO_DEV_NONE
       },
+      #endif
+      #ifdef PLL_H_
       {
              "pll",                 PLL_Init,               PLL_Open,
              PLL_Close,             PLL_Write,              PLL_Read,
              PLL_IOCtl,             PLL_Release,            PLL_DEV_NONE
       },
+      #endif
+      #ifdef I2C_H_
       {
              "i2c1",                I2C_Init,               I2C_Open,
              I2C_Close,             I2C_Write,              I2C_Read,
              I2C_IOCtl,             I2C_Release,            I2C_DEV_1
       },
+      #endif
+      #ifdef ETH_H_
       {
              "eth0",                ETHER_Init,             ETHER_Open,
              ETHER_Close,           ETHER_Write,            ETHER_Read,
              ETHER_IOCtl,           ETHER_Release,          ETH_DEV_1
       },
-      #ifdef DS1307_DEV_NVM
+      #endif
+      #ifdef DS1307_H_
       {
              "ds1307nvm",           DS1307_Init,            DS1307_Open,
              DS1307_Close,          DS1307_Write,           DS1307_Read,
              DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_NVM
       },
       #endif
-      #ifdef DS1307_DEV_RTC
+      #ifdef DS1307_H_
       {
              "ds1307rtc",           DS1307_Init,            DS1307_Open,
              DS1307_Close,          DS1307_Write,           DS1307_Read,
@@ -146,7 +156,7 @@ static const regDrv_t drvList[] =
              TTY_IOCtl,             TTY_Release,            TTY_DEV_3
       },
       #endif
-      #ifdef MPL115A2_DEV_NONE
+      #ifdef MPL115A2_H_
       {
              "mpl115a2",            MPL115A2_Init,          MPL115A2_Open,
              MPL115A2_Close,        MPL115A2_Write,         MPL115A2_Read,
