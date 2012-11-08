@@ -83,7 +83,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
 
       if (name && mode)
       {
-            file = Calloc(1, sizeof(FILE_t));
+            file = calloc(1, sizeof(FILE_t));
 
             if (file != NULL)
             {
@@ -134,7 +134,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                         /* file does not exist */
                         if (stat != STD_RET_OK)
                         {
-                              Free(file);
+                              free(file);
                               file = NULL;
                         }
                         else
@@ -181,7 +181,7 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                   }
                   else
                   {
-                        Free(file);
+                        free(file);
                         file = NULL;
                   }
             }
@@ -209,7 +209,7 @@ stdRet_t fclose(FILE_t *file)
       {
             if (file->close(file->fd) == STD_RET_OK)
             {
-                  Free(file);
+                  free(file);
                   status = STD_RET_OK;
             }
       }
@@ -395,7 +395,7 @@ DIR_t *opendir(const ch_t *path)
 
       if (path)
       {
-            dir = Calloc(1 , sizeof(DIR_t));
+            dir = calloc(1 , sizeof(DIR_t));
 
             if (dir)
             {
@@ -426,7 +426,7 @@ DIR_t *opendir(const ch_t *path)
                   /* file does not exist */
                   if (stat != STD_RET_OK)
                   {
-                        Free(dir);
+                        free(dir);
                         dir = NULL;
                   }
             }
@@ -477,7 +477,7 @@ stdRet_t closedir(DIR_t *dir)
 
       if (dir)
       {
-            Free(dir);
+            free(dir);
             status = STD_RET_OK;
       }
 

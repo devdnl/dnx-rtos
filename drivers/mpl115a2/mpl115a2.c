@@ -132,7 +132,7 @@ stdRet_t MPL115A2_Init(nod_t dev)
       {
             if (mplmem == NULL)
             {
-                  mplmem = Calloc(1, sizeof(struct varcon));
+                  mplmem = calloc(1, sizeof(struct varcon));
 
                   if (mplmem)
                   {
@@ -170,7 +170,7 @@ stdRet_t MPL115A2_Init(nod_t dev)
                         }
                         else
                         {
-                              Free(mplmem);
+                              free(mplmem);
                               mplmem = NULL;
                         }
                   }
@@ -203,7 +203,7 @@ stdRet_t MPL115A2_Release(nod_t dev)
       {
             DeleteMutex(mplmem->mtx);
 
-            Free(mplmem);
+            free(mplmem);
 
             mplmem = NULL;
 

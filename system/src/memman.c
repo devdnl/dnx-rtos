@@ -231,7 +231,7 @@ static void plug_holes(struct mem *mem)
 * @brief Zero the heap and initialize start, end and lowest-free
 */
 //================================================================================================//
-void memman_init(void)
+void mm_init(void)
 {
       struct mem *mem;
 
@@ -266,7 +266,7 @@ void memman_init(void)
  *             call to mem_malloc()
  */
 //================================================================================================//
-void Free(void *rmem)
+void mm_free(void *rmem)
 {
       struct mem *mem;
 
@@ -316,7 +316,7 @@ void Free(void *rmem)
  *         or freed!
  */
 //================================================================================================//
-void *Trim(void *rmem, size_t newsize)
+void *mm_trim(void *rmem, size_t newsize)
 {
       size_t size;
       size_t ptr, ptr2;
@@ -452,7 +452,7 @@ void *Trim(void *rmem, size_t newsize)
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
  */
 //================================================================================================//
-void *Malloc(size_t size)
+void *mm_malloc(size_t size)
 {
       size_t ptr, ptr2;
       struct mem *mem, *mem2;
@@ -579,12 +579,12 @@ void *Malloc(size_t size)
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
 //================================================================================================//
-void *Calloc(size_t count, size_t size)
+void *mm_calloc(size_t count, size_t size)
 {
       void *p;
 
       /* allocate 'count' objects of size 'size' */
-      p = Malloc(count * size);
+      p = mm_malloc(count * size);
 
       if (p)
       {
@@ -603,7 +603,7 @@ void *Calloc(size_t count, size_t size)
  * @return free memory count
  */
 //================================================================================================//
-u32_t GetFreeHeapSize(void)
+u32_t mm_GetFreeHeapSize(void)
 {
       return (MEMMAN_HEAP_SIZE - used_mem);
 }
@@ -616,7 +616,7 @@ u32_t GetFreeHeapSize(void)
  * @return used memory count
  */
 //================================================================================================//
-u32_t GetUsedHeapSize(void)
+u32_t mm_GetUsedHeapSize(void)
 {
       return used_mem;
 }

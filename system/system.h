@@ -50,6 +50,11 @@ extern "C" {
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
+/** BASIC DEFINITIONS */
+#define malloc(size)                      mm_malloc(size)
+#define calloc(nitems, isize)             mm_calloc(nitems, isize)
+#define free(mem)                         mm_free(mem)
+
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      TaskDelay(delay)
 #define SleepUntil(lastTime, sleepTime)   TaskDelayUntil(lastTime, sleepTime)
@@ -61,8 +66,8 @@ extern "C" {
 #define SystemGetPID()                    TaskGetPID()
 #define SystemGetAppHandle()              TaskGetCurrentTaskHandle()
 #define SystemAppSuspend()                TaskSuspend(NULL)
-#define SystemGetFreeMemSize()            GetFreeHeapSize()
-#define SystemGetUsedMemSize()            GetUsedHeapSize()
+#define SystemGetFreeMemSize()            mm_GetFreeHeapSize()
+#define SystemGetUsedMemSize()            mm_GetUsedHeapSize()
 #define SystemGetMemSize()                MEMMAN_HEAP_SIZE
 #define SystemGetHostname()               LwIP_GetHostname()
 #define SystemGetUptime()                 GetUptimeCnt()

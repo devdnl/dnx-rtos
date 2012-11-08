@@ -429,7 +429,7 @@ stdRet_t appmain(ch_t *argv)
 
       struct tcp_pcb *pcb;
 
-      htmlBuffer = Malloc(BFR_SIZE);
+      htmlBuffer = malloc(BFR_SIZE);
 
       if (!htmlBuffer)
       {

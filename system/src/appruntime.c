@@ -84,7 +84,7 @@ app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg
       }
 
       /* allocate memory for application handler */
-      appHandle = Calloc(1, sizeof(app_t));
+      appHandle = calloc(1, sizeof(app_t));
 
       if (appHandle)
       {
@@ -99,7 +99,7 @@ app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg
             /* start application task */
             if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->TaskHandle) != pdPASS)
             {
-                  Free(appHandle);
+                  free(appHandle);
                   appHandle = NULL;
             }
       }
@@ -132,7 +132,7 @@ app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *
       }
 
       /* allocate memory for application handler */
-      appHandle = Calloc(1, sizeof(app_t));
+      appHandle = calloc(1, sizeof(app_t));
 
       if (appHandle)
       {
@@ -147,7 +147,7 @@ app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *
             /* start daemon task */
             if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->TaskHandle) != pdPASS)
             {
-                  Free(appHandle);
+                  free(appHandle);
                   appHandle = NULL;
             }
       }
@@ -247,7 +247,7 @@ stdRet_t FreeApphdl(app_t *appArgs)
                   TaskDelete(appArgs->TaskHandle);
             }
 
-            Free(appArgs);
+            free(appArgs);
 
             return STD_RET_OK;
       }

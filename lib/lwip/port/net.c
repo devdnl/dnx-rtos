@@ -94,7 +94,7 @@ netSoc_t NET_NewTCPSocket(ip_addr_t *ipaddr, u16_t port)
       /* allocate memory for TCP pcb variable */
       if (pcbIdx < MEMP_NUM_TCP_PCB)
       {
-            netSoc->pcb = (struct tcp_pcb *)Malloc(sizeof(struct tcp_pcb));
+            netSoc->pcb = (struct tcp_pcb *)malloc(sizeof(struct tcp_pcb));
 
             if (netSoc->pcb == NULL)
                   goto NET_NewTCPSocket_end;
@@ -105,7 +105,7 @@ netSoc_t NET_NewTCPSocket(ip_addr_t *ipaddr, u16_t port)
 
       if (tcp_bind(netSoc->pcb, ipaddr, port) != ERR_OK)
       {
-            Free(netSoc->pcb);
+            free(netSoc->pcb);
             goto NET_NewTCPSocket_end;
       }
 
@@ -219,7 +219,7 @@ stdRet_t NET_CloseTCPSocket(netSoc_t socket)
       tcp_recv(netSoc->pcb, NULL);
       tcp_accept(netSoc->pcb, NULL);
       tcp_close(netSoc->pcb);
-      Free(netSoc->pcb);
+      free(netSoc->pcb);
       netSoc->pcb = NULL;
       netSoc->status.integer = 0;
       TaskResumeAll();

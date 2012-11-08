@@ -91,13 +91,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void  memman_init(void);
-extern void  *Malloc(size_t size);
-extern void  *Calloc(size_t count, size_t size);
-extern void  *Trim(void *rmem, size_t newsize);
-extern void  Free(void *mem);
-extern u32_t GetFreeHeapSize(void);
-extern u32_t GetUsedHeapSize(void);
+extern void  mm_init(void);
+extern void  *mm_malloc(size_t size);
+extern void  *mm_calloc(size_t count, size_t size);
+extern void  *mm_trim(void *rmem, size_t newsize);
+extern void  mm_free(void *mem);
+extern u32_t mm_GetFreeHeapSize(void);
+extern u32_t mm_GetUsedHeapSize(void);
 
 #ifdef __cplusplus
 }

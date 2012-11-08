@@ -79,7 +79,7 @@ int main(void)
       NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
       /* dynamic memory management initialization */
-      memman_init();
+      mm_init();
 
       /* PLL initialization */
       if (InitDrv("pll", "pll") != STD_RET_OK)

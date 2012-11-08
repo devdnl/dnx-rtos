@@ -149,7 +149,7 @@ stdRet_t appmain(ch_t *argv)
 
             if (file)
             {
-                  ch_t *buffer = Calloc(FILE_BUFFER_SIZE, sizeof(ch_t));
+                  ch_t *buffer = calloc(FILE_BUFFER_SIZE, sizeof(ch_t));
 
                   if (buffer)
                   {
@@ -212,7 +212,7 @@ stdRet_t appmain(ch_t *argv)
                               kprint("Write %s error\n", OUTPUT_FILE);
                         }
 
-                        Free(buffer);
+                        free(buffer);
                   }
 
                   fclose(file);

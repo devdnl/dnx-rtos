@@ -130,7 +130,7 @@ stdRet_t TTY_Init(nod_t dev)
 
             if (term == NULL)
             {
-                  term = Calloc(1, sizeof(struct termHdl));
+                  term = calloc(1, sizeof(struct termHdl));
 
                   if (term)
                   {
@@ -145,7 +145,7 @@ stdRet_t TTY_Init(nod_t dev)
                         }
                         else
                         {
-                              Free(term);
+                              free(term);
                         }
                   }
             }
@@ -179,7 +179,7 @@ stdRet_t TTY_Open(nod_t dev)
             {
                   if (TTY(dev) == NULL)
                   {
-                        TTY(dev) = Calloc(1, sizeof(struct ttyEntry));
+                        TTY(dev) = calloc(1, sizeof(struct ttyEntry));
 
                         if (TTY(dev))
                         {
@@ -191,7 +191,7 @@ stdRet_t TTY_Open(nod_t dev)
                               }
                               else
                               {
-                                    Free(TTY(dev));
+                                    free(TTY(dev));
                               }
                         }
                   }
@@ -288,21 +288,21 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                         }
 
                         /* join to messages together */
-                        msg = Malloc(msgsize);
+                        msg = malloc(msgsize);
 
                         if (msg)
                         {
                               strcpy(msg, lstmsg);
                               strncat(msg, src, nitems + 1);
-                        }
 
-                        /* free last message and add new on the same place */
-                        AddMsg(dev, msg, FALSE);
+                              /* free last message and add new on the same place */
+                              AddMsg(dev, msg, FALSE);
+                        }
                   }
                   else
                   {
                         /* add new message */
-                        msg = Malloc(nitems);
+                        msg = malloc(nitems);
 
                         if (msg)
                         {
@@ -448,7 +448,7 @@ stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                   {
                         if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
                         {
-                              ch_t *msg = Malloc(2);
+                              ch_t *msg = malloc(2);
 
                               if (msg)
                               {
@@ -517,11 +517,11 @@ stdRet_t TTY_Release(nod_t dev)
                         {
                               for (u8_t i = 0; i < TTY_MAX_LINES; i++)
                               {
-                                    Free(TTY(dev)->line[i]);
+                                    free(TTY(dev)->line[i]);
                               }
                         }
 
-                        Free(TTY(dev));
+                        free(TTY(dev));
 
                         GiveRecMutex(mtx);
                         DeleteRecMutex(mtx);
@@ -538,7 +538,7 @@ stdRet_t TTY_Release(nod_t dev)
                         }
 
                         TaskDelete(term->taskHdl);
-                        Free(term);
+                        free(term);
                   }
             }
             else
@@ -715,7 +715,7 @@ static void ClearTTY(u8_t dev)
       {
             for (u8_t i = 0; i < TTY_MAX_LINES; i++)
             {
-                  Free(TTY(dev)->line[i]);
+                  free(TTY(dev)->line[i]);
                   TTY(dev)->line[i] = NULL;
             }
 
@@ -771,7 +771,7 @@ static void AddMsg(u8_t dev, ch_t *msg, bool_t incMsgCnt)
       wridx = TTY(dev)->wrIdx;
       while (mgcnt--)
       {
-            Free(TTY(dev)->line[wridx]);
+            free(TTY(dev)->line[wridx]);
             TTY(dev)->line[wridx++] = NULL;
 
             if (wridx >= TTY_MAX_LINES)

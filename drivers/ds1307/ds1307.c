@@ -151,7 +151,7 @@ stdRet_t DS1307_Init(nod_t dev)
 
       if (rtc == NULL)
       {
-            rtc = Calloc(1, sizeof(struct rtc_struct));
+            rtc = calloc(1, sizeof(struct rtc_struct));
       }
 
       if (rtc)
@@ -458,7 +458,7 @@ stdRet_t DS1307_Release(nod_t dev)
 
       if (!rtc->rtcInit && !rtc->nvmInit)
       {
-            Free(rtc);
+            free(rtc);
             rtc = NULL;
       }
 

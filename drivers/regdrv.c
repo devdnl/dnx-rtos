@@ -191,7 +191,7 @@ stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
       {
             if (devName == NULL)
             {
-                  devName = Calloc(1, sizeof(struct devName_struct));
+                  devName = calloc(1, sizeof(struct devName_struct));
 
                   if (devName == NULL)
                   {
@@ -254,7 +254,7 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
                         if (status == STD_RET_OK && devName->node[i])
                         {
                               kprint("Removed node /dev/%s\n", devName->node[i]);
-                              Free(devName->node[i]);
+                              free(devName->node[i]);
                               devName->node[i] = NULL;
                         }
                         break;

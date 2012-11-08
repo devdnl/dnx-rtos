@@ -175,19 +175,19 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       ch_t *arg;
 
       /* allocate memory for input line */
-      line    = Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
-      history = Malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      line    = malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      history = malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
 
       if (!line || !history)
       {
             if (line)
             {
-                  Free(line);
+                  free(line);
             }
 
             if (history)
             {
-                  Free(history);
+                  free(history);
             }
 
             printf("No enough free memory\n");
@@ -279,8 +279,8 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       }
 
       /* free used memory */
-      Free(line);
-      Free(history);
+      free(line);
+      free(history);
 
       /* if stack size is debugging */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)

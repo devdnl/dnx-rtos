@@ -215,7 +215,7 @@ static err_t HelloWorld_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 {
 
   /* Tell LwIP to associate this structure with this connection. */
-  tcp_arg(pcb, Calloc(sizeof(struct name), 1));
+  tcp_arg(pcb, calloc(sizeof(struct name), 1));
 
   /* Configure LwIP to use our call back functions. */
   tcp_err(pcb, HelloWorld_conn_err);

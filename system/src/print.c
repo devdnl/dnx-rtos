@@ -380,7 +380,7 @@ u32_t printt(FILE_t *file, const ch_t *format, ...)
             u32_t size = CalcFormatSize(format, args);
             va_end(args);
 
-            ch_t *str  = Calloc(1, size);
+            ch_t *str  = calloc(1, size);
 
             if (str)
             {
@@ -390,7 +390,7 @@ u32_t printt(FILE_t *file, const ch_t *format, ...)
 
                   fwrite(str, sizeof(ch_t), size, file);
 
-                  Free(str);
+                  free(str);
             }
       }
 
@@ -419,7 +419,7 @@ u32_t kprint(const ch_t *format, ...)
             u32_t size = CalcFormatSize(format, args);
             va_end(args);
 
-            ch_t *buffer = Calloc(size, sizeof(ch_t));
+            ch_t *buffer = calloc(size, sizeof(ch_t));
 
             if (buffer)
             {
@@ -429,7 +429,7 @@ u32_t kprint(const ch_t *format, ...)
 
                   fwrite(buffer, sizeof(ch_t), size, kprintFile);
 
-                  Free(buffer);
+                  free(buffer);
             }
       }
 

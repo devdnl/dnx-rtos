@@ -60,6 +60,7 @@ extern "C" {
 #include "ethernetif.h"
 #include "stm32_eth.h"
 #include <string.h>
+#include "system.h"
 
 
 /*==================================================================================================
@@ -174,10 +175,10 @@ void Set_MAC_Address(uint8_t* macadd)
 static void low_level_init(struct netif *netif)
 {
       /* allocate memory */
-      Rx_Buff = (uint8_t*)Malloc(sizeof(uint8_t) * ETH_RXBUFNB * ETH_MAX_PACKET_SIZE);
-      Tx_Buff = (uint8_t*)Malloc(sizeof(uint8_t) * ETH_TXBUFNB * ETH_MAX_PACKET_SIZE);
-      DMARxDscrTab = (ETH_DMADESCTypeDef*)Malloc(sizeof(ETH_DMADESCTypeDef) * ETH_RXBUFNB);
-      DMATxDscrTab = (ETH_DMADESCTypeDef*)Malloc(sizeof(ETH_DMADESCTypeDef) * ETH_TXBUFNB);
+      Rx_Buff = (uint8_t*)malloc(sizeof(uint8_t) * ETH_RXBUFNB * ETH_MAX_PACKET_SIZE);
+      Tx_Buff = (uint8_t*)malloc(sizeof(uint8_t) * ETH_TXBUFNB * ETH_MAX_PACKET_SIZE);
+      DMARxDscrTab = (ETH_DMADESCTypeDef*)malloc(sizeof(ETH_DMADESCTypeDef) * ETH_RXBUFNB);
+      DMATxDscrTab = (ETH_DMADESCTypeDef*)malloc(sizeof(ETH_DMADESCTypeDef) * ETH_TXBUFNB);
 
       if (!Rx_Buff || !Tx_Buff || !DMARxDscrTab || !DMATxDscrTab)
       {

@@ -32,8 +32,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "proc.h"
-#include "memman.h"
-#include "oswrap.h"
+#include "system.h"
 #include <string.h>
 
 
@@ -111,12 +110,12 @@ stdRet_t PROC_remove(u32_t fd)
                                           fileptrprv->next = fileptr->next;
 
                                     if (fileptr->name)
-                                          Free(fileptr->name);
+                                          free(fileptr->name);
 
                                     if (fileptr->data)
-                                          Free(fileptr->data);
+                                          free(fileptr->data);
 
-                                    Free(fileptr);
+                                    free(fileptr);
 
                                     procmem->file->size--;
 
@@ -204,21 +203,21 @@ procfd_t PROC_open(const ch_t *name, ch_t *mode)
             /* allocate memory when not created yet */
             if (procmem == NULL)
             {
-                  procmem = Calloc(1, sizeof(struct filehdl));
+                  procmem = calloc(1, sizeof(struct filehdl));
 
                   if (procmem)
                   {
-                        procmem->file = Calloc(1, sizeof(struct filenode));
-                        ch_t *name    = Calloc(2, sizeof(ch_t));
+                        procmem->file = calloc(1, sizeof(struct filenode));
+                        ch_t *name    = calloc(2, sizeof(ch_t));
                         procmem->mtx  = CreateMutex();
 
                         if (!procmem->file || !name || !procmem->mtx)
                         {
                               if (procmem->file)
-                                    Free(procmem->file);
+                                    free(procmem->file);
 
                               if (name)
-                                    Free(name);
+                                    free(name);
 
                               if (procmem->mtx)
                                     DeleteMutex(procmem->mtx);
@@ -257,7 +256,7 @@ procfd_t PROC_open(const ch_t *name, ch_t *mode)
                                     {
                                           if (fileptr->data)
                                           {
-                                                Free(fileptr->data);
+                                                free(fileptr->data);
                                                 fileptr->data = NULL;
                                                 fileptr->size = 0;
                                           }
@@ -278,16 +277,16 @@ procfd_t PROC_open(const ch_t *name, ch_t *mode)
                            || (strncmp("a", mode, 2) == 0) || (strncmp("a+", mode, 2) == 0) )
                         {
                               /* file does not found - create new file */
-                              struct filenode *newfile = Calloc(1, sizeof(struct filenode));
-                              ch_t *fname = Malloc(strlen(name));
+                              struct filenode *newfile = calloc(1, sizeof(struct filenode));
+                              ch_t *fname = malloc(strlen(name));
 
                               if (!newfile || !fname)
                               {
                                     if (newfile)
-                                          Free(newfile);
+                                          free(newfile);
 
                                     if (fname)
-                                          Free(fname);
+                                          free(fname);
                               }
                               else
                               {
@@ -365,14 +364,14 @@ size_t PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek)
 
                               if ((seek + wrsize) > filelen || fileptr->data == NULL)
                               {
-                                    ch_t *newdata = Malloc(filelen + wrsize);
+                                    ch_t *newdata = malloc(filelen + wrsize);
 
                                     if (newdata)
                                     {
                                           if (fileptr->data)
                                           {
                                                 memcpy(newdata, fileptr->data, filelen);
-                                                Free(fileptr->data);
+                                                free(fileptr->data);
                                           }
 
                                           memcpy(newdata + seek, src, wrsize);

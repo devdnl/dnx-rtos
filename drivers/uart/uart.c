@@ -453,7 +453,7 @@ stdRet_t UART_Open(nod_t dev)
                   UARTEnable();
 
                   /* allocate memory for RX buffer */
-                  PortHandle[dev].RxFIFO.Buffer = (u8_t*)Malloc(UART_RX_BUFFER_SIZE);
+                  PortHandle[dev].RxFIFO.Buffer = (u8_t*)malloc(UART_RX_BUFFER_SIZE);
 
                   if (PortHandle[dev].RxFIFO.Buffer == NULL)
                   {
@@ -617,7 +617,7 @@ stdRet_t UART_Close(nod_t dev)
                   }
 
                   /* free used memory for buffer */
-                  Free(PortHandle[dev].RxFIFO.Buffer);
+                  free(PortHandle[dev].RxFIFO.Buffer);
                   PortHandle[dev].RxFIFO.Buffer = NULL;
                   PortHandle[dev].RxFIFO.Level  = 0;
                   PortHandle[dev].RxFIFO.RxIdx  = 0;

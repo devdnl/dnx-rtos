@@ -114,7 +114,7 @@ stdRet_t I2C_Init(nod_t dev)
 
       if (i2c == NULL)
       {
-            i2c = Calloc(1, sizeof(PortHandler_t));
+            i2c = calloc(1, sizeof(PortHandler_t));
 
             if (i2c == NULL)
                   goto I2C_Init_end;
@@ -124,7 +124,7 @@ stdRet_t I2C_Init(nod_t dev)
       {
             if (i2c->port[dev] == NULL)
             {
-                  i2c->port[dev] = Calloc(1, sizeof(struct i2cCtrl));
+                  i2c->port[dev] = calloc(1, sizeof(struct i2cCtrl));
 
                   if (i2c->port[dev] != NULL)
                   {
@@ -784,7 +784,7 @@ stdRet_t I2C_Release(nod_t dev)
             /* free i2c device data */
             if (i2c->port[dev])
             {
-                  Free(i2c->port[dev]);
+                  free(i2c->port[dev]);
                   i2c->port[dev] = NULL;
                   status = STD_RET_OK;
             }
@@ -797,7 +797,7 @@ stdRet_t I2C_Release(nod_t dev)
             }
 
             /* free i2c handler */
-            Free(i2c);
+            free(i2c);
             i2c = NULL;
       }
 

@@ -69,7 +69,7 @@ stdRet_t appmain(ch_t *argv)
       u8_t  divcnt = 10;
       ch_t  *buffer;
 
-      if ( (buffer = Calloc(size, sizeof(ch_t))) )
+      if ( (buffer = calloc(size, sizeof(ch_t))) )
       {
             while (ugetChar() != 'q')
             {
@@ -98,7 +98,7 @@ stdRet_t appmain(ch_t *argv)
 
             status = STD_RET_OK;
 
-            Free(buffer);
+            free(buffer);
       }
       else
       {
