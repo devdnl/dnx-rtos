@@ -45,34 +45,24 @@ extern "C" {
 /** port names */
 enum UART_DEV_NUMBER_ENUM
 {
-      #ifdef RCC_APB2ENR_USART1EN
-      #if (UART_1_ENABLE > 0)
+      #if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
             UART_DEV_1,
       #endif
-      #endif
 
-      #ifdef RCC_APB1ENR_USART2EN
-      #if (UART_2_ENABLE > 0)
+      #if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
             UART_DEV_2,
       #endif
-      #endif
 
-      #ifdef RCC_APB1ENR_USART3EN
-      #if (UART_3_ENABLE > 0)
+      #if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
             UART_DEV_3,
       #endif
-      #endif
 
-      #ifdef RCC_APB1ENR_UART4EN
-      #if (UART_4_ENABLE > 0)
+      #if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
             UART_DEV_4,
       #endif
-      #endif
 
-      #ifdef RCC_APB1ENR_UART5EN
-      #if (UART_5_ENABLE > 0)
+      #if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
             UART_DEV_5,
-      #endif
       #endif
 
       UART_DEV_LAST

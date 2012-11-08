@@ -43,7 +43,8 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define PORT_FREE                   (u16_t)EMPTY_TASK
+#define UARTP(dev)                              uart->port[dev]
+#define BLOCK_TIME                              100
 
 /** UART wake method: idle line (0) or address mark (1) */
 #define SetAddressMarkWakeMethod(enable)        \
@@ -177,35 +178,6 @@ extern "C" {
       usartPtr->CR1 &= ~USART_CR1_TXEIE
 
 
-/** interrupt definition */
-#define IRQCode(usartBase, devName)                                                             \
-      if (usartBase->SR & USART_SR_RXNE)                                                        \
-      {                                                                                         \
-            RxFIFO_t *RxFIFO = &PortHandle[devName].RxFIFO;                                     \
-                                                                                                \
-            u8_t DR = usartBase->DR;                                                            \
-                                                                                                \
-            if (RxFIFO->Buffer)                                                                 \
-            {                                                                                   \
-                  if (RxFIFO->Level < UART_RX_BUFFER_SIZE)                                      \
-                  {                                                                             \
-                        RxFIFO->Buffer[RxFIFO->TxIdx++] = DR;                                   \
-                                                                                                \
-                        if (RxFIFO->TxIdx >= UART_RX_BUFFER_SIZE)                               \
-                              RxFIFO->TxIdx = 0;                                                \
-                                                                                                \
-                        RxFIFO->Level++;                                                        \
-                  }                                                                             \
-                                                                                                \
-                  if (PortHandle[devName].TaskHandle)                                           \
-                  {                                                                             \
-                        if (TaskResumeFromISR(PortHandle[devName].TaskHandle) == pdTRUE)        \
-                              TaskYield();                                                      \
-                  }                                                                             \
-            }                                                                                   \
-      }
-
-
 /** IRQ priorities */
 #define IRQ_PRIORITY          0xDF
 
@@ -213,107 +185,74 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
-/** Rx FIFO type */
-typedef struct RxFIFO_struct
+/** USART handling structure */
+struct uartCtrl
 {
-      u8_t  *Buffer;
-      u16_t Level;
-      u16_t RxIdx;
-      u16_t TxIdx;
-} RxFIFO_t;
+      /** Rx FIFO type */
+      struct sRxFIFO
+      {
+            u8_t  *Buffer;
+            u16_t Level;
+            u16_t RxIdx;
+            u16_t TxIdx;
+      } RxFIFO;
 
+      /** structure with tx buffer address and size */
+      struct sTxBuffer
+      {
+            u8_t   *TxSrcPtr;
+            size_t Size;
+      } TxBuffer;
 
-/** type which contains tx buffer address and size */
-typedef struct TxBuffer_struct
-{
-      u8_t   *TxSrcPtr;
-      size_t Size;
-} TxBuffer_t;
+      USART_t *Address;             /* peripheral address */
+      sem_t   sem;                  /* semaphore for sync between IRQ and task */
+      mutex_t mtx;                  /* mutex for secure resources */
+      task_t  TaskHandle;           /* task handler in IRQ */
+};
 
 
 /** type which contain port information */
-typedef struct PortHandle_struct
+typedef struct PortHandler_struct
 {
-      USART_t     *Address;             /* peripheral address */
-      RxFIFO_t    RxFIFO;               /* Rx FIFO for IRQ */
-      TxBuffer_t  TxBuffer;             /* Tx Buffer for IRQ */
-      xTaskHandle TaskHandle;           /* task handle variable for IRQ */
-      u16_t       Lock;                 /* port reservation */
-} PortHandle_t;
+      struct uartCtrl *port[UART_DEV_LAST];
+} PortHandler_t;
 
 
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
+static void IRQCode(USART_t *usart, nod_t dev);
 
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-/* DNLFIXME fix: global variable must be in dynamic memory */
-/** port localizations */
-static PortHandle_t PortHandle[] =
+/* addresses of UART devices */
+static USART_t *const uartAddr[UART_DEV_LAST] =
 {
-      #ifdef RCC_APB2ENR_USART1EN
-      #if (UART_1_ENABLE > 0)
-      {
-            .Address    = USART1,
-            .RxFIFO     = {NULL, 0, 0, 0},
-            .TxBuffer   = {NULL, 0},
-            .TaskHandle = NULL,
-            .Lock       = PORT_FREE
-      },
-      #endif
-      #endif
+#if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
+      USART1,
+#endif
 
-      #ifdef RCC_APB1ENR_USART2EN
-      #if (UART_2_ENABLE > 0)
-      {
-            .Address    = USART2,
-            .RxFIFO     = {NULL, 0, 0, 0},
-            .TxBuffer   = {NULL, 0},
-            .TaskHandle = NULL,
-            .Lock       = PORT_FREE
-      },
-      #endif
-      #endif
+#if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
+      USART2,
+#endif
 
-      #ifdef RCC_APB1ENR_USART3EN
-      #if (UART_3_ENABLE > 0)
-      {
-            .Address    = USART3,
-            .RxFIFO     = {NULL, 0, 0, 0},
-            .TxBuffer   = {NULL, 0},
-            .TaskHandle = NULL,
-            .Lock       = PORT_FREE
-      },
-      #endif
-      #endif
+#if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
+      USART3,
+#endif
 
-      #ifdef RCC_APB1ENR_UART4EN
-      #if (UART_4_ENABLE > 0)
-      {
-            .Address    = UART4,
-            .RxFIFO     = {NULL, 0, 0, 0},
-            .TxBuffer   = {NULL, 0},
-            .TaskHandle = NULL,
-            .Lock       = PORT_FREE
-      },
-      #endif
-      #endif
+#if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
+      UART4,
+#endif
 
-      #ifdef RCC_APB1ENR_UART5EN
-      #if (UART_5_ENABLE > 0)
-      {
-            .Address    = UART5,
-            .RxFIFO     = {NULL, 0, 0, 0},
-            .TxBuffer   = {NULL, 0},
-            .TaskHandle = NULL,
-            .Lock       = PORT_FREE
-      },
-      #endif
-      #endif
+#if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
+      UART5,
+#endif
 };
+
+/** port configuration localizations */
+static PortHandler_t *uart;
 
 
 /*==================================================================================================
@@ -324,16 +263,100 @@ static PortHandle_t PortHandle[] =
 /**
  * @brief Initialize USART devices
  *
- * @param dev     device number
+ * @param[in] dev           UART device
  *
  * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
 stdRet_t UART_Init(nod_t dev)
 {
-      (void) dev;
+      stdRet_t status = STD_RET_ERROR;
 
-      return STD_RET_OK;
+      if (uart == NULL)
+      {
+            uart = calloc(1, sizeof(PortHandler_t));
+
+            if (uart == NULL)
+                  goto UART_Init_end;
+      }
+
+      if (dev < UART_DEV_LAST)
+      {
+            if (UARTP(dev) == NULL)
+            {
+                  UARTP(dev) = calloc(1, sizeof(struct uartCtrl));
+
+                  if (UARTP(dev) != NULL)
+                  {
+                        UARTP(dev)->mtx = CreateRecMutex();
+                        CreateSemBin(UARTP(dev)->sem);
+
+                        if (UARTP(dev)->mtx && UARTP(dev)->sem)
+                        {
+                              UARTP(dev)->Address = (USART_t*)uartAddr[dev];
+                              status = STD_RET_OK;
+                        }
+                        else
+                        {
+                              if (UARTP(dev)->mtx)
+                                    DeleteRecMutex(UARTP(dev)->mtx);
+
+                              if (UARTP(dev)->sem)
+                                    DeleteSemBin(UARTP(dev)->sem);
+
+                              free(UARTP(dev));
+                        }
+                  }
+            }
+      }
+
+      UART_Init_end:
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Release USART devices
+ *
+ * @param[in] dev           I2C device
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t UART_Release(nod_t dev)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (uart && dev < UART_DEV_LAST)
+      {
+            /* free i2c device data */
+            if (UARTP(dev))
+            {
+                  DeleteSemBin(UARTP(dev)->sem);
+                  DeleteRecMutex(UARTP(dev)->mtx);
+                  free(UARTP(dev));
+
+                  UARTP(dev) = NULL;
+                  status = STD_RET_OK;
+            }
+
+            /* check if all devices are not used, if yes then free handler */
+            for (u8_t i = 0; i < UART_DEV_LAST; i++)
+            {
+                  if (UARTP(i) != NULL)
+                        goto UART_Release_End;
+            }
+
+            /* free i2c handler */
+            free(uart);
+            uart = NULL;
+      }
+
+      UART_Release_End:
+      return status;
 }
 
 
@@ -341,7 +364,7 @@ stdRet_t UART_Init(nod_t dev)
 /**
  * @brief Opens specified port and initialize default settings
  *
- * @param[in]  dev                  USART name (number)
+ * @param[in]  dev                        USART name (number)
  *
  * @retval STD_STATUS_OK                  operation success
  * @retval UART_STATUS_PORTLOCKED         port locked for other task
@@ -357,60 +380,42 @@ stdRet_t UART_Open(nod_t dev)
       /* check port range */
       if ((unsigned)dev < UART_DEV_LAST)
       {
-            /* lock task switching */
-            TaskSuspendAll();
-
             /* check that port is free */
-            if (PortHandle[dev].Lock == PORT_FREE)
+            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  /* registered port for current task */
-                  PortHandle[dev].Lock = TaskGetPID();
-                  TaskResumeAll();
-
-                  /* set task handle for IRQs */
-                  PortHandle[dev].TaskHandle = TaskGetCurrentTaskHandle();
+                  UARTP(dev)->TaskHandle = TaskGetCurrentTaskHandle();
 
                   /* enable UART clock */
                   switch (dev)
                   {
-                        #ifdef RCC_APB2ENR_USART1EN
-                        #if (UART_1_ENABLE > 0)
+                        #if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
                         case UART_DEV_1:
                               RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_USART2EN
-                        #if (UART_2_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
                         case UART_DEV_2:
                               RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_USART3EN
-                        #if (UART_3_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
                         case UART_DEV_3:
                               RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_UART4EN
-                        #if (UART_4_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
                         case UART_DEV_4:
                               RCC->APB1ENR |= RCC_APB1ENR_UART4EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_UART5EN
-                        #if (UART_5_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
                         case UART_DEV_5:
                               RCC->APB1ENR |= RCC_APB1ENR_UART5EN;
                               break;
-                        #endif
                         #endif
 
                         default:
@@ -418,7 +423,7 @@ stdRet_t UART_Open(nod_t dev)
                   }
 
                   /* set port address */
-                  usartPtr = PortHandle[dev].Address;
+                  usartPtr = UARTP(dev)->Address;
 
                   /* default settings */
                   if ((u32_t)usartPtr == USART1_BASE)
@@ -453,9 +458,9 @@ stdRet_t UART_Open(nod_t dev)
                   UARTEnable();
 
                   /* allocate memory for RX buffer */
-                  PortHandle[dev].RxFIFO.Buffer = (u8_t*)malloc(UART_RX_BUFFER_SIZE);
+                  UARTP(dev)->RxFIFO.Buffer = malloc(UART_RX_BUFFER_SIZE);
 
-                  if (PortHandle[dev].RxFIFO.Buffer == NULL)
+                  if (UARTP(dev)->RxFIFO.Buffer == NULL)
                   {
                         status = UART_STATUS_NOFREEMEM;
                         goto UART_Open_End;
@@ -464,49 +469,39 @@ stdRet_t UART_Open(nod_t dev)
                   /* enable interrupts */
                   switch (dev)
                   {
-                        #ifdef RCC_APB2ENR_USART1EN
-                        #if (UART_1_ENABLE > 0)
+                        #if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
                         case UART_DEV_1:
                               NVIC_EnableIRQ(USART1_IRQn);
                               NVIC_SetPriority(USART1_IRQn, IRQ_PRIORITY);
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_USART2EN
-                        #if (UART_2_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
                         case UART_DEV_2:
                               NVIC_EnableIRQ(USART2_IRQn);
                               NVIC_SetPriority(USART2_IRQn, IRQ_PRIORITY);
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_USART3EN
-                        #if (UART_3_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
                         case UART_DEV_3:
                               NVIC_EnableIRQ(USART3_IRQn);
                               NVIC_SetPriority(USART3_IRQn, IRQ_PRIORITY);
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_UART4EN
-                        #if (UART_4_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
                         case UART_DEV_4:
                               NVIC_EnableIRQ(UART4_IRQn);
                               NVIC_SetPriority(UART4_IRQn, IRQ_PRIORITY);
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_UART5EN
-                        #if (UART_5_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
                         case UART_DEV_5:
                               NVIC_EnableIRQ(UART5_IRQn);
                               NVIC_SetPriority(UART5_IRQn, IRQ_PRIORITY);
                               break;
-                        #endif
                         #endif
 
                         default:
@@ -519,16 +514,11 @@ stdRet_t UART_Open(nod_t dev)
             }
             else
             {
-                  TaskResumeAll();
-
-                  if (PortHandle[dev].Lock == TaskGetPID())
-                        status = STD_RET_OK;
-                  else
-                        status = UART_STATUS_PORTLOCKED;
+                  status = UART_STATUS_PORTLOCKED;
             }
       }
 
-UART_Open_End:
+      UART_Open_End:
       return status;
 }
 
@@ -537,7 +527,7 @@ UART_Open_End:
 /**
  * @brief Function close opened port
  *
- * @param[in]  dev                  USART name (number)
+ * @param[in]  dev                        USART name (number)
  *
  * @retval STD_STATUS_OK                  operation success
  * @retval UART_STATUS_PORTLOCKED         port locked for other task
@@ -552,13 +542,12 @@ stdRet_t UART_Close(nod_t dev)
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
+            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* turn off device */
                   switch (dev)
                   {
-                        #ifdef RCC_APB2ENR_USART1EN
-                        #if (UART_1_ENABLE > 0)
+                        #if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
                         case UART_DEV_1:
                               NVIC_DisableIRQ(USART1_IRQn);
                               RCC->APB2RSTR |= RCC_APB2RSTR_USART1RST;
@@ -566,10 +555,8 @@ stdRet_t UART_Close(nod_t dev)
                               RCC->APB2ENR  &= ~RCC_APB2ENR_USART1EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_USART2EN
-                        #if (UART_2_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
                         case UART_DEV_2:
                               NVIC_DisableIRQ(USART2_IRQn);
                               RCC->APB1RSTR |= RCC_APB1RSTR_USART2RST;
@@ -577,10 +564,8 @@ stdRet_t UART_Close(nod_t dev)
                               RCC->APB1ENR  &= ~RCC_APB1ENR_USART2EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_USART3EN
-                        #if (UART_3_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
                         case UART_DEV_3:
                               NVIC_DisableIRQ(USART3_IRQn);
                               RCC->APB1RSTR |= RCC_APB1RSTR_USART3RST;
@@ -588,10 +573,8 @@ stdRet_t UART_Close(nod_t dev)
                               RCC->APB1ENR  &= ~RCC_APB1ENR_USART3EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_UART4EN
-                        #if (UART_4_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
                         case UART_DEV_4:
                               NVIC_DisableIRQ(UART4_IRQn);
                               RCC->APB1RSTR |= RCC_APB1RSTR_UART4RST;
@@ -599,10 +582,8 @@ stdRet_t UART_Close(nod_t dev)
                               RCC->APB1ENR  &= ~RCC_APB1ENR_UART4EN;
                               break;
                         #endif
-                        #endif
 
-                        #ifdef RCC_APB1ENR_UART5EN
-                        #if (UART_5_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
                         case UART_DEV_5:
                               NVIC_DisableIRQ(UART5_IRQn);
                               RCC->APB1RSTR |= RCC_APB1RSTR_UART5RST;
@@ -610,29 +591,28 @@ stdRet_t UART_Close(nod_t dev)
                               RCC->APB1ENR  &= ~RCC_APB1ENR_UART5EN;
                               break;
                         #endif
-                        #endif
 
                         default:
                               break;
                   }
 
                   /* free used memory for buffer */
-                  free(PortHandle[dev].RxFIFO.Buffer);
-                  PortHandle[dev].RxFIFO.Buffer = NULL;
-                  PortHandle[dev].RxFIFO.Level  = 0;
-                  PortHandle[dev].RxFIFO.RxIdx  = 0;
-                  PortHandle[dev].RxFIFO.TxIdx  = 0;
-
-                  /* unlock device */
-                  PortHandle[dev].Lock = PORT_FREE;
-
-                  /* delete from task handle */
-                  PortHandle[dev].TaskHandle = NULL;
+                  free(UARTP(dev)->RxFIFO.Buffer);
+                  UARTP(dev)->RxFIFO.Buffer = NULL;
+                  UARTP(dev)->RxFIFO.Level  = 0;
+                  UARTP(dev)->RxFIFO.RxIdx  = 0;
+                  UARTP(dev)->RxFIFO.TxIdx  = 0;
 
                   /* delete tx buffer */
-                  PortHandle[dev].TxBuffer.TxSrcPtr = NULL;
+                  UARTP(dev)->TxBuffer.TxSrcPtr = NULL;
 
                   status = STD_RET_OK;
+
+                  /* give this mutex */
+                  GiveRecMutex(UARTP(dev)->mtx);
+
+                  /* give mutex from open */
+                  GiveRecMutex(UARTP(dev)->mtx);
             }
             else
             {
@@ -648,15 +628,13 @@ stdRet_t UART_Close(nod_t dev)
 /**
  * @brief Write data to UART (ISR or DMA)
  *
- * @param[in]  dev                  USART name (number)
+ * @param[in]  dev                        dev number
  * @param[in]  *src                       source buffer
- * @param[in]  size                       buffer size
+ * @param[in]  size                       item size
+ * @param[in]  nitems                     number of items
  * @param[in]  seek                       seek
  *
- * @retval STD_STATUS_OK                  operation success
- * @retval UART_STATUS_PORTLOCKED         port locked for other task
- * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
- * @retval UART_STATUS_INCORRECTSIZE      incorrect size
+ * @return number of transmitted nitems
  */
 //================================================================================================//
 size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
@@ -670,13 +648,13 @@ size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
+            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* load data from FIFO */
                   if (nitems && size)
                   {
                          /* set port address */
-                        usartPtr = PortHandle[dev].Address;
+                        usartPtr = UARTP(dev)->Address;
                         u8_t *dataPtr  = (u8_t*)src;
                         u32_t dataSize = nitems * size;
 
@@ -697,6 +675,8 @@ size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 
                         n /= size;
                   }
+
+                  GiveRecMutex(UARTP(dev)->mtx);
             }
       }
 
@@ -708,15 +688,13 @@ size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
 /**
  * @brief Read data from UART Rx buffer
  *
- * @param[in]  dev                  USART name (number)
+ * @param[in]  dev                        dev number
  * @param[out] *dst                       destination buffer
- * @param[in]  size                       buffer size
+ * @param[in]  size                       item size
+ * @param[in]  nitems                     number of items
  * @param[in]  seek                       seek
  *
- * @retval STD_STATUS_OK                  operation success
- * @retval UART_STATUS_PORTLOCKED         port locked for other task
- * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
- * @retval UART_STATUS_INCORRECTSIZE      incorrect size
+ * @return number of received nitems
  */
 //================================================================================================//
 size_t UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
@@ -729,14 +707,14 @@ size_t UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
+            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* load data from FIFO */
                   if (nitems && size)
                   {
-                        RxFIFO_t *RxFIFO  = &PortHandle[dev].RxFIFO;
-                        u8_t     *dstPtr  = (u8_t*)dst;
-                        u32_t    dataSize = nitems * size;
+                        struct sRxFIFO *RxFIFO  = &UARTP(dev)->RxFIFO;
+                        u8_t  *dstPtr  = (u8_t*)dst;
+                        u32_t dataSize = nitems * size;
 
                         do
                         {
@@ -767,6 +745,8 @@ size_t UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 
                         n /= size;
                   }
+
+                  GiveRecMutex(UARTP(dev)->mtx);
             }
       }
 
@@ -797,9 +777,9 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (PortHandle[dev].Lock == TaskGetPID())
+            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  USART_t *usartPtr = PortHandle[dev].Address;
+                  USART_t *usartPtr = UARTP(dev)->Address;
 
                   status = STD_RET_OK;
 
@@ -883,7 +863,7 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_GET_BYTE:
                         {
-                              RxFIFO_t *RxFIFO = &PortHandle[dev].RxFIFO;
+                              struct sRxFIFO *RxFIFO = &UARTP(dev)->RxFIFO;
 
                               TaskEnterCritical();
 
@@ -907,7 +887,7 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_SEND_BYTE:
                         {
-                              usartPtr = PortHandle[dev].Address;
+                              usartPtr = UARTP(dev)->Address;
 
                               while (!(usartPtr->SR & USART_SR_TXE))
                                     TaskDelay(1);
@@ -919,7 +899,7 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_SET_BAUDRATE:
                         {
-                             usartPtr = PortHandle[dev].Address;
+                             usartPtr = UARTP(dev)->Address;
 
                              if ((u32_t)usartPtr == USART1_BASE)
                                    SetBaudRate(UART_PCLK2_FREQ, *(u32_t*)data);
@@ -933,6 +913,8 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                               break;
 
                   }
+
+                  GiveRecMutex(UARTP(dev)->mtx);
             }
             else
             {
@@ -946,18 +928,41 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 
 //================================================================================================//
 /**
- * @brief Release USART devices
+ * @brief Interrupt handling
  *
+ * @param usart   usart address
  * @param dev     device number
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t UART_Release(nod_t dev)
+static void IRQCode(USART_t *usart, nod_t dev)
 {
-      (void) dev;
+      if (usart->SR & USART_SR_RXNE)
+      {
+            struct sRxFIFO *RxFIFO = &UARTP(dev)->RxFIFO;
 
-      return STD_RET_OK;
+            u8_t DR = usart->DR;
+
+            if (RxFIFO->Buffer)
+            {
+                  if (RxFIFO->Level < UART_RX_BUFFER_SIZE)
+                  {
+                        RxFIFO->Buffer[RxFIFO->TxIdx++] = DR;
+
+                        if (RxFIFO->TxIdx >= UART_RX_BUFFER_SIZE)
+                              RxFIFO->TxIdx = 0;
+
+                        RxFIFO->Level++;
+                  }
+
+                  if (UARTP(dev)->TaskHandle)
+                  {
+                        if (TaskResumeFromISR(UARTP(dev)->TaskHandle) == pdTRUE)
+                              TaskYield();
+                  }
+            }
+      }
 }
 
 
@@ -966,13 +971,11 @@ stdRet_t UART_Release(nod_t dev)
  * @brief USART1 Interrupt
  */
 //================================================================================================//
-#ifdef RCC_APB2ENR_USART1EN
-#if (UART_1_ENABLE > 0)
+#if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
 void USART1_IRQHandler(void)
 {
       IRQCode(USART1, UART_DEV_1);
 }
-#endif
 #endif
 
 
@@ -981,13 +984,11 @@ void USART1_IRQHandler(void)
  * @brief USART2 Interrupt
  */
 //================================================================================================//
-#ifdef RCC_APB1ENR_USART2EN
-#if (UART_2_ENABLE > 0)
+#if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
 void USART2_IRQHandler(void)
 {
       IRQCode(USART2, UART_DEV_2);
 }
-#endif
 #endif
 
 
@@ -996,13 +997,11 @@ void USART2_IRQHandler(void)
  * @brief USART3 Interrupt
  */
 //================================================================================================//
-#ifdef RCC_APB1ENR_USART3EN
-#if (UART_3_ENABLE > 0)
+#if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
 void USART3_IRQHandler(void)
 {
       IRQCode(USART3, UART_DEV_3);
 }
-#endif
 #endif
 
 
@@ -1011,13 +1010,11 @@ void USART3_IRQHandler(void)
  * @brief UART4 Interrupt
  */
 //================================================================================================//
-#ifdef RCC_APB1ENR_UART4EN
-#if (UART_4_ENABLE > 0)
+#if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
 void UART4_IRQHandler(void)
 {
       IRQCode(UART4, UART_DEV_4);
 }
-#endif
 #endif
 
 
@@ -1026,13 +1023,11 @@ void UART4_IRQHandler(void)
  * @brief UART5 Interrupt
  */
 //================================================================================================//
-#ifdef RCC_APB1ENR_UART5EN
-#if (UART_5_ENABLE > 0)
+#if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
 void UART5_IRQHandler(void)
 {
       IRQCode(UART5, UART_DEV_5);
 }
-#endif
 #endif
 
 #ifdef __cplusplus
