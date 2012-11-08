@@ -37,7 +37,9 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define PORT_FREE                         (u16_t)EMPTY_TASK
+#define I2CP(dev)                         i2c->port[dev]
+
+#define BLOCK_TIME                        100
 
 /** define I2C error mask */
 #define I2C_ERROR_MASK_BM                 (I2C_SR1_OVR | I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR)
@@ -54,7 +56,7 @@ struct i2cCtrl
 {
       I2C_t    *Address;             /* peripheral address */
       task_t   TaskHandle;           /* task handle variable for IRQ */
-      u16_t    Lock;                 /* port reservation */
+      mutex_t  mtx;                  /* port reservation */
       u8_t     SlaveAddress;         /* slave address */
       stdRet_t status;               /* last operation status */
 };
@@ -80,7 +82,7 @@ static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout);
                                       Local object definitions
 ==================================================================================================*/
 /* addresses of I2C devices */
-static const I2C_t *i2cAddr[I2C_DEV_LAST] =
+static I2C_t *const i2cAddr[I2C_DEV_LAST] =
 {
 #ifdef I2C_DEV_1_DEFINED
       I2C1,
@@ -122,21 +124,70 @@ stdRet_t I2C_Init(nod_t dev)
 
       if (dev < I2C_DEV_LAST)
       {
-            if (i2c->port[dev] == NULL)
+            if (I2CP(dev) == NULL)
             {
-                  i2c->port[dev] = calloc(1, sizeof(struct i2cCtrl));
+                  I2CP(dev) = calloc(1, sizeof(struct i2cCtrl));
 
-                  if (i2c->port[dev] != NULL)
+                  if (I2CP(dev) != NULL)
                   {
-                        i2c->port[dev]->Address = (I2C_t*)i2cAddr[dev];
-                        i2c->port[dev]->Lock    = PORT_FREE;
+                        I2CP(dev)->mtx = CreateRecMutex();
 
-                        status = STD_RET_OK;
+                        if (I2CP(dev)->mtx)
+                        {
+                              I2CP(dev)->Address = (I2C_t*)i2cAddr[dev];
+                              status = STD_RET_OK;
+                        }
+                        else
+                        {
+                              free(I2CP(dev));
+                        }
                   }
             }
       }
 
       I2C_Init_end:
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Release I2C peripheral
+ *
+ * @param[in] dev           I2C device
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t I2C_Release(nod_t dev)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (i2c && dev < I2C_DEV_LAST)
+      {
+            /* free i2c device data */
+            if (I2CP(dev))
+            {
+                  DeleteRecMutex(I2CP(dev)->mtx);
+                  free(I2CP(dev));
+                  I2CP(dev) = NULL;
+                  status = STD_RET_OK;
+            }
+
+            /* check if all devices are not used, if yes then free handler */
+            for (u8_t i = 0; i < I2C_DEV_LAST; i++)
+            {
+                  if (I2CP(i) != NULL)
+                        goto I2C_Release_End;
+            }
+
+            /* free i2c handler */
+            free(i2c);
+            i2c = NULL;
+      }
+
+      I2C_Release_End:
       return status;
 }
 
@@ -160,17 +211,9 @@ stdRet_t I2C_Open(nod_t dev)
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
       {
-            /* lock task switching */
-            TaskSuspendAll();
-
             /* check that port is free */
-            if (i2c->port[dev]->Lock == PORT_FREE)
+            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  /* registered port for current task */
-                  i2c->port[dev]->Lock = TaskGetPID();
-
-                  TaskResumeAll();
-
                   /* set task handle for IRQs */
                   i2c->port[dev]->TaskHandle = TaskGetCurrentTaskHandle();
 
@@ -213,12 +256,7 @@ stdRet_t I2C_Open(nod_t dev)
             }
             else
             {
-                  TaskResumeAll();
-
-                  if (i2c->port[dev]->Lock == TaskGetPID())
-                        status = STD_RET_OK;
-                  else
-                        status = I2C_STATUS_PORTLOCKED;
+                  status = I2C_STATUS_PORTLOCKED;
             }
       }
 
@@ -246,10 +284,10 @@ stdRet_t I2C_Close(nod_t dev)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (i2c->port[dev]->Lock == TaskGetPID())
+            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* set port address */
-                  i2cPtr = i2c->port[dev]->Address;
+                  i2cPtr = I2CP(dev)->Address;
 
                   /* disable I2C device */
                   i2cPtr->CR1 |= I2C_CR1_SWRST;
@@ -279,13 +317,16 @@ stdRet_t I2C_Close(nod_t dev)
                               break;
                   }
 
-                  /* unlock device */
-                  i2c->port[dev]->Lock = PORT_FREE;
-
                   /* delete from task handle */
                   i2c->port[dev]->TaskHandle = NULL;
 
                   status = STD_RET_OK;
+
+                  /* give this mutex */
+                  GiveRecMutex(I2CP(dev)->mtx);
+
+                  /* give mutex from open */
+                  GiveRecMutex(I2CP(dev)->mtx);
             }
             else
             {
@@ -303,7 +344,8 @@ stdRet_t I2C_Close(nod_t dev)
  *
  * @param[in] dev           I2C device
  * @param[in] *src          source data
- * @param[in] size          data size
+ * @param[in] size          item size
+ * @param[in] nitems        number of items
  * @param[in] seek          register address
  *
  * @retval number of written nitems
@@ -317,21 +359,21 @@ size_t I2C_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
               /* check that port is reserved for this task */
-            if (i2c->port[dev]->Lock == TaskGetPID())
+            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  I2C_t *i2cPtr     = i2c->port[dev]->Address;
-                  u8_t  *data       = (u8_t *)src;
-                  stdRet_t *i2cstat = &i2c->port[dev]->status;
+                  I2C_t *i2cPtr     = I2CP(dev)->Address;
+                  u8_t  *data       = (u8_t*)src;
+                  stdRet_t *i2cstat = &I2CP(dev)->status;
 
                   /* check arguments */
                   if (!src || !size || !nitems)
                   {
-                        i2c->port[dev]->status = I2C_STATUS_BADARG;
+                        I2CP(dev)->status = I2C_STATUS_BADARG;
                         goto I2C_Write_end;
                   }
 
                   /* start condition */
-                  if ((*i2cstat = StartCondition(i2cPtr, (i2c->port[dev]->SlaveAddress << 1) & 0xFE))
+                  if ((*i2cstat = StartCondition(i2cPtr, (I2CP(dev)->SlaveAddress << 1) & 0xFE))
                      != STD_RET_OK)
                   {
                         goto I2C_Write_end;
@@ -360,6 +402,8 @@ size_t I2C_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                   StopCondition(i2cPtr);
 
                   n = nitems;
+
+                  GiveRecMutex(I2CP(dev)->mtx);
             }
       }
 
@@ -388,10 +432,10 @@ size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (i2c->port[dev]->Lock == TaskGetPID())
+            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  I2C_t *i2cPtr     = i2c->port[dev]->Address;
-                  stdRet_t *i2cstat = &i2c->port[dev]->status;
+                  I2C_t *i2cPtr     = I2CP(dev)->Address;
+                  stdRet_t *i2cstat = &I2CP(dev)->status;
 
                   /* check arguments */
                   if (!dst || !size || !nitems)
@@ -401,7 +445,7 @@ size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
                   }
 
                   /* start condition */
-                  if ((*i2cstat = StartCondition(i2cPtr, (i2c->port[dev]->SlaveAddress << 1) & 0xFE) )
+                  if ((*i2cstat = StartCondition(i2cPtr, (I2CP(dev)->SlaveAddress << 1) & 0xFE) )
                      != STD_RET_OK)
                   {
                         goto I2C_Read_end;
@@ -413,7 +457,7 @@ size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
                   if ((*i2cstat = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
                         goto I2C_Read_end;
 
-                  /* waiting for data send was finished */
+                  /* waiting for data sending was finished */
                   while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
                   {
                         TaskDelay(1);
@@ -426,7 +470,7 @@ size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
                         i2cPtr->CR1 |= I2C_CR1_ACK;
 
                   /* repeat start condition */
-                  if ((*i2cstat = StartCondition(i2cPtr,(i2c->port[dev]->SlaveAddress << 1) | 0x01) )
+                  if ((*i2cstat = StartCondition(i2cPtr,(I2CP(dev)->SlaveAddress << 1) | 0x01) )
                      != STD_RET_OK)
                   {
                         goto I2C_Read_end;
@@ -440,6 +484,8 @@ size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
                   StopCondition(i2cPtr);
 
                   n = nitems;
+
+                  GiveRecMutex(I2CP(dev)->mtx);
             }
       }
 
@@ -474,9 +520,9 @@ stdRet_t I2C_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (i2c->port[dev]->Lock == TaskGetPID())
+            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  I2C_t *i2cPtr = i2c->port[dev]->Address;
+                  I2C_t *i2cPtr = I2CP(dev)->Address;
 
                   status = STD_RET_OK;
 
@@ -484,19 +530,19 @@ stdRet_t I2C_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                   {
                         case I2C_IORQ_SETSLAVEADDR:
                         {
-                              i2c->port[dev]->SlaveAddress = *((u8_t *)data);
+                              I2CP(dev)->SlaveAddress = *((u8_t *)data);
                               break;
                         }
 
                         case I2C_IORQ_GETSLAVEADDR:
                         {
-                              *((u8_t *)data) = i2c->port[dev]->SlaveAddress;
+                              *((u8_t *)data) = I2CP(dev)->SlaveAddress;
                               break;
                         }
 
                         case I2C_IORQ_SETSCLFREQ:
                         {
-                              i2cPtr->CCR = SetSCLFreq(*((u32_t *)data));
+                              i2cPtr->CCR = SetSCLFreq(*((u32_t*)data));
                               break;
                         }
 
@@ -512,6 +558,8 @@ stdRet_t I2C_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
                               break;
                         }
                   }
+
+                  GiveRecMutex(I2CP(dev)->mtx);
             }
             else
             {
@@ -761,47 +809,6 @@ static stdRet_t CheckStatus(I2C_t *i2c, u32_t timeout)
             StopCondition(i2c);
       }
 
-      return status;
-}
-
-
-//================================================================================================//
-/**
- * @brief Release I2C peripheral
- *
- * @param[in] dev           I2C device
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//================================================================================================//
-stdRet_t I2C_Release(nod_t dev)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      if (i2c && dev < I2C_DEV_LAST)
-      {
-            /* free i2c device data */
-            if (i2c->port[dev])
-            {
-                  free(i2c->port[dev]);
-                  i2c->port[dev] = NULL;
-                  status = STD_RET_OK;
-            }
-
-            /* check if all devices are not used, if yes then free handler */
-            for (u8_t i = 0; i < I2C_DEV_LAST; i++)
-            {
-                  if (i2c->port[i] != NULL)
-                        goto I2C_Release_End;
-            }
-
-            /* free i2c handler */
-            free(i2c);
-            i2c = NULL;
-      }
-
-      I2C_Release_End:
       return status;
 }
 
