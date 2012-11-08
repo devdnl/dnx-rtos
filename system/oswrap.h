@@ -80,8 +80,8 @@ extern "C" {
 /** SEMAPHORES AND MUTEXES */
 #define CreateSemBin(sem)                 vSemaphoreCreateBinary(sem)
 #define CreateSemCnt(maxCnt, initCnt)     xSemaphoreCreateCounting(maCnt, initCnt)
-#define CreateMutex()                     xSemaphoreCreateMutex() /* DNLFIXME use creating as semaphore */
-#define CreateRecMutex()                  xSemaphoreCreateRecursiveMutex() /* DNLFIXME use creating as semaphore */
+#define CreateMutex(mutex)                mutex = xSemaphoreCreateMutex()
+#define CreateRecMutex(mutex)             mutex = xSemaphoreCreateRecursiveMutex()
 #define DeleteSemBin(sem)                 vSemaphoreDelete(sem)
 #define DeleteSemCnt(sem)                 vSemaphoreDelete(sem)
 #define DeleteMutex(mutex)                vSemaphoreDelete(mutex)

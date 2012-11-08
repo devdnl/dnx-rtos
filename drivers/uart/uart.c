@@ -289,7 +289,7 @@ stdRet_t UART_Init(nod_t dev)
 
                   if (UARTP(dev) != NULL)
                   {
-                        UARTP(dev)->mtx = CreateRecMutex();
+                        CreateRecMutex(UARTP(dev)->mtx);
                         CreateSemBin(UARTP(dev)->sem);
 
                         if (UARTP(dev)->mtx && UARTP(dev)->sem)

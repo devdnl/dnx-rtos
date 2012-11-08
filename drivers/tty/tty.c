@@ -183,7 +183,7 @@ stdRet_t TTY_Open(nod_t dev)
 
                         if (TTY(dev))
                         {
-                              TTY(dev)->mtx = CreateRecMutex();
+                              CreateRecMutex(TTY(dev)->mtx);
 
                               if (TTY(dev)->mtx != NULL)
                               {

@@ -136,7 +136,7 @@ stdRet_t MPL115A2_Init(nod_t dev)
 
                   if (mplmem)
                   {
-                        mplmem->mtx = CreateMutex();
+                        CreateMutex(mplmem->mtx);
 
                         if (mplmem->mtx)
                         {

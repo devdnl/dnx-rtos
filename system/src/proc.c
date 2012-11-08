@@ -209,7 +209,7 @@ procfd_t PROC_open(const ch_t *name, ch_t *mode)
                   {
                         procmem->file = calloc(1, sizeof(struct filenode));
                         ch_t *name    = calloc(2, sizeof(ch_t));
-                        procmem->mtx  = CreateMutex();
+                        CreateMutex(procmem->mtx);
 
                         if (!procmem->file || !name || !procmem->mtx)
                         {
