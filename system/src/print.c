@@ -415,7 +415,7 @@ u32_t kprint(const ch_t *format, ...)
 
       if (kprintFile)
       {
-            va_start(args, format); /* DNLFIXME check: maybe is possible to insert this in called function */
+            va_start(args, format);
             u32_t size = CalcFormatSize(format, args);
             va_end(args);
 

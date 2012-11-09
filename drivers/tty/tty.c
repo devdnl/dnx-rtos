@@ -273,25 +273,25 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                   {
                         msgsize += nitems + 1;
 
-                        /* move message pointer back */
-                        TTY(dev)->wrIdx--;
-
-                        if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
-                        {
-                              TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
-                        }
-
-                        /* if no message to refresh setup refresh only one */
-                        if (TTY(dev)->newMsgCnt == 0)
-                        {
-                              TTY(dev)->refLstLn = SET;
-                        }
-
-                        /* join to messages together */
+                        /* create buffer for new msg */
                         msg = malloc(msgsize);
 
                         if (msg)
                         {
+                              /* move message pointer back */
+                              TTY(dev)->wrIdx--;
+
+                              if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
+                              {
+                                    TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
+                              }
+
+                              /* if no message to refresh setup refresh only one */
+                              if (TTY(dev)->newMsgCnt == 0)
+                              {
+                                    TTY(dev)->refLstLn = SET;
+                              }
+
                               strcpy(msg, lstmsg);
                               strncat(msg, src, nitems + 1);
 
