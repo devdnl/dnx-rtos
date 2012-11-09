@@ -669,6 +669,7 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 {
       ch_t  chr;
       u32_t streamLen = 1;
+      i32_t value = 0;
 
       while ((chr = *format++) != '\0')
       {
@@ -685,11 +686,18 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
             {
                   chr = *format++;
 
-                  u8_t inCmdStep = 0;
+                  /* read value from format */
+                  while (chr >= '0' && chr <= '9')
+                  {
+                        value *= 10;
+                        value += chr - '0';
+                        chr    = *format++;
+                  }
 
+                  /* check if digital value is to decode */
                   if (chr == 'd' || chr == 'u')
                   {
-                        i32_t  *dec = (i32_t*)var;
+                        i32_t  *dec = var;
                         i32_t  sign = 1;
                         bool_t uint = (chr == 'u' ? TRUE : FALSE);
 
@@ -746,9 +754,10 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                         goto tscan_end;
                   }
 
+                  /* check if hex value is to decode */
                   if (chr == 'x')
                   {
-                        u32_t *hex = (u32_t *)var;
+                        u32_t *hex = var;
 
                         *hex = 0;
 
@@ -764,8 +773,7 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    ch_t *endl = "\r\n";
-                                    fwrite(endl, sizeof(ch_t), strlen(endl), stdout);
+                                    printt(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
@@ -800,9 +808,10 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                         }
                   }
 
+                  /* check if binary value is to decode */
                   if (chr == 'b')
                   {
-                        u32_t *bin = (u32_t *)var;
+                        u32_t *bin = var;
 
                         *bin = 0;
 
@@ -816,8 +825,7 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    putChart(stdout, ASCII_CR);
-                                    putChart(stdout, ASCII_LF);
+                                    printt(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
@@ -841,73 +849,40 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                         }
                   }
 
-                  if (chr == 's') /* DNLFIXME correct string reading in scanf, especially %23s etc */
+                  /* check if text string is to gets */
+                  if (chr == 's')
                   {
-                        u16_t free = *(format++);
+                        u16_t bfrSize = UINT16_MAX;
+                        ch_t *string  = var;
+                        u16_t strLen  = 0;
 
-                        if (free >= '1' && free <= '9')
-                        {
-                              free = (free - '0') * 50;
-                        }
-                        else
-                        {
-                              free = UINT16_MAX;
-                        }
-
-                        ch_t *string = (ch_t*)var;
+                        if (*(--format) != '%' && value)
+                              bfrSize = value - 1;
 
                         while (TRUE)
                         {
                               chr = getChart(stdin);
 
-                              /* check command Arrow Up */
-                              if ((chr == ASCII_ESC) && (inCmdStep == 0))
-                              {
-                                    inCmdStep++;
-                                    *(string++) = chr;
-                                    continue;
-                              }
-                              else if ((chr == '[') && (inCmdStep == 1))
-                              {
-                                 inCmdStep++;
-                                 *(string++) = chr;
-                                 continue;
-                              }
-                              else if ((chr == 'A') && (inCmdStep == 2))
-                              {
-                                 *(string++) = chr;
-                                 goto tscan_end;
-                              }
-                              else
-                              {
-                                    inCmdStep = 0;
-                              }
-
-
                               /* put character */
                               if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *(string++) = 0x00;
-                                    putChart(stdout, ASCII_CR);
-                                    putChart(stdout, ASCII_LF);
+                                    printt(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
-                              else if ((chr == ASCII_BS) && (streamLen > 1))
+                              else if ((chr == ASCII_BS) && (streamLen > 1) && strLen)
                               {
                                     printt(stdout, "%c\x1B[K", chr);
                                     *(--string) = 0x00;
                                     streamLen--;
-                                    free++;
+                                    strLen--;
                                     continue;
                               }
-                              else if (chr >= ' ')
+                              else if ((chr >= ' ') && (strLen < bfrSize))
                               {
-                                    if (free)
-                                    {
-                                          putChart(stdout, chr);
-                                          *(string++) = chr;
-                                          free--;
-                                    }
+                                    putChart(stdout, chr);
+                                    *(string++) = chr;
+                                    strLen++;
                               }
                               else
                               {
@@ -921,7 +896,7 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
       }
 
       tscan_end:
-            return (streamLen - 1);
+      return (streamLen - 1);
 }
 
 

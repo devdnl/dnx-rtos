@@ -644,7 +644,7 @@ static void ttyd(void *arg)
                   /* no Fn key was detected */
                   if (keyfn == TTY_SEL_NONE && ttyPtr)
                   {
-                        if (TakeRecMutex(TTY(term->curTTY)->mtx, BLOCK_TIME) == OS_OK)
+                        if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
                         {
                               if (ttyPtr->input.level < TTY_OUT_BFR_SIZE)
                               {
@@ -658,7 +658,7 @@ static void ttyd(void *arg)
                                     ttyPtr->input.level++;
                               }
 
-                              GiveRecMutex(TTY(term->curTTY)->mtx);
+                              GiveRecMutex(ttyPtr->mtx);
                         }
                   }
                   /* Fn key was hit */

@@ -181,14 +181,10 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       if (!line || !history)
       {
             if (line)
-            {
                   free(line);
-            }
 
             if (history)
-            {
                   free(history);
-            }
 
             printf("No enough free memory\n");
             termStatus = STD_RET_ERROR;
@@ -210,7 +206,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
             PrintPrompt();
 
             /* waiting for command */
-            scanf("%s2", line);
+            scanf("%100s", line);
 
             /* check that history was call */
             if (strcmp(line, "\x1B[A") == 0)
