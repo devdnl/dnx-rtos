@@ -29,11 +29,6 @@ extern "C" {
 #endif
 
 
-/*
- * INFO:
- * - driver don't support DMA (future support)
- */
-
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
@@ -44,138 +39,140 @@ extern "C" {
                                   Local symbolic constants/macros
 ==================================================================================================*/
 #define UARTP(dev)                              uart->port[dev]
+#define UARTA(dev)                              uartAddr[dev]
 #define BLOCK_TIME                              100
+#define TXC_WAIT_TIME                           60000
 
 /** UART wake method: idle line (0) or address mark (1) */
-#define SetAddressMarkWakeMethod(enable)        \
+#define SetAddressMarkWakeMethod(usart, enable) \
       if (enable)                               \
-            usartPtr->CR1 |= USART_CR1_WAKE;    \
+            usart->CR1 |= USART_CR1_WAKE;       \
       else                                      \
-            usartPtr->CR1 &= ~USART_CR1_WAKE
+            usart->CR1 &= ~USART_CR1_WAKE
 
 
 /** parity enable (1) or disable (0) */
-#define ParityCheckEnable(enable)               \
+#define ParityCheckEnable(usart, enable)        \
       if (enable)                               \
-            usartPtr->CR1 |= USART_CR1_PCE;     \
+            usart->CR1 |= USART_CR1_PCE;        \
       else                                      \
-            usartPtr->CR1 &= ~USART_CR1_PCE
+            usart->CR1 &= ~USART_CR1_PCE
 
 
 /** even parity (0) or odd parity (1) */
-#define SetOddParity(enable)                    \
+#define SetOddParity(usart, enable)             \
       if (enable)                               \
-            usartPtr->CR1 |= USART_CR1_PS;      \
+            usart->CR1 |= USART_CR1_PS;         \
       else                                      \
-            usartPtr->CR1 &= ~USART_CR1_PS
+            usart->CR1 &= ~USART_CR1_PS
 
 
 /** disable (0) or enable (1) UART transmitter */
-#define TransmitterEnable(enable)               \
+#define TransmitterEnable(usart, enable)        \
       if (enable)                               \
-            usartPtr->CR1 |= USART_CR1_TE;      \
+            usart->CR1 |= USART_CR1_TE;         \
       else                                      \
-            usartPtr->CR1 &= ~USART_CR1_TE
+            usart->CR1 &= ~USART_CR1_TE
 
 
 /** disable (0) or enable (1) UART receiver */
-#define ReceiverEnable(enable)                  \
+#define ReceiverEnable(usart, enable)           \
       if (enable)                               \
-            usartPtr->CR1 |= USART_CR1_RE;      \
+            usart->CR1 |= USART_CR1_RE;         \
       else                                      \
-            usartPtr->CR1 &= ~USART_CR1_RE
+            usart->CR1 &= ~USART_CR1_RE
 
 
 /** receiver wakeup: active mode (0) or mute mode (1) */
-#define ReceiverWakeupMuteEnable(enable)        \
+#define ReceiverWakeupMuteEnable(usart, enable) \
       if (enable)                               \
-            usartPtr->CR1 |= USART_CR1_RWU;     \
+            usart->CR1 |= USART_CR1_RWU;        \
       else                                      \
-            usartPtr->CR1 &= ~USART_CR1_RWU
+            usart->CR1 &= ~USART_CR1_RWU
 
 
 /** LIN mode disable (0) or enable (1) */
-#define LINModeEnable(enable)                   \
+#define LINModeEnable(usart, enable)            \
       if (enable)                               \
-            usartPtr->CR2 |= USART_CR2_LINEN;   \
+            usart->CR2 |= USART_CR2_LINEN;      \
       else                                      \
-            usartPtr->CR2 &= ~USART_CR2_LINEN
+            usart->CR2 &= ~USART_CR2_LINEN
 
 
 /** 1 stop bit (0) or 2 stop bits (1) */
-#define Set2StopBits(enable)                    \
+#define Set2StopBits(usart, enable)             \
       if (enable)                               \
       {                                         \
-            usartPtr->CR2 &= USART_CR2_STOP;    \
-            usartPtr->CR2 |= USART_CR2_STOP_1;  \
+            usart->CR2 &= USART_CR2_STOP;       \
+            usart->CR2 |= USART_CR2_STOP_1;     \
       }                                         \
       else                                      \
-            usartPtr->CR2 &= USART_CR2_STOP
+            usart->CR2 &= USART_CR2_STOP
 
 
 /** LIN break detector length: 10 bits (0) or 11 bits (1) */
-#define LINBreakDet11Bits(enable)               \
+#define LINBreakDet11Bits(usart, enable)        \
       if (enable)                               \
-            usartPtr->CR2 |= USART_CR2_LBDL;    \
+            usart->CR2 |= USART_CR2_LBDL;       \
       else                                      \
-            usartPtr->CR2 &= ~USART_CR2_LBDL
+            usart->CR2 &= ~USART_CR2_LBDL
 
 
 /** address of the USART node (in the multiprocessor mode), 4-bit length */
-#define SetAddressNode(adr)                     \
-      usartPtr->CR2 &= ~USART_CR2_ADD;          \
-      usartPtr->CR2 |= (adr & USART_CR2_ADD)    \
+#define SetAddressNode(usart, adr)              \
+      usart->CR2 &= ~USART_CR2_ADD;             \
+      usart->CR2 |= (adr & USART_CR2_ADD)       \
 
 
 /** baud rate */
-#define SetBaudRate(clk, baud)                  \
-      usartPtr->BRR = (u16_t)((clk / baud) + 1)
+#define SetBaudRate(usart, clk, baud)           \
+      usart->BRR = (u16_t)((clk / baud) + 1)
 
 
 /** CTS hardware flow control enable (1) or disable (0) */
-#define CTSEnable(enable)                       \
+#define CTSEnable(usart, enable)                \
       if (enable)                               \
-            usartPtr->CR3 |= USART_CR3_CTSE;    \
+            usart->CR3 |= USART_CR3_CTSE;       \
       else                                      \
-            usartPtr->CR3 &= ~USART_CR3_CTSE
+            usart->CR3 &= ~USART_CR3_CTSE
 
 
 /** RTS hardware flow control enable (1) or disable (0) */
-#define RTSEnable(enable)                       \
+#define RTSEnable(usart, enable)                \
       if (enable)                               \
-            usartPtr->CR3 |= USART_CR3_RTSE;    \
+            usart->CR3 |= USART_CR3_RTSE;       \
       else                                      \
-            usartPtr->CR3 &= ~USART_CR3_RTSE
+            usart->CR3 &= ~USART_CR3_RTSE
 
 
 /** enable UART */
-#define UARTEnable()                            \
-      usartPtr->CR1 |= USART_CR1_UE
+#define UARTEnable(usart)                       \
+      usart->CR1 |= USART_CR1_UE
 
 
 /** disable UART */
-#define UARTDisable()                           \
-      usartPtr->CR1 &= ~UART_CR1_UE1
+#define UARTDisable(usart)                      \
+      usart->CR1 &= ~UART_CR1_UE1
 
 
 /** enable RX interrupt */
-#define EnableRxIRQ()                           \
-      usartPtr->CR1 |= USART_CR1_RXNEIE
+#define EnableRxIRQ(usart)                      \
+      usart->CR1 |= USART_CR1_RXNEIE
 
 
 /** enable RX interrupt */
-#define DisableRxIRQ()                          \
-      usartPtr->CR1 &= ~UART_CR1_RXNEIE
+#define DisableRxIRQ(usart)                     \
+      usart->CR1 &= ~UART_CR1_RXNEIE
 
 
 /** enable TXE interrupt */
-#define EnableTXEIRQ()                          \
-      usartPtr->CR1 |= USART_CR1_TXEIE
+#define EnableTXEIRQ(usart)                     \
+      usart->CR1 |= USART_CR1_TXEIE
 
 
 /** disable TXE interrupt */
-#define DisableTXEIRQ()                         \
-      usartPtr->CR1 &= ~USART_CR1_TXEIE
+#define DisableTXEIRQ(usart)                    \
+      usart->CR1 &= ~USART_CR1_TXEIE
 
 
 /** IRQ priorities */
@@ -204,7 +201,6 @@ struct uartCtrl
             size_t Size;
       } TxBuffer;
 
-      USART_t *Address;             /* peripheral address */
       sem_t   sem;                  /* semaphore for sync between IRQ and task */
       mutex_t mtx;                  /* mutex for secure resources */
       task_t  TaskHandle;           /* task handler in IRQ */
@@ -294,7 +290,7 @@ stdRet_t UART_Init(nod_t dev)
 
                         if (UARTP(dev)->mtx && UARTP(dev)->sem)
                         {
-                              UARTP(dev)->Address = (USART_t*)uartAddr[dev];
+                              TakeSemBin(UARTP(dev)->sem, 1);
                               status = STD_RET_OK;
                         }
                         else
@@ -374,8 +370,7 @@ stdRet_t UART_Release(nod_t dev)
 //================================================================================================//
 stdRet_t UART_Open(nod_t dev)
 {
-      stdRet_t status    = UART_STATUS_PORTNOTEXIST;
-      USART_t  *usartPtr = NULL;
+      stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
       if ((unsigned)dev < UART_DEV_LAST)
@@ -423,39 +418,39 @@ stdRet_t UART_Open(nod_t dev)
                   }
 
                   /* set port address */
-                  usartPtr = UARTP(dev)->Address;
+                  USART_t *uart_p = UARTA(dev);
 
                   /* default settings */
-                  if ((u32_t)usartPtr == USART1_BASE)
-                        SetBaudRate(UART_PCLK2_FREQ, UART_DEFAULT_BAUDRATE);
+                  UARTEnable(uart_p);
+
+                  if ((u32_t)uart_p == USART1_BASE)
+                        SetBaudRate(uart_p, UART_PCLK2_FREQ, UART_DEFAULT_BAUDRATE);
                   else
-                        SetBaudRate(UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
+                        SetBaudRate(uart_p, UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
 
-                  SetAddressMarkWakeMethod(UART_DEFAULT_WAKE_METHOD);
+                  SetAddressMarkWakeMethod(uart_p, UART_DEFAULT_WAKE_METHOD);
 
-                  ParityCheckEnable(UART_DEFAULT_PARITY_ENABLE);
+                  ParityCheckEnable(uart_p, UART_DEFAULT_PARITY_ENABLE);
 
-                  SetOddParity(UART_DEFAULT_PARITY_SELECTION);
+                  SetOddParity(uart_p, UART_DEFAULT_PARITY_SELECTION);
 
-                  TransmitterEnable(UART_DEFAULT_TX_ENABLE);
+                  TransmitterEnable(uart_p, UART_DEFAULT_TX_ENABLE);
 
-                  ReceiverEnable(UART_DEFAULT_RX_ENABLE);
+                  ReceiverEnable(uart_p, UART_DEFAULT_RX_ENABLE);
 
-                  ReceiverWakeupMuteEnable(UART_DEFAULT_RX_WAKEUP_MODE);
+                  ReceiverWakeupMuteEnable(uart_p, UART_DEFAULT_RX_WAKEUP_MODE);
 
-                  LINModeEnable(UART_DEFAULT_LIN_ENABLE);
+                  LINModeEnable(uart_p, UART_DEFAULT_LIN_ENABLE);
 
-                  Set2StopBits(UART_DEFAULT_STOP_BITS);
+                  Set2StopBits(uart_p, UART_DEFAULT_STOP_BITS);
 
-                  LINBreakDet11Bits(UART_DEFAULT_LIN_BREAK_LEN_DET);
+                  LINBreakDet11Bits(uart_p, UART_DEFAULT_LIN_BREAK_LEN_DET);
 
-                  SetAddressNode(UART_DEFAULT_MULTICOM_ADDRESS);
+                  SetAddressNode(uart_p, UART_DEFAULT_MULTICOM_ADDRESS);
 
-                  CTSEnable(UART_DEFAULT_CTS_ENABLE);
+                  CTSEnable(uart_p, UART_DEFAULT_CTS_ENABLE);
 
-                  RTSEnable(UART_DEFAULT_RTS_ENABLE);
-
-                  UARTEnable();
+                  RTSEnable(uart_p, UART_DEFAULT_RTS_ENABLE);
 
                   /* allocate memory for RX buffer */
                   UARTP(dev)->RxFIFO.Buffer = malloc(UART_RX_BUFFER_SIZE);
@@ -508,7 +503,7 @@ stdRet_t UART_Open(nod_t dev)
                               break;
                   }
 
-                  EnableRxIRQ();
+                  EnableRxIRQ(uart_p);
 
                   status = STD_RET_OK;
             }
@@ -642,7 +637,6 @@ size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
       (void)seek;
 
       size_t  n = 0;
-      USART_t *usartPtr = NULL;
 
       /* check port range */
       if ((unsigned)dev < UART_DEV_LAST)
@@ -653,27 +647,13 @@ size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
                   /* load data from FIFO */
                   if (nitems && size)
                   {
-                         /* set port address */
-                        usartPtr = UARTP(dev)->Address;
-                        u8_t *dataPtr  = (u8_t*)src;
-                        u32_t dataSize = nitems * size;
+                        UARTP(dev)->TxBuffer.TxSrcPtr = src;
+                        UARTP(dev)->TxBuffer.Size     = size * nitems;
 
-                        do
-                        {
-                              if (usartPtr->SR & USART_SR_TXE)
-                              {
-                                    usartPtr->DR = *(dataPtr++);
-                                    dataSize--;
-                                    n++;
-                              }
-                              else
-                              {
-//                                    TaskDelay(1); /* DNLFIXME in UART Tx use DMA */
-                              }
-                        }
-                        while (dataSize);
+                        EnableTXEIRQ(UARTA(dev));
+                        TakeSemBin(UARTP(dev)->sem, TXC_WAIT_TIME);
 
-                        n /= size;
+                        n = nitems;
                   }
 
                   GiveRecMutex(UARTP(dev)->mtx);
@@ -779,86 +759,86 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
             /* check that port is reserved for this task */
             if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  USART_t *usartPtr = UARTP(dev)->Address;
+                  USART_t *uart_p = UARTA(dev);
 
                   status = STD_RET_OK;
 
                   switch (ioRQ)
                   {
                         case UART_IORQ_ENABLE_WAKEUP_IDLE:
-                              SetAddressMarkWakeMethod(FALSE);
+                              SetAddressMarkWakeMethod(uart_p, FALSE);
                               break;
 
                         case UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK:
-                              SetAddressMarkWakeMethod(TRUE);
+                              SetAddressMarkWakeMethod(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_ENABLE_PARITY_CHECK:
-                              ParityCheckEnable(TRUE);
+                              ParityCheckEnable(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_DISABLE_PARITY_CHECK:
-                              ParityCheckEnable(FALSE);
+                              ParityCheckEnable(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_SET_ODD_PARITY:
-                              SetOddParity(TRUE);
+                              SetOddParity(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_SET_EVEN_PARITY:
-                              SetOddParity(FALSE);
+                              SetOddParity(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE:
-                              ReceiverWakeupMuteEnable(TRUE);
+                              ReceiverWakeupMuteEnable(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE:
-                              ReceiverWakeupMuteEnable(FALSE);
+                              ReceiverWakeupMuteEnable(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_ENABLE_LIN_MODE:
-                              LINModeEnable(TRUE);
+                              LINModeEnable(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_DISABLE_LIN_MODE:
-                              LINModeEnable(FALSE);
+                              LINModeEnable(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_SET_1_STOP_BIT:
-                              Set2StopBits(FALSE);
+                              Set2StopBits(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_SET_2_STOP_BITS:
-                              Set2StopBits(TRUE);
+                              Set2StopBits(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS:
-                              LINBreakDet11Bits(TRUE);
+                              LINBreakDet11Bits(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS:
-                              LINBreakDet11Bits(FALSE);
+                              LINBreakDet11Bits(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_SET_ADDRESS_NODE:
-                              SetAddressNode(*(u8_t*)data);
+                              SetAddressNode(uart_p, *(u8_t*)data);
 					break;
 
                         case UART_IORQ_ENABLE_CTS:
-                              CTSEnable(TRUE);
+                              CTSEnable(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_DISABLE_CTS:
-                              CTSEnable(FALSE);
+                              CTSEnable(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_ENABLE_RTS:
-                              RTSEnable(TRUE);
+                              RTSEnable(uart_p, TRUE);
 					break;
 
                         case UART_IORQ_DISABLE_RTS:
-                              RTSEnable(FALSE);
+                              RTSEnable(uart_p, FALSE);
 					break;
 
                         case UART_IORQ_GET_BYTE:
@@ -887,24 +867,24 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_SEND_BYTE:
                         {
-                              usartPtr = UARTP(dev)->Address;
+                              uart_p = UARTA(dev);
 
-                              while (!(usartPtr->SR & USART_SR_TXE))
+                              while (!(uart_p->SR & USART_SR_TXE))
                                     TaskDelay(1);
 
-                              usartPtr->DR = *(u8_t*)data;
+                              uart_p->DR = *(u8_t*)data;
 
 					break;
                         }
 
                         case UART_IORQ_SET_BAUDRATE:
                         {
-                             usartPtr = UARTP(dev)->Address;
+                              uart_p = UARTA(dev);
 
-                             if ((u32_t)usartPtr == USART1_BASE)
-                                   SetBaudRate(UART_PCLK2_FREQ, *(u32_t*)data);
+                             if ((u32_t)uart_p == USART1_BASE)
+                                   SetBaudRate(uart_p, UART_PCLK2_FREQ, *(u32_t*)data);
                              else
-                                   SetBaudRate(UART_PCLK1_FREQ, *(u32_t*)data);
+                                   SetBaudRate(uart_p, UART_PCLK1_FREQ, *(u32_t*)data);
                               break;
                         }
 
@@ -938,6 +918,23 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
 //================================================================================================//
 static void IRQCode(USART_t *usart, nod_t dev)
 {
+      if (usart->SR & USART_SR_TXE)
+      {
+            if (UARTP(dev)->TxBuffer.Size && UARTP(dev)->TxBuffer.TxSrcPtr)
+            {
+                  usart->DR = *(UARTP(dev)->TxBuffer.TxSrcPtr++);
+
+                  if (--UARTP(dev)->TxBuffer.Size == 0)
+                  {
+                        UARTP(dev)->TxBuffer.TxSrcPtr = NULL;
+
+                        i32_t woke;
+                        DisableTXEIRQ(UARTA(dev));
+                        GiveSemBinFromISR(UARTP(dev)->sem, &woke);
+                  }
+            }
+      }
+
       if (usart->SR & USART_SR_RXNE)
       {
             struct sRxFIFO *RxFIFO = &UARTP(dev)->RxFIFO;
