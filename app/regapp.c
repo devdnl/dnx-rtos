@@ -180,9 +180,9 @@ u32_t GetAppList(ch_t *nameList, u32_t size)
 //================================================================================================//
 void REGAPP_opendir(DIR_t *dir)
 {
-      dir->readdir = REGAPP_readdir;
-      dir->seek    = 0;
-      dir->items   = ARRAY_SIZE(appList);
+      dir->rddir = REGAPP_readdir;
+      dir->seek  = 0;
+      dir->items = ARRAY_SIZE(appList);
 }
 
 

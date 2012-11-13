@@ -337,9 +337,9 @@ stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata)
 //================================================================================================//
 void REGDRV_opendir(DIR_t *dir)
 {
-      dir->readdir = REGDRV_readdir;
-      dir->seek    = 0;
-      dir->items   = 0;
+      dir->rddir = REGDRV_readdir;
+      dir->seek  = 0;
+      dir->items = 0;
 
       for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
       {
@@ -362,10 +362,10 @@ void REGDRV_opendir(DIR_t *dir)
 dirent_t REGDRV_readdir(size_t seek)
 {
       dirent_t direntry;
-      direntry.remove = REGDRV_remove;
-      direntry.name   = NULL;
-      direntry.size   = 0;
-      direntry.fd     = 0;
+      direntry.rm   = REGDRV_remove;
+      direntry.name = NULL;
+      direntry.size = 0;
+      direntry.fd   = 0;
 
       u8_t itemcnt = 0;
       for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)

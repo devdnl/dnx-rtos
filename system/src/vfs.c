@@ -32,10 +32,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "vfs.h"
-#include "regapp.h"
-#include "regdrv.h"
-#include "proc.h"
-#include "memman.h"
+#include "system.h"
 #include <string.h>
 
 
@@ -67,6 +64,39 @@ static dirent_t ROOT_readdir(size_t seek);
 
 //================================================================================================//
 /**
+ * @brief Function mount file system in VFS
+ *
+ * @param node                registered node
+ * @param *dir                folder name
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_mount(struct vfsnode node, const ch_t *dir)
+{
+
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function umount dir from file system
+ *
+ * @param *path               dir path
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_umount(const ch_t *path)
+{
+
+}
+
+
+//================================================================================================//
+/**
  * @brief Function open selected file
  *
  * @param *name         file path
@@ -75,7 +105,7 @@ static dirent_t ROOT_readdir(size_t seek);
  * @retval NULL if file can't be created
  */
 //================================================================================================//
-FILE_t *fopen(const ch_t *name, const ch_t *mode)
+FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
 {
       (void) mode;
 
@@ -108,11 +138,11 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                               {
                                     if (drvdata.open(drvdata.device) == STD_RET_OK)
                                     {
-                                          file->close = drvdata.close;
-                                          file->fd    = drvdata.device;
-                                          file->ioctl = drvdata.ioctl;
-                                          file->read  = drvdata.read;
-                                          file->write = drvdata.write;
+                                          file->fdclose = drvdata.close;
+                                          file->fd      = drvdata.device;
+                                          file->fdioctl = drvdata.ioctl;
+                                          file->fdread  = drvdata.read;
+                                          file->fdwrite = drvdata.write;
 
                                           stat = STD_RET_OK;
                                     }
@@ -122,10 +152,10 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                         {
                               if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
                               {
-                                    file->close = PROC_close;
-                                    file->ioctl = NULL;
-                                    file->read  = PROC_read;
-                                    file->write = PROC_write;
+                                    file->fdclose = PROC_close;
+                                    file->fdioctl = NULL;
+                                    file->fdread  = PROC_read;
+                                    file->fdwrite = PROC_write;
 
                                     stat = STD_RET_OK;
                               }
@@ -144,17 +174,17 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
                               /* open for reading */
                               if (strncmp("r", mode, 2) == 0)
                               {
-                                    file->write = NULL;
+                                    file->fdwrite = NULL;
                               }
                               /* open for writing (file need not exist) */
                               else if (strncmp("w", mode, 2) == 0)
                               {
-                                    file->read = NULL;
+                                    file->fdread = NULL;
                               }
                               /* open for appending (file need not exist) */
                               else if (strncmp("a", mode, 2) == 0)
                               {
-                                    file->read = NULL;
+                                    file->fdread = NULL;
                               }
                               /* open for reading and writing, start at beginning */
                               else if (strncmp("r+", mode, 2) == 0)
@@ -201,13 +231,13 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
  * @retval STD_RET_ERROR      file not closed
  */
 //================================================================================================//
-stdRet_t fclose(FILE_t *file)
+stdRet_t vfs_fclose(FILE_t *file)
 {
       stdRet_t status = STD_RET_ERROR;
 
       if (file)
       {
-            if (file->close(file->fd) == STD_RET_OK)
+            if (file->fdclose(file->fd) == STD_RET_OK)
             {
                   free(file);
                   status = STD_RET_OK;
@@ -230,15 +260,15 @@ stdRet_t fclose(FILE_t *file)
  * @return STD_RET_OK or 0 if write finished successfully, otherwise > 0
  */
 //================================================================================================//
-size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
+size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
       size_t n = 0;
 
       if (ptr && size && nitems && file)
       {
-            if (file->write)
+            if (file->fdwrite)
             {
-                  n = file->write(file->fd, ptr, size, nitems, file->seek);
+                  n = file->fdwrite(file->fd, ptr, size, nitems, file->seek);
                   file->seek += n * size;
             }
       }
@@ -259,15 +289,15 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @return number of read items
  */
 //================================================================================================//
-size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
+size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
       size_t n = 0;
 
       if (ptr && size && nitems && file)
       {
-            if (file->read)
+            if (file->fdread)
             {
-                  n = file->read(file->fd, ptr, size, nitems, file->seek);
+                  n = file->fdread(file->fd, ptr, size, nitems, file->seek);
                   file->seek += n * size;
             }
       }
@@ -288,7 +318,7 @@ size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @retval STD_RET_ERROR      error occured
  */
 //================================================================================================//
-stdRet_t fseek(FILE_t *file, i32_t offset, i32_t mode)
+stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
 {
       (void)mode;
 
@@ -316,13 +346,13 @@ stdRet_t fseek(FILE_t *file, i32_t offset, i32_t mode)
  * @retval STD_RET_XX         error
  */
 //================================================================================================//
-stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
+stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (file && file->ioctl)
+      if (file && file->fdioctl)
       {
-            status = file->ioctl(file->fd, rq, data);
+            status = file->fdioctl(file->fd, rq, data);
       }
 
       return status;
@@ -340,9 +370,9 @@ stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
 //================================================================================================//
 static void ROOT_opendir(DIR_t *dir) /* DNLFIXME apply better solution (table) */
 {
-      dir->readdir = ROOT_readdir;
-      dir->seek    = 0;
-      dir->items   = 3;
+      dir->rddir = ROOT_readdir;
+      dir->seek  = 0;
+      dir->items = 3;
 }
 
 
@@ -357,7 +387,7 @@ static void ROOT_opendir(DIR_t *dir) /* DNLFIXME apply better solution (table) *
 static dirent_t ROOT_readdir(size_t seek)
 {
       dirent_t direntry;
-      direntry.remove = NULL;
+      direntry.rm     = NULL;
       direntry.name   = NULL;
       direntry.size   = 0;
       direntry.isfile = FALSE;
@@ -389,7 +419,7 @@ static dirent_t ROOT_readdir(size_t seek)
  * @return directory object
  */
 //================================================================================================//
-DIR_t *opendir(const ch_t *path)
+DIR_t *vfs_opendir(const ch_t *path)
 {
       DIR_t *dir = NULL;
 
@@ -444,16 +474,16 @@ DIR_t *opendir(const ch_t *path)
  * @return element attributes
  */
 //================================================================================================//
-dirent_t readdir(DIR_t *dir)
+dirent_t vfs_readdir(DIR_t *dir)
 {
       dirent_t direntry;
       direntry.name = NULL;
       direntry.size = 0;
       direntry.fd   = 0;
 
-      if (dir->readdir)
+      if (dir->rddir)
       {
-            direntry = dir->readdir(dir->seek);
+            direntry = dir->rddir(dir->seek);
             dir->seek++;
       }
 
@@ -471,7 +501,7 @@ dirent_t readdir(DIR_t *dir)
  * @retval STD_RET_ERROR      close error
  */
 //================================================================================================//
-stdRet_t closedir(DIR_t *dir)
+stdRet_t vfs_closedir(DIR_t *dir)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -489,21 +519,38 @@ stdRet_t closedir(DIR_t *dir)
 /**
  * @brief Remove file
  *
- * @param *direntry     localization of file description
+ * @param *patch        localization of file
  *
  * @return STD_RET_OK if success, otherwise STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t remove(dirent_t *direntry)
+size_t vfs_remove(const ch_t *path)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (direntry->remove)
-      {
-            status = direntry->remove(direntry->fd);
-      }
+      /* DNLTODO implement vfs_remove */
+//      if (direntry->rm)
+//      {
+//            status = direntry->rm(direntry->fd);
+//      }
 
       return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Rename file name
+ *
+ * @param *oldName            old file name
+ * @param *newName            new file name
+ *
+ * @return 0 if success, otherwise != 0
+ */
+//================================================================================================//
+size_t vfs_rename(const ch_t *oldName, const ch_t *newName)
+{
+
 }
 
 

@@ -58,7 +58,6 @@ enum status_enum
 {
    STD_RET_OK                 = 0,
    STD_RET_ERROR              = 1,
-   STD_RET_ALLOCERROR         = 2,
    STD_RET_UNKNOWN            = 127,
 };
 
@@ -86,10 +85,10 @@ typedef u32_t fd_t;
 /** file type */
 typedef struct
 {
-      stdRet_t (*close)(nod_t dev);
-      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(nod_t dev, IORq_t iorq, void *data);
+      stdRet_t (*fdclose)(fd_t fd);
+      size_t   (*fdwrite)(fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*fdread )(fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+      stdRet_t (*fdioctl)(fd_t fd, IORq_t iorq, void *data);
       fd_t     fd;
       size_t   seek;
       ch_t     *mode;
@@ -99,7 +98,7 @@ typedef struct
 /** directory entry */
 typedef struct
 {
-      stdRet_t (*remove)(fd_t fd);
+      stdRet_t (*rm)(fd_t fd);
       ch_t  *name;
       size_t size;
       bool_t isfile;
@@ -110,7 +109,7 @@ typedef struct
 /** dir type */
 typedef struct
 {
-      dirent_t (*readdir)(size_t seek);
+      dirent_t (*rddir)(size_t seek);
       size_t   items;
       size_t   seek;
 } DIR_t;

@@ -55,6 +55,21 @@ extern "C" {
 #define calloc(nitems, isize)             mm_calloc(nitems, isize)
 #define free(mem)                         mm_free(mem)
 
+/** FILE SYSTEM DEFINITIONS */
+#define mount(node, path)                 vfs_mount(node, path)
+#define umount(path)                      vfs_umount(path)
+#define fopen(path, mode)                 vfs_fopen(path, mode)
+#define fclose(file)                      vfs_fclose(file)
+#define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
+#define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
+#define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
+#define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
+#define opendir(path)                     vfs_opendir(path)
+#define readdir(dir)                      vfs_readdir(dir)
+#define closedir(dir)                     vfs_closedir(dir)
+#define remove(direntry)                  vfs_remove(direntry)
+#define rename(oldName, newName)          vfs_rename(oldName, newName)
+
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      TaskDelay(delay)
 #define SleepUntil(lastTime, sleepTime)   TaskDelayUntil(lastTime, sleepTime)
