@@ -1,11 +1,11 @@
-#ifndef PROC_H_
-#define PROC_H_
+#ifndef _DLIST_H_
+#define _DLIST_H_
 /*=============================================================================================*//**
-@file    proc.h
+@file    dlist.h
 
 @author  Daniel Zorychta
 
-@brief   This file support /proc files
+@brief   This file support lists
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -34,13 +34,23 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "basic_types.h"
-#include "systypes.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-typedef size_t procfd_t;
+struct listitem {
+      void  *data;
+      u32_t  usrAttr;
+      struct listitem *prev;
+      struct listitem *next;
+};
+
+typedef struct list {
+      struct listitem *firstitem;
+      struct listitem *lastitem;
+      size_t itemcount;
+} list_t;
 
 
 /*==================================================================================================
@@ -51,21 +61,22 @@ typedef size_t procfd_t;
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t PROC_remove(u32_t fd);
-extern size_t   PROC_GetFileSize(procfd_t fd);
-extern procfd_t PROC_open(const ch_t *name, ch_t *mode);
-extern stdRet_t PROC_close(procfd_t fd);
-extern size_t   PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-extern void     PROC_opendir(DIR_t *dir);
-extern dirent_t PROC_readdir(size_t seek);
+extern list_t *ListCreate(void);
+extern void    ListFree(list_t *list);
+extern size_t  ListAddItem(list_t *list);
+extern void    ListRmItem(list_t *list, size_t number);
+extern void    ListSetItemData(list_t *list, void *ptr);
+extern void    ListSetItemAttr(list_t *list, u32_t attr);
+extern void   *ListGetItemData(list_t *list, size_t number);
+extern u32_t  *ListGetItemAttr(list_t *list, size_t number);
+extern size_t  ListGetItemCount(list_t *list);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROC_H_ */
+#endif /* _DLIST_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

@@ -102,6 +102,7 @@ CSRC = $(sort \
    system/src/hooks.c \
    system/src/idle.c \
    system/src/initd.c \
+   system/src/dlist.c \
    system/src/main.c \
    system/src/memman.c \
    system/src/print.c \
