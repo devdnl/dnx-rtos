@@ -49,7 +49,7 @@ struct listitem {
 typedef struct list {
       struct listitem *firstitem;
       struct listitem *lastitem;
-      size_t itemcount;
+      i32_t  itemcount;
 } list_t;
 
 
@@ -63,13 +63,13 @@ typedef struct list {
 ==================================================================================================*/
 extern list_t *ListCreate(void);
 extern void    ListFree(list_t *list);
-extern size_t  ListAddItem(list_t *list);
-extern void    ListRmItem(list_t *list, size_t number);
-extern void    ListSetItemData(list_t *list, void *ptr);
-extern void    ListSetItemAttr(list_t *list, u32_t attr);
-extern void   *ListGetItemData(list_t *list, size_t number);
-extern u32_t  *ListGetItemAttr(list_t *list, size_t number);
-extern size_t  ListGetItemCount(list_t *list);
+extern i32_t   ListAddItem(list_t *list);
+extern size_t  ListRmItem(list_t *list, i32_t nitem);
+extern void    ListSetItemData(list_t *list, i32_t nitem, void *ptr);
+extern void    ListSetItemAttr(list_t *list, i32_t nitem, u32_t attr);
+extern void   *ListGetItemData(list_t *list, i32_t nitem);
+extern u32_t   ListGetItemAttr(list_t *list, i32_t nitem);
+extern i32_t   ListGetItemCount(list_t *list);
 
 
 #ifdef __cplusplus

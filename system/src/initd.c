@@ -135,10 +135,6 @@ void Initd(void *arg)
 
       ttyx[0] = tty;
 
-
-      u8_t cnt = 0;
-
-
       for (;;)
       {
             /* load application if new TTY was created */
