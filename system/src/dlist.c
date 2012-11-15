@@ -43,6 +43,18 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+struct listitem {
+      void  *data;
+      u32_t  usrAttr;
+      struct listitem *prev;
+      struct listitem *next;
+};
+
+typedef struct list {
+      struct listitem *firstitem;
+      struct listitem *lastitem;
+      i32_t  itemcount;
+} list_t;
 
 
 /*==================================================================================================
