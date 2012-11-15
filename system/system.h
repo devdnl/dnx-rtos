@@ -45,6 +45,7 @@ extern "C" {
 #include "vfs.h"
 #include "hooks.h"
 #include "netconf.h"
+#include "dlist.h"
 
 
 /*==================================================================================================

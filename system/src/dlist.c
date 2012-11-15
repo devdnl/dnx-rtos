@@ -45,14 +45,12 @@ extern "C" {
 ==================================================================================================*/
 struct listitem {
       void  *data;
-      u32_t  usrAttr;
-      struct listitem *prev;
       struct listitem *next;
 };
 
 typedef struct list {
-      struct listitem *firstitem;
-      struct listitem *lastitem;
+      struct listitem *head;
+      struct listitem *tail;
       i32_t  itemcount;
 } list_t;
 
@@ -60,7 +58,7 @@ typedef struct list {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static struct listitem *GetItemAddr(list_t *list, i32_t nitem);
+static void GetItemAddr(list_t *list, i32_t nitem, struct listitem **previtem, struct listitem **thisitem);
 
 
 /*==================================================================================================
@@ -99,7 +97,7 @@ list_t *ListCreate(void)
 void ListFree(list_t *list)
 {
       if (list) {
-            struct listitem *item     = list->firstitem;
+            struct listitem *item     = list->head;
             struct listitem *nextitem = NULL;
 
             while (item) {
@@ -132,12 +130,12 @@ i32_t ListAddItem(list_t *list)
       struct listitem *newitem = calloc(1, sizeof(struct listitem));
 
       if (newitem) {
-            if (list->firstitem == NULL) {
-                  list->firstitem = newitem;
-                  list->lastitem  = newitem;
+            if (list->head == NULL) {
+                  list->head = newitem;
+                  list->tail  = newitem;
             } else {
-                  list->lastitem->next = newitem;
-                  list->lastitem = newitem;
+                  list->tail->next = newitem;
+                  list->tail = newitem;
             }
 
             list->itemcount++;
@@ -165,17 +163,24 @@ size_t ListRmItem(list_t *list, i32_t nitem)
 
       if (list && (list->itemcount - 1 >= nitem)) {
 
-            struct listitem *item = GetItemAddr(list, nitem);
+            struct listitem *item;
+            struct listitem *previtem;
+            GetItemAddr(list, nitem, &item, &previtem);
 
             if (item) {
-                  if (item->prev) {
-                        item->prev->next = item->next;
-                  } else {
-                        list->firstitem = item->next;
+                  /* check head pointer */
+                  if (nitem == 0) {
+                        list->head = item->next;
                   }
 
-                  if (item->next == NULL) {
-                        list->lastitem = item->prev;
+                  /* check tail pointer */
+                  if (list->tail == item) {
+                        list->tail = item->next;
+                  }
+
+                  /* connect to previous item next item from current item */
+                  if (previtem) {
+                        previtem->next = item->next;
                   }
 
                   free(item->data);
@@ -201,37 +206,16 @@ size_t ListRmItem(list_t *list, i32_t nitem)
  * @param *ptr          data pointer
  */
 //================================================================================================//
-void ListSetItemData(list_t *list, i32_t nitem, void *ptr)
+void ListSetItemDataPtr(list_t *list, i32_t nitem, void *ptr)
 {
       if (list && (nitem > -1)) {
 
-            struct listitem *item = GetItemAddr(list, nitem);
+            struct listitem *item;
+            GetItemAddr(list, nitem, NULL, &item);
 
             if (item) {
                   free(item->data);
                   item->data = ptr;
-            }
-      }
-}
-
-
-//================================================================================================//
-/**
- * @brief Function set item attribute
- *
- * @param *list         pointer to list
- * @param nitem         item number
- * @param attr          item attribute
- */
-//================================================================================================//
-void ListSetItemAttr(list_t *list, i32_t nitem, u32_t attr)
-{
-      if (list && (nitem > -1)) {
-
-            struct listitem *item = GetItemAddr(list, nitem);
-
-            if (item) {
-                  item->usrAttr = attr;
             }
       }
 }
@@ -247,13 +231,13 @@ void ListSetItemAttr(list_t *list, i32_t nitem, u32_t attr)
  * @return pointer to item user data
  */
 //================================================================================================//
-void *ListGetItemData(list_t *list, i32_t nitem)
+void *ListGetItemDataPtr(list_t *list, i32_t nitem)
 {
       void *usrdata = NULL;
 
       if (list && (nitem > -1)) {
-
-            struct listitem *item = GetItemAddr(list, nitem);
+            struct listitem *item;
+            GetItemAddr(list, nitem, NULL, &item);
 
             if (item) {
                   usrdata = item->data;
@@ -261,33 +245,6 @@ void *ListGetItemData(list_t *list, i32_t nitem)
       }
 
       return usrdata;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function return item's user attribute
- *
- * @param *list         pointer to list
- * @param nitem         item number
- *
- * @return item's user attribute
- */
-//================================================================================================//
-u32_t ListGetItemAttr(list_t *list, i32_t nitem)
-{
-      u32_t usrattr = 0;
-
-      if (list && (nitem > -1)) {
-
-            struct listitem *item = GetItemAddr(list, nitem);
-
-            if (item) {
-                  usrattr = item->usrAttr;
-            }
-      }
-
-      return usrattr;
 }
 
 
@@ -317,23 +274,31 @@ i32_t ListGetItemCount(list_t *list)
  * @brief Function find pointer to selected item
  *
  * @param *list         pointer to list
+ * @param *previtem     pointer to previous item
+ * @param *thisitem     pointer to found item
  * @param nitem         item number
  *
  * @return pointer to item
  */
 //================================================================================================//
-static struct listitem *GetItemAddr(list_t *list, i32_t nitem)
+static void GetItemAddr(list_t *list, i32_t nitem, struct listitem **previtem, struct listitem **thisitem)
 {
-      struct listitem *item = list->firstitem;
+      struct listitem *titem = list->head;
+      struct listitem *pitem = NULL;
 
       i32_t cnt = 0;
 
-      while (cnt < nitem && item) {
-            item = item->next;
+      while (cnt < nitem && titem) {
+            pitem = titem;
+            titem = titem->next;
             cnt++;
       }
 
-      return item;
+      if (thisitem)
+            *thisitem = titem;
+
+      if (previtem)
+            *previtem = pitem;
 }
 
 

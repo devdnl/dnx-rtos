@@ -247,12 +247,12 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                               if (strncmp(fname, "/", 5) == 0)
                               {
                                     fs_open("/index.html", &file);
-                                    snprint(fname, sizeof(fname), "/index.html");
+                                    snprintb(fname, sizeof(fname), "/index.html");
                               }
                               else
                               {
                                     fs_open("/404.html", &file);
-                                    snprint(fname, sizeof(fname), "/404.html");
+                                    snprintb(fname, sizeof(fname), "/404.html");
                               }
                         }
 
@@ -286,7 +286,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                       fclose(sensor);
                                                 }
 
-                                                n = snprint(pagePtr, 50, "%d", (i32_t)temp);
+                                                n = snprintb(pagePtr, 50, "%d", (i32_t)temp);
                                           }
                                           else if (strncmp(&file.data[i], "pres/?>", 7) == 0)
                                           {
@@ -301,7 +301,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                       fclose(sensor);
                                                 }
 
-                                                n = snprint(pagePtr, 50, "%d", (u32_t)pressure);
+                                                n = snprintb(pagePtr, 50, "%d", (u32_t)pressure);
                                           }
                                           else if (strncmp(&file.data[i], "date/?>", 7) == 0)
                                           {
@@ -323,7 +323,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                       memset(&date, 0x00, sizeof(date));
                                                 }
 
-                                                n = snprint(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
+                                                n = snprintb(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
                                                             date.day,
                                                             date.month,
                                                             date.year,

@@ -342,7 +342,7 @@ static u32_t CalcFormatSize(const ch_t *format, va_list arg)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
+u32_t snprintb(ch_t *stream, u32_t size, const ch_t *format, ...)
 {
       va_list args;
       u32_t n = 0;
