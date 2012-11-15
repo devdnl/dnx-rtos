@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support lists
+@brief   This file support dynamically lists
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -119,13 +119,14 @@ void ListFree(list_t *list)
  * @brief Function add item to end of list
  *
  * @param *list         pointer to list
+ * @param *data         data pointer
  *
  * @return number of item in list, if failure function return -1
  */
 //================================================================================================//
-i32_t ListAddItem(list_t *list)
+i32_t ListAddItem(list_t *list, void *data)
 {
-      size_t n = -1;
+      i32_t n = -1;
 
       struct listitem *newitem = calloc(1, sizeof(struct listitem));
 
@@ -139,6 +140,8 @@ i32_t ListAddItem(list_t *list)
             }
 
             list->itemcount++;
+
+            newitem->data = data;
 
             n = list->itemcount - 1;
       }
@@ -161,34 +164,35 @@ size_t ListRmItem(list_t *list, i32_t nitem)
 {
       size_t n = 1;
 
-      if (list && (list->itemcount - 1 >= nitem)) {
+      if (list) {
+            if ((nitem >= 0) && (list->itemcount - 1 >= nitem)) {
+                  struct listitem *item;
+                  struct listitem *previtem;
+                  GetItemAddr(list, nitem, &previtem, &item);
 
-            struct listitem *item;
-            struct listitem *previtem;
-            GetItemAddr(list, nitem, &item, &previtem);
+                  if (item) {
+                        /* check head pointer */
+                        if (nitem == 0) {
+                              list->head = item->next;
+                        }
 
-            if (item) {
-                  /* check head pointer */
-                  if (nitem == 0) {
-                        list->head = item->next;
+                        /* check tail pointer */
+                        if (list->itemcount - 1 == nitem) {
+                              list->tail = previtem;
+                        }
+
+                        /* connect to previous item next item from current item */
+                        if (previtem) {
+                              previtem->next = item->next;
+                        }
+
+                        free(item->data);
+                        free(item);
+
+                        list->itemcount--;
+
+                        n = 0;
                   }
-
-                  /* check tail pointer */
-                  if (list->tail == item) {
-                        list->tail = item->next;
-                  }
-
-                  /* connect to previous item next item from current item */
-                  if (previtem) {
-                        previtem->next = item->next;
-                  }
-
-                  free(item->data);
-                  free(item);
-
-                  list->itemcount--;
-
-                  n = 0;
             }
       }
 
@@ -206,9 +210,9 @@ size_t ListRmItem(list_t *list, i32_t nitem)
  * @param *ptr          data pointer
  */
 //================================================================================================//
-void ListSetItemDataPtr(list_t *list, i32_t nitem, void *ptr)
+void ListSetItemData(list_t *list, i32_t nitem, void *ptr)
 {
-      if (list && (nitem > -1)) {
+      if (list && (nitem >= 0)) {
 
             struct listitem *item;
             GetItemAddr(list, nitem, NULL, &item);
@@ -231,20 +235,20 @@ void ListSetItemDataPtr(list_t *list, i32_t nitem, void *ptr)
  * @return pointer to item user data
  */
 //================================================================================================//
-void *ListGetItemDataPtr(list_t *list, i32_t nitem)
+void *ListGetItemData(list_t *list, i32_t nitem)
 {
-      void *usrdata = NULL;
+      void *data = NULL;
 
-      if (list && (nitem > -1)) {
+      if (list && (nitem >= 0)) {
             struct listitem *item;
             GetItemAddr(list, nitem, NULL, &item);
 
             if (item) {
-                  usrdata = item->data;
+                  data = item->data;
             }
       }
 
-      return usrdata;
+      return data;
 }
 
 

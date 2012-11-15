@@ -5,7 +5,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support lists
+@brief   This file support dynamically lists
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -52,10 +52,10 @@ typedef struct list list_t;
 ==================================================================================================*/
 extern list_t *ListCreate(void);
 extern void    ListFree(list_t *list);
-extern i32_t   ListAddItem(list_t *list);
+extern i32_t   ListAddItem(list_t *list, void *ptr);
 extern size_t  ListRmItem(list_t *list, i32_t nitem);
-extern void    ListSetItemDataPtr(list_t *list, i32_t nitem, void *ptr);
-extern void   *ListGetItemDataPtr(list_t *list, i32_t nitem);
+extern void    ListSetItemData(list_t *list, i32_t nitem, void *ptr);
+extern void   *ListGetItemData(list_t *list, i32_t nitem);
 extern i32_t   ListGetItemCount(list_t *list);
 
 
