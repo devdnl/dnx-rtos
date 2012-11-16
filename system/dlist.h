@@ -52,9 +52,12 @@ typedef struct list list_t;
 ==================================================================================================*/
 extern list_t *ListCreate(void);
 extern void    ListFree(list_t *list);
-extern i32_t   ListAddItem(list_t *list, void *ptr);
-extern size_t  ListRmItem(list_t *list, i32_t nitem);
-extern void    ListSetItemData(list_t *list, i32_t nitem, void *ptr);
+extern i32_t   ListAddItem(list_t *list, void *data);
+extern i32_t   ListInsItemBefore(list_t *list, i32_t nitem, void *data);
+extern i32_t   ListInsItemAfter(list_t *list, i32_t nitem, void *data);
+extern i32_t   ListRmItem(list_t *list, i32_t nitem);
+extern void    ListClear(list_t *list);
+extern void    ListSetItemData(list_t *list, i32_t nitem, void *data);
 extern void   *ListGetItemData(list_t *list, i32_t nitem);
 extern i32_t   ListGetItemCount(list_t *list);
 
