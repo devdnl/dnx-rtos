@@ -58,6 +58,8 @@ struct node {
       void       *data;
 };
 
+typedef struct node node_t;
+
 struct fshdl_s {
       list_t  *root;
       mutex_t mtx;
@@ -67,7 +69,11 @@ struct fshdl_s {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static ch_t *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
+static ch_t   *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
+static list_t *GetNodeFromList(list_t *list, ch_t *dirname, size_t len, struct node **node);
+static list_t *GotoDir(ch_t *path);
+static i32_t   GetPathDeep(const ch_t *path);
+static i32_t   CreateDirNode(list_t *list, const ch_t *name);
 
 
 /*==================================================================================================
@@ -122,6 +128,76 @@ stdRet_t vfs_init(void)
 
 //================================================================================================//
 /**
+ * @brief Create directory
+ *
+ * @param *path   path to new directory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_mkdir(const ch_t *path)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && fs) {
+            list_t *root = fs->root;
+            i32_t   deep = GetPathDeep(path);
+            ch_t   *word;
+            node_t *node;
+            size_t  len;
+
+            while (deep > 1) {
+                  path = GetWordFromPath((ch_t*)path, &word, &len);
+                  root = GetNodeFromList(root, word, len, &node);
+
+                  if (node->type == NODE_TYPE_FS) {
+                        break;
+                  }
+                  deep--;
+            }
+
+            if (deep == 1 && root) {
+                  switch (node->type) {
+                  case NODE_TYPE_DIR:
+                        GetWordFromPath((ch_t*)path, &word, &len);
+
+                        ch_t *name = calloc(1, len + 1);
+
+                        if (name) {
+                              strncpy(name, word, len);
+
+                              if (CreateDirNode(root, name) != 0){
+                                    free(name);
+                              } else {
+                                    status = STD_RET_OK;
+                              }
+                        }
+                        break;
+
+                  case NODE_TYPE_FS:
+                        if (node->data) {
+                              vfsnode_t *extfs = node->data;
+
+                              status = extfs->mkdir(path);
+                        }
+                        break;
+
+                  default:
+                        break;
+                  }
+
+
+
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function open selected file
  *
  * @param *name         file path
@@ -137,125 +213,147 @@ FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
       if (name && mode) {
             file = calloc(1, sizeof(FILE_t));
 
-            if (file && (name[0] == '/')) {
-                  nodeType_t nodeType = NODE_TYPE_UNKNOWN;
-                  struct node *node   = NULL;
-                  list_t root = fs->root;
-                  ch_t  *path = name;
-                  ch_t  *word = NULL;
+            if (file) {
+                  /* root filter */
+                  if (name[0] == '/') {
+                        struct node *node   = NULL;
+                        list_t *root = fs->root;
+                        ch_t   *path = (ch_t *)name;
+                        ch_t   *word = NULL;
+                        size_t  len;
 
-                  /* go to file/dir/fs specified in path */
-                  while (path) {
-                        path = GetWordFromPath(path, &word, NULL);
+                        /* go to file/dir/fs specified in path */
+                        while (path) {
+                              path = GetWordFromPath(path, &word, &len);
 
-                        root = FindNode(root, word, &node);
+                              root = GetNodeFromList(root, word, len, &node);
 
-                        if (node == NULL) {
-                              path = 0;
+                              if (node == NULL) {
+                                    path = 0;
+                              }
+                        }
+
+                        /* check file type */
+                        if (path == NULL) {
+                              switch (node->type) {
+                              case NODE_TYPE_DIR:
+                                    /* DNLTODO */
+                                    break;
+
+                              case NODE_TYPE_FILE:
+                                    /* DNLTODO */
+                                    break;
+
+                              case NODE_TYPE_FS:
+                                    /* DNLTODO */
+                                    break;
+
+                              default:
+                                    break;
+                              }
                         }
                   }
 
 
 
 
-
-                  /* check if path is device */
-                  stdRet_t stat = STD_RET_ERROR;
-
-                  ch_t *filename = strchr(name + 1, '/');
-
-                  if (filename)
-                  {
-                        filename++;
-
-                        if (strncmp("/bin/", name, filename - name) == 0)
-                        {
-                                    /* nothing to do */
-                        }
-                        else if (strncmp("/dev/", name, filename - name) == 0)
-                        {
-                              regDrvData_t drvdata;
-
-                              if (GetDrvData(filename, &drvdata) == STD_RET_OK)
-                              {
-                                    if (drvdata.open(drvdata.device) == STD_RET_OK)
-                                    {
-                                          file->fdclose = drvdata.close;
-                                          file->fd      = drvdata.device;
-                                          file->fdioctl = drvdata.ioctl;
-                                          file->fdread  = drvdata.read;
-                                          file->fdwrite = drvdata.write;
-
-                                          stat = STD_RET_OK;
-                                    }
-                              }
-                        }
-//                        else if (strncmp("/proc/", name, filename - name) == 0)
-//                        {
-//                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
-//                              {
-//                                    file->fdclose = PROC_close;
-//                                    file->fdioctl = NULL;
-//                                    file->fdread  = PROC_read;
-//                                    file->fdwrite = PROC_write;
+//                  /* check if path is device */
+//                  stdRet_t stat = STD_RET_ERROR;
 //
-//                                    stat = STD_RET_OK;
+//                  ch_t *filename = strchr(name + 1, '/');
+//
+//                  if (filename)
+//                  {
+//                        filename++;
+//
+//                        if (strncmp("/bin/", name, filename - name) == 0)
+//                        {
+//                                    /* nothing to do */
+//                        }
+//                        else if (strncmp("/dev/", name, filename - name) == 0)
+//                        {
+//                              regDrvData_t drvdata;
+//
+//                              if (GetDrvData(filename, &drvdata) == STD_RET_OK)
+//                              {
+//                                    if (drvdata.open(drvdata.device) == STD_RET_OK)
+//                                    {
+//                                          file->fdclose = drvdata.close;
+//                                          file->fd      = drvdata.device;
+//                                          file->fdioctl = drvdata.ioctl;
+//                                          file->fdread  = drvdata.read;
+//                                          file->fdwrite = drvdata.write;
+//
+//                                          stat = STD_RET_OK;
+//                                    }
 //                              }
 //                        }
-
-                        /* file does not exist */
-                        if (stat != STD_RET_OK)
-                        {
-                              free(file);
-                              file = NULL;
-                        }
-                        else
-                        {
-                              file->mode = (ch_t*)mode;
-
-                              /* open for reading */
-                              if (strncmp("r", mode, 2) == 0)
-                              {
-                                    file->fdwrite = NULL;
-                              }
-                              /* open for writing (file need not exist) */
-                              else if (strncmp("w", mode, 2) == 0)
-                              {
-                                    file->fdread = NULL;
-                              }
-                              /* open for appending (file need not exist) */
-                              else if (strncmp("a", mode, 2) == 0)
-                              {
-                                    file->fdread = NULL;
-                              }
-                              /* open for reading and writing, start at beginning */
-                              else if (strncmp("r+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* open for reading and writing (overwrite file) */
-                              else if (strncmp("w+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* open for reading and writing (append if file exists) */
-                              else if (strncmp("a+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* invalid mode */
-                              else
-                              {
-                                    fclose(file);
-                                    file = NULL;
-                              }
-                        }
-                  }
-                  else
-                  {
-                        free(file);
-                        file = NULL;
-                  }
+////                        else if (strncmp("/proc/", name, filename - name) == 0)
+////                        {
+////                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
+////                              {
+////                                    file->fdclose = PROC_close;
+////                                    file->fdioctl = NULL;
+////                                    file->fdread  = PROC_read;
+////                                    file->fdwrite = PROC_write;
+////
+////                                    stat = STD_RET_OK;
+////                              }
+////                        }
+//
+//                        /* file does not exist */
+//                        if (stat != STD_RET_OK)
+//                        {
+//                              free(file);
+//                              file = NULL;
+//                        }
+//                        else
+//                        {
+//                              file->mode = (ch_t*)mode;
+//
+//                              /* open for reading */
+//                              if (strncmp("r", mode, 2) == 0)
+//                              {
+//                                    file->fdwrite = NULL;
+//                              }
+//                              /* open for writing (file need not exist) */
+//                              else if (strncmp("w", mode, 2) == 0)
+//                              {
+//                                    file->fdread = NULL;
+//                              }
+//                              /* open for appending (file need not exist) */
+//                              else if (strncmp("a", mode, 2) == 0)
+//                              {
+//                                    file->fdread = NULL;
+//                              }
+//                              /* open for reading and writing, start at beginning */
+//                              else if (strncmp("r+", mode, 2) == 0)
+//                              {
+//                                    /* nothing to change */
+//                              }
+//                              /* open for reading and writing (overwrite file) */
+//                              else if (strncmp("w+", mode, 2) == 0)
+//                              {
+//                                    /* nothing to change */
+//                              }
+//                              /* open for reading and writing (append if file exists) */
+//                              else if (strncmp("a+", mode, 2) == 0)
+//                              {
+//                                    /* nothing to change */
+//                              }
+//                              /* invalid mode */
+//                              else
+//                              {
+//                                    fclose(file);
+//                                    file = NULL;
+//                              }
+//                        }
+//                  }
+//                  else
+//                  {
+//                        free(file);
+//                        file = NULL;
+//                  }
             }
       }
 
@@ -445,9 +543,9 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
 //================================================================================================//
 static void ROOT_opendir(DIR_t *dir) /* DNLFIXME apply better solution (table) */
 {
-      dir->rddir = ROOT_readdir;
-      dir->seek  = 0;
-      dir->items = 3;
+//      dir->rddir = ROOT_readdir;
+//      dir->seek  = 0;
+//      dir->items = 3;
 }
 
 
@@ -509,15 +607,15 @@ DIR_t *vfs_opendir(const ch_t *path)
 
                   if (strcmp("/", path) == 0)
                   {
-                        ROOT_opendir(dir);
+//                        ROOT_opendir(dir);
                   }
                   else if (strcmp("/bin", path) == 0)
                   {
-                        REGAPP_opendir(dir);
+//                        REGAPP_opendir(dir);
                   }
                   else if (strcmp("/dev", path) == 0)
                   {
-                        REGDRV_opendir(dir);
+//                        REGDRV_opendir(dir);
                   }
 //                  else if (strcmp("/proc", path) == 0)
 //                  {
@@ -631,6 +729,39 @@ size_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 
 //================================================================================================//
 /**
+ * @brief Create directory node
+ */
+//================================================================================================//
+static i32_t CreateDirNode(list_t *list, const ch_t *name)
+{
+      i32_t n = 1;
+
+      node_t *dir = calloc(1, sizeof(node_t));
+
+      if (dir && list) {
+            dir->data = ListCreate();
+
+            if (dir->data) {
+                  dir->name = name;
+                  dir->size = sizeof(node_t) + strlen(name);
+                  dir->type = NODE_TYPE_DIR;
+
+                  if (ListAddItem(list, dir) < 0) {
+                        ListFree(dir->data);
+                        free(dir);
+                        dir = NULL;
+                  } else {
+                        n = 0;
+                  }
+            }
+      }
+
+      return n;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function return pointer to word
  *
  * @param[in]  *str          string
@@ -675,16 +806,70 @@ static ch_t *GetWordFromPath(ch_t *str, ch_t **word, size_t *length)
 
 //================================================================================================//
 /**
+ * @brief Check path deep
+ *
+ * @param *path         path
+ *
+ * @return path deep
+ */
+//================================================================================================//
+static i32_t GetPathDeep(const ch_t *path)
+{
+      u32_t deep = 0;
+      const ch_t *lastpath = NULL;
+
+      if (path[0] == '/') {
+            lastpath = path++;
+
+            while ((path = strchr(path, '/'))) {
+                  lastpath = path;
+                  path++;
+                  deep++;
+            }
+
+            if (lastpath[1] != '\0')
+                  deep++;
+      }
+
+      return deep;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function find node
  *
  * @param[in]  *list          input dir list
- * @param[in]  *word          finding folder name
+ * @param[in]  *dirname       finding folder name
+ * @param[in]  len            dir name length
  * @param[out] **node         found node
  */
 //================================================================================================//
-list_t *FindNode(list_t *list, ch_t *word, struct node **node)
+static list_t *GetNodeFromList(list_t *list, ch_t *dirname, size_t len, struct node **node)
 {
+      i32_t   listsize = 0;
+      list_t *nextlist = NULL;
+      node_t *dir      = NULL;
 
+      if (list && dirname && node) {
+            listsize = ListGetItemCount(list);
+            i32_t i  = 0;
+
+            while (listsize-- > 0) {
+                  dir = ListGetItemData(list, i++);
+
+                  if (strncmp(dir->name, dirname, len) == 0) {
+                        if (dir->type == NODE_TYPE_DIR)
+                              nextlist = dir->data;
+
+                        break;
+                  }
+            }
+
+            *node = dir;
+      }
+
+      return nextlist;
 }
 
 

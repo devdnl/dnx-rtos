@@ -53,12 +53,15 @@ struct vfsnode
       size_t   (*write)(fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
       size_t   (*read)(fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
       stdRet_t (*ioctl)(fd_t fd, IORq_t iroq, void *data);
+      stdRet_t (*mkdir)(const ch_t *path);
       DIR_t   *(*opendir)(const ch_t *path);
       dirent_t (*readdir)(DIR_t *dir);
       stdRet_t (*closedir)(DIR_t *dir);
       size_t   (*remove)(dirent_t *direntry);
       size_t   (*rename)(const ch_t *oldName, const ch_t *newName);
 };
+
+typedef struct vfsnode vfsnode_t;
 
 
 /*==================================================================================================
