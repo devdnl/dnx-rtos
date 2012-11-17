@@ -44,18 +44,36 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+typedef enum {
+      NODE_TYPE_UNKNOWN,
+      NODE_TYPE_DIR,
+      NODE_TYPE_FILE,
+      NODE_TYPE_FS,
+} nodeType_t;
+
+struct node {
+      ch_t       *name;
+      nodeType_t  type;
+      u32_t       size;
+      void       *data;
+};
+
+struct fshdl_s {
+      list_t  *root;
+      mutex_t mtx;
+};
 
 
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static void     ROOT_opendir(DIR_t *dir);
-static dirent_t ROOT_readdir(size_t seek);
+static ch_t *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
 
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+static struct fshdl_s *fs;
 
 
 /*==================================================================================================
@@ -64,34 +82,41 @@ static dirent_t ROOT_readdir(size_t seek);
 
 //================================================================================================//
 /**
- * @brief Function mount file system in VFS
+ * @brief Initialize VFS module
  *
- * @param node                registered node
- * @param *dir                folder name
- *
- * @retval STD_RET_OK         mount success
- * @retval STD_RET_ERROR      mount error
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t vfs_mount(struct vfsnode node, const ch_t *dir)
+stdRet_t vfs_init(void)
 {
+      stdRet_t ret = STD_RET_OK;
 
-}
+      if (fs == NULL) {
+            fs = calloc(1, sizeof(struct fshdl_s));
 
+            if (fs) {
+                  CreateMutex(fs->mtx);
+                  fs->root = ListCreate();
 
-//================================================================================================//
-/**
- * @brief Function umount dir from file system
- *
- * @param *path               dir path
- *
- * @retval STD_RET_OK         mount success
- * @retval STD_RET_ERROR      mount error
- */
-//================================================================================================//
-stdRet_t vfs_umount(const ch_t *path)
-{
+                  if (!fs->mtx || !fs->root) {
+                        if (fs->mtx)
+                              DeleteMutex(fs->mtx);
 
+                        if (fs->root)
+                              ListFree(fs->root);
+
+                        free(fs);
+
+                        fs = NULL;
+                  }
+            }
+
+            if (fs == NULL)
+                  ret = STD_RET_ERROR;
+      }
+
+      return ret;
 }
 
 
@@ -107,16 +132,33 @@ stdRet_t vfs_umount(const ch_t *path)
 //================================================================================================//
 FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
 {
-      (void) mode;
-
       FILE_t *file = NULL;
 
-      if (name && mode)
-      {
+      if (name && mode) {
             file = calloc(1, sizeof(FILE_t));
 
-            if (file != NULL)
-            {
+            if (file && (name[0] == '/')) {
+                  nodeType_t nodeType = NODE_TYPE_UNKNOWN;
+                  struct node *node   = NULL;
+                  list_t root = fs->root;
+                  ch_t  *path = name;
+                  ch_t  *word = NULL;
+
+                  /* go to file/dir/fs specified in path */
+                  while (path) {
+                        path = GetWordFromPath(path, &word, NULL);
+
+                        root = FindNode(root, word, &node);
+
+                        if (node == NULL) {
+                              path = 0;
+                        }
+                  }
+
+
+
+
+
                   /* check if path is device */
                   stdRet_t stat = STD_RET_ERROR;
 
@@ -148,18 +190,18 @@ FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
                                     }
                               }
                         }
-                        else if (strncmp("/proc/", name, filename - name) == 0)
-                        {
-                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
-                              {
-                                    file->fdclose = PROC_close;
-                                    file->fdioctl = NULL;
-                                    file->fdread  = PROC_read;
-                                    file->fdwrite = PROC_write;
-
-                                    stat = STD_RET_OK;
-                              }
-                        }
+//                        else if (strncmp("/proc/", name, filename - name) == 0)
+//                        {
+//                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
+//                              {
+//                                    file->fdclose = PROC_close;
+//                                    file->fdioctl = NULL;
+//                                    file->fdread  = PROC_read;
+//                                    file->fdwrite = PROC_write;
+//
+//                                    stat = STD_RET_OK;
+//                              }
+//                        }
 
                         /* file does not exist */
                         if (stat != STD_RET_OK)
@@ -218,6 +260,39 @@ FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
       }
 
       return file;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function mount file system in VFS
+ *
+ * @param node                registered node
+ * @param *dir                folder name
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_mount(struct vfsnode node, const ch_t *dir)
+{
+
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function umount dir from file system
+ *
+ * @param *path               dir path
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_umount(const ch_t *path)
+{
+
 }
 
 
@@ -444,10 +519,10 @@ DIR_t *vfs_opendir(const ch_t *path)
                   {
                         REGDRV_opendir(dir);
                   }
-                  else if (strcmp("/proc", path) == 0)
-                  {
-                        PROC_opendir(dir);
-                  }
+//                  else if (strcmp("/proc", path) == 0)
+//                  {
+//                        PROC_opendir(dir);
+//                  }
                   else
                   {
                         stat = STD_RET_ERROR;
@@ -553,6 +628,64 @@ size_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 
 }
 
+
+//================================================================================================//
+/**
+ * @brief Function return pointer to word
+ *
+ * @param[in]  *str          string
+ * @param[out] **word        pointer to word beginning
+ * @param[out] *length       pointer to word length
+ *
+ * @return pointer to next word, otherwise NULL
+ */
+//================================================================================================//
+static ch_t *GetWordFromPath(ch_t *str, ch_t **word, size_t *length)
+{
+      ch_t *bwd = NULL;
+      ch_t *ewd = NULL;
+      ch_t *nwd = NULL;
+
+      if (str) {
+            bwd = strchr(str, '/');
+
+            if (bwd) {
+                  ewd = strchr(bwd + 1, '/');
+
+                  if (ewd == NULL) {
+                        ewd = strchr(bwd + 1, '\0');
+                        nwd = NULL;
+                  } else {
+                        nwd = ewd;
+                  }
+
+                  bwd++;
+            }
+      }
+
+      if (word)
+            *word   = bwd;
+
+      if (length)
+            *length = ewd - bwd;
+
+      return nwd;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function find node
+ *
+ * @param[in]  *list          input dir list
+ * @param[in]  *word          finding folder name
+ * @param[out] **node         found node
+ */
+//================================================================================================//
+list_t *FindNode(list_t *list, ch_t *word, struct node **node)
+{
+
+}
 
 
 #ifdef __cplusplus

@@ -79,7 +79,7 @@ typedef u8_t IORq_t;
 
 
 /** file descriptor */
-typedef u32_t fd_t;
+typedef size_t fd_t;
 
 
 /** file type */

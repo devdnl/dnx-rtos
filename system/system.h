@@ -41,7 +41,6 @@ extern "C" {
 #include "appruntime.h"
 #include "cpu.h"
 #include "regdrv.h"
-#include "proc.h"
 #include "vfs.h"
 #include "hooks.h"
 #include "netconf.h"

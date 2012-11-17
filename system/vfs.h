@@ -47,7 +47,7 @@ extern "C" {
 ==================================================================================================*/
 struct vfsnode
 {
-      fd_t     (*getFD)(const ch_t *path);
+      fd_t    *(*getFD)(const ch_t *path);
       stdRet_t (*open)(fd_t fd);
       stdRet_t (*close)(fd_t fd);
       size_t   (*write)(fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
@@ -64,14 +64,18 @@ struct vfsnode
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
+extern stdRet_t vfs_init(void);
+extern FILE_t  *vfs_fopen(const ch_t *name, const ch_t *mode);
+
 extern stdRet_t vfs_mount(struct vfsnode node, const ch_t *path);
 extern stdRet_t vfs_umount(const ch_t *path);
-extern FILE_t  *vfs_fopen(const ch_t *name, const ch_t *mode);
+
 extern stdRet_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode);
 extern stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data);
+extern stdRet_t vfs_mkdir(const ch_t *path);
 extern DIR_t   *vfs_opendir(const ch_t *path);
 extern dirent_t vfs_readdir(DIR_t *dir);
 extern stdRet_t vfs_closedir(DIR_t *dir);
