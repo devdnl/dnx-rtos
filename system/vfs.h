@@ -47,17 +47,14 @@ extern "C" {
 ==================================================================================================*/
 struct vfsnode
 {
-      fd_t    *(*getFD)(const ch_t *path);
-      stdRet_t (*open)(fd_t fd);
-      stdRet_t (*close)(fd_t fd);
-      size_t   (*write)(fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read)(fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t (*ioctl)(fd_t fd, IORq_t iroq, void *data);
+      stdRet_t (*open)(void *fd);
+      stdRet_t (*close)(void *fd);
+      size_t   (*write)(void *fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*read)(void *fd, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t (*ioctl)(void *fd, IORq_t iroq, void *data);
       size_t   (*mkdir)(const ch_t *path);
       DIR_t   *(*opendir)(const ch_t *path);
-      dirent_t (*readdir)(DIR_t *dir);
-      stdRet_t (*closedir)(DIR_t *dir);
-      size_t   (*remove)(dirent_t *direntry);
+      size_t   (*remove)(const ch_t *path);
       size_t   (*rename)(const ch_t *oldName, const ch_t *newName);
 };
 
@@ -70,23 +67,18 @@ typedef struct vfsnode vfsnode_t;
 extern stdRet_t vfs_init(void);
 extern stdRet_t vfs_mkdir(const ch_t *path);
 extern DIR_t   *vfs_opendir(const ch_t *path);
-
+extern stdRet_t vfs_closedir(DIR_t *dir);
+extern dirent_t vfs_readdir(DIR_t *dir);
 
 
 extern FILE_t  *vfs_fopen(const ch_t *name, const ch_t *mode);
-
 extern stdRet_t vfs_mount(struct vfsnode node, const ch_t *path);
 extern stdRet_t vfs_umount(const ch_t *path);
-
 extern stdRet_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode);
 extern stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data);
-
-
-extern dirent_t vfs_readdir(DIR_t *dir);
-extern stdRet_t vfs_closedir(DIR_t *dir);
 extern size_t   vfs_remove(const ch_t *path);
 extern size_t   vfs_rename(const ch_t *oldName, const ch_t *newName);
 

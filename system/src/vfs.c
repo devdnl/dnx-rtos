@@ -239,12 +239,9 @@ DIR_t *vfs_opendir(const ch_t *path)
 
                                     /* open external DIR */
                                     vfsnode_t *extfs  = node->data;
-                                    DIR_t     *extdir = NULL;
 
                                     if (extfs->opendir)
-                                          extdir = extfs->opendir(path);
-
-                                    dir = extdir;
+                                          dir = extfs->opendir(path);
                               }
                               break;
 
@@ -262,6 +259,30 @@ DIR_t *vfs_opendir(const ch_t *path)
       }
 
       return dir;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function close opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @retval STD_RET_OK         close success
+ * @retval STD_RET_ERROR      close error
+ */
+//================================================================================================//
+stdRet_t vfs_closedir(DIR_t *dir)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (dir)
+      {
+            free(dir);
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 
@@ -625,32 +646,6 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
       if (file && file->fdioctl)
       {
             status = file->fdioctl(file->fd, rq, data);
-      }
-
-      return status;
-}
-
-
-
-
-//================================================================================================//
-/**
- * @brief Function close opened directory
- *
- * @param *dir          directory object
- *
- * @retval STD_RET_OK         close success
- * @retval STD_RET_ERROR      close error
- */
-//================================================================================================//
-stdRet_t vfs_closedir(DIR_t *dir)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      if (dir)
-      {
-            free(dir);
-            status = STD_RET_OK;
       }
 
       return status;
