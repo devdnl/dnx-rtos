@@ -56,11 +56,10 @@ extern "C" {
 /** default system status */
 enum status_enum
 {
-   STD_RET_OK                 = 0,
-   STD_RET_ERROR              = 1,
-   STD_RET_UNKNOWN            = 127,
+      STD_RET_OK                 = 0,
+      STD_RET_ERROR              = 1,
+      STD_RET_UNKNOWN            = 127,
 };
-
 
 /** universal status type */
 typedef signed char stdRet_t;
@@ -98,31 +97,30 @@ typedef struct
 /** directory entry */
 typedef struct
 {
-      stdRet_t (*rm)(fd_t fd);
-      ch_t  *name;
-      size_t size;
-      bool_t isfile;
-      fd_t   fd;
+      ch_t   *name;
+      size_t  size;
+      bool_t  isfile;
 } dirent_t;
 
 
 /** dir type */
-typedef struct
+typedef struct dir_s
 {
-      dirent_t (*rddir)(size_t seek);
-      size_t   items;
-      size_t   seek;
+      dirent_t  (*rddir)(struct dir_s *dir);
+      size_t    items;
+      size_t    seek;
+      void     *dd;
 } DIR_t;
 
 
 /** application standard arguments type */
 typedef struct appArgs_struct
 {
-      void     *arg;                      /* pointer to the argument */
-      FILE_t   *stdin;                    /* file used only to read keyboard */
-      FILE_t   *stdout;                   /* file used only to write to terminal */
-      void     *TaskHandle;               /* FreeRTOS task handling for children */
-      void     *ParentTaskHandle;         /* FreeRTOS task handling for parent */
+      void    *arg;                       /* pointer to the argument */
+      FILE_t  *stdin;                     /* file used only to read keyboard */
+      FILE_t  *stdout;                    /* file used only to write to terminal */
+      void    *TaskHandle;                /* FreeRTOS task handling for children */
+      void    *ParentTaskHandle;          /* FreeRTOS task handling for parent */
       stdRet_t exitCode;                  /* exit code */
 } app_t;
 

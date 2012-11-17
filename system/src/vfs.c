@@ -61,7 +61,7 @@ struct node {
 typedef struct node node_t;
 
 struct fshdl_s {
-      list_t  *root;
+      node_t  root;
       mutex_t mtx;
 };
 
@@ -69,11 +69,11 @@ struct fshdl_s {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static ch_t   *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
-static list_t *GetNodeFromList(list_t *list, ch_t *dirname, size_t len, struct node **node);
-static list_t *GotoDir(ch_t *path);
-static i32_t   GetPathDeep(const ch_t *path);
-static i32_t   CreateDirNode(list_t *list, const ch_t *name);
+static ch_t     *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
+static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep);
+static i32_t     GetPathDeep(const ch_t *path);
+static size_t    CreateDirNode(node_t *atNode, const ch_t *name);
+static dirent_t  readdir(DIR_t *dir);
 
 
 /*==================================================================================================
@@ -103,18 +103,22 @@ stdRet_t vfs_init(void)
 
             if (fs) {
                   CreateMutex(fs->mtx);
-                  fs->root = ListCreate();
+                  fs->root.data = ListCreate();
 
-                  if (!fs->mtx || !fs->root) {
+                  if (!fs->mtx || !fs->root.data) {
                         if (fs->mtx)
                               DeleteMutex(fs->mtx);
 
-                        if (fs->root)
-                              ListFree(fs->root);
+                        if (fs->root.data)
+                              ListFree(fs->root.data);
 
                         free(fs);
 
                         fs = NULL;
+                  } else {
+                        fs->root.name = "/";
+                        fs->root.size = sizeof(node_t);
+                        fs->root.type = NODE_TYPE_DIR;
                   }
             }
 
@@ -141,59 +145,154 @@ stdRet_t vfs_mkdir(const ch_t *path)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && fs) {
-            list_t *root = fs->root;
-            i32_t   deep = GetPathDeep(path);
-            ch_t   *word;
-            node_t *node;
-            size_t  len;
+            /* try parse folder name to create */
+            i32_t deep = GetPathDeep(path);
 
-            while (deep > 1) {
-                  path = GetWordFromPath((ch_t*)path, &word, &len);
-                  root = GetNodeFromList(root, word, len, &node);
+            if (deep) {
+                  /* go to target dir */
+                  const ch_t *extPath = NULL;
+                  node_t     *node    = GetNode(path, &fs->root, &extPath, -1);
 
-                  if (node->type == NODE_TYPE_FS) {
-                        break;
-                  }
-                  deep--;
-            }
+                  /* check if target node is OK */
+                  if (node) {
+                        switch (node->type) {
+                        /* internal FS */
+                        case NODE_TYPE_DIR:
+                        {
+                              ch_t  *dirname    = strrchr(path, '/') + 1;
+                              u32_t  dirnamelen = strlen(dirname);
+                              ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
 
-            if (deep == 1 && root) {
-                  switch (node->type) {
-                  case NODE_TYPE_DIR:
-                        GetWordFromPath((ch_t*)path, &word, &len);
+                              if (name) {
+                                    strcpy(name, dirname);
 
-                        ch_t *name = calloc(1, len + 1);
-
-                        if (name) {
-                              strncpy(name, word, len);
-
-                              if (CreateDirNode(root, name) != 0){
-                                    free(name);
-                              } else {
-                                    status = STD_RET_OK;
+                                    if (CreateDirNode(node, name) == 0)
+                                          status = STD_RET_OK;
+                                    else
+                                          free(name);
                               }
+                              break;
                         }
-                        break;
 
-                  case NODE_TYPE_FS:
-                        if (node->data) {
-                              vfsnode_t *extfs = node->data;
+                        /* external FS */
+                        case NODE_TYPE_FS:
+                        {
+                              if (node->data) {
+                                    vfsnode_t *extfs = node->data;
 
-                              status = extfs->mkdir(path);
+                                    if (node->data) {
+                                          if (extfs->mkdir(extPath) == 0)
+                                                status = STD_RET_OK;
+                                    }
+                              }
+                              break;
                         }
-                        break;
 
-                  default:
-                        break;
+                        default:
+                              break;
+                        }
                   }
-
-
-
             }
       }
 
       return status;
 }
+
+
+//================================================================================================//
+/**
+ * @brief Function open directory
+ *
+ * @param *path         directory path
+ *
+ * @return directory object
+ */
+//================================================================================================//
+DIR_t *vfs_opendir(const ch_t *path)
+{
+      DIR_t *dir = NULL;
+
+      if (path && fs) {
+            dir = calloc(1, sizeof(DIR_t));
+
+            if (dir) {
+                  /* go to target dir */
+                  const ch_t *extPath = NULL;
+                  node_t     *node    = GetNode(path, &fs->root, &extPath, 0);
+
+                  if (node) {
+                        switch (node->type) {
+                        case NODE_TYPE_DIR:
+                              dir->items = ListGetItemCount(node->data);
+                              dir->rddir = readdir;
+                              dir->seek  = 0;
+                              dir->dd    = node;
+                              break;
+
+                        case NODE_TYPE_FS:
+                              if (node->data) {
+                                    /*
+                                     * freeing DIR object because external FS create
+                                     * own object internally
+                                     */
+                                    free(dir);
+
+                                    /* open external DIR */
+                                    vfsnode_t *extfs  = node->data;
+                                    DIR_t     *extdir = NULL;
+
+                                    if (extfs->opendir)
+                                          extdir = extfs->opendir(path);
+
+                                    dir = extdir;
+                              }
+                              break;
+
+                        /* Probably FILE */
+                        default:
+                              free(dir);
+                              dir = NULL;
+                              break;
+                        }
+                  } else {
+                        free(dir);
+                        dir = NULL;
+                  }
+            }
+      }
+
+      return dir;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read next item of opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @return element attributes
+ */
+//================================================================================================//
+dirent_t vfs_readdir(DIR_t *dir)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+
+      if (dir->rddir) {
+            direntry = dir->rddir(dir);
+      }
+
+      return direntry;
+}
+
+
+
+
+
+
+
 
 
 //================================================================================================//
@@ -217,7 +316,7 @@ FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
                   /* root filter */
                   if (name[0] == '/') {
                         struct node *node   = NULL;
-                        list_t *root = fs->root;
+//                        list_t *root = fs->root;
                         ch_t   *path = (ch_t *)name;
                         ch_t   *word = NULL;
                         size_t  len;
@@ -226,7 +325,7 @@ FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
                         while (path) {
                               path = GetWordFromPath(path, &word, &len);
 
-                              root = GetNodeFromList(root, word, len, &node);
+//                              root = GetNodeFromList(root, word, len, &node);
 
                               if (node == NULL) {
                                     path = 0;
@@ -532,136 +631,6 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
 }
 
 
-//================================================================================================//
-/**
- * @brief Function open root directory
- *
- * @param *dir          directory
- *
- * @return number of items
- */
-//================================================================================================//
-static void ROOT_opendir(DIR_t *dir) /* DNLFIXME apply better solution (table) */
-{
-//      dir->rddir = ROOT_readdir;
-//      dir->seek  = 0;
-//      dir->items = 3;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function read selected item
- *
- * @param seek          nitem
- * @return file attributes
- */
-//================================================================================================//
-static dirent_t ROOT_readdir(size_t seek)
-{
-      dirent_t direntry;
-      direntry.rm     = NULL;
-      direntry.name   = NULL;
-      direntry.size   = 0;
-      direntry.isfile = FALSE;
-      direntry.fd     = 0;
-
-      if (seek < 3)
-      {
-            switch (seek) /* DNLFIXME apply better solution (table) */
-            {
-                  case 0: direntry.name = "bin"; break;
-                  case 1: direntry.name = "dev"; break;
-                  case 2: direntry.name = "proc"; break;
-                  default: break;
-            }
-
-            direntry.size = 0;
-      }
-
-      return direntry;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function open directory
- *
- * @param *path         directory path
- *
- * @return directory object
- */
-//================================================================================================//
-DIR_t *vfs_opendir(const ch_t *path)
-{
-      DIR_t *dir = NULL;
-
-      if (path)
-      {
-            dir = calloc(1 , sizeof(DIR_t));
-
-            if (dir)
-            {
-                  /* check if path is device */
-                  stdRet_t stat = STD_RET_OK;
-
-                  if (strcmp("/", path) == 0)
-                  {
-//                        ROOT_opendir(dir);
-                  }
-                  else if (strcmp("/bin", path) == 0)
-                  {
-//                        REGAPP_opendir(dir);
-                  }
-                  else if (strcmp("/dev", path) == 0)
-                  {
-//                        REGDRV_opendir(dir);
-                  }
-//                  else if (strcmp("/proc", path) == 0)
-//                  {
-//                        PROC_opendir(dir);
-//                  }
-                  else
-                  {
-                        stat = STD_RET_ERROR;
-                  }
-
-                  /* file does not exist */
-                  if (stat != STD_RET_OK)
-                  {
-                        free(dir);
-                        dir = NULL;
-                  }
-            }
-      }
-
-      return dir;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function read next item of opened directory
- *
- * @param *dir          directory object
- * @return element attributes
- */
-//================================================================================================//
-dirent_t vfs_readdir(DIR_t *dir)
-{
-      dirent_t direntry;
-      direntry.name = NULL;
-      direntry.size = 0;
-      direntry.fd   = 0;
-
-      if (dir->rddir)
-      {
-            direntry = dir->rddir(dir->seek);
-            dir->seek++;
-      }
-
-      return direntry;
-}
 
 
 //================================================================================================//
@@ -729,29 +698,35 @@ size_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 
 //================================================================================================//
 /**
- * @brief Create directory node
+ * @brief Create directory at selected node (dir)
+ *
+ * @param *atNode       pointer to node when new dir is created
+ * @param *name         new folder name
+ *
+ * @return 0 if success, otherwise != 0
  */
 //================================================================================================//
-static i32_t CreateDirNode(list_t *list, const ch_t *name)
+static size_t CreateDirNode(node_t *atNode, const ch_t *name)
 {
-      i32_t n = 1;
+      size_t n = 1;
 
-      node_t *dir = calloc(1, sizeof(node_t));
+      if (atNode && name) {
+            node_t *dir = calloc(1, sizeof(node_t));
 
-      if (dir && list) {
-            dir->data = ListCreate();
+            if (dir) {
+                  dir->data = ListCreate();
 
-            if (dir->data) {
-                  dir->name = name;
-                  dir->size = sizeof(node_t) + strlen(name);
-                  dir->type = NODE_TYPE_DIR;
+                  if (dir->data) {
+                        dir->name = (ch_t*)name;
+                        dir->size = sizeof(node_t) + strlen(name);
+                        dir->type = NODE_TYPE_DIR;
 
-                  if (ListAddItem(list, dir) < 0) {
-                        ListFree(dir->data);
-                        free(dir);
-                        dir = NULL;
-                  } else {
-                        n = 0;
+                        if (ListAddItem(atNode->data, dir) < 0) {
+                              ListFree(dir->data);
+                              free(dir);
+                        } else {
+                              n = 0;
+                        }
                   }
             }
       }
@@ -837,41 +812,99 @@ static i32_t GetPathDeep(const ch_t *path)
 
 //================================================================================================//
 /**
- * @brief Function find node
+ * @brief Function find node by path
  *
- * @param[in]  *list          input dir list
- * @param[in]  *dirname       finding folder name
- * @param[in]  len            dir name length
- * @param[out] **node         found node
+ * @param[in]  *path          path
+ * @param[in]  *startnode     start node
+ * @param[out] **extPath      external path begin (pointer from path)
+ * @param[in]   deep          deep control
+ *
+ * @return node
  */
 //================================================================================================//
-static list_t *GetNodeFromList(list_t *list, ch_t *dirname, size_t len, struct node **node)
+static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep)
 {
-      i32_t   listsize = 0;
-      list_t *nextlist = NULL;
-      node_t *dir      = NULL;
+      node_t *curnode = NULL;
 
-      if (list && dirname && node) {
-            listsize = ListGetItemCount(list);
-            i32_t i  = 0;
+      if (path && startnode) {
+            if (startnode->type == NODE_TYPE_DIR) {
+                  curnode          = startnode;
+                  i32_t   dirdeep  = GetPathDeep(path);
+                  ch_t   *word;
+                  size_t  len;
+                  i32_t   listsize;
 
-            while (listsize-- > 0) {
-                  dir = ListGetItemData(list, i++);
+                  while (dirdeep + deep) {
+                        /* get word from path */
+                        path = GetWordFromPath((ch_t*)path, &word, &len);
 
-                  if (strncmp(dir->name, dirname, len) == 0) {
-                        if (dir->type == NODE_TYPE_DIR)
-                              nextlist = dir->data;
+                        /* get number of list items */
+                        listsize = ListGetItemCount(curnode->data);
 
-                        break;
+                        /* find that object exist */
+                        i32_t i = 0;
+                        while (listsize-- > 0) {
+                              node_t *node = ListGetItemData(curnode->data, i++);
+
+                              if (node) {
+                                    if (strncmp(node->name, word, len) == 0) {
+                                          curnode = node;
+                                          break;
+                                    }
+                              } else {
+                                    dirdeep = 1 - deep;
+                                    break;
+                              }
+                        }
+
+                        /* if NULL exit */
+                        if (curnode == NULL)
+                              break;
+
+                        /* if external system, exit */
+                        if (curnode->type == NODE_TYPE_FS) {
+                              *extPath = word;
+                              break;
+                        }
+
+                        dirdeep--;
                   }
             }
-
-            *node = dir;
       }
 
-      return nextlist;
+      return curnode;
 }
 
+
+//================================================================================================//
+/**
+ * @brief Function read next item of opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @return element attributes
+ */
+//================================================================================================//
+static dirent_t readdir(DIR_t *dir)
+{
+      dirent_t dirent;
+      dirent.isfile = TRUE;
+      dirent.name   = NULL;
+      dirent.size   = 0;
+
+      if (dir) {
+            node_t *from = dir->dd;
+            node_t *node = ListGetItemData(from->data, dir->seek++);
+
+            if (node) {
+                  dirent.isfile = node->type == NODE_TYPE_FILE ? TRUE : FALSE;
+                  dirent.name   = node->name;
+                  dirent.size   = node->size;
+            }
+      }
+
+      return dirent;
+}
 
 #ifdef __cplusplus
 }
