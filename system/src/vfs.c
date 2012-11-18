@@ -49,6 +49,7 @@ typedef enum {
       NODE_TYPE_DIR,
       NODE_TYPE_FILE,
       NODE_TYPE_FS,
+      NODE_TYPE_DRV,
 } nodeType_t;
 
 struct node {
@@ -134,7 +135,7 @@ stdRet_t vfs_init(void)
  * @brief Function mount file system in VFS
  *
  * @param *path               path when dir shall be mounted
- * @param *node               pointer to description of mount FS
+ * @param *mountcfg           pointer to description of mount FS
  *
  * @retval STD_RET_OK         mount success
  * @retval STD_RET_ERROR      mount error
@@ -236,6 +237,76 @@ stdRet_t vfs_umount(const ch_t *path)
                               ListRmItem(nodebase->data, item);
 
                               status = STD_RET_OK;
+                        }
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function create node for driver file
+ *
+ * @param *path               path when driver-file shall be created
+ * @param *drvcfg             pointer to description of driver
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_mknode(const ch_t *path, vfsdcfg_t *drvcfg)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && drvcfg && fs) {
+            /* try parse folder name to create */
+            i32_t deep = GetPathDeep(path);
+
+            if (deep) {
+                  /* go to target dir */
+                  node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
+
+                  /* check if target node is OK */
+                  if (node) {
+                        if (node->type == NODE_TYPE_DIR) {
+                              ch_t  *drvname    = strrchr(path, '/') + 1;
+                              u32_t  drvnamelen = strlen(drvname);
+                              ch_t  *filename   = calloc(drvnamelen + 1, sizeof(ch_t));
+
+                              if (filename) {
+                                    strcpy(filename, drvname);
+
+                                    node_t    *dirfile = calloc(1, sizeof(node_t));
+                                    vfsdcfg_t *dcfg    = calloc(1, sizeof(vfsdcfg_t));
+
+                                    if (dirfile && dcfg) {
+                                          memcpy(dcfg, drvcfg, sizeof(vfsdcfg_t));
+
+                                          dirfile->name = filename;
+                                          dirfile->size = sizeof(node_t) + strlen(filename) + sizeof(vfsdcfg_t);
+                                          dirfile->type = NODE_TYPE_DRV;
+                                          dirfile->data = dcfg;
+
+                                          /* add new drv to this folder */
+                                          if (ListAddItem(node->data, dirfile) >= 0) {
+                                                status = STD_RET_OK;
+                                          }
+                                    }
+
+                                    /* free memory when error */
+                                    if (status == STD_RET_ERROR) {
+                                          if (dirfile)
+                                                free(dirfile);
+
+                                          if (dcfg)
+                                                free(dcfg);
+
+                                          free(filename);
+                                    }
+                              }
                         }
                   }
             }
@@ -481,7 +552,9 @@ stdRet_t vfs_remove(const ch_t *path)
                   if (nodeobj) {
 
                         /* node must be local FILE or DIR */
-                        if (nodeobj->type == NODE_TYPE_DIR || nodeobj->type == NODE_TYPE_FILE) {
+                        if (  nodeobj->type == NODE_TYPE_DIR
+                           || nodeobj->type == NODE_TYPE_FILE
+                           || nodeobj->type == NODE_TYPE_DRV) {
 
                               /* if DIR check if is empty */
                               if (nodeobj->type == NODE_TYPE_DIR) {
@@ -1025,7 +1098,7 @@ static dirent_t readdir(DIR_t *dir)
             node_t *node = ListGetItemData(from->data, dir->seek++);
 
             if (node) {
-                  dirent.isfile = node->type == NODE_TYPE_FILE ? TRUE : FALSE;
+                  dirent.isfile = (node->type == NODE_TYPE_FILE || node->type == NODE_TYPE_DRV);
                   dirent.name   = node->name;
                   dirent.size   = node->size;
             }

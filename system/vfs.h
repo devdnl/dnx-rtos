@@ -45,9 +45,8 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-struct vfsmcfg
-{
-      stdRet_t (*open)(void *fd);
+struct vfsmcfg {
+      stdRet_t (*open)(const ch_t *name, const ch_t *mode);
       stdRet_t (*close)(void *fd);
       size_t   (*write)(void *fd, void *src, size_t size, size_t nitems, size_t seek);
       size_t   (*read)(void *fd, void *dst, size_t size, size_t nitems, size_t seek);
@@ -58,15 +57,26 @@ struct vfsmcfg
       stdRet_t (*rename)(const ch_t *oldName, const ch_t *newName);
 };
 
+struct vfsdcfg {
+      nod_t    device;
+      stdRet_t (*open )(nod_t dev);
+      stdRet_t (*close)(nod_t dev);
+      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t (*ioctl)(nod_t dev, IORq_t iroq, void *data);
+};
+
 typedef struct vfsmcfg vfsmcfg_t;
+typedef struct vfsdcfg vfsdcfg_t;
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
 extern stdRet_t vfs_init(void);
-extern stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *node);
+extern stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg);
 extern stdRet_t vfs_umount(const ch_t *path);
+extern stdRet_t vfs_mknode(const ch_t *path, vfsdcfg_t *drvcfg);
 extern stdRet_t vfs_mkdir(const ch_t *path);
 extern DIR_t   *vfs_opendir(const ch_t *path);
 extern stdRet_t vfs_closedir(DIR_t *dir);
