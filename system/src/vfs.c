@@ -162,13 +162,16 @@ stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg)
                               if (name) {
                                     strcpy(name, dirname);
 
-                                    node_t *fsdir = calloc(1, sizeof(node_t));
+                                    node_t    *fsdir = calloc(1, sizeof(node_t));
+                                    vfsmcfg_t *mcfg  = calloc(1, sizeof(vfsmcfg_t));
 
-                                    if (fsdir) {
+                                    if (fsdir && mcfg) {
+                                          memcpy(mcfg, mountcfg, sizeof(vfsmcfg_t));
+
                                           fsdir->name = name;
                                           fsdir->size = sizeof(node_t) + strlen(name) + sizeof(vfsmcfg_t);
                                           fsdir->type = NODE_TYPE_FS;
-                                          fsdir->data = mountcfg;
+                                          fsdir->data = mcfg;
 
                                           /* add new fsdir to this folder */
                                           if (ListAddItem(node->data, fsdir) >= 0) {
@@ -180,6 +183,9 @@ stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg)
                                     if (status == STD_RET_ERROR) {
                                           if (fsdir)
                                                 free(fsdir);
+
+                                          if (mcfg)
+                                                free(mcfg);
 
                                           free(name);
                                     }
@@ -215,7 +221,7 @@ stdRet_t vfs_umount(const ch_t *path)
                   /* go to FS dir */
                   i32_t  item;
                   node_t *nodebase = GetNode(path, &fs->root, NULL, -1, NULL);
-                  node_t *nodefs   = GetNode(path, nodebase, NULL, 0, &item);
+                  node_t *nodefs   = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
 
                   /* check if target node is OK */
                   if (nodebase && nodefs) {
@@ -407,8 +413,8 @@ DIR_t *vfs_opendir(const ch_t *path)
  *
  * @param *dir          directory object
  *
- * @retval STD_RET_OK         close success
- * @retval STD_RET_ERROR      close error
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
 stdRet_t vfs_closedir(DIR_t *dir)
@@ -446,6 +452,78 @@ dirent_t vfs_readdir(DIR_t *dir)
 
       return direntry;
 }
+
+
+//================================================================================================//
+/**
+ * @brief Remove file
+ *
+ * @param *patch        localization of file/directory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_remove(const ch_t *path)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path) {
+            /* go to dir */
+            i32_t       item;
+            const ch_t *extPath  = NULL;
+            node_t     *nodebase = GetNode(path, &fs->root, &extPath, -1, NULL);
+            node_t     *nodeobj  = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
+
+            /* check if target nodes ares OK */
+            if (nodebase) {
+
+                  if (nodeobj) {
+
+                        /* node must be local FILE or DIR */
+                        if (nodeobj->type == NODE_TYPE_DIR || nodeobj->type == NODE_TYPE_FILE) {
+
+                              /* if DIR check if is empty */
+                              if (nodeobj->type == NODE_TYPE_DIR) {
+
+                                    if (ListGetItemCount(nodeobj->data) != 0) {
+                                          goto vfs_remove_end;
+                                    } else {
+                                          ListDestroy(nodeobj->data);
+                                          nodeobj->data = NULL;
+                                    }
+                              }
+
+                              if (nodeobj->name)
+                                    free(nodeobj->name);
+
+                              if (nodeobj->data)
+                                    free(nodeobj->data);
+
+                              if (ListRmItem(nodebase->data, item) == 0)
+                                    status = STD_RET_OK;
+                        }
+                  } else if (nodebase->type == NODE_TYPE_FS) {
+
+                        vfsmcfg_t *ext = nodebase->data;
+
+                        if (ext->remove) {
+                              if (ext->remove(extPath) == 0) {
+                                    status = STD_RET_OK;
+                              }
+                        }
+                  }
+            }
+      }
+
+      vfs_remove_end:
+      return status;
+}
+
+
+
+
+
 
 
 
@@ -741,8 +819,8 @@ stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
  * @param rq                  request
  * @param *data               pointer to datas
  *
- * @retval STD_RET_OK         success
- * @retval STD_RET_XX         error
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
 stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
@@ -760,38 +838,16 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
 
 //================================================================================================//
 /**
- * @brief Remove file
- *
- * @param *patch        localization of file
- *
- * @return STD_RET_OK if success, otherwise STD_RET_ERROR
- */
-//================================================================================================//
-size_t vfs_remove(const ch_t *path)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      /* DNLTODO implement vfs_remove */
-//      if (direntry->rm)
-//      {
-//            status = direntry->rm(direntry->fd);
-//      }
-
-      return status;
-}
-
-
-//================================================================================================//
-/**
  * @brief Rename file name
  *
  * @param *oldName            old file name
  * @param *newName            new file name
  *
- * @return 0 if success, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-size_t vfs_rename(const ch_t *oldName, const ch_t *newName)
+stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 {
 
 }
@@ -897,7 +953,7 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath
                   size_t  len;
                   i32_t   listsize;
 
-                  while (dirdeep + deep) {
+                  while (dirdeep + deep > 0) {
                         /* get word from path */
                         path = GetWordFromPath((ch_t*)path, &word, &len);
 
