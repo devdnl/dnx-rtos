@@ -70,9 +70,8 @@ struct fshdl_s {
                                       Local function prototypes
 ==================================================================================================*/
 static ch_t     *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
-static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep);
+static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, i32_t *nitem);
 static i32_t     GetPathDeep(const ch_t *path);
-static size_t    CreateDirNode(node_t *atNode, const ch_t *name);
 static dirent_t  readdir(DIR_t *dir);
 
 
@@ -110,7 +109,7 @@ stdRet_t vfs_init(void)
                               DeleteMutex(fs->mtx);
 
                         if (fs->root.data)
-                              ListFree(fs->root.data);
+                              ListDestroy(fs->root.data);
 
                         free(fs);
 
@@ -127,6 +126,116 @@ stdRet_t vfs_init(void)
       }
 
       return ret;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function mount file system in VFS
+ *
+ * @param *path               path when dir shall be mounted
+ * @param *node               pointer to description of mount FS
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && mountcfg && fs) {
+            /* try parse folder name to create */
+            i32_t deep = GetPathDeep(path);
+
+            if (deep) {
+                  /* go to target dir */
+                  node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
+
+                  /* check if target node is OK */
+                  if (node) {
+                        if (node->type == NODE_TYPE_DIR) {
+                              ch_t  *dirname    = strrchr(path, '/') + 1;
+                              u32_t  dirnamelen = strlen(dirname);
+                              ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
+
+                              if (name) {
+                                    strcpy(name, dirname);
+
+                                    node_t *fsdir = calloc(1, sizeof(node_t));
+
+                                    if (fsdir) {
+                                          fsdir->name = name;
+                                          fsdir->size = sizeof(node_t) + strlen(name) + sizeof(vfsmcfg_t);
+                                          fsdir->type = NODE_TYPE_FS;
+                                          fsdir->data = mountcfg;
+
+                                          /* add new fsdir to this folder */
+                                          if (ListAddItem(node->data, fsdir) >= 0) {
+                                                status = STD_RET_OK;
+                                          }
+                                    }
+
+                                    /* free memory when error */
+                                    if (status == STD_RET_ERROR) {
+                                          if (fsdir)
+                                                free(fsdir);
+
+                                          free(name);
+                                    }
+                              }
+                        }
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function umount dir from file system
+ *
+ * @param *path               dir path
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_umount(const ch_t *path)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && fs) {
+            /* try parse folder name to create */
+            i32_t deep = GetPathDeep(path);
+
+            if (deep) {
+                  /* go to FS dir */
+                  i32_t  item;
+                  node_t *nodebase = GetNode(path, &fs->root, NULL, -1, NULL);
+                  node_t *nodefs   = GetNode(path, nodebase, NULL, 0, &item);
+
+                  /* check if target node is OK */
+                  if (nodebase && nodefs) {
+                        if (nodefs->type == NODE_TYPE_FS) {
+                              if (nodefs->data)
+                                    free(nodefs->data);
+
+                              if (nodefs->name)
+                                    free(nodefs->name);
+
+                              /* remove from file system and free node */
+                              ListRmItem(nodebase->data, item);
+
+                              status = STD_RET_OK;
+                        }
+                  }
+            }
+      }
+
+      return status;
 }
 
 
@@ -151,7 +260,7 @@ stdRet_t vfs_mkdir(const ch_t *path)
             if (deep) {
                   /* go to target dir */
                   const ch_t *extPath = NULL;
-                  node_t     *node    = GetNode(path, &fs->root, &extPath, -1);
+                  node_t     *node    = GetNode(path, &fs->root, &extPath, -1, NULL);
 
                   /* check if target node is OK */
                   if (node) {
@@ -163,13 +272,38 @@ stdRet_t vfs_mkdir(const ch_t *path)
                               u32_t  dirnamelen = strlen(dirname);
                               ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
 
+                              /* check if name buffer is created */
                               if (name) {
                                     strcpy(name, dirname);
 
-                                    if (CreateDirNode(node, name) == 0)
-                                          status = STD_RET_OK;
-                                    else
+                                    node_t *dir = calloc(1, sizeof(node_t));
+
+                                    if (dir) {
+                                          dir->data = ListCreate();
+
+                                          if (dir->data) {
+                                                dir->name = (ch_t*)name;
+                                                dir->size = sizeof(node_t) + strlen(name);
+                                                dir->type = NODE_TYPE_DIR;
+
+                                                /* add new folder to this folder */
+                                                if (ListAddItem(node->data, dir) >= 0) {
+                                                      status = STD_RET_OK;
+                                                }
+                                          }
+                                    }
+
+                                    /* free memory when error */
+                                    if (status == STD_RET_ERROR) {
+                                          if (dir) {
+                                                if (dir->data)
+                                                      ListDestroy(dir->data);
+
+                                                free(dir);
+                                          }
+
                                           free(name);
+                                    }
                               }
                               break;
                         }
@@ -178,7 +312,7 @@ stdRet_t vfs_mkdir(const ch_t *path)
                         case NODE_TYPE_FS:
                         {
                               if (node->data) {
-                                    vfsnode_t *extfs = node->data;
+                                    vfsmcfg_t *extfs = node->data;
 
                                     if (node->data) {
                                           if (extfs->mkdir(extPath) == 0)
@@ -218,7 +352,7 @@ DIR_t *vfs_opendir(const ch_t *path)
             if (dir) {
                   /* go to target dir */
                   const ch_t *extPath = NULL;
-                  node_t     *node    = GetNode(path, &fs->root, &extPath, 0);
+                  node_t     *node    = GetNode(path, &fs->root, &extPath, 0, NULL);
 
                   if (node) {
                         switch (node->type) {
@@ -236,12 +370,17 @@ DIR_t *vfs_opendir(const ch_t *path)
                                      * own object internally
                                      */
                                     free(dir);
+                                    dir = NULL;
+
+                                    if (extPath == NULL) {
+                                          extPath = "/";
+                                    }
 
                                     /* open external DIR */
-                                    vfsnode_t *extfs  = node->data;
+                                    vfsmcfg_t *extfs = node->data;
 
                                     if (extfs->opendir)
-                                          dir = extfs->opendir(path);
+                                          dir = extfs->opendir(extPath);
                               }
                               break;
 
@@ -483,39 +622,6 @@ FILE_t *vfs_fopen(const ch_t *name, const ch_t *mode)
 
 //================================================================================================//
 /**
- * @brief Function mount file system in VFS
- *
- * @param node                registered node
- * @param *dir                folder name
- *
- * @retval STD_RET_OK         mount success
- * @retval STD_RET_ERROR      mount error
- */
-//================================================================================================//
-stdRet_t vfs_mount(struct vfsnode node, const ch_t *dir)
-{
-
-}
-
-
-//================================================================================================//
-/**
- * @brief Function umount dir from file system
- *
- * @param *path               dir path
- *
- * @retval STD_RET_OK         mount success
- * @retval STD_RET_ERROR      mount error
- */
-//================================================================================================//
-stdRet_t vfs_umount(const ch_t *path)
-{
-
-}
-
-
-//================================================================================================//
-/**
  * @brief Function close opened file
  *
  * @param *file               pinter to file
@@ -693,45 +799,6 @@ size_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 
 //================================================================================================//
 /**
- * @brief Create directory at selected node (dir)
- *
- * @param *atNode       pointer to node when new dir is created
- * @param *name         new folder name
- *
- * @return 0 if success, otherwise != 0
- */
-//================================================================================================//
-static size_t CreateDirNode(node_t *atNode, const ch_t *name)
-{
-      size_t n = 1;
-
-      if (atNode && name) {
-            node_t *dir = calloc(1, sizeof(node_t));
-
-            if (dir) {
-                  dir->data = ListCreate();
-
-                  if (dir->data) {
-                        dir->name = (ch_t*)name;
-                        dir->size = sizeof(node_t) + strlen(name);
-                        dir->type = NODE_TYPE_DIR;
-
-                        if (ListAddItem(atNode->data, dir) < 0) {
-                              ListFree(dir->data);
-                              free(dir);
-                        } else {
-                              n = 0;
-                        }
-                  }
-            }
-      }
-
-      return n;
-}
-
-
-//================================================================================================//
-/**
  * @brief Function return pointer to word
  *
  * @param[in]  *str          string
@@ -813,11 +880,12 @@ static i32_t GetPathDeep(const ch_t *path)
  * @param[in]  *startnode     start node
  * @param[out] **extPath      external path begin (pointer from path)
  * @param[in]   deep          deep control
+ * @param[out] *nitem         node is n-item of list which was found
  *
  * @return node
  */
 //================================================================================================//
-static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep)
+static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, i32_t *nitem)
 {
       node_t *curnode = NULL;
 
@@ -838,27 +906,36 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath
 
                         /* find that object exist */
                         i32_t i = 0;
-                        while (listsize-- > 0) {
+                        while (listsize > 0) {
                               node_t *node = ListGetItemData(curnode->data, i++);
 
                               if (node) {
                                     if (strncmp(node->name, word, len) == 0) {
                                           curnode = node;
+
+                                          if (nitem)
+                                                *nitem = i - 1;
                                           break;
                                     }
                               } else {
                                     dirdeep = 1 - deep;
                                     break;
                               }
+
+                              listsize--;
                         }
 
-                        /* if NULL exit */
-                        if (curnode == NULL)
+                        /* dir does not found or error */
+                        if (listsize == 0 || curnode == NULL) {
+                              curnode = NULL;
                               break;
+                        }
 
                         /* if external system, exit */
                         if (curnode->type == NODE_TYPE_FS) {
-                              *extPath = word;
+                              if (extPath)
+                                    *extPath = path;
+
                               break;
                         }
 

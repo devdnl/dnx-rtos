@@ -94,7 +94,7 @@ list_t *ListCreate(void)
  * @param *list         pointer to list
  */
 //================================================================================================//
-void ListFree(list_t *list)
+void ListDestroy(list_t *list)
 {
       if (list) {
             struct listitem *item     = list->head;

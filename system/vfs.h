@@ -45,7 +45,7 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-struct vfsnode
+struct vfsmcfg
 {
       stdRet_t (*open)(void *fd);
       stdRet_t (*close)(void *fd);
@@ -58,13 +58,15 @@ struct vfsnode
       size_t   (*rename)(const ch_t *oldName, const ch_t *newName);
 };
 
-typedef struct vfsnode vfsnode_t;
+typedef struct vfsmcfg vfsmcfg_t;
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
 extern stdRet_t vfs_init(void);
+extern stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *node);
+extern stdRet_t vfs_umount(const ch_t *path);
 extern stdRet_t vfs_mkdir(const ch_t *path);
 extern DIR_t   *vfs_opendir(const ch_t *path);
 extern stdRet_t vfs_closedir(DIR_t *dir);
@@ -72,8 +74,6 @@ extern dirent_t vfs_readdir(DIR_t *dir);
 
 
 extern FILE_t  *vfs_fopen(const ch_t *name, const ch_t *mode);
-extern stdRet_t vfs_mount(struct vfsnode node, const ch_t *path);
-extern stdRet_t vfs_umount(const ch_t *path);
 extern stdRet_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);

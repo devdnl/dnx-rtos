@@ -51,7 +51,7 @@ typedef struct list list_t;
                                      Exported function prototypes
 ==================================================================================================*/
 extern list_t *ListCreate(void);
-extern void    ListFree(list_t *list);
+extern void    ListDestroy(list_t *list);
 extern i32_t   ListAddItem(list_t *list, void *data);
 extern i32_t   ListInsItemBefore(list_t *list, i32_t nitem, void *data);
 extern i32_t   ListInsItemAfter(list_t *list, i32_t nitem, void *data);
