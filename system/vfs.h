@@ -45,17 +45,26 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-struct vfsmcfg {
-      stdRet_t (*open)(const ch_t *name, const ch_t *mode);
-      stdRet_t (*close)(void *fd);
-      size_t   (*write)(void *fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read)(void *fd, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t (*ioctl)(void *fd, IORq_t iroq, void *data);
-      stdRet_t (*mkdir)(const ch_t *path);
-      DIR_t   *(*opendir)(const ch_t *path);
-      stdRet_t (*remove)(const ch_t *path);
-      stdRet_t (*rename)(const ch_t *oldName, const ch_t *newName);
+struct vfsstat {
+      size_t filesize;
 };
+
+typedef struct vfsstat vfsstat_t;
+
+struct vfsmcfg {
+      stdRet_t  (*open   )(const ch_t *name, const ch_t *mode);
+      stdRet_t  (*close  )(void *fd);
+      size_t    (*write  )(void *fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t    (*read   )(void *fd, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t  (*ioctl  )(void *fd, IORq_t iroq, void *data);
+      stdRet_t  (*mkdir  )(const ch_t *path);
+      DIR_t    *(*opendir)(const ch_t *path);
+      stdRet_t  (*remove )(const ch_t *path);
+      stdRet_t  (*rename )(const ch_t *oldName, const ch_t *newName);
+      stdRet_t  (*stat   )(const ch_t *path, vfsstat_t *stat);
+};
+
+typedef struct vfsmcfg vfsmcfg_t;
 
 struct vfsdcfg {
       nod_t    device;
@@ -66,13 +75,8 @@ struct vfsdcfg {
       stdRet_t (*ioctl)(nod_t dev, IORq_t iroq, void *data);
 };
 
-struct vfsstat {
-      size_t filesize;
-};
-
-typedef struct vfsmcfg vfsmcfg_t;
 typedef struct vfsdcfg vfsdcfg_t;
-typedef struct vfsstat vfsstat_t;
+
 
 
 

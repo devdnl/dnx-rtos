@@ -602,46 +602,71 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
       stdRet_t status = STD_RET_ERROR;
 
       if (oldName && newName) {
+            i32_t       oldItem;
+            i32_t       newItem;
             const ch_t *oldExtPath;
             const ch_t *newExtPath;
-            node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, NULL);
-            node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, NULL);
+            node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, &oldItem);
+            node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, &newItem);
 
             if (oldNodeBase && newNodeBase) {
-                  /* rename in the same directory */
-                  if (oldNodeBase == newNodeBase) {
-                        /* rename in VFS structure */
-                        if (oldNodeBase->type == NODE_TYPE_DIR) {
-                              ch_t   *name = calloc(1, strlen(strrchr(newName, '/') + 1));
-                              node_t *node = GetNode(strrchr(oldName, '/'), newNodeBase, NULL, 0, NULL);
+                  /* external the same FS -- move or rename operation */
+                  if (  oldNodeBase == newNodeBase && oldNodeBase->type == NODE_TYPE_FS) {
+                        vfsmcfg_t *ext = oldNodeBase->data;
 
-                              if (name && node) {
-                                    strcpy(name, strrchr(newName, '/') + 1);
-
-                                    if (node->name)
-                                          free(node->name);
-
-                                    node->name = name;
-
-                                    status = STD_RET_OK;
-
-                              } else {
-                                    if (name)
-                                          free(name);
-                              }
-                        /* rename in external FS */
-                        } else if (oldNodeBase->type == NODE_TYPE_FS) {
-                              vfsmcfg_t *ext = oldNodeBase->data;
-
-                              if (ext) {
-                                    if (ext->rename) {
-                                          status = ext->rename(oldExtPath, newExtPath);
-                                    }
+                        if (ext) {
+                              if (ext->rename) {
+                                    status = ext->rename(oldExtPath, newExtPath);
                               }
                         }
-                  /* rename in different directory -- move operation */
-                  } else if (oldNodeBase->type == NODE_TYPE_DIR && newNodeBase->type == NODE_TYPE_DIR) {
+                  }
+                  /* internal FS, the same dir -- rename operation */
+                  else if (oldNodeBase == newNodeBase && oldNodeBase->type != NODE_TYPE_FS) {
+                        ch_t   *name = calloc(1, strlen(strrchr(newName, '/') + 1));
+                        node_t *node = GetNode(strrchr(oldName, '/'), newNodeBase, NULL, 0, NULL);
 
+                        if (name && node) {
+                              strcpy(name, strrchr(newName, '/') + 1);
+
+                              if (node->name)
+                                    free(node->name);
+
+                              node->name = name;
+
+                              status = STD_RET_OK;
+
+                        } else {
+                              if (name)
+                                    free(name);
+                        }
+                  }
+                  /* internal FS, different dir -- move operation */
+                  else if (  oldNodeBase != newNodeBase
+                          && oldNodeBase->type != NODE_TYPE_FS
+                          && newNodeBase->type != NODE_TYPE_FS) {
+                        /* TODO must move all content to new loc if dir has the same name */
+                        /* TODO must delete file/dir of the same name in new loc if move file*/
+                  }
+                  /* internal and external FS; int->ext -- operation copy and remove */
+                  else if (  oldNodeBase != newNodeBase
+                          && oldNodeBase->type != NODE_TYPE_FS
+                          && newNodeBase->type == NODE_TYPE_FS) {
+                        /* not supported because recursive copy is required */
+                        /* DNLTODO int->ext FS move implementation */
+                  }
+                  /* internal and external FS; ext->int -- operation copy and remove */
+                  else if (  oldNodeBase != newNodeBase
+                          && oldNodeBase->type == NODE_TYPE_FS
+                          && newNodeBase->type != NODE_TYPE_FS) {
+                        /* not supported because recursive copy is required */
+                        /* DNLTODO ext->int FS move implementation */
+                  }
+                  /* external to external FS -- opeartion copy and remove */
+                  else if (  oldNodeBase != newNodeBase
+                          && oldNodeBase->type == NODE_TYPE_FS
+                          && newNodeBase->type == NODE_TYPE_FS) {
+                        /* not supported because recursive copy is required */
+                        /* DNLTODO ext->ext FS move implementation */
                   }
             }
       }
