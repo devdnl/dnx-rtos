@@ -326,7 +326,7 @@ stdRet_t vfs_mknod(const ch_t *path, vfsdcfg_t *drvcfg)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t vfs_mkdir(const ch_t *path) /* DNLFIXME: mkdir must check if dir exist */
+stdRet_t vfs_mkdir(const ch_t *path)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -338,13 +338,12 @@ stdRet_t vfs_mkdir(const ch_t *path) /* DNLFIXME: mkdir must check if dir exist 
                   /* go to target dir */
                   const ch_t *extPath = NULL;
                   node_t     *node    = GetNode(path, &fs->root, &extPath, -1, NULL);
+                  node_t     *ifnode  = GetNode(strrchr(path, '/'), node, NULL, 0, NULL);
 
-                  /* check if target node is OK */
-                  if (node) {
-                        switch (node->type) {
+                  /* check if target node is OK and the same name doesn't exist */
+                  if (node && !ifnode) {
                         /* internal FS */
-                        case NODE_TYPE_DIR:
-                        {
+                        if (node->type ==  NODE_TYPE_DIR) {
                               ch_t  *dirname    = strrchr(path, '/') + 1;
                               u32_t  dirnamelen = strlen(dirname);
                               ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
@@ -382,12 +381,8 @@ stdRet_t vfs_mkdir(const ch_t *path) /* DNLFIXME: mkdir must check if dir exist 
                                           free(name);
                                     }
                               }
-                              break;
-                        }
-
                         /* external FS */
-                        case NODE_TYPE_FS:
-                        {
+                        } else if (node->type ==  NODE_TYPE_FS) {
                               if (node->data) {
                                     vfsmcfg_t *extfs = node->data;
 
@@ -396,11 +391,6 @@ stdRet_t vfs_mkdir(const ch_t *path) /* DNLFIXME: mkdir must check if dir exist 
                                                 status = STD_RET_OK;
                                     }
                               }
-                              break;
-                        }
-
-                        default:
-                              break;
                         }
                   }
             }
