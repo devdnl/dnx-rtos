@@ -257,7 +257,7 @@ stdRet_t vfs_umount(const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t vfs_mknode(const ch_t *path, vfsdcfg_t *drvcfg)
+stdRet_t vfs_mknod(const ch_t *path, vfsdcfg_t *drvcfg)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -326,7 +326,7 @@ stdRet_t vfs_mknode(const ch_t *path, vfsdcfg_t *drvcfg)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t vfs_mkdir(const ch_t *path)
+stdRet_t vfs_mkdir(const ch_t *path) /* DNLFIXME: mkdir must check if dir exist */
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -594,7 +594,70 @@ stdRet_t vfs_remove(const ch_t *path)
 }
 
 
+//================================================================================================//
+/**
+ * @brief Rename file name
+ * The implementation of rename can move files only if external FS provide functionality. Local
+ * VFS can not do this.
+ *
+ * @param *oldName            old file name
+ * @param *newName            new file name
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
+{
+      stdRet_t status = STD_RET_ERROR;
 
+      if (oldName && newName) {
+            const ch_t *oldExtPath;
+            const ch_t *newExtPath;
+            node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, NULL);
+            node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, NULL);
+
+            if (oldNodeBase && newNodeBase) {
+                  /* rename in the same directory */
+                  if (oldNodeBase == newNodeBase) {
+                        /* rename in VFS structure */
+                        if (oldNodeBase->type == NODE_TYPE_DIR) {
+                              ch_t   *name = calloc(1, strlen(strrchr(newName, '/') + 1));
+                              node_t *node = GetNode(strrchr(oldName, '/'), newNodeBase, NULL, 0, NULL);
+
+                              if (name && node) {
+                                    strcpy(name, strrchr(newName, '/') + 1);
+
+                                    if (node->name)
+                                          free(node->name);
+
+                                    node->name = name;
+
+                                    status = STD_RET_OK;
+
+                              } else {
+                                    if (name)
+                                          free(name);
+                              }
+                        /* rename in external FS */
+                        } else if (oldNodeBase->type == NODE_TYPE_FS) {
+                              vfsmcfg_t *ext = oldNodeBase->data;
+
+                              if (ext) {
+                                    if (ext->rename) {
+                                          status = ext->rename(oldExtPath, newExtPath);
+                                    }
+                              }
+                        }
+                  /* rename in different directory -- move operation */
+                  } else if (oldNodeBase->type == NODE_TYPE_DIR && newNodeBase->type == NODE_TYPE_DIR) {
+
+                  }
+            }
+      }
+
+      return status;
+}
 
 
 
@@ -906,23 +969,6 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
       }
 
       return status;
-}
-
-
-//================================================================================================//
-/**
- * @brief Rename file name
- *
- * @param *oldName            old file name
- * @param *newName            new file name
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//================================================================================================//
-stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
-{
-
 }
 
 

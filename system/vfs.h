@@ -66,8 +66,47 @@ struct vfsdcfg {
       stdRet_t (*ioctl)(nod_t dev, IORq_t iroq, void *data);
 };
 
+struct vfsstat {
+      size_t filesize;
+};
+
 typedef struct vfsmcfg vfsmcfg_t;
 typedef struct vfsdcfg vfsdcfg_t;
+typedef struct vfsstat vfsstat_t;
+
+
+
+/*
+struct fuse_operations {
+    int (*getattr) (const char *, struct stat *);
+    int (*readlink) (const char *, char *, size_t);
+    int (*getdir) (const char *, fuse_dirh_t, fuse_dirfil_t);
+    int (*mknod) (const char *, mode_t, dev_t);
+    int (*mkdir) (const char *, mode_t);
+    int (*unlink) (const char *);
+    int (*rmdir) (const char *);
+    int (*symlink) (const char *, const char *);
+    int (*rename) (const char *, const char *);
+    int (*link) (const char *, const char *);
+    int (*chmod) (const char *, mode_t);
+    int (*chown) (const char *, uid_t, gid_t);
+    int (*truncate) (const char *, off_t);
+    int (*utime) (const char *, struct utimbuf *);
+    int (*open) (const char *, struct fuse_file_info *);
+    int (*read) (const char *, char *, size_t, off_t, struct fuse_file_info *);
+    int (*write) (const char *, const char *, size_t, off_t,struct fuse_file_info *);
+    int (*statfs) (const char *, struct statfs *);
+    int (*flush) (const char *, struct fuse_file_info *);
+    int (*release) (const char *, struct fuse_file_info *);
+    int (*fsync) (const char *, int, struct fuse_file_info *);
+    int (*setxattr) (const char *, const char *, const char *, size_t, int);
+    int (*getxattr) (const char *, const char *, char *, size_t);
+    int (*listxattr) (const char *, char *, size_t);
+    int (*removexattr) (const char *, const char *);
+};*/
+
+
+
 
 
 /*==================================================================================================
@@ -76,12 +115,15 @@ typedef struct vfsdcfg vfsdcfg_t;
 extern stdRet_t vfs_init(void);
 extern stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg);
 extern stdRet_t vfs_umount(const ch_t *path);
-extern stdRet_t vfs_mknode(const ch_t *path, vfsdcfg_t *drvcfg);
+extern stdRet_t vfs_mknod(const ch_t *path, vfsdcfg_t *drvcfg);
 extern stdRet_t vfs_mkdir(const ch_t *path);
 extern DIR_t   *vfs_opendir(const ch_t *path);
 extern stdRet_t vfs_closedir(DIR_t *dir);
 extern dirent_t vfs_readdir(DIR_t *dir);
 extern stdRet_t vfs_remove(const ch_t *path);
+extern stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName);
+
+extern stdRet_t vfs_stat(const ch_t *path, vfsstat_t *stat);
 
 extern FILE_t  *vfs_fopen(const ch_t *name, const ch_t *mode);
 extern stdRet_t vfs_fclose(FILE_t *file);
@@ -90,7 +132,6 @@ extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode);
 extern stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data);
 
-extern stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName);
 
 #ifdef __cplusplus
 }
