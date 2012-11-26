@@ -55,7 +55,7 @@ struct vfsstat {
 };
 
 struct vfsmcfg {
-      stdRet_t  (*open   )(const ch_t *name, const ch_t *mode);
+      FILE_t   *(*open   )(const ch_t *name, const ch_t *mode);
       stdRet_t  (*close  )(void *fd);
       size_t    (*write  )(void *fd, void *src, size_t size, size_t nitems, size_t seek);
       size_t    (*read   )(void *fd, void *dst, size_t size, size_t nitems, size_t seek);
@@ -130,8 +130,8 @@ extern dirent_t vfs_readdir(DIR_t *dir);
 extern stdRet_t vfs_remove(const ch_t *path);
 extern stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName);
 extern stdRet_t vfs_stat(const ch_t *path, struct vfsstat *stat);
+extern FILE_t  *vfs_fopen(const ch_t *path, const ch_t *mode);
 
-extern FILE_t  *vfs_fopen(const ch_t *name, const ch_t *mode);
 extern stdRet_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
