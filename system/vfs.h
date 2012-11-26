@@ -46,10 +46,13 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 struct vfsstat {
-      size_t filesize;
+     u32_t  st_dev;           /* ID of device containing file */
+     u32_t  st_mode;          /* protection */
+     u32_t  st_uid;           /* user ID of owner */
+     u32_t  st_gid;           /* group ID of owner */
+     size_t st_size;          /* total size, in bytes */
+     u32_t  st_mtime;         /* time of last modification */
 };
-
-typedef struct vfsstat vfsstat_t;
 
 struct vfsmcfg {
       stdRet_t  (*open   )(const ch_t *name, const ch_t *mode);
@@ -61,7 +64,7 @@ struct vfsmcfg {
       DIR_t    *(*opendir)(const ch_t *path);
       stdRet_t  (*remove )(const ch_t *path);
       stdRet_t  (*rename )(const ch_t *oldName, const ch_t *newName);
-      stdRet_t  (*stat   )(const ch_t *path, vfsstat_t *stat);
+      stdRet_t  (*stat   )(const ch_t *path, struct vfsstat *stat);
 };
 
 typedef struct vfsmcfg vfsmcfg_t;
@@ -126,8 +129,7 @@ extern stdRet_t vfs_closedir(DIR_t *dir);
 extern dirent_t vfs_readdir(DIR_t *dir);
 extern stdRet_t vfs_remove(const ch_t *path);
 extern stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName);
-
-extern stdRet_t vfs_stat(const ch_t *path, vfsstat_t *stat);
+extern stdRet_t vfs_stat(const ch_t *path, struct vfsstat *stat);
 
 extern FILE_t  *vfs_fopen(const ch_t *name, const ch_t *mode);
 extern stdRet_t vfs_fclose(FILE_t *file);

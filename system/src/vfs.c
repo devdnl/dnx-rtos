@@ -39,6 +39,7 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define MTX_BLOCK_TIME        100
 
 
 /*==================================================================================================
@@ -53,10 +54,15 @@ typedef enum {
 } nodeType_t;
 
 struct node {
-      ch_t       *name;
-      nodeType_t  type;
-      u32_t       size;
-      void       *data;
+      ch_t       *name;       /* file name */
+      nodeType_t  type;       /* file type */
+      u32_t       dev;        /* ID of device containing file */
+      u32_t       mode;       /* protection */
+      u32_t       uid;        /* user ID of owner */
+      u32_t       gid;        /* group ID of owner */
+      size_t      size;       /* file size */
+      u32_t       mtime;      /* time of last modification */
+      void       *data;       /* file type specified data */
 };
 
 typedef struct node node_t;
@@ -98,32 +104,36 @@ stdRet_t vfs_init(void)
 {
       stdRet_t ret = STD_RET_OK;
 
-      if (fs == NULL) {
-            fs = calloc(1, sizeof(struct fshdl_s));
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (fs == NULL) {
+                  fs = calloc(1, sizeof(struct fshdl_s));
 
-            if (fs) {
-                  CreateMutex(fs->mtx);
-                  fs->root.data = ListCreate();
+                  if (fs) {
+                        CreateMutex(fs->mtx);
+                        fs->root.data = ListCreate();
 
-                  if (!fs->mtx || !fs->root.data) {
-                        if (fs->mtx)
-                              DeleteMutex(fs->mtx);
+                        if (!fs->mtx || !fs->root.data) {
+                              if (fs->mtx)
+                                    DeleteMutex(fs->mtx);
 
-                        if (fs->root.data)
-                              ListDestroy(fs->root.data);
+                              if (fs->root.data)
+                                    ListDestroy(fs->root.data);
 
-                        free(fs);
+                              free(fs);
 
-                        fs = NULL;
-                  } else {
-                        fs->root.name = "/";
-                        fs->root.size = sizeof(node_t);
-                        fs->root.type = NODE_TYPE_DIR;
+                              fs = NULL;
+                        } else {
+                              fs->root.name = "/";
+                              fs->root.size = sizeof(node_t);
+                              fs->root.type = NODE_TYPE_DIR;
+                        }
                   }
+
+                  if (fs == NULL)
+                        ret = STD_RET_ERROR;
             }
 
-            if (fs == NULL)
-                  ret = STD_RET_ERROR;
+            GiveMutex(fs->mtx);
       }
 
       return ret;
@@ -145,55 +155,59 @@ stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (path && mountcfg && fs) {
-            /* try parse folder name to create */
-            i32_t deep = GetPathDeep(path);
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (path && mountcfg && fs) {
+                  /* try parse folder name to create */
+                  i32_t deep = GetPathDeep(path);
 
-            if (deep) {
-                  /* go to target dir */
-                  node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
+                  if (deep) {
+                        /* go to target dir */
+                        node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
 
-                  /* check if target node is OK */
-                  if (node) {
-                        if (node->type == NODE_TYPE_DIR) {
-                              ch_t  *dirname    = strrchr(path, '/') + 1;
-                              u32_t  dirnamelen = strlen(dirname);
-                              ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
+                        /* check if target node is OK */
+                        if (node) {
+                              if (node->type == NODE_TYPE_DIR) {
+                                    ch_t  *dirname    = strrchr(path, '/') + 1;
+                                    u32_t  dirnamelen = strlen(dirname);
+                                    ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
 
-                              if (name) {
-                                    strcpy(name, dirname);
+                                    if (name) {
+                                          strcpy(name, dirname);
 
-                                    node_t    *fsdir = calloc(1, sizeof(node_t));
-                                    vfsmcfg_t *mcfg  = calloc(1, sizeof(vfsmcfg_t));
+                                          node_t    *fsdir = calloc(1, sizeof(node_t));
+                                          vfsmcfg_t *mcfg  = calloc(1, sizeof(vfsmcfg_t));
 
-                                    if (fsdir && mcfg) {
-                                          memcpy(mcfg, mountcfg, sizeof(vfsmcfg_t));
+                                          if (fsdir && mcfg) {
+                                                memcpy(mcfg, mountcfg, sizeof(vfsmcfg_t));
 
-                                          fsdir->name = name;
-                                          fsdir->size = sizeof(node_t) + strlen(name) + sizeof(vfsmcfg_t);
-                                          fsdir->type = NODE_TYPE_FS;
-                                          fsdir->data = mcfg;
+                                                fsdir->name = name;
+                                                fsdir->size = sizeof(node_t) + strlen(name) + sizeof(vfsmcfg_t);
+                                                fsdir->type = NODE_TYPE_FS;
+                                                fsdir->data = mcfg;
 
-                                          /* add new fsdir to this folder */
-                                          if (ListAddItem(node->data, fsdir) >= 0) {
-                                                status = STD_RET_OK;
+                                                /* add new fsdir to this folder */
+                                                if (ListAddItem(node->data, fsdir) >= 0) {
+                                                      status = STD_RET_OK;
+                                                }
                                           }
-                                    }
 
-                                    /* free memory when error */
-                                    if (status == STD_RET_ERROR) {
-                                          if (fsdir)
-                                                free(fsdir);
+                                          /* free memory when error */
+                                          if (status == STD_RET_ERROR) {
+                                                if (fsdir)
+                                                      free(fsdir);
 
-                                          if (mcfg)
-                                                free(mcfg);
+                                                if (mcfg)
+                                                      free(mcfg);
 
-                                          free(name);
+                                                free(name);
+                                          }
                                     }
                               }
                         }
                   }
             }
+
+            GiveMutex(fs->mtx);
       }
 
       return status;
@@ -214,32 +228,36 @@ stdRet_t vfs_umount(const ch_t *path)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (path && fs) {
-            /* try parse folder name to create */
-            i32_t deep = GetPathDeep(path);
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (path && fs) {
+                  /* try parse folder name to create */
+                  i32_t deep = GetPathDeep(path);
 
-            if (deep) {
-                  /* go to FS dir */
-                  i32_t  item;
-                  node_t *nodebase = GetNode(path, &fs->root, NULL, -1, NULL);
-                  node_t *nodefs   = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
+                  if (deep) {
+                        /* go to FS dir */
+                        i32_t  item;
+                        node_t *nodebase = GetNode(path, &fs->root, NULL, -1, NULL);
+                        node_t *nodefs   = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
 
-                  /* check if target node is OK */
-                  if (nodebase && nodefs) {
-                        if (nodefs->type == NODE_TYPE_FS) {
-                              if (nodefs->data)
-                                    free(nodefs->data);
+                        /* check if target node is OK */
+                        if (nodebase && nodefs) {
+                              if (nodefs->type == NODE_TYPE_FS) {
+                                    if (nodefs->data)
+                                          free(nodefs->data);
 
-                              if (nodefs->name)
-                                    free(nodefs->name);
+                                    if (nodefs->name)
+                                          free(nodefs->name);
 
-                              /* remove from file system and free node */
-                              ListRmItem(nodebase->data, item);
+                                    /* remove from file system and free node */
+                                    ListRmItem(nodebase->data, item);
 
-                              status = STD_RET_OK;
+                                    status = STD_RET_OK;
+                              }
                         }
                   }
             }
+
+            GiveMutex(fs->mtx);
       }
 
       return status;
@@ -261,55 +279,61 @@ stdRet_t vfs_mknod(const ch_t *path, vfsdcfg_t *drvcfg)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (path && drvcfg && fs) {
-            /* try parse folder name to create */
-            i32_t deep = GetPathDeep(path);
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (path && drvcfg && fs) {
+                  /* try parse folder name to create */
+                  i32_t deep = GetPathDeep(path);
 
-            if (deep) {
-                  /* go to target dir */
-                  node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
+                  if (deep) {
+                        /* go to target dir */
+                        node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
 
-                  /* check if target node is OK */
-                  if (node) {
-                        if (node->type == NODE_TYPE_DIR) {
-                              ch_t  *drvname    = strrchr(path, '/') + 1;
-                              u32_t  drvnamelen = strlen(drvname);
-                              ch_t  *filename   = calloc(drvnamelen + 1, sizeof(ch_t));
+                        /* check if target node is OK */
+                        if (node) {
+                              if (node->type == NODE_TYPE_DIR) {
+                                    ch_t  *drvname    = strrchr(path, '/') + 1;
+                                    u32_t  drvnamelen = strlen(drvname);
+                                    ch_t  *filename   = calloc(drvnamelen + 1, sizeof(ch_t));
 
-                              if (filename) {
-                                    strcpy(filename, drvname);
+                                    if (filename) {
+                                          strcpy(filename, drvname);
 
-                                    node_t    *dirfile = calloc(1, sizeof(node_t));
-                                    vfsdcfg_t *dcfg    = calloc(1, sizeof(vfsdcfg_t));
+                                          node_t    *dirfile = calloc(1, sizeof(node_t));
+                                          vfsdcfg_t *dcfg    = calloc(1, sizeof(vfsdcfg_t));
 
-                                    if (dirfile && dcfg) {
-                                          memcpy(dcfg, drvcfg, sizeof(vfsdcfg_t));
+                                          if (dirfile && dcfg) {
+                                                memcpy(dcfg, drvcfg, sizeof(vfsdcfg_t));
 
-                                          dirfile->name = filename;
-                                          dirfile->size = sizeof(node_t) + strlen(filename) + sizeof(vfsdcfg_t);
-                                          dirfile->type = NODE_TYPE_DRV;
-                                          dirfile->data = dcfg;
+                                                dirfile->name = filename;
+                                                dirfile->size = sizeof(node_t) + strlen(filename)
+                                                              + sizeof(vfsdcfg_t);
+                                                dirfile->type = NODE_TYPE_DRV;
+                                                dirfile->data = dcfg;
+                                                dirfile->dev  = dcfg->device;
 
-                                          /* add new drv to this folder */
-                                          if (ListAddItem(node->data, dirfile) >= 0) {
-                                                status = STD_RET_OK;
+                                                /* add new drv to this folder */
+                                                if (ListAddItem(node->data, dirfile) >= 0) {
+                                                      status = STD_RET_OK;
+                                                }
                                           }
-                                    }
 
-                                    /* free memory when error */
-                                    if (status == STD_RET_ERROR) {
-                                          if (dirfile)
-                                                free(dirfile);
+                                          /* free memory when error */
+                                          if (status == STD_RET_ERROR) {
+                                                if (dirfile)
+                                                      free(dirfile);
 
-                                          if (dcfg)
-                                                free(dcfg);
+                                                if (dcfg)
+                                                      free(dcfg);
 
-                                          free(filename);
+                                                free(filename);
+                                          }
                                     }
                               }
                         }
                   }
             }
+
+            GiveMutex(fs->mtx);
       }
 
       return status;
@@ -330,70 +354,74 @@ stdRet_t vfs_mkdir(const ch_t *path)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (path && fs) {
-            /* try parse folder name to create */
-            i32_t deep = GetPathDeep(path);
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (path && fs) {
+                  /* try parse folder name to create */
+                  i32_t deep = GetPathDeep(path);
 
-            if (deep) {
-                  /* go to target dir */
-                  const ch_t *extPath = NULL;
-                  node_t     *node    = GetNode(path, &fs->root, &extPath, -1, NULL);
-                  node_t     *ifnode  = GetNode(strrchr(path, '/'), node, NULL, 0, NULL);
+                  if (deep) {
+                        /* go to target dir */
+                        const ch_t *extPath = NULL;
+                        node_t     *node    = GetNode(path, &fs->root, &extPath, -1, NULL);
+                        node_t     *ifnode  = GetNode(strrchr(path, '/'), node, NULL, 0, NULL);
 
-                  /* check if target node is OK and the same name doesn't exist */
-                  if (node && !ifnode) {
-                        /* internal FS */
-                        if (node->type ==  NODE_TYPE_DIR) {
-                              ch_t  *dirname    = strrchr(path, '/') + 1;
-                              u32_t  dirnamelen = strlen(dirname);
-                              ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
+                        /* check if target node is OK and the same name doesn't exist */
+                        if (node && !ifnode) {
+                              /* internal FS */
+                              if (node->type ==  NODE_TYPE_DIR) {
+                                    ch_t  *dirname    = strrchr(path, '/') + 1;
+                                    u32_t  dirnamelen = strlen(dirname);
+                                    ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
 
-                              /* check if name buffer is created */
-                              if (name) {
-                                    strcpy(name, dirname);
+                                    /* check if name buffer is created */
+                                    if (name) {
+                                          strcpy(name, dirname);
 
-                                    node_t *dir = calloc(1, sizeof(node_t));
+                                          node_t *dir = calloc(1, sizeof(node_t));
 
-                                    if (dir) {
-                                          dir->data = ListCreate();
+                                          if (dir) {
+                                                dir->data = ListCreate();
 
-                                          if (dir->data) {
-                                                dir->name = (ch_t*)name;
-                                                dir->size = sizeof(node_t) + strlen(name);
-                                                dir->type = NODE_TYPE_DIR;
+                                                if (dir->data) {
+                                                      dir->name = (ch_t*)name;
+                                                      dir->size = sizeof(node_t) + strlen(name);
+                                                      dir->type = NODE_TYPE_DIR;
 
-                                                /* add new folder to this folder */
-                                                if (ListAddItem(node->data, dir) >= 0) {
-                                                      status = STD_RET_OK;
+                                                      /* add new folder to this folder */
+                                                      if (ListAddItem(node->data, dir) >= 0) {
+                                                            status = STD_RET_OK;
+                                                      }
                                                 }
                                           }
-                                    }
 
-                                    /* free memory when error */
-                                    if (status == STD_RET_ERROR) {
-                                          if (dir) {
-                                                if (dir->data)
-                                                      ListDestroy(dir->data);
+                                          /* free memory when error */
+                                          if (status == STD_RET_ERROR) {
+                                                if (dir) {
+                                                      if (dir->data)
+                                                            ListDestroy(dir->data);
 
-                                                free(dir);
+                                                      free(dir);
+                                                }
+
+                                                free(name);
                                           }
-
-                                          free(name);
                                     }
-                              }
-                        /* external FS */
-                        } else if (node->type ==  NODE_TYPE_FS) {
-                              if (node->data) {
-                                    vfsmcfg_t *extfs = node->data;
-
+                              /* external FS */
+                              } else if (node->type ==  NODE_TYPE_FS) {
                                     if (node->data) {
-                                          if (extfs->mkdir(extPath) == 0)
-                                                status = STD_RET_OK;
+                                          vfsmcfg_t *extfs = node->data;
+
+                                          if (node->data) {
+                                                if (extfs->mkdir(extPath) == 0)
+                                                      status = STD_RET_OK;
+                                          }
                                     }
                               }
                         }
                   }
             }
+
+            GiveMutex(fs->mtx);
       }
 
       return status;
@@ -413,55 +441,59 @@ DIR_t *vfs_opendir(const ch_t *path)
 {
       DIR_t *dir = NULL;
 
-      if (path && fs) {
-            dir = calloc(1, sizeof(DIR_t));
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (path && fs) {
+                  dir = calloc(1, sizeof(DIR_t));
 
-            if (dir) {
-                  /* go to target dir */
-                  const ch_t *extPath = NULL;
-                  node_t     *node    = GetNode(path, &fs->root, &extPath, 0, NULL);
+                  if (dir) {
+                        /* go to target dir */
+                        const ch_t *extPath = NULL;
+                        node_t     *node    = GetNode(path, &fs->root, &extPath, 0, NULL);
 
-                  if (node) {
-                        switch (node->type) {
-                        case NODE_TYPE_DIR:
-                              dir->items = ListGetItemCount(node->data);
-                              dir->rddir = readdir;
-                              dir->seek  = 0;
-                              dir->dd    = node;
-                              break;
+                        if (node) {
+                              switch (node->type) {
+                              case NODE_TYPE_DIR:
+                                    dir->items = ListGetItemCount(node->data);
+                                    dir->rddir = readdir;
+                                    dir->seek  = 0;
+                                    dir->dd    = node;
+                                    break;
 
-                        case NODE_TYPE_FS:
-                              if (node->data) {
-                                    /*
-                                     * freeing DIR object because external FS create
-                                     * own object internally
-                                     */
+                              case NODE_TYPE_FS:
+                                    if (node->data) {
+                                          /*
+                                           * freeing DIR object because external FS create
+                                           * own object internally
+                                           */
+                                          free(dir);
+                                          dir = NULL;
+
+                                          if (extPath == NULL) {
+                                                extPath = "/";
+                                          }
+
+                                          /* open external DIR */
+                                          vfsmcfg_t *extfs = node->data;
+
+                                          if (extfs->opendir)
+                                                dir = extfs->opendir(extPath);
+                                    }
+                                    break;
+
+                              /* Probably FILE */
+                              default:
                                     free(dir);
                                     dir = NULL;
-
-                                    if (extPath == NULL) {
-                                          extPath = "/";
-                                    }
-
-                                    /* open external DIR */
-                                    vfsmcfg_t *extfs = node->data;
-
-                                    if (extfs->opendir)
-                                          dir = extfs->opendir(extPath);
+                                    break;
                               }
-                              break;
-
-                        /* Probably FILE */
-                        default:
+                        } else {
                               free(dir);
                               dir = NULL;
-                              break;
                         }
-                  } else {
-                        free(dir);
-                        dir = NULL;
                   }
             }
+
+            GiveMutex(fs->mtx);
       }
 
       return dir;
@@ -529,54 +561,58 @@ stdRet_t vfs_remove(const ch_t *path)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (path) {
-            /* go to dir */
-            i32_t       item;
-            const ch_t *extPath  = NULL;
-            node_t     *nodebase = GetNode(path, &fs->root, &extPath, -1, NULL);
-            node_t     *nodeobj  = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (path) {
+                  /* go to dir */
+                  i32_t       item;
+                  const ch_t *extPath  = NULL;
+                  node_t     *nodebase = GetNode(path, &fs->root, &extPath, -1, NULL);
+                  node_t     *nodeobj  = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
 
-            /* check if target nodes ares OK */
-            if (nodebase) {
+                  /* check if target nodes ares OK */
+                  if (nodebase) {
 
-                  if (nodeobj) {
+                        if (nodeobj) {
 
-                        /* node must be local FILE or DIR */
-                        if (  nodeobj->type == NODE_TYPE_DIR
-                           || nodeobj->type == NODE_TYPE_FILE
-                           || nodeobj->type == NODE_TYPE_DRV) {
+                              /* node must be local FILE or DIR */
+                              if (  nodeobj->type == NODE_TYPE_DIR
+                                 || nodeobj->type == NODE_TYPE_FILE
+                                 || nodeobj->type == NODE_TYPE_DRV) {
 
-                              /* if DIR check if is empty */
-                              if (nodeobj->type == NODE_TYPE_DIR) {
+                                    /* if DIR check if is empty */
+                                    if (nodeobj->type == NODE_TYPE_DIR) {
 
-                                    if (ListGetItemCount(nodeobj->data) != 0) {
-                                          goto vfs_remove_end;
-                                    } else {
-                                          ListDestroy(nodeobj->data);
-                                          nodeobj->data = NULL;
+                                          if (ListGetItemCount(nodeobj->data) != 0) {
+                                                goto vfs_remove_end;
+                                          } else {
+                                                ListDestroy(nodeobj->data);
+                                                nodeobj->data = NULL;
+                                          }
                                     }
+
+                                    if (nodeobj->name)
+                                          free(nodeobj->name);
+
+                                    if (nodeobj->data)
+                                          free(nodeobj->data);
+
+                                    if (ListRmItem(nodebase->data, item) == 0)
+                                          status = STD_RET_OK;
                               }
+                        } else if (nodebase->type == NODE_TYPE_FS) {
 
-                              if (nodeobj->name)
-                                    free(nodeobj->name);
+                              vfsmcfg_t *ext = nodebase->data;
 
-                              if (nodeobj->data)
-                                    free(nodeobj->data);
-
-                              if (ListRmItem(nodebase->data, item) == 0)
-                                    status = STD_RET_OK;
-                        }
-                  } else if (nodebase->type == NODE_TYPE_FS) {
-
-                        vfsmcfg_t *ext = nodebase->data;
-
-                        if (ext->remove) {
-                              if (ext->remove(extPath) == 0) {
-                                    status = STD_RET_OK;
+                              if (ext->remove) {
+                                    if (ext->remove(extPath) == 0) {
+                                          status = STD_RET_OK;
+                                    }
                               }
                         }
                   }
             }
+
+            GiveMutex(fs->mtx);
       }
 
       vfs_remove_end:
@@ -601,81 +637,108 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (oldName && newName) {
-            i32_t       oldItem;
-            i32_t       newItem;
-            const ch_t *oldExtPath;
-            const ch_t *newExtPath;
-            node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, &oldItem);
-            node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, &newItem);
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (oldName && newName) {
+                  i32_t       oldItem;
+                  i32_t       newItem;
+                  const ch_t *oldExtPath;
+                  const ch_t *newExtPath;
+                  node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, &oldItem);
+                  node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, &newItem);
 
-            if (oldNodeBase && newNodeBase) {
-                  /* external the same FS -- move or rename operation */
-                  if (  oldNodeBase == newNodeBase && oldNodeBase->type == NODE_TYPE_FS) {
-                        vfsmcfg_t *ext = oldNodeBase->data;
+                  if (oldNodeBase && newNodeBase) {
+                        /* external the same FS -- move or rename operation */
+                        if (  oldNodeBase == newNodeBase && oldNodeBase->type == NODE_TYPE_FS) {
+                              vfsmcfg_t *ext = oldNodeBase->data;
 
-                        if (ext) {
-                              if (ext->rename) {
-                                    status = ext->rename(oldExtPath, newExtPath);
+                              if (ext) {
+                                    if (ext->rename) {
+                                          status = ext->rename(oldExtPath, newExtPath);
+                                    }
                               }
+                        /* internal FS, the same dir -- rename operation */
+                        } else if (oldNodeBase == newNodeBase && oldNodeBase->type != NODE_TYPE_FS) {
+                              ch_t   *name = calloc(1, strlen(strrchr(newName, '/') + 1));
+                              node_t *node = GetNode(strrchr(oldName, '/'), newNodeBase, NULL, 0, NULL);
+
+                              if (name && node) {
+                                    strcpy(name, strrchr(newName, '/') + 1);
+
+                                    if (node->name)
+                                          free(node->name);
+
+                                    node->name = name;
+
+                                    status = STD_RET_OK;
+
+                              } else {
+                                    if (name)
+                                          free(name);
+                              }
+                        /* internal FS, different dir -- move operation */
+                        } else if (  oldNodeBase != newNodeBase
+                                && oldNodeBase->type != NODE_TYPE_FS
+                                && newNodeBase->type != NODE_TYPE_FS) {
+                        /* internal and external FS; int->ext -- operation copy and remove */
+                        } else if (  oldNodeBase != newNodeBase
+                                && oldNodeBase->type != NODE_TYPE_FS
+                                && newNodeBase->type == NODE_TYPE_FS) {
+                        /* internal and external FS; ext->int -- operation copy and remove */
+                        } else if (  oldNodeBase != newNodeBase
+                                && oldNodeBase->type == NODE_TYPE_FS
+                                && newNodeBase->type != NODE_TYPE_FS) {
+                        /* external to external FS -- operation copy and remove */
+                        } else if (  oldNodeBase != newNodeBase
+                                && oldNodeBase->type == NODE_TYPE_FS
+                                && newNodeBase->type == NODE_TYPE_FS) {
                         }
-                  }
-                  /* internal FS, the same dir -- rename operation */
-                  else if (oldNodeBase == newNodeBase && oldNodeBase->type != NODE_TYPE_FS) {
-                        ch_t   *name = calloc(1, strlen(strrchr(newName, '/') + 1));
-                        node_t *node = GetNode(strrchr(oldName, '/'), newNodeBase, NULL, 0, NULL);
-
-                        if (name && node) {
-                              strcpy(name, strrchr(newName, '/') + 1);
-
-                              if (node->name)
-                                    free(node->name);
-
-                              node->name = name;
-
-                              status = STD_RET_OK;
-
-                        } else {
-                              if (name)
-                                    free(name);
-                        }
-                  }
-                  /* internal FS, different dir -- move operation */
-                  else if (  oldNodeBase != newNodeBase
-                          && oldNodeBase->type != NODE_TYPE_FS
-                          && newNodeBase->type != NODE_TYPE_FS) {
-                        /* TODO must move all content to new loc if dir has the same name */
-                        /* TODO must delete file/dir of the same name in new loc if move file*/
-                  }
-                  /* internal and external FS; int->ext -- operation copy and remove */
-                  else if (  oldNodeBase != newNodeBase
-                          && oldNodeBase->type != NODE_TYPE_FS
-                          && newNodeBase->type == NODE_TYPE_FS) {
-                        /* not supported because recursive copy is required */
-                        /* DNLTODO int->ext FS move implementation */
-                  }
-                  /* internal and external FS; ext->int -- operation copy and remove */
-                  else if (  oldNodeBase != newNodeBase
-                          && oldNodeBase->type == NODE_TYPE_FS
-                          && newNodeBase->type != NODE_TYPE_FS) {
-                        /* not supported because recursive copy is required */
-                        /* DNLTODO ext->int FS move implementation */
-                  }
-                  /* external to external FS -- opeartion copy and remove */
-                  else if (  oldNodeBase != newNodeBase
-                          && oldNodeBase->type == NODE_TYPE_FS
-                          && newNodeBase->type == NODE_TYPE_FS) {
-                        /* not supported because recursive copy is required */
-                        /* DNLTODO ext->ext FS move implementation */
                   }
             }
+
+            GiveMutex(fs->mtx);
       }
 
       return status;
 }
 
 
+//================================================================================================//
+/**
+ * @brief Function returns file/dir status
+ *
+ * @param *path         file/dir path
+ * @param *stat         pointer to stat structure
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_stat(const ch_t *path, struct vfsstat *stat)
+{
+      stdRet_t status = STD_RET_ERROR;
 
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (path && stat) {
+                  const ch_t *extPath = NULL;
+                  node_t     *node    = GetNode(path, &fs->root, &extPath, 0, NULL);
+
+                  if (node) {
+                        stat->st_dev     = node->dev;
+                        stat->st_gid     = node->gid;
+                        stat->st_mode    = node->mode;
+                        stat->st_mtime   = node->mtime;
+                        stat->st_size    = node->size;
+                        stat->st_uid     = node->uid;
+
+                        status = STD_RET_OK;
+                  }
+            }
+
+            GiveMutex(fs->mtx);
+      }
+
+      return status;
+}
 
 
 
