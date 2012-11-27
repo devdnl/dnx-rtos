@@ -39,6 +39,13 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+/* delete definition of illegal macros in this file */
+#undef ioctl
+#undef opendir
+#undef remove
+#undef rename
+
+/* wait time for operation on VFS */
 #define MTX_BLOCK_TIME        100
 
 

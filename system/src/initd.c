@@ -147,7 +147,7 @@ void Initd(void *arg)
                         if (ttyx[ctty] == NULL)
                         {
                               ch_t path[16];
-                              snprintb(path, sizeof(path), "/dev/tty%c", '0' + ctty);
+                              snprintf(path, sizeof(path), "/dev/tty%c", '0' + ctty);
                               ttyx[ctty] = fopen(path, "r+");
                         }
 
