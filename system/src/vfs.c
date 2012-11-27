@@ -56,7 +56,8 @@ typedef enum {
 struct node {
       ch_t       *name;       /* file name */
       nodeType_t  type;       /* file type */
-      u32_t       dev;        /* ID of device containing file */
+      u32_t       dev;        /* major device number */
+      u32_t       part;       /* minor device number */
       u32_t       mode;       /* protection */
       u32_t       uid;        /* user ID of owner */
       u32_t       gid;        /* group ID of owner */
@@ -79,7 +80,10 @@ struct fshdl_s {
 static ch_t     *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
 static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, i32_t *nitem);
 static i32_t     GetPathDeep(const ch_t *path);
-static dirent_t  readdir(DIR_t *dir);
+static dirent_t  lfs_readdir(DIR_t *dir);
+static stdRet_t  lfs_close(u32_t dev, u32_t fd);
+static size_t    lfs_write(u32_t dev, u32_t fd, void *src, size_t size, size_t nitems, size_t seek);
+static size_t    lfs_read(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek);
 
 
 /*==================================================================================================
@@ -143,6 +147,8 @@ stdRet_t vfs_init(void)
 //================================================================================================//
 /**
  * @brief Function mount file system in VFS
+ * External file system is mounted to empty directory. If directory is not empty mounting is not
+ * possible.
  *
  * @param *path               path when dir shall be mounted
  * @param *mountcfg           pointer to description of mount FS
@@ -162,45 +168,21 @@ stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg)
 
                   if (deep) {
                         /* go to target dir */
-                        node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
+                        node_t *node = GetNode(path, &fs->root, NULL, 0, NULL);
 
                         /* check if target node is OK */
                         if (node) {
-                              if (node->type == NODE_TYPE_DIR) {
-                                    ch_t  *dirname    = strrchr(path, '/') + 1;
-                                    u32_t  dirnamelen = strlen(dirname);
-                                    ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
+                              if (node->type == NODE_TYPE_DIR && ListGetItemCount(node->data) == 0) {
+                                    ListDestroy(node->data);
 
-                                    if (name) {
-                                          strcpy(name, dirname);
+                                    vfsmcfg_t *mcfg  = calloc(1, sizeof(vfsmcfg_t));
 
-                                          node_t    *fsdir = calloc(1, sizeof(node_t));
-                                          vfsmcfg_t *mcfg  = calloc(1, sizeof(vfsmcfg_t));
+                                    if (mcfg) {
+                                          *mcfg      = *mountcfg;
+                                          node->data = mcfg;
+                                          node->type = NODE_TYPE_FS;
 
-                                          if (fsdir && mcfg) {
-                                                memcpy(mcfg, mountcfg, sizeof(vfsmcfg_t));
-
-                                                fsdir->name = name;
-                                                fsdir->size = sizeof(node_t) + strlen(name) + sizeof(vfsmcfg_t);
-                                                fsdir->type = NODE_TYPE_FS;
-                                                fsdir->data = mcfg;
-
-                                                /* add new fsdir to this folder */
-                                                if (ListAddItem(node->data, fsdir) >= 0) {
-                                                      status = STD_RET_OK;
-                                                }
-                                          }
-
-                                          /* free memory when error */
-                                          if (status == STD_RET_ERROR) {
-                                                if (fsdir)
-                                                      free(fsdir);
-
-                                                if (mcfg)
-                                                      free(mcfg);
-
-                                                free(name);
-                                          }
+                                          status = STD_RET_OK;
                                     }
                               }
                         }
@@ -234,24 +216,22 @@ stdRet_t vfs_umount(const ch_t *path)
                   i32_t deep = GetPathDeep(path);
 
                   if (deep) {
-                        /* go to FS dir */
-                        i32_t  item;
-                        node_t *nodebase = GetNode(path, &fs->root, NULL, -1, NULL);
-                        node_t *nodefs   = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
+                        node_t *node = GetNode(path, &fs->root, NULL, 0, NULL);
 
                         /* check if target node is OK */
-                        if (nodebase && nodefs) {
-                              if (nodefs->type == NODE_TYPE_FS) {
-                                    if (nodefs->data)
-                                          free(nodefs->data);
+                        if (node) {
+                              if (node->type == NODE_TYPE_FS) {
+                                    list_t *dir = ListCreate();
 
-                                    if (nodefs->name)
-                                          free(nodefs->name);
+                                    if (dir) {
+                                          if (node->data)
+                                                free(node->data);
 
-                                    /* remove from file system and free node */
-                                    ListRmItem(nodebase->data, item);
+                                          node->data = dir;
+                                          node->type = NODE_TYPE_DIR;
 
-                                    status = STD_RET_OK;
+                                          status = STD_RET_OK;
+                                    }
                               }
                         }
                   }
@@ -304,12 +284,13 @@ stdRet_t vfs_mknod(const ch_t *path, vfsdcfg_t *drvcfg)
                                           if (dirfile && dcfg) {
                                                 memcpy(dcfg, drvcfg, sizeof(vfsdcfg_t));
 
-                                                dirfile->name = filename;
-                                                dirfile->size = sizeof(node_t) + strlen(filename)
-                                                              + sizeof(vfsdcfg_t);
-                                                dirfile->type = NODE_TYPE_DRV;
-                                                dirfile->data = dcfg;
-                                                dirfile->dev  = dcfg->device;
+                                                dirfile->name  = filename;
+                                                dirfile->size  = sizeof(node_t) + strlen(filename)
+                                                               + sizeof(vfsdcfg_t);
+                                                dirfile->type  = NODE_TYPE_DRV;
+                                                dirfile->data  = dcfg;
+                                                dirfile->dev   = dcfg->dev;
+                                                dirfile->part  = dcfg->part;
 
                                                 /* add new drv to this folder */
                                                 if (ListAddItem(node->data, dirfile) >= 0) {
@@ -412,7 +393,7 @@ stdRet_t vfs_mkdir(const ch_t *path)
                                           vfsmcfg_t *extfs = node->data;
 
                                           if (node->data) {
-                                                if (extfs->mkdir(extPath) == 0)
+                                                if (extfs->mkdir(extfs->dev, extPath) == 0)
                                                       status = STD_RET_OK;
                                           }
                                     }
@@ -454,7 +435,7 @@ DIR_t *vfs_opendir(const ch_t *path)
                               switch (node->type) {
                               case NODE_TYPE_DIR:
                                     dir->items = ListGetItemCount(node->data);
-                                    dir->rddir = readdir;
+                                    dir->rddir = lfs_readdir;
                                     dir->seek  = 0;
                                     dir->dd    = node;
                                     break;
@@ -476,7 +457,7 @@ DIR_t *vfs_opendir(const ch_t *path)
                                           vfsmcfg_t *extfs = node->data;
 
                                           if (extfs->opendir)
-                                                dir = extfs->opendir(extPath);
+                                                dir = extfs->opendir(extfs->dev, extPath);
                                     }
                                     break;
 
@@ -604,7 +585,7 @@ stdRet_t vfs_remove(const ch_t *path)
                               vfsmcfg_t *ext = nodebase->data;
 
                               if (ext->remove) {
-                                    if (ext->remove(extPath) == 0) {
+                                    if (ext->remove(ext->dev, extPath) == 0) {
                                           status = STD_RET_OK;
                                     }
                               }
@@ -653,7 +634,7 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 
                               if (ext) {
                                     if (ext->rename) {
-                                          status = ext->rename(oldExtPath, newExtPath);
+                                          status = ext->rename(ext->dev, oldExtPath, newExtPath);
                                     }
                               }
                         /* internal FS, the same dir -- rename operation */
@@ -724,6 +705,7 @@ stdRet_t vfs_stat(const ch_t *path, struct vfsstat *stat)
 
                   if (node) {
                         stat->st_dev   = node->dev;
+                        stat->st_rdev  = node->part;
                         stat->st_gid   = node->gid;
                         stat->st_mode  = node->mode;
                         stat->st_mtime = node->mtime;
@@ -763,151 +745,155 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
                         const ch_t *extPath = NULL;
                         node_t     *node    = GetNode(path, &fs->root, &extPath, 0, NULL);
 
-                        if (node) {
-                              switch (node->type) {
-                              case NODE_TYPE_FILE: {
+                        /* file does not exist */
+                        if (node == NULL) {
+                              /* create file when mode is correct */
+                              if (  (strncmp("w", mode, 2) == 0) || (strncmp("w+", mode, 2) == 0)
+                                 || (strncmp("a", mode, 2) == 0) || (strncmp("a+", mode, 2) == 0) ) {
 
-                                    break;
-                              }
+                                    /* file does not exist, try to create new file */
+                                    node_t *nodebase = GetNode(path, &fs->root, NULL, -1, NULL);
 
-                              case NODE_TYPE_DRV: {
-                                    vfsdcfg_t *drv = node->data;
+                                    if (nodebase) {
+                                          if (nodebase->type == NODE_TYPE_DIR) {
+                                                ch_t   *filename = calloc(1, strlen(strrchr(path, '/')));
+                                                node_t *fnode    = calloc(1, sizeof(node_t));
 
-                                    if (drv->open) {
-                                          if (drv->open(drv->device) == STD_RET_OK) {
-                                                file->fd      = drv->device;
-                                                file->fdclose = drv->close;
-                                                file->fdioctl = drv->ioctl;
-                                                file->fdread  = drv->read;
-                                                file->fdwrite = drv->write;
-                                                file->mode    = (ch_t*)mode;
-                                                file->seek    = 0;
+                                                if (filename && fnode) {
+                                                      strcpy(filename, strrchr(path, '/') + 1);
+
+                                                      fnode->name  = filename;
+                                                      fnode->data  = NULL;
+                                                      fnode->dev   = 0;
+                                                      fnode->gid   = 0;
+                                                      fnode->mode  = 0;
+                                                      fnode->mtime = 0;
+                                                      fnode->part  = 0;
+                                                      fnode->size  = 0;
+                                                      fnode->type  = NODE_TYPE_FILE;
+                                                      fnode->uid   = 0;
+
+                                                      if (ListAddItem(nodebase->data, fnode) < 0) {
+                                                            free(fnode);
+                                                            free(filename);
+                                                            free(file);
+                                                            file = NULL;
+                                                      }
+                                                }
                                           } else {
                                                 free(file);
                                                 file = NULL;
                                           }
-                                    }
-                                    break;
-                              }
-
-                              case NODE_TYPE_FS: {
-                                    vfsmcfg_t *ext = node->data;
-
-                                    if (ext->open) {
+                                    } else {
                                           free(file);
                                           file = NULL;
-
-                                          file = ext->open(extPath, mode);
                                     }
-                                    break;
                               }
+                        }
 
-                              default:
-                                    break;
+                        if (file) {
+                              /* file shall exist */
+                              node = GetNode(path, &fs->root, &extPath, 0, NULL);
+
+                              if (node) {
+                                    vfsdcfg_t *drv = node->data;
+                                    vfsmcfg_t *ext = node->data;
+
+                                    /* open file according to file type */
+                                    switch (node->type) {
+                                    case NODE_TYPE_FILE:
+                                          file->dev     = 0;
+                                          file->fd_part = 0;
+                                          file->close   = lfs_close;
+                                          file->read    = lfs_read;
+                                          file->write   = lfs_write;
+                                          file->ioctl   = NULL;
+                                          file->seek    = 0;
+                                          break;
+
+                                    case NODE_TYPE_DRV:
+                                          if (drv->open) {
+                                                if (drv->open(drv->dev, drv->part) == STD_RET_OK) {
+                                                      file->dev     = drv->dev;
+                                                      file->fd_part = drv->part;
+                                                      file->close   = drv->close;
+                                                      file->ioctl   = drv->ioctl;
+                                                      file->read    = drv->read;
+                                                      file->write   = drv->write;
+                                                      file->seek    = 0;
+                                                } else {
+                                                      free(file);
+                                                      file = NULL;
+                                                }
+                                          }
+                                          break;
+
+                                    case NODE_TYPE_FS:
+                                          if (ext->open) {
+                                                file->fd_part = ext->open(ext->dev, extPath, mode);
+
+                                                if (file->fd_part != 0) {
+                                                      file->dev   = ext->dev;
+                                                      file->close = ext->close;
+                                                      file->ioctl = ext->ioctl;
+                                                      file->read  = ext->read;
+                                                      file->write = ext->write;
+                                                      file->seek  = 0;
+                                                } else {
+                                                      free(file);
+                                                      file = NULL;
+                                                }
+                                          }
+                                          break;
+
+                                    default:
+                                          free(file);
+                                          file = NULL;
+                                          break;
+                                    }
+
+                                    /* check file mode */
+                                    if (file) {
+                                          /* open for reading */
+                                          if (strncmp("r", mode, 2) == 0)
+                                          {
+                                                file->write = NULL;
+                                          }
+                                          /* open for writing (file need not exist) */
+                                          else if (strncmp("w", mode, 2) == 0)
+                                          {
+                                                file->read = NULL;
+                                          }
+                                          /* open for appending (file need not exist) */
+                                          else if (strncmp("a", mode, 2) == 0)
+                                          {
+                                                file->read = NULL;
+                                          }
+                                          /* open for reading and writing, start at beginning */
+                                          else if (strncmp("r+", mode, 2) == 0)
+                                          {
+                                                /* nothing to change */
+                                          }
+                                          /* open for reading and writing (overwrite file) */
+                                          else if (strncmp("w+", mode, 2) == 0)
+                                          {
+                                                /* nothing to change */
+                                          }
+                                          /* open for reading and writing (append if file exists) */
+                                          else if (strncmp("a+", mode, 2) == 0)
+                                          {
+                                                /* nothing to change */
+                                          }
+                                          /* invalid mode */
+                                          else
+                                          {
+                                                vfs_fclose(file);
+                                                file = NULL;
+                                          }
+                                    }
                               }
                         }
                   }
-
-
-
-
-      //                  /* check if path is device */
-      //                  stdRet_t stat = STD_RET_ERROR;
-      //
-      //                  ch_t *filename = strchr(name + 1, '/');
-      //
-      //                  if (filename)
-      //                  {
-      //                        filename++;
-      //
-      //                        if (strncmp("/bin/", name, filename - name) == 0)
-      //                        {
-      //                                    /* nothing to do */
-      //                        }
-      //                        else if (strncmp("/dev/", name, filename - name) == 0)
-      //                        {
-      //                              regDrvData_t drvdata;
-      //
-      //                              if (GetDrvData(filename, &drvdata) == STD_RET_OK)
-      //                              {
-      //                                    if (drvdata.open(drvdata.device) == STD_RET_OK)
-      //                                    {
-      //                                          file->fdclose = drvdata.close;
-      //                                          file->fd      = drvdata.device;
-      //                                          file->fdioctl = drvdata.ioctl;
-      //                                          file->fdread  = drvdata.read;
-      //                                          file->fdwrite = drvdata.write;
-      //
-      //                                          stat = STD_RET_OK;
-      //                                    }
-      //                              }
-      //                        }
-      ////                        else if (strncmp("/proc/", name, filename - name) == 0)
-      ////                        {
-      ////                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
-      ////                              {
-      ////                                    file->fdclose = PROC_close;
-      ////                                    file->fdioctl = NULL;
-      ////                                    file->fdread  = PROC_read;
-      ////                                    file->fdwrite = PROC_write;
-      ////
-      ////                                    stat = STD_RET_OK;
-      ////                              }
-      ////                        }
-      //
-      //                        /* file does not exist */
-      //                        if (stat != STD_RET_OK)
-      //                        {
-      //                              free(file);
-      //                              file = NULL;
-      //                        }
-      //                        else
-      //                        {
-      //                              file->mode = (ch_t*)mode;
-      //
-      //                              /* open for reading */
-      //                              if (strncmp("r", mode, 2) == 0)
-      //                              {
-      //                                    file->fdwrite = NULL;
-      //                              }
-      //                              /* open for writing (file need not exist) */
-      //                              else if (strncmp("w", mode, 2) == 0)
-      //                              {
-      //                                    file->fdread = NULL;
-      //                              }
-      //                              /* open for appending (file need not exist) */
-      //                              else if (strncmp("a", mode, 2) == 0)
-      //                              {
-      //                                    file->fdread = NULL;
-      //                              }
-      //                              /* open for reading and writing, start at beginning */
-      //                              else if (strncmp("r+", mode, 2) == 0)
-      //                              {
-      //                                    /* nothing to change */
-      //                              }
-      //                              /* open for reading and writing (overwrite file) */
-      //                              else if (strncmp("w+", mode, 2) == 0)
-      //                              {
-      //                                    /* nothing to change */
-      //                              }
-      //                              /* open for reading and writing (append if file exists) */
-      //                              else if (strncmp("a+", mode, 2) == 0)
-      //                              {
-      //                                    /* nothing to change */
-      //                              }
-      //                              /* invalid mode */
-      //                              else
-      //                              {
-      //                                    fclose(file);
-      //                                    file = NULL;
-      //                              }
-      //                        }
-      //                  }
-      //                  else
-      //                  {
-      //                        free(file);
-      //                        file = NULL;
-      //                  }
             }
 
             GiveMutex(fs->mtx);
@@ -915,14 +901,6 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
 
       return file;
 }
-
-
-
-
-
-
-
-
 
 
 //================================================================================================//
@@ -939,12 +917,12 @@ stdRet_t vfs_fclose(FILE_t *file)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (file)
-      {
-            if (file->fdclose(file->fd) == STD_RET_OK)
-            {
-                  free(file);
-                  status = STD_RET_OK;
+      if (file) {
+            if (file->close) {
+                  if (file->close(file->dev, file->fd_part) == STD_RET_OK) {
+                        free(file);
+                        status = STD_RET_OK;
+                  }
             }
       }
 
@@ -968,11 +946,9 @@ size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
       size_t n = 0;
 
-      if (ptr && size && nitems && file)
-      {
-            if (file->fdwrite)
-            {
-                  n = file->fdwrite(file->fd, ptr, size, nitems, file->seek);
+      if (ptr && size && nitems && file) {
+            if (file->write) {
+                  n = file->write(file->dev, file->fd_part, ptr, size, nitems, file->seek);
                   file->seek += n * size;
             }
       }
@@ -997,11 +973,9 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
       size_t n = 0;
 
-      if (ptr && size && nitems && file)
-      {
-            if (file->fdread)
-            {
-                  n = file->fdread(file->fd, ptr, size, nitems, file->seek);
+      if (ptr && size && nitems && file) {
+            if (file->read) {
+                  n = file->read(file->dev, file->fd_part, ptr, size, nitems, file->seek);
                   file->seek += n * size;
             }
       }
@@ -1019,7 +993,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @param mode                seek mode DNLFIXME implement: seek mode
  *
  * @retval STD_RET_OK         seek moved successfully
- * @retval STD_RET_ERROR      error occured
+ * @retval STD_RET_ERROR      error occurred
  */
 //================================================================================================//
 stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
@@ -1028,8 +1002,7 @@ stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (file)
-      {
+      if (file) {
             file->seek = offset;
             status     = STD_RET_OK;
       }
@@ -1044,7 +1017,7 @@ stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
  *
  * @param *file               file
  * @param rq                  request
- * @param *data               pointer to datas
+ * @param *data               pointer to data
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -1054,12 +1027,92 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (file && file->fdioctl)
-      {
-            status = file->fdioctl(file->fd, rq, data);
+      if (file) {
+            if (file->ioctl) {
+                  status = file->ioctl(file->dev, file->fd_part, rq, data);
+            }
       }
 
       return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read next item of opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @return element attributes
+ */
+//================================================================================================//
+static dirent_t lfs_readdir(DIR_t *dir)
+{
+      dirent_t dirent;
+      dirent.isfile = TRUE;
+      dirent.name   = NULL;
+      dirent.size   = 0;
+
+      if (dir) {
+            node_t *from = dir->dd;
+            node_t *node = ListGetItemData(from->data, dir->seek++);
+
+            if (node) {
+                  dirent.isfile = (node->type == NODE_TYPE_FILE || node->type == NODE_TYPE_DRV);
+                  dirent.name   = node->name;
+                  dirent.size   = node->size;
+            }
+      }
+
+      return dirent;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function close file in LFS
+ * Function return always STD_RET_OK, to close file in LFS no operation is needed.
+ *
+ * @param dev     device number
+ * @param fd      file descriptor
+ *
+ * @retval STD_RET_OK
+ */
+//================================================================================================//
+static stdRet_t lfs_close(u32_t dev, u32_t fd)
+{
+      (void)dev;
+      (void)fd;
+
+      return STD_RET_OK;
+}
+
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+static size_t lfs_write(u32_t dev, u32_t fd, void *src, size_t size, size_t nitems, size_t seek)
+{
+      (void)dev;
+      (void)fd;
+
+      return 0;
+}
+
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+static size_t lfs_read(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+{
+      (void)dev;
+      (void)fd;
+
+      return 0;
 }
 
 
@@ -1213,36 +1266,6 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath
       return curnode;
 }
 
-
-//================================================================================================//
-/**
- * @brief Function read next item of opened directory
- *
- * @param *dir          directory object
- *
- * @return element attributes
- */
-//================================================================================================//
-static dirent_t readdir(DIR_t *dir)
-{
-      dirent_t dirent;
-      dirent.isfile = TRUE;
-      dirent.name   = NULL;
-      dirent.size   = 0;
-
-      if (dir) {
-            node_t *from = dir->dd;
-            node_t *node = ListGetItemData(from->data, dir->seek++);
-
-            if (node) {
-                  dirent.isfile = (node->type == NODE_TYPE_FILE || node->type == NODE_TYPE_DRV);
-                  dirent.name   = node->name;
-                  dirent.size   = node->size;
-            }
-      }
-
-      return dirent;
-}
 
 #ifdef __cplusplus
 }

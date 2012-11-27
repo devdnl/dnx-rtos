@@ -47,6 +47,7 @@ extern "C" {
 ==================================================================================================*/
 struct vfsstat {
      u32_t  st_dev;           /* ID of device containing file */
+     u32_t  st_rdev;          /* device ID (if special file) */
      u32_t  st_mode;          /* protection */
      u32_t  st_uid;           /* user ID of owner */
      u32_t  st_gid;           /* group ID of owner */
@@ -55,27 +56,29 @@ struct vfsstat {
 };
 
 struct vfsmcfg {
-      FILE_t   *(*open   )(const ch_t *name, const ch_t *mode);
-      stdRet_t  (*close  )(void *fd);
-      size_t    (*write  )(void *fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t    (*read   )(void *fd, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t  (*ioctl  )(void *fd, IORq_t iroq, void *data);
-      stdRet_t  (*mkdir  )(const ch_t *path);
-      DIR_t    *(*opendir)(const ch_t *path);
-      stdRet_t  (*remove )(const ch_t *path);
-      stdRet_t  (*rename )(const ch_t *oldName, const ch_t *newName);
-      stdRet_t  (*stat   )(const ch_t *path, struct vfsstat *stat);
+      u32_t     dev;
+      u32_t     (*open   )(u32_t dev, const ch_t *name, const ch_t *mode);
+      stdRet_t  (*close  )(u32_t dev, u32_t fd);
+      size_t    (*write  )(u32_t dev, u32_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t    (*read   )(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t  (*ioctl  )(u32_t dev, u32_t fd, IORq_t iroq, void *data);
+      stdRet_t  (*mkdir  )(u32_t dev, const ch_t *path);
+      DIR_t    *(*opendir)(u32_t dev, const ch_t *path);
+      stdRet_t  (*remove )(u32_t dev, const ch_t *path);
+      stdRet_t  (*rename )(u32_t dev, const ch_t *oldName, const ch_t *newName);
+      stdRet_t  (*stat   )(u32_t dev, const ch_t *path, struct vfsstat *stat);
 };
 
 typedef struct vfsmcfg vfsmcfg_t;
 
 struct vfsdcfg {
-      nod_t    device;
-      stdRet_t (*open )(nod_t dev);
-      stdRet_t (*close)(nod_t dev);
-      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t (*ioctl)(nod_t dev, IORq_t iroq, void *data);
+      u32_t    dev;
+      u32_t    part;
+      stdRet_t (*open )(u32_t dev, u32_t part);
+      stdRet_t (*close)(u32_t dev, u32_t part);
+      size_t   (*write)(u32_t dev, u32_t part, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*read )(u32_t dev, u32_t part, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t (*ioctl)(u32_t dev, u32_t part, IORq_t iroq, void *data);
 };
 
 typedef struct vfsdcfg vfsdcfg_t;
@@ -131,7 +134,6 @@ extern stdRet_t vfs_remove(const ch_t *path);
 extern stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName);
 extern stdRet_t vfs_stat(const ch_t *path, struct vfsstat *stat);
 extern FILE_t  *vfs_fopen(const ch_t *path, const ch_t *mode);
-
 extern stdRet_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
