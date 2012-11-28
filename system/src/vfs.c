@@ -273,10 +273,11 @@ stdRet_t vfs_mknod(const ch_t *path, vfsdcfg_t *drvcfg)
 
                   if (deep) {
                         /* go to target dir */
-                        node_t *node = GetNode(path, &fs->root, NULL, -1, NULL);
+                        node_t *node   = GetNode(path, &fs->root, NULL, -1, NULL);
+                        node_t *ifnode = GetNode(strrchr(path, '/'), node, NULL, 0, NULL);
 
                         /* check if target node is OK */
-                        if (node) {
+                        if (node && !ifnode) {
                               if (node->type == NODE_TYPE_DIR) {
                                     ch_t  *drvname    = strrchr(path, '/') + 1;
                                     u32_t  drvnamelen = strlen(drvname);
@@ -634,7 +635,7 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
                   node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, &oldItem);
                   node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, &newItem);
 
-                  if (oldNodeBase && newNodeBase) {
+                  if (oldNodeBase && newNodeBase && oldName[0] == '/' && newName[0] == '/') {
                         /* external the same FS -- move or rename operation */
                         if (  oldNodeBase == newNodeBase && oldNodeBase->type == NODE_TYPE_FS) {
                               vfsmcfg_t *ext = oldNodeBase->data;
@@ -1105,6 +1106,8 @@ static size_t lfs_write(u32_t dev, u32_t fd, void *src, size_t size, size_t nite
       (void)dev;
       (void)fd;
 
+      /* TODO lfs_write */
+
       return 0;
 }
 
@@ -1118,6 +1121,8 @@ static size_t lfs_read(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitem
 {
       (void)dev;
       (void)fd;
+
+      /* TODO lfs_read */
 
       return 0;
 }
