@@ -53,12 +53,18 @@ typedef struct list list_t;
 extern list_t *ListCreate(void);
 extern void    ListDestroy(list_t *list);
 extern i32_t   ListAddItem(list_t *list, void *data);
-extern i32_t   ListInsItemBefore(list_t *list, i32_t nitem, void *data);
-extern i32_t   ListInsItemAfter(list_t *list, i32_t nitem, void *data);
-extern i32_t   ListRmItem(list_t *list, i32_t nitem);
+extern i32_t   ListInsItemBeforeNo(list_t *list, i32_t nitem, void *data);
+extern i32_t   ListInsItemAfterNo(list_t *list, i32_t nitem, void *data);
+extern i32_t   ListRmItemByNo(list_t *list, i32_t nitem);
+extern i32_t   ListRmItemByID(list_t *list, u32_t id);
 extern void    ListClear(list_t *list);
-extern void    ListSetItemData(list_t *list, i32_t nitem, void *data);
-extern void   *ListGetItemData(list_t *list, i32_t nitem);
+extern i32_t   ListSetItemDataByNo(list_t *list, i32_t nitem, void *data);
+extern void   *ListGetItemDataByNo(list_t *list, i32_t nitem);
+extern i32_t   ListSetItemDataByID(list_t *list, u32_t id, void *data);
+extern void   *ListGetItemDataByID(list_t *list, u32_t id);
+extern i32_t   ListUnlinkItemDataByNo(list_t *list, i32_t nitem);
+extern i32_t   ListUnlinkItemDataByID(list_t *list, u32_t id);
+extern u32_t   ListGetItemID(list_t *list, i32_t nitem);
 extern i32_t   ListGetItemCount(list_t *list);
 
 

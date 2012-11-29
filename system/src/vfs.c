@@ -78,6 +78,7 @@ typedef struct node node_t;
 struct fshdl_s {
       node_t  root;
       mutex_t mtx;
+      list_t  *openFile;
 };
 
 
@@ -85,7 +86,7 @@ struct fshdl_s {
                                       Local function prototypes
 ==================================================================================================*/
 static ch_t     *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
-static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, i32_t *nitem);
+static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, u32_t *itemid);
 static i32_t     GetPathDeep(const ch_t *path);
 static dirent_t  lfs_readdir(DIR_t *dir);
 static stdRet_t  lfs_close(u32_t dev, u32_t fd);
@@ -122,13 +123,17 @@ stdRet_t vfs_init(void)
                   if (fs) {
                         CreateMutex(fs->mtx);
                         fs->root.data = ListCreate();
+                        fs->openFile  = ListCreate();
 
-                        if (!fs->mtx || !fs->root.data) {
+                        if (!fs->mtx || !fs->root.data || !fs->openFile) {
                               if (fs->mtx)
                                     DeleteMutex(fs->mtx);
 
                               if (fs->root.data)
                                     ListDestroy(fs->root.data);
+
+                              if (fs->openFile)
+                                    ListDestroy(fs->openFile);
 
                               free(fs);
 
@@ -553,10 +558,10 @@ stdRet_t vfs_remove(const ch_t *path)
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
             if (path) {
                   /* go to dir */
-                  i32_t       item;
+                  u32_t       itemid;
                   const ch_t *extPath  = NULL;
                   node_t     *nodebase = GetNode(path, &fs->root, &extPath, -1, NULL);
-                  node_t     *nodeobj  = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
+                  node_t     *nodeobj  = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &itemid);
 
                   /* check if target nodes ares OK */
                   if (nodebase) {
@@ -585,7 +590,7 @@ stdRet_t vfs_remove(const ch_t *path)
                                     if (nodeobj->data)
                                           free(nodeobj->data);
 
-                                    if (ListRmItem(nodebase->data, item) == 0)
+                                    if (ListRmItemByID(nodebase->data, itemid) == 0)
                                           status = STD_RET_OK;
                               }
                         } else if (nodebase->type == NODE_TYPE_FS) {
@@ -628,12 +633,10 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
             if (oldName && newName) {
-                  i32_t       oldItem;
-                  i32_t       newItem;
                   const ch_t *oldExtPath;
                   const ch_t *newExtPath;
-                  node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, &oldItem);
-                  node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, &newItem);
+                  node_t     *oldNodeBase = GetNode(oldName, &fs->root, &oldExtPath, -1, NULL);
+                  node_t     *newNodeBase = GetNode(newName, &fs->root, &newExtPath, -1, NULL);
 
                   if (oldNodeBase && newNodeBase && oldName[0] == '/' && newName[0] == '/') {
                         /* external the same FS -- move or rename operation */
@@ -806,29 +809,43 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
                               if (node) {
                                     vfsdcfg_t *drv = node->data;
                                     vfsmcfg_t *ext = node->data;
+                                    i32_t      item;
 
                                     /* open file according to file type */
                                     switch (node->type) {
                                     case NODE_TYPE_FILE:
-                                          file->dev     = 0;
-                                          file->fd_part = 0;
-                                          file->close   = lfs_close;
-                                          file->read    = lfs_read;
-                                          file->write   = lfs_write;
-                                          file->ioctl   = NULL;
-                                          file->seek    = 0;
+                                          /* declare file as open in list */
+                                          item = ListAddItem(fs->openFile, node);
+
+                                          if (item >= 0) {
+                                                /* clears file when condition is fulfilled */
+                                                if ( node->data && (  (strncmp("w",  mode, 2) == 0)
+                                                                   || (strncmp("w+", mode, 2) == 0) ) ) {
+                                                      free(node->data);
+                                                      node->data = NULL;
+                                                      node->size = 0;
+                                                }
+
+                                                file->dev   = 0;
+                                                file->fd    = ListGetItemID(fs->openFile, item);
+                                                file->close = lfs_close;
+                                                file->read  = lfs_read;
+                                                file->write = lfs_write;
+                                                file->ioctl = NULL;
+                                                file->seek  = 0;
+                                          }
                                           break;
 
                                     case NODE_TYPE_DRV:
                                           if (drv->open) {
                                                 if (drv->open(drv->dev, drv->part) == STD_RET_OK) {
-                                                      file->dev     = drv->dev;
-                                                      file->fd_part = drv->part;
-                                                      file->close   = drv->close;
-                                                      file->ioctl   = drv->ioctl;
-                                                      file->read    = drv->read;
-                                                      file->write   = drv->write;
-                                                      file->seek    = 0;
+                                                      file->dev   = drv->dev;
+                                                      file->fd    = drv->part;
+                                                      file->close = drv->close;
+                                                      file->ioctl = drv->ioctl;
+                                                      file->read  = drv->read;
+                                                      file->write = drv->write;
+                                                      file->seek  = 0;
                                                 } else {
                                                       free(file);
                                                       file = NULL;
@@ -838,9 +855,9 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
 
                                     case NODE_TYPE_FS:
                                           if (ext->open) {
-                                                file->fd_part = ext->open(ext->dev, extPath, mode);
+                                                file->fd = ext->open(ext->dev, extPath, mode);
 
-                                                if (file->fd_part != 0) {
+                                                if (file->fd != 0) {
                                                       file->dev   = ext->dev;
                                                       file->close = ext->close;
                                                       file->ioctl = ext->ioctl;
@@ -927,7 +944,7 @@ stdRet_t vfs_fclose(FILE_t *file)
 
       if (file) {
             if (file->close) {
-                  if (file->close(file->dev, file->fd_part) == STD_RET_OK) {
+                  if (file->close(file->dev, file->fd) == STD_RET_OK) {
                         free(file);
                         status = STD_RET_OK;
                   }
@@ -956,7 +973,7 @@ size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
 
       if (ptr && size && nitems && file) {
             if (file->write) {
-                  n = file->write(file->dev, file->fd_part, ptr, size, nitems, file->seek);
+                  n = file->write(file->dev, file->fd, ptr, size, nitems, file->seek);
                   file->seek += n * size;
             }
       }
@@ -983,7 +1000,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
 
       if (ptr && size && nitems && file) {
             if (file->read) {
-                  n = file->read(file->dev, file->fd_part, ptr, size, nitems, file->seek);
+                  n = file->read(file->dev, file->fd, ptr, size, nitems, file->seek);
                   file->seek += n * size;
             }
       }
@@ -1037,7 +1054,7 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
 
       if (file) {
             if (file->ioctl) {
-                  status = file->ioctl(file->dev, file->fd_part, rq, data);
+                  status = file->ioctl(file->dev, file->fd, rq, data);
             }
       }
 
@@ -1063,7 +1080,7 @@ static dirent_t lfs_readdir(DIR_t *dir)
 
       if (dir) {
             node_t *from = dir->dd;
-            node_t *node = ListGetItemData(from->data, dir->seek++);
+            node_t *node = ListGetItemDataByID(from->data, dir->seek++);
 
             if (node) {
                   dirent.isfile = (node->type == NODE_TYPE_FILE || node->type == NODE_TYPE_DRV);
@@ -1090,9 +1107,16 @@ static dirent_t lfs_readdir(DIR_t *dir)
 static stdRet_t lfs_close(u32_t dev, u32_t fd)
 {
       (void)dev;
-      (void)fd;
 
-      return STD_RET_OK;
+      stdRet_t status = STD_RET_ERROR;
+
+      if (ListUnlinkItemDataByID(fs->openFile, fd) == 0) {
+            if (ListRmItemByID(fs->openFile, fd) == 0) {
+                  status = STD_RET_OK;
+            }
+      }
+
+      return status;
 }
 
 
@@ -1104,9 +1128,17 @@ static stdRet_t lfs_close(u32_t dev, u32_t fd)
 static size_t lfs_write(u32_t dev, u32_t fd, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
-      (void)fd;
 
-      /* TODO lfs_write */
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (src && size && nitems) {
+                  node_t *node = ListGetItemDataByID(fs->openFile, fd);
+
+                  if (node) {
+
+                  }
+            }
+      }
+
 
       return 0;
 }
@@ -1211,12 +1243,12 @@ static i32_t GetPathDeep(const ch_t *path)
  * @param[in]  *startnode     start node
  * @param[out] **extPath      external path begin (pointer from path)
  * @param[in]   deep          deep control
- * @param[out] *nitem         node is n-item of list which was found
+ * @param[out] *itemid        node is n-item of list which was found
  *
  * @return node
  */
 //================================================================================================//
-static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, i32_t *nitem)
+static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, u32_t *itemid)
 {
       node_t *curnode = NULL;
 
@@ -1238,14 +1270,14 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath
                         /* find that object exist */
                         i32_t i = 0;
                         while (listsize > 0) {
-                              node_t *node = ListGetItemData(curnode->data, i++);
+                              node_t *node = ListGetItemDataByNo(curnode->data, i++);
 
                               if (node) {
                                     if (strncmp(node->name, word, len) == 0) {
                                           curnode = node;
 
-                                          if (nitem)
-                                                *nitem = i - 1;
+                                          if (itemid)
+                                                *itemid = ListGetItemID(curnode->data, i - 1);
                                           break;
                                     }
                               } else {

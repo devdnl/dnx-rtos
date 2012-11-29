@@ -45,6 +45,7 @@ extern "C" {
 ==================================================================================================*/
 struct listitem {
       void  *data;
+      u32_t  id;
       struct listitem *next;
 };
 
@@ -52,13 +53,15 @@ typedef struct list {
       struct listitem *head;
       struct listitem *tail;
       i32_t  itemcount;
+      u32_t  idcnt;
 } list_t;
 
 
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static void GetItemAddr(list_t *list, i32_t nitem, struct listitem **previtem, struct listitem **thisitem);
+static void  GetItemAddrByNo(list_t *list, i32_t nitem, struct listitem **previtem, struct listitem **thisitem);
+static i32_t GetItemAddrByID(list_t *list, u32_t id, struct listitem **previtem, struct listitem **thisitem);
 
 
 /*==================================================================================================
@@ -103,7 +106,9 @@ void ListDestroy(list_t *list)
             while (item) {
                   nextitem = item->next;
 
-                  free(item->data);
+                  if (item->data)
+                        free(item->data);
+
                   free(item);
 
                   item = nextitem;
@@ -143,6 +148,7 @@ i32_t ListAddItem(list_t *list, void *data)
                   list->itemcount++;
 
                   newitem->data = data;
+                  newitem->id   = list->idcnt++;
 
                   n = list->itemcount - 1;
             }
@@ -162,7 +168,7 @@ i32_t ListAddItem(list_t *list, void *data)
  * @return 0 if ok, otherwise != 0
  */
 //================================================================================================//
-i32_t ListInsItemBefore(list_t *list, i32_t nitem, void *data)
+i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, void *data)
 {
       i32_t n = 1;
 
@@ -172,7 +178,7 @@ i32_t ListInsItemBefore(list_t *list, i32_t nitem, void *data)
             if (newitem) {
                   struct listitem *item;
                   struct listitem *previtem;
-                  GetItemAddr(list, nitem, &previtem, &item);
+                  GetItemAddrByNo(list, nitem, &previtem, &item);
 
                   if (item) {
                         /* check head pointer */
@@ -192,6 +198,7 @@ i32_t ListInsItemBefore(list_t *list, i32_t nitem, void *data)
                         }
 
                         newitem->data = data;
+                        newitem->id   = list->idcnt++;
 
                         n = 0;
                   }
@@ -212,7 +219,7 @@ i32_t ListInsItemBefore(list_t *list, i32_t nitem, void *data)
  * @return 0 if ok, otherwise != 0
  */
 //================================================================================================//
-i32_t ListInsItemAfter(list_t *list, i32_t nitem, void *data)
+i32_t ListInsItemAfterNo(list_t *list, i32_t nitem, void *data)
 {
       i32_t n = 1;
 
@@ -222,7 +229,7 @@ i32_t ListInsItemAfter(list_t *list, i32_t nitem, void *data)
             if (newitem) {
                   struct listitem *item;
                   struct listitem *previtem;
-                  GetItemAddr(list, nitem, &previtem, &item);
+                  GetItemAddrByNo(list, nitem, &previtem, &item);
 
                   if (item) {
                         newitem->next = item->next;
@@ -236,6 +243,7 @@ i32_t ListInsItemAfter(list_t *list, i32_t nitem, void *data)
                         }
 
                         newitem->data = data;
+                        newitem->id   = list->idcnt++;
 
                         n = 0;
                   }
@@ -248,7 +256,7 @@ i32_t ListInsItemAfter(list_t *list, i32_t nitem, void *data)
 
 //================================================================================================//
 /**
- * @brief Function remove selected item
+ * @brief Function remove selected n item
  *
  * @param *list         pointer to list
  * @param nitem         item number
@@ -256,7 +264,7 @@ i32_t ListInsItemAfter(list_t *list, i32_t nitem, void *data)
  * @return 0 if ok, otherwise != 0
  */
 //================================================================================================//
-i32_t ListRmItem(list_t *list, i32_t nitem)
+i32_t ListRmItemByNo(list_t *list, i32_t nitem)
 {
       i32_t n = 1;
 
@@ -264,7 +272,7 @@ i32_t ListRmItem(list_t *list, i32_t nitem)
             if ((nitem >= 0) && (list->itemcount - 1 >= nitem)) {
                   struct listitem *item;
                   struct listitem *previtem;
-                  GetItemAddr(list, nitem, &previtem, &item);
+                  GetItemAddrByNo(list, nitem, &previtem, &item);
 
                   if (item) {
                         /* check head pointer */
@@ -282,13 +290,65 @@ i32_t ListRmItem(list_t *list, i32_t nitem)
                               previtem->next = item->next;
                         }
 
-                        free(item->data);
+                        if (item->data)
+                              free(item->data);
+
                         free(item);
 
                         list->itemcount--;
 
                         n = 0;
                   }
+            }
+      }
+
+      return n;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function remove selected item by ID
+ *
+ * @param *list         pointer to list
+ * @param  id           item ID
+ *
+ * @return 0 if ok, otherwise != 0
+ */
+//================================================================================================//
+i32_t ListRmItemByID(list_t *list, u32_t id)
+{
+      i32_t n = 1;
+
+      if (list) {
+            struct listitem *item;
+            struct listitem *previtem;
+            i32_t nitem = GetItemAddrByID(list, id, &previtem, &item);
+
+            if (item) {
+                  /* check head pointer */
+                  if (nitem == 0) {
+                        list->head = item->next;
+                  }
+
+                  /* check tail pointer */
+                  if (list->itemcount - 1 == nitem) {
+                        list->tail = previtem;
+                  }
+
+                  /* connect to previous item next item from current item */
+                  if (previtem) {
+                        previtem->next = item->next;
+                  }
+
+                  if (item->data)
+                        free(item->data);
+
+                  free(item);
+
+                  list->itemcount--;
+
+                  n = 0;
             }
       }
 
@@ -315,7 +375,9 @@ void ListClear(list_t *list)
             while (item) {
                   nextitem = item->next;
 
-                  free(item->data);
+                  if (item->data)
+                        free(item->data);
+
                   free(item);
 
                   item = nextitem;
@@ -336,20 +398,30 @@ void ListClear(list_t *list)
  * @param *list         pointer to list
  * @param nitem         item number
  * @param *data         data pointer
+ *
+ * @return 0 if ok, otherwise != 0
  */
 //================================================================================================//
-void ListSetItemData(list_t *list, i32_t nitem, void *data)
+i32_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data)
 {
+      i32_t n = 1;
+
       if (list && (nitem >= 0)) {
 
             struct listitem *item;
-            GetItemAddr(list, nitem, NULL, &item);
+            GetItemAddrByNo(list, nitem, NULL, &item);
 
             if (item) {
-                  free(item->data);
+                  if (item->data)
+                        free(item->data);
+
                   item->data = data;
+
+                  n = 0;
             }
       }
+
+      return n;
 }
 
 
@@ -363,13 +435,13 @@ void ListSetItemData(list_t *list, i32_t nitem, void *data)
  * @return pointer to item user data
  */
 //================================================================================================//
-void *ListGetItemData(list_t *list, i32_t nitem)
+void *ListGetItemDataByNo(list_t *list, i32_t nitem)
 {
       void *data = NULL;
 
       if (list && (nitem >= 0)) {
             struct listitem *item;
-            GetItemAddr(list, nitem, NULL, &item);
+            GetItemAddrByNo(list, nitem, NULL, &item);
 
             if (item) {
                   data = item->data;
@@ -377,6 +449,159 @@ void *ListGetItemData(list_t *list, i32_t nitem)
       }
 
       return data;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function set item data pointer by id
+ * Function automatically free last data before use new data
+ *
+ * @param *list         pointer to list
+ * @param nitem         item number
+ * @param *data         data pointer
+ *
+ * @return 0 if ok, otherwise != 0
+ */
+//================================================================================================//
+i32_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
+{
+      i32_t n = 1;
+
+      if (list) {
+
+            struct listitem *item;
+            GetItemAddrByID(list, id, NULL, &item);
+
+            if (item) {
+                  if (item->data)
+                        free(item->data);
+
+                  item->data = data;
+
+                  n = 0;
+            }
+      }
+
+      return n;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function return item data pointer by ID
+ *
+ * @param *list         pointer to list
+ * @param nitem         item number
+ *
+ * @return pointer to item user data
+ */
+//================================================================================================//
+void *ListGetItemDataByID(list_t *list, u32_t id)
+{
+      void *data = NULL;
+
+      if (list) {
+            struct listitem *item;
+            GetItemAddrByID(list, id, NULL, &item);
+
+            if (item) {
+                  data = item->data;
+            }
+      }
+
+      return data;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function return item ID number
+ *
+ * @param *list         pointer to list
+ * @param  nitem        item number
+ *
+ * @return item ID
+ */
+//================================================================================================//
+u32_t ListGetItemID(list_t *list, i32_t nitem)
+{
+      u32_t id = UINT32_MAX;
+
+      if (list && (nitem >= 0)) {
+            struct listitem *item;
+            GetItemAddrByNo(list, nitem, NULL, &item);
+
+            if (item) {
+                  id = item->id;
+            }
+      }
+
+      return id;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function unlink data form item selected by id
+ * Function automatically free last data before use new data
+ *
+ * @param *list         pointer to list
+ * @param  nitem        item number
+ * @param *data         data pointer
+ *
+ * @return 0 if ok, otherwise != 0
+ */
+//================================================================================================//
+i32_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem)
+{
+      i32_t n = 1;
+
+      if (list) {
+
+            struct listitem *item;
+            GetItemAddrByNo(list, nitem, NULL, &item);
+
+            if (item) {
+                  item->data = NULL;
+
+                  n = 0;
+            }
+      }
+
+      return n;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function unlink data form item selected by id
+ * Function automatically free last data before use new data
+ *
+ * @param *list         pointer to list
+ * @param  id           item id
+ * @param *data         data pointer
+ *
+ * @return 0 if ok, otherwise != 0
+ */
+//================================================================================================//
+i32_t ListUnlinkItemDataByID(list_t *list, u32_t id)
+{
+      i32_t n = 1;
+
+      if (list) {
+
+            struct listitem *item;
+            GetItemAddrByID(list, id, NULL, &item);
+
+            if (item) {
+                  item->data = NULL;
+
+                  n = 0;
+            }
+      }
+
+      return n;
 }
 
 
@@ -408,12 +633,10 @@ i32_t ListGetItemCount(list_t *list)
  * @param *list         pointer to list
  * @param *previtem     pointer to previous item
  * @param *thisitem     pointer to found item
- * @param nitem         item number
- *
- * @return pointer to item
+ * @param  nitem        item number
  */
 //================================================================================================//
-static void GetItemAddr(list_t *list, i32_t nitem, struct listitem **previtem, struct listitem **thisitem)
+static void GetItemAddrByNo(list_t *list, i32_t nitem, struct listitem **previtem, struct listitem **thisitem)
 {
       struct listitem *titem = list->head;
       struct listitem *pitem = NULL;
@@ -431,6 +654,41 @@ static void GetItemAddr(list_t *list, i32_t nitem, struct listitem **previtem, s
 
       if (previtem)
             *previtem = pitem;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function find pointer to selected item's id
+ *
+ * @param *list         pointer to list
+ * @param  id           item id
+ * @param *previtem     pointer to previous item
+ * @param *thisitem     pointer to found item
+ *
+ * @return item number
+ */
+//================================================================================================//
+static i32_t GetItemAddrByID(list_t *list, u32_t id, struct listitem **previtem, struct listitem **thisitem)
+{
+      struct listitem *titem = list->head;
+      struct listitem *pitem = NULL;
+
+      i32_t cnt = 0;
+
+      while (cnt < list->itemcount && titem && id != titem->id) {
+            pitem = titem;
+            titem = titem->next;
+            cnt++;
+      }
+
+      if (thisitem)
+            *thisitem = titem;
+
+      if (previtem)
+            *previtem = pitem;
+
+      return cnt;
 }
 
 

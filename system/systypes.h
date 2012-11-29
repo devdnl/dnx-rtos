@@ -85,11 +85,11 @@ typedef size_t fd_t;
 typedef struct
 {
       u32_t    dev;
-      u32_t    fd_part;
-      stdRet_t (*close)(u32_t dev, u32_t fd_part);
-      size_t   (*write)(u32_t dev, u32_t fd_part, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(u32_t dev, u32_t fd_part, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(u32_t dev, u32_t fd_part, IORq_t iorq, void *data);
+      u32_t    fd;
+      stdRet_t (*close)(u32_t dev, u32_t fd);
+      size_t   (*write)(u32_t dev, u32_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*read )(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+      stdRet_t (*ioctl)(u32_t dev, u32_t fd, IORq_t iorq, void *data);
       size_t   seek;
 } FILE_t;
 
