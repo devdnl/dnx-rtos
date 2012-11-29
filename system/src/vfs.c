@@ -86,7 +86,7 @@ struct fshdl_s {
                                       Local function prototypes
 ==================================================================================================*/
 static ch_t     *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
-static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, u32_t *itemid);
+static node_t   *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, i32_t *item);
 static i32_t     GetPathDeep(const ch_t *path);
 static dirent_t  lfs_readdir(DIR_t *dir);
 static stdRet_t  lfs_close(u32_t dev, u32_t fd);
@@ -558,15 +558,15 @@ stdRet_t vfs_remove(const ch_t *path)
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
             if (path) {
                   /* go to dir */
-                  u32_t       itemid;
+                  i32_t       item;
                   const ch_t *extPath  = NULL;
                   node_t     *nodebase = GetNode(path, &fs->root, &extPath, -1, NULL);
-                  node_t     *nodeobj  = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &itemid);
+                  node_t     *nodeobj  = GetNode(strrchr(path, '/'), nodebase, NULL, 0, &item);
 
                   /* check if target nodes ares OK */
                   if (nodebase) {
 
-                        if (nodeobj) {
+                        if (nodeobj && nodeobj != &fs->root) {
 
                               /* node must be local FILE or DIR */
                               if (  nodeobj->type == NODE_TYPE_DIR
@@ -576,7 +576,7 @@ stdRet_t vfs_remove(const ch_t *path)
                                     /* if DIR check if is empty */
                                     if (nodeobj->type == NODE_TYPE_DIR) {
 
-                                          if (ListGetItemCount(nodeobj->data) != 0) {
+                                          if (ListGetItemCount(nodeobj->data) > 0) {
                                                 goto vfs_remove_end;
                                           } else {
                                                 ListDestroy(nodeobj->data);
@@ -589,6 +589,8 @@ stdRet_t vfs_remove(const ch_t *path)
 
                                     if (nodeobj->data)
                                           free(nodeobj->data);
+
+                                    u32_t itemid = ListGetItemID(nodebase->data, item);
 
                                     if (ListRmItemByID(nodebase->data, itemid) == 0)
                                           status = STD_RET_OK;
@@ -1080,7 +1082,7 @@ static dirent_t lfs_readdir(DIR_t *dir)
 
       if (dir) {
             node_t *from = dir->dd;
-            node_t *node = ListGetItemDataByID(from->data, dir->seek++);
+            node_t *node = ListGetItemDataByNo(from->data, dir->seek++);
 
             if (node) {
                   dirent.isfile = (node->type == NODE_TYPE_FILE || node->type == NODE_TYPE_DRV);
@@ -1243,12 +1245,12 @@ static i32_t GetPathDeep(const ch_t *path)
  * @param[in]  *startnode     start node
  * @param[out] **extPath      external path begin (pointer from path)
  * @param[in]   deep          deep control
- * @param[out] *itemid        node is n-item of list which was found
+ * @param[out] *item          node is n-item of list which was found
  *
  * @return node
  */
 //================================================================================================//
-static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, u32_t *itemid)
+static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath, i32_t deep, i32_t *item)
 {
       node_t *curnode = NULL;
 
@@ -1276,8 +1278,8 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, const ch_t **extPath
                                     if (strncmp(node->name, word, len) == 0) {
                                           curnode = node;
 
-                                          if (itemid)
-                                                *itemid = ListGetItemID(curnode->data, i - 1);
+                                          if (item)
+                                                *item = i - 1;//ListGetItemID(curnode->data, i - 1);
                                           break;
                                     }
                               } else {

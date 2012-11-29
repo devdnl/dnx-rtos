@@ -139,7 +139,7 @@ i32_t ListAddItem(list_t *list, void *data)
             if (newitem) {
                   if (list->head == NULL) {
                         list->head = newitem;
-                        list->tail  = newitem;
+                        list->tail = newitem;
                   } else {
                         list->tail->next = newitem;
                         list->tail = newitem;
