@@ -1124,41 +1124,114 @@ static stdRet_t lfs_close(u32_t dev, u32_t fd)
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function write to file data
+ *
+ * @param  dev          device number
+ * @param  fd           file descriptor
+ * @param *src          data source
+ * @param  size         item size
+ * @param  nitems       number of items
+ * @param  seek         position in file
+ *
+ * @return number of written items
  */
 //================================================================================================//
 static size_t lfs_write(u32_t dev, u32_t fd, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
 
+      size_t n = 0;
+
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
             if (src && size && nitems) {
                   node_t *node = ListGetItemDataByID(fs->openFile, fd);
 
                   if (node) {
+                        size_t wrsize  = size * nitems;
+                        size_t filelen = node->size;
 
+                        if (seek > filelen)
+                              seek = filelen;
+
+                        if ((seek + wrsize) > filelen || node->data == NULL) {
+                              ch_t *newdata = malloc(filelen + wrsize);
+
+                              if (newdata) {
+                                    if (node->data) {
+                                          memcpy(newdata, node->data, filelen);
+                                          free(node->data);
+                                    }
+
+                                    memcpy(newdata + seek, src, wrsize);
+                                    n = nitems;
+
+                                    node->data  = newdata;
+                                    node->size += wrsize - (filelen - seek);
+                              }
+                        } else {
+                              memcpy(node->data + seek, src, wrsize);
+                              n = nitems;
+                        }
                   }
             }
       }
 
-
-      return 0;
+      return n;
 }
 
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function read from file data
+ *
+ * @param  dev          device number
+ * @param  fd           file descriptor
+ * @param *dst          data destination
+ * @param  size         item size
+ * @param  nitems       number of items
+ * @param  seek         position in file
+ *
+ * @return number of read items
  */
 //================================================================================================//
 static size_t lfs_read(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
-      (void)fd;
 
-      /* TODO lfs_read */
+      size_t n = 0;
 
-      return 0;
+      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
+            if (dst && size && nitems) {
+                  node_t *node = ListGetItemDataByID(fs->openFile, fd);
+
+                  if (node) {
+                        size_t filelen = node->size;
+                        size_t items2rd;
+
+                        /* check if seek is not bigger than file length */
+                        if (seek > filelen) {
+                              seek = filelen;
+                        }
+
+                        /* check how many items to read is on current file position */
+                        if (((filelen - seek) / size) >= nitems) {
+                              items2rd = nitems;
+                        } else {
+                              items2rd = (filelen - seek) / size;
+                        }
+
+                        /* copy if file buffer exist */
+                        if (node->data) {
+                              if (items2rd > 0) {
+                                    memcpy(dst, node->data + seek, items2rd * size);
+                                    n = items2rd;
+                              }
+                        }
+                  }
+            }
+      }
+
+      return n;
 }
 
 
