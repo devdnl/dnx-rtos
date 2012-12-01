@@ -553,15 +553,18 @@ stdRet_t lfs_stat(u32_t dev, const ch_t *path, struct vfs_stat *stat)
                   node_t *node = GetNode(path, &fs->root, 0, NULL);
 
                   if (node) {
-                        stat->st_dev   = node->dev;
-                        stat->st_rdev  = node->part;
-                        stat->st_gid   = node->gid;
-                        stat->st_mode  = node->mode;
-                        stat->st_mtime = node->mtime;
-                        stat->st_size  = node->size;
-                        stat->st_uid   = node->uid;
+                        if (  (path[strlen(path) - 1] == '/' && node->type == NODE_TYPE_DIR)
+                           ||  path[strlen(path) - 1] != '/') {
+                              stat->st_dev   = node->dev;
+                              stat->st_rdev  = node->part;
+                              stat->st_gid   = node->gid;
+                              stat->st_mode  = node->mode;
+                              stat->st_mtime = node->mtime;
+                              stat->st_size  = node->size;
+                              stat->st_uid   = node->uid;
 
-                        status = STD_RET_OK;
+                              status = STD_RET_OK;
+                        }
                   }
             }
 
