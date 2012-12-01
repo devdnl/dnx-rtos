@@ -45,7 +45,7 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-struct vfsstat {
+struct vfs_stat {
      u32_t  st_dev;           /* ID of device containing file */
      u32_t  st_rdev;          /* device ID (if special file) */
      u32_t  st_mode;          /* protection */
@@ -55,23 +55,16 @@ struct vfsstat {
      u32_t  st_mtime;         /* time of last modification */
 };
 
-struct vfsmcfg {
-      u32_t     dev;
-      u32_t     (*open   )(u32_t dev, const ch_t *name, const ch_t *mode);
-      stdRet_t  (*close  )(u32_t dev, u32_t fd);
-      size_t    (*write  )(u32_t dev, u32_t fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t    (*read   )(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t  (*ioctl  )(u32_t dev, u32_t fd, IORq_t iroq, void *data);
-      stdRet_t  (*mkdir  )(u32_t dev, const ch_t *path);
-      DIR_t    *(*opendir)(u32_t dev, const ch_t *path);
-      stdRet_t  (*remove )(u32_t dev, const ch_t *path);
-      stdRet_t  (*rename )(u32_t dev, const ch_t *oldName, const ch_t *newName);
-      stdRet_t  (*stat   )(u32_t dev, const ch_t *path, struct vfsstat *stat);
+struct vfs_statfs {
+      u32_t f_type;           /* file system type */
+      u32_t f_blocks;         /* total blocks */
+      u32_t f_bfree;          /* free blocks */
+      u32_t f_files;          /* total file nodes in FS */
+      u32_t f_ffree;          /* free file nodes in FS */
+      const ch_t *fsname;     /* FS name */
 };
 
-typedef struct vfsmcfg vfsmcfg_t;
-
-struct vfsdcfg {
+struct vfs_drvcfg {
       u32_t    dev;
       u32_t    part;
       stdRet_t (*open )(u32_t dev, u32_t part);
@@ -81,58 +74,43 @@ struct vfsdcfg {
       stdRet_t (*ioctl)(u32_t dev, u32_t part, IORq_t iroq, void *data);
 };
 
-typedef struct vfsdcfg vfsdcfg_t;
-
-
-
-
-/*
-struct fuse_operations {
-    int (*getattr) (const char *, struct stat *);
-    int (*readlink) (const char *, char *, size_t);
-    int (*getdir) (const char *, fuse_dirh_t, fuse_dirfil_t);
-    int (*mknod) (const char *, mode_t, dev_t);
-    int (*mkdir) (const char *, mode_t);
-    int (*unlink) (const char *);
-    int (*rmdir) (const char *);
-    int (*symlink) (const char *, const char *);
-    int (*rename) (const char *, const char *);
-    int (*link) (const char *, const char *);
-    int (*chmod) (const char *, mode_t);
-    int (*chown) (const char *, uid_t, gid_t);
-    int (*truncate) (const char *, off_t);
-    int (*utime) (const char *, struct utimbuf *);
-    int (*open) (const char *, struct fuse_file_info *);
-    int (*read) (const char *, char *, size_t, off_t, struct fuse_file_info *);
-    int (*write) (const char *, const char *, size_t, off_t,struct fuse_file_info *);
-    int (*statfs) (const char *, struct statfs *);
-    int (*flush) (const char *, struct fuse_file_info *);
-    int (*release) (const char *, struct fuse_file_info *);
-    int (*fsync) (const char *, int, struct fuse_file_info *);
-    int (*setxattr) (const char *, const char *, const char *, size_t, int);
-    int (*getxattr) (const char *, const char *, char *, size_t);
-    int (*listxattr) (const char *, char *, size_t);
-    int (*removexattr) (const char *, const char *);
-};*/
-
-
-
+struct vfs_fscfg {
+      u32_t     dev;
+      stdRet_t  (*open   )(u32_t dev, fd_t *fd, const ch_t *path, const ch_t *mode);
+      stdRet_t  (*close  )(u32_t dev, fd_t fd);
+      size_t    (*write  )(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t    (*read   )(u32_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t  (*ioctl  )(u32_t dev, fd_t fd, IORq_t iroq, void *data);
+      stdRet_t  (*mkdir  )(u32_t dev, const ch_t *path);
+      stdRet_t  (*mknod  )(u32_t dev, const ch_t *path, struct vfs_drvcfg *dcfg);
+      DIR_t    *(*opendir)(u32_t dev, const ch_t *path);
+      stdRet_t  (*remove )(u32_t dev, const ch_t *path);
+      stdRet_t  (*rename )(u32_t dev, const ch_t *oldName, const ch_t *newName);
+      stdRet_t  (*chmod  )(u32_t dev, u32_t mode);
+      stdRet_t  (*chown  )(u32_t dev, u16_t owner, u16_t group);
+      stdRet_t  (*stat   )(u32_t dev, const ch_t *path, struct vfs_stat *stat);
+      stdRet_t  (*statfs )(u32_t dev, struct vfs_statfs *statfs);
+      stdRet_t  (*release)(u32_t dev);
+};
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
 extern stdRet_t vfs_init(void);
-extern stdRet_t vfs_mount(const ch_t *path, vfsmcfg_t *mountcfg);
+extern stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg);
 extern stdRet_t vfs_umount(const ch_t *path);
-extern stdRet_t vfs_mknod(const ch_t *path, vfsdcfg_t *drvcfg);
+extern stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg);
 extern stdRet_t vfs_mkdir(const ch_t *path);
 extern DIR_t   *vfs_opendir(const ch_t *path);
 extern stdRet_t vfs_closedir(DIR_t *dir);
 extern dirent_t vfs_readdir(DIR_t *dir);
 extern stdRet_t vfs_remove(const ch_t *path);
 extern stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName);
-extern stdRet_t vfs_stat(const ch_t *path, struct vfsstat *stat);
+extern stdRet_t vfs_chmod(const ch_t *path, u32_t mode);
+extern stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group);
+extern stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat);
+extern stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs);
 extern FILE_t  *vfs_fopen(const ch_t *path, const ch_t *mode);
 extern stdRet_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);

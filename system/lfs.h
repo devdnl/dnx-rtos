@@ -34,13 +34,13 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "basic_types.h"
+#include "vfs.h"
 #include "systypes.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-//typedef size_t procfd_t;
 
 
 /*==================================================================================================
@@ -51,14 +51,22 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-//extern stdRet_t PROC_remove(u32_t fd);
-//extern size_t   PROC_GetFileSize(procfd_t fd);
-//extern procfd_t PROC_open(const ch_t *name, ch_t *mode);
-//extern stdRet_t PROC_close(procfd_t fd);
-//extern size_t   PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek);
-//extern size_t   PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-//extern void     PROC_opendir(DIR_t *dir);
-//extern dirent_t PROC_readdir(size_t seek);
+extern stdRet_t  lfs_init   (void);
+extern stdRet_t  lfs_open   (u32_t dev, fd_t *fd, const ch_t *path, const ch_t *mode);
+extern stdRet_t  lfs_close  (u32_t dev, fd_t fd);
+extern size_t    lfs_write  (u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t    lfs_read   (u32_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t  lfs_ioctl  (u32_t dev, fd_t fd, IORq_t iroq, void *data);
+extern stdRet_t  lfs_mkdir  (u32_t dev, const ch_t *path);
+extern stdRet_t  lfs_mknod  (u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg);
+extern DIR_t    *lfs_opendir(u32_t dev, const ch_t *path);
+extern stdRet_t  lfs_remove (u32_t dev, const ch_t *path);
+extern stdRet_t  lfs_rename (u32_t dev, const ch_t *oldName, const ch_t *newName);
+extern stdRet_t  lfs_chmod  (u32_t dev, u32_t mode);
+extern stdRet_t  lfs_chown  (u32_t dev, u16_t owner, u16_t group);
+extern stdRet_t  lfs_stat   (u32_t dev, const ch_t *path, struct vfs_stat *stat);
+extern stdRet_t  lfs_statfs (u32_t dev, struct vfs_statfs *statfs);
+extern stdRet_t  lfs_release(u32_t dev);
 
 
 #ifdef __cplusplus
