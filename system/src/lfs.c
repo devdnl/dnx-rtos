@@ -373,7 +373,7 @@ stdRet_t lfs_remove(u32_t dev, const ch_t *path)
                   /* go to dir */
                   i32_t   item;
                   node_t *nodebase = GetNode(path, &fs->root, -1, NULL);
-                  node_t *nodeobj  = GetNode(strrchr(path, '/'), nodebase, 0, &item);
+                  node_t *nodeobj  = GetNode(path, &fs->root, 0, &item);
 
                   /* check if target nodes ares OK */
                   if (nodebase) {
@@ -384,6 +384,13 @@ stdRet_t lfs_remove(u32_t dev, const ch_t *path)
                               if (  nodeobj->type == NODE_TYPE_DIR
                                  || nodeobj->type == NODE_TYPE_FILE
                                  || nodeobj->type == NODE_TYPE_DRV) {
+
+                                    /* if path is ending on slash, the object must be DIR */
+                                    if (path[strlen(path) - 1] == '/') {
+                                          if (nodeobj->type != NODE_TYPE_DIR) {
+                                                goto lfs_remove_end;
+                                          }
+                                    }
 
                                     /* if DIR check if is empty */
                                     if (nodeobj->type == NODE_TYPE_DIR) {

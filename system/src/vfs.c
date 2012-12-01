@@ -436,7 +436,7 @@ stdRet_t vfs_remove(const ch_t *path)
                         if (mfs == NULL) {
                               ch_t *extPath = NULL;
                               slashpath[strlen(slashpath) - 1] = '\0';
-                              struct fsinfo *bfs = FindBaseFS(slashpath, strlen(slashpath) - 1, &extPath);
+                              struct fsinfo *bfs = FindBaseFS(path, strlen(path) - 1, &extPath);
 
                               if (bfs) {
                                     if (bfs->fs.remove) {
