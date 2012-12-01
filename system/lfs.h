@@ -51,7 +51,7 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t  lfs_init   (void);
+extern stdRet_t  lfs_init   (u32_t dev);
 extern stdRet_t  lfs_open   (u32_t dev, fd_t *fd, const ch_t *path, const ch_t *mode);
 extern stdRet_t  lfs_close  (u32_t dev, fd_t fd);
 extern size_t    lfs_write  (u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
@@ -59,7 +59,7 @@ extern size_t    lfs_read   (u32_t dev, fd_t fd, void *dst, size_t size, size_t 
 extern stdRet_t  lfs_ioctl  (u32_t dev, fd_t fd, IORq_t iroq, void *data);
 extern stdRet_t  lfs_mkdir  (u32_t dev, const ch_t *path);
 extern stdRet_t  lfs_mknod  (u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg);
-extern DIR_t    *lfs_opendir(u32_t dev, const ch_t *path);
+extern stdRet_t  lfs_opendir(u32_t dev, const ch_t *path, DIR_t *dir);
 extern stdRet_t  lfs_remove (u32_t dev, const ch_t *path);
 extern stdRet_t  lfs_rename (u32_t dev, const ch_t *oldName, const ch_t *newName);
 extern stdRet_t  lfs_chmod  (u32_t dev, u32_t mode);

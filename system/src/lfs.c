@@ -107,44 +107,42 @@ static struct fshdl_s *fs;
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_init(void)
+stdRet_t lfs_init(u32_t dev)
 {
+      (void)dev;
+
       stdRet_t ret = STD_RET_OK;
 
-      if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
-            if (fs == NULL) {
-                  fs = calloc(1, sizeof(struct fshdl_s));
+      if (fs == NULL) {
+            fs = calloc(1, sizeof(struct fshdl_s));
 
-                  if (fs) {
-                        CreateMutex(fs->mtx);
-                        fs->root.data = ListCreate();
-                        fs->openFile  = ListCreate();
+            if (fs) {
+                  CreateMutex(fs->mtx);
+                  fs->root.data = ListCreate();
+                  fs->openFile  = ListCreate();
 
-                        if (!fs->mtx || !fs->root.data || !fs->openFile) {
-                              if (fs->mtx)
-                                    DeleteMutex(fs->mtx);
+                  if (!fs->mtx || !fs->root.data || !fs->openFile) {
+                        if (fs->mtx)
+                              DeleteMutex(fs->mtx);
 
-                              if (fs->root.data)
-                                    ListDestroy(fs->root.data);
+                        if (fs->root.data)
+                              ListDestroy(fs->root.data);
 
-                              if (fs->openFile)
-                                    ListDestroy(fs->openFile);
+                        if (fs->openFile)
+                              ListDestroy(fs->openFile);
 
-                              free(fs);
+                        free(fs);
 
-                              fs = NULL;
-                        } else {
-                              fs->root.name = "/";
-                              fs->root.size = sizeof(node_t);
-                              fs->root.type = NODE_TYPE_DIR;
-                        }
+                        fs = NULL;
+                  } else {
+                        fs->root.name = "/";
+                        fs->root.size = sizeof(node_t);
+                        fs->root.type = NODE_TYPE_DIR;
                   }
-
-                  if (fs == NULL)
-                        ret = STD_RET_ERROR;
             }
 
-            GiveMutex(fs->mtx);
+            if (fs == NULL)
+                  ret = STD_RET_ERROR;
       }
 
       return ret;
@@ -314,38 +312,35 @@ stdRet_t lfs_mkdir(u32_t dev, const ch_t *path)
 /**
  * @brief Function open directory
  *
+ * @param  dev          device number
  * @param *path         directory path
+ * @param *dir          directory info
  *
- * @return directory object
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-DIR_t *lfs_opendir(u32_t dev, const ch_t *path)
+stdRet_t lfs_opendir(u32_t dev, const ch_t *path, DIR_t *dir)
 {
       (void)dev;
 
-      DIR_t *dir = NULL;
+      stdRet_t status = STD_RET_ERROR;
 
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME)) {
             if (path && fs) {
-                  dir = calloc(1, sizeof(DIR_t));
+                  /* go to target dir */
+                  node_t *node = GetNode(path, &fs->root, 0, NULL);
 
-                  if (dir) {
-                        /* go to target dir */
-                        node_t *node = GetNode(path, &fs->root, 0, NULL);
-
-                        if (node) {
-                              if (node->type == NODE_TYPE_DIR) {
+                  if (node) {
+                        if (node->type == NODE_TYPE_DIR) {
+                              if (dir) {
                                     dir->items = ListGetItemCount(node->data);
                                     dir->rddir = lfs_readdir;
                                     dir->seek  = 0;
                                     dir->dd    = node;
-                              } else {
-                                    free(dir);
-                                    dir = NULL;
                               }
-                        } else {
-                              free(dir);
-                              dir = NULL;
+
+                              status = STD_RET_OK;
                         }
                   }
             }
@@ -353,7 +348,7 @@ DIR_t *lfs_opendir(u32_t dev, const ch_t *path)
             GiveMutex(fs->mtx);
       }
 
-      return dir;
+      return status;
 }
 
 
