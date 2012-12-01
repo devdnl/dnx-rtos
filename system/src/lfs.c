@@ -589,9 +589,15 @@ stdRet_t lfs_stat(u32_t dev, const ch_t *path, struct vfs_stat *stat)
 stdRet_t lfs_statfs(u32_t dev, struct vfs_statfs *statfs)
 {
       (void)dev;
-      (void)statfs;
 
-      return STD_RET_ERROR;
+      statfs->f_bfree  = 0;
+      statfs->f_blocks = 0;
+      statfs->f_ffree  = 0;
+      statfs->f_files  = 0;
+      statfs->f_type   = 1;
+      statfs->fsname   = "LFS";
+
+      return STD_RET_OK;
 }
 
 
@@ -609,7 +615,7 @@ stdRet_t lfs_release(u32_t dev)
 {
       (void)dev;
 
-      return STD_RET_ERROR;
+      return STD_RET_OK;
 }
 
 

@@ -227,16 +227,20 @@ stdRet_t vfs_umount(const ch_t *path)
                               struct fsinfo *mountfs = FindMountedFS(newpath, -1, &itemid);
 
                               if (mountfs) {
-                                    if (mountfs->mntFSCnt == 0) {
-                                          if (mountfs->basefs)
-                                                if (mountfs->basefs->mntFSCnt)
-                                                      mountfs->basefs->mntFSCnt--;
+                                    if (mountfs->fs.release) {
+                                          if (mountfs->fs.release(mountfs->fs.dev) == STD_RET_OK) {
+                                                if (mountfs->mntFSCnt == 0) {
+                                                      if (mountfs->basefs)
+                                                            if (mountfs->basefs->mntFSCnt)
+                                                                  mountfs->basefs->mntFSCnt--;
 
-                                          if (mountfs->path)
-                                                free(mountfs->path);
+                                                      if (mountfs->path)
+                                                            free(mountfs->path);
 
-                                          if (ListRmItemByID(vfs->mntList, itemid) == 0)
-                                                status = STD_RET_OK;
+                                                      if (ListRmItemByID(vfs->mntList, itemid) == 0)
+                                                            status = STD_RET_OK;
+                                                }
+                                          }
                                     }
                               }
 
@@ -552,12 +556,18 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
 
       if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
             if (path && statfs) {
-                  struct fsinfo *fs = FindMountedFS(path, -1, NULL);
+                  ch_t *slashpath = AddEndSlash(path);
 
-                  if (fs) {
-                        if (fs->fs.statfs) {
-                              status = fs->fs.statfs(fs->fs.dev, statfs);
+                  if (slashpath) {
+                        struct fsinfo *fs = FindMountedFS(slashpath, -1, NULL);
+
+                        if (fs) {
+                              if (fs->fs.statfs) {
+                                    status = fs->fs.statfs(fs->fs.dev, statfs);
+                              }
                         }
+
+                        free(slashpath);
                   }
             }
 
