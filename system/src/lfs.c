@@ -187,7 +187,7 @@ stdRet_t lfs_mknod(u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
                                           strcpy(filename, drvname);
 
                                           node_t         *dirfile = calloc(1, sizeof(node_t));
-                                          struct vfs_drvcfg *dcfg    = calloc(1, sizeof(struct vfs_drvcfg));
+                                          struct vfs_drvcfg *dcfg = calloc(1, sizeof(struct vfs_drvcfg));
 
                                           if (dirfile && dcfg) {
                                                 memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
@@ -450,12 +450,12 @@ stdRet_t lfs_rename(u32_t dev, const ch_t *oldName, const ch_t *newName)
                   node_t *oldNodeBase = GetNode(oldName, &fs->root, -1, NULL);
                   node_t *newNodeBase = GetNode(newName, &fs->root, -1, NULL);
 
-                  if (oldNodeBase && newNodeBase && oldName[0] == '/' && newName[0] == '/') {
-                        /* the same dir -- rename operation */
-                        if (oldNodeBase == newNodeBase) {
+                  if (  oldNodeBase && newNodeBase && oldName[0] == '/' && newName[0] == '/'
+                     && oldName[strlen(oldName) - 1] != '/' && newName[strlen(newName) - 1] != '/') {
 
+                        if (oldNodeBase == newNodeBase) {
                               ch_t   *name = calloc(1, strlen(strrchr(newName, '/') + 1));
-                              node_t *node = GetNode(strrchr(oldName, '/'), newNodeBase, 0, NULL);
+                              node_t *node = GetNode(oldName, &fs->root, 0, NULL);
 
                               if (name && node) {
                                     strcpy(name, strrchr(newName, '/') + 1);
@@ -465,15 +465,19 @@ stdRet_t lfs_rename(u32_t dev, const ch_t *oldName, const ch_t *newName)
 
                                     node->name = name;
 
-                                    status = STD_RET_OK;
+                                    if (node->type == NODE_TYPE_DIR)
+                                          node->size = sizeof(node_t) + strlen(name);
+                                    else if (node->type == NODE_TYPE_DRV)
+                                          node->size = sizeof(node_t) + strlen(name) + sizeof(struct vfs_drvcfg);
 
+                                    status = STD_RET_OK;
                               } else {
                                     if (name)
                                           free(name);
-                              }
-                        /* different dir -- move operation */
-                        } else {
 
+                                    if (node)
+                                          free(node);
+                              }
                         }
                   }
             }

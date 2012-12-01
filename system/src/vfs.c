@@ -340,6 +340,8 @@ DIR_t *vfs_opendir(const ch_t *path)
 
       if (path && vfs && dir) {
             if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+                  stdRet_t status = STD_RET_ERROR;
+
                   ch_t *newpath = AddEndSlash(path);
 
                   if (newpath) {
@@ -348,12 +350,17 @@ DIR_t *vfs_opendir(const ch_t *path)
 
                         if (fs) {
                               if (fs->fs.opendir) {
-                                    if (fs->fs.opendir(fs->fs.dev, extPath, dir) != STD_RET_OK) {
-                                          free(dir);
-                                          dir = NULL;
-                                    }
+                                    status = fs->fs.opendir(fs->fs.dev, extPath, dir);
                               }
                         }
+                  }
+
+                  if (status != STD_RET_OK) {
+                        if (newpath)
+                              free(newpath);
+
+                        free(dir);
+                        dir = NULL;
                   }
 
                   GiveMutex(fs->mtx);
