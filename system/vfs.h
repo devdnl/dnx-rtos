@@ -77,7 +77,7 @@ struct vfs_drvcfg {
 struct vfs_fscfg {
       u32_t     dev;
       stdRet_t  (*init   )(u32_t dev);
-      stdRet_t  (*open   )(u32_t dev, fd_t *fd, const ch_t *path, const ch_t *mode);
+      stdRet_t  (*open   )(u32_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
       stdRet_t  (*close  )(u32_t dev, fd_t fd);
       size_t    (*write  )(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
       size_t    (*read   )(u32_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);

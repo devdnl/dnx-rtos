@@ -148,7 +148,7 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
             ch_t          *newpath = AddEndSlash(path);
 
             if (newpath) {
-                  if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+                  if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                         /* find if file system is already mounted and find base file system ----- */
                         mountfs = FindMountedFS(newpath, -1, NULL);
                         basefs  = FindBaseFS(newpath, strlen(newpath), &extPath);
@@ -219,7 +219,7 @@ stdRet_t vfs_umount(const ch_t *path)
 
       if (path && vfs) {
             if (path[0] == '/') {
-                  if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+                  if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                         u32_t itemid;
                         ch_t *newpath = AddEndSlash(path);
 
@@ -272,7 +272,7 @@ stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && drvcfg && vfs) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t *extPath     = NULL;
                   struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
 
@@ -305,7 +305,7 @@ stdRet_t vfs_mkdir(const ch_t *path)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && vfs) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t *newpath = SubEndSlash(path);
 
                   if (newpath) {
@@ -343,7 +343,7 @@ DIR_t *vfs_opendir(const ch_t *path)
       DIR_t *dir = malloc(sizeof(DIR_t));
 
       if (path && vfs && dir) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   stdRet_t status = STD_RET_ERROR;
 
                   ch_t *newpath = AddEndSlash(path);
@@ -438,7 +438,7 @@ stdRet_t vfs_remove(const ch_t *path)
       stdRet_t status = STD_RET_ERROR;
 
       if (path) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t *slashpath = AddEndSlash(path);
 
                   if (slashpath) {
@@ -485,7 +485,7 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
       stdRet_t status = STD_RET_ERROR;
 
       if (oldName && newName) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t     *extPathOld = NULL;
                   ch_t     *extPathNew = NULL;
                   struct fsinfo *fsOld = FindBaseFS(oldName, strlen(oldName), &extPathOld);
@@ -521,7 +521,7 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && stat) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t     *extPath = NULL;
                   struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
 
@@ -555,7 +555,7 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && statfs) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t *slashpath = AddEndSlash(path);
 
                   if (slashpath) {
@@ -593,42 +593,47 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
       FILE_t *file = NULL;
 
       if (path && mode) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
-                  file = calloc(1, sizeof(FILE_t));
+            if (  strncmp("r", mode, 2) == 0 || strncmp("r+", mode, 2) == 0
+               || strncmp("w", mode, 2) == 0 || strncmp("w+", mode, 2) == 0
+               || strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0 ) {
 
-                  if (file) {
-                        stdRet_t status = STD_RET_ERROR;
+                  if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
 
-                        ch_t     *extPath = NULL;
-                        struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+                        file = calloc(1, sizeof(FILE_t));
 
-                        if (fs) {
-                              if (fs->fs.open) {
-                                    status = fs->fs.open(fs->fs.dev, &file->fd, extPath, mode);
+                        if (file) {
+                              stdRet_t status = STD_RET_ERROR;
+
+                              ch_t     *extPath = NULL;
+                              struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+
+                              if (fs) {
+                                    if (fs->fs.open) {
+                                          status = fs->fs.open(fs->fs.dev,  &file->fd,
+                                                               &file->seek, extPath, mode);
+                                    }
+                              }
+
+                              if (status == STD_RET_OK) {
+                                    file->dev   = fs->fs.dev;
+                                    file->close = fs->fs.close;
+                                    file->ioctl = fs->fs.ioctl;
+
+                                    if (strncmp("r", mode, 2) != 0) {
+                                          file->write = fs->fs.write;
+                                    }
+
+                                    if (strncmp("w", mode, 2) != 0 && strncmp("a", mode, 2) != 0) {
+                                          file->read  = fs->fs.read;
+                                    }
+                              } else {
+                                    free(file);
+                                    file = NULL;
                               }
                         }
 
-                        if (status == STD_RET_OK) {
-                              file->dev   = fs->fs.dev;
-                              file->close = fs->fs.close;
-                              file->ioctl = fs->fs.ioctl;
-                              file->seek  = 0;
-
-                              if (strncmp("r", mode, 2) != 0) {
-                                    file->write = fs->fs.write;
-                              }
-
-                              if (strncmp("w", mode, 2) != 0 && strncmp("a", mode, 2) != 0)
-                              {
-                                    file->read  = fs->fs.read;
-                              }
-                        } else {
-                              free(file);
-                              file = NULL;
-                        }
+                        GiveMutex(fs->mtx);
                   }
-
-                  GiveMutex(fs->mtx);
             }
       }
 
