@@ -583,6 +583,48 @@ stdRet_t lfs_stat(u32_t dev, const ch_t *path, struct vfs_stat *stat)
 
 //================================================================================================//
 /**
+ * @brief Function returns file status
+ *
+ * @param  dev          device number
+ * @param  fd           file descriptor
+ * @param *stat         pointer to status structure
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t lfs_fstat(u32_t dev, fd_t fd, struct vfs_stat *stat)
+{
+      (void)dev;
+
+      stdRet_t status = STD_RET_ERROR;
+
+      if (stat) {
+            node_t *node;
+
+            if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  node = ListGetItemDataByID(fs->openFile, fd);
+
+                  if (node) {
+                        stat->st_dev   = node->dev;
+                        stat->st_rdev  = node->part;
+                        stat->st_gid   = node->gid;
+                        stat->st_mode  = node->mode;
+                        stat->st_mtime = node->mtime;
+                        stat->st_size  = node->size;
+                        stat->st_uid   = node->uid;
+                  }
+
+                  GiveMutex(fs->mtx);
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function returns FS status
  *
  * @param dev           fs device

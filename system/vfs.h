@@ -45,6 +45,16 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/* set position equal to offset bytes */
+#define VFS_SEEK_SET    0
+
+/* set position to current location plus offset */
+#define VFS_SEEK_CUR    1
+
+/* set position to EOF plus offset */
+#define VFS_SEEK_END    2
+
+
 struct vfs_stat {
      u32_t  st_dev;           /* ID of device containing file */
      u32_t  st_rdev;          /* device ID (if special file) */
@@ -71,7 +81,7 @@ struct vfs_drvcfg {
       stdRet_t (*close)(u32_t dev, u32_t part);
       size_t   (*write)(u32_t dev, u32_t part, void *src, size_t size, size_t nitems, size_t seek);
       size_t   (*read )(u32_t dev, u32_t part, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t (*ioctl)(u32_t dev, u32_t part, IORq_t iroq, void *data);
+      stdRet_t (*ioctl)(u32_t dev, u32_t part, IORq_t iorq, void *data);
 };
 
 struct vfs_fscfg {
@@ -82,6 +92,7 @@ struct vfs_fscfg {
       size_t    (*write  )(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
       size_t    (*read   )(u32_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
       stdRet_t  (*ioctl  )(u32_t dev, fd_t fd, IORq_t iroq, void *data);
+      stdRet_t  (*fstat  )(u32_t dev, fd_t fd, struct vfs_stat *stat);
       stdRet_t  (*mkdir  )(u32_t dev, const ch_t *path);
       stdRet_t  (*mknod  )(u32_t dev, const ch_t *path, struct vfs_drvcfg *dcfg);
       stdRet_t  (*opendir)(u32_t dev, const ch_t *path, DIR_t *dir);
@@ -117,7 +128,9 @@ extern stdRet_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode);
+extern i32_t    vfs_ftell(FILE_t *file);
 extern stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data);
+extern stdRet_t vfs_fstat(FILE_t *file, struct vfs_stat *stat);
 
 
 #ifdef __cplusplus

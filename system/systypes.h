@@ -90,6 +90,7 @@ typedef struct
       size_t   (*write)(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
       size_t   (*read )(u32_t dev, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
       stdRet_t (*ioctl)(u32_t dev, fd_t fd, IORq_t iorq, void *data);
+      stdRet_t (*stat )(u32_t dev, fd_t fd, void *stat);
       size_t   seek;
 } FILE_t;
 

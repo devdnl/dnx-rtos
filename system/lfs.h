@@ -65,6 +65,7 @@ extern stdRet_t  lfs_rename (u32_t dev, const ch_t *oldName, const ch_t *newName
 extern stdRet_t  lfs_chmod  (u32_t dev, u32_t mode);
 extern stdRet_t  lfs_chown  (u32_t dev, u16_t owner, u16_t group);
 extern stdRet_t  lfs_stat   (u32_t dev, const ch_t *path, struct vfs_stat *stat);
+extern stdRet_t  lfs_fstat  (u32_t dev, fd_t fd, struct vfs_stat *stat);
 extern stdRet_t  lfs_statfs (u32_t dev, struct vfs_statfs *statfs);
 extern stdRet_t  lfs_release(u32_t dev);
 

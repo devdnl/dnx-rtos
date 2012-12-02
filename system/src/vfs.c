@@ -593,9 +593,10 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
       FILE_t *file = NULL;
 
       if (path && mode) {
-            if (  strncmp("r", mode, 2) == 0 || strncmp("r+", mode, 2) == 0
-               || strncmp("w", mode, 2) == 0 || strncmp("w+", mode, 2) == 0
-               || strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0 ) {
+            if (  (  strncmp("r", mode, 2) == 0 || strncmp("r+", mode, 2) == 0
+                  || strncmp("w", mode, 2) == 0 || strncmp("w+", mode, 2) == 0
+                  || strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0  )
+               && path[strlen(path) - 1] != '/'                                   ) {
 
                   if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
 
@@ -618,6 +619,7 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
                                     file->dev   = fs->fs.dev;
                                     file->close = fs->fs.close;
                                     file->ioctl = fs->fs.ioctl;
+                                    file->stat  = fs->fs.fstat;
 
                                     if (strncmp("r", mode, 2) != 0) {
                                           file->write = fs->fs.write;
@@ -728,7 +730,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
  *
  * @param *file               file object
  * @param offset              seek value
- * @param mode                seek mode DNLFIXME implement: seek mode
+ * @param mode                seek mode
  *
  * @retval STD_RET_OK         seek moved successfully
  * @retval STD_RET_ERROR      error occurred
@@ -741,11 +743,45 @@ stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
       stdRet_t status = STD_RET_ERROR;
 
       if (file) {
-            file->seek = offset;
-            status     = STD_RET_OK;
+            struct vfs_stat stat;
+
+            if (mode == VFS_SEEK_END) {
+                  stat.st_size = 0;
+                  vfs_fstat(file, &stat);
+            }
+
+            switch (mode) {
+            case VFS_SEEK_SET: file->seek  = offset; break;
+            case VFS_SEEK_CUR: file->seek += offset; break;
+            case VFS_SEEK_END: file->seek  = stat.st_size + offset; break;
+            default: break;
+            }
+
+            status = STD_RET_OK;
       }
 
       return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns seek value
+ *
+ * @param *file               file object
+ *
+ * @return -1 if error, otherwise correct value
+ */
+//================================================================================================//
+i32_t vfs_ftell(FILE_t *file)
+{
+      i32_t seek = -1;
+
+      if (file) {
+            seek = file->seek;
+      }
+
+      return seek;
 }
 
 
@@ -768,6 +804,31 @@ stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
       if (file) {
             if (file->ioctl) {
                   status = file->ioctl(file->dev, file->fd, rq, data);
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns file/dir status
+ *
+ * @param *path         file/dir path
+ * @param *stat         pointer to stat structure
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_fstat(FILE_t *file, struct vfs_stat *stat)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (file && stat) {
+            if (file->stat) {
+                  status = file->stat(file->dev, file->fd, stat);
             }
       }
 
