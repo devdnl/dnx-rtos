@@ -484,8 +484,8 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
-            if (oldName && newName) {
+      if (oldName && newName) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
                   ch_t     *extPathOld = NULL;
                   ch_t     *extPathNew = NULL;
                   struct fsinfo *fsOld = FindBaseFS(oldName, strlen(oldName), &extPathOld);
@@ -520,8 +520,8 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
-            if (path && stat) {
+      if (path && stat) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
                   ch_t     *extPath = NULL;
                   struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
 
@@ -554,8 +554,8 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
-            if (path && statfs) {
+      if (path && statfs) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
                   ch_t *slashpath = AddEndSlash(path);
 
                   if (slashpath) {
@@ -592,56 +592,44 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
 {
       FILE_t *file = NULL;
 
-      if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
-            if (path && mode) {
+      if (path && mode) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME)) {
                   file = calloc(1, sizeof(FILE_t));
 
                   if (file) {
-                        /* DNLTODO vfs_fopen */
+                        stdRet_t status = STD_RET_ERROR;
 
-                        /* check file mode */
-                        if (file) {
-                              /* open for reading */
-                              if (strncmp("r", mode, 2) == 0)
-                              {
-                                    file->write = NULL;
-                              }
-                              /* open for writing (file need not exist) */
-                              else if (strncmp("w", mode, 2) == 0)
-                              {
-                                    file->read = NULL;
-                              }
-                              /* open for appending (file need not exist) */
-                              else if (strncmp("a", mode, 2) == 0)
-                              {
-                                    file->read = NULL;
-                              }
-                              /* open for reading and writing, start at beginning */
-                              else if (strncmp("r+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* open for reading and writing (overwrite file) */
-                              else if (strncmp("w+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* open for reading and writing (append if file exists) */
-                              else if (strncmp("a+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* invalid mode */
-                              else
-                              {
-                                    vfs_fclose(file);
-                                    file = NULL;
+                        ch_t     *extPath = NULL;
+                        struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+
+                        if (fs) {
+                              if (fs->fs.open) {
+                                    status = fs->fs.open(fs->fs.dev, &file->fd, extPath, mode);
                               }
                         }
-                  }
-            }
 
-            GiveMutex(fs->mtx);
+                        if (status == STD_RET_OK) {
+                              file->dev   = fs->fs.dev;
+                              file->close = fs->fs.close;
+                              file->ioctl = fs->fs.ioctl;
+                              file->seek  = 0;
+
+                              if (strncmp("r", mode, 2) != 0) {
+                                    file->write = fs->fs.write;
+                              }
+
+                              if (strncmp("w", mode, 2) != 0 && strncmp("a", mode, 2) != 0)
+                              {
+                                    file->read  = fs->fs.read;
+                              }
+                        } else {
+                              free(file);
+                              file = NULL;
+                        }
+                  }
+
+                  GiveMutex(fs->mtx);
+            }
       }
 
       return file;

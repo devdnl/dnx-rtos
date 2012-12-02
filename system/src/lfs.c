@@ -39,7 +39,7 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-/* delete definition of illegal macros in this file */
+/* delete definition of illegal macros in this file DNLFIXME */
 #undef ioctl
 #undef opendir
 #undef remove
@@ -103,6 +103,8 @@ static struct fshdl_s *fs;
 /**
  * @brief Initialize VFS module
  *
+ * @param  dev          device number
+ *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
@@ -153,6 +155,7 @@ stdRet_t lfs_init(u32_t dev)
 /**
  * @brief Function create node for driver file
  *
+ * @param  dev                device number
  * @param *path               path when driver-file shall be created
  * @param *drvcfg             pointer to description of driver
  *
@@ -233,7 +236,8 @@ stdRet_t lfs_mknod(u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
 /**
  * @brief Create directory
  *
- * @param *path   path to new directory
+ * @param  dev          device number
+ * @param *path         path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -356,6 +360,7 @@ stdRet_t lfs_opendir(u32_t dev, const ch_t *path, DIR_t *dir)
 /**
  * @brief Remove file
  *
+ * @param  dev          device number
  * @param *patch        localization of file/directory
  *
  * @retval STD_RET_OK
@@ -432,6 +437,7 @@ stdRet_t lfs_remove(u32_t dev, const ch_t *path)
  * The implementation of rename can move files only if external FS provide functionality. Local
  * VFS can not do this.
  *
+ * @param  dev                device number
  * @param *oldName            old file name
  * @param *newName            new file name
  *
@@ -535,6 +541,7 @@ stdRet_t lfs_chown(u32_t dev, u16_t owner, u16_t group)
 /**
  * @brief Function returns file/dir status
  *
+ * @param  dev          device number
  * @param *path         file/dir path
  * @param *stat         pointer to stat structure
  *
@@ -623,6 +630,7 @@ stdRet_t lfs_release(u32_t dev)
 /**
  * @brief Function open selected file
  *
+ * @param  dev          device number
  * @param *name         file path
  * @param *mode         file mode
  *
