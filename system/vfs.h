@@ -45,6 +45,16 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+/* USER CFG: memory management, free memory */
+#define FREE(ptr)             free(ptr)
+
+/* USER CFG: memory management, memory allocation */
+#define CALLOC(nmemb, msize)  calloc(nmemb, msize)
+
+/* USER CFG: memory management, memory allocation */
+#define MALLOC(size)          malloc(size)
+
+
 /* set position equal to offset bytes */
 #define VFS_SEEK_SET    0
 
@@ -53,7 +63,6 @@ extern "C" {
 
 /* set position to EOF plus offset */
 #define VFS_SEEK_END    2
-
 
 struct vfs_stat {
      u32_t  st_dev;           /* ID of device containing file */
@@ -77,32 +86,33 @@ struct vfs_statfs {
 struct vfs_drvcfg {
       u32_t    dev;
       u32_t    part;
-      stdRet_t (*open )(u32_t dev, u32_t part);
-      stdRet_t (*close)(u32_t dev, u32_t part);
-      size_t   (*write)(u32_t dev, u32_t part, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(u32_t dev, u32_t part, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t (*ioctl)(u32_t dev, u32_t part, IORq_t iorq, void *data);
+      stdRet_t (*f_open )(devx_t dev, fd_t part);
+      stdRet_t (*f_close)(devx_t dev, fd_t part);
+      size_t   (*f_write)(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*f_read )(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t (*f_ioctl)(devx_t dev, fd_t part, IORq_t iorq, void *data);
+      stdRet_t (*f_stat )(devx_t dev, fd_t part, struct vfs_stat *stat);
 };
 
 struct vfs_fscfg {
       u32_t     dev;
-      stdRet_t  (*init   )(u32_t dev);
-      stdRet_t  (*open   )(u32_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
-      stdRet_t  (*close  )(u32_t dev, fd_t fd);
-      size_t    (*write  )(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t    (*read   )(u32_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t  (*ioctl  )(u32_t dev, fd_t fd, IORq_t iroq, void *data);
-      stdRet_t  (*fstat  )(u32_t dev, fd_t fd, struct vfs_stat *stat);
-      stdRet_t  (*mkdir  )(u32_t dev, const ch_t *path);
-      stdRet_t  (*mknod  )(u32_t dev, const ch_t *path, struct vfs_drvcfg *dcfg);
-      stdRet_t  (*opendir)(u32_t dev, const ch_t *path, DIR_t *dir);
-      stdRet_t  (*remove )(u32_t dev, const ch_t *path);
-      stdRet_t  (*rename )(u32_t dev, const ch_t *oldName, const ch_t *newName);
-      stdRet_t  (*chmod  )(u32_t dev, u32_t mode);
-      stdRet_t  (*chown  )(u32_t dev, u16_t owner, u16_t group);
-      stdRet_t  (*stat   )(u32_t dev, const ch_t *path, struct vfs_stat *stat);
-      stdRet_t  (*statfs )(u32_t dev, struct vfs_statfs *statfs);
-      stdRet_t  (*release)(u32_t dev);
+      stdRet_t  (*f_init   )(devx_t dev);
+      stdRet_t  (*f_open   )(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
+      stdRet_t  (*f_close  )(devx_t dev, fd_t fd);
+      size_t    (*f_write  )(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t    (*f_read   )(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t  (*f_ioctl  )(devx_t dev, fd_t fd, IORq_t iroq, void *data);
+      stdRet_t  (*f_fstat  )(devx_t dev, fd_t fd, struct vfs_stat *stat);
+      stdRet_t  (*f_mkdir  )(devx_t dev, const ch_t *path);
+      stdRet_t  (*f_mknod  )(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg);
+      stdRet_t  (*f_opendir)(devx_t dev, const ch_t *path, DIR_t *dir);
+      stdRet_t  (*f_remove )(devx_t dev, const ch_t *path);
+      stdRet_t  (*f_rename )(devx_t dev, const ch_t *oldName, const ch_t *newName);
+      stdRet_t  (*f_chmod  )(devx_t dev, u32_t mode);
+      stdRet_t  (*f_chown  )(devx_t dev, u16_t owner, u16_t group);
+      stdRet_t  (*f_stat   )(devx_t dev, const ch_t *path, struct vfs_stat *stat);
+      stdRet_t  (*f_statfs )(devx_t dev, struct vfs_statfs *statfs);
+      stdRet_t  (*f_release)(devx_t dev);
 };
 
 

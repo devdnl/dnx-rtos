@@ -61,12 +61,21 @@ enum status_enum
       STD_RET_UNKNOWN            = 127,
 };
 
+/** file types */
+typedef enum
+{
+      FILE_TYPE_REGULAR,
+      FILE_TYPE_DIR,
+      FILE_TYPE_DRV,
+      FILE_TYPE_LINK
+} tfile_t;
+
 /** universal status type */
 typedef signed char stdRet_t;
 
 
 /** device number type */
-typedef size_t nod_t;
+typedef size_t devx_t;
 
 
 /** task/application ID */
@@ -84,14 +93,14 @@ typedef u32_t fd_t;
 /** file type */
 typedef struct
 {
-      u32_t    dev;
+      devx_t   dev;
       fd_t     fd;
-      stdRet_t (*close)(u32_t dev, fd_t fd);
-      size_t   (*write)(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(u32_t dev, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(u32_t dev, fd_t fd, IORq_t iorq, void *data);
-      stdRet_t (*stat )(u32_t dev, fd_t fd, void *stat);
-      size_t   seek;
+      stdRet_t (*f_close)(devx_t dev, fd_t fd);
+      size_t   (*f_write)(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*f_read )(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+      stdRet_t (*f_ioctl)(devx_t dev, fd_t fd, IORq_t iorq, void *data);
+      stdRet_t (*f_stat )(devx_t dev, fd_t fd, void *stat);
+      size_t   f_seek;
 } FILE_t;
 
 
@@ -100,11 +109,11 @@ typedef struct
 {
       ch_t   *name;
       size_t  size;
-      bool_t  isfile;
+      tfile_t filetype;
 } dirent_t;
 
 
-/** dir type */
+/** directory type */
 typedef struct dir_s
 {
       dirent_t  (*rddir)(struct dir_s *dir);

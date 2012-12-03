@@ -32,20 +32,14 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "lfs.h"
-#include "system.h"
 #include <string.h>
+#include "system.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-/* delete definition of illegal macros in this file DNLFIXME */
-#undef ioctl
-#undef opendir
-#undef remove
-#undef rename
-
-/* wait time for operation on VFS */
+/* wait time for operation on FS */
 #define MTX_BLOCK_TIME        100
 
 
@@ -53,9 +47,10 @@ extern "C" {
                                    Local types, enums definitions
 ==================================================================================================*/
 typedef enum {
-      NODE_TYPE_DIR,
-      NODE_TYPE_FILE,
-      NODE_TYPE_DRV,
+      NODE_TYPE_DIR  = FILE_TYPE_DIR,
+      NODE_TYPE_FILE = FILE_TYPE_REGULAR,
+      NODE_TYPE_DRV  = FILE_TYPE_DRV,
+      NODE_TYPE_LINK = FILE_TYPE_LINK
 } nodeType_t;
 
 struct node {
@@ -108,14 +103,14 @@ static struct fshdl_s *fs;
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_init(u32_t dev)
+stdRet_t lfs_init(devx_t dev)
 {
       (void)dev;
 
       stdRet_t ret = STD_RET_OK;
 
       if (fs == NULL) {
-            fs = calloc(1, sizeof(struct fshdl_s));
+            fs = CALLOC(1, sizeof(struct fshdl_s));
 
             if (fs) {
                   CreateMutex(fs->mtx);
@@ -132,7 +127,7 @@ stdRet_t lfs_init(u32_t dev)
                         if (fs->openFile)
                               ListDestroy(fs->openFile);
 
-                        free(fs);
+                        FREE(fs);
 
                         fs = NULL;
                   } else {
@@ -162,7 +157,7 @@ stdRet_t lfs_init(u32_t dev)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_mknod(u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
+stdRet_t lfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
 {
       (void)dev;
 
@@ -183,13 +178,13 @@ stdRet_t lfs_mknod(u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
                               if (node->type == NODE_TYPE_DIR) {
                                     ch_t  *drvname    = strrchr(path, '/') + 1;
                                     u32_t  drvnamelen = strlen(drvname);
-                                    ch_t  *filename   = calloc(drvnamelen + 1, sizeof(ch_t));
+                                    ch_t  *filename   = CALLOC(drvnamelen + 1, sizeof(ch_t));
 
                                     if (filename) {
                                           strcpy(filename, drvname);
 
-                                          node_t         *dirfile = calloc(1, sizeof(node_t));
-                                          struct vfs_drvcfg *dcfg = calloc(1, sizeof(struct vfs_drvcfg));
+                                          node_t         *dirfile = CALLOC(1, sizeof(node_t));
+                                          struct vfs_drvcfg *dcfg = CALLOC(1, sizeof(struct vfs_drvcfg));
 
                                           if (dirfile && dcfg) {
                                                 memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
@@ -211,12 +206,12 @@ stdRet_t lfs_mknod(u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
                                           /* free memory when error */
                                           if (status == STD_RET_ERROR) {
                                                 if (dirfile)
-                                                      free(dirfile);
+                                                      FREE(dirfile);
 
                                                 if (dcfg)
-                                                      free(dcfg);
+                                                      FREE(dcfg);
 
-                                                free(filename);
+                                                FREE(filename);
                                           }
                                     }
                               }
@@ -242,7 +237,7 @@ stdRet_t lfs_mknod(u32_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_mkdir(u32_t dev, const ch_t *path)
+stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
 {
       (void)dev;
 
@@ -264,13 +259,13 @@ stdRet_t lfs_mkdir(u32_t dev, const ch_t *path)
                               if (node->type ==  NODE_TYPE_DIR) {
                                     ch_t  *dirname    = strrchr(path, '/') + 1;
                                     u32_t  dirnamelen = strlen(dirname);
-                                    ch_t  *name       = calloc(dirnamelen + 1, sizeof(ch_t));
+                                    ch_t  *name       = CALLOC(dirnamelen + 1, sizeof(ch_t));
 
                                     /* check if name buffer is created */
                                     if (name) {
                                           strcpy(name, dirname);
 
-                                          node_t *dir = calloc(1, sizeof(node_t));
+                                          node_t *dir = CALLOC(1, sizeof(node_t));
 
                                           if (dir) {
                                                 dir->data = ListCreate();
@@ -293,10 +288,10 @@ stdRet_t lfs_mkdir(u32_t dev, const ch_t *path)
                                                       if (dir->data)
                                                             ListDestroy(dir->data);
 
-                                                      free(dir);
+                                                      FREE(dir);
                                                 }
 
-                                                free(name);
+                                                FREE(name);
                                           }
                                     }
                               }
@@ -323,7 +318,7 @@ stdRet_t lfs_mkdir(u32_t dev, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_opendir(u32_t dev, const ch_t *path, DIR_t *dir)
+stdRet_t lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
 {
       (void)dev;
 
@@ -366,7 +361,7 @@ stdRet_t lfs_opendir(u32_t dev, const ch_t *path, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_remove(u32_t dev, const ch_t *path)
+stdRet_t lfs_remove(devx_t dev, const ch_t *path)
 {
       (void)dev;
 
@@ -408,10 +403,10 @@ stdRet_t lfs_remove(u32_t dev, const ch_t *path)
                                     }
 
                                     if (nodeobj->name)
-                                          free(nodeobj->name);
+                                          FREE(nodeobj->name);
 
                                     if (nodeobj->data)
-                                          free(nodeobj->data);
+                                          FREE(nodeobj->data);
 
                                     u32_t itemid = ListGetItemID(nodebase->data, item);
 
@@ -444,7 +439,7 @@ stdRet_t lfs_remove(u32_t dev, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_rename(u32_t dev, const ch_t *oldName, const ch_t *newName)
+stdRet_t lfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
 {
       (void)dev;
 
@@ -459,14 +454,14 @@ stdRet_t lfs_rename(u32_t dev, const ch_t *oldName, const ch_t *newName)
                      && oldName[strlen(oldName) - 1] != '/' && newName[strlen(newName) - 1] != '/') {
 
                         if (oldNodeBase == newNodeBase) {
-                              ch_t   *name = calloc(1, strlen(strrchr(newName, '/') + 1));
+                              ch_t   *name = CALLOC(1, strlen(strrchr(newName, '/') + 1));
                               node_t *node = GetNode(oldName, &fs->root, 0, NULL);
 
                               if (name && node) {
                                     strcpy(name, strrchr(newName, '/') + 1);
 
                                     if (node->name)
-                                          free(node->name);
+                                          FREE(node->name);
 
                                     node->name = name;
 
@@ -478,10 +473,10 @@ stdRet_t lfs_rename(u32_t dev, const ch_t *oldName, const ch_t *newName)
                                     status = STD_RET_OK;
                               } else {
                                     if (name)
-                                          free(name);
+                                          FREE(name);
 
                                     if (node)
-                                          free(node);
+                                          FREE(node);
                               }
                         }
                   }
@@ -505,7 +500,7 @@ stdRet_t lfs_rename(u32_t dev, const ch_t *oldName, const ch_t *newName)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_chmod(u32_t dev, u32_t mode)
+stdRet_t lfs_chmod(devx_t dev, u32_t mode)
 {
       (void)dev;
       (void)mode;
@@ -526,7 +521,7 @@ stdRet_t lfs_chmod(u32_t dev, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_chown(u32_t dev, u16_t owner, u16_t group)
+stdRet_t lfs_chown(devx_t dev, u16_t owner, u16_t group)
 {
       (void)dev;
       (void)owner;
@@ -548,7 +543,7 @@ stdRet_t lfs_chown(u32_t dev, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_stat(u32_t dev, const ch_t *path, struct vfs_stat *stat)
+stdRet_t lfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
 {
       (void)dev;
 
@@ -593,7 +588,7 @@ stdRet_t lfs_stat(u32_t dev, const ch_t *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_fstat(u32_t dev, fd_t fd, struct vfs_stat *stat)
+stdRet_t lfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
 {
       (void)dev;
 
@@ -634,7 +629,7 @@ stdRet_t lfs_fstat(u32_t dev, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_statfs(u32_t dev, struct vfs_statfs *statfs)
+stdRet_t lfs_statfs(devx_t dev, struct vfs_statfs *statfs)
 {
       (void)dev;
 
@@ -659,7 +654,7 @@ stdRet_t lfs_statfs(u32_t dev, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_release(u32_t dev)
+stdRet_t lfs_release(devx_t dev)
 {
       (void)dev;
 
@@ -679,7 +674,7 @@ stdRet_t lfs_release(u32_t dev)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_open(u32_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
+stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
 {
       (void)dev;
 
@@ -702,8 +697,8 @@ stdRet_t lfs_open(u32_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_
 
                               if (nodebase) {
                                     if (nodebase->type == NODE_TYPE_DIR) {
-                                          ch_t   *filename = calloc(1, strlen(strrchr(path, '/')));
-                                          node_t *fnode    = calloc(1, sizeof(node_t));
+                                          ch_t   *filename = CALLOC(1, strlen(strrchr(path, '/')));
+                                          node_t *fnode    = CALLOC(1, sizeof(node_t));
 
                                           if (filename && fnode) {
                                                 strcpy(filename, strrchr(path, '/') + 1);
@@ -720,8 +715,8 @@ stdRet_t lfs_open(u32_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_
                                                 fnode->uid   = 0;
 
                                                 if (ListAddItem(nodebase->data, fnode) < 0) {
-                                                      free(fnode);
-                                                      free(filename);
+                                                      FREE(fnode);
+                                                      FREE(filename);
                                                 } else {
                                                       status = STD_RET_OK;
                                                 }
@@ -781,8 +776,8 @@ stdRet_t lfs_open(u32_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_
                                           status = STD_RET_OK;
 
                                     } else if (node->type ==  NODE_TYPE_DRV) {
-                                          if (drv->open) {
-                                                if (drv->open(drv->dev, drv->part) == STD_RET_OK) {
+                                          if (drv->f_open) {
+                                                if (drv->f_open(drv->dev, drv->part) == STD_RET_OK) {
                                                       *seek  = 0;
                                                       status = STD_RET_OK;
                                                 }
@@ -820,7 +815,6 @@ stdRet_t lfs_open(u32_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_
 static dirent_t lfs_readdir(DIR_t *dir)
 {
       dirent_t dirent;
-      dirent.isfile = TRUE;
       dirent.name   = NULL;
       dirent.size   = 0;
 
@@ -830,9 +824,9 @@ static dirent_t lfs_readdir(DIR_t *dir)
                   node_t *node = ListGetItemDataByNo(from->data, dir->seek++);
 
                   if (node) {
-                        dirent.isfile = (node->type == NODE_TYPE_FILE || node->type == NODE_TYPE_DRV);
-                        dirent.name   = node->name;
-                        dirent.size   = node->size;
+                        dirent.filetype = node->type;
+                        dirent.name     = node->name;
+                        dirent.size     = node->size;
                   }
 
                   GiveMutex(fs->mtx);
@@ -854,7 +848,7 @@ static dirent_t lfs_readdir(DIR_t *dir)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t lfs_close(u32_t dev, fd_t fd)
+stdRet_t lfs_close(devx_t dev, fd_t fd)
 {
       (void)dev;
 
@@ -870,8 +864,8 @@ stdRet_t lfs_close(u32_t dev, fd_t fd)
             if (node->type == NODE_TYPE_DRV && node->data) {
                   struct vfs_drvcfg *drv = node->data;
 
-                  if (drv->close) {
-                        status = drv->close(drv->dev, drv->part);
+                  if (drv->f_close) {
+                        status = drv->f_close(drv->dev, drv->part);
                   }
             } else {
                   status = STD_RET_OK;
@@ -910,7 +904,7 @@ stdRet_t lfs_close(u32_t dev, fd_t fd)
  * @return number of written items
  */
 //================================================================================================//
-size_t lfs_write(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+size_t lfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
 
@@ -928,8 +922,8 @@ size_t lfs_write(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size
                   if (node->type == NODE_TYPE_DRV && node->data) {
                         struct vfs_drvcfg *drv = node->data;
 
-                        if (drv->write)
-                              n = drv->write(drv->dev, drv->part, src, size, nitems, seek);
+                        if (drv->f_write)
+                              n = drv->f_write(drv->dev, drv->part, src, size, nitems, seek);
 
                   } else if (node->type == NODE_TYPE_FILE) {
                         size_t wrsize  = size * nitems;
@@ -939,12 +933,12 @@ size_t lfs_write(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size
                               seek = filelen;
 
                         if ((seek + wrsize) > filelen || node->data == NULL) {
-                              ch_t *newdata = malloc(filelen + wrsize);
+                              ch_t *newdata = MALLOC(filelen + wrsize);
 
                               if (newdata) {
                                     if (node->data) {
                                           memcpy(newdata, node->data, filelen);
-                                          free(node->data);
+                                          FREE(node->data);
                                     }
 
                                     memcpy(newdata + seek, src, wrsize);
@@ -979,7 +973,7 @@ size_t lfs_write(u32_t dev, fd_t fd, void *src, size_t size, size_t nitems, size
  * @return number of read items
  */
 //================================================================================================//
-size_t lfs_read(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t lfs_read(devx_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
 
@@ -997,8 +991,8 @@ size_t lfs_read(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size
                   if (node->type == NODE_TYPE_DRV && node->data) {
                         struct vfs_drvcfg *drv = node->data;
 
-                        if (drv->read)
-                              n = drv->read(drv->dev, drv->part, dst, size, nitems, seek);
+                        if (drv->f_read)
+                              n = drv->f_read(drv->dev, drv->part, dst, size, nitems, seek);
 
                   } else if (node->type == NODE_TYPE_FILE) {
                         size_t filelen = node->size;
@@ -1044,7 +1038,7 @@ size_t lfs_read(u32_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_ioctl(u32_t dev, fd_t fd, IORq_t iroq, void *data)
+stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iroq, void *data)
 {
       stdRet_t status = STD_RET_ERROR;
       node_t *node;
@@ -1058,8 +1052,8 @@ stdRet_t lfs_ioctl(u32_t dev, fd_t fd, IORq_t iroq, void *data)
             if (node->type == NODE_TYPE_DRV && node->data) {
                   struct vfs_drvcfg *drv = node->data;
 
-                  if (drv->ioctl) {
-                        status = drv->ioctl(dev, fd, iroq, data);
+                  if (drv->f_ioctl) {
+                        status = drv->f_ioctl(dev, fd, iroq, data);
                   }
             }
       }
@@ -1185,7 +1179,7 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
                                           curnode = node;
 
                                           if (item)
-                                                *item = i - 1;//ListGetItemID(curnode->data, i - 1);
+                                                *item = i - 1;/*ListGetItemID(curnode->data, i - 1);*/// DNLFIXME
                                           break;
                                     }
                               } else {
