@@ -78,7 +78,7 @@ struct fshdl_s {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static ch_t     *GetWordFromPath(ch_t *str, ch_t **word, size_t *length);
+static ch_t     *ShowWordInPath(ch_t *str, ch_t **word, size_t *length);
 static node_t   *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
 static i32_t     GetPathDeep(const ch_t *path);
 static dirent_t  lfs_readdir(DIR_t *dir);
@@ -1064,7 +1064,7 @@ stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iroq, void *data)
 
 //================================================================================================//
 /**
- * @brief Function return pointer to word
+ * @brief Function return pointer to path's word
  *
  * @param[in]  *str          string
  * @param[out] **word        pointer to word beginning
@@ -1073,7 +1073,7 @@ stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iroq, void *data)
  * @return pointer to next word, otherwise NULL
  */
 //================================================================================================//
-static ch_t *GetWordFromPath(ch_t *str, ch_t **word, size_t *length)
+static ch_t *ShowWordInPath(ch_t *str, ch_t **word, size_t *length)
 {
       ch_t *bwd = NULL;
       ch_t *ewd = NULL;
@@ -1159,12 +1159,11 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
                   curnode          = startnode;
                   i32_t   dirdeep  = GetPathDeep(path);
                   ch_t   *word;
-                  size_t  len;
                   i32_t   listsize;
 
                   while (dirdeep + deep > 0) {
                         /* get word from path */
-                        path = GetWordFromPath((ch_t*)path, &word, &len);
+                        path = ShowWordInPath((ch_t*)path, &word, NULL);
 
                         /* get number of list items */
                         listsize = ListGetItemCount(curnode->data);
@@ -1175,11 +1174,11 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
                               node_t *node = ListGetItemDataByNo(curnode->data, i++);
 
                               if (node) {
-                                    if (strncmp(node->name, word, len) == 0) {
+                                    if (strncmp(node->name, word, strlen(node->name)) == 0) {
                                           curnode = node;
 
                                           if (item)
-                                                *item = i - 1;/*ListGetItemID(curnode->data, i - 1);*/// DNLFIXME
+                                                *item = i - 1;
                                           break;
                                     }
                               } else {
