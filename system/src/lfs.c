@@ -78,7 +78,6 @@ struct fshdl_s {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static ch_t     *ShowWordInPath(ch_t *str, ch_t **word, size_t *length);
 static node_t   *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
 static i32_t     GetPathDeep(const ch_t *path);
 static dirent_t  lfs_readdir(DIR_t *dir);
@@ -164,55 +163,49 @@ stdRet_t lfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && drvcfg && fs) {
-            if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  /* try parse folder name to create */
-                  i32_t deep = GetPathDeep(path);
+            if (path[0] == '/' && TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  node_t *node   = GetNode(path, &fs->root, -1, NULL);
+                  node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
 
-                  if (deep) {
-                        /* go to target dir */
-                        node_t *node   = GetNode(path, &fs->root, -1, NULL);
-                        node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
+                  /* check if target node is OK */
+                  if (node && !ifnode) {
+                        if (node->type == NODE_TYPE_DIR) {
+                              ch_t  *drvname    = strrchr(path, '/') + 1;
+                              u32_t  drvnamelen = strlen(drvname);
+                              ch_t  *filename   = CALLOC(drvnamelen + 1, sizeof(ch_t));
 
-                        /* check if target node is OK */
-                        if (node && !ifnode) {
-                              if (node->type == NODE_TYPE_DIR) {
-                                    ch_t  *drvname    = strrchr(path, '/') + 1;
-                                    u32_t  drvnamelen = strlen(drvname);
-                                    ch_t  *filename   = CALLOC(drvnamelen + 1, sizeof(ch_t));
+                              if (filename) {
+                                    strcpy(filename, drvname);
 
-                                    if (filename) {
-                                          strcpy(filename, drvname);
+                                    node_t         *dirfile = CALLOC(1, sizeof(node_t));
+                                    struct vfs_drvcfg *dcfg = CALLOC(1, sizeof(struct vfs_drvcfg));
 
-                                          node_t         *dirfile = CALLOC(1, sizeof(node_t));
-                                          struct vfs_drvcfg *dcfg = CALLOC(1, sizeof(struct vfs_drvcfg));
+                                    if (dirfile && dcfg) {
+                                          memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
 
-                                          if (dirfile && dcfg) {
-                                                memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
+                                          dirfile->name  = filename;
+                                          dirfile->size  = sizeof(node_t) + strlen(filename)
+                                                         + sizeof(struct vfs_drvcfg);
+                                          dirfile->type  = NODE_TYPE_DRV;
+                                          dirfile->data  = dcfg;
+                                          dirfile->dev   = dcfg->dev;
+                                          dirfile->part  = dcfg->part;
 
-                                                dirfile->name  = filename;
-                                                dirfile->size  = sizeof(node_t) + strlen(filename)
-                                                               + sizeof(struct vfs_drvcfg);
-                                                dirfile->type  = NODE_TYPE_DRV;
-                                                dirfile->data  = dcfg;
-                                                dirfile->dev   = dcfg->dev;
-                                                dirfile->part  = dcfg->part;
-
-                                                /* add new drv to this folder */
-                                                if (ListAddItem(node->data, dirfile) >= 0) {
-                                                      status = STD_RET_OK;
-                                                }
+                                          /* add new drv to this folder */
+                                          if (ListAddItem(node->data, dirfile) >= 0) {
+                                                status = STD_RET_OK;
                                           }
+                                    }
 
-                                          /* free memory when error */
-                                          if (status == STD_RET_ERROR) {
-                                                if (dirfile)
-                                                      FREE(dirfile);
+                                    /* free memory when error */
+                                    if (status == STD_RET_ERROR) {
+                                          if (dirfile)
+                                                FREE(dirfile);
 
-                                                if (dcfg)
-                                                      FREE(dcfg);
+                                          if (dcfg)
+                                                FREE(dcfg);
 
-                                                FREE(filename);
-                                          }
+                                          FREE(filename);
                                     }
                               }
                         }
@@ -244,55 +237,49 @@ stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && fs) {
-            if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  /* try parse folder name to create */
-                  i32_t deep = GetPathDeep(path);
+            if (path[0] == '/' && TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  node_t *node   = GetNode(path, &fs->root, -1, NULL);
+                  node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
 
-                  if (deep) {
-                        /* go to target dir */
-                        node_t *node   = GetNode(path, &fs->root, -1, NULL);
-                        node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
+                  /* check if target node is OK and the same name doesn't exist */
+                  if (node && !ifnode) {
+                        /* internal FS */
+                        if (node->type ==  NODE_TYPE_DIR) {
+                              ch_t  *dirname    = strrchr(path, '/') + 1;
+                              u32_t  dirnamelen = strlen(dirname);
+                              ch_t  *name       = CALLOC(dirnamelen + 1, sizeof(ch_t));
 
-                        /* check if target node is OK and the same name doesn't exist */
-                        if (node && !ifnode) {
-                              /* internal FS */
-                              if (node->type ==  NODE_TYPE_DIR) {
-                                    ch_t  *dirname    = strrchr(path, '/') + 1;
-                                    u32_t  dirnamelen = strlen(dirname);
-                                    ch_t  *name       = CALLOC(dirnamelen + 1, sizeof(ch_t));
+                              /* check if name buffer is created */
+                              if (name) {
+                                    strcpy(name, dirname);
 
-                                    /* check if name buffer is created */
-                                    if (name) {
-                                          strcpy(name, dirname);
+                                    node_t *dir = CALLOC(1, sizeof(node_t));
 
-                                          node_t *dir = CALLOC(1, sizeof(node_t));
+                                    if (dir) {
+                                          dir->data = ListCreate();
 
+                                          if (dir->data) {
+                                                dir->name = (ch_t*)name;
+                                                dir->size = sizeof(node_t) + strlen(name);
+                                                dir->type = NODE_TYPE_DIR;
+
+                                                /* add new folder to this folder */
+                                                if (ListAddItem(node->data, dir) >= 0) {
+                                                      status = STD_RET_OK;
+                                                }
+                                          }
+                                    }
+
+                                    /* free memory when error */
+                                    if (status == STD_RET_ERROR) {
                                           if (dir) {
-                                                dir->data = ListCreate();
+                                                if (dir->data)
+                                                      ListDestroy(dir->data);
 
-                                                if (dir->data) {
-                                                      dir->name = (ch_t*)name;
-                                                      dir->size = sizeof(node_t) + strlen(name);
-                                                      dir->type = NODE_TYPE_DIR;
-
-                                                      /* add new folder to this folder */
-                                                      if (ListAddItem(node->data, dir) >= 0) {
-                                                            status = STD_RET_OK;
-                                                      }
-                                                }
+                                                FREE(dir);
                                           }
 
-                                          /* free memory when error */
-                                          if (status == STD_RET_ERROR) {
-                                                if (dir) {
-                                                      if (dir->data)
-                                                            ListDestroy(dir->data);
-
-                                                      FREE(dir);
-                                                }
-
-                                                FREE(name);
-                                          }
+                                          FREE(name);
                                     }
                               }
                         }
@@ -1064,50 +1051,6 @@ stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iroq, void *data)
 
 //================================================================================================//
 /**
- * @brief Function return pointer to path's word
- *
- * @param[in]  *str          string
- * @param[out] **word        pointer to word beginning
- * @param[out] *length       pointer to word length
- *
- * @return pointer to next word, otherwise NULL
- */
-//================================================================================================//
-static ch_t *ShowWordInPath(ch_t *str, ch_t **word, size_t *length)
-{
-      ch_t *bwd = NULL;
-      ch_t *ewd = NULL;
-      ch_t *nwd = NULL;
-
-      if (str) {
-            bwd = strchr(str, '/');
-
-            if (bwd) {
-                  ewd = strchr(bwd + 1, '/');
-
-                  if (ewd == NULL) {
-                        ewd = strchr(bwd + 1, '\0');
-                        nwd = NULL;
-                  } else {
-                        nwd = ewd;
-                  }
-
-                  bwd++;
-            }
-      }
-
-      if (word)
-            *word   = bwd;
-
-      if (length)
-            *length = ewd - bwd;
-
-      return nwd;
-}
-
-
-//================================================================================================//
-/**
  * @brief Check path deep
  *
  * @param *path         path
@@ -1156,29 +1099,41 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
 
       if (path && startnode) {
             if (startnode->type == NODE_TYPE_DIR) {
-                  curnode          = startnode;
-                  i32_t   dirdeep  = GetPathDeep(path);
-                  ch_t   *word;
-                  i32_t   listsize;
+                  curnode       = startnode;
+                  i32_t dirdeep = GetPathDeep(path);
+                  u16_t pathlen;
+                  ch_t *pathend;
 
+                  /* go to selected node -------------------------------------------------------- */
                   while (dirdeep + deep > 0) {
-                        /* get word from path */
-                        path = ShowWordInPath((ch_t*)path, &word, NULL);
+                        /* get element from path */
+                        if ((path = strchr(path, '/')) == NULL)
+                              break;
+                        else
+                              path++;
+
+                        if ((pathend = strchr(path, '/')) == NULL)
+                              pathlen = strlen(path);
+                        else
+                              pathlen = pathend - path;
 
                         /* get number of list items */
-                        listsize = ListGetItemCount(curnode->data);
+                        i32_t listsize = ListGetItemCount(curnode->data);
 
-                        /* find that object exist */
+                        /* find that object exist ----------------------------------------------- */
                         i32_t i = 0;
                         while (listsize > 0) {
                               node_t *node = ListGetItemDataByNo(curnode->data, i++);
 
                               if (node) {
-                                    if (strncmp(node->name, word, strlen(node->name)) == 0) {
+                                    if (  strlen(node->name) == pathlen
+                                       && strncmp(node->name, path, pathlen) == 0) {
+
                                           curnode = node;
 
                                           if (item)
                                                 *item = i - 1;
+
                                           break;
                                     }
                               } else {
@@ -1189,7 +1144,7 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
                               listsize--;
                         }
 
-                        /* dir does not found or error */
+                        /* directory does not found or error */
                         if (listsize == 0 || curnode == NULL) {
                               curnode = NULL;
                               break;
