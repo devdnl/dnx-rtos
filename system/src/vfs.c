@@ -501,6 +501,75 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
 
 //================================================================================================//
 /**
+ * @brief Function change file mode
+ *
+ * @param *path   file path
+ * @param  mode   file mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_chmod(const ch_t *path, u16_t mode)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  ch_t     *extPath = NULL;
+                  struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+
+                  if (fs) {
+                        if (fs->fs.f_chmod) {
+                              status = fs->fs.f_chmod(fs->fs.dev, extPath, mode);
+                        }
+                  }
+            }
+
+            GiveMutex(fs->mtx);
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function change file owner and group
+ *
+ * @param *path   file path
+ * @param  owner  file owner
+ * @param  group  file group
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path) {
+            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  ch_t     *extPath = NULL;
+                  struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+
+                  if (fs) {
+                        if (fs->fs.f_chown) {
+                              status = fs->fs.f_chown(fs->fs.dev, extPath, owner, group);
+                        }
+                  }
+            }
+
+            GiveMutex(fs->mtx);
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function returns file/dir status
  *
  * @param *path         file/dir path

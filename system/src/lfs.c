@@ -481,18 +481,34 @@ stdRet_t lfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
  * @brief Function change file mode
  *
  * @param dev     fs device
+ * @param *path   path
  * @param mode    file mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_chmod(devx_t dev, u32_t mode)
+stdRet_t lfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
 {
       (void)dev;
-      (void)mode;
 
-      return STD_RET_ERROR;
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path) {
+            if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  node_t *node = GetNode(path, &fs->root, 0, NULL);
+
+                  if (node) {
+                        node->mode = mode;
+
+                        status = STD_RET_OK;
+                  }
+
+                  GiveMutex(fs->mtx);
+            }
+      }
+
+      return status;
 }
 
 
@@ -501,6 +517,7 @@ stdRet_t lfs_chmod(devx_t dev, u32_t mode)
  * @brief Function change file owner and group
  *
  * @param dev     fs device
+ * @param *path   path
  * @param owner   file owner
  * @param group   file group
  *
@@ -508,13 +525,27 @@ stdRet_t lfs_chmod(devx_t dev, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_chown(devx_t dev, u16_t owner, u16_t group)
+stdRet_t lfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
 {
       (void)dev;
-      (void)owner;
-      (void)group;
+      stdRet_t status = STD_RET_ERROR;
 
-      return STD_RET_ERROR;
+      if (path) {
+            if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  node_t *node = GetNode(path, &fs->root, 0, NULL);
+
+                  if (node) {
+                        node->uid = owner;
+                        node->gid = group;
+
+                        status = STD_RET_OK;
+                  }
+
+                  GiveMutex(fs->mtx);
+            }
+      }
+
+      return status;
 }
 
 
