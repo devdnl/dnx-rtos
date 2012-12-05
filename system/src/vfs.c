@@ -33,7 +33,6 @@ extern "C" {
 ==================================================================================================*/
 #include "vfs.h"
 #include <string.h>
-#include "system.h"
 
 
 /*==================================================================================================
@@ -64,7 +63,7 @@ struct vfshdl {
                                       Local function prototypes
 ==================================================================================================*/
 static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid);
-static struct fsinfo *FindBaseFS(const ch_t *path, u16_t len, ch_t **extPath);
+static struct fsinfo *FindBaseFS(const ch_t *path, ch_t **extPath);
 static ch_t          *AddEndSlash(const ch_t *path);
 static ch_t          *SubEndSlash(const ch_t *path);
 
@@ -145,7 +144,7 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
                   if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                         /* find if file system is already mounted and find base file system ----- */
                         mountfs = FindMountedFS(newpath, -1, NULL);
-                        basefs  = FindBaseFS(newpath, strlen(newpath), &extPath);
+                        basefs  = FindBaseFS(newpath, &extPath);
 
                         /* create new FS in existing dir and FS, otherwise create new FS if first mount */
                         if (basefs && mountfs == NULL) {
@@ -221,19 +220,20 @@ stdRet_t vfs_umount(const ch_t *path)
                               struct fsinfo *mountfs = FindMountedFS(newpath, -1, &itemid);
 
                               if (mountfs) {
-                                    if (mountfs->fs.f_release) {
+                                    if (mountfs->fs.f_release && mountfs->mntFSCnt == 0) {
                                           if (mountfs->fs.f_release(mountfs->fs.dev) == STD_RET_OK) {
-                                                if (mountfs->mntFSCnt == 0) {
-                                                      if (mountfs->basefs)
-                                                            if (mountfs->basefs->mntFSCnt)
-                                                                  mountfs->basefs->mntFSCnt--;
 
-                                                      if (mountfs->path)
-                                                            FREE(mountfs->path);
-
-                                                      if (ListRmItemByID(vfs->mntList, itemid) == 0)
-                                                            status = STD_RET_OK;
+                                                /* decrease mount points if base FS exist */
+                                                if (mountfs->basefs) {
+                                                      if (mountfs->basefs->mntFSCnt)
+                                                            mountfs->basefs->mntFSCnt--;
                                                 }
+
+                                                if (mountfs->path)
+                                                      FREE(mountfs->path);
+
+                                                if (ListRmItemByID(vfs->mntList, itemid) == 0)
+                                                      status = STD_RET_OK;
                                           }
                                     }
                               }
@@ -268,7 +268,7 @@ stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg)
       if (path && drvcfg && vfs) {
             if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t *extPath     = NULL;
-                  struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+                  struct fsinfo *fs = FindBaseFS(path, &extPath);
 
                   if (fs) {
                         if (fs->fs.f_mknod) {
@@ -304,7 +304,7 @@ stdRet_t vfs_mkdir(const ch_t *path)
 
                   if (newpath) {
                         ch_t *extPath     = NULL;
-                        struct fsinfo *fs = FindBaseFS(newpath, strlen(newpath), &extPath);
+                        struct fsinfo *fs = FindBaseFS(newpath, &extPath);
 
                         if (fs) {
                               if (fs->fs.f_mkdir) {
@@ -344,7 +344,7 @@ DIR_t *vfs_opendir(const ch_t *path)
 
                   if (newpath) {
                         ch_t     *extPath = NULL;
-                        struct fsinfo *fs = FindBaseFS(newpath, strlen(newpath), &extPath);
+                        struct fsinfo *fs = FindBaseFS(newpath, &extPath);
 
                         if (fs) {
                               if (fs->fs.f_opendir) {
@@ -440,8 +440,7 @@ stdRet_t vfs_remove(const ch_t *path)
 
                         if (mfs == NULL) {
                               ch_t *extPath = NULL;
-                              slashpath[strlen(slashpath) - 1] = '\0';
-                              struct fsinfo *bfs = FindBaseFS(path, strlen(path) - 1, &extPath);
+                              struct fsinfo *bfs = FindBaseFS(path, &extPath);
 
                               if (bfs) {
                                     if (bfs->fs.f_remove) {
@@ -482,8 +481,8 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
             if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t     *extPathOld = NULL;
                   ch_t     *extPathNew = NULL;
-                  struct fsinfo *fsOld = FindBaseFS(oldName, strlen(oldName), &extPathOld);
-                  struct fsinfo *fsNew = FindBaseFS(newName, strlen(newName), &extPathNew);
+                  struct fsinfo *fsOld = FindBaseFS(oldName, &extPathOld);
+                  struct fsinfo *fsNew = FindBaseFS(newName, &extPathNew);
 
                   if (fsOld && fsNew && fsOld == fsNew) {
                         if (fsOld->fs.f_rename) {
@@ -517,7 +516,7 @@ stdRet_t vfs_chmod(const ch_t *path, u16_t mode)
       if (path) {
             if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t     *extPath = NULL;
-                  struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+                  struct fsinfo *fs = FindBaseFS(path, &extPath);
 
                   if (fs) {
                         if (fs->fs.f_chmod) {
@@ -552,7 +551,7 @@ stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group)
       if (path) {
             if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t     *extPath = NULL;
-                  struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+                  struct fsinfo *fs = FindBaseFS(path, &extPath);
 
                   if (fs) {
                         if (fs->fs.f_chown) {
@@ -586,7 +585,7 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
       if (path && stat) {
             if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   ch_t     *extPath = NULL;
-                  struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+                  struct fsinfo *fs = FindBaseFS(path, &extPath);
 
                   if (fs) {
                         if (fs->fs.f_stat) {
@@ -669,12 +668,12 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
                               stdRet_t status = STD_RET_ERROR;
 
                               ch_t     *extPath = NULL;
-                              struct fsinfo *fs = FindBaseFS(path, strlen(path), &extPath);
+                              struct fsinfo *fs = FindBaseFS(path, &extPath);
 
                               if (fs) {
                                     if (fs->fs.f_open) {
                                           status = fs->fs.f_open(fs->fs.dev,  &file->fd,
-                                                               &file->f_seek, extPath, mode);
+                                                                 &file->f_seek, extPath, mode);
                                     }
                               }
 
@@ -939,17 +938,16 @@ static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid)
  * @brief Function find base FS of selected path
  *
  * @param *path         path to FS
- * @param  len          path length
  * @param **extPath     pointer to external part of path
  *
  * @return pointer to FS info
  */
 //================================================================================================//
-static struct fsinfo *FindBaseFS(const ch_t *path, u16_t len, ch_t **extPath)
+static struct fsinfo *FindBaseFS(const ch_t *path, ch_t **extPath)
 {
       struct fsinfo *fsinfo = NULL;
 
-      ch_t *pathTail = (ch_t*)path + len;
+      ch_t *pathTail = (ch_t*)path + strlen(path);
 
       if (*(pathTail - 1) == '/')
             pathTail--;
