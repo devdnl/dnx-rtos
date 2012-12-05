@@ -36,6 +36,7 @@ extern "C" {
 #include "basic_types.h"
 #include "systypes.h"
 #include "vfs.h"
+#include "system.h"
 
 
 /*==================================================================================================

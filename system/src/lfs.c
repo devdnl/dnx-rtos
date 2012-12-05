@@ -33,7 +33,6 @@ extern "C" {
 ==================================================================================================*/
 #include "lfs.h"
 #include <string.h>
-#include "system.h"
 
 
 /*==================================================================================================
@@ -53,7 +52,7 @@ typedef enum {
       NODE_TYPE_LINK = FILE_TYPE_LINK
 } nodeType_t;
 
-struct node {
+typedef struct node {
       ch_t       *name;       /* file name */
       nodeType_t  type;       /* file type */
       u32_t       dev;        /* major device number */
@@ -64,9 +63,13 @@ struct node {
       size_t      size;       /* file size */
       u32_t       mtime;      /* time of last modification */
       void       *data;       /* file type specified data */
-};
+} node_t;
 
-typedef struct node node_t;
+typedef struct openInfo {
+      node_t *node;
+      node_t *nodebase;
+      bool_t  doRM;
+} fopenInfo_t;
 
 struct fshdl_s {
       node_t  root;
@@ -163,55 +166,57 @@ stdRet_t lfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && drvcfg && fs) {
-            if (path[0] == '/' && TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  node_t *node   = GetNode(path, &fs->root, -1, NULL);
-                  node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
+            if (path[0] == '/') {
+                  if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                        node_t *node   = GetNode(path, &fs->root, -1, NULL);
+                        node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
 
-                  /* check if target node is OK */
-                  if (node && !ifnode) {
-                        if (node->type == NODE_TYPE_DIR) {
-                              ch_t  *drvname    = strrchr(path, '/') + 1;
-                              u32_t  drvnamelen = strlen(drvname);
-                              ch_t  *filename   = CALLOC(drvnamelen + 1, sizeof(ch_t));
+                        /* check if target node is OK */
+                        if (node && !ifnode) {
+                              if (node->type == NODE_TYPE_DIR) {
+                                    ch_t  *drvname    = strrchr(path, '/') + 1;
+                                    u32_t  drvnamelen = strlen(drvname);
+                                    ch_t  *filename   = CALLOC(drvnamelen + 1, sizeof(ch_t));
 
-                              if (filename) {
-                                    strcpy(filename, drvname);
+                                    if (filename) {
+                                          strcpy(filename, drvname);
 
-                                    node_t         *dirfile = CALLOC(1, sizeof(node_t));
-                                    struct vfs_drvcfg *dcfg = CALLOC(1, sizeof(struct vfs_drvcfg));
+                                          node_t         *dirfile = CALLOC(1, sizeof(node_t));
+                                          struct vfs_drvcfg *dcfg = CALLOC(1, sizeof(struct vfs_drvcfg));
 
-                                    if (dirfile && dcfg) {
-                                          memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
+                                          if (dirfile && dcfg) {
+                                                memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
 
-                                          dirfile->name  = filename;
-                                          dirfile->size  = sizeof(node_t) + strlen(filename)
-                                                         + sizeof(struct vfs_drvcfg);
-                                          dirfile->type  = NODE_TYPE_DRV;
-                                          dirfile->data  = dcfg;
-                                          dirfile->dev   = dcfg->dev;
-                                          dirfile->part  = dcfg->part;
+                                                dirfile->name  = filename;
+                                                dirfile->size  = sizeof(node_t) + strlen(filename)
+                                                               + sizeof(struct vfs_drvcfg);
+                                                dirfile->type  = NODE_TYPE_DRV;
+                                                dirfile->data  = dcfg;
+                                                dirfile->dev   = dcfg->dev;
+                                                dirfile->part  = dcfg->part;
 
-                                          /* add new drv to this folder */
-                                          if (ListAddItem(node->data, dirfile) >= 0) {
-                                                status = STD_RET_OK;
+                                                /* add new drv to this folder */
+                                                if (ListAddItem(node->data, dirfile) >= 0) {
+                                                      status = STD_RET_OK;
+                                                }
                                           }
-                                    }
 
-                                    /* free memory when error */
-                                    if (status == STD_RET_ERROR) {
-                                          if (dirfile)
-                                                FREE(dirfile);
+                                          /* free memory when error */
+                                          if (status == STD_RET_ERROR) {
+                                                if (dirfile)
+                                                      FREE(dirfile);
 
-                                          if (dcfg)
-                                                FREE(dcfg);
+                                                if (dcfg)
+                                                      FREE(dcfg);
 
-                                          FREE(filename);
+                                                FREE(filename);
+                                          }
                                     }
                               }
                         }
-                  }
 
-                  GiveMutex(fs->mtx);
+                        GiveMutex(fs->mtx);
+                  }
             }
       }
 
@@ -237,55 +242,57 @@ stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && fs) {
-            if (path[0] == '/' && TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  node_t *node   = GetNode(path, &fs->root, -1, NULL);
-                  node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
+            if (path[0] == '/') {
+                  if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                        node_t *node   = GetNode(path, &fs->root, -1, NULL);
+                        node_t *ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
 
-                  /* check if target node is OK and the same name doesn't exist */
-                  if (node && !ifnode) {
-                        /* internal FS */
-                        if (node->type ==  NODE_TYPE_DIR) {
-                              ch_t  *dirname    = strrchr(path, '/') + 1;
-                              u32_t  dirnamelen = strlen(dirname);
-                              ch_t  *name       = CALLOC(dirnamelen + 1, sizeof(ch_t));
+                        /* check if target node is OK and the same name doesn't exist */
+                        if (node && !ifnode) {
+                              /* internal FS */
+                              if (node->type ==  NODE_TYPE_DIR) {
+                                    ch_t  *dirname    = strrchr(path, '/') + 1;
+                                    u32_t  dirnamelen = strlen(dirname);
+                                    ch_t  *name       = CALLOC(dirnamelen + 1, sizeof(ch_t));
 
-                              /* check if name buffer is created */
-                              if (name) {
-                                    strcpy(name, dirname);
+                                    /* check if name buffer is created */
+                                    if (name) {
+                                          strcpy(name, dirname);
 
-                                    node_t *dir = CALLOC(1, sizeof(node_t));
+                                          node_t *dir = CALLOC(1, sizeof(node_t));
 
-                                    if (dir) {
-                                          dir->data = ListCreate();
+                                          if (dir) {
+                                                dir->data = ListCreate();
 
-                                          if (dir->data) {
-                                                dir->name = (ch_t*)name;
-                                                dir->size = sizeof(node_t) + strlen(name);
-                                                dir->type = NODE_TYPE_DIR;
+                                                if (dir->data) {
+                                                      dir->name = (ch_t*)name;
+                                                      dir->size = sizeof(node_t) + strlen(name);
+                                                      dir->type = NODE_TYPE_DIR;
 
-                                                /* add new folder to this folder */
-                                                if (ListAddItem(node->data, dir) >= 0) {
-                                                      status = STD_RET_OK;
+                                                      /* add new folder to this folder */
+                                                      if (ListAddItem(node->data, dir) >= 0) {
+                                                            status = STD_RET_OK;
+                                                      }
                                                 }
                                           }
-                                    }
 
-                                    /* free memory when error */
-                                    if (status == STD_RET_ERROR) {
-                                          if (dir) {
-                                                if (dir->data)
-                                                      ListDestroy(dir->data);
+                                          /* free memory when error */
+                                          if (status == STD_RET_ERROR) {
+                                                if (dir) {
+                                                      if (dir->data)
+                                                            ListDestroy(dir->data);
 
-                                                FREE(dir);
+                                                      FREE(dir);
+                                                }
+
+                                                FREE(name);
                                           }
-
-                                          FREE(name);
                                     }
                               }
                         }
-                  }
 
-                  GiveMutex(fs->mtx);
+                        GiveMutex(fs->mtx);
+                  }
             }
       }
 
@@ -356,50 +363,49 @@ stdRet_t lfs_remove(devx_t dev, const ch_t *path)
 
       if (path) {
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  /* go to dir */
                   i32_t   item;
                   node_t *nodebase = GetNode(path, &fs->root, -1, NULL);
                   node_t *nodeobj  = GetNode(path, &fs->root, 0, &item);
 
-                  /* check if target nodes ares OK */
-                  if (nodebase) {
+                  /* check if target nodes are OK */
+                  if (nodebase && nodeobj && nodeobj != &fs->root) {
 
-                        if (nodeobj && nodeobj != &fs->root) {
+                        /* check if file is opened */
+                        /* DNLTODO remove must check if file is opened */
 
-                              /* node must be local FILE or DIR */
-                              if (  nodeobj->type == NODE_TYPE_DIR
-                                 || nodeobj->type == NODE_TYPE_FILE
-                                 || nodeobj->type == NODE_TYPE_DRV) {
+                        /* node must be local FILE or DIR */
+                        if (  nodeobj->type == NODE_TYPE_DIR
+                           || nodeobj->type == NODE_TYPE_FILE
+                           || nodeobj->type == NODE_TYPE_DRV) {
 
-                                    /* if path is ending on slash, the object must be DIR */
-                                    if (path[strlen(path) - 1] == '/') {
-                                          if (nodeobj->type != NODE_TYPE_DIR) {
-                                                goto lfs_remove_end;
-                                          }
+                              /* if path is ending on slash, the object must be DIR */
+                              if (path[strlen(path) - 1] == '/') {
+                                    if (nodeobj->type != NODE_TYPE_DIR) {
+                                          goto lfs_remove_end;
                                     }
-
-                                    /* if DIR check if is empty */
-                                    if (nodeobj->type == NODE_TYPE_DIR) {
-
-                                          if (ListGetItemCount(nodeobj->data) > 0) {
-                                                goto lfs_remove_end;
-                                          } else {
-                                                ListDestroy(nodeobj->data);
-                                                nodeobj->data = NULL;
-                                          }
-                                    }
-
-                                    if (nodeobj->name)
-                                          FREE(nodeobj->name);
-
-                                    if (nodeobj->data)
-                                          FREE(nodeobj->data);
-
-                                    u32_t itemid = ListGetItemID(nodebase->data, item);
-
-                                    if (ListRmItemByID(nodebase->data, itemid) == 0)
-                                          status = STD_RET_OK;
                               }
+
+                              /* if DIR check if is empty */
+                              if (nodeobj->type == NODE_TYPE_DIR) {
+
+                                    if (ListGetItemCount(nodeobj->data) > 0) {
+                                          goto lfs_remove_end;
+                                    } else {
+                                          ListDestroy(nodeobj->data);
+                                          nodeobj->data = NULL;
+                                    }
+                              }
+
+                              if (nodeobj->name)
+                                    FREE(nodeobj->name);
+
+                              if (nodeobj->data)
+                                    FREE(nodeobj->data);
+
+                              u32_t itemid = ListGetItemID(nodebase->data, item);
+
+                              if (ListRmItemByID(nodebase->data, itemid) == 0)
+                                    status = STD_RET_OK;
                         }
                   }
 
@@ -700,54 +706,59 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
 
       if (fd && path && mode) {
             node_t *node;
+            node_t *nodebase = GetNode(path, &fs->root, -1, NULL);
 
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   node = GetNode(path, &fs->root, 0, NULL);
 
                   /* file does not exist -------------------------------------------------------- */
-                  if (node == NULL) {
+                  if (nodebase && node == NULL) {
+                        ch_t   *filename = NULL;
+                        node_t *fnode    = NULL;
+
                         /* create file when mode is correct */
                         if (  (strncmp("w", mode, 2) == 0) || (strncmp("w+", mode, 2) == 0)
                            || (strncmp("a", mode, 2) == 0) || (strncmp("a+", mode, 2) == 0) ) {
 
-                              /* file does not exist, try to create new file */
-                              node_t *nodebase = GetNode(path, &fs->root, -1, NULL);
+                              if (nodebase->type == NODE_TYPE_DIR) {
+                                    filename = CALLOC(1, strlen(strrchr(path, '/')));
+                                    fnode    = CALLOC(1, sizeof(node_t));
 
-                              if (nodebase) {
-                                    if (nodebase->type == NODE_TYPE_DIR) {
-                                          ch_t   *filename = CALLOC(1, strlen(strrchr(path, '/')));
-                                          node_t *fnode    = CALLOC(1, sizeof(node_t));
+                                    if (filename && fnode) {
+                                          strcpy(filename, strrchr(path, '/') + 1);
 
-                                          if (filename && fnode) {
-                                                strcpy(filename, strrchr(path, '/') + 1);
+                                          fnode->name  = filename;
+                                          fnode->data  = NULL;
+                                          fnode->dev   = 0;
+                                          fnode->gid   = 0;
+                                          fnode->mode  = 0;
+                                          fnode->mtime = 0;
+                                          fnode->part  = 0;
+                                          fnode->size  = 0;
+                                          fnode->type  = NODE_TYPE_FILE;
+                                          fnode->uid   = 0;
 
-                                                fnode->name  = filename;
-                                                fnode->data  = NULL;
-                                                fnode->dev   = 0;
-                                                fnode->gid   = 0;
-                                                fnode->mode  = 0;
-                                                fnode->mtime = 0;
-                                                fnode->part  = 0;
-                                                fnode->size  = 0;
-                                                fnode->type  = NODE_TYPE_FILE;
-                                                fnode->uid   = 0;
-
-                                                if (ListAddItem(nodebase->data, fnode) < 0) {
-                                                      FREE(fnode);
-                                                      FREE(filename);
-                                                } else {
-                                                      status = STD_RET_OK;
-                                                }
+                                          if (ListAddItem(nodebase->data, fnode) == 0) {
+                                                status = STD_RET_OK;
                                           }
                                     }
                               }
                         }
-                  } else {
-                        status = STD_RET_OK;
+
+                        if (status == STD_RET_ERROR) {
+                              if (filename)
+                                    FREE(filename);
+
+                              if (fnode)
+                                    FREE(fnode);
+
+                              GiveMutex(fs->mtx);
+                              goto lfs_open_end;
+                        }
                   }
 
                   GiveMutex(fs->mtx);
-            }
+            } /* DNLTODO fopen */
 
             /* file shall exist ----------------------------------------------------------------- */
             if (status == STD_RET_OK) {
@@ -760,14 +771,24 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
 
                   if (node) {
                         struct vfs_drvcfg *drv = node->data;
-                        i32_t item;
+                        i32_t item = -1;
 
                         if (node->type != NODE_TYPE_DIR) {
-                              if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                                    item = ListAddItem(fs->openFile, node);
-                                    GiveMutex(fs->mtx);
+                              /* add file to opened files list */
+                              fopenInfo_t *foi = calloc(1, sizeof(fopenInfo_t));
+
+                              if (foi) {
+                                    foi->node     = node;
+                                    foi->doRM     = FALSE;
+                                    foi->nodebase = nodebase;
+
+                                    if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                                          item = ListAddItem(fs->openFile, foi);
+                                          GiveMutex(fs->mtx);
+                                    }
                               }
 
+                              /* set file parameters */
                               if (item >= 0) {
 
                                     if (node->type == NODE_TYPE_FILE) {
@@ -793,7 +814,7 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
 
                                           status = STD_RET_OK;
 
-                                    } else if (node->type ==  NODE_TYPE_DRV) {
+                                    } else if (node->type == NODE_TYPE_DRV) {
                                           if (drv->f_open) {
                                                 if (drv->f_open(drv->dev, drv->part) == STD_RET_OK) {
                                                       *seek  = 0;
@@ -802,6 +823,7 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
                                           }
                                     }
 
+                                    /* load FD, if error delete opened file from list */
                                     if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                                           *fd = ListGetItemID(fs->openFile, item);
 
@@ -817,6 +839,7 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
             }
       }
 
+      lfs_open_end:
       return status;
 }
 
@@ -870,40 +893,78 @@ stdRet_t lfs_close(devx_t dev, fd_t fd)
 {
       (void)dev;
 
-      stdRet_t status = STD_RET_ERROR;
-      node_t *node;
+      stdRet_t     status = STD_RET_ERROR;
+      node_t      *node   = NULL;
+      fopenInfo_t *foi;
+      bool_t       rm;
 
+      /* gets opened file info from list */
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-            node = ListGetItemDataByID(fs->openFile, fd);
+            foi  = ListGetItemDataByID(fs->openFile, fd);
+
+            if (foi) {
+                  node = foi->node;
+            }
+
             GiveMutex(fs->mtx);
       }
 
+      /* do operation on node if exist */
       if (node) {
+            /* close device if file is driver type */
             if (node->type == NODE_TYPE_DRV && node->data) {
                   struct vfs_drvcfg *drv = node->data;
 
                   if (drv->f_close) {
-                        status = drv->f_close(drv->dev, drv->part);
+                        if (drv->f_close(drv->dev, drv->part) == STD_RET_ERROR)
+                              goto lfs_close_end;
                   }
-            } else {
-                  status = STD_RET_OK;
             }
 
-            if (status == STD_RET_OK) {
-                  status = STD_RET_ERROR;
+            /* if closed successfully delete file from open list */
+            if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
 
-                  if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                        if (ListUnlinkItemDataByID(fs->openFile, fd) == 0) {
-                              if (ListRmItemByID(fs->openFile, fd) == 0) {
-                                    status = STD_RET_OK;
-                              }
-                        }
+                  rm = foi->doRM;
 
-                        GiveMutex(fs->mtx);
+                  /* remove file from 'opened' list */
+                  if (ListRmItemByID(fs->openFile, fd) != 0) {
+                        goto lfs_close_give_mtx;
                   }
+
+                  /* check if file is not to remove */
+                  if (rm == FALSE) {
+                        status = STD_RET_OK;
+                        goto lfs_close_give_mtx;
+                  }
+
+                  /* file to remove, check if other app does not opens this file */
+                  u16_t n;
+
+                  if ((n = ListGetItemCount(fs->openFile)) == -1) {
+                        goto lfs_close_give_mtx;
+                  }
+
+                  for (u16_t i = 0; i < n; i++) {
+                        foi = ListGetItemDataByNo(fs->openFile, i);
+
+                        if (foi->node == node) {
+                              status = STD_RET_OK;
+                              goto lfs_close_give_mtx;
+                        }
+                  }
+
+                  /* file must be removed */
+                  /* DNLTODO use common remove node function */
+
+
+                  status = STD_RET_OK;
+
+                  lfs_close_give_mtx:
+                  GiveMutex(fs->mtx);
             }
       }
 
+      lfs_close_end:
       return status;
 }
 
