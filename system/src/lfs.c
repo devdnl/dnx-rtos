@@ -69,6 +69,7 @@ typedef struct openInfo {
       node_t *node;
       node_t *nodebase;
       bool_t  doRM;
+      u32_t   itemID;
 } fopenInfo_t;
 
 struct fshdl_s {
@@ -431,6 +432,8 @@ stdRet_t lfs_remove(devx_t dev, const ch_t *path)
                         if (dorm == FALSE) {
                               u32_t itemid = ListGetItemID(nodebase->data, item);
                               status = rmNode(nodebase, nodeobj, itemid);
+                        } else {
+                              status = STD_RET_OK;
                         }
                   }
 
@@ -733,10 +736,13 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
       stdRet_t status = STD_RET_ERROR;
 
       if (fd && path && mode) {
+            i32_t   item;
             node_t *node;
-            node_t *nodebase = GetNode(path, &fs->root, -1, NULL);
+            node_t *nodebase;
 
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                  nodebase = GetNode(path, &fs->root, -1, NULL);
+
                   /* create file when mode is correct */
                   if (  (strncmp("w", mode, 2) == 0) || (strncmp("w+", mode, 2) == 0)
                      || (strncmp("a", mode, 2) == 0) || (strncmp("a+", mode, 2) == 0) ) {
@@ -792,13 +798,12 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
 
             /* file shall exist ----------------------------------------------------------------- */
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  node = GetNode(path, &fs->root, 0, NULL);
+                  node = GetNode(path, &fs->root, 0, &item);
                   GiveMutex(fs->mtx);
             }
 
-            if (node) {
+            if (node && nodebase) {
                   struct vfs_drvcfg *drv = node->data;
-                  i32_t item = -1;
 
                   if (node->type != NODE_TYPE_DIR) {
                         /* add file to opened files list */
@@ -809,6 +814,7 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
                                     foi->doRM     = FALSE;
                                     foi->node     = node;
                                     foi->nodebase = nodebase;
+                                    foi->itemID   = ListGetItemID(nodebase->data, item);
 
                                     /* find if file shall be removed */
                                     i16_t n;
@@ -909,7 +915,6 @@ stdRet_t lfs_close(devx_t dev, fd_t fd)
       stdRet_t     status = STD_RET_ERROR;
       node_t      *node   = NULL;
       fopenInfo_t *foi;
-      bool_t       doRM;
 
       /* gets opened file info from list */
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
@@ -936,7 +941,7 @@ stdRet_t lfs_close(devx_t dev, fd_t fd)
 
             /* if closed successfully delete file from open list */
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  doRM = foi->doRM;
+                  fopenInfo_t finf = *foi;
 
                   /* remove file from 'opened' list */
                   if (ListRmItemByID(fs->openFile, fd) != 0) {
@@ -946,7 +951,7 @@ stdRet_t lfs_close(devx_t dev, fd_t fd)
                   /* file to remove, check if other app does not opens this file */
                   status = STD_RET_OK;
 
-                  if (doRM == TRUE) {
+                  if (finf.doRM == TRUE) {
                         i16_t n = ListGetItemCount(fs->openFile);
 
                         for (i16_t i = 0; i < n; i++) {
@@ -958,7 +963,7 @@ stdRet_t lfs_close(devx_t dev, fd_t fd)
                         }
 
                         /* file can be removed */
-                        status = rmNode(foi->nodebase, foi->node, fd);
+                        status = rmNode(finf.nodebase, finf.node, finf.itemID);
                   }
 
                   lfs_close_give_mtx:
