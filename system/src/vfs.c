@@ -187,7 +187,7 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
                               FREE(newpath);
                         }
 
-                        GiveMutex(fs->mtx);
+                        GiveMutex(vfs->mtx);
                   }
             }
       }
@@ -241,7 +241,7 @@ stdRet_t vfs_umount(const ch_t *path)
                               FREE(newpath);
                         }
 
-                        GiveMutex(fs->mtx);
+                        GiveMutex(vfs->mtx);
                   }
             }
       }
@@ -276,7 +276,7 @@ stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg)
                         }
                   }
 
-                  GiveMutex(fs->mtx);
+                  GiveMutex(vfs->mtx);
             }
       }
 
@@ -315,7 +315,7 @@ stdRet_t vfs_mkdir(const ch_t *path)
                         FREE(newpath);
                   }
 
-                  GiveMutex(fs->mtx);
+                  GiveMutex(vfs->mtx);
             }
       }
 
@@ -361,7 +361,7 @@ DIR_t *vfs_opendir(const ch_t *path)
                         dir = NULL;
                   }
 
-                  GiveMutex(fs->mtx);
+                  GiveMutex(vfs->mtx);
             }
       }
 
@@ -453,7 +453,7 @@ stdRet_t vfs_remove(const ch_t *path)
                   }
             }
 
-            GiveMutex(fs->mtx);
+            GiveMutex(vfs->mtx);
       }
 
       return status;
@@ -491,7 +491,7 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
                   }
             }
 
-            GiveMutex(fs->mtx);
+            GiveMutex(vfs->mtx);
       }
 
       return status;
@@ -525,7 +525,7 @@ stdRet_t vfs_chmod(const ch_t *path, u16_t mode)
                   }
             }
 
-            GiveMutex(fs->mtx);
+            GiveMutex(vfs->mtx);
       }
 
       return status;
@@ -560,7 +560,7 @@ stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group)
                   }
             }
 
-            GiveMutex(fs->mtx);
+            GiveMutex(vfs->mtx);
       }
 
       return status;
@@ -594,7 +594,7 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
                   }
             }
 
-            GiveMutex(fs->mtx);
+            GiveMutex(vfs->mtx);
       }
 
       return status;
@@ -633,7 +633,7 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
                   }
             }
 
-            GiveMutex(fs->mtx);
+            GiveMutex(vfs->mtx);
       }
 
       return status;
@@ -696,7 +696,7 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
                               }
                         }
 
-                        GiveMutex(fs->mtx);
+                        GiveMutex(vfs->mtx);
                   }
             }
       }
