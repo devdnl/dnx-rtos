@@ -80,7 +80,7 @@ void Initd(void *arg)
 
       struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));
 
-      /* early initialization - VFS system */
+      /* early initialization - VFS starting */
       vfs_init();
 
       /* early initialization - mounting FS */
@@ -141,6 +141,12 @@ void Initd(void *arg)
       } else {
             TaskTerminate();
       }
+
+      /* early initialization - basic drivers start */
+      if (InitDrv("pll", "/dev/pll") != STD_RET_OK)
+            while (TRUE);
+
+      InitDrv("gpio", "/dev/gpio");
 
       /* early initialization - terminal support */
       InitDrv("uart1", "/dev/ttyS0");

@@ -80,14 +80,6 @@ int main(void)
       /* dynamic memory management initialization */
       mm_init();
 
-
-      /* PLL initialization */
-      if (InitDrv("pll", "pll") != STD_RET_OK)
-            while (TRUE);
-
-      /* GPIO and AFIO initialization */
-      InitDrv("gpio", "gpio");
-
       /* create main task */
       TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 2, NULL);
 
