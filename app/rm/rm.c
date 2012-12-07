@@ -69,27 +69,7 @@ stdRet_t appmain(ch_t *argv)
 
             if (filename)
             {
-                  *filename++ = '\0';
-
-                  ch_t *dirname = argv;
-
-                  DIR_t *dir = opendir(dirname);
-
-                  if (dir)
-                  {
-                        dirent_t diren;
-
-                        while ((diren = readdir(dir)).name != NULL)
-                        {
-                              if (strcmp(diren.name, filename) == 0)
-                              {
-                                    status = remove(&diren);
-                                    break;
-                              }
-                        }
-
-                        closedir(dir);
-                  }
+                   status = remove(filename);
             }
 
             if (status != STD_RET_OK)

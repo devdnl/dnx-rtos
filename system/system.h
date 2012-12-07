@@ -56,19 +56,34 @@ extern "C" {
 #define free(mem)                         mm_free(mem)
 
 /** FILE SYSTEM DEFINITIONS */
-#define mount(node, path)                 vfs_mount(node, path)
+#define SEEK_SET                          VFS_SEEK_SET
+#define SEEK_CUR                          VFS_SEEK_CUR
+#define SEEK_END                          VFS_SEEK_END
+
+#define mount(path, fs_cfg)               vfs_mount(path, fs_cfg)
 #define umount(path)                      vfs_umount(path)
+#define mknod(path, drv_cfg)              vfs_mknod(path, drv_cfg)
+#define mkdir(path)                       vfs_mkdir(path)
+#define opendir(path)                     vfs_opendir(path)
+#define closedir(dir)                     vfs_closedir(dir)
+#define readdir(dir)                      vfs_readdir(dir)
+#define remove(path)                      vfs_remove(path)
+#define rename(oldName, newName)          vfs_rename(oldName, newName)
+#define chmod(path, mode)                 vfs_chmod(path, mode)
+#define chown(path, owner, group)         vfs_chown(path, owner, group)
+#define stat(path, statPtr)               vfs_stat(path, statPtr)
+#define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
 #define fopen(path, mode)                 vfs_fopen(path, mode)
 #define fclose(file)                      vfs_fclose(file)
 #define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
 #define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
 #define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
+#define ftell(file)                       vfs_ftell(file)
 #define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
-#define opendir(path)                     vfs_opendir(path)
-#define readdir(dir)                      vfs_readdir(dir)
-#define closedir(dir)                     vfs_closedir(dir)
-#define remove(direntry)                  vfs_remove(direntry)
-#define rename(oldName, newName)          vfs_rename(oldName, newName)
+#define fstat(file, statPtr)              vfs_fstat(file, stat)
+
+
+
 
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      TaskDelay(delay)
