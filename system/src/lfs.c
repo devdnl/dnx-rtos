@@ -813,7 +813,7 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
 
                   if (node->type != NODE_TYPE_DIR) {
                         /* add file to opened files list */
-                        fopenInfo_t *foi = calloc(1, sizeof(fopenInfo_t));
+                        fopenInfo_t *foi = CALLOC(1, sizeof(fopenInfo_t));
 
                         if (foi) {
                               if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
@@ -841,9 +841,13 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
                                     }
 
                                     /* add open file info to list */
-                                    item = ListAddItem(fs->openFile, foi);
+                                    if ((item = ListAddItem(fs->openFile, foi)) < 0) {
+                                          FREE(foi);
+                                    }
 
                                     GiveMutex(fs->mtx);
+                              } else {
+                                    FREE(foi);
                               }
                         }
 
@@ -862,6 +866,12 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
                                     /* set file size */
                                     if (  strncmp("w",  mode, 2) == 0
                                        || strncmp("w+", mode, 2) == 0 ) {
+
+                                          if (node->data) {
+                                                FREE(node->data);
+                                                node->data = NULL;
+                                          }
+
                                           node->size = 0;
                                     }
 

@@ -32,7 +32,6 @@ extern "C" {
                                              Include files
 ==================================================================================================*/
 #include "system.h"
-#include "regdrv.h"
 #include "initd.h"
 #include "misc.h"
 

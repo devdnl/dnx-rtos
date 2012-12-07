@@ -282,6 +282,9 @@ stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
 
                               if (status == STD_RET_ERROR) {
                                     drvList[i].drvRelease(dev, part);
+                                    kprint("\x1B[31mCreate node %s failed\x1B[0m\n", nodeName);
+                              } else {
+                                    kprint("Created node %s\n", nodeName);
                               }
                         }
 

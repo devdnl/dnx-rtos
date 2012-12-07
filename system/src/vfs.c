@@ -179,15 +179,15 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
                               }
                         }
 
-                        /* free allocated memory if error --------------------------------------- */
-                        if (status != STD_RET_OK) {
-                              if (newfs)
-                                    FREE(newfs);
-
-                              FREE(newpath);
-                        }
-
                         GiveMutex(vfs->mtx);
+                  }
+
+                  /* free allocated memory if error */
+                  if (status == STD_RET_ERROR) {
+                        if (newfs)
+                              FREE(newfs);
+
+                        FREE(newpath);
                   }
             }
       }
@@ -334,34 +334,36 @@ stdRet_t vfs_mkdir(const ch_t *path)
 //================================================================================================//
 DIR_t *vfs_opendir(const ch_t *path)
 {
-      DIR_t *dir = MALLOC(sizeof(DIR_t));
+      stdRet_t status = STD_RET_ERROR;
+      DIR_t *dir      = NULL;
 
-      if (path && vfs && dir) {
-            if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
-                  stdRet_t status = STD_RET_ERROR;
+      if (path && vfs) {
+            dir = MALLOC(sizeof(DIR_t));
 
-                  ch_t *newpath = AddEndSlash(path);
+            if (dir) {
+                  if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
+                        ch_t *newpath = AddEndSlash(path);
 
-                  if (newpath) {
-                        ch_t     *extPath = NULL;
-                        struct fsinfo *fs = FindBaseFS(newpath, &extPath);
+                        if (newpath) {
+                              ch_t     *extPath = NULL;
+                              struct fsinfo *fs = FindBaseFS(newpath, &extPath);
 
-                        if (fs) {
-                              if (fs->fs.f_opendir) {
-                                    status = fs->fs.f_opendir(fs->fs.dev, extPath, dir);
+                              if (fs) {
+                                    if (fs->fs.f_opendir) {
+                                          status = fs->fs.f_opendir(fs->fs.dev, extPath, dir);
+                                    }
                               }
+
+                              FREE(newpath);
                         }
+
+                        GiveMutex(vfs->mtx);
                   }
 
-                  if (status != STD_RET_OK) {
-                        if (newpath)
-                              FREE(newpath);
-
+                  if (status == STD_RET_ERROR) {
                         FREE(dir);
                         dir = NULL;
                   }
-
-                  GiveMutex(vfs->mtx);
             }
       }
 
@@ -451,9 +453,9 @@ stdRet_t vfs_remove(const ch_t *path)
 
                         FREE(slashpath);
                   }
-            }
 
-            GiveMutex(vfs->mtx);
+                  GiveMutex(vfs->mtx);
+            }
       }
 
       return status;
@@ -489,9 +491,9 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
                               status = fsOld->fs.f_rename(fsOld->fs.dev, extPathOld, extPathNew);
                         }
                   }
-            }
 
-            GiveMutex(vfs->mtx);
+                  GiveMutex(vfs->mtx);
+            }
       }
 
       return status;
@@ -523,9 +525,9 @@ stdRet_t vfs_chmod(const ch_t *path, u16_t mode)
                               status = fs->fs.f_chmod(fs->fs.dev, extPath, mode);
                         }
                   }
-            }
 
-            GiveMutex(vfs->mtx);
+                  GiveMutex(vfs->mtx);
+            }
       }
 
       return status;
@@ -558,9 +560,9 @@ stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group)
                               status = fs->fs.f_chown(fs->fs.dev, extPath, owner, group);
                         }
                   }
-            }
 
-            GiveMutex(vfs->mtx);
+                  GiveMutex(vfs->mtx);
+            }
       }
 
       return status;
@@ -592,9 +594,9 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
                               status = fs->fs.f_stat(fs->fs.dev, extPath, stat);
                         }
                   }
-            }
 
-            GiveMutex(vfs->mtx);
+                  GiveMutex(vfs->mtx);
+            }
       }
 
       return status;
@@ -631,9 +633,9 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
 
                         FREE(slashpath);
                   }
-            }
 
-            GiveMutex(vfs->mtx);
+                  GiveMutex(vfs->mtx);
+            }
       }
 
       return status;
