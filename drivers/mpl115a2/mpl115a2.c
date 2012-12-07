@@ -120,12 +120,15 @@ static struct varcon *mplmem;
  * @brief Initialize MPL115A2 device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t MPL115A2_Init(nod_t dev)
+stdRet_t MPL115A2_Init(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == MPL115A2_DEV_NONE)
@@ -190,13 +193,16 @@ stdRet_t MPL115A2_Init(nod_t dev)
  * @brief Release MPL115A2 device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t MPL115A2_Release(nod_t dev)
+stdRet_t MPL115A2_Release(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == MPL115A2_DEV_NONE)
@@ -219,13 +225,16 @@ stdRet_t MPL115A2_Release(nod_t dev)
  * @brief Opens specified port and initialize default settings
  *
  * @param[in]  dev                        MPL115A2 number
+ * @param[in]  part                       device part
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  operation error
  */
 //================================================================================================//
-stdRet_t MPL115A2_Open(nod_t dev)
+stdRet_t MPL115A2_Open(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == MPL115A2_DEV_NONE)
@@ -243,13 +252,16 @@ stdRet_t MPL115A2_Open(nod_t dev)
  * @brief Function close opened port
  *
  * @param[in]  dev                        MPL115A2 number
+ * @param[in]  part                       device part
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  operation error
  */
 //================================================================================================//
-stdRet_t MPL115A2_Close(nod_t dev)
+stdRet_t MPL115A2_Close(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == MPL115A2_DEV_NONE)
@@ -266,6 +278,7 @@ stdRet_t MPL115A2_Close(nod_t dev)
  * @brief Write data to MPL115A2
  *
  * @param[in]  dev                        MPL115A2 number
+ * @param[in]  part                       device part
  * @param[in]  *src                       source buffer
  * @param[in]  size                       buffer size
  * @param[in]  nitems                     number of items
@@ -274,9 +287,10 @@ stdRet_t MPL115A2_Close(nod_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t MPL115A2_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t MPL115A2_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)src;
       (void)size;
       (void)nitems;
@@ -293,6 +307,7 @@ size_t MPL115A2_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t s
  * @brief Write data to MPL115A2
  *
  * @param[in]  dev                        MPL115A2 number
+ * @param[in]  part                       device part
  * @param[in]  *dst                       destination buffer
  * @param[in]  size                       item size
  * @param[in]  nitems                     number of items
@@ -301,9 +316,10 @@ size_t MPL115A2_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t s
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t MPL115A2_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t MPL115A2_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)dst;
       (void)size;
       (void)nitems;
@@ -320,6 +336,7 @@ size_t MPL115A2_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t se
  * @brief Specific settings of MPL115A2
  *
  * @param[in    ] dev           MPL115A2 device
+ * @param[in    ] part          device part
  * @param[in    ] ioRQ          input/output request
  * @param[in,out] *data         input/output data
  *
@@ -327,8 +344,10 @@ size_t MPL115A2_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t se
  * @retval STD_RET_ERROR        operation error
  */
 //================================================================================================//
-stdRet_t MPL115A2_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
+stdRet_t MPL115A2_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == MPL115A2_DEV_NONE)

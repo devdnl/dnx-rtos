@@ -65,7 +65,7 @@ extern stdRet_t  lfs_open   (devx_t dev, fd_t *fd, size_t *seek, const ch_t *pat
 extern stdRet_t  lfs_close  (devx_t dev, fd_t fd);
 extern size_t    lfs_write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
 extern size_t    lfs_read   (devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t  lfs_ioctl  (devx_t dev, fd_t fd, IORq_t iroq, void *data);
+extern stdRet_t  lfs_ioctl  (devx_t dev, fd_t fd, IORq_t iorq, void *data);
 extern stdRet_t  lfs_mkdir  (devx_t dev, const ch_t *path);
 extern stdRet_t  lfs_mknod  (devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg);
 extern stdRet_t  lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir);

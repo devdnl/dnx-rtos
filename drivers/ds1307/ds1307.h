@@ -42,6 +42,7 @@ extern "C" {
 ==================================================================================================*/
 #define DS1307_DEV_RTC        0
 #define DS1307_DEV_NVM        1
+#define DS1307_PART_NONE      0
 
 
 /*==================================================================================================
@@ -57,13 +58,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t DS1307_Init(nod_t dev);
-extern stdRet_t DS1307_Open(nod_t dev);
-extern stdRet_t DS1307_Close(nod_t dev);
-extern size_t   DS1307_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   DS1307_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t DS1307_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t DS1307_Release(nod_t dev);
+extern stdRet_t DS1307_Init   (devx_t dev, fd_t fd);
+extern stdRet_t DS1307_Open   (devx_t dev, fd_t fd);
+extern stdRet_t DS1307_Close  (devx_t dev, fd_t fd);
+extern size_t   DS1307_Write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   DS1307_Read   (devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t DS1307_IOCtl  (devx_t dev, fd_t fd, IORq_t ioRQ, void *data);
+extern stdRet_t DS1307_Release(devx_t dev, fd_t fd);
 
 
 #ifdef __cplusplus

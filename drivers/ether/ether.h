@@ -46,6 +46,9 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+#define ETH_PART_NONE         0
+
+
 /** port names */
 enum ETH_DEV_NUMBER_enum
 {
@@ -57,13 +60,13 @@ enum ETH_DEV_NUMBER_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t ETHER_Init(nod_t eth);
-extern stdRet_t ETHER_Open(nod_t eth);
-extern stdRet_t ETHER_Close(nod_t eth);
-extern size_t   ETHER_Write(nod_t eth, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   ETHER_Read(nod_t eth, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t ETHER_IOCtl(nod_t eth, IORq_t ioRQ, void *data);
-extern stdRet_t ETHER_Release(nod_t eth);
+extern stdRet_t ETHER_Init   (devx_t eth, fd_t fd);
+extern stdRet_t ETHER_Open   (devx_t eth, fd_t fd);
+extern stdRet_t ETHER_Close  (devx_t eth, fd_t fd);
+extern size_t   ETHER_Write  (devx_t eth, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   ETHER_Read   (devx_t eth, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t ETHER_IOCtl  (devx_t eth, fd_t fd, IORq_t ioRQ, void *data);
+extern stdRet_t ETHER_Release(devx_t eth, fd_t fd);
 
 #ifdef __cplusplus
 }

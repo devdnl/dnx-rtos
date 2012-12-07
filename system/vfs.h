@@ -92,7 +92,6 @@ struct vfs_drvcfg {
       size_t   (*f_write)(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek);
       size_t   (*f_read )(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek);
       stdRet_t (*f_ioctl)(devx_t dev, fd_t part, IORq_t iorq, void *data);
-      stdRet_t (*f_stat )(devx_t dev, fd_t part, struct vfs_stat *stat);
 };
 
 struct vfs_fscfg {

@@ -61,6 +61,8 @@ APP_SEC_BEGIN
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
+      const ch_t fileType[] = {'-', 'd', 'c', 'l'};
+
       stdRet_t status = STD_RET_ERROR;
 
       DIR_t *dir = opendir(argv);
@@ -76,7 +78,11 @@ stdRet_t appmain(ch_t *argv)
 
             while ((dirent = readdir(dir)).name != NULL)
             {
-                  printf("%s%s\x1B[0m\t\t%u\n", dirent.isfile? fcolor : dcolor, dirent.name, dirent.size);
+                  printf("%s%c %u\t%s\x1B[0m\n",
+                         dirent.filetype != FILE_TYPE_DIR? fcolor : dcolor,
+                         fileType[dirent.filetype],
+                         dirent.size,
+                         dirent.name);
             }
 
             closedir(dir);

@@ -647,7 +647,7 @@ stdRet_t lfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
       stdRet_t status = STD_RET_ERROR;
 
       if (stat) {
-            node_t *node;
+            node_t *node = NULL;
 
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   fopenInfo_t *foi = ListGetItemDataByID(fs->openFile, fd);
@@ -688,14 +688,20 @@ stdRet_t lfs_statfs(devx_t dev, struct vfs_statfs *statfs)
 {
       (void)dev;
 
-      statfs->f_bfree  = 0;
-      statfs->f_blocks = 0;
-      statfs->f_ffree  = 0;
-      statfs->f_files  = 0;
-      statfs->f_type   = 1;
-      statfs->fsname   = "LFS";
+      stdRet_t status = STD_RET_ERROR;
 
-      return STD_RET_OK;
+      if (statfs) {
+            statfs->f_bfree  = 0;
+            statfs->f_blocks = 0;
+            statfs->f_ffree  = 0;
+            statfs->f_files  = 0;
+            statfs->f_type   = 1;
+            statfs->fsname   = "LFS";
+
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 
@@ -736,9 +742,9 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
       stdRet_t status = STD_RET_ERROR;
 
       if (fd && path && mode) {
-            i32_t   item;
-            node_t *node;
-            node_t *nodebase;
+            i32_t   item     = -1;
+            node_t *node     = NULL;
+            node_t *nodebase = NULL;
 
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   nodebase = GetNode(path, &fs->root, -1, NULL);
@@ -997,7 +1003,7 @@ size_t lfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, siz
       size_t n = 0;
 
       if (src && size && nitems) {
-            node_t *node;
+            node_t *node = NULL;
 
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   fopenInfo_t *foi = ListGetItemDataByID(fs->openFile, fd);
@@ -1070,7 +1076,7 @@ size_t lfs_read(devx_t dev, u32_t fd, void *dst, size_t size, size_t nitems, siz
       size_t n = 0;
 
       if (dst && size && nitems) {
-            node_t *node;
+            node_t *node = NULL;
 
             if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
                   fopenInfo_t *foi = ListGetItemDataByID(fs->openFile, fd);
@@ -1132,10 +1138,10 @@ size_t lfs_read(devx_t dev, u32_t fd, void *dst, size_t size, size_t nitems, siz
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iroq, void *data)
+stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
 {
       stdRet_t status = STD_RET_ERROR;
-      node_t *node;
+      node_t  *node   = NULL;
 
       if (TakeMutex(fs->mtx, MTX_BLOCK_TIME) == OS_OK) {
             fopenInfo_t *foi = ListGetItemDataByID(fs->openFile, fd);
@@ -1151,7 +1157,7 @@ stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iroq, void *data)
                   struct vfs_drvcfg *drv = node->data;
 
                   if (drv->f_ioctl) {
-                        status = drv->f_ioctl(dev, fd, iroq, data);
+                        status = drv->f_ioctl(dev, fd, iorq, data);
                   }
             }
       }

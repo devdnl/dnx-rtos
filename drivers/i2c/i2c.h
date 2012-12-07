@@ -47,6 +47,8 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+#define I2C_PART_NONE         0
+
 /** port names */
 enum I2C_DEV_NUMBER_enum
 {
@@ -71,13 +73,14 @@ enum I2C_DEV_NUMBER_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t I2C_Init(nod_t dev);
-extern stdRet_t I2C_Open(nod_t dev);
-extern stdRet_t I2C_Close(nod_t dev);
-extern size_t   I2C_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   I2C_Read(nod_t dev , void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t I2C_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t I2C_Release(nod_t dev);
+extern stdRet_t I2C_Init   (devx_t dev, fd_t fd);
+extern stdRet_t I2C_Open   (devx_t dev, fd_t fd);
+extern stdRet_t I2C_Close  (devx_t dev, fd_t fd);
+extern size_t   I2C_Write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   I2C_Read   (devx_t dev, fd_t fd , void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t I2C_IOCtl  (devx_t dev, fd_t fd, IORq_t ioRQ, void *data);
+extern stdRet_t I2C_Release(devx_t dev, fd_t fd);
+
 
 #ifdef __cplusplus
 }

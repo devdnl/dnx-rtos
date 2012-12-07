@@ -42,6 +42,9 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+#define UART_PART_NONE        0
+
+
 /** port names */
 enum UART_DEV_NUMBER_ENUM
 {
@@ -77,13 +80,13 @@ enum UART_DEV_NUMBER_ENUM
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t UART_Init(nod_t dev);
-extern stdRet_t UART_Open(nod_t dev);
-extern stdRet_t UART_Close(nod_t dev);
-extern size_t   UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t UART_Release(nod_t dev);
+extern stdRet_t UART_Init   (devx_t dev, fd_t part);
+extern stdRet_t UART_Open   (devx_t dev, fd_t part);
+extern stdRet_t UART_Close  (devx_t dev, fd_t part);
+extern size_t   UART_Write  (devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   UART_Read   (devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t UART_IOCtl  (devx_t dev, fd_t part, IORq_t ioRQ, void *data);
+extern stdRet_t UART_Release(devx_t dev, fd_t part);
 
 #ifdef __cplusplus
 }

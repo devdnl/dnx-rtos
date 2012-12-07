@@ -137,13 +137,16 @@ static struct rtc_struct
  * @brief Initialize RTC devices
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_Init(nod_t dev)
+stdRet_t DS1307_Init(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       u8_t   tmp;
@@ -214,13 +217,16 @@ stdRet_t DS1307_Init(nod_t dev)
  * @brief Opens specified port and initialize default settings
  *
  * @param[in]  dev                        dev name (number)
+ * @param[in]  part                       device part
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_Open(nod_t dev)
+stdRet_t DS1307_Open(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == DS1307_DEV_NVM)
@@ -249,13 +255,16 @@ stdRet_t DS1307_Open(nod_t dev)
  * @brief Function close opened port
  *
  * @param[in]  dev                        dev name (number)
+ * @param[in]  part                       device part
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_Close(nod_t dev)
+stdRet_t DS1307_Close(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == DS1307_DEV_NVM)
@@ -280,6 +289,7 @@ stdRet_t DS1307_Close(nod_t dev)
  * @brief Write data to UART (ISR or DMA)
  *
  * @param[in]  dev                        dev name (number)
+ * @param[in]  part                       device part
  * @param[in]  *src                       source buffer
  * @param[in]  size                       item size
  * @param[in]  nitems                     number of items
@@ -288,8 +298,10 @@ stdRet_t DS1307_Close(nod_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t DS1307_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t DS1307_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
+      (void)part;
+
       size_t n = 0;
       u8_t   tmp;
       FILE_t *i2c;
@@ -329,6 +341,7 @@ size_t DS1307_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t see
  * @brief Read data from UART Rx buffer
  *
  * @param[in]  dev                        RTC name (number)
+ * @param[in]  part                       device part
  * @param[out] *dst                       destination buffer
  * @param[in]  size                       buffer size
  * @param[in]  seek                       seek
@@ -336,8 +349,10 @@ size_t DS1307_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t see
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t DS1307_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t DS1307_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
+      (void)part;
+
       size_t n = 0;
       u8_t   tmp;
       FILE_t *i2c;
@@ -377,6 +392,7 @@ size_t DS1307_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek
  * @brief Direct IO control
  *
  * @param[in]     dev                     RTC name (number)
+ * @param[in]     part                    device part
  * @param[in,out] ioRQ                    IO request
  * @param[in,out] *data                   IO data (arguments, results, etc)
  *
@@ -384,8 +400,10 @@ size_t DS1307_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek
  * @retval STD_RET_ERROR                  error
  */
 //================================================================================================//
-stdRet_t DS1307_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
+stdRet_t DS1307_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == DS1307_DEV_RTC)
@@ -437,12 +455,15 @@ stdRet_t DS1307_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
  * @brief Release RTC devices
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t DS1307_Release(nod_t dev)
+stdRet_t DS1307_Release(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev == DS1307_DEV_RTC)

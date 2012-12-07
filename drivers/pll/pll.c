@@ -68,12 +68,18 @@ extern "C" {
 /**
  * @brief Initialize clocks
  *
+ * @param dev     device number
+ * @param part    device part
+ *
+ * @retval STD_STATUS_OK
+ *
  * NOTE: PLL2 and PLL3 not used
  */
 //================================================================================================//
-stdRet_t PLL_Init(nod_t dev)
+stdRet_t PLL_Init(devx_t dev, fd_t part)
 {
       (void) dev;
+      (void)part;
 
       u32_t wait;
 
@@ -159,13 +165,15 @@ stdRet_t PLL_Init(nod_t dev)
  * @brief Open device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_Open(nod_t dev)
+stdRet_t PLL_Open(devx_t dev, fd_t part)
 {
       (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }
@@ -176,13 +184,15 @@ stdRet_t PLL_Open(nod_t dev)
  * @brief Close device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_Close(nod_t dev)
+stdRet_t PLL_Close(devx_t dev, fd_t part)
 {
       (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }
@@ -193,6 +203,7 @@ stdRet_t PLL_Close(nod_t dev)
  * @brief Write to the device
  *
  * @param dev     device number
+ * @param part    device part
  * @param *src    source
  * @param size    size
  * @param seek    seek
@@ -200,9 +211,10 @@ stdRet_t PLL_Close(nod_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t PLL_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t PLL_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)src;
       (void)size;
       (void)seek;
@@ -217,6 +229,7 @@ size_t PLL_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @brief Read from device
  *
  * @param dev     device number
+ * @param part    device part
  * @param *dst    destination
  * @param size    size
  * @param seek    seek
@@ -224,9 +237,10 @@ size_t PLL_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t PLL_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t PLL_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)dst;
       (void)size;
       (void)seek;
@@ -241,15 +255,17 @@ size_t PLL_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @brief IO control
  *
  * @param[in]     dev     device number
+ * @param part    device part
  * @param[in]     ioRq    IO reqest
  * @param[in,out] data    data pointer
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_IOCtl(nod_t dev, IORq_t ioRq, void *data)
+stdRet_t PLL_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 {
       (void)dev;
+      (void)part;
       (void)ioRq;
       (void)data;
 
@@ -262,13 +278,15 @@ stdRet_t PLL_IOCtl(nod_t dev, IORq_t ioRq, void *data)
  * @brief Release PLL devices. Here is removed driver node and reseted device
  *
  * @param dev           device number
+ * @param part          device part
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t PLL_Release(nod_t dev)
+stdRet_t PLL_Release(devx_t dev, fd_t part)
 {
-      (void) dev;
+      (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }
