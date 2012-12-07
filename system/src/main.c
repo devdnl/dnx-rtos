@@ -35,7 +35,6 @@ extern "C" {
 #include "regdrv.h"
 #include "initd.h"
 #include "misc.h"
-#include "tty.h"
 
 
 /*==================================================================================================
@@ -80,6 +79,7 @@ int main(void)
 
       /* dynamic memory management initialization */
       mm_init();
+
 
       /* PLL initialization */
       if (InitDrv("pll", "pll") != STD_RET_OK)

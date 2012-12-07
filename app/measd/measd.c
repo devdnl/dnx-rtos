@@ -42,7 +42,7 @@ APP_SEC_BEGIN
 #define GRAPH_X_POINT               (300/(DATA_COUNT - 1))
 #define SLEEP_TIME                  5000UL /* = 15 min */
 #define SENSOR_FILE                 "/dev/sensor"
-#define OUTPUT_FILE                 "/proc/graph.svg"
+#define OUTPUT_FILE                 "/srv/www/graph.svg"
 
 
 /*==================================================================================================

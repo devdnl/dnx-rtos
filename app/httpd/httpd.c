@@ -82,6 +82,8 @@ APP_SEC_BEGIN
 ==================================================================================================*/
 #define BFR_SIZE                    4096
 
+#define FILE_SENSOR                 "/dev/sensor"
+#define FILE_GRAPH                  "/srv/www/graph.svg"
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -278,7 +280,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 i += 6;
                                                 i8_t temp = 0;
 
-                                                FILE_t *sensor = fopen("/dev/sensor", "r");
+                                                FILE_t *sensor = fopen(FILE_SENSOR, "r");
 
                                                 if (sensor)
                                                 {
@@ -293,7 +295,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 i += 6;
                                                 u16_t pressure = 0;
 
-                                                FILE_t *sensor = fopen("/dev/sensor", "r");
+                                                FILE_t *sensor = fopen(FILE_SENSOR, "r");
 
                                                 if (sensor)
                                                 {
@@ -334,7 +336,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                           {
                                                 i += 7;
 
-                                                FILE_t *svg = fopen("/proc/graph.svg", "r");
+                                                FILE_t *svg = fopen(FILE_GRAPH, "r");
 
                                                 if (svg)
                                                 {
