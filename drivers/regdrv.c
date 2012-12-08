@@ -288,11 +288,14 @@ stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
                               }
                         }
 
-                        break;
+                        goto InitDrv_end;
                   }
             }
+
+            kprint("\x1B[31mDriver %s does not exist!\x1B[0m\n", drvName);
       }
 
+      InitDrv_end:
       return status;
 }
 

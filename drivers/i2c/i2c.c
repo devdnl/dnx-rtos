@@ -143,6 +143,7 @@ stdRet_t I2C_Init(devx_t dev, fd_t part)
                         else
                         {
                               free(I2CP(dev));
+                              I2CP(dev) = NULL;
                         }
                   }
             }
