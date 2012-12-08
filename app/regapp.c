@@ -351,6 +351,8 @@ stdRet_t appfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
                   dir->items = ARRAY_SIZE(appList);
                   dir->rddir = readrootdir;
                   dir->seek  = 0;
+
+                  status = STD_RET_OK;
             }
       }
 
@@ -546,9 +548,12 @@ static dirent_t readrootdir(DIR_t *dir)
       dirent.size = 0;
 
       if (dir) {
-            dirent.filetype = FILE_TYPE_REGULAR;
-            dirent.name     = (ch_t*)appList[dir->seek].appName;
-            dirent.size     = 0;
+            if (dir->seek < ARRAY_SIZE(appList)) {
+                  dirent.filetype = FILE_TYPE_REGULAR;
+                  dirent.name     = (ch_t*)appList[dir->seek].appName;
+                  dirent.size     = 0;
+                  dir->seek++;
+            }
       }
 
       return dirent;
