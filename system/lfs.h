@@ -36,20 +36,23 @@ extern "C" {
 #include "basic_types.h"
 #include "systypes.h"
 #include "vfs.h"
-#include "system.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /* USER CFG: memory management, free memory */
-#define FREE(ptr)             free(ptr)
+#define LFS_FREE(ptr)               mm_free(ptr)
 
 /* USER CFG: memory management, memory allocation */
-#define CALLOC(nmemb, msize)  calloc(nmemb, msize)
+#define LFS_CALLOC(nmemb, msize)    mm_calloc(nmemb, msize)
 
 /* USER CFG: memory management, memory allocation */
-#define MALLOC(size)          malloc(size)
+#define LFS_MALLOC(size)            mm_malloc(size)
+
+/* USER CFG: getting task name */
+#define GET_TASK_NAME()             TaskGetName(NULL) /* DNLTEST */
 
 
 /*==================================================================================================

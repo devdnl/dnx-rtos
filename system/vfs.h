@@ -35,25 +35,22 @@ extern "C" {
 ==================================================================================================*/
 #include "basic_types.h"
 #include "systypes.h"
-#include "system.h"
+#include "memman.h"
+#include "dlist.h"
+#include "oswrap.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-
-
-/*==================================================================================================
-                                  Exported types, enums definitions
-==================================================================================================*/
 /* USER CFG: memory management, free memory */
-#define FREE(ptr)             free(ptr)
+#define VFS_FREE(ptr)               mm_free(ptr)
 
 /* USER CFG: memory management, memory allocation */
-#define CALLOC(nmemb, msize)  calloc(nmemb, msize)
+#define VFS_CALLOC(nmemb, msize)    mm_calloc(nmemb, msize)
 
 /* USER CFG: memory management, memory allocation */
-#define MALLOC(size)          malloc(size)
+#define VFS_MALLOC(size)            mm_malloc(size)
 
 
 /* set position equal to offset bytes */
@@ -65,6 +62,45 @@ extern "C" {
 /* set position to EOF plus offset */
 #define VFS_SEEK_END    2
 
+
+/* translate functions to STDC */
+#ifndef SEEK_SET
+#define SEEK_SET                          VFS_SEEK_SET
+#endif
+
+#ifndef SEEK_CUR
+#define SEEK_CUR                          VFS_SEEK_CUR
+#endif
+
+#ifndef SEEK_END
+#define SEEK_END                          VFS_SEEK_END
+#endif
+
+#define mount(path, fs_cfg)               vfs_mount(path, fs_cfg)
+#define umount(path)                      vfs_umount(path)
+#define mknod(path, drv_cfg)              vfs_mknod(path, drv_cfg)
+#define mkdir(path)                       vfs_mkdir(path)
+#define opendir(path)                     vfs_opendir(path)
+#define closedir(dir)                     vfs_closedir(dir)
+#define readdir(dir)                      vfs_readdir(dir)
+#define remove(path)                      vfs_remove(path)
+#define rename(oldName, newName)          vfs_rename(oldName, newName)
+#define chmod(path, mode)                 vfs_chmod(path, mode)
+#define chown(path, owner, group)         vfs_chown(path, owner, group)
+#define stat(path, statPtr)               vfs_stat(path, statPtr)
+#define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
+#define fopen(path, mode)                 vfs_fopen(path, mode)
+#define fclose(file)                      vfs_fclose(file)
+#define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
+#define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
+#define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
+#define ftell(file)                       vfs_ftell(file)
+#define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
+#define fstat(file, statPtr)              vfs_fstat(file, stat)
+
+/*==================================================================================================
+                                  Exported types, enums definitions
+==================================================================================================*/
 struct vfs_stat {
      u32_t  st_dev;           /* ID of device containing file */
      u32_t  st_rdev;          /* device ID (if special file) */

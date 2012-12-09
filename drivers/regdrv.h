@@ -33,19 +33,7 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
-#include "systypes.h"
-#include "vfs.h"
-
-/* include here device definition/request list */
-#include "uart_def.h"
-#include "pll_def.h"
-#include "i2c_def.h"
-#include "gpio_def.h"
-#include "ether_def.h"
-#include "ds1307_def.h"
-#include "tty_def.h"
-#include "mpl115a2_def.h"
+#include "sysdrv.h"
 
 
 /*==================================================================================================

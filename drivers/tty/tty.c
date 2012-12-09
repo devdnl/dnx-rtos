@@ -33,6 +33,8 @@ extern "C" {
 ==================================================================================================*/
 #include "tty.h"
 #include <string.h>
+#include "uart_def.h"
+#include "vfs.h"
 
 
 /*==================================================================================================
@@ -44,6 +46,10 @@ extern "C" {
 #define TTY(number)                 term->tty[number]
 #define BLOCK_TIME                  10000
 
+#define calloc(nmemb, msize)        mm_calloc(nmemb, msize)
+#define malloc(size)                mm_malloc(size)
+#define free(mem)                   mm_free(mem)
+
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -54,10 +60,10 @@ struct termHdl
       struct ttyEntry
       {
             ch_t    *line[TTY_MAX_LINES];        /* line buffer */
-            u8_t    wrIdx;                       /* write index */
-            u8_t    newMsgCnt;                   /* new message counter */
-            flag_t  refLstLn;                    /* request to refresh last line */
-            mutex_t mtx;                        /* resources security */
+            u8_t     wrIdx;                      /* write index */
+            u8_t     newMsgCnt;                  /* new message counter */
+            flag_t   refLstLn;                   /* request to refresh last line */
+            mutex_t  mtx;                        /* resources security */
 
             /* FIFO used in keyboard read */
             struct inputfifo
@@ -734,8 +740,11 @@ static void ClearTTY(u8_t dev)
       {
             for (u8_t i = 0; i < TTY_MAX_LINES; i++)
             {
-                  free(TTY(dev)->line[i]);
-                  TTY(dev)->line[i] = NULL;
+                  if (TTY(dev)->line[i])
+                  {
+                        free(TTY(dev)->line[i]);
+                        TTY(dev)->line[i] = NULL;
+                  }
             }
 
             TTY(dev)->newMsgCnt = 0;

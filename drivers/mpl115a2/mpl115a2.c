@@ -34,6 +34,7 @@ extern "C" {
 ==================================================================================================*/
 #include "mpl115a2.h"
 #include "i2c.h"
+#include "vfs.h"
 
 
 /*==================================================================================================
@@ -52,8 +53,11 @@ extern "C" {
 /** degree per ADC count multiplied by 100 (-5.35 * 100) */
 #define TEMP_A_FACTOR               (i16_t)-535
 
-/** system time used to wait to free resources */
-#define BLOCK_TIME                  100
+/** waiting for release resources */
+#define BLOCK_TIME                  5
+
+/** wait for release resources when driver is released */
+#define RELEASE_BLOCK_TIME          1000
 
 
 /*==================================================================================================
@@ -90,6 +94,8 @@ struct mplst
       i16_t   b1;
       i16_t   b2;
       i16_t   c12;
+      i8_t    temp;
+      u16_t   pres;
 };
 
 
@@ -197,13 +203,11 @@ stdRet_t MPL115A2_Release(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
-            TaskSuspendAll();
+      if (TakeMutex(mplmem->mtx, RELEASE_BLOCK_TIME) == OS_OK) {
             GiveMutex(mplmem->mtx);
             DeleteMutex(mplmem->mtx);
             free(mplmem);
             mplmem = NULL;
-            TaskResumeAll();
 
             status = STD_RET_OK;
       }
@@ -330,26 +334,21 @@ stdRet_t MPL115A2_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
-
-            switch (ioRQ) {
-            case MPL115A2_IORQ_GETTEMP:
-                  if (data) {
-                        status = GetTemperature(data);
-                  }
-                  break;
-
-            case MPL115A2_IORQ_GETPRES:
-                  if (data) {
-                        status = GetPressure(data);
-                  }
-                  break;
-
-            default:
-                  break;
+      switch (ioRQ) {
+      case MPL115A2_IORQ_GETTEMP:
+            if (data) {
+                  status = GetTemperature(data);
             }
+            break;
 
-            GiveMutex(mplmem->mtx);
+      case MPL115A2_IORQ_GETPRES:
+            if (data) {
+                  status = GetPressure(data);
+            }
+            break;
+
+      default:
+            break;
       }
 
       return status;
@@ -373,35 +372,48 @@ static stdRet_t GetTemperature(i8_t *temperature)
       u16_t     temp;
       FILE_t   *fi2c;
 
-      if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
-            tmp[0] = MPL115A2_ADDRESS;
+      if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
+            if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
+                  kprint("mpl115a2: %s opens %s file (temp)\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
 
-            if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
-                  goto MPL115A2_GetTemperature_ClosePort;
+                  tmp[0] = MPL115A2_ADDRESS;
 
-            /* start new conversion */
-            tmp[0] = 0x01;
-            fseek(fi2c, REG_CONVERT, SEEK_SET);
+                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                        goto MPL115A2_GetTemperature_ClosePort;
 
-            if (fwrite(&tmp, sizeof(u8_t), 1, fi2c) != 1)
-                  goto MPL115A2_GetTemperature_ClosePort;
+                  /* start new conversion */
+                  tmp[0] = 0x01;
+                  fseek(fi2c, REG_CONVERT, SEEK_SET);
 
-            TaskDelay(5);
+                  if (fwrite(&tmp, sizeof(u8_t), 1, fi2c) != 1)
+                        goto MPL115A2_GetTemperature_ClosePort;
 
-            /* load temperature */
-            fseek(fi2c, REG_TADC_MSB, SEEK_SET);
+                  TaskDelay(5);
 
-            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
-                  /* binds temperature */
-                  temp = (((tmp[0] << 8) | tmp[1]) >> 6);
-                  *temperature = (i8_t)(((i16_t)(temp * MULTIPLIER - ADC25C)) / TEMP_A_FACTOR);
+                  /* load temperature */
+                  fseek(fi2c, REG_TADC_MSB, SEEK_SET);
 
-                  status = STD_RET_OK;
+                  if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
+                        /* binds temperature */
+                        temp = (((tmp[0] << 8) | tmp[1]) >> 6);
+                        mplmem->temp = (i8_t)(((i16_t)(temp * MULTIPLIER - ADC25C)) / TEMP_A_FACTOR);
+
+                        status = STD_RET_OK;
+                  }
+
+                  MPL115A2_GetTemperature_ClosePort:
+                  if (fclose(fi2c) != STD_RET_OK) /* DNLTEST */
+                        kprint("\x1B[31mmpl115a2: %s cannot close %s (temp)\x1B[0m\n", TaskGetName(NULL), I2CFILE);
+                  else
+                        kprint("mpl115a2: %s close %s (temp)\n", TaskGetName(NULL), I2CFILE);
+            } else {  /* DNLTEST */
+                  kprint("mpl115a2: %s cannot open %s file\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
             }
 
-            MPL115A2_GetTemperature_ClosePort:
-            fclose(fi2c);
+            GiveMutex(mplmem->mtx);
       }
+
+      *temperature = mplmem->temp;
 
       return status;
 }
@@ -423,49 +435,62 @@ static stdRet_t GetPressure(u16_t *pressure)
       u8_t      tmp[4];
       FILE_t   *fi2c;
 
-      if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
-            tmp[0] = MPL115A2_ADDRESS;
+      if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
+            if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
+                  kprint("mpl115a2: %s opens %s file (pres)\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
 
-            if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
-                  goto MPL115A2_GetPressure_ClosePort;
+                  tmp[0] = MPL115A2_ADDRESS;
 
-            /* start new conversion */
-            tmp[0] = 0x01;
+                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                        goto MPL115A2_GetPressure_ClosePort;
 
-            fseek(fi2c, REG_CONVERT, SEEK_SET);
+                  /* start new conversion */
+                  tmp[0] = 0x01;
 
-            if (fwrite(&tmp, sizeof(u8_t), 1, fi2c) != 1)
-                  goto MPL115A2_GetPressure_ClosePort;
+                  fseek(fi2c, REG_CONVERT, SEEK_SET);
 
-            TaskDelay(5);
+                  if (fwrite(&tmp, sizeof(u8_t), 1, fi2c) != 1)
+                        goto MPL115A2_GetPressure_ClosePort;
 
-            /* load temperature */
-            fseek(fi2c, REG_PADC_MSB, 0);
+                  TaskDelay(5);
 
-            if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
-                  /* binds pressure */
-                  u16_t Padc = ((tmp[0] << 8) | tmp[1]) >> 6;
+                  /* load temperature */
+                  fseek(fi2c, REG_PADC_MSB, 0);
 
-                  /* binds temperature */
-                  u16_t Tadc = ((tmp[2] << 8) | tmp[3]) >> 6;
+                  if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
+                        /* binds pressure */
+                        u16_t Padc = ((tmp[0] << 8) | tmp[1]) >> 6;
 
-                  /* compute pressure */
-                  i32_t si_c12x2 = mplmem->c12 * Tadc;
-                  i32_t si_a1    = (((mplmem->b1 << 11) + si_c12x2) >> 11);
-                  i32_t si_a2    = mplmem->b2 >> 1;
-                  i32_t si_a1x1  = si_a1 * Padc;
-                  i32_t si_y1    = ((mplmem->a0 << 10) + si_a1x1) >> 10;
-                  i32_t si_a2x2  = si_a2 * Tadc;
-                  i32_t siPcomp  = ((si_y1 << 10) + si_a2x2) >> 13;
+                        /* binds temperature */
+                        u16_t Tadc = ((tmp[2] << 8) | tmp[3]) >> 6;
 
-                  *pressure = (u16_t)((650 * siPcomp) / 1023) + 500;
+                        /* compute pressure */
+                        i32_t si_c12x2 = mplmem->c12 * Tadc;
+                        i32_t si_a1    = (((mplmem->b1 << 11) + si_c12x2) >> 11);
+                        i32_t si_a2    = mplmem->b2 >> 1;
+                        i32_t si_a1x1  = si_a1 * Padc;
+                        i32_t si_y1    = ((mplmem->a0 << 10) + si_a1x1) >> 10;
+                        i32_t si_a2x2  = si_a2 * Tadc;
+                        i32_t siPcomp  = ((si_y1 << 10) + si_a2x2) >> 13;
 
-                  status = STD_RET_OK;
+                        mplmem->pres = (u16_t)((650 * siPcomp) / 1023) + 500;
+
+                        status = STD_RET_OK;
+                  }
+
+                  MPL115A2_GetPressure_ClosePort:
+                  if (fclose(fi2c) != STD_RET_OK) /* DNLTEST */
+                        kprint("\x1B[31mmpl115a2: %s cannot close %s (pres)\x1B[0m\n", TaskGetName(NULL), I2CFILE);
+                  else
+                        kprint("mpl115a2: %s close %s (pres)\n", TaskGetName(NULL), I2CFILE);
+            } else {  /* DNLTEST */
+                  kprint("mpl115a2: %s cannot open %s file\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
             }
 
-            MPL115A2_GetPressure_ClosePort:
-            fclose(fi2c);
+            GiveMutex(mplmem->mtx);
       }
+
+      *pressure = mplmem->pres;
 
       return status;
 }

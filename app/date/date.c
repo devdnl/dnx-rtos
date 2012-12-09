@@ -34,6 +34,7 @@ extern "C" {
 #include "date.h"
 #include "utils.h"
 #include <string.h>
+#include "ds1307_def.h"
 
 /* Begin of application section declaration */
 APPLICATION(date)

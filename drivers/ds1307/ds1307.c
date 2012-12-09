@@ -34,6 +34,8 @@ extern "C"
 ==================================================================================================*/
 #include "ds1307.h"
 #include "i2c_def.h"
+#include "vfs.h"
+#include "i2c_def.h"
 
 
 /*==================================================================================================
@@ -41,7 +43,9 @@ extern "C"
 ==================================================================================================*/
 #define I2CFILE                     "/dev/i2c"
 
-#define MTX_BLOCK_TIME              100
+#define MTX_BLOCK_TIME              5
+
+#define RELEASE_BLOCK_TIME          1000
 
 /** convert BCD to byte */
 #define BCD2BYTE(bcd)               (((bcd >> 4) * 10) + (bcd & 0x0F))
@@ -224,13 +228,11 @@ stdRet_t DS1307_Release(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
-            TaskSuspendAll();
+      if (TakeMutex(rtc->mtx, RELEASE_BLOCK_TIME) == OS_OK) {
             GiveMutex(rtc->mtx);
             DeleteMutex(rtc->mtx);
             free(rtc);
             rtc = NULL;
-            TaskResumeAll();
 
             status = STD_RET_OK;
       }
@@ -257,7 +259,7 @@ stdRet_t DS1307_Open(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (rtc != NULL) {
+      if (rtc) {
             status = STD_RET_OK;
       }
 
@@ -384,42 +386,37 @@ stdRet_t DS1307_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
       if (dev == DS1307_DEV_RTC) {
 
-            if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
-
-                  switch (ioRQ) {
-                  case RTC_IORQ_GETTIME:
-                        if (data) {
-                              bcdTime_t *time = data;
-                              *time  = GetTime();
-                              status = STD_RET_OK;
-                        }
-                        break;
-
-                  case RTC_IORQ_SETTIME:
-                        if (data) {
-                              status = SetTime(data);
-                        }
-                        break;
-
-                  case RTC_IORQ_GETDATE:
-                        if (data) {
-                              bcdDate_t *date = (bcdDate_t*)data;
-                              *date = GetDate();
-                              status = STD_RET_OK;
-                        }
-                        break;
-
-                  case RTC_IORQ_SETDATE:
-                        if (data) {
-                              status = SetDate(data);
-                        }
-                        break;
-
-                  default:
-                        break;
+            switch (ioRQ) {
+            case RTC_IORQ_GETTIME:
+                  if (data) {
+                        bcdTime_t *time = data;
+                        *time  = GetTime();
+                        status = STD_RET_OK;
                   }
+                  break;
 
-                  GiveMutex(rtc->mtx);
+            case RTC_IORQ_SETTIME:
+                  if (data) {
+                        status = SetTime(data);
+                  }
+                  break;
+
+            case RTC_IORQ_GETDATE:
+                  if (data) {
+                        bcdDate_t *date = (bcdDate_t*)data;
+                        *date = GetDate();
+                        status = STD_RET_OK;
+                  }
+                  break;
+
+            case RTC_IORQ_SETDATE:
+                  if (data) {
+                        status = SetDate(data);
+                  }
+                  break;
+
+            default:
+                  break;
             }
       }
 
@@ -441,20 +438,24 @@ static bcdTime_t GetTime(void)
       u8_t    tmp[3];
       FILE_t *fi2c;
 
-      if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
-            tmp[0] = DS1307_ADDRESS;
+      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+            if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
+                  tmp[0] = DS1307_ADDRESS;
 
-            if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
-                  fseek(fi2c, REG_SECONDS, SEEK_SET);
+                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
+                        fseek(fi2c, REG_SECONDS, SEEK_SET);
 
-                  if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
-                        rtc->time.hours   = tmp[2];
-                        rtc->time.minutes = tmp[1];
-                        rtc->time.seconds = tmp[0];
+                        if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
+                              rtc->time.hours   = tmp[2];
+                              rtc->time.minutes = tmp[1];
+                              rtc->time.seconds = tmp[0];
+                        }
                   }
+
+                  fclose(fi2c);
             }
 
-            fclose(fi2c);
+            GiveMutex(rtc->mtx);
       }
 
       return rtc->time;
@@ -477,24 +478,28 @@ static stdRet_t SetTime(bcdTime_t *time)
       u8_t      tmp[3];
       FILE_t   *fi2c;
 
-      if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
-            tmp[0] = DS1307_ADDRESS;
+      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+            if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
+                  tmp[0] = DS1307_ADDRESS;
 
-            if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
+                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
 
-                  tmp[0] = time->seconds;
-                  tmp[1] = time->minutes;
-                  tmp[2] = time->hours;
+                        tmp[0] = time->seconds;
+                        tmp[1] = time->minutes;
+                        tmp[2] = time->hours;
 
-                  fseek(fi2c, REG_SECONDS, SEEK_SET);
+                        fseek(fi2c, REG_SECONDS, SEEK_SET);
 
-                  if (fwrite(tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
-                        rtc->time = *time;
-                        status    = STD_RET_OK;
+                        if (fwrite(tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
+                              rtc->time = *time;
+                              status    = STD_RET_OK;
+                        }
                   }
+
+                  fclose(fi2c);
             }
 
-            fclose(fi2c);
+            GiveMutex(rtc->mtx);
       }
 
       return status;
@@ -515,21 +520,25 @@ static bcdDate_t GetDate(void)
       u8_t    tmp[4];
       FILE_t *fi2c;
 
-      if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
-            tmp[0] = DS1307_ADDRESS;
+      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+            if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
+                  tmp[0] = DS1307_ADDRESS;
 
-            if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
-                  fseek(fi2c, REG_DAY, SEEK_SET);
+                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
+                        fseek(fi2c, REG_DAY, SEEK_SET);
 
-                  if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
-                        rtc->date.weekday = tmp[0];
-                        rtc->date.day     = tmp[1];
-                        rtc->date.month   = tmp[2];
-                        rtc->date.year    = tmp[3];
+                        if (fread(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
+                              rtc->date.weekday = tmp[0];
+                              rtc->date.day     = tmp[1];
+                              rtc->date.month   = tmp[2];
+                              rtc->date.year    = tmp[3];
+                        }
                   }
+
+                  fclose(fi2c);
             }
 
-            fclose(fi2c);
+            GiveMutex(rtc->mtx);
       }
 
       return rtc->date;
@@ -552,26 +561,30 @@ static stdRet_t SetDate(bcdDate_t *date)
       u8_t      tmp[4];
       FILE_t   *fi2c;
 
-      if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
-            tmp[0] = DS1307_ADDRESS;
+      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+            if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
+                  tmp[0] = DS1307_ADDRESS;
 
-            if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
-                  tmp[0] = WeekDay(BCD2BYTE(date->year ) + 2000,
-                                   BCD2BYTE(date->month),
-                                   BCD2BYTE(date->day  ) );
-                  tmp[1] = date->day;
-                  tmp[2] = date->month;
-                  tmp[3] = date->year;
+                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
+                        tmp[0] = WeekDay(BCD2BYTE(date->year ) + 2000,
+                                         BCD2BYTE(date->month),
+                                         BCD2BYTE(date->day  ) );
+                        tmp[1] = date->day;
+                        tmp[2] = date->month;
+                        tmp[3] = date->year;
 
-                  fseek(fi2c, REG_DAY, SEEK_SET);
+                        fseek(fi2c, REG_DAY, SEEK_SET);
 
-                  if (fwrite(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
-                        rtc->date = *date;
-                        status    = STD_RET_OK;
+                        if (fwrite(&tmp, sizeof(u8_t), ARRAY_SIZE(tmp), fi2c) == ARRAY_SIZE(tmp)) {
+                              rtc->date = *date;
+                              status    = STD_RET_OK;
+                        }
                   }
 
                   fclose(fi2c);
             }
+
+            GiveMutex(rtc->mtx);
       }
 
       return status;

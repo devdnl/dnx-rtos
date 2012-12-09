@@ -72,6 +72,8 @@
 #include "lwip/tcp.h"
 #include "fsdata.c"
 #include <string.h>
+#include "mpl115a2_def.h"
+#include "ds1307_def.h"
 
 /* Begin of application section declaration */
 APPLICATION(httpd)
@@ -285,7 +287,9 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 if (sensor)
                                                 {
                                                       ioctl(sensor, MPL115A2_IORQ_GETTEMP, &temp);
-                                                      fclose(sensor);
+
+                                                      if (fclose(sensor) != STD_RET_OK)
+                                                            kprint("httpd: error while closing 'sensor' file\n");
                                                 }
 
                                                 n = snprintb(pagePtr, 50, "%d", (i32_t)temp);
@@ -300,7 +304,9 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 if (sensor)
                                                 {
                                                       ioctl(sensor, MPL115A2_IORQ_GETPRES, &pressure);
-                                                      fclose(sensor);
+
+                                                      if (fclose(sensor) != STD_RET_OK)
+                                                            kprint("httpd: error while closing 'sensor' file\n");
                                                 }
 
                                                 n = snprintb(pagePtr, 50, "%d", (u32_t)pressure);
@@ -317,7 +323,8 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 {
                                                       ioctl(rtc, RTC_IORQ_GETTIME, &time);
                                                       ioctl(rtc, RTC_IORQ_GETDATE, &date);
-                                                      fclose(rtc);
+                                                      if (fclose(rtc) != STD_RET_OK)
+                                                            kprint("httpd: error while closing 'rtc' file\n");
                                                 }
                                                 else
                                                 {

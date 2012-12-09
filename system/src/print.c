@@ -1,5 +1,5 @@
 /*=============================================================================================*//**
-@file    printf.c
+@file    print.c
 
 @author  Daniel Zorychta
 
@@ -29,13 +29,16 @@
 ==================================================================================================*/
 #include "print.h"
 #include <string.h>
-#include "memman.h"
-#include "tty.h"
+#include "vfs.h"
+#include "oswrap.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define calloc(nmemb, msize)              PRINT_CALLOC(nmemb, msize)
+#define malloc(size)                      PRINT_MALLOC(size)
+#define free(mem)                         PRINT_FREE(mem)
 
 
 /*==================================================================================================
@@ -517,7 +520,7 @@ ch_t getChart(FILE_t *stdin)
                   }
                   else
                   {
-                        Sleep(25);
+                        TaskDelay(25);
                   }
             }
       }

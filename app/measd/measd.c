@@ -29,6 +29,7 @@
 ==================================================================================================*/
 #include "clear.h"
 #include <string.h>
+#include "mpl115a2_def.h"
 
 /* Begin of application section declaration */
 APPLICATION(measd)
@@ -134,21 +135,21 @@ stdRet_t appmain(ch_t *argv)
                   data.pres = 0;
                   data.temp = 0;
 
-                  while (ioctl(sensor, MPL115A2_IORQ_GETPRES, &data.pres) != STD_RET_OK)
-                        Sleep(5);
-
-                  while (ioctl(sensor, MPL115A2_IORQ_GETTEMP, &data.temp) != STD_RET_OK)
-                        Sleep(5);
+                  ioctl(sensor, MPL115A2_IORQ_GETPRES, &data.pres);
+                  ioctl(sensor, MPL115A2_IORQ_GETTEMP, &data.temp);
 
                   writeData(&data);
 
-                  fclose(sensor);
+                  if (fclose(sensor) != STD_RET_OK) /* DNLTEST */
+                        kprint("\x1B[32mmeasd: error while closing 'sensor' file\x1B[0m\n");
             }
 
-            FILE_t *file = fopen(OUTPUT_FILE, "w");
+            FILE_t *file = fopen(OUTPUT_FILE, "a+");
 
             if (file)
             {
+                  fseek(file, 0, SEEK_SET);
+
                   ch_t *buffer = calloc(FILE_BUFFER_SIZE, sizeof(ch_t));
 
                   if (buffer)
@@ -207,7 +208,9 @@ stdRet_t appmain(ch_t *argv)
                         seek += snprintf(buffer + seek, FILE_BUFFER_SIZE - seek, "<line x1=\"50\"y1=\"0\"x2=\"50\"y2=\"220\"style=\"stroke:rgb(0,0,0);stroke-width:2\"/>");
                         seek += snprintf(buffer + seek, FILE_BUFFER_SIZE - seek, "<line x1=\"350\"y1=\"0\"x2=\"350\"y2=\"220\"style=\"stroke:rgb(0,0,0);stroke-width:2\"/></svg>");
 
-                        if (fwrite(buffer, sizeof(ch_t), strlen(buffer), file) == 0)
+                        u32_t size = strlen(buffer) < 3092 ? 3092 : strlen(buffer);
+
+                        if (fwrite(buffer, sizeof(ch_t), size, file) == 0)
                         {
                               kprint("Write %s error\n", OUTPUT_FILE);
                         }
@@ -215,11 +218,13 @@ stdRet_t appmain(ch_t *argv)
                         free(buffer);
                   }
 
-                  fclose(file);
+                  if (fclose(file) != STD_RET_OK)
+                        kprint("measd: error while closing 'file' file\n");
             }
 
             /* sleep in equal periods */
-            SleepUntil(&LastWakeTime, SLEEP_TIME);
+//            SleepUntil(&LastWakeTime, SLEEP_TIME); /* DNLTEST */
+            return STD_RET_OK;
       }
 
       return STD_RET_OK;

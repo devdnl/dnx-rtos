@@ -32,12 +32,14 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "dlist.h"
-#include "system.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define calloc(nmemb, msize)              DLIST_CALLOC(nmemb, msize)
+#define malloc(size)                      DLIST_MALLOC(size)
+#define free(mem)                         DLIST_FREE(mem)
 
 
 /*==================================================================================================
@@ -520,24 +522,26 @@ void *ListGetItemDataByID(list_t *list, u32_t id)
  *
  * @param *list         pointer to list
  * @param  nitem        item number
+ * @param *itemid       item id
  *
- * @return item ID
+ * @return 0 if ok, otherwise != 0
  */
 //================================================================================================//
-u32_t ListGetItemID(list_t *list, i32_t nitem)
+i32_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid)
 {
-      u32_t id = UINT32_MAX;
+      i32_t n = 1;
 
-      if (list && (nitem >= 0)) {
+      if (list && nitem >= 0 && itemid) {
             struct listitem *item;
             GetItemAddrByNo(list, nitem, NULL, &item);
 
             if (item) {
-                  id = item->id;
+                  *itemid = item->id;
+                  n = 0;
             }
       }
 
-      return id;
+      return n;
 }
 
 

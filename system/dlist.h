@@ -34,17 +34,22 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "basic_types.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-typedef struct list list_t;
+/* USER CFG: memory management */
+#define DLIST_CALLOC(nmemb, msize)        mm_calloc(nmemb, msize)
+#define DLIST_MALLOC(size)                mm_malloc(size)
+#define DLIST_FREE(mem)                   mm_free(mem)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+typedef struct list list_t;
 
 
 /*==================================================================================================
@@ -64,7 +69,7 @@ extern i32_t   ListSetItemDataByID(list_t *list, u32_t id, void *data);
 extern void   *ListGetItemDataByID(list_t *list, u32_t id);
 extern i32_t   ListUnlinkItemDataByNo(list_t *list, i32_t nitem);
 extern i32_t   ListUnlinkItemDataByID(list_t *list, u32_t id);
-extern u32_t   ListGetItemID(list_t *list, i32_t nitem);
+extern i32_t   ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid);
 extern i32_t   ListGetItemCount(list_t *list);
 
 

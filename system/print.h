@@ -1,7 +1,7 @@
-#ifndef PRINTF_H_
-#define PRINTF_H_
+#ifndef PRINT_H_
+#define PRINT_H_
 /*=============================================================================================*//**
-@file    printf.h
+@file    print.h
 
 @author  Daniel Zorychta
 
@@ -36,11 +36,18 @@ extern "C" {
 #include <stdarg.h>
 #include "basic_types.h"
 #include "systypes.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/** USER CFG: memory management */
+#define PRINT_CALLOC(nmemb, msize)              mm_calloc(nmemb, msize)
+#define PRINT_MALLOC(size)                      mm_malloc(size)
+#define PRINT_FREE(mem)                         mm_free(mem)
+
+/** translate function to STDC */
 #define printf(...)                             printt(stdout, __VA_ARGS__)
 #define snprintf(stream, size, ...)             snprintb(stream, size, __VA_ARGS__)
 #define scanf(format, result)                   scant(stdin, stdout, format, result)
@@ -119,7 +126,7 @@ extern u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 }
 #endif
 
-#endif /* PRINTF_H_ */
+#endif /* PRINT_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

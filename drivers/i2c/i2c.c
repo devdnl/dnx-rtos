@@ -32,6 +32,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "i2c.h"
+#include "print.h" /* DNLTEST */
 
 
 /*==================================================================================================
@@ -206,17 +207,15 @@ stdRet_t I2C_Release(devx_t dev, fd_t part)
  * @param[in] dev           I2C device
  * @param[in] part          device part
  *
- * @retval STD_RET_OK                     operation success
- * @retval I2C_STATUS_PORTNOTEXIST        port not exist
- * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
 stdRet_t I2C_Open(devx_t dev, fd_t part)
 {
       (void)part;
 
-      stdRet_t status  = I2C_STATUS_PORTNOTEXIST;
-      I2C_t    *i2cPtr = NULL;
+      stdRet_t status  = STD_RET_ERROR;
 
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
@@ -251,7 +250,7 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
                   }
 
                   /* set port address */
-                  i2cPtr = i2c->port[dev]->Address;
+                  I2C_t *i2cPtr = i2c->port[dev]->Address;
 
                   /* set default port settings */
                   i2cPtr->CR1   |= I2C_CR1_SWRST;
@@ -266,7 +265,7 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
             }
             else
             {
-                  status = I2C_STATUS_PORTLOCKED;
+                  kprint("\x1B[34mi2cdrv: %s open: mutex locked\x1B[0m\n", TaskGetName(NULL)); /* DNLTEST */
             }
       }
 
@@ -281,26 +280,22 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
  * @param[in] dev           I2C device
  * @param[in] part          device part
  *
- * @retval STD_RET_OK                     operation success
- * @retval I2C_STATUS_PORTNOTEXIST        port not exist
- * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
 stdRet_t I2C_Close(devx_t dev, fd_t part)
 {
       (void)part;
 
-      stdRet_t status  = I2C_STATUS_PORTNOTEXIST;
-      I2C_t    *i2cPtr = NULL;
+      stdRet_t status = STD_RET_ERROR;
 
-      /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
       {
-            /* check that port is reserved for this task */
             if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* set port address */
-                  i2cPtr = I2CP(dev)->Address;
+                  I2C_t *i2cPtr = I2CP(dev)->Address;
 
                   /* disable I2C device */
                   i2cPtr->CR1 |= I2C_CR1_SWRST;
@@ -333,18 +328,22 @@ stdRet_t I2C_Close(devx_t dev, fd_t part)
                   /* delete from task handle */
                   i2c->port[dev]->TaskHandle = NULL;
 
-                  status = STD_RET_OK;
-
                   /* give this mutex */
                   GiveRecMutex(I2CP(dev)->mtx);
 
                   /* give mutex from open */
                   GiveRecMutex(I2CP(dev)->mtx);
+
+                  status = STD_RET_OK;
             }
             else
             {
-                  status = I2C_STATUS_PORTLOCKED;
+                  kprint("\x1B[34mi2cdrv: %s mutex locked\x1B[0m\n", TaskGetName(NULL)); /* DNLTEST */
             }
+      }
+      else
+      {
+            kprint("\x1B[34mi2cdrv: %s bad i2c device\x1B[0m\n", TaskGetName(NULL)); /* DNLTEST */
       }
 
       return status;

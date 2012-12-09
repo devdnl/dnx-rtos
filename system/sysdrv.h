@@ -1,9 +1,11 @@
+#ifndef SYSDRV_H_
+#define SYSDRV_H_
 /*=============================================================================================*//**
-@file    rm.c
+@file    sysdrv.h
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This function provide all required function needed to write drivers.
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,69 +26,55 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "clear.h"
-#include <string.h>
+#include "basic_types.h"
+#include "systypes.h"
+#include "memman.h"
+#include "oswrap.h"
 
-/* Begin of application section declaration */
-APPLICATION(rm)
-APP_SEC_BEGIN
 
 /*==================================================================================================
-                                  Local symbolic constants/macros
+                                 Exported symbolic constants/macros
+==================================================================================================*/
+#ifndef calloc
+#define calloc(nmemb, msize)             mm_calloc(nmemb, msize)
+#endif
+
+#ifndef malloc
+#define malloc(size)                     mm_malloc(size)
+#endif
+
+#ifndef free
+#define free(mem)                        mm_free(mem)
+#endif
+
+
+/*==================================================================================================
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                      Local object definitions
+                                     Exported function prototypes
 ==================================================================================================*/
 
 
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
-
-//================================================================================================//
-/**
- * @brief clear main function
- */
-//================================================================================================//
-stdRet_t appmain(ch_t *argv)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      if (argv)
-      {
-            /* parse directory and file name */
-            ch_t *filename = strchr(argv, '/');
-
-            if (filename)
-            {
-                   status = remove(filename);
-            }
-
-            if (status != STD_RET_OK)
-                  printf("Cannot remove specified file.\n");
-      }
-      else
-      {
-            printf("Enter correct filename.\n");
-      }
-
-
-      return status;
+#ifdef __cplusplus
 }
+#endif
 
-/* End of application section declaration */
-APP_SEC_END
-
+#endif /* SYSDRV_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

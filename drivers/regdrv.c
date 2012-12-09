@@ -31,9 +31,9 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "regdrv.h"           /* DNLTODO correct this module, use better file allocation */
-#include "systypes.h"
+#include "regdrv.h"
 #include <string.h>
+#include "vfs.h"
 
 /* include here drivers headers */
 #include "uart.h"

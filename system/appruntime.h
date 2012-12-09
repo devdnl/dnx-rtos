@@ -35,12 +35,28 @@ extern "C" {
 ==================================================================================================*/
 #include "basic_types.h"
 #include "systypes.h"
-#include "projdefs.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/** USER CFG: memory management */
+#define APPRUNTIME_CALLOC(nmemb, msize)   mm_calloc(nmemb, msize)
+#define APPRUNTIME_MALLOC(size)           mm_malloc(size)
+#define APPRUNTIME_FREE(mem)              mm_free(mem)
+
+/** application preamble */
+#define APPLICATION(name)                 void name(void *appArgument)
+#define APP_SEC_BEGIN                     { InitApp();
+#define APP_SEC_END                       Exit(appmain(argv));}
+
+#define InitApp()                         FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
+                                          FILE_t *stdout = ((app_t*)appArgument)->stdout; \
+                                          ch_t   *argv   = ((app_t*)appArgument)->arg;    \
+                                          (void)stdin; (void)stdout; (void)argv
+
+
 /** simpler definition of terminating application */
 #define Exit(exitCode)                    TerminateApplication(appArgument, exitCode)
 
@@ -70,14 +86,12 @@ typedef enum parseType_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern app_t    *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-extern app_t    *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
 extern app_t    *Exec(const ch_t *name, ch_t *argv);
 extern app_t    *Execd(const ch_t *name, ch_t *argv);
-extern stdRet_t StartDaemon(const ch_t *name, ch_t *argv);
-extern stdRet_t FreeApphdl(app_t *appArgs);
-extern void     TerminateApplication(app_t *appArgument, stdRet_t exitCode);
-extern stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
+extern stdRet_t  StartDaemon(const ch_t *name, ch_t *argv);
+extern stdRet_t  FreeApphdl(app_t *appArgs);
+extern void      TerminateApplication(app_t *appArgument, stdRet_t exitCode);
+extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 
 #ifdef __cplusplus
 }

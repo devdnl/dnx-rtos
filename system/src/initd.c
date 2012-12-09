@@ -36,6 +36,7 @@ extern "C" {
 #include "lfs.h"
 #include "regapp.h"
 #include <string.h>
+#include "tty_def.h"
 
 
 /*==================================================================================================
