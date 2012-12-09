@@ -43,15 +43,16 @@ extern "C" {
 #include "hooks.h"
 #include "netconf.h"
 #include "dlist.h"
+#include "appmoni.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
 /** BASIC DEFINITIONS */
-#define malloc(size)                      mm_malloc(size)
-#define calloc(nitems, isize)             mm_calloc(nitems, isize)
-#define free(mem)                         mm_free(mem)
+#define malloc(size)                      moni_malloc(size)
+#define calloc(nitems, isize)             moni_calloc(nitems, isize)
+#define free(mem)                         moni_free(mem)
 
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      TaskDelay(delay)

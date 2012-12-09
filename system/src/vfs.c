@@ -660,10 +660,10 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
       FILE_t *file = NULL;
 
       if (path && mode) {
-            if (  (  strncmp("r", mode, 2) == 0 || strncmp("r+", mode, 2) == 0
+            if (  path[strlen(path) - 1] != '/'
+               && (  strncmp("r", mode, 2) == 0 || strncmp("r+", mode, 2) == 0
                   || strncmp("w", mode, 2) == 0 || strncmp("w+", mode, 2) == 0
-                  || strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0  )
-               && path[strlen(path) - 1] != '/'                                   ) {
+                  || strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) ) {
 
                   if (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) == OS_OK) {
 

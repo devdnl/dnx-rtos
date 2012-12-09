@@ -161,7 +161,7 @@ void Initd(void *arg)
       kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
       kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
       kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
-      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'\x1B[0m\n\n");
+      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'  RTOS\x1B[0m\n\n");
 
       kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
       kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
@@ -177,9 +177,8 @@ void Initd(void *arg)
       InitDrv("mpl115a2", "/dev/sensor");
 
 
-      if (LwIP_Init() == STD_RET_OK)
-      {
-            StartDaemon("measd", NULL);
+      if (LwIP_Init() == STD_RET_OK) {
+            StartDaemon("measd", NULL); /* DNLTEST */
             StartDaemon("httpd", NULL);
       }
 
@@ -194,24 +193,24 @@ void Initd(void *arg)
        *------------------------------------------------------------------------------------------*/
       u8_t ctty = -1;
 
-      app_t *apphdl[TTY_LAST];
-      memset(apphdl, 0x00, sizeof(apphdl));
+      app_t *apphdl[TTY_LAST] = {NULL};
+//      memset(apphdl, 0x00, sizeof(apphdl));
 
-      FILE_t *tty;
+//      FILE_t *tty;
       FILE_t *ttyx[TTY_LAST];
-      memset(ttyx, 0x00, sizeof(ttyx));
+//      memset(ttyx, 0x00, sizeof(ttyx));
 
-      while ((tty = fopen("/dev/tty0", "r+")) == NULL)
+      while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL)
       {
             Sleep(200);
       }
 
-      ttyx[0] = tty;
+//      ttyx[0] = tty;
 
       for (;;)
       {
             /* load application if new TTY was created */
-            ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
+            ioctl(ttyx[0], TTY_IORQ_GETCURRENTTTY, &ctty);
 
             if (ctty < TTY_LAST - 1)
             {
@@ -258,7 +257,7 @@ void Initd(void *arg)
                               ttyx[i] = NULL;
 
                               ctty = 0;
-                              ioctl(tty, TTY_IORQ_SETACTIVETTY, &ctty);
+                              ioctl(ttyx[0], TTY_IORQ_SETACTIVETTY, &ctty);
                         }
                   }
             }

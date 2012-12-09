@@ -36,15 +36,15 @@ extern "C" {
 #include "basic_types.h"
 #include "systypes.h"
 #include "memman.h"
-
+#include "appmoni.h"
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** USER CFG: memory management */
-#define APPRUNTIME_CALLOC(nmemb, msize)   mm_calloc(nmemb, msize)
-#define APPRUNTIME_MALLOC(size)           mm_malloc(size)
-#define APPRUNTIME_FREE(mem)              mm_free(mem)
+#define APPRUNTIME_CALLOC(nmemb, msize)   moni_calloc(nmemb, msize)//mm_calloc(nmemb, msize) /*DNLTEST*/
+#define APPRUNTIME_MALLOC(size)           moni_malloc(size)//mm_malloc(size) /* DNLTEST */
+#define APPRUNTIME_FREE(mem)              moni_free(mem)//mm_free(mem) /* DNLTEST */
 
 /** application preamble */
 #define APPLICATION(name)                 void name(void *appArgument)

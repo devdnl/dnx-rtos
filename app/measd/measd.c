@@ -222,9 +222,9 @@ stdRet_t appmain(ch_t *argv)
                         kprint("measd: error while closing 'file' file\n");
             }
 
-            /* sleep in equal periods */
-//            SleepUntil(&LastWakeTime, SLEEP_TIME); /* DNLTEST */
-            return STD_RET_OK;
+            /* sleep in equal periods */ /* DNLTEST */
+            SleepUntil(&LastWakeTime, SLEEP_TIME);
+//            return STD_RET_OK;
       }
 
       return STD_RET_OK;

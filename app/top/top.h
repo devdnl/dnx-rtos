@@ -40,7 +40,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define TOP_STACK_SIZE                    (2 * MINIMAL_STACK_SIZE)
+#define TOP_STACK_SIZE                    (3 * MINIMAL_STACK_SIZE)
 
 /** define application name */
 #define TOP_NAME                          "top"

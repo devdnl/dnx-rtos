@@ -42,6 +42,8 @@ extern "C" {
 #include "lwip/init.h"
 #include "lwip/tcp_impl.h"
 #include "stm32_eth.h"
+#include "oswrap.h"
+#include "vfs.h"
 
 
 /*==================================================================================================
@@ -109,8 +111,10 @@ stdRet_t LwIP_Init(void)
             kprint("lwIP: Ethernet interface does not exist!");
             goto LwIP_Init_exit_Failure;
       }
-
-      fclose(eth);
+      else
+      {
+            fclose(eth);
+      }
 
 
       lwip_init();

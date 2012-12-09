@@ -42,6 +42,10 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+#ifdef SYSTEM_H_
+#error "system.h and sysdrv.h shall never included together!"
+#endif
+
 #ifndef calloc
 #define calloc(nmemb, msize)             mm_calloc(nmemb, msize)
 #endif

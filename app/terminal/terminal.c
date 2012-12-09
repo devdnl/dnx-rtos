@@ -71,8 +71,8 @@ ch_t *cdpath;
 //================================================================================================//
 void PrintPrompt(void)
 {
-      printf("\n\x1B[33m%s\x1B[0m\n", cdpath);
-      printf("\x1B[32mroot@%s$\x1B[0m ", SystemGetHostname());
+      printf("\x1B[32mroot@%s:\x1B[33m%s\x1B[0m\n", SystemGetHostname(), cdpath);
+      printf("\x1B[32m$\x1B[0m ");
 }
 
 
@@ -320,6 +320,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       /* free used memory */
       free(line);
       free(history);
+      free(cdpath);
 
       /* if stack size is debugging */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)

@@ -1,9 +1,11 @@
+#ifndef APPMONI_H_
+#define APPMONI_H_
 /*=============================================================================================*//**
-@file    touch.c
+@file    appmoni.h
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This module is used to monitoring all applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,58 +26,44 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "clear.h"
-#include <string.h>
+#include "systypes.h"
 
-/* Begin of application section declaration */
-APPLICATION(touch)
-APP_SEC_BEGIN
 
 /*==================================================================================================
-                                  Local symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                      Local object definitions
+                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                        Function definitions
+                                     Exported function prototypes
 ==================================================================================================*/
+extern void *moni_malloc(u32_t size);
+extern void *moni_calloc(u32_t nmemb, u32_t msize);
+extern void  moni_free  (void *mem);
 
-//================================================================================================//
-/**
- * @brief clear main function
- */
-//================================================================================================//
-stdRet_t appmain(ch_t *argv)
-{
-      stdRet_t status = STD_RET_ERROR;
 
-      FILE_t *file = fopen(argv, "w");
-
-      if (file)
-      {
-            fclose(file);
-            status = STD_RET_OK;
-      }
-
-      return status;
+#ifdef __cplusplus
 }
+#endif
 
-/* End of application section declaration */
-APP_SEC_END
-
+#endif /* APPMONI_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

@@ -32,7 +32,6 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "i2c.h"
-#include "print.h" /* DNLTEST */
 
 
 /*==================================================================================================
@@ -55,11 +54,12 @@ extern "C" {
 /** i2c control structure */
 struct i2cCtrl
 {
-      I2C_t    *Address;             /* peripheral address */
-      task_t   TaskHandle;           /* task handle variable for IRQ */
-      mutex_t  mtx;                  /* port reservation */
-      u8_t     SlaveAddress;         /* slave address */
-      stdRet_t status;               /* last operation status */
+      I2C_t    *Address;            /* peripheral address */
+      task_t    TaskHandle;         /* task handle variable for IRQ */
+      mutex_t   mtx;                /* port reservation */
+      u8_t      SlaveAddress;       /* slave address */
+      stdRet_t  status;             /* last operation status */
+      u16_t     openCnt;            /* counter of opened files */
 };
 
 /** type which contain port information */
@@ -220,6 +220,8 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
       {
+            if (I2CP(dev)->openCnt == 0) { /* DNLTEST */
+                  I2CP(dev)->openCnt = 1;
             /* check that port is free */
             if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
@@ -263,9 +265,7 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
 
                   status = STD_RET_OK;
             }
-            else
-            {
-                  kprint("\x1B[34mi2cdrv: %s open: mutex locked\x1B[0m\n", TaskGetName(NULL)); /* DNLTEST */
+
             }
       }
 
@@ -334,16 +334,10 @@ stdRet_t I2C_Close(devx_t dev, fd_t part)
                   /* give mutex from open */
                   GiveRecMutex(I2CP(dev)->mtx);
 
+                  I2CP(dev)->openCnt = 0; /* DNLTEST */
+
                   status = STD_RET_OK;
             }
-            else
-            {
-                  kprint("\x1B[34mi2cdrv: %s mutex locked\x1B[0m\n", TaskGetName(NULL)); /* DNLTEST */
-            }
-      }
-      else
-      {
-            kprint("\x1B[34mi2cdrv: %s bad i2c device\x1B[0m\n", TaskGetName(NULL)); /* DNLTEST */
       }
 
       return status;

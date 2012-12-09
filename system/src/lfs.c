@@ -41,7 +41,7 @@ extern "C" {
                                   Local symbolic constants/macros
 ==================================================================================================*/
 /* wait time for operation on FS */
-#define MTX_BLOCK_TIME        100
+#define MTX_BLOCK_TIME                    0
 
 #define calloc(nmemb, msize)              LFS_CALLOC(nmemb, msize)
 #define malloc(size)                      LFS_MALLOC(size)
