@@ -43,7 +43,7 @@ extern "C"
 ==================================================================================================*/
 #define I2CFILE                     "/dev/i2c"
 
-#define MTX_BLOCK_TIME              5
+#define MTX_BLOCK_TIME              0
 
 #define RELEASE_BLOCK_TIME          1000
 

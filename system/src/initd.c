@@ -161,7 +161,7 @@ void Initd(void *arg)
       kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
       kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
       kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
-      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'  RTOS\x1B[0m\n\n");
+      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'  RTOS 0.5.0\x1B[0m\n\n");
 
       kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
       kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
@@ -178,7 +178,7 @@ void Initd(void *arg)
 
 
       if (LwIP_Init() == STD_RET_OK) {
-            StartDaemon("measd", NULL); /* DNLTEST */
+            StartDaemon("measd", NULL);
             StartDaemon("httpd", NULL);
       }
 
@@ -191,21 +191,14 @@ void Initd(void *arg)
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
-      u8_t ctty = -1;
-
-      app_t *apphdl[TTY_LAST] = {NULL};
-//      memset(apphdl, 0x00, sizeof(apphdl));
-
-//      FILE_t *tty;
-      FILE_t *ttyx[TTY_LAST];
-//      memset(ttyx, 0x00, sizeof(ttyx));
+      u8_t    ctty = -1;
+      app_t  *apphdl[TTY_LAST] = {NULL};
+      FILE_t *ttyx[TTY_LAST] = {NULL};
 
       while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL)
       {
             Sleep(200);
       }
-
-//      ttyx[0] = tty;
 
       for (;;)
       {

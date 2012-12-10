@@ -39,7 +39,7 @@ extern "C" {
 ==================================================================================================*/
 #define I2CP(dev)                         i2c->port[dev]
 
-#define BLOCK_TIME                        100
+#define BLOCK_TIME                        0
 
 /** define I2C error mask */
 #define I2C_ERROR_MASK_BM                 (I2C_SR1_OVR | I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR)
@@ -59,7 +59,6 @@ struct i2cCtrl
       mutex_t   mtx;                /* port reservation */
       u8_t      SlaveAddress;       /* slave address */
       stdRet_t  status;             /* last operation status */
-      u16_t     openCnt;            /* counter of opened files */
 };
 
 /** type which contain port information */
@@ -220,8 +219,6 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
       {
-            if (I2CP(dev)->openCnt == 0) { /* DNLTEST */
-                  I2CP(dev)->openCnt = 1;
             /* check that port is free */
             if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
@@ -264,8 +261,6 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
                   i2cPtr->CR1   |= I2C_CR1_PE;
 
                   status = STD_RET_OK;
-            }
-
             }
       }
 
@@ -333,8 +328,6 @@ stdRet_t I2C_Close(devx_t dev, fd_t part)
 
                   /* give mutex from open */
                   GiveRecMutex(I2CP(dev)->mtx);
-
-                  I2CP(dev)->openCnt = 0; /* DNLTEST */
 
                   status = STD_RET_OK;
             }

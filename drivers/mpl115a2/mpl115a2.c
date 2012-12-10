@@ -54,7 +54,7 @@ extern "C" {
 #define TEMP_A_FACTOR               (i16_t)-535
 
 /** waiting for release resources */
-#define BLOCK_TIME                  5
+#define BLOCK_TIME                  0
 
 /** wait for release resources when driver is released */
 #define RELEASE_BLOCK_TIME          1000

@@ -40,7 +40,7 @@ extern "C" {
 ==================================================================================================*/
 #define UARTP(dev)                              uart->port[dev]
 #define UARTA(dev)                              uartAddr[dev]
-#define BLOCK_TIME                              100
+#define BLOCK_TIME                              0
 #define TXC_WAIT_TIME                           60000
 
 /** UART wake method: idle line (0) or address mark (1) */

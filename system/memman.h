@@ -73,7 +73,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** USER CFG: HEAP size */
-#define MEMMAN_HEAP_SIZE                  (size_t)(40*1024)
+#define MEMMAN_HEAP_SIZE                  (size_t)(41*1024)
 
 /** USER CFG: aligment */
 #define MEMMAM_ALIGNMENT                  4
