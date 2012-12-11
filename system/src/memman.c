@@ -93,11 +93,6 @@ extern "C" {
  */
 #define MEM_ALIGN(addr) ((void *)(((ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(ptr_t)(MEM_ALIGNMENT-1)))
 
-/** All allocated blocks will be BLOCK_MIN_SIZE bytes big, at least!
- * BLOCK_MIN_SIZE can be overridden to suit your needs. Smaller values save space,
- * larger values could prevent too small blocks to fragment the RAM too much. */
-#define BLOCK_MIN_SIZE              12
-
 /** some alignment macros: we define them here for better source code layout */
 #define BLOCK_MIN_SIZE_ALIGNED      MEM_ALIGN_SIZE(BLOCK_MIN_SIZE)
 #define SIZEOF_STRUCT_MEM           MEM_ALIGN_SIZE(sizeof(struct mem))

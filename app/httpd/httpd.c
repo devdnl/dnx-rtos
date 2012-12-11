@@ -275,7 +275,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                     if (strncmp(&file.data[i], "<?", 2) == 0)
                                     {
                                           i += 2;
-                                          n = 0;
+                                          n  = 0;
 
                                           if (strncmp(&file.data[i], "temp/?>", 7) == 0)
                                           {
@@ -315,8 +315,8 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                           {
                                                 i += 6;
 
-                                                bcdTime_t time;
-                                                bcdDate_t date;
+                                                bcdTime_t time = {0x00, 0x00, 0x00};
+                                                bcdDate_t date = {0, 0, 0, 0};
                                                 FILE_t *rtc = fopen("/dev/rtc", "r");
 
                                                 if (rtc)
@@ -326,11 +326,11 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                       if (fclose(rtc) != STD_RET_OK)
                                                             kprint("httpd: error while closing 'rtc' file\n");
                                                 }
-                                                else
-                                                {
-                                                      memset(&time, 0x00, sizeof(time));
-                                                      memset(&date, 0x00, sizeof(date));
-                                                }
+//                                                else
+//                                                {
+//                                                      memset(&time, 0x00, sizeof(time));
+//                                                      memset(&date, 0x00, sizeof(date));
+//                                                }
 
                                                 n = snprintb(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
                                                             date.day,

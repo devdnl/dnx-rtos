@@ -32,6 +32,8 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "vfs.h"
+#include "dlist.h"
+#include "oswrap.h"
 #include <string.h>
 
 
@@ -168,17 +170,15 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
                   }
 
                   /* mount FS if created -------------------------------------------------------- */
-                  if (newfs) {
-                        if (mountcfg->f_init) {
-                              if (mountcfg->f_init(mountcfg->dev) == STD_RET_OK) {
-                                    newfs->path     = newpath;
-                                    newfs->basefs   = basefs;
-                                    newfs->fs       = *mountcfg;
-                                    newfs->mntFSCnt = 0;
+                  if (newfs && mountcfg->f_init) {
+                        if (mountcfg->f_init(mountcfg->dev) == STD_RET_OK) {
+                              newfs->path     = newpath;
+                              newfs->basefs   = basefs;
+                              newfs->fs       = *mountcfg;
+                              newfs->mntFSCnt = 0;
 
-                                    if (ListAddItem(vfs->mntList, newfs) >= 0) {
-                                          status = STD_RET_OK;
-                                    }
+                              if (ListAddItem(vfs->mntList, newfs) >= 0) {
+                                    status = STD_RET_OK;
                               }
                         }
                   }

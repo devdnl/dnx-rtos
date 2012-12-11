@@ -34,12 +34,14 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "systypes.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-
+/* USER CFG: enable (1) or disable (0) application monitoring */
+#define APP_MONITORING_ENABLE             (0)
 
 /*==================================================================================================
                                   Exported types, enums definitions
@@ -54,9 +56,15 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
+#if (APP_MONITORING_ENABLE > 0)
 extern void *moni_malloc(u32_t size);
 extern void *moni_calloc(u32_t nmemb, u32_t msize);
 extern void  moni_free  (void *mem);
+#else
+#define moni_malloc(size)           mm_malloc(size)
+#define moni_calloc(nmemb, msize)   mm_calloc(nmemb, msize)
+#define moni_free(mem)              mm_free(mem)
+#endif
 
 
 #ifdef __cplusplus

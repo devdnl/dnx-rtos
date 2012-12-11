@@ -32,7 +32,6 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "appmoni.h"
-#include "memman.h"
 #include "print.h"
 #include "oswrap.h"
 
@@ -69,8 +68,13 @@ extern "C" {
 //================================================================================================//
 /**
  * @brief Monitor memory allocation
+ *
+ * @param size          block size
+ *
+ * @return pointer to allocated block or NULL if error
  */
 //================================================================================================//
+#if (APP_MONITORING_ENABLE > 0)
 void *moni_malloc(u32_t size)
 {
       void *ptr = mm_malloc(size);
@@ -79,13 +83,20 @@ void *moni_malloc(u32_t size)
 
       return ptr;
 }
+#endif
 
 
 //================================================================================================//
 /**
  * @brief Monitor memory allocation
+ *
+ * @param nmemb         n members
+ * @param msize         member size
+ *
+ * @return pointer to allocated block or NULL if error
  */
 //================================================================================================//
+#if (APP_MONITORING_ENABLE > 0)
 void *moni_calloc(u32_t nmemb, u32_t msize)
 {
       void *ptr = mm_calloc(nmemb, msize);
@@ -94,19 +105,24 @@ void *moni_calloc(u32_t nmemb, u32_t msize)
 
       return ptr;
 }
+#endif
 
 
 //================================================================================================//
 /**
  * @brief Monitor memory freeing
+ *
+ * @param *mem          block to free
  */
 //================================================================================================//
+#if (APP_MONITORING_ENABLE > 0)
 void moni_free(void *mem)
 {
       mm_free(mem);
 
       kprint("%s: freeing: 0x%x\n", TaskGetName(NULL), mem);
 }
+#endif
 
 
 #ifdef __cplusplus

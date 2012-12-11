@@ -374,8 +374,6 @@ static stdRet_t GetTemperature(i8_t *temperature)
 
       if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
-                  kprint("mpl115a2: %s opens %s file (temp)\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
-
                   tmp[0] = MPL115A2_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
@@ -402,12 +400,7 @@ static stdRet_t GetTemperature(i8_t *temperature)
                   }
 
                   MPL115A2_GetTemperature_ClosePort:
-                  if (fclose(fi2c) != STD_RET_OK) /* DNLTEST */
-                        kprint("\x1B[31mmpl115a2: %s cannot close %s (temp)\x1B[0m\n", TaskGetName(NULL), I2CFILE);
-                  else
-                        kprint("mpl115a2: %s close %s (temp)\n", TaskGetName(NULL), I2CFILE);
-            } else {  /* DNLTEST */
-                  kprint("mpl115a2: %s cannot open %s file\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
+                  fclose(fi2c);
             }
 
             GiveMutex(mplmem->mtx);
@@ -437,8 +430,6 @@ static stdRet_t GetPressure(u16_t *pressure)
 
       if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
-                  kprint("mpl115a2: %s opens %s file (pres)\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
-
                   tmp[0] = MPL115A2_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
@@ -479,12 +470,7 @@ static stdRet_t GetPressure(u16_t *pressure)
                   }
 
                   MPL115A2_GetPressure_ClosePort:
-                  if (fclose(fi2c) != STD_RET_OK) /* DNLTEST */
-                        kprint("\x1B[31mmpl115a2: %s cannot close %s (pres)\x1B[0m\n", TaskGetName(NULL), I2CFILE);
-                  else
-                        kprint("mpl115a2: %s close %s (pres)\n", TaskGetName(NULL), I2CFILE);
-            } else {  /* DNLTEST */
-                  kprint("mpl115a2: %s cannot open %s file\n", TaskGetName(NULL), I2CFILE); /* DNLTEST */
+                  fclose(fi2c);
             }
 
             GiveMutex(mplmem->mtx);

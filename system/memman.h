@@ -78,6 +78,11 @@ extern "C" {
 /** USER CFG: aligment */
 #define MEMMAM_ALIGNMENT                  4
 
+/** USER CFG: All allocated blocks will be BLOCK_MIN_SIZE bytes big, at least!
+ * BLOCK_MIN_SIZE can be overridden to suit your needs. Smaller values save space,
+ * larger values could prevent too small blocks to fragment the RAM too much. */
+#define BLOCK_MIN_SIZE                    16
+
 /** USER CFG: heap protection */
 #define MEMMAM_FREE_PROTECT()             TaskSuspendAll()
 #define MEMMAM_FREE_UNPROTECT()           TaskResumeAll()

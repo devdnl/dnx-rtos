@@ -33,7 +33,6 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
 #include "systypes.h"
 #include "vfs.h"
 #include "memman.h"
@@ -52,7 +51,7 @@ extern "C" {
 #define LFS_MALLOC(size)            mm_malloc(size)
 
 /* USER CFG: getting task name */
-#define GET_TASK_NAME()             TaskGetName(NULL) /* DNLTEST */
+//#define GET_TASK_NAME()             TaskGetName(NULL)
 
 
 /*==================================================================================================

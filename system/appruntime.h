@@ -42,11 +42,11 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** USER CFG: memory management */
-#define APPRUNTIME_CALLOC(nmemb, msize)   moni_calloc(nmemb, msize)//mm_calloc(nmemb, msize) /*DNLTEST*/
-#define APPRUNTIME_MALLOC(size)           moni_malloc(size)//mm_malloc(size) /* DNLTEST */
-#define APPRUNTIME_FREE(mem)              moni_free(mem)//mm_free(mem) /* DNLTEST */
+#define APPRUNTIME_CALLOC(nmemb, msize)   moni_calloc(nmemb, msize)
+#define APPRUNTIME_MALLOC(size)           moni_malloc(size)
+#define APPRUNTIME_FREE(mem)              moni_free(mem)
 
-/** application preamble */
+/** application section */
 #define APPLICATION(name)                 void name(void *appArgument)
 #define APP_SEC_BEGIN                     { InitApp();
 #define APP_SEC_END                       Exit(appmain(argv));}
@@ -64,7 +64,7 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** type which define parse possiblities */
+/** type which define parse possibilities */
 typedef enum parseType_enum
 {
       PARSE_AS_BIN,

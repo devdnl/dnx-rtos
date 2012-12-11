@@ -140,8 +140,7 @@ stdRet_t appmain(ch_t *argv)
 
                   writeData(&data);
 
-                  if (fclose(sensor) != STD_RET_OK) /* DNLTEST */
-                        kprint("\x1B[32mmeasd: error while closing 'sensor' file\x1B[0m\n");
+                  fclose(sensor);
             }
 
             FILE_t *file = fopen(OUTPUT_FILE, "a+");
@@ -222,9 +221,8 @@ stdRet_t appmain(ch_t *argv)
                         kprint("measd: error while closing 'file' file\n");
             }
 
-            /* sleep in equal periods */ /* DNLTEST */
+            /* sleep in equal periods */
             SleepUntil(&LastWakeTime, SLEEP_TIME);
-//            return STD_RET_OK;
       }
 
       return STD_RET_OK;

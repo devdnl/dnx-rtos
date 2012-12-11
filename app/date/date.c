@@ -72,8 +72,8 @@ stdRet_t appmain(ch_t *argv)
                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
       stdRet_t  status = STD_RET_OK;
-      bcdTime_t time;
-      bcdDate_t date;
+      bcdTime_t time   = {0x00, 0x00, 0x00};
+      bcdDate_t date   = {0, 0, 0, 0};
       FILE_t    *rtc;
 
       rtc = fopen("/dev/rtc", "r+");

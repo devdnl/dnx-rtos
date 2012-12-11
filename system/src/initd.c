@@ -218,17 +218,21 @@ void Initd(void *arg)
 
                         kprint("Starting application on new terminal: TTY%d\n", ctty);
 
+                        TaskSuspendAll();
                         apphdl[ctty] = Exec("term", NULL);
 
                         if (apphdl[ctty] == NULL)
                         {
+                              TaskResumeAll();
                               kprint("Not enough free memory to start application\n");
                         }
                         else
                         {
-                              kprint("Application started on TTY%d\n", ctty);
                               apphdl[ctty]->stdin  = ttyx[ctty];
                               apphdl[ctty]->stdout = ttyx[ctty];
+
+                              TaskResumeAll();
+                              kprint("Application started on TTY%d\n", ctty);
                         }
                   }
             }
