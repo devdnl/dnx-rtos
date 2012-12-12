@@ -29,6 +29,7 @@
 ==================================================================================================*/
 #include "clear.h"
 #include <string.h>
+#include "ds1307_def.h"
 
 /* Begin of application section declaration */
 APPLICATION(uptime)

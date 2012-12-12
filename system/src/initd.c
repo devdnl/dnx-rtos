@@ -33,7 +33,10 @@ extern "C" {
 ==================================================================================================*/
 #include "initd.h"
 #include "regdrv.h"
+#include "lfs.h"
+#include "regapp.h"
 #include <string.h>
+#include "tty_def.h"
 
 
 /*==================================================================================================
@@ -76,9 +79,79 @@ void Initd(void *arg)
 {
       (void) arg;
 
+      struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));
+
+      /* early initialization - VFS starting */
+      vfs_init();
+
+      /* early initialization - mounting FS */
+      if (fscfg) {
+            fscfg->dev       = 0;
+            fscfg->f_init    = lfs_init;
+            fscfg->f_chmod   = lfs_chmod;
+            fscfg->f_chown   = lfs_chown;
+            fscfg->f_close   = lfs_close;
+            fscfg->f_ioctl   = lfs_ioctl;
+            fscfg->f_mkdir   = lfs_mkdir;
+            fscfg->f_mknod   = lfs_mknod;
+            fscfg->f_open    = lfs_open;
+            fscfg->f_opendir = lfs_opendir;
+            fscfg->f_read    = lfs_read;
+            fscfg->f_release = lfs_release;
+            fscfg->f_remove  = lfs_remove;
+            fscfg->f_rename  = lfs_rename;
+            fscfg->f_stat    = lfs_stat;
+            fscfg->f_fstat   = lfs_fstat;
+            fscfg->f_statfs  = lfs_statfs;
+            fscfg->f_write   = lfs_write;
+            mount("/", fscfg);
+
+            /* create basic directories */
+            mkdir("/bin");
+            mkdir("/dev");
+            mkdir("/etc");
+            mkdir("/fbin");
+            mkdir("/home");
+            mkdir("/mnt");
+            mkdir("/proc");
+            mkdir("/srv");
+            mkdir("/srv/www");
+            mkdir("/tmp");
+
+            fscfg->dev       = 0;
+            fscfg->f_init    = appfs_init;
+            fscfg->f_chmod   = appfs_chmod;
+            fscfg->f_chown   = appfs_chown;
+            fscfg->f_close   = appfs_close;
+            fscfg->f_ioctl   = appfs_ioctl;
+            fscfg->f_mkdir   = appfs_mkdir;
+            fscfg->f_mknod   = appfs_mknod;
+            fscfg->f_open    = appfs_open;
+            fscfg->f_opendir = appfs_opendir;
+            fscfg->f_read    = appfs_read;
+            fscfg->f_release = appfs_release;
+            fscfg->f_remove  = appfs_remove;
+            fscfg->f_rename  = appfs_rename;
+            fscfg->f_stat    = appfs_stat;
+            fscfg->f_fstat   = appfs_fstat;
+            fscfg->f_statfs  = appfs_statfs;
+            fscfg->f_write   = appfs_write;
+            mount("/fbin", fscfg);
+
+            free(fscfg);
+      } else {
+            TaskTerminate();
+      }
+
+      /* early initialization - basic drivers start */
+      if (InitDrv("pll", "/dev/pll") != STD_RET_OK)
+            while (TRUE);
+
+      InitDrv("gpio", "/dev/gpio");
+
       /* early initialization - terminal support */
-      InitDrv("uart1", "ttyS0");
-      InitDrv("tty0", "tty0");
+      InitDrv("uart1", "/dev/ttyS0");
+      InitDrv("tty0", "/dev/tty0");
       kprintEnableOn("/dev/tty0");
 
       /* something about board and system */
@@ -88,24 +161,23 @@ void Initd(void *arg)
       kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
       kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
       kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
-      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'\x1B[0m\n\n");
+      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'  RTOS 0.5.0\x1B[0m\n\n");
 
       kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
       kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
 
       /* driver initialization */
-      InitDrv("tty1", "tty1");
-      InitDrv("tty2", "tty2");
-      InitDrv("tty3", "tty3");
-      InitDrv("i2c1", "i2c");
-      InitDrv("ds1307rtc", "rtc");
-      InitDrv("ds1307nvm", "nvm");
-      InitDrv("eth0", "eth0");
-      InitDrv("mpl115a2", "sensor");
+      InitDrv("tty1", "/dev/tty1");
+      InitDrv("tty2", "/dev/tty2");
+      InitDrv("tty3", "/dev/tty3");
+      InitDrv("i2c1", "/dev/i2c");
+      InitDrv("ds1307rtc", "/dev/rtc");
+      InitDrv("ds1307nvm", "/dev/nvm");
+      InitDrv("eth0", "/dev/eth0");
+      InitDrv("mpl115a2", "/dev/sensor");
 
 
-      if (LwIP_Init() == STD_RET_OK)
-      {
+      if (LwIP_Init() == STD_RET_OK) {
             StartDaemon("measd", NULL);
             StartDaemon("httpd", NULL);
       }
@@ -119,30 +191,19 @@ void Initd(void *arg)
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
-      u8_t ctty = -1;
+      u8_t    ctty = -1;
+      app_t  *apphdl[TTY_LAST] = {NULL};
+      FILE_t *ttyx[TTY_LAST] = {NULL};
 
-      app_t *apphdl[TTY_LAST];
-      memset(apphdl, 0x00, sizeof(apphdl));
-
-      FILE_t *tty;
-      FILE_t *ttyx[TTY_LAST];
-      memset(ttyx, 0x00, sizeof(ttyx));
-
-      while ((tty = fopen("/dev/tty0", "r+")) == NULL)
+      while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL)
       {
             Sleep(200);
       }
 
-      ttyx[0] = tty;
-
-
-      u8_t cnt = 0;
-
-
       for (;;)
       {
             /* load application if new TTY was created */
-            ioctl(tty, TTY_IORQ_GETCURRENTTTY, &ctty);
+            ioctl(ttyx[0], TTY_IORQ_GETCURRENTTTY, &ctty);
 
             if (ctty < TTY_LAST - 1)
             {
@@ -151,23 +212,27 @@ void Initd(void *arg)
                         if (ttyx[ctty] == NULL)
                         {
                               ch_t path[16];
-                              snprint(path, sizeof(path), "/dev/tty%c", '0' + ctty);
+                              snprintf(path, sizeof(path), "/dev/tty%c", '0' + ctty);
                               ttyx[ctty] = fopen(path, "r+");
                         }
 
                         kprint("Starting application on new terminal: TTY%d\n", ctty);
 
+                        TaskSuspendAll();
                         apphdl[ctty] = Exec("term", NULL);
 
                         if (apphdl[ctty] == NULL)
                         {
+                              TaskResumeAll();
                               kprint("Not enough free memory to start application\n");
                         }
                         else
                         {
-                              kprint("Application started on TTY%d\n", ctty);
                               apphdl[ctty]->stdin  = ttyx[ctty];
                               apphdl[ctty]->stdout = ttyx[ctty];
+
+                              TaskResumeAll();
+                              kprint("Application started on TTY%d\n", ctty);
                         }
                   }
             }
@@ -189,7 +254,7 @@ void Initd(void *arg)
                               ttyx[i] = NULL;
 
                               ctty = 0;
-                              ioctl(tty, TTY_IORQ_SETACTIVETTY, &ctty);
+                              ioctl(ttyx[0], TTY_IORQ_SETACTIVETTY, &ctty);
                         }
                   }
             }

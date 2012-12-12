@@ -40,7 +40,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define UPTIME_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
+#define UPTIME_STACK_SIZE               (3 * MINIMAL_STACK_SIZE)
 
 /** define application name */
 #define UPTIME_NAME                     "uptime"

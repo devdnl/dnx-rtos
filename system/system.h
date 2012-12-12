@@ -39,21 +39,20 @@ extern "C" {
 #include "oswrap.h"
 #include "print.h"
 #include "appruntime.h"
-#include "cpu.h"
-#include "regdrv.h"
-#include "proc.h"
 #include "vfs.h"
 #include "hooks.h"
 #include "netconf.h"
+#include "dlist.h"
+#include "appmoni.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
 /** BASIC DEFINITIONS */
-#define malloc(size)                      mm_malloc(size)
-#define calloc(nitems, isize)             mm_calloc(nitems, isize)
-#define free(mem)                         mm_free(mem)
+#define malloc(size)                      moni_malloc(size)
+#define calloc(nitems, isize)             moni_calloc(nitems, isize)
+#define free(mem)                         moni_free(mem)
 
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      TaskDelay(delay)
@@ -74,17 +73,7 @@ extern "C" {
 #define SystemGetTaskCount()              TaskGetNumberOfTasks()
 #define SystemGetRunTimeStats(dst)        TaskGetRunTimeStats(dst)
 #define SystemGetOSTickCnt()              TaskGetTickCount()
-#define SystemGetAppName()                TaskGetName(THIS_APP)
-
-/** application preamble */
-#define APPLICATION(name)                 void name(void *appArgument)
-#define APP_SEC_BEGIN                     { InitApp();
-#define APP_SEC_END                       Exit(appmain(argv));}
-
-#define InitApp()                         FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
-                                          FILE_t *stdout = ((app_t*)appArgument)->stdout; \
-                                          ch_t   *argv   = ((app_t*)appArgument)->arg;    \
-                                          (void)stdin; (void)stdout; (void)argv
+#define SystemGetAppName()                TaskGetName(NULL)
 
 
 /*==================================================================================================

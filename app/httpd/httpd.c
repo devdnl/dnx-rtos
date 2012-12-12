@@ -72,6 +72,8 @@
 #include "lwip/tcp.h"
 #include "fsdata.c"
 #include <string.h>
+#include "mpl115a2_def.h"
+#include "ds1307_def.h"
 
 /* Begin of application section declaration */
 APPLICATION(httpd)
@@ -82,6 +84,8 @@ APP_SEC_BEGIN
 ==================================================================================================*/
 #define BFR_SIZE                    4096
 
+#define FILE_SENSOR                 "/dev/sensor"
+#define FILE_GRAPH                  "/srv/www/graph.svg"
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -247,12 +251,12 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                               if (strncmp(fname, "/", 5) == 0)
                               {
                                     fs_open("/index.html", &file);
-                                    snprint(fname, sizeof(fname), "/index.html");
+                                    snprintb(fname, sizeof(fname), "/index.html");
                               }
                               else
                               {
                                     fs_open("/404.html", &file);
-                                    snprint(fname, sizeof(fname), "/404.html");
+                                    snprintb(fname, sizeof(fname), "/404.html");
                               }
                         }
 
@@ -271,59 +275,64 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                     if (strncmp(&file.data[i], "<?", 2) == 0)
                                     {
                                           i += 2;
-                                          n = 0;
+                                          n  = 0;
 
                                           if (strncmp(&file.data[i], "temp/?>", 7) == 0)
                                           {
                                                 i += 6;
                                                 i8_t temp = 0;
 
-                                                FILE_t *sensor = fopen("/dev/sensor", "r");
+                                                FILE_t *sensor = fopen(FILE_SENSOR, "r");
 
                                                 if (sensor)
                                                 {
                                                       ioctl(sensor, MPL115A2_IORQ_GETTEMP, &temp);
-                                                      fclose(sensor);
+
+                                                      if (fclose(sensor) != STD_RET_OK)
+                                                            kprint("httpd: error while closing 'sensor' file\n");
                                                 }
 
-                                                n = snprint(pagePtr, 50, "%d", (i32_t)temp);
+                                                n = snprintb(pagePtr, 50, "%d", (i32_t)temp);
                                           }
                                           else if (strncmp(&file.data[i], "pres/?>", 7) == 0)
                                           {
                                                 i += 6;
                                                 u16_t pressure = 0;
 
-                                                FILE_t *sensor = fopen("/dev/sensor", "r");
+                                                FILE_t *sensor = fopen(FILE_SENSOR, "r");
 
                                                 if (sensor)
                                                 {
                                                       ioctl(sensor, MPL115A2_IORQ_GETPRES, &pressure);
-                                                      fclose(sensor);
+
+                                                      if (fclose(sensor) != STD_RET_OK)
+                                                            kprint("httpd: error while closing 'sensor' file\n");
                                                 }
 
-                                                n = snprint(pagePtr, 50, "%d", (u32_t)pressure);
+                                                n = snprintb(pagePtr, 50, "%d", (u32_t)pressure);
                                           }
                                           else if (strncmp(&file.data[i], "date/?>", 7) == 0)
                                           {
                                                 i += 6;
 
-                                                bcdTime_t time;
-                                                bcdDate_t date;
+                                                bcdTime_t time = {0x00, 0x00, 0x00};
+                                                bcdDate_t date = {0, 0, 0, 0};
                                                 FILE_t *rtc = fopen("/dev/rtc", "r");
 
                                                 if (rtc)
                                                 {
                                                       ioctl(rtc, RTC_IORQ_GETTIME, &time);
                                                       ioctl(rtc, RTC_IORQ_GETDATE, &date);
-                                                      fclose(rtc);
+                                                      if (fclose(rtc) != STD_RET_OK)
+                                                            kprint("httpd: error while closing 'rtc' file\n");
                                                 }
-                                                else
-                                                {
-                                                      memset(&time, 0x00, sizeof(time));
-                                                      memset(&date, 0x00, sizeof(date));
-                                                }
+//                                                else
+//                                                {
+//                                                      memset(&time, 0x00, sizeof(time));
+//                                                      memset(&date, 0x00, sizeof(date));
+//                                                }
 
-                                                n = snprint(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
+                                                n = snprintb(pagePtr, 50, "%x2-%x2-20%x2, %x2:%x2\n",
                                                             date.day,
                                                             date.month,
                                                             date.year,
@@ -334,7 +343,7 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                           {
                                                 i += 7;
 
-                                                FILE_t *svg = fopen("/proc/graph.svg", "r");
+                                                FILE_t *svg = fopen(FILE_GRAPH, "r");
 
                                                 if (svg)
                                                 {

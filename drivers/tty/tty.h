@@ -34,15 +34,14 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "tty_def.h"
-#include "basic_types.h"
-#include "system.h"
+#include "sysdrv.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 #define TTYD_NAME             "ttyd"
-#define TTYD_STACK_SIZE       2*MINIMAL_STACK_SIZE
+#define TTYD_STACK_SIZE       3*MINIMAL_STACK_SIZE
 
 
 /*==================================================================================================
@@ -54,13 +53,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t TTY_Init(nod_t dev);
-extern stdRet_t TTY_Open(nod_t dev);
-extern stdRet_t TTY_Close(nod_t dev);
-extern size_t   TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data);
-extern stdRet_t TTY_Release(nod_t dev);
+extern stdRet_t TTY_Init   (devx_t dev, fd_t fd);
+extern stdRet_t TTY_Open   (devx_t dev, fd_t fd);
+extern stdRet_t TTY_Close  (devx_t dev, fd_t fd);
+extern size_t   TTY_Write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   TTY_Read   (devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t TTY_IOCtl  (devx_t dev, fd_t fd, IORq_t ioRQ, void *data);
+extern stdRet_t TTY_Release(devx_t dev, fd_t fd);
 
 #ifdef __cplusplus
 }

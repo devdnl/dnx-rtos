@@ -1,5 +1,5 @@
 /*=============================================================================================*//**
-@file    printf.c
+@file    print.c
 
 @author  Daniel Zorychta
 
@@ -29,13 +29,16 @@
 ==================================================================================================*/
 #include "print.h"
 #include <string.h>
-#include "memman.h"
-#include "tty.h"
+#include "vfs.h"
+#include "oswrap.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define calloc(nmemb, msize)              PRINT_CALLOC(nmemb, msize)
+#define malloc(size)                      PRINT_MALLOC(size)
+#define free(mem)                         PRINT_FREE(mem)
 
 
 /*==================================================================================================
@@ -342,7 +345,7 @@ static u32_t CalcFormatSize(const ch_t *format, va_list arg)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...)
+u32_t snprintb(ch_t *stream, u32_t size, const ch_t *format, ...)
 {
       va_list args;
       u32_t n = 0;
@@ -517,7 +520,7 @@ ch_t getChart(FILE_t *stdin)
                   }
                   else
                   {
-                        Sleep(25);
+                        TaskDelay(25);
                   }
             }
       }

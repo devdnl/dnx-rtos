@@ -1,9 +1,11 @@
+#ifndef SYSDRV_H_
+#define SYSDRV_H_
 /*=============================================================================================*//**
-@file    touch.c
+@file    sysdrv.h
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This function provide all required function needed to write drivers.
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,58 +26,59 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "clear.h"
-#include <string.h>
+#include "basic_types.h"
+#include "systypes.h"
+#include "memman.h"
+#include "oswrap.h"
 
-/* Begin of application section declaration */
-APPLICATION(touch)
-APP_SEC_BEGIN
 
 /*==================================================================================================
-                                  Local symbolic constants/macros
+                                 Exported symbolic constants/macros
+==================================================================================================*/
+#ifdef SYSTEM_H_
+#error "system.h and sysdrv.h shall never included together!"
+#endif
+
+#ifndef calloc
+#define calloc(nmemb, msize)             mm_calloc(nmemb, msize)
+#endif
+
+#ifndef malloc
+#define malloc(size)                     mm_malloc(size)
+#endif
+
+#ifndef free
+#define free(mem)                        mm_free(mem)
+#endif
+
+
+/*==================================================================================================
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                      Local object definitions
+                                     Exported function prototypes
 ==================================================================================================*/
 
 
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
-
-//================================================================================================//
-/**
- * @brief clear main function
- */
-//================================================================================================//
-stdRet_t appmain(ch_t *argv)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      FILE_t *file = fopen(argv, "w");
-
-      if (file)
-      {
-            fclose(file);
-            status = STD_RET_OK;
-      }
-
-      return status;
+#ifdef __cplusplus
 }
+#endif
 
-/* End of application section declaration */
-APP_SEC_END
-
+#endif /* SYSDRV_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

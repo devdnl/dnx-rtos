@@ -70,15 +70,17 @@ extern "C" {
 /**
  * @brief Initialise unit
  *
- * @param eth                 ethernet number
+ * @param dev                 Ethernet number
+ * @param part                device part
  *
  * @retval STD_RET_OK         success
  * @retval STD_RET_ERROR      error
  */
 //================================================================================================//
-stdRet_t ETHER_Init(nod_t eth)
+stdRet_t ETHER_Init(devx_t dev, fd_t part)
 {
-      (void) eth;
+      (void)part;
+      (void)dev;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -155,13 +157,15 @@ stdRet_t ETHER_Init(nod_t eth)
  * @brief Open device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t ETHER_Open(nod_t dev)
+stdRet_t ETHER_Open(devx_t dev, fd_t part)
 {
       (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }
@@ -172,13 +176,15 @@ stdRet_t ETHER_Open(nod_t dev)
  * @brief Close device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t ETHER_Close(nod_t dev)
+stdRet_t ETHER_Close(devx_t dev, fd_t part)
 {
       (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }
@@ -189,6 +195,7 @@ stdRet_t ETHER_Close(nod_t dev)
  * @brief Write to the device
  *
  * @param dev     device number
+ * @param part    device part
  * @param *src    source
  * @param size    size
  * @param seek    seek
@@ -196,9 +203,10 @@ stdRet_t ETHER_Close(nod_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t ETHER_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t ETHER_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)src;
       (void)size;
       (void)seek;
@@ -213,6 +221,7 @@ size_t ETHER_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek
  * @brief Read from device
  *
  * @param dev     device number
+ * @param part    device part
  * @param *dst    destination
  * @param size    size
  * @param seek    seek
@@ -220,9 +229,10 @@ size_t ETHER_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t ETHER_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t ETHER_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)dst;
       (void)size;
       (void)seek;
@@ -237,15 +247,17 @@ size_t ETHER_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @brief IO control
  *
  * @param[in]     dev     device number
+ * @param part    device part
  * @param[in]     ioRq    IO reqest
  * @param[in,out] data    data pointer
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t ETHER_IOCtl(nod_t dev, IORq_t ioRq, void *data)
+stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 {
       (void)dev;
+      (void)part;
       (void)ioRq;
       (void)data;
 
@@ -258,14 +270,16 @@ stdRet_t ETHER_IOCtl(nod_t dev, IORq_t ioRq, void *data)
  * @brief Release ethernet device
  *
  * @param eth                 ethernet number
+ * @param part                device part
  *
  * @retval STD_RET_OK         success
  * @retval STD_RET_ERROR      error
  */
 //================================================================================================//
-stdRet_t ETHER_Release(nod_t eth)
+stdRet_t ETHER_Release(devx_t dev, fd_t part)
 {
-      (void) eth;
+      (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }

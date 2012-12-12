@@ -31,11 +31,8 @@ extern "C" {
 /*==================================================================================================
                                              Include files
 ==================================================================================================*/
-#include "system.h"
-#include "regdrv.h"
 #include "initd.h"
 #include "misc.h"
-#include "tty.h"
 
 
 /*==================================================================================================
@@ -51,6 +48,7 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
+static void basicConf(void);
 
 
 /*==================================================================================================
@@ -74,27 +72,34 @@ extern "C" {
 //================================================================================================//
 int main(void)
 {
-      /* set interrupt vectors and NVIC priority */
-      NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
-      NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+      /* basic configuration depending on architecture */
+      basicConf();
 
       /* dynamic memory management initialization */
       mm_init();
 
-      /* PLL initialization */
-      if (InitDrv("pll", "pll") != STD_RET_OK)
-            while (TRUE);
-
-      /* GPIO and AFIO initialization */
-      InitDrv("gpio", "gpio");
-
-      /* create main task */
+      /* create idit task */
       TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 2, NULL);
 
       /* start OS */
       vTaskStartScheduler();
 
       return 0;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Basic configuration
+ * Function configure the basic of the basic configuration of CPU. This function is depending on
+ * CPU architecture.
+ */
+//================================================================================================//
+static void basicConf(void)
+{
+      /* set interrupt vectors and NVIC priority */
+      NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
+      NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 }
 
 

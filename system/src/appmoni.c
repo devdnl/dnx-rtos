@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    rm.c
+@file    appmoni.c
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This module is used to monitoring all applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,15 +24,17 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "clear.h"
-#include <string.h>
+#include "appmoni.h"
+#include "print.h"
+#include "oswrap.h"
 
-/* Begin of application section declaration */
-APPLICATION(rm)
-APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -45,7 +47,17 @@ APP_SEC_BEGIN
 
 
 /*==================================================================================================
+                                      Local function prototypes
+==================================================================================================*/
+
+
+/*==================================================================================================
                                       Local object definitions
+==================================================================================================*/
+
+
+/*==================================================================================================
+                                     Exported object definitions
 ==================================================================================================*/
 
 
@@ -55,37 +67,67 @@ APP_SEC_BEGIN
 
 //================================================================================================//
 /**
- * @brief clear main function
+ * @brief Monitor memory allocation
+ *
+ * @param size          block size
+ *
+ * @return pointer to allocated block or NULL if error
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+#if (APP_MONITORING_ENABLE > 0)
+void *moni_malloc(u32_t size)
 {
-      stdRet_t status = STD_RET_ERROR;
+      void *ptr = mm_malloc(size);
 
-      if (argv)
-      {
-            /* parse directory and file name */
-            ch_t *filename = strchr(argv, '/');
+      kprint("%s: malloc: %u -> 0x%x\n", TaskGetName(NULL), size, ptr);
 
-            if (filename)
-            {
-                   status = remove(filename);
-            }
-
-            if (status != STD_RET_OK)
-                  printf("Cannot remove specified file.\n");
-      }
-      else
-      {
-            printf("Enter correct filename.\n");
-      }
-
-
-      return status;
+      return ptr;
 }
+#endif
 
-/* End of application section declaration */
-APP_SEC_END
+
+//================================================================================================//
+/**
+ * @brief Monitor memory allocation
+ *
+ * @param nmemb         n members
+ * @param msize         member size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//================================================================================================//
+#if (APP_MONITORING_ENABLE > 0)
+void *moni_calloc(u32_t nmemb, u32_t msize)
+{
+      void *ptr = mm_calloc(nmemb, msize);
+
+      kprint("%s: calloc: %u * %u -> 0x%x\n", TaskGetName(NULL), nmemb, msize, ptr);
+
+      return ptr;
+}
+#endif
+
+
+//================================================================================================//
+/**
+ * @brief Monitor memory freeing
+ *
+ * @param *mem          block to free
+ */
+//================================================================================================//
+#if (APP_MONITORING_ENABLE > 0)
+void moni_free(void *mem)
+{
+      mm_free(mem);
+
+      kprint("%s: freeing: 0x%x\n", TaskGetName(NULL), mem);
+}
+#endif
+
+
+#ifdef __cplusplus
+}
+#endif
 
 /*==================================================================================================
                                             End of file

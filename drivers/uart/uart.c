@@ -40,7 +40,7 @@ extern "C" {
 ==================================================================================================*/
 #define UARTP(dev)                              uart->port[dev]
 #define UARTA(dev)                              uartAddr[dev]
-#define BLOCK_TIME                              100
+#define BLOCK_TIME                              0
 #define TXC_WAIT_TIME                           60000
 
 /** UART wake method: idle line (0) or address mark (1) */
@@ -217,7 +217,7 @@ typedef struct PortHandler_struct
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static void IRQCode(USART_t *usart, nod_t dev);
+static void IRQCode(USART_t *usart, devx_t dev);
 
 
 /*==================================================================================================
@@ -260,13 +260,16 @@ static PortHandler_t *uart;
  * @brief Initialize USART devices
  *
  * @param[in] dev           UART device
+ * @param[in] part          device part
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t UART_Init(nod_t dev)
+stdRet_t UART_Init(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (uart == NULL)
@@ -317,13 +320,16 @@ stdRet_t UART_Init(nod_t dev)
  * @brief Release USART devices
  *
  * @param[in] dev           I2C device
+ * @param[in] part          device part
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t UART_Release(nod_t dev)
+stdRet_t UART_Release(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (uart && dev < UART_DEV_LAST)
@@ -361,6 +367,7 @@ stdRet_t UART_Release(nod_t dev)
  * @brief Opens specified port and initialize default settings
  *
  * @param[in]  dev                        USART name (number)
+ * @param[in]  part                       device part
  *
  * @retval STD_STATUS_OK                  operation success
  * @retval UART_STATUS_PORTLOCKED         port locked for other task
@@ -368,8 +375,10 @@ stdRet_t UART_Release(nod_t dev)
  * @retval UART_STATUS_NOFREEMEM          no enough free memory to allocate RxBuffer
  */
 //================================================================================================//
-stdRet_t UART_Open(nod_t dev)
+stdRet_t UART_Open(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
@@ -523,14 +532,17 @@ stdRet_t UART_Open(nod_t dev)
  * @brief Function close opened port
  *
  * @param[in]  dev                        USART name (number)
+ * @param[in]  part                       device part
  *
  * @retval STD_STATUS_OK                  operation success
  * @retval UART_STATUS_PORTLOCKED         port locked for other task
  * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
  */
 //================================================================================================//
-stdRet_t UART_Close(nod_t dev)
+stdRet_t UART_Close(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
@@ -624,6 +636,7 @@ stdRet_t UART_Close(nod_t dev)
  * @brief Write data to UART (ISR or DMA)
  *
  * @param[in]  dev                        dev number
+ * @param[in]  part                       device part
  * @param[in]  *src                       source buffer
  * @param[in]  size                       item size
  * @param[in]  nitems                     number of items
@@ -632,8 +645,9 @@ stdRet_t UART_Close(nod_t dev)
  * @return number of transmitted nitems
  */
 //================================================================================================//
-size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t UART_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
+      (void)part;
       (void)seek;
 
       size_t  n = 0;
@@ -669,6 +683,7 @@ size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @brief Read data from UART Rx buffer
  *
  * @param[in]  dev                        dev number
+ * @param[in]  part                       device part
  * @param[out] *dst                       destination buffer
  * @param[in]  size                       item size
  * @param[in]  nitems                     number of items
@@ -677,8 +692,9 @@ size_t UART_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @return number of received nitems
  */
 //================================================================================================//
-size_t UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
+      (void)part;
       (void)seek;
 
       size_t n = 0;
@@ -738,7 +754,8 @@ size_t UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
 /**
  * @brief Direct IO control
  *
- * @param[in]     dev               USART name (number)
+ * @param[in]     dev                     USART name (number)
+ * @param[in]     part                    device part
  * @param[in,out] ioRQ                    IO request
  * @param[in,out] *data                   IO data (arguments, results, etc)
  *
@@ -749,8 +766,10 @@ size_t UART_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @retval UART_STATUS_BADRQ              bad request
  */
 //================================================================================================//
-stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
+stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 {
+      (void)part;
+
       stdRet_t status = UART_STATUS_PORTNOTEXIST;
 
       /* check port range */
@@ -916,7 +935,7 @@ stdRet_t UART_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-static void IRQCode(USART_t *usart, nod_t dev)
+static void IRQCode(USART_t *usart, devx_t dev)
 {
       if (usart->SR & USART_SR_TXE)
       {

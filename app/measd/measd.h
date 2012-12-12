@@ -40,7 +40,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** define stack size for this application */
-#define MEASD_STACK_SIZE               (4 * MINIMAL_STACK_SIZE)
+#define MEASD_STACK_SIZE               (5 * MINIMAL_STACK_SIZE)
 
 /** define application name */
 #define MEASD_NAME                     "measd"

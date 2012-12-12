@@ -67,15 +67,27 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "basic_types.h"
-#include "FreeRTOS.h"
-#include "task.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** HEAP size */
-#define MEMMAN_HEAP_SIZE                   (size_t)(40*1024)
+/** USER CFG: HEAP size */
+#define MEMMAN_HEAP_SIZE                  (size_t)(41*1024)
+
+/** USER CFG: aligment */
+#define MEMMAM_ALIGNMENT                  4
+
+/** USER CFG: All allocated blocks will be BLOCK_MIN_SIZE bytes big, at least!
+ * BLOCK_MIN_SIZE can be overridden to suit your needs. Smaller values save space,
+ * larger values could prevent too small blocks to fragment the RAM too much. */
+#define BLOCK_MIN_SIZE                    16
+
+/** USER CFG: heap protection */
+#define MEMMAM_FREE_PROTECT()             TaskSuspendAll()
+#define MEMMAM_FREE_UNPROTECT()           TaskResumeAll()
+#define MEMMAM_ALLOC_PROTECT()            TaskSuspendAll()
+#define MEMMAM_ALLOC_UNPROTECT()          TaskResumeAll()
 
 
 /*==================================================================================================
@@ -91,13 +103,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void  mm_init(void);
+extern void   mm_init(void);
 extern void  *mm_malloc(size_t size);
 extern void  *mm_calloc(size_t count, size_t size);
 extern void  *mm_trim(void *rmem, size_t newsize);
-extern void  mm_free(void *mem);
-extern u32_t mm_GetFreeHeapSize(void);
-extern u32_t mm_GetUsedHeapSize(void);
+extern void   mm_free(void *mem);
+extern u32_t  mm_GetFreeHeapSize(void);
+extern u32_t  mm_GetUsedHeapSize(void);
 
 #ifdef __cplusplus
 }

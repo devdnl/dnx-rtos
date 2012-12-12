@@ -1,11 +1,11 @@
-#ifndef PROC_H_
-#define PROC_H_
+#ifndef APPMONI_H_
+#define APPMONI_H_
 /*=============================================================================================*//**
-@file    proc.h
+@file    appmoni.h
 
 @author  Daniel Zorychta
 
-@brief   This file support /proc files
+@brief   This module is used to monitoring all applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,15 +33,15 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
 #include "systypes.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-typedef size_t procfd_t;
-
+/* USER CFG: enable (1) or disable (0) application monitoring */
+#define APP_MONITORING_ENABLE             (0)
 
 /*==================================================================================================
                                   Exported types, enums definitions
@@ -49,23 +49,29 @@ typedef size_t procfd_t;
 
 
 /*==================================================================================================
+                                     Exported object declarations
+==================================================================================================*/
+
+
+/*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t PROC_remove(u32_t fd);
-extern size_t   PROC_GetFileSize(procfd_t fd);
-extern procfd_t PROC_open(const ch_t *name, ch_t *mode);
-extern stdRet_t PROC_close(procfd_t fd);
-extern size_t   PROC_write(nod_t fd, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   PROC_read(nod_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-extern void     PROC_opendir(DIR_t *dir);
-extern dirent_t PROC_readdir(size_t seek);
+#if (APP_MONITORING_ENABLE > 0)
+extern void *moni_malloc(u32_t size);
+extern void *moni_calloc(u32_t nmemb, u32_t msize);
+extern void  moni_free  (void *mem);
+#else
+#define moni_malloc(size)           mm_malloc(size)
+#define moni_calloc(nmemb, msize)   mm_calloc(nmemb, msize)
+#define moni_free(mem)              mm_free(mem)
+#endif
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PROC_H_ */
+#endif /* APPMONI_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

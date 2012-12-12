@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.2068779240">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.2068779240" moduleId="org.eclipse.cdt.core.settings" name="qemu">
@@ -508,7 +506,14 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="timer_on_coos.cdt.managedbuild.target.gnu.cross.exe.32425771" name="Executable" projectType="cdt.managedbuild.target.gnu.cross.exe"/>
 	</storageModule>
-	<storageModule moduleId="refreshScope" versionNumber="1"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="micro">
+			<resource resourceType="PROJECT" workspacePath="/devdnl_stm32eth"/>
+		</configuration>
+		<configuration configurationName="qemu">
+			<resource resourceType="PROJECT" workspacePath="/devdnl_stm32eth"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>

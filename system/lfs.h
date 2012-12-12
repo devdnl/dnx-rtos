@@ -1,9 +1,11 @@
+#ifndef LFS_H_
+#define LFS_H_
 /*=============================================================================================*//**
-@file    rm.c
+@file    lfs.h
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This file support lfs - list file system
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,69 +26,66 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "clear.h"
-#include <string.h>
+#include "systypes.h"
+#include "vfs.h"
+#include "memman.h"
 
-/* Begin of application section declaration */
-APPLICATION(rm)
-APP_SEC_BEGIN
 
 /*==================================================================================================
-                                  Local symbolic constants/macros
+                                 Exported symbolic constants/macros
+==================================================================================================*/
+/* USER CFG: memory management, free memory */
+#define LFS_FREE(ptr)               mm_free(ptr)
+
+/* USER CFG: memory management, memory allocation */
+#define LFS_CALLOC(nmemb, msize)    mm_calloc(nmemb, msize)
+
+/* USER CFG: memory management, memory allocation */
+#define LFS_MALLOC(size)            mm_malloc(size)
+
+/* USER CFG: getting task name */
+//#define GET_TASK_NAME()             TaskGetName(NULL)
+
+
+/*==================================================================================================
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                     Exported function prototypes
 ==================================================================================================*/
+extern stdRet_t  lfs_init   (devx_t dev);
+extern stdRet_t  lfs_open   (devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
+extern stdRet_t  lfs_close  (devx_t dev, fd_t fd);
+extern size_t    lfs_write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t    lfs_read   (devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t  lfs_ioctl  (devx_t dev, fd_t fd, IORq_t iorq, void *data);
+extern stdRet_t  lfs_mkdir  (devx_t dev, const ch_t *path);
+extern stdRet_t  lfs_mknod  (devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg);
+extern stdRet_t  lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir);
+extern stdRet_t  lfs_remove (devx_t dev, const ch_t *path);
+extern stdRet_t  lfs_rename (devx_t dev, const ch_t *oldName, const ch_t *newName);
+extern stdRet_t  lfs_chmod  (devx_t dev, const ch_t *path, u32_t mode);
+extern stdRet_t  lfs_chown  (devx_t dev, const ch_t *path, u16_t owner, u16_t group);
+extern stdRet_t  lfs_stat   (devx_t dev, const ch_t *path, struct vfs_stat *stat);
+extern stdRet_t  lfs_fstat  (devx_t dev, fd_t fd, struct vfs_stat *stat);
+extern stdRet_t  lfs_statfs (devx_t dev, struct vfs_statfs *statfs);
+extern stdRet_t  lfs_release(devx_t dev);
 
 
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
-
-//================================================================================================//
-/**
- * @brief clear main function
- */
-//================================================================================================//
-stdRet_t appmain(ch_t *argv)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      if (argv)
-      {
-            /* parse directory and file name */
-            ch_t *filename = strchr(argv, '/');
-
-            if (filename)
-            {
-                   status = remove(filename);
-            }
-
-            if (status != STD_RET_OK)
-                  printf("Cannot remove specified file.\n");
-      }
-      else
-      {
-            printf("Enter correct filename.\n");
-      }
-
-
-      return status;
+#ifdef __cplusplus
 }
+#endif
 
-/* End of application section declaration */
-APP_SEC_END
-
+#endif /* LFS_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

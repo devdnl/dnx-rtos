@@ -1,7 +1,7 @@
-#ifndef PRINTF_H_
-#define PRINTF_H_
+#ifndef PRINT_H_
+#define PRINT_H_
 /*=============================================================================================*//**
-@file    printf.h
+@file    print.h
 
 @author  Daniel Zorychta
 
@@ -36,54 +36,62 @@ extern "C" {
 #include <stdarg.h>
 #include "basic_types.h"
 #include "systypes.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-#define printf(...)                 printt(stdout, __VA_ARGS__)
-#define scanf(format, result)       scant(stdin, stdout, format, result)
-#define putChar(c)                  putChart(stdout, c)
-#define getChar()                   getChart(stdin)
-#define ugetChar()                  ugetChart(stdin)
+/** USER CFG: memory management */
+#define PRINT_CALLOC(nmemb, msize)              mm_calloc(nmemb, msize)
+#define PRINT_MALLOC(size)                      mm_malloc(size)
+#define PRINT_FREE(mem)                         mm_free(mem)
+
+/** translate function to STDC */
+#define printf(...)                             printt(stdout, __VA_ARGS__)
+#define snprintf(stream, size, ...)             snprintb(stream, size, __VA_ARGS__)
+#define scanf(format, result)                   scant(stdin, stdout, format, result)
+#define putChar(c)                              putChart(stdout, c)
+#define getChar()                               getChart(stdin)
+#define ugetChar()                              ugetChart(stdin)
 
 /** VT100 terminal commands */
-#define enableLineWrap()            printf("\x1B[?7h")
-#define setNewLineMode()            printf("\x1B[20h")
-#define setLineFeedMode()           printf("\x1B[20l")
-#define clrscr()                    printf("\x1B[2J")
-#define eraseLine()                 printf("\x1B[2K")
-#define eraseLineEnd()              printf("\x1B[K")
-#define cursorHome()                printf("\x1B[H")
-#define resetAttr()                 printf("\x1B[0m")
-#define fontBlink()                 printf("\x1B[5m")
-#define fontUnderl()                printf("\x1B[4m")
-#define fontNormal()                printf("\x1B[0m")
-#define fontBold()                  printf("\x1B[1m")
-#define fontBlack()                 printf("\x1B[30m")
-#define fontRed()                   printf("\x1B[31m")
-#define fontGreen()                 printf("\x1B[32m")
-#define fontYellow()                printf("\x1B[33m")
-#define fontBlue()                  printf("\x1B[34m")
-#define fontMagenta()               printf("\x1B[35m")
-#define fontCyan()                  printf("\x1B[36m")
-#define fontWhite()                 printf("\x1B[37m")
-#define bgBlack()                   printf("\x1B[40m")
-#define bgRed()                     printf("\x1B[41m")
-#define bgGreen()                   printf("\x1B[42m")
-#define bgYellow()                  printf("\x1B[43m")
-#define bgBlue()                    printf("\x1B[44m")
-#define bgMagenta()                 printf("\x1B[45m")
-#define bgCyan()                    printf("\x1B[46m")
-#define bgWhite()                   printf("\x1B[47m")
+#define enableLineWrap()                        printf("\x1B[?7h")
+#define setNewLineMode()                        printf("\x1B[20h")
+#define setLineFeedMode()                       printf("\x1B[20l")
+#define clrscr()                                printf("\x1B[2J")
+#define eraseLine()                             printf("\x1B[2K")
+#define eraseLineEnd()                          printf("\x1B[K")
+#define cursorHome()                            printf("\x1B[H")
+#define resetAttr()                             printf("\x1B[0m")
+#define fontBlink()                             printf("\x1B[5m")
+#define fontUnderl()                            printf("\x1B[4m")
+#define fontNormal()                            printf("\x1B[0m")
+#define fontBold()                              printf("\x1B[1m")
+#define fontBlack()                             printf("\x1B[30m")
+#define fontRed()                               printf("\x1B[31m")
+#define fontGreen()                             printf("\x1B[32m")
+#define fontYellow()                            printf("\x1B[33m")
+#define fontBlue()                              printf("\x1B[34m")
+#define fontMagenta()                           printf("\x1B[35m")
+#define fontCyan()                              printf("\x1B[36m")
+#define fontWhite()                             printf("\x1B[37m")
+#define bgBlack()                               printf("\x1B[40m")
+#define bgRed()                                 printf("\x1B[41m")
+#define bgGreen()                               printf("\x1B[42m")
+#define bgYellow()                              printf("\x1B[43m")
+#define bgBlue()                                printf("\x1B[44m")
+#define bgMagenta()                             printf("\x1B[45m")
+#define bgCyan()                                printf("\x1B[46m")
+#define bgWhite()                               printf("\x1B[47m")
 
 /** key definitions */
-#define ASCII_LF                    0x0A
-#define ASCII_CR                    0x0D
-#define ASCII_BS                    0x08
-#define ASCII_NULL                  0x00
-#define ASCII_ESC                   0x1B
-#define ASCII_CANCEL                0x18
+#define ASCII_LF                                0x0A
+#define ASCII_CR                                0x0D
+#define ASCII_BS                                0x08
+#define ASCII_NULL                              0x00
+#define ASCII_ESC                               0x1B
+#define ASCII_CANCEL                            0x18
 
 
 /*==================================================================================================
@@ -101,7 +109,7 @@ extern "C" {
 //==================================================================================================*/
 //extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired);
 extern ch_t  *a2i(ch_t *string, u8_t base, i32_t *value);
-extern u32_t snprint(ch_t *stream, u32_t size, const ch_t *format, ...);
+extern u32_t snprintb(ch_t *stream, u32_t size, const ch_t *format, ...);
 extern u32_t kprint(const ch_t *format, ...);
 extern u32_t kprintOK(void);
 extern u32_t kprintFail(void);
@@ -118,7 +126,7 @@ extern u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 }
 #endif
 
-#endif /* PRINTF_H_ */
+#endif /* PRINT_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

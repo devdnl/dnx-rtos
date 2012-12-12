@@ -44,6 +44,8 @@ extern "C" {
 /** define number of virtual terminals */
 #define TTY_NUMBER_OF_VT            4
 
+/** define part count */
+#define TTY_PART_NONE               0
 
 /*==================================================================================================
                                   Exported types, enums definitions

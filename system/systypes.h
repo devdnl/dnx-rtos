@@ -56,19 +56,26 @@ extern "C" {
 /** default system status */
 enum status_enum
 {
-   STD_RET_OK                 = 0,
-   STD_RET_ERROR              = 1,
-   STD_RET_ALLOCERROR         = 2,
-   STD_RET_UNKNOWN            = 127,
+      STD_RET_OK                 = 0,
+      STD_RET_ERROR              = 1,
+      STD_RET_UNKNOWN            = 127,
 };
 
+/** file types */
+typedef enum
+{
+      FILE_TYPE_REGULAR,
+      FILE_TYPE_DIR,
+      FILE_TYPE_DRV,
+      FILE_TYPE_LINK
+} tfile_t;
 
 /** universal status type */
 typedef signed char stdRet_t;
 
 
 /** device number type */
-typedef size_t nod_t;
+typedef size_t devx_t;
 
 
 /** task/application ID */
@@ -86,44 +93,44 @@ typedef u32_t fd_t;
 /** file type */
 typedef struct
 {
-      stdRet_t (*close)(nod_t dev);
-      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(nod_t dev, IORq_t iorq, void *data);
+      devx_t   dev;
       fd_t     fd;
-      size_t   seek;
-      ch_t     *mode;
+      stdRet_t (*f_close)(devx_t dev, fd_t fd);
+      size_t   (*f_write)(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*f_read )(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+      stdRet_t (*f_ioctl)(devx_t dev, fd_t fd, IORq_t iorq, void *data);
+      stdRet_t (*f_stat )(devx_t dev, fd_t fd, void *stat);
+      size_t   f_seek;
 } FILE_t;
 
 
 /** directory entry */
 typedef struct
 {
-      stdRet_t (*remove)(fd_t fd);
-      ch_t  *name;
-      size_t size;
-      bool_t isfile;
-      fd_t   fd;
+      ch_t   *name;
+      size_t  size;
+      tfile_t filetype;
 } dirent_t;
 
 
-/** dir type */
-typedef struct
+/** directory type */
+typedef struct dir_s
 {
-      dirent_t (*readdir)(size_t seek);
-      size_t   items;
-      size_t   seek;
+      dirent_t  (*rddir)(struct dir_s *dir);
+      size_t    items;
+      size_t    seek;
+      void     *dd;
 } DIR_t;
 
 
 /** application standard arguments type */
 typedef struct appArgs_struct
 {
-      void     *arg;                      /* pointer to the argument */
-      FILE_t   *stdin;                    /* file used only to read keyboard */
-      FILE_t   *stdout;                   /* file used only to write to terminal */
-      void     *TaskHandle;               /* FreeRTOS task handling for children */
-      void     *ParentTaskHandle;         /* FreeRTOS task handling for parent */
+      void    *arg;                       /* pointer to the argument */
+      FILE_t  *stdin;                     /* file used only to read keyboard */
+      FILE_t  *stdout;                    /* file used only to write to terminal */
+      void    *TaskHandle;                /* FreeRTOS task handling for children */
+      void    *ParentTaskHandle;          /* FreeRTOS task handling for parent */
       stdRet_t exitCode;                  /* exit code */
 } app_t;
 

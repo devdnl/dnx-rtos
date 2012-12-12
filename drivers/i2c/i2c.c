@@ -39,7 +39,7 @@ extern "C" {
 ==================================================================================================*/
 #define I2CP(dev)                         i2c->port[dev]
 
-#define BLOCK_TIME                        100
+#define BLOCK_TIME                        0
 
 /** define I2C error mask */
 #define I2C_ERROR_MASK_BM                 (I2C_SR1_OVR | I2C_SR1_AF | I2C_SR1_ARLO | I2C_SR1_BERR)
@@ -54,11 +54,11 @@ extern "C" {
 /** i2c control structure */
 struct i2cCtrl
 {
-      I2C_t    *Address;             /* peripheral address */
-      task_t   TaskHandle;           /* task handle variable for IRQ */
-      mutex_t  mtx;                  /* port reservation */
-      u8_t     SlaveAddress;         /* slave address */
-      stdRet_t status;               /* last operation status */
+      I2C_t    *Address;            /* peripheral address */
+      task_t    TaskHandle;         /* task handle variable for IRQ */
+      mutex_t   mtx;                /* port reservation */
+      u8_t      SlaveAddress;       /* slave address */
+      stdRet_t  status;             /* last operation status */
 };
 
 /** type which contain port information */
@@ -104,14 +104,17 @@ static PortHandler_t *i2c;
 /**
  * @brief Initialize I2C
  *
- * @param[in] dev           I2C device
+ * @param[in] dev             I2C device
+ * @param[in] part            device part
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t I2C_Init(nod_t dev)
+stdRet_t I2C_Init(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (i2c == NULL)
@@ -140,6 +143,7 @@ stdRet_t I2C_Init(nod_t dev)
                         else
                         {
                               free(I2CP(dev));
+                              I2CP(dev) = NULL;
                         }
                   }
             }
@@ -155,13 +159,16 @@ stdRet_t I2C_Init(nod_t dev)
  * @brief Release I2C peripheral
  *
  * @param[in] dev           I2C device
+ * @param[in] part          device part
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t I2C_Release(nod_t dev)
+stdRet_t I2C_Release(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (i2c && dev < I2C_DEV_LAST)
@@ -197,16 +204,17 @@ stdRet_t I2C_Release(nod_t dev)
  * @brief Open selected I2C port
  *
  * @param[in] dev           I2C device
+ * @param[in] part          device part
  *
- * @retval STD_RET_OK                     operation success
- * @retval I2C_STATUS_PORTNOTEXIST        port not exist
- * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t I2C_Open(nod_t dev)
+stdRet_t I2C_Open(devx_t dev, fd_t part)
 {
-      stdRet_t status  = I2C_STATUS_PORTNOTEXIST;
-      I2C_t    *i2cPtr = NULL;
+      (void)part;
+
+      stdRet_t status  = STD_RET_ERROR;
 
       /* check port range */
       if ((unsigned)dev < I2C_DEV_LAST)
@@ -241,7 +249,7 @@ stdRet_t I2C_Open(nod_t dev)
                   }
 
                   /* set port address */
-                  i2cPtr = i2c->port[dev]->Address;
+                  I2C_t *i2cPtr = i2c->port[dev]->Address;
 
                   /* set default port settings */
                   i2cPtr->CR1   |= I2C_CR1_SWRST;
@@ -254,10 +262,6 @@ stdRet_t I2C_Open(nod_t dev)
 
                   status = STD_RET_OK;
             }
-            else
-            {
-                  status = I2C_STATUS_PORTLOCKED;
-            }
       }
 
       return status;
@@ -269,25 +273,24 @@ stdRet_t I2C_Open(nod_t dev)
  * @brief Close port
  *
  * @param[in] dev           I2C device
+ * @param[in] part          device part
  *
- * @retval STD_RET_OK                     operation success
- * @retval I2C_STATUS_PORTNOTEXIST        port not exist
- * @retval I2C_STATUS_PORTLOCKED          port locked
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t I2C_Close(nod_t dev)
+stdRet_t I2C_Close(devx_t dev, fd_t part)
 {
-      stdRet_t status  = I2C_STATUS_PORTNOTEXIST;
-      I2C_t    *i2cPtr = NULL;
+      (void)part;
 
-      /* check port range */
+      stdRet_t status = STD_RET_ERROR;
+
       if ((unsigned)dev < I2C_DEV_LAST)
       {
-            /* check that port is reserved for this task */
             if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* set port address */
-                  i2cPtr = I2CP(dev)->Address;
+                  I2C_t *i2cPtr = I2CP(dev)->Address;
 
                   /* disable I2C device */
                   i2cPtr->CR1 |= I2C_CR1_SWRST;
@@ -320,17 +323,13 @@ stdRet_t I2C_Close(nod_t dev)
                   /* delete from task handle */
                   i2c->port[dev]->TaskHandle = NULL;
 
-                  status = STD_RET_OK;
-
                   /* give this mutex */
                   GiveRecMutex(I2CP(dev)->mtx);
 
                   /* give mutex from open */
                   GiveRecMutex(I2CP(dev)->mtx);
-            }
-            else
-            {
-                  status = I2C_STATUS_PORTLOCKED;
+
+                  status = STD_RET_OK;
             }
       }
 
@@ -343,6 +342,7 @@ stdRet_t I2C_Close(nod_t dev)
  * @brief Function write data to the I2C device
  *
  * @param[in] dev           I2C device
+ * @param[in] part          device part
  * @param[in] *src          source data
  * @param[in] size          item size
  * @param[in] nitems        number of items
@@ -351,8 +351,10 @@ stdRet_t I2C_Close(nod_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t I2C_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t I2C_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
+      (void)part;
+
       size_t n = 0;
 
       /* check port range */
@@ -417,6 +419,7 @@ size_t I2C_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @brief Read data wrom I2C device
  *
  * @param[in ] dev           I2C device
+ * @param[in ] part          device part
  * @param[out] *dst          destination data
  * @param[in ] size          data size
  * @param[in ] seek          register address
@@ -424,8 +427,10 @@ size_t I2C_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t I2C_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
+      (void)part;
+
       size_t n = 0;
 
       /* check port range */
@@ -499,6 +504,7 @@ size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @brief Specific settings of I2C port
  *
  * @param[in    ] dev           I2C device
+ * @param[in    ] part          device part
  * @param[in    ] ioRQ          input/output reqest
  * @param[in,out] *data         input/output data
  *
@@ -512,8 +518,10 @@ size_t I2C_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @retval I2C_STATUS_ERROR               more than 1 error
  */
 //================================================================================================//
-stdRet_t I2C_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
+stdRet_t I2C_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 {
+      (void)part;
+
       stdRet_t status = I2C_STATUS_PORTNOTEXIST;
 
       /* check port range */

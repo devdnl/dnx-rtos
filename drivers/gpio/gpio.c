@@ -250,9 +250,10 @@ static void InitAFIO(void);
  * @brief Initialise all GPIOs
  */
 //================================================================================================//
-stdRet_t GPIO_Init(nod_t dev)
+stdRet_t GPIO_Init(devx_t dev, fd_t part)
 {
-      (void) dev;
+      (void)dev;
+      (void)part;
 
       #if (AFIO_EN > 0)
             InitAFIO();
@@ -295,13 +296,15 @@ stdRet_t GPIO_Init(nod_t dev)
  * @brief Open device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t GPIO_Open(nod_t dev)
+stdRet_t GPIO_Open(devx_t dev, fd_t part)
 {
       (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }
@@ -312,13 +315,15 @@ stdRet_t GPIO_Open(nod_t dev)
  * @brief Close device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t GPIO_Close(nod_t dev)
+stdRet_t GPIO_Close(devx_t dev, fd_t part)
 {
       (void)dev;
+      (void)part;
 
       return STD_RET_OK;
 }
@@ -329,6 +334,7 @@ stdRet_t GPIO_Close(nod_t dev)
  * @brief Write to the device
  *
  * @param dev     device number
+ * @param part    device part
  * @param *src    source
  * @param size    size
  * @param seek    seek
@@ -336,9 +342,10 @@ stdRet_t GPIO_Close(nod_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t GPIO_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t GPIO_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)src;
       (void)size;
       (void)seek;
@@ -353,6 +360,7 @@ size_t GPIO_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @brief Read from device
  *
  * @param dev     device number
+ * @param part    device part
  * @param *dst    destination
  * @param size    size
  * @param seek    seek
@@ -360,9 +368,10 @@ size_t GPIO_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t GPIO_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t GPIO_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
+      (void)part;
       (void)dst;
       (void)size;
       (void)seek;
@@ -377,15 +386,17 @@ size_t GPIO_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @brief IO control
  *
  * @param[in]     dev     device number
+ * @param[in]     part    device part
  * @param[in]     ioRq    IO reqest
  * @param[in,out] data    data pointer
  *
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t GPIO_IOCtl(nod_t dev, IORq_t ioRq, void *data)
+stdRet_t GPIO_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 {
       (void)dev;
+      (void)part;
       (void)ioRq;
       (void)data;
 
@@ -398,13 +409,15 @@ stdRet_t GPIO_IOCtl(nod_t dev, IORq_t ioRq, void *data)
  * @brief Release GPIO devices. Here is removed driver node and reseted device
  *
  * @param dev           device number
+ * @param part          device part
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t GPIO_Release(nod_t dev)
+stdRet_t GPIO_Release(devx_t dev, fd_t part)
 {
       (void) dev;
+      (void)part;
 
       return STD_RET_OK;
 }

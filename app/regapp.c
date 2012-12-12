@@ -62,6 +62,7 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
+static dirent_t readrootdir(DIR_t *dir);
 
 
 /*==================================================================================================
@@ -71,16 +72,16 @@ static const regAppData_t appList[] =
 {
       {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
       {CLEAR_NAME   , clear   , CLEAR_STACK_SIZE   },
-      {FREEMEM_NAME,  freemem,  FREEMEM_STACK_SIZE },
-      {DATE_NAME,     date,     DATE_STACK_SIZE    },
-      {LS_NAME,       ls,       LS_STACK_SIZE      },
-      {MALT_NAME,     malt,     MALT_STACK_SIZE    },
-      {UPTIME_NAME,   uptime,   UPTIME_STACK_SIZE  },
-      {TOP_NAME,      top,      TOP_STACK_SIZE     },
-      {HTTPD_NAME,    httpd,    HTTPD_STACK_SIZE   },
-      {TOUCH_NAME,    touch,    TOUCH_STACK_SIZE   },
-      {RM_NAME,       rm,       RM_STACK_SIZE      },
-      {MEASD_NAME,    measd,    MEASD_STACK_SIZE   },
+      {FREEMEM_NAME , freemem , FREEMEM_STACK_SIZE },
+      {DATE_NAME    , date    , DATE_STACK_SIZE    },
+      {LS_NAME      , ls      , LS_STACK_SIZE      },
+      {MALT_NAME    , malt    , MALT_STACK_SIZE    },
+      {UPTIME_NAME  , uptime  , UPTIME_STACK_SIZE  },
+      {TOP_NAME     , top     , TOP_STACK_SIZE     },
+      {HTTPD_NAME   , httpd   , HTTPD_STACK_SIZE   },
+      {TOUCH_NAME   , touch   , TOUCH_STACK_SIZE   },
+      {RM_NAME      , rm      , RM_STACK_SIZE      },
+      {MEASD_NAME   , measd   , MEASD_STACK_SIZE   },
 };
 
 
@@ -122,95 +123,440 @@ regAppData_t GetAppData(const ch_t *appName)
 
 //================================================================================================//
 /**
- * @brief Send application list
+ * @brief Function initialize appfs
  *
- * @param *nameList           list of exist application
+ * @param dev           device number
  *
- * @return number of exist application
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-u32_t GetAppList(ch_t *nameList, u32_t size)
+stdRet_t appfs_init(devx_t dev)
 {
-      if (ARRAY_SIZE(appList) == 0)
-            return 0;
+      (void)dev;
 
-      if (size)
-            size--;
+      return STD_RET_OK;
+}
 
-      u32_t app;
-      for (app = 0; app < ARRAY_SIZE(appList); app++)
-      {
-            u32_t i;
-            for (i = 0; i < strlen(appList[app].appName); i++)
-            {
-                  if (size)
-                  {
-                        *(nameList++) = appList[app].appName[i];
-                        size--;
-                  }
-                  else
-                  {
-                        *(nameList) = ASCII_NULL;
-                        return app;
-                  }
 
-                  size--;
+//================================================================================================//
+/**
+ * @brief Function open selected file
+ *
+ * @param  dev          device number
+ * @param *fd           file descriptor
+ * @param *seek         file position
+ * @param *path         file name
+ * @param *mode         file mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
+{
+      (void)dev;
+      (void)fd;
+      (void)seek;
+      (void)path;
+      (void)mode;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Close file
+ *
+ * @param dev           device number
+ * @param *fd           file descriptor
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_close(devx_t dev, fd_t fd)
+{
+      (void)dev;
+      (void)fd;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Write data file
+ *
+ * @param  dev          device number
+ * @param *fd           file descriptor
+ * @param *src          data source
+ * @param  size         item size
+ * @param  nitems       item count
+ * @param  seek         file position
+ *
+ * @return written nitems
+ */
+//================================================================================================//
+size_t appfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+{
+      (void)dev;
+      (void)fd;
+      (void)src;
+      (void)size;
+      (void)nitems;
+      (void)seek;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Read data files
+ *
+ * @param  dev          device number
+ * @param *fd           file descriptor
+ * @param *src          data source
+ * @param  size         item size
+ * @param  nitems       item count
+ * @param  seek         file position
+ *
+ * @retval read nitems
+ */
+//================================================================================================//
+size_t appfs_read(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+{
+      (void)dev;
+      (void)fd;
+      (void)dst;
+      (void)size;
+      (void)nitems;
+      (void)seek;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Control file
+ *
+ * @param  dev          device number
+ * @param  fd           file descriptor
+ * @param  iorq         request
+ * @param *data         data
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
+{
+      (void)dev;
+      (void)fd;
+      (void)iorq;
+      (void)data;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Statistics of opened file
+ *
+ * @param dev           device number
+ * @param *fd           file descriptor
+ * @param *stat         output statistics
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
+{
+      (void)dev;
+      (void)fd;
+      (void)stat;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Create directory
+ *
+ * @param dev           device number
+ * @param *path         directory path
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_mkdir(devx_t dev, const ch_t *path)
+{
+      (void)dev;
+      (void)path;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Create device node
+ *
+ * @param dev           device number
+ * @param *path         node path
+ * @param *dcfg         device configuration
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg)
+{
+      (void)dev;
+      (void)path;
+      (void)dcfg;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Opens directory
+ *
+ * @param dev           device number
+ * @param *path         directory path
+ * @param *dir          directory object to fill
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
+{
+      (void)dev;
+
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && dir) {
+            if (path[0] == '/' && strlen(path) == 1) {
+                  dir->dd    = 0;
+                  dir->items = ARRAY_SIZE(appList);
+                  dir->rddir = readrootdir;
+                  dir->seek  = 0;
+
+                  status = STD_RET_OK;
             }
-
-            if (size--)
-                  *(nameList++) = ASCII_CR;
-
-            if (size--)
-                  *(nameList++) = ASCII_LF;
       }
 
-      return app;
-}
-
-
-
-//================================================================================================//
-/**
- * @brief Function open driver directory
- *
- * @param *dir          directory
- *
- * @return number of items
- */
-//================================================================================================//
-void REGAPP_opendir(DIR_t *dir)
-{
-      dir->readdir = REGAPP_readdir;
-      dir->seek    = 0;
-      dir->items   = ARRAY_SIZE(appList);
+      return status;
 }
 
 
 //================================================================================================//
 /**
- * @brief Function read selected item
+ * @brief Remove file
  *
- * @param seek          nitem
- * @return file attributes
+ * @param dev           device number
+ * @param *path         file path
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-dirent_t REGAPP_readdir(size_t seek)
+stdRet_t appfs_remove(devx_t dev, const ch_t *path)
 {
-      dirent_t direntry;
-      direntry.name = NULL;
-      direntry.size = 0;
-      direntry.fd   = 0;
+      (void)dev;
+      (void)path;
 
-      if (seek < ARRAY_SIZE(appList))
-      {
-            direntry.name   = (ch_t*)appList[seek].appName;
-            direntry.size   = appList[seek].stackSize * sizeof(void *)
-                            + strlen(direntry.name)
-                            + sizeof(regAppData_t);
-            direntry.isfile = TRUE;
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Rename file
+ *
+ * @param dev           device number
+ * @param *oldName      old file name
+ * @param *newName      new file name
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
+{
+      (void)dev;
+      (void)oldName;
+      (void)newName;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Change file mode
+ *
+ * @param dev           device number
+ * @param *path         file path
+ * @param mode          new mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
+{
+      (void)dev;
+      (void)path;
+      (void)mode;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Change file owner and group
+ *
+ * @param dev           device number
+ * @param *path         file path
+ * @param owner         owner
+ * @param group         group
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
+{
+      (void)dev;
+      (void)path;
+      (void)owner;
+      (void)group;
+
+      return STD_RET_ERROR;
+}
+
+
+//================================================================================================//
+/**
+ * @brief File statistics
+ *
+ * @param dev           device number
+ * @param *path         file path
+ * @param *stat         file statistics
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
+{
+      (void)dev;
+
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && stat) {
+            stat->st_dev   = 0;
+            stat->st_gid   = 0;
+            stat->st_mode  = 0444;
+            stat->st_mtime = 0;
+            stat->st_rdev  = 0;
+            stat->st_size  = 0;
+            stat->st_uid   = 0;
+
+            status = STD_RET_OK;
       }
 
-      return direntry;
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief File system statistics
+ *
+ * @param dev           device number
+ * @param *statfs       FS statistics
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_statfs(devx_t dev, struct vfs_statfs *statfs)
+{
+      (void)dev;
+
+      stdRet_t status = STD_RET_ERROR;
+
+      if (statfs) {
+            statfs->f_bfree  = 0;
+            statfs->f_blocks = 0;
+            statfs->f_ffree  = 0;
+            statfs->f_files  = 0;
+            statfs->f_type   = 1;
+            statfs->fsname   = "appfs";
+
+            status = STD_RET_OK;
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Release file system
+ *
+ * @param dev           device number
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t appfs_release(devx_t dev)
+{
+      (void)dev;
+
+      return STD_RET_OK;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Read item from opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @return directory entry
+ */
+//================================================================================================//
+static dirent_t readrootdir(DIR_t *dir)
+{
+      dirent_t dirent;
+      dirent.name = NULL;
+      dirent.size = 0;
+
+      if (dir) {
+            if (dir->seek < ARRAY_SIZE(appList)) {
+                  dirent.filetype = FILE_TYPE_REGULAR;
+                  dirent.name     = (ch_t*)appList[dir->seek].appName;
+                  dirent.size     = 0;
+                  dir->seek++;
+            }
+      }
+
+      return dirent;
 }
 
 

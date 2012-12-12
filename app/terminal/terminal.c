@@ -29,6 +29,7 @@
 ==================================================================================================*/
 #include "terminal.h"
 #include <string.h>
+#include "tty_def.h"
 
 /* Begin of application section declaration */
 APPLICATION(terminal)
@@ -56,6 +57,7 @@ typedef enum
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+ch_t *cdpath;
 
 
 /*==================================================================================================
@@ -69,7 +71,8 @@ typedef enum
 //================================================================================================//
 void PrintPrompt(void)
 {
-      printf("\x1B[32mroot@%s:\x1B[0m ", SystemGetHostname());
+      printf("\x1B[32mroot@%s:\x1B[33m%s\x1B[0m\n", SystemGetHostname(), cdpath);
+      printf("\x1B[32m$\x1B[0m ");
 }
 
 
@@ -106,6 +109,42 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
       if (strcmp("stack", cmd) == 0)
       {
             printf("Free stack: %d\n", SystemGetStackFreeSpace());
+            return CMD_EXECUTED;
+      }
+
+      /* cd ------------------------------------------------------------------------------------- */
+      if (strcmp("cd", cmd) == 0)
+      {
+            if (arg[0] == '/')
+            {
+                  strcpy(cdpath, arg);
+            }
+            else if (strcmp(arg, "..") == 0)
+            {
+                  ch_t *lastslash = strrchr(cdpath, '/');
+
+                  if (lastslash)
+                  {
+                        if (lastslash != cdpath)
+                        {
+                              *lastslash = '\0';
+                        }
+                        else
+                        {
+                              *(lastslash + 1) = '\0';
+                        }
+                  }
+            }
+            else if (arg[0] != '/')
+            {
+                  strcat(cdpath, "/");
+                  strcat(cdpath, arg);
+            }
+            else
+            {
+                  strcat(cdpath, arg);
+            }
+
             return CMD_EXECUTED;
       }
 
@@ -175,10 +214,11 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       ch_t *arg;
 
       /* allocate memory for input line */
-      line    = malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
-      history = malloc(PROMPT_LINE_SIZE * sizeof(ch_t));
+      line    = calloc(PROMPT_LINE_SIZE, sizeof(ch_t));
+      history = calloc(PROMPT_LINE_SIZE, sizeof(ch_t));
+      cdpath  = calloc(256, sizeof(ch_t));
 
-      if (!line || !history)
+      if (!line || !history || !cdpath)
       {
             if (line)
                   free(line);
@@ -186,17 +226,20 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
             if (history)
                   free(history);
 
+            if (cdpath)
+                  free(cdpath);
+
             printf("No enough free memory\n");
             termStatus = STD_RET_ERROR;
             goto Terminal_Exit;
       }
 
-      memset(history, ASCII_NULL, PROMPT_LINE_SIZE);
+      strcpy(cdpath, "/");
 
       u32_t tty = 0;
       ioctl(stdin, TTY_IORQ_GETCURRENTTTY, &tty);
 
-      printf("Welcome to Tinix (tty%u)\n", tty);
+      printf("Welcome to Tinix RTOS (tty%u)\n", tty);
 
       /* main loop ------------------------------------------------------------------------------ */
       for (;;)
@@ -208,7 +251,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
             /* waiting for command */
             scanf("%100s", line);
 
-            /* check that history was call */
+            /* check that history was called */
             if (strcmp(line, "\x1B[A") == 0)
             {
                   ch_t character;
@@ -277,6 +320,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       /* free used memory */
       free(line);
       free(history);
+      free(cdpath);
 
       /* if stack size is debugging */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)

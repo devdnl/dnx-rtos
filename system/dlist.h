@@ -1,11 +1,11 @@
-#ifndef TOUCH_H_
-#define TOUCH_H_
+#ifndef _DLIST_H_
+#define _DLIST_H_
 /*=============================================================================================*//**
-@file    touch.h
+@file    dlist.h
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This file support dynamically lists
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,40 +33,51 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
+#include "basic_types.h"
+#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** define stack size for this application */
-#define TOUCH_STACK_SIZE               (2 * MINIMAL_STACK_SIZE)
-
-/** define application name */
-#define TOUCH_NAME                     "touch"
+/* USER CFG: memory management */
+#define DLIST_CALLOC(nmemb, msize)        mm_calloc(nmemb, msize)
+#define DLIST_MALLOC(size)                mm_malloc(size)
+#define DLIST_FREE(mem)                   mm_free(mem)
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
+typedef struct list list_t;
 
 
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern APPLICATION(touch);
+extern list_t *ListCreate(void);
+extern void    ListDestroy(list_t *list);
+extern i32_t   ListAddItem(list_t *list, void *data);
+extern i32_t   ListInsItemBeforeNo(list_t *list, i32_t nitem, void *data);
+extern i32_t   ListInsItemAfterNo(list_t *list, i32_t nitem, void *data);
+extern i32_t   ListRmItemByNo(list_t *list, i32_t nitem);
+extern i32_t   ListRmItemByID(list_t *list, u32_t id);
+extern void    ListClear(list_t *list);
+extern i32_t   ListSetItemDataByNo(list_t *list, i32_t nitem, void *data);
+extern void   *ListGetItemDataByNo(list_t *list, i32_t nitem);
+extern i32_t   ListSetItemDataByID(list_t *list, u32_t id, void *data);
+extern void   *ListGetItemDataByID(list_t *list, u32_t id);
+extern i32_t   ListUnlinkItemDataByNo(list_t *list, i32_t nitem);
+extern i32_t   ListUnlinkItemDataByID(list_t *list, u32_t id);
+extern i32_t   ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid);
+extern i32_t   ListGetItemCount(list_t *list);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TOUCH_H_ */
+#endif /* _DLIST_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

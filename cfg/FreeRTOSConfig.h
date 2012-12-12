@@ -138,7 +138,7 @@ NVIC value of 255. */
 /* required functions in cpu load stats */
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      RunTimeStatsCfgCnt()
 #define portGET_RUN_TIME_COUNTER_VALUE()              RunTimeStatsGetCnt()
-#define sprintf(ptr, format, ...)                     snprint(ptr, 65535, format, __VA_ARGS__)
+#define sprintf(ptr, format, ...)                     snprintf(ptr, 65535, format, __VA_ARGS__)
 
 #endif /* FREERTOS_CONFIG_H */
 

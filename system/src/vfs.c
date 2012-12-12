@@ -32,38 +32,605 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "vfs.h"
-#include "regapp.h"
-#include "regdrv.h"
-#include "proc.h"
-#include "memman.h"
+#include "dlist.h"
+#include "oswrap.h"
 #include <string.h>
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+/* wait time for operation on VFS */
+#define MTX_BLOCK_TIME                    10
 
+#define calloc(nmemb, msize)              VFS_CALLOC(nmemb, msize)
+#define malloc(size)                      VFS_MALLOC(size)
+#define free(mem)                         VFS_FREE(mem)
 
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+struct fsinfo {
+      ch_t             *path;
+      struct fsinfo    *basefs;
+      struct vfs_fscfg  fs;
+      u8_t mntFSCnt;
+};
+
+
+struct vfshdl {
+      list_t  *mntList;
+      mutex_t  mtx;
+};
 
 
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static void     ROOT_opendir(DIR_t *dir);
-static dirent_t ROOT_readdir(size_t seek);
-
+static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid);
+static struct fsinfo *FindBaseFS(const ch_t *path, ch_t **extPath);
+static ch_t          *AddEndSlash(const ch_t *path);
+static ch_t          *SubEndSlash(const ch_t *path);
 
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+static struct vfshdl *vfs;
 
 
 /*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
+
+//================================================================================================//
+/**
+ * @brief Initialize VFS module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_init(void)
+{
+      stdRet_t ret = STD_RET_OK;
+
+      if (vfs == NULL) {
+            vfs = calloc(1, sizeof(struct vfshdl));
+
+            if (vfs) {
+                  CreateMutex(vfs->mtx);
+                  vfs->mntList = ListCreate();
+
+                  if (!vfs->mtx || !vfs->mntList) {
+                        if (vfs->mtx)
+                              DeleteMutex(vfs->mtx);
+
+                        if (vfs->mntList)
+                              ListDestroy(vfs->mntList);
+
+                        free(vfs);
+                        vfs = NULL;
+                  }
+            }
+
+            if (vfs == NULL)
+                  ret = STD_RET_ERROR;
+      }
+
+      return ret;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function mount file system in VFS
+ * External file system is mounted to empty directory. If directory is not empty mounting is not
+ * possible.
+ *
+ * @param *path               path when dir shall be mounted
+ * @param *mountcfg           pointer to description of mount FS
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && mountcfg && vfs) {
+            struct fsinfo *mountfs = NULL;
+            struct fsinfo *basefs  = NULL;
+            ch_t          *extPath = NULL;
+            struct fsinfo *newfs   = NULL;
+            ch_t          *newpath = AddEndSlash(path);
+
+            if (newpath && vfs) {
+                  while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+
+                  /* find if file system is already mounted and find base file system ----------- */
+                  mountfs = FindMountedFS(newpath, -1, NULL);
+                  basefs  = FindBaseFS(newpath, &extPath);
+
+                  /* create new FS in existing dir and FS, otherwise create new FS if first mount */
+                  if (basefs && mountfs == NULL) {
+                        if (basefs->fs.f_opendir && extPath) {
+
+                              if (basefs->fs.f_opendir(basefs->fs.dev,
+                                                     extPath, NULL) == STD_RET_OK) {
+
+                                    newfs = calloc(1, sizeof(struct fsinfo));
+                                    basefs->mntFSCnt++;
+                              }
+                        }
+                  } else if (  ListGetItemCount(vfs->mntList) == 0
+                            && strlen(newpath) == 1 && newpath[0] == '/') {
+
+                        newfs = calloc(1, sizeof(struct fsinfo));
+                  }
+
+                  /* mount FS if created -------------------------------------------------------- */
+                  if (newfs && mountcfg->f_init) {
+                        if (mountcfg->f_init(mountcfg->dev) == STD_RET_OK) {
+                              newfs->path     = newpath;
+                              newfs->basefs   = basefs;
+                              newfs->fs       = *mountcfg;
+                              newfs->mntFSCnt = 0;
+
+                              if (ListAddItem(vfs->mntList, newfs) >= 0) {
+                                    status = STD_RET_OK;
+                              }
+                        }
+                  }
+
+                  GiveMutex(vfs->mtx);
+            }
+
+            /* free allocated memory if error */
+            if (status == STD_RET_ERROR) {
+                  if (newfs)
+                        free(newfs);
+
+                  free(newpath);
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function umount dir from file system
+ *
+ * @param *path               dir path
+ *
+ * @retval STD_RET_OK         mount success
+ * @retval STD_RET_ERROR      mount error
+ */
+//================================================================================================//
+stdRet_t vfs_umount(const ch_t *path)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && vfs) {
+            if (path[0] == '/') {
+                  while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+
+                  u32_t itemid;
+                  ch_t *newpath = AddEndSlash(path);
+
+                  if (newpath) {
+                        struct fsinfo *mountfs = FindMountedFS(newpath, -1, &itemid);
+
+                        if (mountfs) {
+                              if (mountfs->fs.f_release && mountfs->mntFSCnt == 0) {
+                                    if (mountfs->fs.f_release(mountfs->fs.dev) == STD_RET_OK) {
+
+                                          /* decrease mount points if base FS exist */
+                                          if (mountfs->basefs) {
+                                                if (mountfs->basefs->mntFSCnt)
+                                                      mountfs->basefs->mntFSCnt--;
+                                          }
+
+                                          if (mountfs->path)
+                                                free(mountfs->path);
+
+                                          if (ListRmItemByID(vfs->mntList, itemid) == 0)
+                                                status = STD_RET_OK;
+                                    }
+                              }
+                        }
+
+                        free(newpath);
+                  }
+
+                  GiveMutex(vfs->mtx);
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function create node for driver file
+ *
+ * @param *path               path when driver-file shall be created
+ * @param *drvcfg             pointer to description of driver
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && drvcfg && vfs) {
+            ch_t *extPath     = NULL;
+
+            while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+            struct fsinfo *fs = FindBaseFS(path, &extPath);
+            GiveMutex(vfs->mtx);
+
+            if (fs) {
+                  if (fs->fs.f_mknod) {
+                        status = fs->fs.f_mknod(fs->fs.dev, extPath, drvcfg);
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Create directory
+ *
+ * @param *path   path to new directory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_mkdir(const ch_t *path)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && vfs) {
+            ch_t *newpath = SubEndSlash(path);
+
+            if (newpath) {
+                  ch_t *extPath = NULL;
+
+                  while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                  struct fsinfo *fs = FindBaseFS(newpath, &extPath);
+                  GiveMutex(vfs->mtx);
+
+                  if (fs) {
+                        if (fs->fs.f_mkdir) {
+                              status = fs->fs.f_mkdir(fs->fs.dev, extPath);
+                        }
+                  }
+
+                  free(newpath);
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function open directory
+ *
+ * @param *path         directory path
+ *
+ * @return directory object
+ */
+//================================================================================================//
+DIR_t *vfs_opendir(const ch_t *path)
+{
+      stdRet_t status = STD_RET_ERROR;
+      DIR_t *dir      = NULL;
+
+      if (path && vfs) {
+            dir = malloc(sizeof(DIR_t));
+
+            if (dir) {
+                  ch_t *newpath = AddEndSlash(path);
+
+                  if (newpath) {
+                        ch_t *extPath = NULL;
+
+                        while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        struct fsinfo *fs = FindBaseFS(newpath, &extPath);
+                        GiveMutex(vfs->mtx);
+
+                        if (fs) {
+                              if (fs->fs.f_opendir) {
+                                    status = fs->fs.f_opendir(fs->fs.dev, extPath, dir);
+                              }
+                        }
+
+                        free(newpath);
+                  }
+
+                  if (status == STD_RET_ERROR) {
+                        free(dir);
+                        dir = NULL;
+                  }
+            }
+      }
+
+      return dir;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function close opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_closedir(DIR_t *dir)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (dir)
+      {
+            free(dir);
+            status = STD_RET_OK;
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function read next item of opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @return element attributes
+ */
+//================================================================================================//
+dirent_t vfs_readdir(DIR_t *dir)
+{
+      dirent_t direntry;
+      direntry.name = NULL;
+      direntry.size = 0;
+
+      if (dir->rddir) {
+            direntry = dir->rddir(dir);
+      }
+
+      return direntry;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Remove file
+ * Removes file or directory. Removes directory if is not a mount point.
+ *
+ * @param *patch        localization of file/directory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_remove(const ch_t *path)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && vfs) {
+            ch_t *slashpath = AddEndSlash(path);
+
+            if (slashpath) {
+                  ch_t *extPath = NULL;
+
+                  while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                  struct fsinfo *mfs = FindMountedFS(slashpath, -1, NULL);
+                  struct fsinfo *bfs = FindBaseFS(path, &extPath);
+                  GiveMutex(vfs->mtx);
+
+                  if (bfs && mfs == NULL) {
+                        if (bfs->fs.f_remove) {
+                              status = bfs->fs.f_remove(bfs->fs.dev, extPath);
+                        }
+                  }
+
+                  free(slashpath);
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Rename file name
+ * The implementation of rename can move files only if external FS provide functionality. Local
+ * VFS can not do this.
+ *
+ * @param *oldName            old file name
+ * @param *newName            new file name
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (oldName && newName && vfs) {
+            ch_t *extPathOld = NULL;
+            ch_t *extPathNew = NULL;
+
+            while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+            struct fsinfo *fsOld = FindBaseFS(oldName, &extPathOld);
+            struct fsinfo *fsNew = FindBaseFS(newName, &extPathNew);
+            GiveMutex(vfs->mtx);
+
+            if (fsOld && fsNew && fsOld == fsNew) {
+                  if (fsOld->fs.f_rename) {
+                        status = fsOld->fs.f_rename(fsOld->fs.dev, extPathOld, extPathNew);
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function change file mode
+ *
+ * @param *path   file path
+ * @param  mode   file mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_chmod(const ch_t *path, u16_t mode)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && vfs) {
+            ch_t *extPath = NULL;
+
+            while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+            struct fsinfo *fs = FindBaseFS(path, &extPath);
+            GiveMutex(vfs->mtx);
+
+            if (fs) {
+                  if (fs->fs.f_chmod) {
+                        status = fs->fs.f_chmod(fs->fs.dev, extPath, mode);
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function change file owner and group
+ *
+ * @param *path   file path
+ * @param  owner  file owner
+ * @param  group  file group
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && vfs) {
+            ch_t *extPath = NULL;
+
+            while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+            struct fsinfo *fs = FindBaseFS(path, &extPath);
+            GiveMutex(vfs->mtx);
+
+            if (fs) {
+                  if (fs->fs.f_chown) {
+                        status = fs->fs.f_chown(fs->fs.dev, extPath, owner, group);
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns file/dir status
+ *
+ * @param *path         file/dir path
+ * @param *stat         pointer to stat structure
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && stat && vfs) {
+            ch_t *extPath = NULL;
+
+            while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+            struct fsinfo *fs = FindBaseFS(path, &extPath);
+            GiveMutex(vfs->mtx);
+
+            if (fs) {
+                  if (fs->fs.f_stat) {
+                        status = fs->fs.f_stat(fs->fs.dev, extPath, stat);
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns file system status
+ *
+ * @param *path         fs path
+ * @param *statfs       pointer to fs status structure
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && statfs && vfs) {
+            ch_t *slashpath = AddEndSlash(path);
+
+            if (slashpath) {
+                  while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                  struct fsinfo *fs = FindMountedFS(slashpath, -1, NULL);
+                  GiveMutex(vfs->mtx);
+
+                  if (fs) {
+                        if (fs->fs.f_statfs) {
+                              status = fs->fs.f_statfs(fs->fs.dev, statfs);
+                        }
+                  }
+
+                  free(slashpath);
+            }
+      }
+
+      return status;
+}
+
 
 //================================================================================================//
 /**
@@ -75,114 +642,50 @@ static dirent_t ROOT_readdir(size_t seek);
  * @retval NULL if file can't be created
  */
 //================================================================================================//
-FILE_t *fopen(const ch_t *name, const ch_t *mode)
+FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
 {
-      (void) mode;
-
       FILE_t *file = NULL;
 
-      if (name && mode)
-      {
-            file = calloc(1, sizeof(FILE_t));
+      if (path && mode && vfs) {
+            if (  path[strlen(path) - 1] != '/'
+               && (  strncmp("r", mode, 2) == 0 || strncmp("r+", mode, 2) == 0
+                  || strncmp("w", mode, 2) == 0 || strncmp("w+", mode, 2) == 0
+                  || strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) ) {
 
-            if (file != NULL)
-            {
-                  /* check if path is device */
-                  stdRet_t stat = STD_RET_ERROR;
+                  file = calloc(1, sizeof(FILE_t));
 
-                  ch_t *filename = strchr(name + 1, '/');
+                  if (file) {
+                        stdRet_t status  = STD_RET_ERROR;
+                        ch_t    *extPath = NULL;
 
-                  if (filename)
-                  {
-                        filename++;
+                        while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        struct fsinfo *fs = FindBaseFS(path, &extPath);
+                        GiveMutex(vfs->mtx);
 
-                        if (strncmp("/bin/", name, filename - name) == 0)
-                        {
-                                    /* nothing to do */
-                        }
-                        else if (strncmp("/dev/", name, filename - name) == 0)
-                        {
-                              regDrvData_t drvdata;
-
-                              if (GetDrvData(filename, &drvdata) == STD_RET_OK)
-                              {
-                                    if (drvdata.open(drvdata.device) == STD_RET_OK)
-                                    {
-                                          file->close = drvdata.close;
-                                          file->fd    = drvdata.device;
-                                          file->ioctl = drvdata.ioctl;
-                                          file->read  = drvdata.read;
-                                          file->write = drvdata.write;
-
-                                          stat = STD_RET_OK;
-                                    }
-                              }
-                        }
-                        else if (strncmp("/proc/", name, filename - name) == 0)
-                        {
-                              if ((file->fd = PROC_open(filename, (ch_t*)mode)) != 0)
-                              {
-                                    file->close = PROC_close;
-                                    file->ioctl = NULL;
-                                    file->read  = PROC_read;
-                                    file->write = PROC_write;
-
-                                    stat = STD_RET_OK;
+                        if (fs) {
+                              if (fs->fs.f_open) {
+                                    status = fs->fs.f_open(fs->fs.dev,  &file->fd,
+                                                           &file->f_seek, extPath, mode);
                               }
                         }
 
-                        /* file does not exist */
-                        if (stat != STD_RET_OK)
-                        {
+                        if (status == STD_RET_OK) {
+                              file->dev     = fs->fs.dev;
+                              file->f_close = fs->fs.f_close;
+                              file->f_ioctl = fs->fs.f_ioctl;
+                              file->f_stat  = (void*)fs->fs.f_fstat;
+
+                              if (strncmp("r", mode, 2) != 0) {
+                                    file->f_write = fs->fs.f_write;
+                              }
+
+                              if (strncmp("w", mode, 2) != 0 && strncmp("a", mode, 2) != 0) {
+                                    file->f_read  = fs->fs.f_read;
+                              }
+                        } else {
                               free(file);
                               file = NULL;
                         }
-                        else
-                        {
-                              file->mode = (ch_t*)mode;
-
-                              /* open for reading */
-                              if (strncmp("r", mode, 2) == 0)
-                              {
-                                    file->write = NULL;
-                              }
-                              /* open for writing (file need not exist) */
-                              else if (strncmp("w", mode, 2) == 0)
-                              {
-                                    file->read = NULL;
-                              }
-                              /* open for appending (file need not exist) */
-                              else if (strncmp("a", mode, 2) == 0)
-                              {
-                                    file->read = NULL;
-                              }
-                              /* open for reading and writing, start at beginning */
-                              else if (strncmp("r+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* open for reading and writing (overwrite file) */
-                              else if (strncmp("w+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* open for reading and writing (append if file exists) */
-                              else if (strncmp("a+", mode, 2) == 0)
-                              {
-                                    /* nothing to change */
-                              }
-                              /* invalid mode */
-                              else
-                              {
-                                    fclose(file);
-                                    file = NULL;
-                              }
-                        }
-                  }
-                  else
-                  {
-                        free(file);
-                        file = NULL;
                   }
             }
       }
@@ -201,16 +704,17 @@ FILE_t *fopen(const ch_t *name, const ch_t *mode)
  * @retval STD_RET_ERROR      file not closed
  */
 //================================================================================================//
-stdRet_t fclose(FILE_t *file)
+stdRet_t vfs_fclose(FILE_t *file)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (file)
-      {
-            if (file->close(file->fd) == STD_RET_OK)
-            {
-                  free(file);
-                  status = STD_RET_OK;
+      if (file) {
+            if (file->f_close) {
+                  status = file->f_close(file->dev, file->fd);
+
+                  if (status == STD_RET_OK) {
+                        free(file);
+                  }
             }
       }
 
@@ -230,16 +734,14 @@ stdRet_t fclose(FILE_t *file)
  * @return STD_RET_OK or 0 if write finished successfully, otherwise > 0
  */
 //================================================================================================//
-size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
+size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
       size_t n = 0;
 
-      if (ptr && size && nitems && file)
-      {
-            if (file->write)
-            {
-                  n = file->write(file->fd, ptr, size, nitems, file->seek);
-                  file->seek += n * size;
+      if (ptr && size && nitems && file) {
+            if (file->f_write) {
+                  n = file->f_write(file->dev, file->fd, ptr, size, nitems, file->f_seek);
+                  file->f_seek += n * size;
             }
       }
 
@@ -259,16 +761,14 @@ size_t fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @return number of read items
  */
 //================================================================================================//
-size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
+size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
 {
       size_t n = 0;
 
-      if (ptr && size && nitems && file)
-      {
-            if (file->read)
-            {
-                  n = file->read(file->fd, ptr, size, nitems, file->seek);
-                  file->seek += n * size;
+      if (ptr && size && nitems && file) {
+            if (file->f_read) {
+                  n = file->f_read(file->dev, file->fd, ptr, size, nitems, file->f_seek);
+                  file->f_seek += n * size;
             }
       }
 
@@ -282,202 +782,33 @@ size_t fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
  *
  * @param *file               file object
  * @param offset              seek value
- * @param mode                seek mode DNLFIXME implement: seek mode
+ * @param mode                seek mode
  *
  * @retval STD_RET_OK         seek moved successfully
- * @retval STD_RET_ERROR      error occured
+ * @retval STD_RET_ERROR      error occurred
  */
 //================================================================================================//
-stdRet_t fseek(FILE_t *file, i32_t offset, i32_t mode)
+stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
 {
       (void)mode;
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (file)
-      {
-            file->seek = offset;
-            status     = STD_RET_OK;
-      }
+      if (file) {
+            struct vfs_stat stat;
 
-      return status;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function support not standard operations
- *
- * @param *file               file
- * @param rq                  request
- * @param *data               pointer to datas
- *
- * @retval STD_RET_OK         success
- * @retval STD_RET_XX         error
- */
-//================================================================================================//
-stdRet_t ioctl(FILE_t *file, IORq_t rq, void *data)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      if (file && file->ioctl)
-      {
-            status = file->ioctl(file->fd, rq, data);
-      }
-
-      return status;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function open root directory
- *
- * @param *dir          directory
- *
- * @return number of items
- */
-//================================================================================================//
-static void ROOT_opendir(DIR_t *dir) /* DNLFIXME apply better solution (table) */
-{
-      dir->readdir = ROOT_readdir;
-      dir->seek    = 0;
-      dir->items   = 3;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function read selected item
- *
- * @param seek          nitem
- * @return file attributes
- */
-//================================================================================================//
-static dirent_t ROOT_readdir(size_t seek)
-{
-      dirent_t direntry;
-      direntry.remove = NULL;
-      direntry.name   = NULL;
-      direntry.size   = 0;
-      direntry.isfile = FALSE;
-      direntry.fd     = 0;
-
-      if (seek < 3)
-      {
-            switch (seek) /* DNLFIXME apply better solution (table) */
-            {
-                  case 0: direntry.name = "bin"; break;
-                  case 1: direntry.name = "dev"; break;
-                  case 2: direntry.name = "proc"; break;
-                  default: break;
+            if (mode == VFS_SEEK_END) {
+                  stat.st_size = 0;
+                  vfs_fstat(file, &stat);
             }
 
-            direntry.size = 0;
-      }
-
-      return direntry;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function open directory
- *
- * @param *path         directory path
- *
- * @return directory object
- */
-//================================================================================================//
-DIR_t *opendir(const ch_t *path)
-{
-      DIR_t *dir = NULL;
-
-      if (path)
-      {
-            dir = calloc(1 , sizeof(DIR_t));
-
-            if (dir)
-            {
-                  /* check if path is device */
-                  stdRet_t stat = STD_RET_OK;
-
-                  if (strcmp("/", path) == 0)
-                  {
-                        ROOT_opendir(dir);
-                  }
-                  else if (strcmp("/bin", path) == 0)
-                  {
-                        REGAPP_opendir(dir);
-                  }
-                  else if (strcmp("/dev", path) == 0)
-                  {
-                        REGDRV_opendir(dir);
-                  }
-                  else if (strcmp("/proc", path) == 0)
-                  {
-                        PROC_opendir(dir);
-                  }
-                  else
-                  {
-                        stat = STD_RET_ERROR;
-                  }
-
-                  /* file does not exist */
-                  if (stat != STD_RET_OK)
-                  {
-                        free(dir);
-                        dir = NULL;
-                  }
+            switch (mode) {
+            case VFS_SEEK_SET: file->f_seek  = offset; break;
+            case VFS_SEEK_CUR: file->f_seek += offset; break;
+            case VFS_SEEK_END: file->f_seek  = stat.st_size + offset; break;
+            default: break;
             }
-      }
 
-      return dir;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function read next item of opened directory
- *
- * @param *dir          directory object
- * @return element attributes
- */
-//================================================================================================//
-dirent_t readdir(DIR_t *dir)
-{
-      dirent_t direntry;
-      direntry.name = NULL;
-      direntry.size = 0;
-      direntry.fd   = 0;
-
-      if (dir->readdir)
-      {
-            direntry = dir->readdir(dir->seek);
-            dir->seek++;
-      }
-
-      return direntry;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function close opened directory
- *
- * @param *dir          directory object
- *
- * @retval STD_RET_OK         close success
- * @retval STD_RET_ERROR      close error
- */
-//================================================================================================//
-stdRet_t closedir(DIR_t *dir)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      if (dir)
-      {
-            free(dir);
             status = STD_RET_OK;
       }
 
@@ -487,26 +818,210 @@ stdRet_t closedir(DIR_t *dir)
 
 //================================================================================================//
 /**
- * @brief Remove file
+ * @brief Function returns seek value
  *
- * @param *direntry     localization of file description
+ * @param *file               file object
  *
- * @return STD_RET_OK if success, otherwise STD_RET_ERROR
+ * @return -1 if error, otherwise correct value
  */
 //================================================================================================//
-stdRet_t remove(dirent_t *direntry)
+i32_t vfs_ftell(FILE_t *file)
+{
+      i32_t seek = -1;
+
+      if (file) {
+            seek = file->f_seek;
+      }
+
+      return seek;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function support not standard operations
+ *
+ * @param *file               file
+ * @param rq                  request
+ * @param *data               pointer to data
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (direntry->remove)
-      {
-            status = direntry->remove(direntry->fd);
+      if (file) {
+            if (file->f_ioctl) {
+                  status = file->f_ioctl(file->dev, file->fd, rq, data);
+            }
+      }
+
+      return status;
+
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns file/dir status
+ *
+ * @param *path         file/dir path
+ * @param *stat         pointer to stat structure
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t vfs_fstat(FILE_t *file, struct vfs_stat *stat)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (file && stat) {
+            if (file->f_stat) {
+                  status = file->f_stat(file->dev, file->fd, stat);
+            }
       }
 
       return status;
 }
 
 
+//================================================================================================//
+/**
+ * @brief Function find FS in mounted list
+ *
+ * @param *path         path to FS
+ * @param  len          path length
+ * @param *itemid       item id in mount list
+ *
+ * @return pointer to FS info
+ */
+//================================================================================================//
+static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid)
+{
+      struct fsinfo *fsinfo = NULL;
+
+      i32_t icount = ListGetItemCount(vfs->mntList);
+
+      for (i32_t i = 0; i < icount; i++) {
+
+            struct fsinfo *data = ListGetItemDataByNo(vfs->mntList, i);
+
+            if (strncmp(path, data->path, len) == 0) {
+                  fsinfo = data;
+
+                  if (itemid) {
+                        if (ListGetItemID(vfs->mntList, i, itemid) != 0)
+                              fsinfo = NULL;
+                  }
+
+                  break;
+            }
+      }
+
+      return fsinfo;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function find base FS of selected path
+ *
+ * @param *path         path to FS
+ * @param **extPath     pointer to external part of path
+ *
+ * @return pointer to FS info
+ */
+//================================================================================================//
+static struct fsinfo *FindBaseFS(const ch_t *path, ch_t **extPath)
+{
+      struct fsinfo *fsinfo = NULL;
+
+      ch_t *pathTail = (ch_t*)path + strlen(path);
+
+      if (*(pathTail - 1) == '/')
+            pathTail--;
+
+      while (pathTail >= path) {
+            struct fsinfo *fs = FindMountedFS(path, pathTail - path + 1, NULL);
+
+            if (fs) {
+                  fsinfo = fs;
+                  break;
+            } else {
+                  while (*(--pathTail) != '/' && pathTail >= path);
+            }
+      }
+
+      if (fsinfo && extPath) {
+            *extPath = pathTail;
+      }
+
+      return fsinfo;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function corrects path -- adds additional / at the end if not exist
+ *
+ * @param *path         path to correct
+ *
+ * @return pointer to new path
+ */
+//================================================================================================//
+static ch_t *AddEndSlash(const ch_t *path)
+{
+      ch_t *newpath;
+      u16_t nplen = strlen(path);
+
+      if (path[nplen - 1] != '/') {
+            nplen++;
+      }
+
+      newpath = calloc(nplen + 1, sizeof(ch_t));
+
+      if (newpath) {
+            strcpy(newpath, path);
+
+            if (nplen > strlen(path)) {
+                  strcat(newpath, "/");
+            }
+      }
+
+     return newpath;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function corrects path -- subs / at the end if exist
+ *
+ * @param *path         path to correct
+ *
+ * @return pointer to new path
+ */
+//================================================================================================//
+static ch_t *SubEndSlash(const ch_t *path)
+{
+      ch_t *newpath;
+      u16_t nplen = strlen(path);
+
+      if (path[nplen - 1] == '/') {
+            nplen--;
+      }
+
+      newpath = calloc(nplen + 1, sizeof(ch_t));
+
+      if (newpath) {
+            strncpy(newpath, path, nplen);
+      }
+
+      return newpath;
+}
 
 #ifdef __cplusplus
 }

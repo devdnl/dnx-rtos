@@ -31,9 +31,9 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "regdrv.h"           /* DNLTODO correct this module, use better file allocation */
-#include "systypes.h"
+#include "regdrv.h"
 #include <string.h>
+#include "vfs.h"
 
 /* include here drivers headers */
 #include "uart.h"
@@ -56,15 +56,10 @@ extern "C" {
 ==================================================================================================*/
 typedef struct
 {
-      ch_t     *drvName;
-      stdRet_t (*init)(nod_t);
-      stdRet_t (*open)(nod_t);
-      stdRet_t (*close)(nod_t);
-      size_t   (*write)(nod_t dev, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*read )(nod_t dev, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*ioctl)(nod_t, IORq_t, void*);
-      stdRet_t (*release)(nod_t);
-      nod_t    device;
+      ch_t  *drvName;
+      stdRet_t (*drvInit   )(devx_t dev, fd_t part);
+      stdRet_t (*drvRelease)(devx_t dev, fd_t part);
+      struct vfs_drvcfg drvCfg;
 } regDrv_t;
 
 
@@ -81,96 +76,173 @@ static const regDrv_t drvList[] =
 {
       #ifdef UART_H_
       {
-             "uart1",               UART_Init,              UART_Open,
-             UART_Close,            UART_Write,             UART_Read,
-             UART_IOCtl,            UART_Release,           UART_DEV_1
+             .drvName    = "uart1",
+             .drvInit    = UART_Init,
+             .drvRelease = UART_Release,
+             .drvCfg     = {.dev     = UART_DEV_1,
+                            .part    = UART_PART_NONE,
+                            .f_open  = UART_Open,
+                            .f_close = UART_Close,
+                            .f_write = UART_Write,
+                            .f_read  = UART_Read,
+                            .f_ioctl = UART_IOCtl}
       },
       #endif
       #ifdef GPIO_H_
       {
-             "gpio",                GPIO_Init,              GPIO_Open,
-             GPIO_Close,            GPIO_Write,             GPIO_Read,
-             GPIO_IOCtl,            GPIO_Release,           GPIO_DEV_NONE
+             .drvName    = "gpio",
+             .drvInit    = GPIO_Init,
+             .drvRelease = GPIO_Release,
+             .drvCfg     = {.dev     = GPIO_DEV_NONE,
+                            .part    = GPIO_PART_NONE,
+                            .f_open  = GPIO_Open,
+                            .f_close = GPIO_Close,
+                            .f_write = GPIO_Write,
+                            .f_read  = GPIO_Read,
+                            .f_ioctl = GPIO_IOCtl}
       },
       #endif
       #ifdef PLL_H_
       {
-             "pll",                 PLL_Init,               PLL_Open,
-             PLL_Close,             PLL_Write,              PLL_Read,
-             PLL_IOCtl,             PLL_Release,            PLL_DEV_NONE
+             .drvName    = "pll",
+             .drvInit    = PLL_Init,
+             .drvRelease = PLL_Release,
+             .drvCfg     = {.dev     = PLL_DEV_NONE,
+                            .part    = PLL_PART_NONE,
+                            .f_open  = PLL_Open,
+                            .f_close = PLL_Close,
+                            .f_write = PLL_Write,
+                            .f_read  = PLL_Read,
+                            .f_ioctl = PLL_IOCtl},
       },
       #endif
       #ifdef I2C_H_
       {
-             "i2c1",                I2C_Init,               I2C_Open,
-             I2C_Close,             I2C_Write,              I2C_Read,
-             I2C_IOCtl,             I2C_Release,            I2C_DEV_1
+            .drvName    = "i2c1",
+            .drvInit    = I2C_Init,
+            .drvRelease = I2C_Release,
+            .drvCfg     = {.dev     = I2C_DEV_1,
+                           .part    = I2C_PART_NONE,
+                           .f_open  = I2C_Open,
+                           .f_close = I2C_Close,
+                           .f_write = I2C_Write,
+                           .f_read  = I2C_Read,
+                           .f_ioctl = I2C_IOCtl},
       },
       #endif
       #ifdef ETH_H_
       {
-             "eth0",                ETHER_Init,             ETHER_Open,
-             ETHER_Close,           ETHER_Write,            ETHER_Read,
-             ETHER_IOCtl,           ETHER_Release,          ETH_DEV_1
+             .drvName    = "eth0",
+             .drvInit    = ETHER_Init,
+             .drvRelease = ETHER_Release,
+             .drvCfg     = {.dev     = ETH_DEV_1,
+                            .part    = ETH_PART_NONE,
+                            .f_open  = ETHER_Open,
+                            .f_close = ETHER_Close,
+                            .f_write = ETHER_Write,
+                            .f_read  = ETHER_Read,
+                            .f_ioctl = ETHER_IOCtl},
       },
       #endif
       #ifdef DS1307_H_
       {
-             "ds1307nvm",           DS1307_Init,            DS1307_Open,
-             DS1307_Close,          DS1307_Write,           DS1307_Read,
-             DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_NVM
+             .drvName    = "ds1307nvm",
+             .drvInit    = DS1307_Init,
+             .drvRelease = DS1307_Release,
+             .drvCfg     = {.dev     = DS1307_DEV_NVM,
+                            .part    = DS1307_PART_NONE,
+                            .f_open  = DS1307_Open,
+                            .f_close = DS1307_Close,
+                            .f_write = DS1307_Write,
+                            .f_read  = DS1307_Read,
+                            .f_ioctl = DS1307_IOCtl},
       },
       #endif
       #ifdef DS1307_H_
       {
-             "ds1307rtc",           DS1307_Init,            DS1307_Open,
-             DS1307_Close,          DS1307_Write,           DS1307_Read,
-             DS1307_IOCtl,          DS1307_Release,         DS1307_DEV_RTC
+             .drvName    = "ds1307rtc",
+             .drvInit    = DS1307_Init,
+             .drvRelease = DS1307_Release,
+             .drvCfg     = {.dev     = DS1307_DEV_RTC,
+                            .part    = DS1307_PART_NONE,
+                            .f_open  = DS1307_Open,
+                            .f_close = DS1307_Close,
+                            .f_write = DS1307_Write,
+                            .f_read  = DS1307_Read,
+                            .f_ioctl = DS1307_IOCtl},
       },
       #endif
       #if (TTY_NUMBER_OF_VT > 0)
       {
-             "tty0",                TTY_Init,               TTY_Open,
-             TTY_Close,             TTY_Write,              TTY_Read,
-             TTY_IOCtl,             TTY_Release,            TTY_DEV_0
+             .drvName    = "tty0",
+             .drvInit    = TTY_Init,
+             .drvRelease = TTY_Release,
+             .drvCfg     = {.dev     = TTY_DEV_0,
+                            .part    = TTY_PART_NONE,
+                            .f_open  = TTY_Open,
+                            .f_close = TTY_Close,
+                            .f_write = TTY_Write,
+                            .f_read  = TTY_Read,
+                            .f_ioctl = TTY_IOCtl},
       },
       #endif
       #if (TTY_NUMBER_OF_VT > 1)
       {
-             "tty1",                TTY_Init,               TTY_Open,
-             TTY_Close,             TTY_Write,              TTY_Read,
-             TTY_IOCtl,             TTY_Release,            TTY_DEV_1
+             .drvName    = "tty1",
+             .drvInit    = TTY_Init,
+             .drvRelease = TTY_Release,
+             .drvCfg     = {.dev     = TTY_DEV_1,
+                            .part    = TTY_PART_NONE,
+                            .f_open  = TTY_Open,
+                            .f_close = TTY_Close,
+                            .f_write = TTY_Write,
+                            .f_read  = TTY_Read,
+                            .f_ioctl = TTY_IOCtl},
       },
       #endif
       #if (TTY_NUMBER_OF_VT > 2)
       {
-             "tty2",                TTY_Init,               TTY_Open,
-             TTY_Close,             TTY_Write,              TTY_Read,
-             TTY_IOCtl,             TTY_Release,            TTY_DEV_2
+             .drvName    = "tty2",
+             .drvInit    = TTY_Init,
+             .drvRelease = TTY_Release,
+             .drvCfg     = {.dev     = TTY_DEV_2,
+                            .part    = TTY_PART_NONE,
+                            .f_open  = TTY_Open,
+                            .f_close = TTY_Close,
+                            .f_write = TTY_Write,
+                            .f_read  = TTY_Read,
+                            .f_ioctl = TTY_IOCtl},
       },
       #endif
       #if (TTY_NUMBER_OF_VT > 3)
       {
-             "tty3",                TTY_Init,               TTY_Open,
-             TTY_Close,             TTY_Write,              TTY_Read,
-             TTY_IOCtl,             TTY_Release,            TTY_DEV_3
+             .drvName    = "tty3",
+             .drvInit    = TTY_Init,
+             .drvRelease = TTY_Release,
+             .drvCfg     = {.dev     = TTY_DEV_3,
+                            .part    = TTY_PART_NONE,
+                            .f_open  = TTY_Open,
+                            .f_close = TTY_Close,
+                            .f_write = TTY_Write,
+                            .f_read  = TTY_Read,
+                            .f_ioctl = TTY_IOCtl},
       },
       #endif
       #ifdef MPL115A2_H_
       {
-             "mpl115a2",            MPL115A2_Init,          MPL115A2_Open,
-             MPL115A2_Close,        MPL115A2_Write,         MPL115A2_Read,
-             MPL115A2_IOCtl,        MPL115A2_Release,       MPL115A2_DEV_NONE
+             .drvName    = "mpl115a2",
+             .drvInit    = MPL115A2_Init,
+             .drvRelease = MPL115A2_Release,
+             .drvCfg     = {.dev     = MPL115A2_DEV_NONE,
+                            .part    = MPL115A2_PART_NONE,
+                            .f_open  = MPL115A2_Open,
+                            .f_close = MPL115A2_Close,
+                            .f_write = MPL115A2_Write,
+                            .f_read  = MPL115A2_Read,
+                            .f_ioctl = MPL115A2_IOCtl},
       },
       #endif
 };
-
-
-/* drivers node names */
-static struct devName_struct
-{
-      ch_t *node[ARRAY_SIZE(drvList)];
-} *devName;
 
 
 /*==================================================================================================
@@ -192,50 +264,38 @@ static struct devName_struct
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //================================================================================================//
-stdRet_t InitDrv(const ch_t *drvName, ch_t *nodeName)
+stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
 {
       stdRet_t status = STD_RET_ERROR;
-      u32_t i;
 
-      if (drvName && nodeName)
-      {
-            if (devName == NULL)
-            {
-                  devName = calloc(1, sizeof(struct devName_struct));
+      if (drvName && nodeName) {
+            u16_t n = ARRAY_SIZE(drvList);
 
-                  if (devName == NULL)
-                  {
-                        goto InitDrv_End;
+            for (u16_t i = 0; i < n; i++) {
+                  if (strcmp(drvList[i].drvName, drvName) == 0) {
+                        devx_t dev  = drvList[i].drvCfg.dev;
+                        fd_t   part = drvList[i].drvCfg.part;
+
+                        if (drvList[i].drvInit(dev, part) == STD_RET_OK) {
+
+                              status = vfs_mknod(nodeName, (struct vfs_drvcfg*)&drvList[i].drvCfg);
+
+                              if (status == STD_RET_ERROR) {
+                                    drvList[i].drvRelease(dev, part);
+                                    kprint("\x1B[31mCreate node %s failed\x1B[0m\n", nodeName);
+                              } else {
+                                    kprint("Created node %s\n", nodeName);
+                              }
+                        }
+
+                        goto InitDrv_end;
                   }
             }
 
-            for (i = 0; i < ARRAY_SIZE(drvList); i++)
-            {
-                  if (strcmp(drvList[i].drvName, drvName) == 0)
-                  {
-                        status = drvList[i].init(drvList[i].device);
-
-                        if (status == STD_RET_OK)
-                        {
-                              devName->node[i] = nodeName;
-                              kprint("Created node /dev/%s\n", nodeName);
-                        }
-                        else
-                        {
-                              kprint("\x1B[31mCreate node /dev/%s failed\x1B[0m\n", nodeName);
-                        }
-                        break;
-                  }
-            }
-
-            if (status != STD_RET_OK && i == ARRAY_SIZE(drvList))
-            {
-                  kprint("\x1B[31mDoes not found %s driver\x1B[0m\n", drvName);
-            }
+            kprint("\x1B[31mDriver %s does not exist!\x1B[0m\n", drvName);
       }
 
-      InitDrv_End:
-
+      InitDrv_end:
       return status;
 }
 
@@ -253,175 +313,21 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (drvName && devName)
-      {
-            for (u32_t i = 0; i < ARRAY_SIZE(drvList); i++)
-            {
-                  if (strcmp(drvList[i].drvName, drvName) == 0)
-                  {
-                        status = drvList[i].release(drvList[i].device);
+      if (drvName) {
+            u16_t n = ARRAY_SIZE(drvList);
 
-                        if (status == STD_RET_OK && devName->node[i])
-                        {
-                              kprint("Removed node /dev/%s\n", devName->node[i]);
-                              free(devName->node[i]);
-                              devName->node[i] = NULL;
-                        }
+            for (u16_t i = 0; i < n; i++) {
+                  if (strcmp(drvList[i].drvName, drvName) == 0) {
+                        devx_t dev  = drvList[i].drvCfg.dev;
+                        fd_t   part = drvList[i].drvCfg.part;
+
+                        status = drvList[i].drvRelease(dev, part);
+
                         break;
                   }
             }
       }
 
-      return status;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function returns regisered driver list
- *
- * @param *drvNode            name of driver in /dev/ path
- *
- * @return driver depending value, all not equal to STD_RET_OK are errors
- */
-//================================================================================================//
-stdRet_t GetDrvData(const ch_t *drvNode, regDrvData_t *drvdata)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      regDrvData_t drvPtrs;
-      drvPtrs.open   = NULL;
-      drvPtrs.close  = NULL;
-      drvPtrs.write  = NULL;
-      drvPtrs.read   = NULL;
-      drvPtrs.ioctl  = NULL;
-      drvPtrs.device = 0;
-
-      if (drvNode && drvdata)
-      {
-            for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
-            {
-                  if (devName->node[i])
-                  {
-                        if (strcmp(devName->node[i], drvNode) == 0)
-                        {
-                              drvPtrs.open   = drvList[i].open;
-                              drvPtrs.close  = drvList[i].close;
-                              drvPtrs.write  = drvList[i].write;
-                              drvPtrs.read   = drvList[i].read;
-                              drvPtrs.ioctl  = drvList[i].ioctl;
-                              drvPtrs.device = drvList[i].device;
-
-                              *drvdata = drvPtrs;
-
-                              status = STD_RET_OK;
-
-                              break;
-                        }
-                  }
-            }
-      }
-
-      return status;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function open driver directory
- *
- * @param *dir          directory
- *
- * @return number of items
- */
-//================================================================================================//
-void REGDRV_opendir(DIR_t *dir)
-{
-      dir->readdir = REGDRV_readdir;
-      dir->seek    = 0;
-      dir->items   = 0;
-
-      for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
-      {
-            if (devName->node[i])
-            {
-                  dir->items++;
-            }
-      }
-}
-
-
-//================================================================================================//
-/**
- * @brief Function read selected item
- *
- * @param seek          nitem
- * @return file attributes
- */
-//================================================================================================//
-dirent_t REGDRV_readdir(size_t seek)
-{
-      dirent_t direntry;
-      direntry.remove = REGDRV_remove;
-      direntry.name   = NULL;
-      direntry.size   = 0;
-      direntry.fd     = 0;
-
-      u8_t itemcnt = 0;
-      for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
-      {
-            if (devName->node[i])
-            {
-                  itemcnt++;
-            }
-      }
-
-      if (seek < itemcnt)
-      {
-            u8_t cnt = seek;
-            for (u8_t i = 0; i < ARRAY_SIZE(drvList); i++)
-            {
-                  if (devName->node[i])
-                  {
-                        if (cnt == 0)
-                        {
-                              direntry.name   = devName->node[i];
-                              direntry.size   = sizeof(regDrv_t);
-                              direntry.isfile = TRUE;
-                              direntry.fd     = i;
-
-                              break;
-                        }
-
-                        cnt--;
-                  }
-            }
-      }
-
-      return direntry;
-}
-
-
-//================================================================================================//
-/**
- * @brief Function find remove driver using file descriptor
- *
- * @param fd            file descriptor
- *
- * @return driver depending value, all not equal to STD_RET_OK are errors
- */
-//================================================================================================//
-stdRet_t REGDRV_remove(fd_t fd)
-{
-      stdRet_t status = STD_RET_ERROR;
-
-      if (devName)
-      {
-            if (devName->node[fd] != NULL)
-            {
-                  status = ReleaseDrv(drvList[fd].drvName);
-            }
-      }
 
       return status;
 }

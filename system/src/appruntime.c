@@ -29,12 +29,16 @@
 ==================================================================================================*/
 #include "appruntime.h"
 #include "regapp.h"
+#include "oswrap.h"
 #include <string.h>
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define calloc(nmemb, msize)              APPRUNTIME_CALLOC(nmemb, msize)
+#define malloc(size)                      APPRUNTIME_MALLOC(size)
+#define free(mem)                         APPRUNTIME_FREE(mem)
 
 
 /*==================================================================================================
@@ -45,6 +49,8 @@
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
+static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
+static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
 
 
 /*==================================================================================================
@@ -73,7 +79,7 @@
  * @return application handler
  */
 //================================================================================================//
-app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
       app_t *appHandle = NULL;
 
@@ -121,7 +127,7 @@ app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg
  * @return application handler
  */
 //================================================================================================//
-app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
 {
       app_t *appHandle = NULL;
 

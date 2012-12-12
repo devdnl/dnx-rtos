@@ -33,6 +33,8 @@ extern "C" {
 ==================================================================================================*/
 #include "tty.h"
 #include <string.h>
+#include "uart_def.h"
+#include "vfs.h"
 
 
 /*==================================================================================================
@@ -44,6 +46,10 @@ extern "C" {
 #define TTY(number)                 term->tty[number]
 #define BLOCK_TIME                  10000
 
+#define calloc(nmemb, msize)        mm_calloc(nmemb, msize)
+#define malloc(size)                mm_malloc(size)
+#define free(mem)                   mm_free(mem)
+
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -54,10 +60,10 @@ struct termHdl
       struct ttyEntry
       {
             ch_t    *line[TTY_MAX_LINES];        /* line buffer */
-            u8_t    wrIdx;                       /* write index */
-            u8_t    newMsgCnt;                   /* new message counter */
-            flag_t  refLstLn;                    /* request to refresh last line */
-            mutex_t mtx;                        /* resources security */
+            u8_t     wrIdx;                      /* write index */
+            u8_t     newMsgCnt;                  /* new message counter */
+            flag_t   refLstLn;                   /* request to refresh last line */
+            mutex_t  mtx;                        /* resources security */
 
             /* FIFO used in keyboard read */
             struct inputfifo
@@ -117,12 +123,15 @@ static struct termHdl *term;
  * @brief Initialize USART devices
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t TTY_Init(nod_t dev)
+stdRet_t TTY_Init(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev < TTY_LAST)
@@ -164,13 +173,16 @@ stdRet_t TTY_Init(nod_t dev)
  * @brief Opens specified port and initialize default settings
  *
  * @param[in]  dev                        TTY number
+ * @param[in]  part                       device part
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  operation error
  */
 //================================================================================================//
-stdRet_t TTY_Open(nod_t dev)
+stdRet_t TTY_Open(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev < TTY_LAST)
@@ -211,13 +223,16 @@ stdRet_t TTY_Open(nod_t dev)
  * @brief Function close opened port
  *
  * @param[in]  dev                        TTY number
+ * @param[in]  part                       device part
  *
  * @retval STD_RET_OK                     operation success
  * @retval STD_RET_ERROR                  operation error
  */
 //================================================================================================//
-stdRet_t TTY_Close(nod_t dev)
+stdRet_t TTY_Close(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev < TTY_LAST)
@@ -234,6 +249,7 @@ stdRet_t TTY_Close(nod_t dev)
  * @brief Write data to TTY
  *
  * @param[in]  dev                        TTY number
+ * @param[in]  part                       device part
  * @param[in]  *src                       source buffer
  * @param[in]  size                       buffer size
  * @param[in]  nitems                     number of items
@@ -242,9 +258,10 @@ stdRet_t TTY_Close(nod_t dev)
  * @retval number of written nitems
  */
 //================================================================================================//
-size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
+size_t TTY_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
+      (void)part;
 
       size_t n = 0;
 
@@ -327,6 +344,7 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @brief Write data to TTY
  *
  * @param[in]  dev                        TTY number
+ * @param[in]  part                       device part
  * @param[in]  *dst                       destination buffer
  * @param[in]  size                       item size
  * @param[in]  nitems                     number of items
@@ -335,9 +353,10 @@ size_t TTY_Write(nod_t dev, void *src, size_t size, size_t nitems, size_t seek)
  * @retval number of read nitems
  */
 //================================================================================================//
-size_t TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
+size_t TTY_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)seek;
+      (void)part;
 
       size_t n = 0;
 
@@ -380,6 +399,7 @@ size_t TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @brief Specific settings of TTY
  *
  * @param[in    ] dev           TTY device
+ * @param[in    ]  part         device part
  * @param[in    ] ioRQ          input/output request
  * @param[in,out] *data         input/output data
  *
@@ -387,8 +407,10 @@ size_t TTY_Read(nod_t dev, void *dst, size_t size, size_t nitems, size_t seek)
  * @retval STD_RET_ERROR        operation error
  */
 //================================================================================================//
-stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
+stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev < TTY_LAST)
@@ -495,13 +517,16 @@ stdRet_t TTY_IOCtl(nod_t dev, IORq_t ioRQ, void *data)
  * @brief Release TTY device
  *
  * @param dev     device number
+ * @param part    device part
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t TTY_Release(nod_t dev)
+stdRet_t TTY_Release(devx_t dev, fd_t part)
 {
+      (void)part;
+
       stdRet_t status = STD_RET_ERROR;
 
       if (dev < TTY_LAST)
@@ -668,7 +693,7 @@ static void ttyd(void *arg)
 
                         if (TTY(keyfn) == NULL)
                         {
-                              TTY_Open(keyfn);
+                              TTY_Open(keyfn, TTY_PART_NONE);
                         }
 
                         if (TTY(keyfn))
@@ -715,8 +740,11 @@ static void ClearTTY(u8_t dev)
       {
             for (u8_t i = 0; i < TTY_MAX_LINES; i++)
             {
-                  free(TTY(dev)->line[i]);
-                  TTY(dev)->line[i] = NULL;
+                  if (TTY(dev)->line[i])
+                  {
+                        free(TTY(dev)->line[i]);
+                        TTY(dev)->line[i] = NULL;
+                  }
             }
 
             TTY(dev)->newMsgCnt = 0;
