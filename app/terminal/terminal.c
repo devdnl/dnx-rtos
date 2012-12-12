@@ -30,6 +30,7 @@
 #include "terminal.h"
 #include <string.h>
 #include "tty_def.h"
+#include "ds1307_def.h"
 
 /* Begin of application section declaration */
 APPLICATION(terminal)
@@ -41,6 +42,7 @@ APP_SEC_BEGIN
 /** user prompt line size [B] */
 #define PROMPT_LINE_SIZE            100
 
+#define CD_PATH_SIZE                128
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -52,6 +54,11 @@ typedef enum
       CMD_ALLOC_ERROR,
       CMD_EXIT,
 } cmdStatus_t;
+
+typedef struct {
+      const ch_t *name;
+      cmdStatus_t (*const cmd)(ch_t *arg);
+} cmd_t;
 
 
 /*==================================================================================================
@@ -66,13 +73,401 @@ ch_t *cdpath;
 
 //================================================================================================//
 /**
- * @brief Function print prompt
+ * @brief Exit from terminal
  */
 //================================================================================================//
-void PrintPrompt(void)
+cmdStatus_t cmdEXIT(ch_t *arg)
 {
-      printf("\x1B[32mroot@%s:\x1B[33m%s\x1B[0m\n", SystemGetHostname(), cdpath);
-      printf("\x1B[32m$\x1B[0m ");
+      (void)arg;
+
+      return CMD_EXIT;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Echo command
+ */
+//================================================================================================//
+cmdStatus_t cmdECHO(ch_t *arg)
+{
+      if (arg)
+            printf("%s\n", arg);
+      else
+            printf("\n");
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function show stack usage
+ */
+//================================================================================================//
+cmdStatus_t cmdSTACK(ch_t *arg)
+{
+      (void)arg;
+
+      printf("Free stack: %d\n", SystemGetStackFreeSpace());
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Clear terminal
+ */
+//================================================================================================//
+cmdStatus_t cmdCLEAR(ch_t *arg)
+{
+      (void)arg;
+
+      ioctl(stdout, TTY_IORQ_CLEARSCR, NULL);
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Reboot system
+ */
+//================================================================================================//
+cmdStatus_t cmdREBOOT(ch_t *arg)
+{
+      (void)arg;
+
+      printf("Reboting...\n");
+      Sleep(500);
+
+      SystemReboot();
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function go to selected dir
+ */
+//================================================================================================//
+cmdStatus_t cmdCD(ch_t *arg)
+{
+      ch_t  *newpath  = NULL;
+      DIR_t *dir      = NULL;
+      bool_t freePath = FALSE;
+
+      if (strcmp(arg, "..") == 0) {
+            ch_t *lastslash = strrchr(cdpath, '/');
+
+            if (lastslash) {
+                  if (lastslash != cdpath) {
+                        *lastslash = '\0';
+                  } else {
+                        *(lastslash + 1) = '\0';
+                  }
+            }
+      } else if (arg[0] != '/') {
+            newpath = calloc(strlen(arg) + strlen(cdpath) + 2, sizeof(cdpath[0]));
+
+            if (newpath) {
+                  strcpy(newpath, cdpath);
+
+                  if (newpath[strlen(newpath) - 1] != '/') {
+                        newpath[strlen(newpath)] = '/';
+                  }
+
+                  strcat(newpath, arg);
+
+                  freePath = TRUE;
+            }
+      } else if (arg[0] == '/') {
+            newpath = arg;
+      } else {
+            printf("No such directory\n");
+      }
+
+      if (newpath) {
+            dir = opendir(newpath);
+
+            if (dir) {
+                  closedir(dir);
+
+                  strncpy(cdpath, newpath, CD_PATH_SIZE);
+            } else {
+                  printf("No such directory\n");
+            }
+
+            if (freePath)
+                  free(newpath);
+      }
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function listing files in selected directory
+ */
+//================================================================================================//
+cmdStatus_t cmdLS(ch_t *arg)
+{
+      ch_t  *newpath  = NULL;
+      bool_t freePath = FALSE;
+
+      if (arg) {
+            if (strcmp(".", arg) == 0) {
+                  arg++;
+            } else if (strncmp("./", arg, 2) == 0) {
+                  arg += 2;
+            }
+
+            if (arg[0] == '/') {
+                  newpath = arg;
+            } else {
+                  newpath = calloc(strlen(arg) + strlen(cdpath) + 2, sizeof(cdpath[0]));
+
+                  if (newpath) {
+                        strcpy(newpath, cdpath);
+
+                        if (newpath[strlen(newpath) - 1] != '/') {
+                              newpath[strlen(newpath)] = '/';
+                        }
+
+                        strcat(newpath, arg);
+
+                        freePath = TRUE;
+                  }
+            }
+      } else {
+            newpath = cdpath;
+      }
+
+      DIR_t *dir = opendir(newpath);
+
+      if (dir) {
+            dirent_t dirent;
+
+            ch_t *ccolor = "\x1B[33mc";
+            ch_t *rcolor = "\x1B[35m-";
+            ch_t *lcolor = "\x1B[36ml";
+            ch_t *dcolor = "\x1B[33md";
+
+            printf("Total %u\n", dir->items);
+
+            while ((dirent = readdir(dir)).name != NULL) {
+                  ch_t *type = NULL;
+
+                  switch (dirent.filetype) {
+                  case FILE_TYPE_DIR:     type = dcolor; break;
+                  case FILE_TYPE_DRV:     type = ccolor; break;
+                  case FILE_TYPE_LINK:    type = lcolor; break;
+                  case FILE_TYPE_REGULAR: type = rcolor; break;
+                  default: type = "?";
+                  }
+
+                  printf("%s %u\t%s\x1B[0m\n", type, dirent.size, dirent.name);
+            }
+
+            closedir(dir);
+      } else {
+            printf("No such directory\n");
+      }
+
+      if (freePath)
+            free(newpath);
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function listing files in selected directory
+ */
+//================================================================================================//
+cmdStatus_t cmdMKDIR(ch_t *arg)
+{
+      ch_t  *newpath  = NULL;
+      bool_t freePath = FALSE;
+
+      if (arg) {
+            if (arg[0] == '/') {
+                  newpath = arg;
+            } else {
+                  newpath = calloc(strlen(arg) + strlen(cdpath) + 2, sizeof(cdpath[0]));
+
+                  if (newpath) {
+                        strcpy(newpath, cdpath);
+
+                        if (newpath[strlen(newpath) - 1] != '/') {
+                              newpath[strlen(newpath)] = '/';
+                        }
+
+                        strcat(newpath, arg);
+
+                        freePath = TRUE;
+                  }
+            }
+      } else {
+            newpath = cdpath;
+      }
+
+      if (mkdir(newpath) == STD_RET_ERROR) {
+            printf("Cannot create directory \"%s\": no such file or directory\n", arg);
+      }
+
+      if (freePath)
+            free(newpath);
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function remove file
+ */
+//================================================================================================//
+cmdStatus_t cmdRM(ch_t *arg)
+{
+      ch_t  *newpath  = NULL;
+      bool_t freePath = FALSE;
+
+      if (arg) {
+            if (arg[0] == '/') {
+                  newpath = arg;
+            } else {
+                  newpath = calloc(strlen(arg) + strlen(cdpath) + 2, sizeof(cdpath[0]));
+
+                  if (newpath) {
+                        strcpy(newpath, cdpath);
+
+                        if (newpath[strlen(newpath) - 1] != '/') {
+                              newpath[strlen(newpath)] = '/';
+                        }
+
+                        strcat(newpath, arg);
+
+                        freePath = TRUE;
+                  }
+            }
+      } else {
+            newpath = cdpath;
+      }
+
+      if (remove(newpath) == STD_RET_ERROR) {
+            printf("Cannot remove \"%s\"\n", arg);
+      }
+
+      if (freePath)
+            free(newpath);
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function touch file
+ */
+//================================================================================================//
+cmdStatus_t cmdTOUCH(ch_t *arg)
+{
+      ch_t  *newpath  = NULL;
+      bool_t freePath = FALSE;
+
+      if (arg) {
+            if (arg[0] == '/') {
+                  newpath = arg;
+            } else {
+                  newpath = calloc(strlen(arg) + strlen(cdpath) + 2, sizeof(cdpath[0]));
+
+                  if (newpath) {
+                        strcpy(newpath, cdpath);
+
+                        if (newpath[strlen(newpath) - 1] != '/') {
+                              newpath[strlen(newpath)] = '/';
+                        }
+
+                        strcat(newpath, arg);
+
+                        freePath = TRUE;
+                  }
+            }
+      } else {
+            newpath = cdpath;
+      }
+
+      FILE_t *file = fopen(newpath, "a+");
+
+      if (file) {
+            fclose(file);
+      } else {
+            printf("Cannot touch \"%s\"\n", arg);
+      }
+
+      if (freePath)
+            free(newpath);
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function show free memory
+ */
+//================================================================================================//
+cmdStatus_t cmdFREE(ch_t *arg)
+{
+      (void)arg;
+
+      u32_t free = SystemGetFreeMemSize();
+      u32_t used = SystemGetUsedMemSize();
+
+      printf("Total: %d\n", SystemGetMemSize());
+      printf("Free : %d\n", free);
+      printf("Used : %d\n", used);
+      printf("Memory usage: %d%%\n", (used * 100)/SystemGetMemSize());
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function show uptime
+ */
+//================================================================================================//
+cmdStatus_t cmdUPTIME(ch_t *arg)
+{
+      (void) arg;
+
+      bcdTime_t time = {0x00, 0x00, 0x00};
+
+      FILE_t *frtc = fopen("/dev/rtc", "r");
+
+      if (frtc) {
+            ioctl(frtc, RTC_IORQ_GETTIME, &time);
+            fclose(frtc);
+      } else {
+            printf("Unable to open \"/dev/rtc\" file!\n");
+      }
+
+      u32_t uptime = SystemGetUptime();
+      u32_t udays  = (uptime / (3600 * 24));
+      u32_t uhrs   = (uptime / 3600) % 24;
+      u32_t umins  = (uptime / 60) % 60;
+
+      printf("%x2:%x2:%x2, up %ud %u2:%u2\n",
+             time.hours, time.minutes, time.seconds,
+             udays, uhrs, umins);
+
+      return CMD_EXECUTED;
 }
 
 
@@ -88,73 +483,27 @@ void PrintPrompt(void)
 //================================================================================================//
 cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 {
-      /* exit command --------------------------------------------------------------------------- */
-      if (strcmp("exit", cmd) == 0)
-      {
-            printf("Exit\n");
-            return CMD_EXIT;
-      }
+      const cmd_t intCmd[] = {
+            {"exit"  , cmdEXIT  },
+            {"echo"  , cmdECHO  },
+            {"stack" , cmdSTACK },
+            {"cd"    , cmdCD    },
+            {"ls"    , cmdLS    },
+            {"mkdir" , cmdMKDIR },
+            {"touch" , cmdTOUCH },
+            {"rm"    , cmdRM    },
+            {"free"  , cmdFREE  },
+            {"uptime", cmdUPTIME},
+            {"clear" , cmdCLEAR },
+            {"reboot", cmdREBOOT},
+      };
 
-      /* echo ----------------------------------------------------------------------------------- */
-      if (strcmp("echo", cmd) == 0)
-      {
-            if (arg)
-                  printf("%s\n", arg);
-            else
-                  printf("\n");
-            return CMD_EXECUTED;
-      }
+      u8_t i;
 
-      /* stack measurement ---------------------------------------------------------------------- */
-      if (strcmp("stack", cmd) == 0)
-      {
-            printf("Free stack: %d\n", SystemGetStackFreeSpace());
-            return CMD_EXECUTED;
-      }
-
-      /* cd ------------------------------------------------------------------------------------- */
-      if (strcmp("cd", cmd) == 0)
-      {
-            if (arg[0] == '/')
-            {
-                  strcpy(cdpath, arg);
+      for (i = 0; i < ARRAY_SIZE(intCmd); i++) {
+            if (strcmp(cmd, intCmd[i].name) == 0) {
+                  return intCmd[i].cmd(arg);
             }
-            else if (strcmp(arg, "..") == 0)
-            {
-                  ch_t *lastslash = strrchr(cdpath, '/');
-
-                  if (lastslash)
-                  {
-                        if (lastslash != cdpath)
-                        {
-                              *lastslash = '\0';
-                        }
-                        else
-                        {
-                              *(lastslash + 1) = '\0';
-                        }
-                  }
-            }
-            else if (arg[0] != '/')
-            {
-                  strcat(cdpath, "/");
-                  strcat(cdpath, arg);
-            }
-            else
-            {
-                  strcat(cdpath, arg);
-            }
-
-            return CMD_EXECUTED;
-      }
-
-      /* system reboot -------------------------------------------------------------------------- */
-      if (strcmp("reboot", cmd) == 0)
-      {
-            printf("Reboting...\n");
-            Sleep(500);
-            SystemReboot();
-            return CMD_EXECUTED;
       }
 
       return CMD_NOT_EXIST;
@@ -198,6 +547,17 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 }
 
 
+//================================================================================================//
+/**
+ * @brief Function print prompt
+ */
+//================================================================================================//
+void PrintPrompt(void)
+{
+      printf("\x1B[32mroot@%s:%s\x1B[0m\n", SystemGetHostname(), cdpath);
+      printf("\x1B[32m$\x1B[0m ");
+}
+
 
 //================================================================================================//
 /**
@@ -216,7 +576,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       /* allocate memory for input line */
       line    = calloc(PROMPT_LINE_SIZE, sizeof(ch_t));
       history = calloc(PROMPT_LINE_SIZE, sizeof(ch_t));
-      cdpath  = calloc(256, sizeof(ch_t));
+      cdpath  = calloc(CD_PATH_SIZE, sizeof(ch_t));
 
       if (!line || !history || !cdpath)
       {
