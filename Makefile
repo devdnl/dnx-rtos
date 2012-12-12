@@ -31,17 +31,9 @@
 ####################################################################################################
 CSRC = $(sort \
    app/regapp.c \
-   app/clear/clear.c \
    app/date/date.c \
-   app/freemem/freemem.c \
-   app/ls/ls.c \
-   app/malt/malt.c \
    app/measd/measd.c \
-   app/rm/rm.c \
    app/terminal/terminal.c \
-   app/touch/touch.c \
-   app/uptime/uptime.c \
-   app/lwiptest/lwiptest.c \
    app/httpd/httpd.c \
    app/top/top.c \
    cpu/stm32/stm32f10x_vectors.c \

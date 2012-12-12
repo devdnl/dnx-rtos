@@ -40,7 +40,7 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** initd stack size */
-#define INITD_STACK_SIZE                  (4 * MINIMAL_STACK_SIZE)
+#define INITD_STACK_SIZE                  (3 * MINIMAL_STACK_SIZE + 20)
 
 /** initd name */
 #define INITD_NAME                        "initd"

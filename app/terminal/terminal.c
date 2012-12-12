@@ -139,7 +139,7 @@ cmdStatus_t cmdREBOOT(ch_t *arg)
 {
       (void)arg;
 
-      printf("Reboting...\n");
+      printf("Rebooting...\n");
       Sleep(500);
 
       SystemReboot();
@@ -254,7 +254,7 @@ cmdStatus_t cmdLS(ch_t *arg)
             ch_t *ccolor = "\x1B[33mc";
             ch_t *rcolor = "\x1B[35m-";
             ch_t *lcolor = "\x1B[36ml";
-            ch_t *dcolor = "\x1B[33md";
+            ch_t *dcolor = "\x1B[32md";
 
             printf("Total %u\n", dir->items);
 

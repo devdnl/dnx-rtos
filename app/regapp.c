@@ -36,16 +36,9 @@ extern "C" {
 
 /* include here applications headers */
 #include "terminal.h"
-#include "clear.h"
-#include "freemem.h"
 #include "date.h"
-#include "ls.h"
-#include "malt.h"
-#include "uptime.h"
 #include "top.h"
 #include "httpd.h"
-#include "touch.h"
-#include "rm.h"
 #include "measd.h"
 
 
@@ -71,16 +64,9 @@ static dirent_t readrootdir(DIR_t *dir);
 static const regAppData_t appList[] =
 {
       {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
-      {CLEAR_NAME   , clear   , CLEAR_STACK_SIZE   },
-      {FREEMEM_NAME , freemem , FREEMEM_STACK_SIZE },
       {DATE_NAME    , date    , DATE_STACK_SIZE    },
-      {LS_NAME      , ls      , LS_STACK_SIZE      },
-      {MALT_NAME    , malt    , MALT_STACK_SIZE    },
-      {UPTIME_NAME  , uptime  , UPTIME_STACK_SIZE  },
       {TOP_NAME     , top     , TOP_STACK_SIZE     },
       {HTTPD_NAME   , httpd   , HTTPD_STACK_SIZE   },
-      {TOUCH_NAME   , touch   , TOUCH_STACK_SIZE   },
-      {RM_NAME      , rm      , RM_STACK_SIZE      },
       {MEASD_NAME   , measd   , MEASD_STACK_SIZE   },
 };
 
