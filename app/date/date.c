@@ -76,112 +76,111 @@ stdRet_t appmain(ch_t *argv)
       bcdDate_t date   = {0, 0, 0, 0};
       FILE_t    *rtc;
 
-      rtc = fopen("/dev/rtc", "r+");
+      if ( (ParseArg(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+         ||(ParseArg(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) ) {
+            printf("Syntax: %s [OPTION]...\n", DATE_NAME);
+            printf("Print actual time and date.\n");
+            printf("  -S,  --set    set RTC time and date\n");
+            printf("  -H,           hours\n");
+            printf("  -m,           minutes\n");
+            printf("  -s,           seconds\n");
+            printf("  -Y,           year\n");
+            printf("  -M,           month\n");
+            printf("  -D,           day\n");
+            printf("       --stack  print free stack\n");
+      } else {
+            rtc = fopen("/dev/rtc", "r+");
 
-      if (rtc)
-      {
-            if ( (ParseArg(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-               ||(ParseArg(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) )
+            if (rtc)
             {
-                  printf("Syntax: %s [OPTION]...\n", DATE_NAME);
-                  printf("Print actual time and date.\n");
-                  printf("  -S,  --set    set RTC time and date\n");
-                  printf("  -H,           hours\n");
-                  printf("  -m,           minutes\n");
-                  printf("  -s,           seconds\n");
-                  printf("  -Y,           year\n");
-                  printf("  -M,           month\n");
-                  printf("  -D,           day\n");
-                  printf("       --stack  print free stack\n");
-            }
-            else if ( (ParseArg(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
-                    ||(ParseArg(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) )
-            {
-                  i32_t ahours   = 0;
-                  i32_t aminutes = 0;
-                  i32_t aseconds = 0;
-                  i32_t ayear    = 0;
-                  i32_t amonth   = 1;
-                  i32_t adate    = 1;
+                  if ( (ParseArg(argv, "set", PARSE_AS_EXIST, NULL) == STD_RET_OK)
+                     ||(ParseArg(argv, "S",   PARSE_AS_EXIST, NULL) == STD_RET_OK) ) {
+                        i32_t ahours   = 0;
+                        i32_t aminutes = 0;
+                        i32_t aseconds = 0;
+                        i32_t ayear    = 0;
+                        i32_t amonth   = 1;
+                        i32_t adate    = 1;
 
-                  ParseArg(argv, "H", PARSE_AS_DEC, &ahours);
-                  ParseArg(argv, "m", PARSE_AS_DEC, &aminutes);
-                  ParseArg(argv, "s", PARSE_AS_DEC, &aseconds);
+                        ParseArg(argv, "H", PARSE_AS_DEC, &ahours);
+                        ParseArg(argv, "m", PARSE_AS_DEC, &aminutes);
+                        ParseArg(argv, "s", PARSE_AS_DEC, &aseconds);
 
-                  ParseArg(argv, "Y", PARSE_AS_DEC, &ayear);
-                  ParseArg(argv, "M", PARSE_AS_DEC, &amonth);
-                  ParseArg(argv, "D", PARSE_AS_DEC, &adate);
+                        ParseArg(argv, "Y", PARSE_AS_DEC, &ayear);
+                        ParseArg(argv, "M", PARSE_AS_DEC, &amonth);
+                        ParseArg(argv, "D", PARSE_AS_DEC, &adate);
 
-                  /* check time range */
-                  if (ahours > 23)
-                        ahours = 23;
+                        /* check time range */
+                        if (ahours > 23)
+                              ahours = 23;
 
-                  if (aminutes > 59)
-                        aminutes = 59;
+                        if (aminutes > 59)
+                              aminutes = 59;
 
-                  if (aseconds > 59)
-                        aseconds = 59;
+                        if (aseconds > 59)
+                              aseconds = 59;
 
-                  /* check date range */
-                  if (ayear > 99)
-                        ayear = 99;
+                        /* check date range */
+                        if (ayear > 99)
+                              ayear = 99;
 
-                  if (amonth > 12)
-                        amonth = 12;
-                  else if (amonth < 1)
-                        amonth = 1;
+                        if (amonth > 12)
+                              amonth = 12;
+                        else if (amonth < 1)
+                              amonth = 1;
 
-                  if (adate > 31)
-                        adate = 31;
-                  else if (adate < 1)
-                        adate = 1;
+                        if (adate > 31)
+                              adate = 31;
+                        else if (adate < 1)
+                              adate = 1;
 
-                  /* convert values to BCD */
-                  time.hours   = UTL_Byte2BCD(ahours);
-                  time.minutes = UTL_Byte2BCD(aminutes);
-                  time.seconds = UTL_Byte2BCD(aseconds);
-                  date.year    = UTL_Byte2BCD(ayear);
-                  date.month   = UTL_Byte2BCD(amonth);
-                  date.day     = UTL_Byte2BCD(adate);
+                        /* convert values to BCD */
+                        time.hours   = UTL_Byte2BCD(ahours);
+                        time.minutes = UTL_Byte2BCD(aminutes);
+                        time.seconds = UTL_Byte2BCD(aseconds);
+                        date.year    = UTL_Byte2BCD(ayear);
+                        date.month   = UTL_Byte2BCD(amonth);
+                        date.day     = UTL_Byte2BCD(adate);
 
-                  if ( (ioctl(rtc, RTC_IORQ_SETTIME, &time) != STD_RET_OK)
-                     ||(ioctl(rtc, RTC_IORQ_SETDATE, &date) != STD_RET_OK) )
-                  {
-                        printf("ERROR: unable to set RTC\n");
-                        status = STD_RET_ERROR;
+                        if ( (ioctl(rtc, RTC_IORQ_SETTIME, &time) != STD_RET_OK)
+                           ||(ioctl(rtc, RTC_IORQ_SETDATE, &date) != STD_RET_OK) )
+                        {
+                              printf("ERROR: unable to set RTC\n");
+                              status = STD_RET_ERROR;
+                        }
                   }
+                  else
+                  {
+                        /* show time */
+                        ioctl(rtc, RTC_IORQ_GETTIME, &time);
+                        ioctl(rtc, RTC_IORQ_GETDATE, &date);
+
+                        u8_t month   = UTL_BCD2Byte(date.month);
+                        u8_t weekday = UTL_BCD2Byte(date.weekday);
+
+                        if (weekday == 0)
+                              weekday++;
+
+                        if (month == 0)
+                              month++;
+
+                        if (date.day == 0)
+                              date.day++;
+
+                        if (date.month == 0)
+                              date.month++;
+
+                        printf("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
+                              weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
+                              time.hours, time.minutes, time.seconds);
+                  }
+
+                  fclose(rtc);
             }
             else
             {
-                  /* show time */
-                  ioctl(rtc, RTC_IORQ_GETTIME, &time);
-                  ioctl(rtc, RTC_IORQ_GETDATE, &date);
-
-                  u8_t month   = UTL_BCD2Byte(date.month);
-                  u8_t weekday = UTL_BCD2Byte(date.weekday);
-
-                  if (weekday == 0)
-                        weekday++;
-
-                  if (month == 0)
-                        month++;
-
-                  if (date.day == 0)
-                        date.day++;
-
-                  if (date.month == 0)
-                        date.month++;
-
-                  printf("%s, %x2 %s 20%x2, %x2:%x2:%x2\n",
-                        weekDayNames[weekday - 1], date.day, monthsNames[month - 1], date.year,
-                        time.hours, time.minutes, time.seconds);
+                  printf("Unable to open RTC file\n");
             }
-
-            fclose(rtc);
-      }
-      else
-      {
-            printf("Unable to open RTC file\n");
       }
 
       /* show stack free space if requested */
