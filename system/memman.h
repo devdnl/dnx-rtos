@@ -110,6 +110,7 @@ extern void  *mm_trim(void *rmem, size_t newsize);
 extern void   mm_free(void *mem);
 extern u32_t  mm_GetFreeHeapSize(void);
 extern u32_t  mm_GetUsedHeapSize(void);
+extern u32_t  mm_GetHeapSize(void);
 
 #ifdef __cplusplus
 }

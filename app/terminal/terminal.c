@@ -487,11 +487,11 @@ cmdStatus_t cmdDF(ch_t *arg)
       mnt.total      = 0;
 
       if (mnt.mnt_dir && mnt.mnt_fsname) {
-            printf("File system\tTotal\tFree\t%Used\tmount point\n");
+            printf("File system\tTotal\tFree\t%%Used\tMount point\n");
 
             for (u32_t i = 0; ;i++) {
                   if (getmntentry(i, &mnt) == STD_RET_OK) {
-                        printf("%s\t\t%u\t\t%u\t\t%u%%\t\t%s\n",
+                        printf("%s\t\t%u\t%u\t%u%%\t%s\n",
                                mnt.mnt_fsname,
                                mnt.total,
                                mnt.free,

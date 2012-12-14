@@ -596,7 +596,7 @@ void *mm_calloc(size_t count, size_t size)
 /**
  * @brief Function return free memory
  *
- * @return free memory count
+ * @return free memory
  */
 //================================================================================================//
 u32_t mm_GetFreeHeapSize(void)
@@ -609,12 +609,25 @@ u32_t mm_GetFreeHeapSize(void)
 /**
  * @brief Function return used memory
  *
- * @return used memory count
+ * @return used memory
  */
 //================================================================================================//
 u32_t mm_GetUsedHeapSize(void)
 {
       return used_mem;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns size of heap
+ *
+ * @return memory size
+ */
+//================================================================================================//
+u32_t mm_GetHeapSize(void)
+{
+      return MEMMAN_HEAP_SIZE;
 }
 
 

@@ -266,22 +266,28 @@ stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
       stdRet_t status = STD_RET_ERROR;
 
       if (mntent) {
-            struct fsinfo     *fs     = NULL;
-            struct vfs_statfs *statfs = NULL;
+            struct fsinfo *fs = NULL;
 
             while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
             fs = ListGetItemDataByNo(vfs->mntList, item);
             GiveMutex(vfs->mtx);
 
             if (fs) {
-                  if (fs->fs.f_statfs)
-                        fs->fs.f_statfs(fs->fs.dev, statfs);
+                  struct vfs_statfs statfs;
+                  statfs.fsname = NULL;
 
-                  if (statfs) {
-                        strcpy(mntent->mnt_dir, fs->mntpoint);
-                        strcpy(mntent->mnt_fsname, statfs->fsname);
-                        mntent->free  = statfs->f_bfree;
-                        mntent->total = statfs->f_blocks;
+                  if (fs->fs.f_statfs)
+                        fs->fs.f_statfs(fs->fs.dev, &statfs);
+
+                  if (statfs.fsname) {
+                        if (strlen(fs->mntpoint) > 1)
+                              strncpy(mntent->mnt_dir, fs->mntpoint, strlen(fs->mntpoint) - 1);
+                        else
+                              strcpy(mntent->mnt_dir, fs->mntpoint);
+
+                        strcpy(mntent->mnt_fsname, statfs.fsname);
+                        mntent->free  = statfs.f_bfree;
+                        mntent->total = statfs.f_blocks;
 
                         status = STD_RET_OK;
                   }
