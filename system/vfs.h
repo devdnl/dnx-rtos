@@ -73,9 +73,10 @@ extern "C" {
 #define SEEK_END                          VFS_SEEK_END
 #endif
 
-#define mount(path, fs_cfg)               vfs_mount(path, fs_cfg)
+#define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
 #define umount(path)                      vfs_umount(path)
-#define mknod(path, drv_cfg)              vfs_mknod(path, drv_cfg)
+#define getmntentry(item, mntentPtr)      vfs_getmntentry(item, mntentPtr)
+#define mknod(path, drv_cfgPtr)           vfs_mknod(path, drv_cfgPtr)
 #define mkdir(path)                       vfs_mkdir(path)
 #define opendir(path)                     vfs_opendir(path)
 #define closedir(dir)                     vfs_closedir(dir)
@@ -117,6 +118,14 @@ struct vfs_statfs {
       const ch_t *fsname;     /* FS name */
 };
 
+/* Structure describing a mount table entry.  */
+struct vfs_mntent {
+      ch_t *mnt_fsname;       /* device or server for filesystem.  */
+      ch_t *mnt_dir;          /* directory mounted on.  */
+      u32_t total;            /* device total size */
+      u32_t free;             /* device free */
+};
+
 struct vfs_drvcfg {
       u32_t    dev;
       u32_t    part;
@@ -155,6 +164,7 @@ struct vfs_fscfg {
 extern stdRet_t vfs_init(void);
 extern stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg);
 extern stdRet_t vfs_umount(const ch_t *path);
+extern stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent);
 extern stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg);
 extern stdRet_t vfs_mkdir(const ch_t *path);
 extern DIR_t   *vfs_opendir(const ch_t *path);

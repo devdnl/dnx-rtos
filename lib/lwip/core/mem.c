@@ -190,7 +190,7 @@ static struct mem *ram_end;
 static struct mem *lfree;
 
 /** concurrent access protection */
-static sys_mutex_t mem_mutex;
+//static sys_mutex_t mem_mutex;
 
 #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
 
@@ -468,7 +468,7 @@ mem_trim(void *rmem, mem_size_t newsize)
   /* else {
     next struct mem is used but size between mem and mem2 is not big enough
     to create another struct mem
-    -> don't do anyhting. 
+    -> don't do anyhting.
     -> the remaining space stays unused since it is too small
   } */
 #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT

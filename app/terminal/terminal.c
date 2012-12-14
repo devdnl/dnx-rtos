@@ -473,6 +473,48 @@ cmdStatus_t cmdUPTIME(ch_t *arg)
 
 //================================================================================================//
 /**
+ * @brief Function show mounted filesystems
+ */
+//================================================================================================//
+cmdStatus_t cmdDF(ch_t *arg)
+{
+      (void)arg;
+
+      struct vfs_mntent mnt;
+      mnt.mnt_dir    = calloc(64, ARRAY_ITEM_SIZE(mnt.mnt_dir));
+      mnt.mnt_fsname = calloc(64, ARRAY_ITEM_SIZE(mnt.mnt_fsname));
+      mnt.free       = 0;
+      mnt.total      = 0;
+
+      if (mnt.mnt_dir && mnt.mnt_fsname) {
+            printf("File system\tTotal\tFree\t%Used\tmount point\n");
+
+            for (u32_t i = 0; ;i++) {
+                  if (getmntentry(i, &mnt) == STD_RET_OK) {
+                        printf("%s\t\t%u\t\t%u\t\t%u%%\t\t%s\n",
+                               mnt.mnt_fsname,
+                               mnt.total,
+                               mnt.free,
+                               ((mnt.total - mnt.free) * 100)/mnt.total,
+                               mnt.mnt_dir);
+                  } else {
+                        break;
+                  }
+            }
+      }
+
+      if (mnt.mnt_dir)
+            free(mnt.mnt_dir);
+
+      if (mnt.mnt_fsname)
+            free(mnt.mnt_fsname);
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function find internal terminal commands
  *
  * @param *cmd          command
@@ -496,6 +538,7 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
             {"uptime", cmdUPTIME},
             {"clear" , cmdCLEAR },
             {"reboot", cmdREBOOT},
+            {"df"    , cmdDF    },
       };
 
       u8_t i;

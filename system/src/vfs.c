@@ -51,7 +51,7 @@ extern "C" {
                                    Local types, enums definitions
 ==================================================================================================*/
 struct fsinfo {
-      ch_t             *path;
+      ch_t             *mntpoint;
       struct fsinfo    *basefs;
       struct vfs_fscfg  fs;
       u8_t mntFSCnt;
@@ -172,7 +172,7 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
                   /* mount FS if created -------------------------------------------------------- */
                   if (newfs && mountcfg->f_init) {
                         if (mountcfg->f_init(mountcfg->dev) == STD_RET_OK) {
-                              newfs->path     = newpath;
+                              newfs->mntpoint     = newpath;
                               newfs->basefs   = basefs;
                               newfs->fs       = *mountcfg;
                               newfs->mntFSCnt = 0;
@@ -233,8 +233,8 @@ stdRet_t vfs_umount(const ch_t *path)
                                                       mountfs->basefs->mntFSCnt--;
                                           }
 
-                                          if (mountfs->path)
-                                                free(mountfs->path);
+                                          if (mountfs->mntpoint)
+                                                free(mountfs->mntpoint);
 
                                           if (ListRmItemByID(vfs->mntList, itemid) == 0)
                                                 status = STD_RET_OK;
@@ -246,6 +246,45 @@ stdRet_t vfs_umount(const ch_t *path)
                   }
 
                   GiveMutex(vfs->mtx);
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function gets mount point for n item
+ *
+ * @param  item         mount point number
+ * @param *mntent       mount entry data
+ */
+//================================================================================================//
+stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (mntent) {
+            struct fsinfo     *fs     = NULL;
+            struct vfs_statfs *statfs = NULL;
+
+            while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+            fs = ListGetItemDataByNo(vfs->mntList, item);
+            GiveMutex(vfs->mtx);
+
+            if (fs) {
+                  if (fs->fs.f_statfs)
+                        fs->fs.f_statfs(fs->fs.dev, statfs);
+
+                  if (statfs) {
+                        strcpy(mntent->mnt_dir, fs->mntpoint);
+                        strcpy(mntent->mnt_fsname, statfs->fsname);
+                        mntent->free  = statfs->f_bfree;
+                        mntent->total = statfs->f_blocks;
+
+                        status = STD_RET_OK;
+                  }
             }
       }
 
@@ -910,7 +949,7 @@ static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid)
 
             struct fsinfo *data = ListGetItemDataByNo(vfs->mntList, i);
 
-            if (strncmp(path, data->path, len) == 0) {
+            if (strncmp(path, data->mntpoint, len) == 0) {
                   fsinfo = data;
 
                   if (itemid) {

@@ -67,6 +67,7 @@ extern "C" {
 
 /** array element count */
 #define ARRAY_SIZE(array)                 (sizeof(array)/sizeof(array[0]))
+#define ARRAY_ITEM_SIZE(array)            (sizeof(array[0]))
 
 
 /*==================================================================================================
