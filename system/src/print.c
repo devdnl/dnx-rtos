@@ -30,15 +30,24 @@
 #include "print.h"
 #include <string.h>
 #include "vfs.h"
+#include "memman.h"
 #include "oswrap.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define calloc(nmemb, msize)              PRINT_CALLOC(nmemb, msize)
-#define malloc(size)                      PRINT_MALLOC(size)
-#define free(mem)                         PRINT_FREE(mem)
+#define calloc(nmemb, msize)              mm_calloc(nmemb, msize)
+#define malloc(size)                      mm_malloc(size)
+#define free(mem)                         mm_free(mem)
+
+#define fopen(path, mode)                 vfs_fopen(path, mode)
+#define fclose(file)                      vfs_fclose(file)
+#define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
+#define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
+#define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
+#define ftell(file)                       vfs_ftell(file)
+#define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
 
 
 /*==================================================================================================

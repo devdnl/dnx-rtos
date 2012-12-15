@@ -37,6 +37,7 @@ extern "C" {
 #include "systypes.h"
 #include "memman.h"
 #include "oswrap.h"
+#include "vfs.h"
 
 
 /*==================================================================================================
@@ -47,16 +48,39 @@ extern "C" {
 #endif
 
 #ifndef calloc
-#define calloc(nmemb, msize)             mm_calloc(nmemb, msize)
+#define calloc(nmemb, msize)              mm_calloc(nmemb, msize)
 #endif
 
 #ifndef malloc
-#define malloc(size)                     mm_malloc(size)
+#define malloc(size)                      mm_malloc(size)
 #endif
 
 #ifndef free
-#define free(mem)                        mm_free(mem)
+#define free(mem)                         mm_free(mem)
 #endif
+
+#define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
+#define umount(path)                      vfs_umount(path)
+#define getmntentry(item, mntentPtr)      vfs_getmntentry(item, mntentPtr)
+#define mknod(path, drv_cfgPtr)           vfs_mknod(path, drv_cfgPtr)
+#define mkdir(path)                       vfs_mkdir(path)
+#define opendir(path)                     vfs_opendir(path)
+#define closedir(dir)                     vfs_closedir(dir)
+#define readdir(dir)                      vfs_readdir(dir)
+#define remove(path)                      vfs_remove(path)
+#define rename(oldName, newName)          vfs_rename(oldName, newName)
+#define chmod(path, mode)                 vfs_chmod(path, mode)
+#define chown(path, owner, group)         vfs_chown(path, owner, group)
+#define stat(path, statPtr)               vfs_stat(path, statPtr)
+#define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
+#define fopen(path, mode)                 vfs_fopen(path, mode)
+#define fclose(file)                      vfs_fclose(file)
+#define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
+#define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
+#define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
+#define ftell(file)                       vfs_ftell(file)
+#define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
+#define fstat(file, statPtr)              vfs_fstat(file, stat)
 
 
 /*==================================================================================================

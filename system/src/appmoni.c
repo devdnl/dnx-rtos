@@ -125,6 +125,41 @@ void moni_free(void *mem)
 #endif
 
 
+//================================================================================================//
+/**
+ * @brief Function open selected file
+ *
+ * @param *name         file path
+ * @param *mode         file mode
+ *
+ * @retval NULL if file can't be created
+ */
+//================================================================================================//
+FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
+{
+      FILE_t *file = vfs_fopen(path, mode);
+
+      return file;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function close opened file
+ *
+ * @param *file               pinter to file
+ *
+ * @retval STD_RET_OK         file closed successfully
+ * @retval STD_RET_ERROR      file not closed
+ */
+//================================================================================================//
+stdRet_t moni_fclose(FILE_t *file)
+{
+      stdRet_t status = vfs_fclose(file);
+
+      return status;
+}
+
 #ifdef __cplusplus
 }
 #endif

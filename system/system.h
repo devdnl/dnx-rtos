@@ -39,7 +39,6 @@ extern "C" {
 #include "oswrap.h"
 #include "print.h"
 #include "appruntime.h"
-#include "vfs.h"
 #include "hooks.h"
 #include "netconf.h"
 #include "dlist.h"
@@ -49,10 +48,34 @@ extern "C" {
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-/** BASIC DEFINITIONS */
+/** MEMORY MANAGEMENT DEFINTIONS */
 #define malloc(size)                      moni_malloc(size)
 #define calloc(nitems, isize)             moni_calloc(nitems, isize)
 #define free(mem)                         moni_free(mem)
+
+/** FILE ACCESS MANAGEMENT */
+#define mount(path, fs_cfgPtr)            moni_mount(path, fs_cfgPtr)
+#define umount(path)                      moni_umount(path)
+#define getmntentry(item, mntentPtr)      moni_getmntentry(item, mntentPtr)
+#define mknod(path, drv_cfgPtr)           moni_mknod(path, drv_cfgPtr)
+#define mkdir(path)                       moni_mkdir(path)
+#define opendir(path)                     moni_opendir(path)
+#define closedir(dir)                     moni_closedir(dir)
+#define readdir(dir)                      moni_readdir(dir)
+#define remove(path)                      moni_remove(path)
+#define rename(oldName, newName)          moni_rename(oldName, newName)
+#define chmod(path, mode)                 moni_chmod(path, mode)
+#define chown(path, owner, group)         moni_chown(path, owner, group)
+#define stat(path, statPtr)               moni_stat(path, statPtr)
+#define statfs(path, statfsPtr)           moni_statfs(path, statfsPtr)
+#define fopen(path, mode)                 moni_fopen(path, mode)
+#define fclose(file)                      moni_fclose(file)
+#define fwrite(ptr, isize, nitems, file)  moni_fwrite(ptr, isize, nitems, file)
+#define fread(ptr, isize, nitems, file)   moni_fread(ptr, isize, nitems, file)
+#define fseek(file, offset, mode)         moni_fseek(file, offset, mode)
+#define ftell(file)                       moni_ftell(file)
+#define ioctl(file, rq, data)             moni_ioctl(file, rq, data)
+#define fstat(file, statPtr)              moni_fstat(file, stat)
 
 /** APPLICATION LEVEL DEFINITIONS */
 #define Sleep(delay)                      TaskDelay(delay)
