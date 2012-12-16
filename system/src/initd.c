@@ -80,11 +80,12 @@ void Initd(void *arg)
 {
       (void) arg;
 
-      struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));
-
       /* early initialization */
       vfs_init();
       moni_Init();
+      moni_AddTask(TaskGetCurrentTaskHandle());
+
+      struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));
 
       /* early initialization - mounting FS */
       if (fscfg) {

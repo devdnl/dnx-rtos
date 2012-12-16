@@ -36,6 +36,7 @@ extern "C" {
 #include "systypes.h"
 #include "memman.h"
 #include "vfs.h"
+#include "oswrap.h"
 
 
 /*==================================================================================================
@@ -95,10 +96,13 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 struct taskstat {
-      u32_t memUsage;
-      u32_t fileUsage;
-      u32_t cpuUsage;
-      u32_t cpuUsageTotal;
+      u32_t  memUsage;
+      u32_t  fileUsage;
+      u32_t  cpuUsage;
+      u32_t  cpuUsageTotal;
+      ch_t  *taskName;
+      task_t taskHdl;
+      u32_t  taskFreeStack;
 };
 
 
@@ -112,8 +116,8 @@ struct taskstat {
 ==================================================================================================*/
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
 extern stdRet_t moni_Init       (void);
-extern stdRet_t moni_AddTask    (PID_t pid);
-extern stdRet_t moni_DelTask    (PID_t pid);
+extern stdRet_t moni_AddTask    (task_t taskHdl);
+extern stdRet_t moni_DelTask    (task_t taskHdl);
 extern stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat);
 #endif
 

@@ -30,6 +30,7 @@
 #include "appruntime.h"
 #include "regapp.h"
 #include "oswrap.h"
+#include "appmoni.h"
 #include <string.h>
 
 
@@ -108,6 +109,9 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
                   free(appHandle);
                   appHandle = NULL;
             }
+
+            if (appHandle)
+                  moni_AddTask(appHandle->TaskHandle);
       }
 
       RunAsApp_end:
@@ -156,6 +160,9 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
                   free(appHandle);
                   appHandle = NULL;
             }
+
+            if (appHandle)
+                  moni_AddTask(appHandle->TaskHandle);
       }
 
       RunAsDaemon_end:
@@ -250,6 +257,7 @@ stdRet_t FreeApphdl(app_t *appArgs)
       {
             if (appArgs->TaskHandle)
             {
+                  moni_DelTask(appArgs->TaskHandle);
                   TaskDelete(appArgs->TaskHandle);
             }
 
@@ -274,6 +282,9 @@ stdRet_t FreeApphdl(app_t *appArgs)
 //================================================================================================//
 void TerminateApplication(app_t *appObj, stdRet_t exitCode)
 {
+      /* remove app from monitor */
+      moni_DelTask(appObj->TaskHandle);
+
       /* set exit code */
       appObj->exitCode = exitCode;
       appObj->TaskHandle = NULL;

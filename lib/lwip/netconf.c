@@ -44,6 +44,7 @@ extern "C" {
 #include "stm32_eth.h"
 #include "oswrap.h"
 #include "vfs.h"
+#include "appmoni.h"
 
 
 /*==================================================================================================
@@ -158,6 +159,8 @@ stdRet_t LwIP_Init(void)
             goto LwIP_Init_exit_Failure;
       }
 
+      moni_AddTask(LwIPDeamonHdl);
+
       #if LWIP_DHCP
       /*
        * creates a new DHCP client for this interface on the first call.
@@ -168,6 +171,7 @@ stdRet_t LwIP_Init(void)
       kprint("Starting DHCP Client..");
       if (ERR_MEM == dhcp_start(&netif))
       {
+            moni_DelTask(LwIPDeamonHdl);
             TaskDelete(LwIPDeamonHdl);
             goto LwIP_Init_exit_Failure;
       }

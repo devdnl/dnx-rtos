@@ -31,6 +31,8 @@
 #include "regapp.h"
 #include <string.h>
 
+#include "appmoni.h"
+
 /* Begin of application section declaration */
 APPLICATION(top)
 APP_SEC_BEGIN
@@ -65,44 +67,77 @@ stdRet_t appmain(ch_t *argv)
 
       stdRet_t status = STD_RET_ERROR;
 
-      u32_t size   = 50 * SystemGetTaskCount();
-      u8_t  divcnt = 10;
-      ch_t  *buffer;
+      if (ParseArg(argv, "a", PARSE_AS_EXIST, NULL) == STD_RET_OK) {
+            struct taskstat taskinfo;
 
-      if ( (buffer = calloc(size, sizeof(ch_t))) )
-      {
             while (ugetChar() != 'q')
             {
-                  Sleep(100);
+                  Sleep(450);
 
-                  if (divcnt >= 10)
-                  {
-                        SystemGetRunTimeStats(buffer);
+                  printf("\x1B[2J\x1B[HPress q to quit\n");
 
-                        printf("\x1B[2J\x1B[HPress q to quit\n");
+                  printf("Total tasks: %u\n", SystemGetTaskCount());
 
-                        printf("Total tasks: %u\n", SystemGetTaskCount());
+                  printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
+                         SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
 
-                        printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                               SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
+                  printf("TaskHdl\t\tFreeStack\tMemUsage\tOpenFiles\t%%CPU\tName\n");
 
-                        printf("Name\t\tTime\t\tUsage\n%s\n", buffer);
-
-                        divcnt = 0;
-                  }
-                  else
-                  {
-                        divcnt++;
+                  for (u16_t i = 0; ; i++) {
+                        if (moni_GetTaskStat(i, &taskinfo) == STD_RET_OK) {
+                              printf("%x\t%u\t\t%u\t\t%u\t\t%u\t%s\n",
+                                     taskinfo.taskHdl,
+                                     taskinfo.taskFreeStack,
+                                     taskinfo.memUsage,
+                                     taskinfo.fileUsage,
+                                     taskinfo.cpuUsage,
+                                     taskinfo.taskName);
+                        } else {
+                              break;
+                        }
                   }
             }
 
-            status = STD_RET_OK;
+      } else {
+            u32_t size   = 50 * SystemGetTaskCount();
+            u8_t  divcnt = 10;
+            ch_t  *buffer;
 
-            free(buffer);
-      }
-      else
-      {
-            printf("No enough free memory!\n");
+            if ( (buffer = calloc(size, sizeof(ch_t))) )
+            {
+                  while (ugetChar() != 'q')
+                  {
+                        Sleep(100);
+
+                        if (divcnt >= 10)
+                        {
+                              SystemGetRunTimeStats(buffer);
+
+                              printf("\x1B[2J\x1B[HPress q to quit\n");
+
+                              printf("Total tasks: %u\n", SystemGetTaskCount());
+
+                              printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
+                                     SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
+
+                              printf("Name\t\tTime\t\tUsage\n%s\n", buffer);
+
+                              divcnt = 0;
+                        }
+                        else
+                        {
+                              divcnt++;
+                        }
+                  }
+
+                  status = STD_RET_OK;
+
+                  free(buffer);
+            }
+            else
+            {
+                  printf("No enough free memory!\n");
+            }
       }
 
       return status;

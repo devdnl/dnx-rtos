@@ -32,20 +32,18 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "appmoni.h"
-#include "print.h"
-#include "oswrap.h"
+#include "print.h" /* DNLTEST tego tutaj nie powinno byc */
 #include "dlist.h"
 #include "memman.h"
 #include <string.h>
 
-#include "stdlib.h"
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define calloc(nmemb, msize)        calloc(nmemb, msize)
-#define malloc(size)                malloc(size)
-#define free(mem)                   free(mem)
+#define calloc(nmemb, msize)        mm_calloc(nmemb, msize)
+#define malloc(size)                mm_malloc(size)
+#define free(mem)                   mm_free(mem)
 #define fclose(file)                vfs_fclose(file)
 
 #define MEM_BLOCK_COUNT             4
@@ -61,7 +59,8 @@ extern "C" {
 ==================================================================================================*/
 /* task information */
 struct taskData {
-      PID_t pid;
+      task_t taskHdl;
+      u32_t  cpuTime;
 
 #if (APP_MONITOR_MEMORY_USAGE > 0)
       struct memBlock {
@@ -91,7 +90,7 @@ struct taskData {
 struct moni {
       list_t  *tasks;         /* list with task informations */
       mutex_t  mtx;           /* mutex */
-      u32_t    cpuTicks;      /* total CPU tics */
+      u32_t    cpuTotalTime;      /* total CPU tics */
 };
 
 
@@ -99,13 +98,13 @@ struct moni {
                                       Local function prototypes
 ==================================================================================================*/
 #if (APP_MONITOR_MEMORY_USAGE > 0)
-static void     *mallocTrace(PID_t pid, size_t size);
-static stdRet_t  freeTrace(PID_t pid, void *addr);
+static void     *mallocTrace(task_t taskHdl, size_t size);
+static stdRet_t  freeTrace(task_t taskHdl, void *addr);
 #endif
 
 #if (APP_MONITOR_FILE_USAGE > 0)
-static FILE_t   *fopenTrace(PID_t pid, const ch_t *path, const ch_t *mode);
-static stdRet_t  fcloseTrace(PID_t pid, FILE_t *file);
+static FILE_t   *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode);
+static stdRet_t  fcloseTrace(task_t taskHdl, FILE_t *file);
 #endif
 
 
@@ -175,7 +174,7 @@ stdRet_t moni_Init(void)
  */
 //================================================================================================//
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
-stdRet_t moni_AddTask(PID_t pid)
+stdRet_t moni_AddTask(task_t taskHdl)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -188,7 +187,7 @@ stdRet_t moni_AddTask(PID_t pid)
             for (i32_t i = 0; i < n; i++) {
                   struct taskData *task = ListGetItemDataByNo(moni->tasks, i);
 
-                  if (task->pid == pid) {
+                  if (task->taskHdl == taskHdl) {
                         status = STD_RET_OK;
                         goto moni_addTask_end;
                   }
@@ -198,7 +197,7 @@ stdRet_t moni_AddTask(PID_t pid)
             struct taskData *task = calloc(1, sizeof(struct taskData));
 
             if (task) {
-                  task->pid = pid;
+                  task->taskHdl = taskHdl;
 
                   if (ListAddItem(moni->tasks, task) >= 0) {
                         status = STD_RET_OK;
@@ -224,7 +223,7 @@ stdRet_t moni_AddTask(PID_t pid)
  */
 //================================================================================================//
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
-stdRet_t moni_DelTask(PID_t pid)
+stdRet_t moni_DelTask(task_t taskHdl)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -236,7 +235,7 @@ stdRet_t moni_DelTask(PID_t pid)
             for (i32_t task = 0; task < taskTotal; task++) {
                   struct taskData *taskInfo = ListGetItemDataByNo(moni->tasks, task);
 
-                  if (taskInfo->pid == pid) {
+                  if (taskInfo->taskHdl == taskHdl) {
                         #if (APP_MONITOR_MEMORY_USAGE > 0)
                         for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
                               if (taskInfo->mblock[block]) {
@@ -301,8 +300,6 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
       stdRet_t status = STD_RET_ERROR;
 
       if (moni && stat) {
-            stat->cpuUsage      = 0;
-            stat->cpuUsageTotal = 0;
             stat->memUsage      = 0;
             stat->fileUsage     = 0;
 
@@ -339,6 +336,14 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
             }
 
             GiveMutex(moni->mtx);
+
+            if (status == STD_RET_OK) {
+                  stat->taskHdl       = taskdata->taskHdl;
+                  stat->taskName      = TaskGetName(taskdata->taskHdl);
+                  stat->taskFreeStack = TaskGetStackFreeSpace(taskdata->taskHdl);
+                  stat->cpuUsage      = taskdata->cpuTime;
+                  stat->cpuUsageTotal = moni->cpuTotalTime;
+            }
       }
 
       return status;
@@ -358,7 +363,7 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void *moni_malloc(u32_t size)
 {
-      void *ptr = mallocTrace(TaskGetPID(), size);
+      void *ptr = mallocTrace(TaskGetCurrentTaskHandle(), size);
 
       kprint("%s: malloc: %u -> 0x%x\n", TaskGetName(NULL), size, ptr);
 
@@ -380,7 +385,7 @@ void *moni_malloc(u32_t size)
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void *moni_calloc(u32_t nmemb, u32_t msize)
 {
-      void *ptr = mallocTrace(TaskGetPID(), nmemb * msize);
+      void *ptr = mallocTrace(TaskGetCurrentTaskHandle(), nmemb * msize);
 
       if (ptr)
             memset(ptr, 0, nmemb * msize);
@@ -402,7 +407,7 @@ void *moni_calloc(u32_t nmemb, u32_t msize)
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void moni_free(void *mem)
 {
-      if (freeTrace(TaskGetPID(), mem) != STD_RET_OK) {
+      if (freeTrace(TaskGetCurrentTaskHandle(), mem) != STD_RET_OK) {
             /* error: application try to free freed memory */
       }
 
@@ -424,7 +429,7 @@ void moni_free(void *mem)
 #if (APP_MONITOR_FILE_USAGE > 0)
 FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
 {
-      return fopenTrace(TaskGetPID(), path, mode);
+      return fopenTrace(TaskGetCurrentTaskHandle(), path, mode);
 }
 #endif
 
@@ -442,7 +447,7 @@ FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
 #if (APP_MONITOR_FILE_USAGE > 0)
 stdRet_t moni_fclose(FILE_t *file)
 {
-      return fcloseTrace(TaskGetPID(), file);
+      return fcloseTrace(TaskGetCurrentTaskHandle(), file);
 }
 #endif
 
@@ -457,7 +462,7 @@ stdRet_t moni_fclose(FILE_t *file)
  */
 //================================================================================================//
 #if (APP_MONITOR_MEMORY_USAGE > 0)
-static void *mallocTrace(PID_t pid, size_t size)
+static void *mallocTrace(task_t taskHdl, size_t size)
 {
       void *mem = NULL;
 
@@ -473,7 +478,7 @@ static void *mallocTrace(PID_t pid, size_t size)
                   if (taskInfo == NULL)
                         goto addMem_end;
 
-                  if (taskInfo->pid == pid) {
+                  if (taskInfo->taskHdl == taskHdl) {
                         /* find empty address slot */
                         u32_t block = 0;
 
@@ -534,7 +539,7 @@ static void *mallocTrace(PID_t pid, size_t size)
  */
 //================================================================================================//
 #if (APP_MONITOR_MEMORY_USAGE > 0)
-static stdRet_t freeTrace(PID_t pid, void *addr)
+static stdRet_t freeTrace(task_t taskHdl, void *addr)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -550,7 +555,7 @@ static stdRet_t freeTrace(PID_t pid, void *addr)
                   if (taskInfo == NULL)
                         goto delMem_end;
 
-                  if (taskInfo->pid == pid) {
+                  if (taskInfo->taskHdl == taskHdl) {
                         /* find address slot */
                         for (u8_t block = 0; block < MEM_BLOCK_COUNT; block++) {
 
@@ -571,14 +576,16 @@ static stdRet_t freeTrace(PID_t pid, void *addr)
                                                 status = STD_RET_OK;
 
                                                 /* check if block is empty */
-                                                for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                                      if (taskInfo->mblock[block]->mslot[i].addr != NULL)
-                                                            goto delMem_end;
-                                                }
+                                                if (block != 0) {
+                                                      for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
+                                                            if (taskInfo->mblock[block]->mslot[i].addr != NULL)
+                                                                  goto delMem_end;
+                                                      }
 
-                                                /* block is empty - freeing memory */
-                                                free(taskInfo->mblock[block]);
-                                                taskInfo->mblock[block] = NULL;
+                                                      /* block is empty - freeing memory */
+                                                      free(taskInfo->mblock[block]);
+                                                      taskInfo->mblock[block] = NULL;
+                                                }
 
                                                 goto delMem_end;
                                           }
@@ -610,7 +617,7 @@ static stdRet_t freeTrace(PID_t pid, void *addr)
  */
 //================================================================================================//
 #if (APP_MONITOR_FILE_USAGE > 0)
-static FILE_t *fopenTrace(PID_t pid, const ch_t *path, const ch_t *mode)
+static FILE_t *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode)
 {
       void *file = NULL;
 
@@ -626,7 +633,7 @@ static FILE_t *fopenTrace(PID_t pid, const ch_t *path, const ch_t *mode)
                   if (taskInfo == NULL)
                         goto addFile_end;
 
-                  if (taskInfo->pid == pid) {
+                  if (taskInfo->taskHdl == taskHdl) {
                         /* find empty file slot */
                         u32_t block = 0;
 
@@ -689,7 +696,7 @@ static FILE_t *fopenTrace(PID_t pid, const ch_t *path, const ch_t *mode)
  */
 //================================================================================================//
 #if (APP_MONITOR_FILE_USAGE > 0)
-static stdRet_t fcloseTrace(PID_t pid, FILE_t *file)
+static stdRet_t fcloseTrace(task_t taskHdl, FILE_t *file)
 {
       stdRet_t status = STD_RET_ERROR;
 
@@ -705,7 +712,7 @@ static stdRet_t fcloseTrace(PID_t pid, FILE_t *file)
                   if (taskInfo == NULL)
                         goto delFile_end;
 
-                  if (taskInfo->pid == pid) {
+                  if (taskInfo->taskHdl == taskHdl) {
                         /* find empty file slot */
                         u32_t block = 0;
 
@@ -725,15 +732,17 @@ static stdRet_t fcloseTrace(PID_t pid, FILE_t *file)
 
                                                       taskInfo->fblock[block]->full = FALSE;
 
-                                                      /* check if block is empty */
-                                                      for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                                            if (taskInfo->fblock[block]->fslot[i].file != NULL)
-                                                                  goto delFile_end;
-                                                      }
+                                                      if (block != 0) {
+                                                            /* check if block is empty */
+                                                            for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
+                                                                  if (taskInfo->fblock[block]->fslot[i].file != NULL)
+                                                                        goto delFile_end;
+                                                            }
 
-                                                      /* block is empty - freeing memory */
-                                                      free(taskInfo->fblock[block]);
-                                                      taskInfo->fblock[block] = NULL;
+                                                            /* block is empty - freeing memory */
+                                                            free(taskInfo->fblock[block]);
+                                                            taskInfo->fblock[block] = NULL;
+                                                      }
                                                 }
 
                                                 goto delFile_end;
