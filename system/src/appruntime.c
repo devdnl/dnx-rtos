@@ -268,15 +268,15 @@ stdRet_t FreeApphdl(app_t *appArgs)
 /**
  * @brief Terminate application
  *
- * @param *stdio              stdio
- * @param exitCode            return value
+ * @param *appObj             application object
+ * @param  exitCode           return value
  */
 //================================================================================================//
-void TerminateApplication(app_t *appArgument, stdRet_t exitCode)
+void TerminateApplication(app_t *appObj, stdRet_t exitCode)
 {
       /* set exit code */
-      appArgument->exitCode = exitCode;
-      appArgument->TaskHandle = NULL;
+      appObj->exitCode = exitCode;
+      appObj->TaskHandle = NULL;
 
       TaskTerminate();
 }

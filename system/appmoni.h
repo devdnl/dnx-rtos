@@ -42,10 +42,10 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /* USER CFG: enable (1) or disable (0) application memory usage monitoring */
-#define APP_MONITOR_MEMORY_USAGE          (0)
+#define APP_MONITOR_MEMORY_USAGE                (1)
 
 /* USEF CFG: enable (1) or disable (0) application opened file monitoring */
-#define APP_MONITOR_FILE_USAGE            (1)
+#define APP_MONITOR_FILE_USAGE                  (1)
 
 /* ---------------------------------------------------------------------------------------------- */
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -83,9 +83,23 @@ extern "C" {
 #define moni_ioctl(file, rq, data)              vfs_ioctl(file, rq, data)
 #define moni_fstat(file, statPtr)               vfs_fstat(file, stat)
 
+/* IF MONITOR MODULE IS NOT USED DISABLE INITIALIZATION */
+#if ((APP_MONITOR_MEMORY_USAGE == 0) && (APP_MONITOR_FILE_USAGE == 0))
+#define moni_init()
+#define moni_addTask(pid);
+#define moni_delTask(pid);
+#define moni_getTaskStat(item, statPtr);
+#endif
+
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+struct taskstat {
+      u32_t memUsage;
+      u32_t fileUsage;
+      u32_t cpuUsage;
+      u32_t cpuUsageTotal;
+};
 
 
 /*==================================================================================================
@@ -96,6 +110,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+extern stdRet_t moni_Init       (void);
+extern stdRet_t moni_AddTask    (PID_t pid);
+extern stdRet_t moni_DelTask    (PID_t pid);
+extern stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat);
+#endif
+
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 extern void *moni_malloc(u32_t size);
 extern void *moni_calloc(u32_t nmemb, u32_t msize);

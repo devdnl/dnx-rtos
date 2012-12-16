@@ -78,7 +78,7 @@ int main(void)
       /* dynamic memory management initialization */
       mm_init();
 
-      /* create idit task */
+      /* create init task */
       TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 2, NULL);
 
       /* start OS */

@@ -35,8 +35,9 @@ extern "C" {
 #include "regdrv.h"
 #include "lfs.h"
 #include "regapp.h"
-#include <string.h>
 #include "tty_def.h"
+#include "appmoni.h"
+#include <string.h>
 
 
 /*==================================================================================================
@@ -81,8 +82,9 @@ void Initd(void *arg)
 
       struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));
 
-      /* early initialization - VFS starting */
+      /* early initialization */
       vfs_init();
+      moni_Init();
 
       /* early initialization - mounting FS */
       if (fscfg) {
