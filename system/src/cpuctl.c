@@ -33,6 +33,7 @@ extern "C" {
 ==================================================================================================*/
 #include "cpuctl.h"
 #include "stm32f10x.h"
+#include "oswrap.h"
 
 
 /*==================================================================================================
@@ -55,7 +56,7 @@ extern "C" {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-
+static u32_t TotalCPUTime;
 
 /*==================================================================================================
                                         Function definitions
@@ -102,12 +103,40 @@ void RunTimeStatsCfgCnt(void)
 //================================================================================================//
 u32_t RunTimeStatsGetCnt(void)
 {
-      static u32_t cnt = 0;
+//      static u32_t cnt = 0;
 
-      cnt += TIM2->CNT;
+//      cnt += TIM2->CNT;
+//      TIM2->CNT = 0;
+
+      return 0;//cnt;
+}
+
+
+void TaskSwitchedIn(void)
+{
+      TotalCPUTime += TIM2->CNT;
       TIM2->CNT = 0;
+}
 
-      return cnt;
+
+void TaskSwitchedOut(void)
+{
+      task_t taskhdl = TaskGetCurrentTaskHandle();
+      u32_t tmp = (u32_t)TaskGetTag(taskhdl);
+      tmp += TIM2->CNT;
+      TaskSetTag(taskhdl, (void*)tmp);
+}
+
+
+u32_t GetCPUTotalTime(void)
+{
+      return TotalCPUTime;
+}
+
+
+void ClearCPUTotalTime(void)
+{
+      TotalCPUTime = 0;
 }
 
 

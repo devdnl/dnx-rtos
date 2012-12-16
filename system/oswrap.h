@@ -71,6 +71,8 @@ extern "C" {
 #define TaskGetNumberOfTasks()            uxTaskGetNumberOfTasks()
 #define TaskGetRunTimeStats(dst)          vTaskGetRunTimeStats((signed char*)dst)
 #define TaskDelayUntil(lastTime, delay)   vTaskDelayUntil((portTickType*)lastTime, delay)
+#define TaskSetTag(taskhdl, tag)          vTaskSetApplicationTaskTag(taskhdl, tag)
+#define TaskGetTag(taskhdl)               xTaskGetApplicationTaskTag(taskhdl)
 
 #define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
         xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)

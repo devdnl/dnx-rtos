@@ -32,7 +32,6 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "appmoni.h"
-#include "print.h" /* DNLTEST tego tutaj nie powinno byc */
 #include "dlist.h"
 #include "memman.h"
 #include <string.h>
@@ -89,7 +88,6 @@ struct taskData {
 struct moni {
       list_t  *tasks;         /* list with task informations */
       mutex_t  mtx;           /* mutex */
-      u32_t    cpuTotalTime;      /* total CPU tics */
 };
 
 
@@ -340,9 +338,16 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
                   stat->taskHdl       = taskdata->taskHdl;
                   stat->taskName      = TaskGetName(taskdata->taskHdl);
                   stat->taskFreeStack = TaskGetStackFreeSpace(taskdata->taskHdl);
-                  stat->cpuUsage      = 0;
-                  stat->cpuUsageTotal = moni->cpuTotalTime;
+                  TaskSuspendAll();
+                  stat->cpuUsage      = (u32_t)TaskGetTag(taskdata->taskHdl);
+                  TaskSetTag(taskdata->taskHdl, (void*)0);
+                  TaskResumeAll();
+                  stat->cpuUsageTotal = GetCPUTotalTime();
                   stat->taskPriority  = TaskGetPriority(taskdata->taskHdl);
+
+                  if (item == ListGetItemCount(moni->tasks) - 1) {
+                        ClearCPUTotalTime();
+                  }
             }
       }
 

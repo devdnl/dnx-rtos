@@ -104,6 +104,7 @@
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configQUEUE_REGISTRY_SIZE               0
 #define configGENERATE_RUN_TIME_STATS           1
+#define configUSE_APPLICATION_TASK_TAG          1
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -140,6 +141,9 @@ NVIC value of 255. */
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      RunTimeStatsCfgCnt()
 #define portGET_RUN_TIME_COUNTER_VALUE()              RunTimeStatsGetCnt()
 #define sprintf(ptr, format, ...)                     snprintf(ptr, 65535, format, __VA_ARGS__)
+
+#define traceTASK_SWITCHED_OUT()                TaskSwitchedIn()
+#define traceTASK_SWITCHED_IN()                 TaskSwitchedOut()
 
 #endif /* FREERTOS_CONFIG_H */
 

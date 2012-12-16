@@ -52,6 +52,10 @@ extern "C" {
 extern void  SystemReboot(void);
 extern void  RunTimeStatsCfgCnt(void);
 extern u32_t RunTimeStatsGetCnt(void);
+extern void  TaskSwitchedIn(void);
+extern void  TaskSwitchedOut(void);
+extern u32_t GetCPUTotalTime(void);
+extern void  ClearCPUTotalTime(void);
 
 #ifdef __cplusplus
 }
