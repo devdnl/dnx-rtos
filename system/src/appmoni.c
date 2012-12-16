@@ -60,7 +60,6 @@ extern "C" {
 /* task information */
 struct taskData {
       task_t taskHdl;
-      u32_t  cpuTime;
 
 #if (APP_MONITOR_MEMORY_USAGE > 0)
       struct memBlock {
@@ -341,8 +340,9 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
                   stat->taskHdl       = taskdata->taskHdl;
                   stat->taskName      = TaskGetName(taskdata->taskHdl);
                   stat->taskFreeStack = TaskGetStackFreeSpace(taskdata->taskHdl);
-                  stat->cpuUsage      = taskdata->cpuTime;
+                  stat->cpuUsage      = 0;
                   stat->cpuUsageTotal = moni->cpuTotalTime;
+                  stat->taskPriority  = TaskGetPriority(taskdata->taskHdl);
             }
       }
 

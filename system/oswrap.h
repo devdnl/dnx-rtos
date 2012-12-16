@@ -66,6 +66,7 @@ extern "C" {
 #define TaskGetName(taskhdl)              (ch_t*)pcTaskGetTaskName(taskhdl)
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetIdleTaskHandle()           xTaskGetIdleTaskHandle()
+#define TaskGetPriority(taskhdl)          (i16_t)((configMAX_PRIORITIES / 2) - uxTaskPriorityGet(taskhdl))
 #define TaskGetStackFreeSpace(taskhdl)    uxTaskGetStackHighWaterMark(taskhdl)
 #define TaskGetNumberOfTasks()            uxTaskGetNumberOfTasks()
 #define TaskGetRunTimeStats(dst)          vTaskGetRunTimeStats((signed char*)dst)

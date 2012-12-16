@@ -103,6 +103,7 @@ struct taskstat {
       ch_t  *taskName;
       task_t taskHdl;
       u32_t  taskFreeStack;
+      i16_t  taskPriority;
 };
 
 

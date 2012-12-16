@@ -107,6 +107,9 @@ stdRet_t appmain(ch_t *argv)
             {
                   printf("No enough free memory!\n");
             }
+      } else if (ParseArg(argv, "fake", PARSE_AS_EXIST, NULL) == STD_RET_OK) {
+            u8_t bfr = malloc(4096);
+            Sleep(5000);
       } else {
             struct taskstat taskinfo;
 
@@ -123,12 +126,13 @@ stdRet_t appmain(ch_t *argv)
                         printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
                                SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
 
-                        printf("TaskHdl\t\tFreeStack\tMemUsage\tOpenFiles\t%%CPU\tName\n");
+                        printf("\x1B[30;47m TSKHDL\t\tPR\tFRSTK\tMEM\tOPFI\t%%CPU\tNAME \x1B[0m\n");
 
                         for (u16_t i = 0; ; i++) {
                               if (moni_GetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                                    printf("%x\t%u\t\t%u\t\t%u\t\t%u%%\t%s\n",
+                                    printf("%x\t%d\t%u\t%u\t%u\t%u%%\t%s\n",
                                            taskinfo.taskHdl,
+                                           taskinfo.taskPriority,
                                            taskinfo.taskFreeStack,
                                            taskinfo.memUsage,
                                            taskinfo.fileUsage,
