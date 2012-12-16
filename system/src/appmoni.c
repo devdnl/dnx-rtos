@@ -363,11 +363,7 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void *moni_malloc(u32_t size)
 {
-      void *ptr = mallocTrace(TaskGetCurrentTaskHandle(), size);
-
-      kprint("%s: malloc: %u -> 0x%x\n", TaskGetName(NULL), size, ptr);
-
-      return ptr;
+      return mallocTrace(TaskGetCurrentTaskHandle(), size);
 }
 #endif
 
@@ -390,8 +386,6 @@ void *moni_calloc(u32_t nmemb, u32_t msize)
       if (ptr)
             memset(ptr, 0, nmemb * msize);
 
-      kprint("%s: calloc: %u * %u -> 0x%x\n", TaskGetName(NULL), nmemb, msize, ptr);
-
       return ptr;
 }
 #endif
@@ -410,8 +404,6 @@ void moni_free(void *mem)
       if (freeTrace(TaskGetCurrentTaskHandle(), mem) != STD_RET_OK) {
             /* error: application try to free freed memory */
       }
-
-      kprint("%s: freeing: 0x%x\n", TaskGetName(NULL), mem);
 }
 #endif
 

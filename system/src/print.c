@@ -318,7 +318,9 @@ static u32_t CalcFormatSize(const ch_t *format, va_list arg)
 
                   if (chr == '%' || chr == 'c')
                   {
-                        chr = va_arg(arg, i32_t);
+                        if (chr == 'c')
+                              chr = va_arg(arg, i32_t);
+
                         size++;
                         continue;
                   }

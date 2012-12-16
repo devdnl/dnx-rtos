@@ -83,6 +83,7 @@ void Initd(void *arg)
       /* early initialization */
       vfs_init();
       moni_Init();
+      moni_AddTask(TaskGetIdleTaskHandle());
       moni_AddTask(TaskGetCurrentTaskHandle());
 
       struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));

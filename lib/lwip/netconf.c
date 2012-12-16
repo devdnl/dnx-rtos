@@ -154,7 +154,7 @@ stdRet_t LwIP_Init(void)
 
       /* start task which periodically perform LwIP */
       xTaskHandle LwIPDeamonHdl;
-      if (TaskCreate(LwIP_Daemon, "lwipd", 6*MINIMAL_STACK_SIZE, NULL, 3, &LwIPDeamonHdl) != pdPASS)
+      if (TaskCreate(LwIP_Daemon, "lwipd", 5*MINIMAL_STACK_SIZE, NULL, 3, &LwIPDeamonHdl) != pdPASS)
       {
             goto LwIP_Init_exit_Failure;
       }
