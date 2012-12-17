@@ -117,21 +117,19 @@ struct taskstat {
                                      Exported function prototypes
 ==================================================================================================*/
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
-extern stdRet_t moni_Init       (void);
-extern stdRet_t moni_AddTask    (task_t taskHdl);
-extern stdRet_t moni_DelTask    (task_t taskHdl);
-extern stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat);
+extern stdRet_t  moni_Init       (void);
+extern stdRet_t  moni_AddTask    (task_t taskHdl);
+extern stdRet_t  moni_DelTask    (task_t taskHdl);
+extern stdRet_t  moni_GetTaskStat(i32_t item, struct taskstat *stat);
 #endif
-
 #if (APP_MONITOR_MEMORY_USAGE > 0)
-extern void *moni_malloc(u32_t size);
-extern void *moni_calloc(u32_t nmemb, u32_t msize);
-extern void  moni_free  (void *mem);
+extern void     *moni_malloc     (u32_t size);
+extern void     *moni_calloc     (u32_t nmemb, u32_t msize);
+extern void      moni_free       (void *mem);
 #endif
-
 #if (APP_MONITOR_FILE_USAGE > 0)
-extern FILE_t   *moni_fopen(const ch_t *path, const ch_t *mode);
-extern stdRet_t  moni_fclose(FILE_t *file);
+extern FILE_t   *moni_fopen      (const ch_t *path, const ch_t *mode);
+extern stdRet_t  moni_fclose     (FILE_t *file);
 #endif
 
 #ifdef __cplusplus

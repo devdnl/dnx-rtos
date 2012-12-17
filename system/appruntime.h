@@ -33,19 +33,12 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "basic_types.h"
 #include "systypes.h"
-#include "memman.h"
-#include "appmoni.h"
+
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** USER CFG: memory management */
-#define APPRUNTIME_CALLOC(nmemb, msize)   moni_calloc(nmemb, msize)
-#define APPRUNTIME_MALLOC(size)           moni_malloc(size)
-#define APPRUNTIME_FREE(mem)              moni_free(mem)
-
 /** application section */
 #define APPLICATION(name)                 void name(void *appArgument)
 #define APP_SEC_BEGIN                     { InitApp();

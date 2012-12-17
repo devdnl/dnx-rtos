@@ -70,7 +70,6 @@
 #include "pll_cfg.h"          /* CPU_TARGET_FREQ */
 #include "memman.h"           /* dynamic memory management */
 #include "cpuctl.h"
-#include "print.h"
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -90,7 +89,6 @@
 #define configTICK_RATE_HZ                      ( ( portTickType ) 1000 )
 #define configMAX_PRIORITIES                    ( ( unsigned portBASE_TYPE ) 7 )
 #define configMINIMAL_STACK_SIZE                ( ( unsigned short ) 40 )
-#define configTOTAL_HEAP_SIZE                   MEMMAN_HEAP_SIZE
 #define configMAX_TASK_NAME_LEN                 ( 16 )
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_16_BIT_TICKS                  0
@@ -103,7 +101,6 @@
 #define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configQUEUE_REGISTRY_SIZE               0
-#define configGENERATE_RUN_TIME_STATS           1
 #define configUSE_APPLICATION_TASK_TAG          1
 
 /* Set the following definitions to 1 to include the API function, or zero
@@ -111,7 +108,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet                1
 #define INCLUDE_uxTaskPriorityGet               1
 #define INCLUDE_vTaskDelete                     1
-#define INCLUDE_vTaskCleanUpResources           0
+//#define INCLUDE_vTaskCleanUpResources           0
 #define INCLUDE_vTaskSuspend                    1
 #define INCLUDE_xTaskResumeFromISR              1
 #define INCLUDE_vTaskDelayUntil                 1
@@ -138,12 +135,8 @@ NVIC value of 255. */
 #define vPortSVCHandler                         SVC_Handler
 
 /* required functions in cpu load stats */
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      RunTimeStatsCfgCnt()
-#define portGET_RUN_TIME_COUNTER_VALUE()              RunTimeStatsGetCnt()
-#define sprintf(ptr, format, ...)                     snprintf(ptr, 65535, format, __VA_ARGS__)
-
-#define traceTASK_SWITCHED_OUT()                TaskSwitchedIn()
-#define traceTASK_SWITCHED_IN()                 TaskSwitchedOut()
+#define traceTASK_SWITCHED_OUT()                cpuctl_TaskSwitchedIn()
+#define traceTASK_SWITCHED_IN()                 cpuctl_TaskSwitchedOut()
 
 #endif /* FREERTOS_CONFIG_H */
 

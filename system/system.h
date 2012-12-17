@@ -94,7 +94,7 @@ extern "C" {
 #define SystemGetHostname()               LwIP_GetHostname()
 #define SystemGetUptime()                 GetUptimeCnt()
 #define SystemGetTaskCount()              TaskGetNumberOfTasks()
-#define SystemGetRunTimeStats(dst)        TaskGetRunTimeStats(dst)
+//#define SystemGetRunTimeStats(dst)        TaskGetRunTimeStats(dst)
 #define SystemGetOSTickCnt()              TaskGetTickCount()
 #define SystemGetAppName()                TaskGetName(NULL)
 

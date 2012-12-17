@@ -40,7 +40,7 @@ extern "C" {
                                   Local symbolic constants/macros
 ==================================================================================================*/
 #define APB1FREQ                    36000000UL
-#define TIM2FREQ                    10000000UL
+#define TIM2FREQ                    1000000UL
 
 
 /*==================================================================================================
@@ -78,7 +78,7 @@ void SystemReboot(void)
  * @brief Start counter used in CPU load measurement
  */
 //================================================================================================//
-void RunTimeStatsCfgCnt(void)
+void cpuctl_CfgTimeStatCnt(void)
 {
       /* enable clock */
       RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
@@ -96,44 +96,49 @@ void RunTimeStatsCfgCnt(void)
 
 //================================================================================================//
 /**
- * @brief Gets value from counter used in CPU load measurement
- *
- * @return timer value
+ * @brief Function called after task go to ready state
  */
 //================================================================================================//
-u32_t RunTimeStatsGetCnt(void)
+void cpuctl_TaskSwitchedIn(void)
 {
-//      static u32_t cnt = 0;
-
-//      cnt += TIM2->CNT;
-//      TIM2->CNT = 0;
-
-      return 0;//cnt;
-}
-
-
-void TaskSwitchedIn(void)
-{
-      TotalCPUTime += TIM2->CNT;
       TIM2->CNT = 0;
 }
 
 
-void TaskSwitchedOut(void)
+//================================================================================================//
+/**
+ * @brief Function called when task go out ready state
+ */
+//================================================================================================//
+void cpuctl_TaskSwitchedOut(void)
 {
+      u16_t  cnt     = TIM2->CNT;
       task_t taskhdl = TaskGetCurrentTaskHandle();
-      u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + TIM2->CNT;
+      u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
+      TotalCPUTime  += cnt;
       TaskSetTag(taskhdl, (void*)tmp);
 }
 
 
-u32_t GetCPUTotalTime(void)
+//================================================================================================//
+/**
+ * @brief Function returns CPU total time
+ *
+ * @return CPU total time
+ */
+//================================================================================================//
+u32_t cpuctl_GetCPUTotalTime(void)
 {
       return TotalCPUTime;
 }
 
 
-void ClearCPUTotalTime(void)
+//================================================================================================//
+/**
+ * @brief Function clear CPU total time
+ */
+//================================================================================================//
+void cpuctl_ClearCPUTotalTime(void)
 {
       TotalCPUTime = 0;
 }

@@ -45,6 +45,7 @@ extern "C" {
 #include "oswrap.h"
 #include "vfs.h"
 #include "appmoni.h"
+#include "print.h"
 
 
 /*==================================================================================================

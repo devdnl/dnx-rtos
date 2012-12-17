@@ -31,15 +31,16 @@
 #include "regapp.h"
 #include "oswrap.h"
 #include "appmoni.h"
+#include "print.h"
 #include <string.h>
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define calloc(nmemb, msize)              APPRUNTIME_CALLOC(nmemb, msize)
-#define malloc(size)                      APPRUNTIME_MALLOC(size)
-#define free(mem)                         APPRUNTIME_FREE(mem)
+#define calloc(nmemb, msize)              moni_calloc(nmemb, msize)
+#define malloc(size)                      moni_malloc(size)
+#define free(mem)                         moni_free(mem)
 
 
 /*==================================================================================================

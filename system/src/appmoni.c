@@ -151,6 +151,8 @@ stdRet_t moni_Init(void)
                         moni = NULL;
 
                         status = STD_RET_ERROR;
+                  } else {
+                        cpuctl_CfgTimeStatCnt();
                   }
             }
       }
@@ -342,11 +344,11 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
                   stat->cpuUsage      = (u32_t)TaskGetTag(taskdata->taskHdl);
                   TaskSetTag(taskdata->taskHdl, (void*)0);
                   TaskResumeAll();
-                  stat->cpuUsageTotal = GetCPUTotalTime();
+                  stat->cpuUsageTotal = cpuctl_GetCPUTotalTime();
                   stat->taskPriority  = TaskGetPriority(taskdata->taskHdl);
 
                   if (item == ListGetItemCount(moni->tasks) - 1) {
-                        ClearCPUTotalTime();
+                        cpuctl_ClearCPUTotalTime();
                   }
             }
       }

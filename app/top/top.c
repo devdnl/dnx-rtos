@@ -65,100 +65,47 @@ stdRet_t appmain(ch_t *argv)
 {
       (void) argv;
 
-      stdRet_t status = STD_RET_ERROR;
+      u8_t divcnt = 10;
 
-      if (ParseArg(argv, "o", PARSE_AS_EXIST, NULL) == STD_RET_OK) {
-            u32_t size   = 50 * SystemGetTaskCount();
-            u8_t  divcnt = 10;
-            ch_t  *buffer;
+      while (ugetChar() != 'q') {
+            Sleep(100);
 
-            if ( (buffer = calloc(size, sizeof(ch_t))) )
-            {
-                  while (ugetChar() != 'q')
-                  {
-                        Sleep(100);
+            if (divcnt >= 10) {
+                  printf("\x1B[2J\x1B[HPress q to quit\n");
 
-                        if (divcnt >= 10)
-                        {
-                              SystemGetRunTimeStats(buffer);
+                  printf("Total tasks: %u\n", SystemGetTaskCount());
 
-                              printf("\x1B[2J\x1B[HPress q to quit\n");
+                  printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
+                         SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
 
-                              printf("Total tasks: %u\n", SystemGetTaskCount());
+                  printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
-                              printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                                     SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
+                  for (u16_t i = 0; ; i++) {
+                        struct taskstat taskinfo;
 
-                              printf("Name\t\tTime\t\tUsage\n%s\n", buffer);
-
-                              divcnt = 0;
-                        }
-                        else
-                        {
-                              divcnt++;
+                        if (moni_GetTaskStat(i, &taskinfo) == STD_RET_OK) {
+                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s \t%u\t%u\n",
+                                     taskinfo.taskHdl,
+                                     taskinfo.taskPriority,
+                                     taskinfo.taskFreeStack,
+                                     taskinfo.memUsage,
+                                     taskinfo.fileUsage,
+                                     ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
+                                     ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
+                                     taskinfo.taskName,
+                                     taskinfo.cpuUsage, taskinfo.cpuUsageTotal);
+                        } else {
+                              break;
                         }
                   }
 
-                  status = STD_RET_OK;
-
-                  free(buffer);
-            }
-            else
-            {
-                  printf("No enough free memory!\n");
-            }
-      } else {
-            struct taskstat taskinfo;
-
-            u8_t divcnt = 10;
-            u32_t totalCPUTime = 0;
-
-            while (ugetChar() != 'q') {
-                  Sleep(100);
-
-                  if (divcnt >= 10) {
-                        printf("\x1B[2J\x1B[HPress q to quit\n");
-
-                        printf("Total tasks: %u\n", SystemGetTaskCount());
-
-                        printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                               SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
-
-                        printf("\x1B[30;47m TSKHDL\t\tPR\tFRSTK\tMEM\tOPFI\t%%CPU\tNAME \x1B[0m\n");
-
-                        u32_t currCPUTotTime = 0;
-
-                        for (u16_t i = 0; ; i++) {
-                              if (moni_GetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                                    currCPUTotTime += taskinfo.cpuUsage;
-
-                                    printf("%x\t%d\t%u\t%u\t%u\t%u.%u%%\t%s \t%u\t%u\n",
-                                           taskinfo.taskHdl,
-                                           taskinfo.taskPriority,
-                                           taskinfo.taskFreeStack,
-                                           taskinfo.memUsage,
-                                           taskinfo.fileUsage,
-                                           ( taskinfo.cpuUsage * 100)  / totalCPUTime,
-                                           ((taskinfo.cpuUsage * 1000) / totalCPUTime) % 10,
-                                           taskinfo.taskName,
-                                           taskinfo.cpuUsage, taskinfo.cpuUsageTotal);
-                              } else {
-                                    break;
-                              }
-                        }
-
-                        totalCPUTime = currCPUTotTime;
-
-                        divcnt = 0;
-                  } else {
-                        divcnt++;
-                  }
-
-                  status = STD_RET_OK;
+                  divcnt = 0;
+            } else {
+                  divcnt++;
             }
       }
 
-      return status;
+      return STD_RET_OK;
 }
 
 /* End of application section declaration */

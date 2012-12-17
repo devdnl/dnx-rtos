@@ -34,6 +34,7 @@ extern "C" {
 #include "regdrv.h"
 #include <string.h>
 #include "vfs.h"
+#include "print.h"
 
 /* include here drivers headers */
 #include "uart.h"
