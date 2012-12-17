@@ -47,10 +47,6 @@ extern "C" {
 #define TTY(number)                 term->tty[number]
 #define BLOCK_TIME                  10000
 
-#define calloc(nmemb, msize)        mm_calloc(nmemb, msize)
-#define malloc(size)                mm_malloc(size)
-#define free(mem)                   mm_free(mem)
-
 
 /*==================================================================================================
                                    Local types, enums definitions

@@ -40,7 +40,7 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-#define TTYD_NAME             "ttyd"
+#define TTYD_NAME             "ttydrv"
 #define TTYD_STACK_SIZE       3*MINIMAL_STACK_SIZE
 
 

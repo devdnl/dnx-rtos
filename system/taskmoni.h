@@ -45,8 +45,11 @@ extern "C" {
 /* USER CFG: enable (1) or disable (0) application memory usage monitoring */
 #define APP_MONITOR_MEMORY_USAGE                (1)
 
-/* USEF CFG: enable (1) or disable (0) application opened file monitoring */
+/* USER CFG: enable (1) or disable (0) application opened file monitoring */
 #define APP_MONITOR_FILE_USAGE                  (1)
+
+/* USER CFG: enable (1) or disable (0) task CPU load monitoring */
+#define APP_MONITOR_CPU_LOAD                    (1)
 
 /* ---------------------------------------------------------------------------------------------- */
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -85,11 +88,12 @@ extern "C" {
 #define moni_fstat(file, statPtr)               vfs_fstat(file, stat)
 
 /* IF MONITOR MODULE IS NOT USED DISABLE INITIALIZATION */
-#if ((APP_MONITOR_MEMORY_USAGE == 0) && (APP_MONITOR_FILE_USAGE == 0))
-#define moni_init()
-#define moni_addTask(pid);
-#define moni_delTask(pid);
-#define moni_getTaskStat(item, statPtr);
+#if ((APP_MONITOR_MEMORY_USAGE == 0) && (APP_MONITOR_FILE_USAGE == 0) && (APP_MONITOR_CPU_LOAD == 0))
+#define moni_Init()
+#define moni_AddTask(pid)
+#define moni_DelTask(pid)
+#define moni_GetTaskStat(item, statPtr)         !memset(statPtr, 0, sizeof(struct taskstat))
+#define moni_GetTaskCount()                     0
 #endif
 
 
@@ -116,7 +120,7 @@ struct taskstat {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
 extern stdRet_t  moni_Init        (void);
 extern stdRet_t  moni_AddTask     (task_t taskHdl);
 extern stdRet_t  moni_DelTask     (task_t taskHdl);

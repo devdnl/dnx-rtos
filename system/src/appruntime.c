@@ -112,8 +112,10 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
                   appHandle = NULL;
             }
 
-            if (appHandle)
+            if (appHandle) {
                   moni_AddTask(appHandle->TaskHandle);
+            }
+
             TaskResumeAll();
       }
 
@@ -165,8 +167,9 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
                   appHandle = NULL;
             }
 
-            if (appHandle)
+            if (appHandle) {
                   moni_AddTask(appHandle->TaskHandle);
+            }
 
             TaskResumeAll();
       }

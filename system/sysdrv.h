@@ -38,6 +38,7 @@ extern "C" {
 #include "memman.h"
 #include "oswrap.h"
 #include "vfs.h"
+#include "appmoni.h"
 
 
 /*==================================================================================================
@@ -73,8 +74,8 @@ extern "C" {
 #define chown(path, owner, group)         vfs_chown(path, owner, group)
 #define stat(path, statPtr)               vfs_stat(path, statPtr)
 #define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
-#define fopen(path, mode)                 vfs_fopen(path, mode)
-#define fclose(file)                      vfs_fclose(file)
+#define fopen(path, mode)                 moni_fopen(path, mode)
+#define fclose(file)                      moni_fclose(file)
 #define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
 #define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
 #define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)

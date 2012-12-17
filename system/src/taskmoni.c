@@ -99,7 +99,9 @@ struct moni {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
 static struct moni *moni;
+#endif
 
 
 /*==================================================================================================
@@ -119,7 +121,7 @@ static struct moni *moni;
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
 stdRet_t moni_Init(void)
 {
       stdRet_t status = STD_RET_OK;
@@ -163,7 +165,7 @@ stdRet_t moni_Init(void)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
 stdRet_t moni_AddTask(task_t taskHdl)
 {
       stdRet_t status = STD_RET_ERROR;
@@ -212,7 +214,7 @@ stdRet_t moni_AddTask(task_t taskHdl)
  * @param pid     task ID
  */
 //================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
 stdRet_t moni_DelTask(task_t taskHdl)
 {
       stdRet_t status = STD_RET_ERROR;
@@ -284,7 +286,7 @@ stdRet_t moni_DelTask(task_t taskHdl)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
 stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 {
       stdRet_t status = STD_RET_ERROR;
@@ -356,7 +358,7 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
  * @return number of monitor tasks
  */
 //================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
 u16_t moni_GetTaskCount(void)
 {
       return ListGetItemCount(moni->tasks);

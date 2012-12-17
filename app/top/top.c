@@ -71,20 +71,22 @@ stdRet_t appmain(ch_t *argv)
             Sleep(100);
 
             if (divcnt >= 10) {
+                  u8_t n = moni_GetTaskCount();
+
                   printf("\x1B[2J\x1B[HPress q to quit\n");
 
-                  printf("Total tasks: %u\n", moni_GetTaskCount());
+                  printf("Total tasks: %u\n", n);
 
                   printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
                          SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
 
                   printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
-                  for (u16_t i = 0; ; i++) {
+                  for (u16_t i = 0; i < n; i++) {
                         struct taskstat taskinfo;
 
                         if (moni_GetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s \t%u\t%u\n",
+                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                      taskinfo.taskHdl,
                                      taskinfo.taskPriority,
                                      taskinfo.taskFreeStack,
@@ -92,8 +94,7 @@ stdRet_t appmain(ch_t *argv)
                                      taskinfo.fileUsage,
                                      ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
                                      ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
-                                     taskinfo.taskName,
-                                     taskinfo.cpuUsage, taskinfo.cpuUsageTotal);
+                                     taskinfo.taskName);
                         } else {
                               break;
                         }
