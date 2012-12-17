@@ -36,7 +36,7 @@ extern "C" {
 #include "lfs.h"
 #include "regapp.h"
 #include "tty_def.h"
-#include "taskmoni.h" /* DNLTEST cos z tym trzeba zrobic */
+#include "taskmoni.h"
 #include <string.h>
 
 
@@ -82,9 +82,6 @@ void Initd(void *arg)
 
       /* early initialization */
       vfs_init();
-      moni_Init();
-      moni_AddTask(TaskGetIdleTaskHandle()); /* DNLTEST cos z tym trzeba zrobic */
-      moni_AddTask(TaskGetCurrentTaskHandle()); /* DNLTEST cos z tym trzeba zrobic */
 
       struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));
 

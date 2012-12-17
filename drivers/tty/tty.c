@@ -142,8 +142,6 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                         if (TaskCreate(ttyd, TTYD_NAME,    TTYD_STACK_SIZE,
                                        NULL, -1, &term->taskHdl) == OS_OK )
                         {
-                              moni_AddTask(term->taskHdl); /* DNLTEST tego nie powinno tutaj byc */
-
                               term->col   = 80;
                               term->row   = 24;
                               term->chTTY = -1;

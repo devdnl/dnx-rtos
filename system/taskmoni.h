@@ -121,7 +121,6 @@ struct taskstat {
                                      Exported function prototypes
 ==================================================================================================*/
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
-extern stdRet_t  moni_Init        (void);
 extern stdRet_t  moni_AddTask     (task_t taskHdl);
 extern stdRet_t  moni_DelTask     (task_t taskHdl);
 extern stdRet_t  moni_GetTaskStat (i32_t item, struct taskstat *stat);

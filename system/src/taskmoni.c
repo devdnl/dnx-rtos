@@ -106,6 +106,7 @@ struct moni {
                                       Local function prototypes
 ==================================================================================================*/
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+static stdRet_t         moni_Init  (void);
 static struct taskData *GetTaskData(i32_t *item, task_t taskHdl);
 #endif
 
@@ -136,7 +137,7 @@ static struct moni *moni;
  */
 //================================================================================================//
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
-stdRet_t moni_Init(void)
+static stdRet_t moni_Init(void)
 {
       stdRet_t status = STD_RET_OK;
 
@@ -183,6 +184,10 @@ stdRet_t moni_Init(void)
 stdRet_t moni_AddTask(task_t taskHdl)
 {
       stdRet_t status = STD_RET_ERROR;
+
+      if (moni == NULL) {
+            moni_Init();
+      }
 
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);

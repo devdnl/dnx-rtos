@@ -97,6 +97,8 @@ extern "C" {
 //#define SystemGetRunTimeStats(dst)        TaskGetRunTimeStats(dst)
 #define SystemGetOSTickCnt()              TaskGetTickCount()
 #define SystemGetAppName()                TaskGetName(NULL)
+#define SystemGetTaskStat(item, statPtr)  moni_GetTaskStat(item, statPtr)
+#define SystemGetMoniTaskCount()          moni_GetTaskCount()
 
 
 /*==================================================================================================

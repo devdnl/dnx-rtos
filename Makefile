@@ -101,6 +101,7 @@ CSRC = $(sort \
    system/src/print.c \
    system/src/lfs.c \
    system/src/vfs.c \
+   system/src/oswrap.c \
    )
 
 ####################################################################################################

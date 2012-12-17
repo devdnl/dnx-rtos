@@ -31,8 +31,6 @@
 #include "regapp.h"
 #include <string.h>
 
-#include "taskmoni.h" /* DNLTEST cos z tym trzeba zrobic */
-
 /* Begin of application section declaration */
 APPLICATION(top)
 APP_SEC_BEGIN
@@ -71,7 +69,7 @@ stdRet_t appmain(ch_t *argv)
             Sleep(100);
 
             if (divcnt >= 10) {
-                  u8_t n = moni_GetTaskCount();
+                  u8_t n = SystemGetMoniTaskCount();
 
                   printf("\x1B[2J\x1B[HPress q to quit\n");
 
@@ -85,7 +83,7 @@ stdRet_t appmain(ch_t *argv)
                   for (u16_t i = 0; i < n; i++) {
                         struct taskstat taskinfo;
 
-                        if (moni_GetTaskStat(i, &taskinfo) == STD_RET_OK) {
+                        if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
                               printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                      taskinfo.taskHdl,
                                      taskinfo.taskPriority,

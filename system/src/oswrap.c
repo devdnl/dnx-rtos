@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    hooks.c
+@file    oswrap.c
 
 @author  Daniel Zorychta
 
-@brief   This file support all system's hooks
+@brief   Operating system wrapper
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,17 +24,21 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "hooks.h"
-#include "print.h"
 #include "oswrap.h"
+#include "taskmoni.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define Priority(prio)                    (prio + (configMAX_PRIORITIES / 2))
 
 
 /*==================================================================================================
@@ -50,9 +54,6 @@
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-/** uptime counter */
-u32_t uptimeCnt;
-u32_t uptimeDiv;
 
 
 /*==================================================================================================
@@ -66,89 +67,46 @@ u32_t uptimeDiv;
 
 //================================================================================================//
 /**
- * @brief Stack overflow hook
+ * @brief
  */
 //================================================================================================//
-void vApplicationStackOverflowHook(task_t taskHdl, signed char *taskName)
+int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack, void *argv, i8_t priority, task_t *taskHdl)
 {
-      TaskDelete(taskHdl);
-      kprint("\x1B[31mTask %s stack overflow!\x1B[0m\n", taskName);
-}
+      TaskSuspendAll();
 
+      task_t task;
 
-//================================================================================================//
-/**
- * @brief Hook when system tick was increased
- */
-//================================================================================================//
-void vApplicationTickHook(void)
-{
-      if (++uptimeDiv >= configTICK_RATE_HZ)
-      {
-            uptimeDiv = 0;
-            uptimeCnt++;
+      int_t status = xTaskCreate(taskCode, (signed char *)name, stack, argv, Priority(priority), &task);
+
+      if (taskHdl) {
+            *taskHdl = task;
       }
+
+      if (status == OS_OK) {
+            moni_AddTask(task);
+      }
+
+      TaskResumeAll();
+
+      return status;
 }
 
 
 //================================================================================================//
 /**
- * @brief Function return uptime counter
- *
- * @return uptime counter
+ * @brief
  */
 //================================================================================================//
-u32_t GetUptimeCnt(void)
+void TaskDelete(task_t taskHdl)
 {
-      return uptimeCnt;
+      moni_DelTask(taskHdl);
+      vTaskDelete(taskHdl);
 }
 
 
-//================================================================================================//
-/**
- * @brief Hard Fault ISR
- */
-//================================================================================================//
-void HardFault_Handler(void)
-{
-      ch_t *name = TaskGetName(THIS_TASK);
-
-      kprint("\x1B[31mTask %s generated Hard Fault!\x1B[0m\n", name);
+#ifdef __cplusplus
 }
-
-
-//================================================================================================//
-/**
- * @brief Memory Management failure ISR
- */
-//================================================================================================//
-void MemManage_Handler(void)
-{
-      while (TRUE);
-}
-
-
-//================================================================================================//
-/**
- * @brief Bus Fault ISR
- */
-//================================================================================================//
-void BusFault_Handler(void)
-{
-      while (TRUE);
-}
-
-
-//================================================================================================//
-/**
- * @brief Usage Fault ISR
- */
-//================================================================================================//
-void UsageFault_Handler(void)
-{
-      while (TRUE);
-}
-
+#endif
 
 /*==================================================================================================
                                             End of file

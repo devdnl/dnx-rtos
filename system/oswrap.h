@@ -49,8 +49,7 @@ extern "C" {
 #define EMPTY_TASK                        UINT32_MAX
 
 /** TASK LEVEL DEFINITIONS */
-#define TaskTerminate()                   vTaskDelete(NULL)
-#define TaskDelete(taskID)                vTaskDelete(taskID)
+#define TaskTerminate()                   vTaskDelete(TaskGetCurrentTaskHandle())
 #define TaskDelay(delay)                  vTaskDelay(delay)
 #define TaskSuspend(taskID)               vTaskSuspend(taskID)
 #define TaskResume(taskID)                vTaskResume(taskID)
@@ -73,12 +72,6 @@ extern "C" {
 #define TaskDelayUntil(lastTime, delay)   vTaskDelayUntil((portTickType*)lastTime, delay)
 #define TaskSetTag(taskhdl, tag)          vTaskSetApplicationTaskTag(taskhdl, tag)
 #define TaskGetTag(taskhdl)               xTaskGetApplicationTaskTag(taskhdl)
-
-#define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
-        xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, Priority(uxPriority), pvCreatedTask)
-
-#define Priority(prio)                    (prio + (configMAX_PRIORITIES / 2))
-
 
 /** SEMAPHORES AND MUTEXES */
 #define CreateSemBin(sem)                 vSemaphoreCreateBinary(sem)
@@ -108,6 +101,7 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 typedef xTaskHandle      task_t;
+typedef pdTASK_CODE      taskCode_t;
 typedef xSemaphoreHandle sem_t;
 typedef xSemaphoreHandle mutex_t;
 
@@ -120,7 +114,8 @@ typedef xSemaphoreHandle mutex_t;
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-
+extern int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack, void *argv, i8_t priority, task_t *taskHdl);
+extern void  TaskDelete(task_t taskHdl);
 
 #ifdef __cplusplus
 }

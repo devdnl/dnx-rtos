@@ -103,17 +103,10 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
             appHandle->stdout           = NULL;
 
             /* start application task */
-            TaskSuspendAll();
-            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS) {
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != OS_OK) {
                   free(appHandle);
                   appHandle = NULL;
             }
-
-            if (appHandle) {
-                  moni_AddTask(appHandle->TaskHandle);
-            }
-
-            TaskResumeAll();
       }
 
       RunAsApp_end:
@@ -155,17 +148,10 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
             appHandle->TaskHandle       = NULL;
 
             /* start daemon task */
-            TaskSuspendAll();
-            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS) {
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != OS_OK) {
                   free(appHandle);
                   appHandle = NULL;
             }
-
-            if (appHandle) {
-                  moni_AddTask(appHandle->TaskHandle);
-            }
-
-            TaskResumeAll();
       }
 
       RunAsDaemon_end:
@@ -255,7 +241,6 @@ stdRet_t KillApp(app_t *appArgs)
 
       if (appArgs) {
             if (appArgs->TaskHandle) {
-                  moni_DelTask(appArgs->TaskHandle);
                   TaskDelete(appArgs->TaskHandle);
             }
 
@@ -278,14 +263,11 @@ stdRet_t KillApp(app_t *appArgs)
 //================================================================================================//
 void TerminateApplication(app_t *appObj, stdRet_t exitCode)
 {
-      /* remove app from monitor */
-      moni_DelTask(appObj->TaskHandle);
+      TaskDelete(appObj->TaskHandle);
 
       /* set exit code */
       appObj->exitCode   = exitCode;
       appObj->TaskHandle = NULL;
-
-      TaskTerminate();
 }
 
 
