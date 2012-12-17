@@ -145,7 +145,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                   if (term)
                   {
                         if (TaskCreate(ttyd, TTYD_NAME,    TTYD_STACK_SIZE,
-                                       NULL, Priority(-1), &term->taskHdl) == OS_OK )
+                                       NULL, -1, &term->taskHdl) == OS_OK )
                         {
                               moni_AddTask(term->taskHdl); /* DNLTEST tego nie powinno tutaj byc */
 

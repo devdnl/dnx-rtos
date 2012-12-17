@@ -360,6 +360,21 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 
 //================================================================================================//
 /**
+ * @brief Function return number of monitor tasks
+ *
+ * @return number of monitor tasks
+ */
+//================================================================================================//
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0))
+u16_t moni_GetTaskCount(void)
+{
+      return ListGetItemCount(moni->tasks);
+}
+#endif
+
+
+//================================================================================================//
+/**
  * @brief Monitor memory allocation
  *
  * @param size          block size

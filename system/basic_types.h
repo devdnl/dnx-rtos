@@ -97,7 +97,7 @@ typedef int64_t      i64_t;
 typedef int64_t      s64_t;
 typedef char_t       ch_t;
 typedef unsigned int uint_t;
-typedef int          int_t;
+typedef signed int   int_t;
 
 
 /*==================================================================================================

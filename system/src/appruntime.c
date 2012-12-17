@@ -105,7 +105,8 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
             appHandle->stdout           = NULL;
 
             /* start application task */
-            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->TaskHandle) != pdPASS)
+            TaskSuspendAll();
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS)
             {
                   free(appHandle);
                   appHandle = NULL;
@@ -113,6 +114,7 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
 
             if (appHandle)
                   moni_AddTask(appHandle->TaskHandle);
+            TaskResumeAll();
       }
 
       RunAsApp_end:
@@ -156,7 +158,8 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
             appHandle->TaskHandle       = NULL;
 
             /* start daemon task */
-            if (TaskCreate(app, appName, stackSize, appHandle, 2, &appHandle->TaskHandle) != pdPASS)
+            TaskSuspendAll();
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS)
             {
                   free(appHandle);
                   appHandle = NULL;
@@ -164,6 +167,8 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
 
             if (appHandle)
                   moni_AddTask(appHandle->TaskHandle);
+
+            TaskResumeAll();
       }
 
       RunAsDaemon_end:

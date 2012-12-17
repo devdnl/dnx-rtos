@@ -79,7 +79,7 @@ int main(void)
       mm_init();
 
       /* create init task */
-      TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, 2, NULL);
+      TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, -1, NULL);
 
       /* start OS */
       vTaskStartScheduler();

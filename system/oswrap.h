@@ -66,7 +66,7 @@ extern "C" {
 #define TaskGetName(taskhdl)              (ch_t*)pcTaskGetTaskName(taskhdl)
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetIdleTaskHandle()           xTaskGetIdleTaskHandle()
-#define TaskGetPriority(taskhdl)          (i16_t)((configMAX_PRIORITIES / 2) - uxTaskPriorityGet(taskhdl))
+#define TaskGetPriority(taskhdl)          (i16_t)(uxTaskPriorityGet(taskhdl) - (configMAX_PRIORITIES / 2))
 #define TaskGetStackFreeSpace(taskhdl)    uxTaskGetStackHighWaterMark(taskhdl)
 #define TaskGetNumberOfTasks()            uxTaskGetNumberOfTasks()
 #define TaskGetRunTimeStats(dst)          vTaskGetRunTimeStats((signed char*)dst)
@@ -75,7 +75,7 @@ extern "C" {
 #define TaskGetTag(taskhdl)               xTaskGetApplicationTaskTag(taskhdl)
 
 #define TaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask) \
-        xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
+        xTaskCreate(pvTaskCode, (signed char *)pcName, usStackDepth, pvParameters, Priority(uxPriority), pvCreatedTask)
 
 #define Priority(prio)                    (prio + (configMAX_PRIORITIES / 2))
 

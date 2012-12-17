@@ -73,7 +73,7 @@ stdRet_t appmain(ch_t *argv)
             if (divcnt >= 10) {
                   printf("\x1B[2J\x1B[HPress q to quit\n");
 
-                  printf("Total tasks: %u\n", SystemGetTaskCount());
+                  printf("Total tasks: %u\n", moni_GetTaskCount());
 
                   printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
                          SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
