@@ -94,15 +94,6 @@ struct moni {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-#if (APP_MONITOR_MEMORY_USAGE > 0)
-static void     *mallocTrace(task_t taskHdl, size_t size);
-static stdRet_t  freeTrace(task_t taskHdl, void *addr);
-#endif
-
-#if (APP_MONITOR_FILE_USAGE > 0)
-static FILE_t   *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode);
-static stdRet_t  fcloseTrace(task_t taskHdl, FILE_t *file);
-#endif
 
 
 /*==================================================================================================
@@ -385,104 +376,12 @@ u16_t moni_GetTaskCount(void)
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void *moni_malloc(u32_t size)
 {
-      return mallocTrace(TaskGetCurrentTaskHandle(), size);
-}
-#endif
-
-
-//================================================================================================//
-/**
- * @brief Monitor memory allocation
- *
- * @param nmemb         n members
- * @param msize         member size
- *
- * @return pointer to allocated block or NULL if error
- */
-//================================================================================================//
-#if (APP_MONITOR_MEMORY_USAGE > 0)
-void *moni_calloc(u32_t nmemb, u32_t msize)
-{
-      void *ptr = mallocTrace(TaskGetCurrentTaskHandle(), nmemb * msize);
-
-      if (ptr)
-            memset(ptr, 0, nmemb * msize);
-
-      return ptr;
-}
-#endif
-
-
-//================================================================================================//
-/**
- * @brief Monitor memory freeing
- *
- * @param *mem          block to free
- */
-//================================================================================================//
-#if (APP_MONITOR_MEMORY_USAGE > 0)
-void moni_free(void *mem)
-{
-      if (freeTrace(TaskGetCurrentTaskHandle(), mem) != STD_RET_OK) {
-            /* error: application try to free freed memory */
-      }
-}
-#endif
-
-
-//================================================================================================//
-/**
- * @brief Function open selected file
- *
- * @param *name         file path
- * @param *mode         file mode
- *
- * @retval NULL if file can't be created
- */
-//================================================================================================//
-#if (APP_MONITOR_FILE_USAGE > 0)
-FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
-{
-      return fopenTrace(TaskGetCurrentTaskHandle(), path, mode);
-}
-#endif
-
-
-//================================================================================================//
-/**
- * @brief Function close opened file
- *
- * @param *file               pinter to file
- *
- * @retval STD_RET_OK         file closed successfully
- * @retval STD_RET_ERROR      file not closed
- */
-//================================================================================================//
-#if (APP_MONITOR_FILE_USAGE > 0)
-stdRet_t moni_fclose(FILE_t *file)
-{
-      return fcloseTrace(TaskGetCurrentTaskHandle(), file);
-}
-#endif
-
-
-//================================================================================================//
-/**
- * @brief Function add to specified task's list information about allocated memory
- *
- * @param  pid    task id
- * @param *addr   address pointer
- * @param  size   allocated memory size
- */
-//================================================================================================//
-#if (APP_MONITOR_MEMORY_USAGE > 0)
-static void *mallocTrace(task_t taskHdl, size_t size)
-{
       void *mem = NULL;
 
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
+            task_t taskHdl  = TaskGetCurrentTaskHandle();
             i32_t taskCount = ListGetItemCount(moni->tasks);
 
             /* find task */
@@ -490,7 +389,7 @@ static void *mallocTrace(task_t taskHdl, size_t size)
                   struct taskData *taskInfo = ListGetItemDataByNo(moni->tasks, task);
 
                   if (taskInfo == NULL)
-                        goto addMem_end;
+                        goto moni_malloc_end;
 
                   if (taskInfo->taskHdl == taskHdl) {
                         /* find empty address slot */
@@ -518,7 +417,7 @@ static void *mallocTrace(task_t taskHdl, size_t size)
                                                 if (slot == MEM_ADR_IN_BLOCK - 1)
                                                       taskInfo->mblock[block]->full = TRUE;
 
-                                                goto addMem_end;
+                                                goto moni_malloc_end;
                                           }
                                     }
 
@@ -535,7 +434,7 @@ static void *mallocTrace(task_t taskHdl, size_t size)
                   }
             }
 
-            addMem_end:
+            moni_malloc_end:
             GiveMutex(moni->mtx);
       }
 
@@ -546,20 +445,41 @@ static void *mallocTrace(task_t taskHdl, size_t size)
 
 //================================================================================================//
 /**
- * @brief Function remove allocated memory from selected task
+ * @brief Monitor memory allocation
  *
- * @param  pid    task ID
- * @param *addr   allocated block
+ * @param nmemb         n members
+ * @param msize         member size
+ *
+ * @return pointer to allocated block or NULL if error
  */
 //================================================================================================//
 #if (APP_MONITOR_MEMORY_USAGE > 0)
-static stdRet_t freeTrace(task_t taskHdl, void *addr)
+void *moni_calloc(u32_t nmemb, u32_t msize)
 {
-      stdRet_t status = STD_RET_ERROR;
+      void *ptr = moni_malloc(nmemb * msize);
 
+      if (ptr)
+            memset(ptr, 0, nmemb * msize);
+
+      return ptr;
+}
+#endif
+
+
+//================================================================================================//
+/**
+ * @brief Monitor memory freeing
+ *
+ * @param *mem          block to free
+ */
+//================================================================================================//
+#if (APP_MONITOR_MEMORY_USAGE > 0)
+void moni_free(void *mem)
+{
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
+            task_t taskHdl  = TaskGetCurrentTaskHandle();
             i32_t taskTotal = ListGetItemCount(moni->tasks);
 
             /* find task */
@@ -567,7 +487,7 @@ static stdRet_t freeTrace(task_t taskHdl, void *addr)
                   struct taskData *taskInfo = ListGetItemDataByNo(moni->tasks, task);
 
                   if (taskInfo == NULL)
-                        goto delMem_end;
+                        goto moni_free_end;
 
                   if (taskInfo->taskHdl == taskHdl) {
                         /* find address slot */
@@ -580,20 +500,18 @@ static stdRet_t freeTrace(task_t taskHdl, void *addr)
 
                                           struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
 
-                                          if (mslot->addr == addr) {
+                                          if (mslot->addr == mem) {
                                                 free(mslot->addr);
                                                 mslot->addr = NULL;
                                                 mslot->size = 0;
 
                                                 taskInfo->mblock[block]->full = FALSE;
 
-                                                status = STD_RET_OK;
-
                                                 /* check if block is empty */
                                                 if (block != 0) {
                                                       for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
                                                             if (taskInfo->mblock[block]->mslot[i].addr != NULL)
-                                                                  goto delMem_end;
+                                                                  goto moni_free_end;
                                                       }
 
                                                       /* block is empty - freeing memory */
@@ -601,43 +519,43 @@ static stdRet_t freeTrace(task_t taskHdl, void *addr)
                                                       taskInfo->mblock[block] = NULL;
                                                 }
 
-                                                goto delMem_end;
+                                                goto moni_free_end;
                                           }
                                     }
                               }
                         }
 
+                        /* error: application try to free freed memory */
+                        /* signal code can be added here */
                   }
             }
 
-            delMem_end:
+            moni_free_end:
             GiveMutex(moni->mtx);
       }
-
-      return status;
 }
 #endif
 
 
 //================================================================================================//
 /**
- * @brief Function opens file if free slots exist and add to monitoring list
+ * @brief Function open selected file
  *
- * @param  pid          task ID
- * @param *path         path to file
+ * @param *name         file path
  * @param *mode         file mode
  *
- * @return if success pointer to file object otherwise NULL
+ * @retval NULL if file can't be created
  */
 //================================================================================================//
 #if (APP_MONITOR_FILE_USAGE > 0)
-static FILE_t *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode)
+FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
 {
       void *file = NULL;
 
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
+            task_t taskHdl  = TaskGetCurrentTaskHandle();
             i32_t taskCount = ListGetItemCount(moni->tasks);
 
             /* find task */
@@ -645,7 +563,7 @@ static FILE_t *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode)
                   struct taskData *taskInfo = ListGetItemDataByNo(moni->tasks, task);
 
                   if (taskInfo == NULL)
-                        goto addFile_end;
+                        goto moni_fopen_end;
 
                   if (taskInfo->taskHdl == taskHdl) {
                         /* find empty file slot */
@@ -673,7 +591,7 @@ static FILE_t *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode)
                                                 if (slot == FLE_OPN_IN_BLOCK - 1)
                                                       taskInfo->fblock[block]->full = TRUE;
 
-                                                goto addFile_end;
+                                                goto moni_fopen_end;
                                           }
                                     }
 
@@ -690,7 +608,7 @@ static FILE_t *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode)
                   }
             }
 
-            addFile_end:
+            moni_fopen_end:
             GiveMutex(moni->mtx);
       }
 
@@ -701,22 +619,23 @@ static FILE_t *fopenTrace(task_t taskHdl, const ch_t *path, const ch_t *mode)
 
 //================================================================================================//
 /**
- * @brief Function close file if exist on monitor list
+ * @brief Function close opened file
  *
- * @param  pid          task ID
- * @param *file         file object
+ * @param *file               pinter to file
  *
- * @return if success pointer to file object otherwise NULL
+ * @retval STD_RET_OK         file closed successfully
+ * @retval STD_RET_ERROR      file not closed
  */
 //================================================================================================//
 #if (APP_MONITOR_FILE_USAGE > 0)
-static stdRet_t fcloseTrace(task_t taskHdl, FILE_t *file)
+stdRet_t moni_fclose(FILE_t *file)
 {
       stdRet_t status = STD_RET_ERROR;
 
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
+            task_t taskHdl  = TaskGetCurrentTaskHandle();
             i32_t taskCount = ListGetItemCount(moni->tasks);
 
             /* find task */
@@ -724,7 +643,7 @@ static stdRet_t fcloseTrace(task_t taskHdl, FILE_t *file)
                   struct taskData *taskInfo = ListGetItemDataByNo(moni->tasks, task);
 
                   if (taskInfo == NULL)
-                        goto delFile_end;
+                        goto moni_fclose_end;
 
                   if (taskInfo->taskHdl == taskHdl) {
                         /* find empty file slot */
@@ -750,7 +669,7 @@ static stdRet_t fcloseTrace(task_t taskHdl, FILE_t *file)
                                                             /* check if block is empty */
                                                             for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
                                                                   if (taskInfo->fblock[block]->fslot[i].file != NULL)
-                                                                        goto delFile_end;
+                                                                        goto moni_fclose_end;
                                                             }
 
                                                             /* block is empty - freeing memory */
@@ -759,7 +678,7 @@ static stdRet_t fcloseTrace(task_t taskHdl, FILE_t *file)
                                                       }
                                                 }
 
-                                                goto delFile_end;
+                                                goto moni_fclose_end;
                                           }
                                     }
 
@@ -769,7 +688,7 @@ static stdRet_t fcloseTrace(task_t taskHdl, FILE_t *file)
                   }
             }
 
-            delFile_end:
+            moni_fclose_end:
             GiveMutex(moni->mtx);
       }
 
