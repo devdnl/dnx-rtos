@@ -281,7 +281,7 @@ stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
 
                               status = vfs_mknod(nodeName, (struct vfs_drvcfg*)&drvList[i].drvCfg);
 
-                              if (status == STD_RET_ERROR) {
+                              if (status != STD_RET_OK) {
                                     drvList[i].drvRelease(dev, part);
                                     kprint("\x1B[31mCreate node %s failed\x1B[0m\n", nodeName);
                               } else {

@@ -50,7 +50,7 @@ extern "C" {
 #define MEM_ADR_IN_BLOCK            7
 
 #define FLE_BLOCK_COUNT             3
-#define FLE_OPN_IN_BLOCK            8
+#define FLE_OPN_IN_BLOCK            7
 
 #define DIR_BLOCK_COUNT             1
 #define DIR_OPN_IN_BLOCK            3
@@ -62,8 +62,6 @@ extern "C" {
 ==================================================================================================*/
 /* task information */
 struct taskData {
-      task_t taskHdl;
-
 #if (APP_MONITOR_MEMORY_USAGE > 0)
       struct memBlock {
             bool_t full;
@@ -107,8 +105,7 @@ struct moni {
                                       Local function prototypes
 ==================================================================================================*/
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
-static stdRet_t         moni_Init  (void);
-static struct taskData *GetTaskData(i32_t *item, task_t taskHdl);
+static stdRet_t moni_Init(void);
 #endif
 
 
@@ -193,16 +190,14 @@ stdRet_t moni_AddTask(task_t taskHdl)
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *task = GetTaskData(NULL, taskHdl);
+            struct taskData *task = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
 
             /* task does not exist */
             if (task == NULL) {
                   task = calloc(1, sizeof(struct taskData));
 
                   if (task) {
-                        task->taskHdl = taskHdl;
-
-                        if (ListAddItem(moni->tasks, 0, task) >= 0) {
+                        if (ListAddItem(moni->tasks, (u32_t)taskHdl, task) >= 0) {
                               status = STD_RET_OK;
                         } else {
                               free(task);
@@ -232,8 +227,7 @@ stdRet_t moni_DelTask(task_t taskHdl)
 
       while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-      i32_t task;
-      struct taskData *taskInfo = GetTaskData(&task, taskHdl);
+      struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
 
       if (taskInfo) {
             #if (APP_MONITOR_MEMORY_USAGE > 0)
@@ -292,7 +286,7 @@ stdRet_t moni_DelTask(task_t taskHdl)
             }
             #endif
 
-            ListRmItemByNo(moni->tasks, task);
+            ListRmItemByID(moni->tasks, (u32_t)taskHdl);
 
             status = STD_RET_OK;
       }
@@ -369,15 +363,18 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
             GiveMutex(moni->mtx);
 
             if (status == STD_RET_OK) {
-                  stat->taskHdl       = taskdata->taskHdl;
-                  stat->taskName      = TaskGetName(taskdata->taskHdl);
-                  stat->taskFreeStack = TaskGetStackFreeSpace(taskdata->taskHdl);
+                  task_t taskHdl = 0;
+                  ListGetItemID(moni->tasks, item, (task_t)&taskHdl);
+
+                  stat->taskHdl       = taskHdl;
+                  stat->taskName      = TaskGetName(taskHdl);
+                  stat->taskFreeStack = TaskGetStackFreeSpace(taskHdl);
                   TaskSuspendAll();
-                  stat->cpuUsage      = (u32_t)TaskGetTag(taskdata->taskHdl);
-                  TaskSetTag(taskdata->taskHdl, (void*)0);
+                  stat->cpuUsage      = (u32_t)TaskGetTag(taskHdl);
+                  TaskSetTag(taskHdl, (void*)0);
                   TaskResumeAll();
                   stat->cpuUsageTotal = cpuctl_GetCPUTotalTime();
-                  stat->taskPriority  = TaskGetPriority(taskdata->taskHdl);
+                  stat->taskPriority  = TaskGetPriority(taskHdl);
 
                   if (item == ListGetItemCount(moni->tasks) - 1) {
                         cpuctl_ClearCPUTotalTime();
@@ -422,7 +419,7 @@ void *moni_malloc(u32_t size)
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
             if (taskInfo) {
                   /* find empty address slot */
@@ -511,7 +508,7 @@ void moni_free(void *mem)
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
             if (taskInfo) {
                   /* find address slot */
@@ -578,7 +575,7 @@ FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
             if (taskInfo) {
                   /* find empty file slot */
@@ -649,7 +646,7 @@ stdRet_t moni_fclose(FILE_t *file)
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
             if (taskInfo) {
                   /* find empty file slot */
@@ -719,7 +716,7 @@ DIR_t *moni_opendir(const ch_t *path)
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
             if (taskInfo) {
                   /* find empty file slot */
@@ -790,7 +787,7 @@ extern stdRet_t moni_closedir(DIR_t *dir)
       if (moni) {
             while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
             if (taskInfo) {
                   /* find empty file slot */
@@ -839,50 +836,6 @@ extern stdRet_t moni_closedir(DIR_t *dir)
       }
 
       return status;
-}
-#endif
-
-
-//================================================================================================//
-/**
- * @brief Function return task data
- *
- * @param *item         task number on list
- * @param *task         task handler pointer
- *
- * @return task data
- */
-//================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
-static struct taskData *GetTaskData(i32_t *item, task_t taskHdl)
-{
-      struct taskData *taskData = NULL;
-
-      if (moni) {
-            i32_t taskCount = ListGetItemCount(moni->tasks);
-
-            /* find task */
-            for (i32_t task = 0; task < taskCount; task++) {
-                  taskData = ListGetItemDataByNo(moni->tasks, task);
-
-                  if (taskData == NULL) {
-                        goto GetTaskData_end;
-                  }
-
-                  if (taskData->taskHdl == taskHdl) {
-                        if (item) {
-                              *item = task;
-                        }
-
-                        goto GetTaskData_end;
-                  }
-            }
-
-            taskData = NULL;
-      }
-
-      GetTaskData_end:
-      return taskData;
 }
 #endif
 
