@@ -353,7 +353,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
                                     goto ParseArg_end;
                               }
 
-                              ch_t *string = (ch_t*)result;
+                              ch_t *string = result;
 
                               while ((character = *(argv++)) != '"') {
                                     *(string++) = character;
@@ -364,7 +364,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
                               status = STD_RET_OK;
                         }
                   } else if (parseAs == PARSE_AS_CHAR) {
-                        ch_t *character = (ch_t*)result;
+                        ch_t *character = result;
 
                         *character = *argv;
 
