@@ -1326,11 +1326,6 @@ unsigned portBASE_TYPE uxTaskGetTaskNumber( xTaskHandle xTask );
  */
 void vTaskSetTaskNumber( xTaskHandle xTask, unsigned portBASE_TYPE uxHandle );
 
-/*
- * Get active task ID
- */
-portBASE_TYPE xTaskGetPID(void);
-
 #ifdef __cplusplus
 }
 #endif

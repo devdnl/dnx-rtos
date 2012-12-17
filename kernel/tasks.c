@@ -2474,11 +2474,3 @@ void vTaskExitCritical( void )
 
 #endif
 /*-----------------------------------------------------------*/
-
-
-portBASE_TYPE xTaskGetPID(void)
-{
-      return pxCurrentTCB->uxTCBNumber;
-}
-
-
