@@ -67,7 +67,17 @@ extern "C" {
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function create new task and if enabled add to monitor list
+ *
+ * @param[in ]  taskCode           task code
+ * @param[in ] *name               task name
+ * @param[in ]  stack              stack deep
+ * @param[in ] *argv               argument pointer
+ * @param[in ]  priority           task priority (calculated to FreeRTOS priority level)
+ * @param[out] *taskHdl            task handle
+ *
+ * @retval OS_OK
+ * @retval OS_NOT_OK
  */
 //================================================================================================//
 int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack, void *argv, i8_t priority, task_t *taskHdl)
@@ -94,7 +104,9 @@ int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack, void *argv,
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function delete task and if enabled remove from monitor list
+ *
+ * @param taskHdl       task handle
  */
 //================================================================================================//
 void TaskDelete(task_t taskHdl)
