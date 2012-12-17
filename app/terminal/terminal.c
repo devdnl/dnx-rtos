@@ -576,7 +576,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
-                  Sleep(10);
+                  Sleep(100);
             }
 
             FreeApphdl(appHdl);

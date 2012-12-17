@@ -111,6 +111,7 @@ stdRet_t appmain(ch_t *argv)
             struct taskstat taskinfo;
 
             u8_t divcnt = 10;
+            u32_t totalCPUTime = 0;
 
             while (ugetChar() != 'q') {
                   Sleep(100);
@@ -125,22 +126,28 @@ stdRet_t appmain(ch_t *argv)
 
                         printf("\x1B[30;47m TSKHDL\t\tPR\tFRSTK\tMEM\tOPFI\t%%CPU\tNAME \x1B[0m\n");
 
+                        u32_t currCPUTotTime = 0;
+
                         for (u16_t i = 0; ; i++) {
                               if (moni_GetTaskStat(i, &taskinfo) == STD_RET_OK) {
+                                    currCPUTotTime += taskinfo.cpuUsage;
+
                                     printf("%x\t%d\t%u\t%u\t%u\t%u.%u%%\t%s \t%u\t%u\n",
                                            taskinfo.taskHdl,
                                            taskinfo.taskPriority,
                                            taskinfo.taskFreeStack,
                                            taskinfo.memUsage,
                                            taskinfo.fileUsage,
-                                           ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
-                                           ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
+                                           ( taskinfo.cpuUsage * 100)  / totalCPUTime,
+                                           ((taskinfo.cpuUsage * 1000) / totalCPUTime) % 10,
                                            taskinfo.taskName,
                                            taskinfo.cpuUsage, taskinfo.cpuUsageTotal);
                               } else {
                                     break;
                               }
                         }
+
+                        totalCPUTime = currCPUTotTime;
 
                         divcnt = 0;
                   } else {

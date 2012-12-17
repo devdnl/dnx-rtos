@@ -40,7 +40,7 @@ extern "C" {
                                   Local symbolic constants/macros
 ==================================================================================================*/
 #define APB1FREQ                    36000000UL
-#define TIM2FREQ                    10000UL
+#define TIM2FREQ                    10000000UL
 
 
 /*==================================================================================================
@@ -122,8 +122,7 @@ void TaskSwitchedIn(void)
 void TaskSwitchedOut(void)
 {
       task_t taskhdl = TaskGetCurrentTaskHandle();
-      u32_t tmp = (u32_t)TaskGetTag(taskhdl);
-      tmp += TIM2->CNT;
+      u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + TIM2->CNT;
       TaskSetTag(taskhdl, (void*)tmp);
 }
 

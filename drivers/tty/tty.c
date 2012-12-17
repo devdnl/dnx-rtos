@@ -36,6 +36,7 @@ extern "C" {
 #include "uart_def.h"
 #include "vfs.h"
 
+#include "appmoni.h" /* DNLTEST tego tutaj nie powinno byc */
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -146,6 +147,8 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                         if (TaskCreate(ttyd, TTYD_NAME,    TTYD_STACK_SIZE,
                                        NULL, Priority(-1), &term->taskHdl) == OS_OK )
                         {
+                              moni_AddTask(term->taskHdl); /* DNLTEST tego nie powinno tutaj byc */
+
                               term->col   = 80;
                               term->row   = 24;
                               term->chTTY = -1;
