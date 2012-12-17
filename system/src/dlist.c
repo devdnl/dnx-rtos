@@ -55,7 +55,6 @@ typedef struct list {
       struct listitem *head;
       struct listitem *tail;
       i32_t  itemcount;
-      u32_t  idcnt;
 } list_t;
 
 
@@ -99,7 +98,7 @@ list_t *ListCreate(void)
  * @param *list         pointer to list
  */
 //================================================================================================//
-void ListDestroy(list_t *list)
+void ListDelete(list_t *list)
 {
       if (list) {
             struct listitem *item     = list->head;
@@ -126,12 +125,13 @@ void ListDestroy(list_t *list)
  * @brief Function add item to end of list
  *
  * @param *list         pointer to list
+ * @param  id           item ID
  * @param *data         data pointer
  *
  * @return number of item in list, if failure function return -1
  */
 //================================================================================================//
-i32_t ListAddItem(list_t *list, void *data)
+i32_t ListAddItem(list_t *list, u32_t id, void *data)
 {
       i32_t n = -1;
 
@@ -150,7 +150,7 @@ i32_t ListAddItem(list_t *list, void *data)
                   list->itemcount++;
 
                   newitem->data = data;
-                  newitem->id   = list->idcnt++;
+                  newitem->id   = id;
 
                   n = list->itemcount - 1;
             }
@@ -165,12 +165,13 @@ i32_t ListAddItem(list_t *list, void *data)
  * @brief Function insert new item before selected place
  *
  * @param *list         pointer to list
+ * @param  id           item ID
  * @param *data         data pointer
  *
  * @return 0 if ok, otherwise != 0
  */
 //================================================================================================//
-i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, void *data)
+i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
 {
       i32_t n = 1;
 
@@ -200,7 +201,7 @@ i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, void *data)
                         }
 
                         newitem->data = data;
-                        newitem->id   = list->idcnt++;
+                        newitem->id   = id;
 
                         n = 0;
                   }
@@ -216,12 +217,13 @@ i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, void *data)
  * @brief Function insert new item after selected place
  *
  * @param *list         pointer to list
+ * @param  id           item ID
  * @param *data         data pointer
  *
  * @return 0 if ok, otherwise != 0
  */
 //================================================================================================//
-i32_t ListInsItemAfterNo(list_t *list, i32_t nitem, void *data)
+i32_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
 {
       i32_t n = 1;
 
@@ -245,7 +247,7 @@ i32_t ListInsItemAfterNo(list_t *list, i32_t nitem, void *data)
                         }
 
                         newitem->data = data;
-                        newitem->id   = list->idcnt++;
+                        newitem->id   = id;
 
                         n = 0;
                   }
@@ -537,6 +539,35 @@ i32_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid)
 
             if (item) {
                   *itemid = item->id;
+                  n = 0;
+            }
+      }
+
+      return n;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function return item number
+ *
+ * @param *list         pointer to list
+ * @param  id           item ID
+ * @param *nitem        item number
+ *
+ * @return 0 if ok, otherwise != 0
+ */
+//================================================================================================//
+i32_t ListGetItemNo(list_t *list, u32_t id, u32_t *nitem)
+{
+      i32_t n = 1;
+
+      if (list && nitem) {
+            struct listitem *item;
+            i32_t itemno = GetItemAddrByID(list, id, NULL, &item);
+
+            if (item) {
+                  *nitem = itemno;
                   n = 0;
             }
       }

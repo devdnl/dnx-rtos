@@ -56,10 +56,10 @@ typedef struct list list_t;
                                      Exported function prototypes
 ==================================================================================================*/
 extern list_t *ListCreate(void);
-extern void    ListDestroy(list_t *list);
-extern i32_t   ListAddItem(list_t *list, void *data);
-extern i32_t   ListInsItemBeforeNo(list_t *list, i32_t nitem, void *data);
-extern i32_t   ListInsItemAfterNo(list_t *list, i32_t nitem, void *data);
+extern void    ListDelete(list_t *list);
+extern i32_t   ListAddItem(list_t *list, u32_t id, void *data);
+extern i32_t   ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id, void *data);
+extern i32_t   ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data);
 extern i32_t   ListRmItemByNo(list_t *list, i32_t nitem);
 extern i32_t   ListRmItemByID(list_t *list, u32_t id);
 extern void    ListClear(list_t *list);
@@ -70,6 +70,7 @@ extern void   *ListGetItemDataByID(list_t *list, u32_t id);
 extern i32_t   ListUnlinkItemDataByNo(list_t *list, i32_t nitem);
 extern i32_t   ListUnlinkItemDataByID(list_t *list, u32_t id);
 extern i32_t   ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid);
+extern i32_t   ListGetItemNo(list_t *list, u32_t id, u32_t *nitem);
 extern i32_t   ListGetItemCount(list_t *list);
 
 

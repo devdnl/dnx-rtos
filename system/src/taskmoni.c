@@ -151,7 +151,7 @@ static stdRet_t moni_Init(void)
 
                   if (!moni->tasks || !moni->mtx) {
                         if (moni->tasks)
-                              ListDestroy(moni->tasks);
+                              ListDelete(moni->tasks);
 
                         if (moni->mtx)
                               DeleteMutex(moni->mtx);
@@ -202,7 +202,7 @@ stdRet_t moni_AddTask(task_t taskHdl)
                   if (task) {
                         task->taskHdl = taskHdl;
 
-                        if (ListAddItem(moni->tasks, task) >= 0) {
+                        if (ListAddItem(moni->tasks, 0, task) >= 0) {
                               status = STD_RET_OK;
                         } else {
                               free(task);

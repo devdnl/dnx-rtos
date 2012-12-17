@@ -61,6 +61,7 @@ struct fsinfo {
 struct vfshdl {
       list_t  *mntList;
       mutex_t  mtx;
+      u32_t    idcnt;
 };
 
 
@@ -106,7 +107,7 @@ stdRet_t vfs_init(void)
                               DeleteMutex(vfs->mtx);
 
                         if (vfs->mntList)
-                              ListDestroy(vfs->mntList);
+                              ListDelete(vfs->mntList);
 
                         free(vfs);
                         vfs = NULL;
@@ -177,7 +178,7 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
                               newfs->fs       = *mountcfg;
                               newfs->mntFSCnt = 0;
 
-                              if (ListAddItem(vfs->mntList, newfs) >= 0) {
+                              if (ListAddItem(vfs->mntList, vfs->idcnt++, newfs) >= 0) {
                                     status = STD_RET_OK;
                               }
                         }

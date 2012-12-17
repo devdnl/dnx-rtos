@@ -83,6 +83,7 @@ struct fshdl_s {
       node_t   root;          /* root dir '/' */
       mutex_t  mtx;           /* lock mutex */
       list_t  *openFile;      /* list with opened files */
+      u32_t    idcnt;
 };
 
 
@@ -133,10 +134,10 @@ stdRet_t lfs_init(devx_t dev)
                               DeleteMutex(lfs->mtx);
 
                         if (lfs->root.data)
-                              ListDestroy(lfs->root.data);
+                              ListDelete(lfs->root.data);
 
                         if (lfs->openFile)
-                              ListDestroy(lfs->openFile);
+                              ListDelete(lfs->openFile);
 
                         free(lfs);
 
@@ -206,7 +207,7 @@ stdRet_t lfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
                                           dirfile->part  = dcfg->part;
 
                                           /* add new drv to this folder */
-                                          if (ListAddItem(node->data, dirfile) >= 0) {
+                                          if (ListAddItem(node->data, lfs->idcnt++, dirfile) >= 0) {
                                                 status = STD_RET_OK;
                                           }
                                     }
@@ -280,7 +281,7 @@ stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
                                                 dir->type = NODE_TYPE_DIR;
 
                                                 /* add new folder to this folder */
-                                                if (ListAddItem(node->data, dir) >= 0) {
+                                                if (ListAddItem(node->data, lfs->idcnt++, dir) >= 0) {
                                                       status = STD_RET_OK;
                                                 }
                                           }
@@ -290,7 +291,7 @@ stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
                                     if (status == STD_RET_ERROR) {
                                           if (dir) {
                                                 if (dir->data)
-                                                      ListDestroy(dir->data);
+                                                      ListDelete(dir->data);
 
                                                 free(dir);
                                           }
@@ -782,7 +783,7 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
 
                               node = fnode;
 
-                              if ((item = ListAddItem(nodebase->data, fnode)) < 0) {
+                              if ((item = ListAddItem(nodebase->data, lfs->idcnt++, fnode)) < 0) {
                                     free(filename);
                                     free(fnode);
                                     goto lfs_open_end;
@@ -831,7 +832,7 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
                                     }
 
                                     /* add open file info to list */
-                                    if ((item = ListAddItem(lfs->openFile, foi)) < 0) {
+                                    if ((item = ListAddItem(lfs->openFile, lfs->idcnt++, foi)) < 0) {
                                           free(foi);
                                           goto lfs_open_end;
                                     }
@@ -1193,7 +1194,7 @@ static stdRet_t rmNode(node_t *base, node_t *target, u32_t baseitemid)
             if (ListGetItemCount(target->data) > 0) {
                   goto rmNode_end;
             } else {
-                  ListDestroy(target->data);
+                  ListDelete(target->data);
                   target->data = NULL;
             }
       }
