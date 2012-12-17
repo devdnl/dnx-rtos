@@ -49,7 +49,7 @@ extern "C" {
 #define EMPTY_TASK                        UINT32_MAX
 
 /** TASK LEVEL DEFINITIONS */
-#define TaskTerminate()                   vTaskDelete(TaskGetCurrentTaskHandle())
+#define TaskTerminate()                   TaskDelete(TaskGetCurrentTaskHandle())
 #define TaskDelay(delay)                  vTaskDelay(delay)
 #define TaskSuspend(taskID)               vTaskSuspend(taskID)
 #define TaskResume(taskID)                vTaskResume(taskID)

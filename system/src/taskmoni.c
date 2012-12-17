@@ -44,6 +44,7 @@ extern "C" {
 #define malloc(size)                mm_malloc(size)
 #define free(mem)                   mm_free(mem)
 #define fclose(file)                vfs_fclose(file)
+#define closedir(dir)               vfs_closedir(dir)
 
 #define MEM_BLOCK_COUNT             4
 #define MEM_ADR_IN_BLOCK            7
@@ -265,6 +266,23 @@ stdRet_t moni_DelTask(task_t taskHdl)
 
                               if (fslot->file) {
                                     fclose(fslot->file);
+                              }
+                        }
+
+                        free(taskInfo->fblock[block]);
+                        taskInfo->fblock[block] = NULL;
+                  }
+            }
+
+            for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
+                  if (taskInfo->dblock[block]) {
+
+                        for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+
+                              struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
+
+                              if (dslot->dir) {
+                                    closedir(dslot->dir);
                               }
                         }
 

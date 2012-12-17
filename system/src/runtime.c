@@ -263,11 +263,11 @@ stdRet_t KillApp(app_t *appArgs)
 //================================================================================================//
 void TerminateApplication(app_t *appObj, stdRet_t exitCode)
 {
-      TaskDelete(appObj->TaskHandle);
-
       /* set exit code */
       appObj->exitCode   = exitCode;
       appObj->TaskHandle = NULL;
+
+      TaskTerminate();
 }
 
 
