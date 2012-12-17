@@ -36,7 +36,7 @@ extern "C" {
 #include "lfs.h"
 #include "regapp.h"
 #include "tty_def.h"
-#include "appmoni.h"
+#include "taskmoni.h" /* DNLTEST cos z tym trzeba zrobic */
 #include <string.h>
 
 
@@ -83,8 +83,8 @@ void Initd(void *arg)
       /* early initialization */
       vfs_init();
       moni_Init();
-      moni_AddTask(TaskGetIdleTaskHandle());
-      moni_AddTask(TaskGetCurrentTaskHandle());
+      moni_AddTask(TaskGetIdleTaskHandle()); /* DNLTEST cos z tym trzeba zrobic */
+      moni_AddTask(TaskGetCurrentTaskHandle()); /* DNLTEST cos z tym trzeba zrobic */
 
       struct vfs_fscfg *fscfg = malloc(sizeof(struct vfs_fscfg));
 
@@ -250,7 +250,7 @@ void Initd(void *arg)
                         {
                               kprint("Application closed on TTY%d\n", ctty);
 
-                              FreeApphdl(apphdl[i]);
+                              KillApp(apphdl[i]);
                               apphdl[i] = NULL;
 
                               ioctl(ttyx[i], TTY_IORQ_CLEARTTY, NULL);

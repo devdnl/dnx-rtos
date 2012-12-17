@@ -82,7 +82,7 @@ typedef enum parseType_enum
 extern app_t    *Exec(const ch_t *name, ch_t *argv);
 extern app_t    *Execd(const ch_t *name, ch_t *argv);
 extern stdRet_t  StartDaemon(const ch_t *name, ch_t *argv);
-extern stdRet_t  FreeApphdl(app_t *appArgs);
+extern stdRet_t  KillApp(app_t *appArgs);
 extern void      TerminateApplication(app_t *appArgument, stdRet_t exitCode);
 extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 

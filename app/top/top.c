@@ -31,7 +31,7 @@
 #include "regapp.h"
 #include <string.h>
 
-#include "appmoni.h"
+#include "taskmoni.h" /* DNLTEST cos z tym trzeba zrobic */
 
 /* Begin of application section declaration */
 APPLICATION(top)

@@ -27,10 +27,10 @@
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "appruntime.h"
+#include "runtime.h"
 #include "regapp.h"
 #include "oswrap.h"
-#include "appmoni.h"
+#include "taskmoni.h"
 #include "print.h"
 #include <string.h>
 
@@ -86,16 +86,14 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
       app_t *appHandle = NULL;
 
       /* check pointers values */
-      if (!app || !appName || !stackSize)
-      {
+      if (!app || !appName || !stackSize) {
             goto RunAsApp_end;
       }
 
       /* allocate memory for application handler */
       appHandle = calloc(1, sizeof(app_t));
 
-      if (appHandle)
-      {
+      if (appHandle) {
             /* initialize stdio data */
             appHandle->arg              = arg;
             appHandle->exitCode         = STD_RET_UNKNOWN;
@@ -106,8 +104,7 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
 
             /* start application task */
             TaskSuspendAll();
-            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS)
-            {
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS) {
                   free(appHandle);
                   appHandle = NULL;
             }
@@ -141,16 +138,14 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
       app_t *appHandle = NULL;
 
       /* check pointers values */
-      if (!app|| !appName  || !stackSize)
-      {
+      if (!app|| !appName  || !stackSize) {
             goto RunAsDaemon_end;
       }
 
       /* allocate memory for application handler */
       appHandle = calloc(1, sizeof(app_t));
 
-      if (appHandle)
-      {
+      if (appHandle) {
             /* set default values */
             appHandle->arg              = arg;
             appHandle->exitCode         = STD_RET_UNKNOWN;
@@ -161,8 +156,7 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
 
             /* start daemon task */
             TaskSuspendAll();
-            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS)
-            {
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != pdPASS) {
                   free(appHandle);
                   appHandle = NULL;
             }
@@ -193,8 +187,7 @@ app_t *Exec(const ch_t *name, ch_t *argv)
 {
       regAppData_t appData = GetAppData(name);
 
-      if (appData.appPtr == NULL || appData.stackSize < MINIMAL_STACK_SIZE)
-      {
+      if (appData.appPtr == NULL || appData.stackSize < MINIMAL_STACK_SIZE) {
             return NULL;
       }
 
@@ -216,8 +209,7 @@ app_t *Execd(const ch_t *name, ch_t *argv)
 {
       regAppData_t appData = GetAppData(name);
 
-      if (appData.appPtr == NULL)
-      {
+      if (appData.appPtr == NULL) {
             return NULL;
       }
 
@@ -237,13 +229,10 @@ app_t *Execd(const ch_t *name, ch_t *argv)
 //================================================================================================//
 stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
 {
-      if (Execd(name, argv) != NULL)
-      {
+      if (Execd(name, argv) != NULL) {
             kprint("%s daemon started\n", name);
             return STD_RET_OK;
-      }
-      else
-      {
+      } else {
             kprint("\x1B[31m%s start failed\x1B[0m\n", name);
             return STD_RET_ERROR;
       }
@@ -260,24 +249,22 @@ stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
  * @retval STD_STATUS_ERROR         freed error, bad pointer
  */
 //================================================================================================//
-stdRet_t FreeApphdl(app_t *appArgs)
+stdRet_t KillApp(app_t *appArgs)
 {
-      if (appArgs)
-      {
-            if (appArgs->TaskHandle)
-            {
+      stdRet_t status = STD_RET_ERROR;
+
+      if (appArgs) {
+            if (appArgs->TaskHandle) {
                   moni_DelTask(appArgs->TaskHandle);
                   TaskDelete(appArgs->TaskHandle);
             }
 
             free(appArgs);
 
-            return STD_RET_OK;
+            status = STD_RET_OK;
       }
-      else
-      {
-            return STD_RET_ERROR;
-      }
+
+      return status;
 }
 
 
@@ -295,7 +282,7 @@ void TerminateApplication(app_t *appObj, stdRet_t exitCode)
       moni_DelTask(appObj->TaskHandle);
 
       /* set exit code */
-      appObj->exitCode = exitCode;
+      appObj->exitCode   = exitCode;
       appObj->TaskHandle = NULL;
 
       TaskTerminate();
@@ -317,111 +304,99 @@ void TerminateApplication(app_t *appObj, stdRet_t exitCode)
 //================================================================================================//
 stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
 {
-      u8_t  base;
+      u8_t base;
+      stdRet_t status = STD_RET_ERROR;
 
       /* check argument correctness */
-      if (!argv || parseAs >= PARSE_AS_UNKNOWN || (parseAs == PARSE_AS_EXIST ? 0 : !result))
-            return STD_RET_ERROR;
+      if (!argv || parseAs >= PARSE_AS_UNKNOWN || (parseAs == PARSE_AS_EXIST ? 0 : !result)) {
+            goto ParseArg_end;
+      }
 
       u32_t findArgSize = strlen(findArg);
 
       /* scan argv line */
-      while (*argv != ASCII_NULL)
-      {
+      while (*argv != ASCII_NULL) {
             /* if find character which open string, parser must find end of a string */
-            if (*argv == '"')
-            {
+            if (*argv == '"') {
                   ch_t *stringEnd;
 
                   argv++;
 
-                  if ((stringEnd = strchr(argv, '"')) == NULL)
+                  if ((stringEnd = strchr(argv, '"')) == NULL) {
                         argv++;
-                  else
+                  } else {
                         argv = stringEnd + 1;
+                  }
             }
 
             /* check that argument is short or long */
-            if (*argv == '-' && *(argv + 1) == '-')
-            {
+            if (*argv == '-' && *(argv + 1) == '-') {
                   argv += 2;
 
-                  if (findArgSize == 1)
+                  if (findArgSize == 1) {
                         argv++;
-            }
-            else if (*argv == '-' && findArgSize == 1)
-            {
+                  }
+            } else if (*argv == '-' && findArgSize == 1) {
                   argv++;
             }
 
             /* check if current argument is found */
-            if (strncmp(argv, findArg, findArgSize) == 0)
-            {
+            if (strncmp(argv, findArg, findArgSize) == 0) {
                   argv += findArgSize;
 
-                  if (parseAs == PARSE_AS_STRING)
-                  {
+                  if (parseAs == PARSE_AS_STRING) {
                         ch_t character = *argv++;
 
-                        if (character == '"')
-                        {
+                        if (character == '"') {
                               /* try to find closed " */
-                              if (strchr(argv, '"') == NULL)
-                                    return STD_RET_ERROR;
+                              if (strchr(argv, '"') == NULL) {
+                                    goto ParseArg_end;
+                              }
 
                               ch_t *string = (ch_t*)result;
 
-                              while ((character = *(argv++)) != '"')
-                              {
+                              while ((character = *(argv++)) != '"') {
                                     *(string++) = character;
                               }
 
                               *(string++) = ASCII_NULL;
 
-                              return STD_RET_OK;
+                              status = STD_RET_OK;
                         }
-                        else
-                        {
-                              return STD_RET_ERROR;
-                        }
-                  }
-                  else if (parseAs == PARSE_AS_CHAR)
-                  {
+                  } else if (parseAs == PARSE_AS_CHAR) {
                         ch_t *character = (ch_t*)result;
 
                         *character = *argv;
 
-                        return STD_RET_OK;
-                  }
-                  else if (parseAs == PARSE_AS_EXIST)
-                  {
-                        return STD_RET_OK;
-                  }
-                  else
-                  {
+                        status = STD_RET_OK;
+
+                  } else if (parseAs == PARSE_AS_EXIST) {
+                        status = STD_RET_OK;
+
+                  } else {
                         i32_t *value = (i32_t*)result;
 
-                        switch (parseAs)
-                        {
-                              case PARSE_AS_BIN: base = 2;  break;
-                              case PARSE_AS_OCT: base = 8;  break;
-                              case PARSE_AS_DEC: base = 10; break;
-                              case PARSE_AS_HEX: base = 16; break;
-                              default: return STD_RET_ERROR;
+                        switch (parseAs) {
+                        case PARSE_AS_BIN: base = 2;  break;
+                        case PARSE_AS_OCT: base = 8;  break;
+                        case PARSE_AS_DEC: base = 10; break;
+                        case PARSE_AS_HEX: base = 16; break;
+                        default: goto ParseArg_end;
                         }
 
                         a2i(argv, base, value);
 
-                        return STD_RET_OK;
+                        status = STD_RET_OK;
                   }
 
-                  return STD_RET_OK;
+                  goto ParseArg_end;
             }
 
             argv++;
       }
 
-      return STD_RET_ERROR;
+      ParseArg_end:
+      return status;
 }
 
 

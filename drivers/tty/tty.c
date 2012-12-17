@@ -36,7 +36,6 @@ extern "C" {
 #include "uart_def.h"
 #include "vfs.h"
 
-#include "appmoni.h" /* DNLTEST tego tutaj nie powinno byc */
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -541,7 +540,9 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                         {
                               for (u8_t i = 0; i < TTY_MAX_LINES; i++)
                               {
-                                    free(TTY(dev)->line[i]);
+                                    if (TTY(dev)->line[i]) {
+                                          free(TTY(dev)->line[i]);
+                                    }
                               }
                         }
 

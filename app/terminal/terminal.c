@@ -579,7 +579,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
                   Sleep(100);
             }
 
-            FreeApphdl(appHdl);
+            KillApp(appHdl);
 
             return CMD_EXECUTED;
       }

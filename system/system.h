@@ -38,11 +38,11 @@ extern "C" {
 #include "memman.h"
 #include "oswrap.h"
 #include "print.h"
-#include "appruntime.h"
+#include "runtime.h"
 #include "hooks.h"
 #include "netconf.h"
 #include "dlist.h"
-#include "appmoni.h"
+#include "taskmoni.h"
 
 
 /*==================================================================================================

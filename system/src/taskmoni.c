@@ -31,7 +31,7 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "appmoni.h"
+#include "taskmoni.h"
 #include "dlist.h"
 #include "memman.h"
 #include <string.h>
@@ -231,10 +231,14 @@ stdRet_t moni_DelTask(task_t taskHdl)
                         #if (APP_MONITOR_MEMORY_USAGE > 0)
                         for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
                               if (taskInfo->mblock[block]) {
+
                                     for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                                          if (taskInfo->mblock[block]->mslot[slot].addr) {
-                                                free(taskInfo->mblock[block]->mslot[slot].addr);
-                                                taskInfo->mblock[block]->mslot[slot].size = 0;
+
+                                          struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
+
+                                          if (mslot->addr) {
+                                                free(mslot->addr);
+                                                mslot->size = 0;
                                           }
                                     }
 
@@ -247,9 +251,13 @@ stdRet_t moni_DelTask(task_t taskHdl)
                         #if (APP_MONITOR_FILE_USAGE > 0)
                         for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
                               if (taskInfo->fblock[block]) {
+
                                     for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
-                                          if (taskInfo->fblock[block]->fslot[slot].file) {
-                                                fclose(taskInfo->fblock[block]->fslot[slot].file);
+
+                                          struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
+
+                                          if (fslot->file) {
+                                                fclose(fslot->file);
                                           }
                                     }
 
