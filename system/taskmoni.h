@@ -63,6 +63,8 @@ extern "C" {
 #if (APP_MONITOR_FILE_USAGE == 0)
 #define moni_fopen(path, mode)                  vfs_fopen(path, mode)
 #define moni_fclose(file)                       vfs_fclose(file)
+#define moni_opendir(path)                      vfs_opendir(path)
+#define moni_closedir(dir)                      vfs_closedir(dir)
 #endif
 
 /* DIRECT FUNCTION BECAUSE MONITORING IS NOT NECESSARY */
@@ -71,8 +73,6 @@ extern "C" {
 #define moni_getmntentry(item, mntentPtr)       vfs_getmntentry(item, mntentPtr)
 #define moni_mknod(path, drv_cfgPtr)            vfs_mknod(path, drv_cfgPtr)
 #define moni_mkdir(path)                        vfs_mkdir(path)
-#define moni_opendir(path)                      vfs_opendir(path)
-#define moni_closedir(dir)                      vfs_closedir(dir)
 #define moni_readdir(dir)                       vfs_readdir(dir)
 #define moni_remove(path)                       vfs_remove(path)
 #define moni_rename(oldName, newName)           vfs_rename(oldName, newName)
@@ -135,6 +135,8 @@ extern void      moni_free        (void *mem);
 #if (APP_MONITOR_FILE_USAGE > 0)
 extern FILE_t   *moni_fopen       (const ch_t *path, const ch_t *mode);
 extern stdRet_t  moni_fclose      (FILE_t *file);
+extern DIR_t    *moni_opendir     (const ch_t *path);
+extern stdRet_t  moni_closedir    (DIR_t *dir);
 #endif
 
 #ifdef __cplusplus

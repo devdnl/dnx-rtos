@@ -51,6 +51,9 @@ extern "C" {
 #define FLE_BLOCK_COUNT             3
 #define FLE_OPN_IN_BLOCK            8
 
+#define DIR_BLOCK_COUNT             1
+#define DIR_OPN_IN_BLOCK            3
+
 #define MTX_BLOCK_TIME              10
 
 /*==================================================================================================
@@ -81,6 +84,14 @@ struct taskData {
             } fslot[FLE_OPN_IN_BLOCK];
 
       } *fblock[FLE_BLOCK_COUNT];
+
+      struct dirBlock {
+            bool_t full;
+
+            struct dirSlot {
+                  DIR_t *dir;
+            } dslot[DIR_OPN_IN_BLOCK];
+      } *dblock[DIR_BLOCK_COUNT];
 #endif
 };
 
@@ -312,6 +323,16 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
                         if (taskdata->fblock[block]) {
                               for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
                                     if (taskdata->fblock[block]->fslot[slot].file) {
+                                          stat->fileUsage++;
+                                    }
+                              }
+                        }
+                  }
+
+                  for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
+                        if (taskdata->dblock[block]) {
+                              for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                                    if (taskdata->dblock[block]->dslot[slot].dir) {
                                           stat->fileUsage++;
                                     }
                               }
@@ -650,6 +671,147 @@ stdRet_t moni_fclose(FILE_t *file)
             }
 
             moni_fclose_end:
+            GiveMutex(moni->mtx);
+      }
+
+      return status;
+}
+#endif
+
+
+//================================================================================================//
+/**
+ * @brief Function open selected directory
+ *
+ * @param *name         directory path
+ *
+ * @retval NULL if file can't be created
+ */
+//================================================================================================//
+#if (APP_MONITOR_FILE_USAGE > 0)
+DIR_t *moni_opendir(const ch_t *path)
+{
+      void *dir = NULL;
+
+      if (moni) {
+            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+
+            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+
+            if (taskInfo) {
+                  /* find empty file slot */
+                  u32_t block = 0;
+
+                  while (block < DIR_BLOCK_COUNT) {
+                        if (taskInfo->dblock[block]) {
+
+                              /* find empty dir slot in block */
+                              for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+
+                                    if (taskInfo->dblock[block]->full == TRUE) {
+                                          break;
+                                    }
+
+                                    struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
+
+                                    if (dslot->dir == NULL) {
+                                          dslot->dir = vfs_opendir(path);
+
+                                          if (dslot->dir) {
+                                                dir = dslot->dir;
+                                          }
+
+                                          if (slot == DIR_OPN_IN_BLOCK - 1)
+                                                taskInfo->dblock[block]->full = TRUE;
+
+                                          goto moni_opendir_end;
+                                    }
+                              }
+
+                              block++;
+                        } else {
+                              /* create new block */
+                              taskInfo->dblock[block] = calloc(1, sizeof(struct dirBlock));
+
+                              if (taskInfo->dblock[block] == NULL) {
+                                    block++;
+                              }
+                        }
+                  }
+            }
+
+            moni_opendir_end:
+            GiveMutex(moni->mtx);
+      }
+
+      return dir;
+}
+#endif
+
+
+//================================================================================================//
+/**
+ * @brief Function close opened directory
+ *
+ * @param *DIR                pinter to directory
+ *
+ * @retval STD_RET_OK         file closed successfully
+ * @retval STD_RET_ERROR      file not closed
+ */
+//================================================================================================//
+#if (APP_MONITOR_FILE_USAGE > 0)
+extern stdRet_t moni_closedir(DIR_t *dir)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (moni) {
+            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+
+            struct taskData *taskInfo = GetTaskData(NULL, TaskGetCurrentTaskHandle());
+
+            if (taskInfo) {
+                  /* find empty file slot */
+                  u32_t block = 0;
+
+                  while (block < DIR_BLOCK_COUNT) {
+                        if (taskInfo->dblock[block]) {
+
+                              /* find opened file */
+                              for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+
+                                    struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
+
+                                    if (dslot->dir == dir) {
+                                          status = vfs_closedir(dir);
+
+                                          if (status == STD_RET_OK) {
+                                                dslot->dir = NULL;
+
+                                                taskInfo->dblock[block]->full = FALSE;
+
+                                                if (block != 0) {
+                                                      /* check if block is empty */
+                                                      for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
+                                                            if (taskInfo->dblock[block]->dslot[i].dir != NULL)
+                                                                  goto moni_closedir_end;
+                                                      }
+
+                                                      /* block is empty - freeing memory */
+                                                      free(taskInfo->dblock[block]);
+                                                      taskInfo->dblock[block] = NULL;
+                                                }
+                                          }
+
+                                          goto moni_closedir_end;
+                                    }
+                              }
+
+                              block++;
+                        }
+                  }
+            }
+
+            moni_closedir_end:
             GiveMutex(moni->mtx);
       }
 
