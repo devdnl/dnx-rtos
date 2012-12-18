@@ -525,13 +525,13 @@ ch_t getChart(FILE_t *stdin)
       {
             while (TRUE)
             {
-                  if ((fread(&chr, sizeof(ch_t), 1, stdin) == 1) && chr)
+                  if ((fread(&chr, sizeof(chr), 1, stdin) == 1) && chr)
                   {
                         break;
                   }
                   else
                   {
-                        TaskDelay(25);
+                        TaskDelay(20);
                   }
             }
       }

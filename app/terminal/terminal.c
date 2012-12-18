@@ -565,9 +565,9 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
-      app_t *appHdl;
+      cmdStatus_t status = CMD_NOT_EXIST;
 
-      appHdl = Exec(cmd, arg);
+      app_t *appHdl = Exec(cmd, arg);
 
       if (appHdl)
       {
@@ -576,17 +576,15 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
-                  Sleep(100);
+                  Sleep(250);
             }
 
             KillApp(appHdl);
 
-            return CMD_EXECUTED;
+            status = CMD_EXECUTED;
       }
-      else
-      {
-            return CMD_NOT_EXIST;
-      }
+
+      return status;
 }
 
 
