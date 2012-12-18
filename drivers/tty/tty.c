@@ -584,11 +584,11 @@ static void ttyd(void *arg)
 {
       (void) arg;
 
-      ch_t   chr;
-      bool_t rxbfrempty = FALSE;
+      ch_t    chr;
+      bool_t  rxbfrempty = FALSE;
       ch_t   *msg;
       FILE_t *ttys;
-      dfn_t  keyfn;
+      dfn_t   keyfn;
 
       /* try open selected file */
       while (TRUE)
