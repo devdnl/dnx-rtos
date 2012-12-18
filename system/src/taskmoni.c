@@ -33,7 +33,6 @@ extern "C" {
 ==================================================================================================*/
 #include "taskmoni.h"
 #include "dlist.h"
-#include "memman.h"
 #include <string.h>
 
 
@@ -43,8 +42,6 @@ extern "C" {
 #define calloc(nmemb, msize)        mm_calloc(nmemb, msize)
 #define malloc(size)                mm_malloc(size)
 #define free(mem)                   mm_free(mem)
-#define fclose(file)                vfs_fclose(file)
-#define closedir(dir)               vfs_closedir(dir)
 
 #define MEM_BLOCK_COUNT             4
 #define MEM_ADR_IN_BLOCK            7
@@ -259,7 +256,7 @@ stdRet_t moni_DelTask(task_t taskHdl)
                               struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
 
                               if (fslot->file) {
-                                    fclose(fslot->file);
+                                    vfs_fclose(fslot->file);
                               }
                         }
 
@@ -276,7 +273,7 @@ stdRet_t moni_DelTask(task_t taskHdl)
                               struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
 
                               if (dslot->dir) {
-                                    closedir(dslot->dir);
+                                    vfs_closedir(dslot->dir);
                               }
                         }
 
