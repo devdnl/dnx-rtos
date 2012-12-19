@@ -141,14 +141,14 @@ static stdRet_t moni_Init(void)
 
             if (moni) {
                   moni->tasks = ListCreate();
-                  CreateMutex(moni->mtx);
+                  CreateRecMutex(moni->mtx);
 
                   if (!moni->tasks || !moni->mtx) {
                         if (moni->tasks)
                               ListDelete(moni->tasks);
 
                         if (moni->mtx)
-                              DeleteMutex(moni->mtx);
+                              DeleteRecMutex(moni->mtx);
 
                         free(moni);
                         moni = NULL;
@@ -185,7 +185,7 @@ stdRet_t moni_AddTask(task_t taskHdl)
       }
 
       if (moni) {
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *task = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
 
@@ -202,7 +202,7 @@ stdRet_t moni_AddTask(task_t taskHdl)
                   }
             }
 
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
       }
 
       return status;
@@ -222,7 +222,7 @@ stdRet_t moni_DelTask(task_t taskHdl)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+      while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
       struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
 
@@ -288,7 +288,7 @@ stdRet_t moni_DelTask(task_t taskHdl)
             status = STD_RET_OK;
       }
 
-      GiveMutex(moni->mtx);
+      GiveRecMutex(moni->mtx);
 
       return status;
 }
@@ -312,10 +312,10 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
       stdRet_t status = STD_RET_ERROR;
 
       if (moni && stat) {
-            stat->memUsage      = 0;
-            stat->fileUsage     = 0;
+            stat->memUsage  = 0;
+            stat->fileUsage = 0;
 
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *taskdata = ListGetItemDataByNo(moni->tasks, item);
 
@@ -357,7 +357,7 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
                   status = STD_RET_OK;
             }
 
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
 
             if (status == STD_RET_OK) {
                   task_t taskHdl = 0;
@@ -383,6 +383,28 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 }
 #endif
 
+
+//================================================================================================//
+/**
+ * @brief
+ */
+//================================================================================================//
+#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+stdRet_t moni_GetTaskHdlStat(task_t taskHdl, struct taskstat *stat)
+{
+      stdRet_t status = STD_RET_ERROR;
+
+      if (taskHdl) {
+            i32_t item = -1;
+
+            if (ListGetItemNo(moni->tasks, (u32_t)taskHdl, &item) == 0) {
+                  status = moni_GetTaskStat(item, stat);
+            }
+      }
+
+      return status;
+}
+#endif
 
 //================================================================================================//
 /**
@@ -414,7 +436,7 @@ void *moni_malloc(u32_t size)
       void *mem = NULL;
 
       if (moni) {
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
@@ -461,7 +483,7 @@ void *moni_malloc(u32_t size)
             }
 
             moni_malloc_end:
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
       }
 
       return mem;
@@ -503,7 +525,7 @@ void *moni_calloc(u32_t nmemb, u32_t msize)
 void moni_free(void *mem)
 {
       if (moni) {
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
@@ -548,7 +570,7 @@ void moni_free(void *mem)
             }
 
             moni_free_end:
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
       }
 }
 #endif
@@ -570,7 +592,7 @@ FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
       void *file = NULL;
 
       if (moni) {
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
@@ -617,7 +639,7 @@ FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
             }
 
             moni_fopen_end:
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
       }
 
       return file;
@@ -641,7 +663,7 @@ stdRet_t moni_fclose(FILE_t *file)
       stdRet_t status = STD_RET_ERROR;
 
       if (moni) {
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
@@ -688,7 +710,7 @@ stdRet_t moni_fclose(FILE_t *file)
             }
 
             moni_fclose_end:
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
       }
 
       return status;
@@ -711,7 +733,7 @@ DIR_t *moni_opendir(const ch_t *path)
       void *dir = NULL;
 
       if (moni) {
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
@@ -758,7 +780,7 @@ DIR_t *moni_opendir(const ch_t *path)
             }
 
             moni_opendir_end:
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
       }
 
       return dir;
@@ -782,7 +804,7 @@ extern stdRet_t moni_closedir(DIR_t *dir)
       stdRet_t status = STD_RET_ERROR;
 
       if (moni) {
-            while (TakeMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
             struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
 
@@ -829,7 +851,7 @@ extern stdRet_t moni_closedir(DIR_t *dir)
             }
 
             moni_closedir_end:
-            GiveMutex(moni->mtx);
+            GiveRecMutex(moni->mtx);
       }
 
       return status;

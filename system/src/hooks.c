@@ -112,8 +112,8 @@ u32_t GetUptimeCnt(void)
 void HardFault_Handler(void)
 {
       ch_t *name = TaskGetName(THIS_TASK);
-      TaskDelete(TaskGetCurrentTaskHandle());
       kprint("\x1B[31mTask %s generated Hard Fault!\x1B[0m\n", name);
+      TaskDelete(TaskGetCurrentTaskHandle());
 }
 
 

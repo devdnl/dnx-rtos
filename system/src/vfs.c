@@ -398,6 +398,8 @@ DIR_t *vfs_opendir(const ch_t *path)
                         GiveMutex(vfs->mtx);
 
                         if (fs) {
+                              dir->dev = fs->fs.dev;
+
                               if (fs->fs.f_opendir) {
                                     status = fs->fs.f_opendir(fs->fs.dev, extPath, dir);
                               }
@@ -433,8 +435,13 @@ stdRet_t vfs_closedir(DIR_t *dir)
 
       if (dir)
       {
-            free(dir);
-            status = STD_RET_OK;
+            if (dir->cldir) {
+                  status = dir->cldir(dir->dev, dir);
+
+                  if (status == STD_RET_OK) {
+                        free(dir);
+                  }
+            }
       }
 
       return status;
@@ -457,7 +464,7 @@ dirent_t vfs_readdir(DIR_t *dir)
       direntry.size = 0;
 
       if (dir->rddir) {
-            direntry = dir->rddir(dir);
+            direntry = dir->rddir(dir->dev, dir);
       }
 
       return direntry;

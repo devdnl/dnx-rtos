@@ -48,6 +48,7 @@ extern "C" {
 #define putChar(c)                              putChart(stdout, c)
 #define getChar()                               getChart(stdin)
 #define ugetChar()                              ugetChart(stdin)
+#define atoi(string, base, valuePtr)            a2i(string, base, valuePtr)
 
 /** VT100 terminal commands */
 #define enableLineWrap()                        printf("\x1B[?7h")

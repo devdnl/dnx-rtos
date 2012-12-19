@@ -34,9 +34,9 @@ extern "C" {
 #include "initd.h"
 #include "regdrv.h"
 #include "lfs.h"
+#include "procfs.h"
 #include "regapp.h"
 #include "tty_def.h"
-#include "taskmoni.h"
 #include <string.h>
 
 
@@ -87,24 +87,24 @@ void Initd(void *arg)
 
       /* early initialization - mounting FS */
       if (fscfg) {
-            fscfg->dev       = 0;
-            fscfg->f_init    = lfs_init;
-            fscfg->f_chmod   = lfs_chmod;
-            fscfg->f_chown   = lfs_chown;
-            fscfg->f_close   = lfs_close;
-            fscfg->f_ioctl   = lfs_ioctl;
-            fscfg->f_mkdir   = lfs_mkdir;
-            fscfg->f_mknod   = lfs_mknod;
-            fscfg->f_open    = lfs_open;
-            fscfg->f_opendir = lfs_opendir;
-            fscfg->f_read    = lfs_read;
-            fscfg->f_release = lfs_release;
-            fscfg->f_remove  = lfs_remove;
-            fscfg->f_rename  = lfs_rename;
-            fscfg->f_stat    = lfs_stat;
-            fscfg->f_fstat   = lfs_fstat;
-            fscfg->f_statfs  = lfs_statfs;
-            fscfg->f_write   = lfs_write;
+            fscfg->dev        = 0;
+            fscfg->f_init     = lfs_init;
+            fscfg->f_chmod    = lfs_chmod;
+            fscfg->f_chown    = lfs_chown;
+            fscfg->f_close    = lfs_close;
+            fscfg->f_ioctl    = lfs_ioctl;
+            fscfg->f_mkdir    = lfs_mkdir;
+            fscfg->f_mknod    = lfs_mknod;
+            fscfg->f_open     = lfs_open;
+            fscfg->f_opendir  = lfs_opendir;
+            fscfg->f_read     = lfs_read;
+            fscfg->f_release  = lfs_release;
+            fscfg->f_remove   = lfs_remove;
+            fscfg->f_rename   = lfs_rename;
+            fscfg->f_stat     = lfs_stat;
+            fscfg->f_fstat    = lfs_fstat;
+            fscfg->f_statfs   = lfs_statfs;
+            fscfg->f_write    = lfs_write;
             mount("/", fscfg);
 
             /* create basic directories */
@@ -119,25 +119,45 @@ void Initd(void *arg)
             mkdir("/srv/www");
             mkdir("/tmp");
 
-            fscfg->dev       = 0;
-            fscfg->f_init    = appfs_init;
-            fscfg->f_chmod   = appfs_chmod;
-            fscfg->f_chown   = appfs_chown;
-            fscfg->f_close   = appfs_close;
-            fscfg->f_ioctl   = appfs_ioctl;
-            fscfg->f_mkdir   = appfs_mkdir;
-            fscfg->f_mknod   = appfs_mknod;
-            fscfg->f_open    = appfs_open;
-            fscfg->f_opendir = appfs_opendir;
-            fscfg->f_read    = appfs_read;
-            fscfg->f_release = appfs_release;
-            fscfg->f_remove  = appfs_remove;
-            fscfg->f_rename  = appfs_rename;
-            fscfg->f_stat    = appfs_stat;
-            fscfg->f_fstat   = appfs_fstat;
-            fscfg->f_statfs  = appfs_statfs;
-            fscfg->f_write   = appfs_write;
+            fscfg->dev        = 0;
+            fscfg->f_init     = appfs_init;
+            fscfg->f_chmod    = appfs_chmod;
+            fscfg->f_chown    = appfs_chown;
+            fscfg->f_close    = appfs_close;
+            fscfg->f_ioctl    = appfs_ioctl;
+            fscfg->f_mkdir    = appfs_mkdir;
+            fscfg->f_mknod    = appfs_mknod;
+            fscfg->f_open     = appfs_open;
+            fscfg->f_opendir  = appfs_opendir;
+            fscfg->f_read     = appfs_read;
+            fscfg->f_release  = appfs_release;
+            fscfg->f_remove   = appfs_remove;
+            fscfg->f_rename   = appfs_rename;
+            fscfg->f_stat     = appfs_stat;
+            fscfg->f_fstat    = appfs_fstat;
+            fscfg->f_statfs   = appfs_statfs;
+            fscfg->f_write    = appfs_write;
             mount("/fbin", fscfg);
+
+            fscfg->dev        = 0;
+            fscfg->f_init     = procfs_init;
+            fscfg->f_chmod    = procfs_chmod;
+            fscfg->f_chown    = procfs_chown;
+            fscfg->f_close    = procfs_close;
+            fscfg->f_ioctl    = procfs_ioctl;
+            fscfg->f_mkdir    = procfs_mkdir;
+            fscfg->f_mknod    = procfs_mknod;
+            fscfg->f_open     = procfs_open;
+            fscfg->f_opendir  = procfs_opendir;
+            fscfg->f_read     = procfs_read;
+            fscfg->f_release  = procfs_release;
+            fscfg->f_remove   = procfs_remove;
+            fscfg->f_rename   = procfs_rename;
+            fscfg->f_stat     = procfs_stat;
+            fscfg->f_fstat    = procfs_fstat;
+            fscfg->f_statfs   = procfs_statfs;
+            fscfg->f_write    = procfs_write;
+            mount("/proc", fscfg);
 
             free(fscfg);
       } else {

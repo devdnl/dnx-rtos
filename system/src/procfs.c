@@ -32,13 +32,16 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "procfs.h"
-#include "taskmoni.h"
+#include "sysdrv.h"
+#include "print.h"
 #include <string.h>
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+/* task name length (8B name + \0). Name is 32b hex number converted to string */
+#define TASK_NAME_LEN               9
 
 
 /*==================================================================================================
@@ -49,9 +52,12 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static dirent_t readdir_root(DIR_t *dir);
-static dirent_t readdir_tasks(DIR_t *dir);
-static dirent_t readdir_tasks_n(DIR_t *dir);
+static stdRet_t procfs_closedir(devx_t dev, DIR_t *dir);
+static stdRet_t procfs_closedir_noop(devx_t dev, DIR_t *dir);
+static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir);
+static dirent_t procfs_readdir_taskname(devx_t dev, DIR_t *dir);
+static dirent_t procfs_readdir_taskid(devx_t dev, DIR_t *dir);
+static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir);
 
 
 /*==================================================================================================
@@ -293,21 +299,96 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && dir) {
+            status    = STD_RET_OK;
+            dir->seek = 0;
+
             if (strcmp(path, "/") == 0) {
                   dir->dd    = NULL;
-                  dir->items = 1;
-                  dir->rddir = readdir_root;
-                  dir->seek  = 0;
-            } else if (strcmp(path, "/tasks/") == 0) {
+                  dir->items = 2;
+                  dir->rddir = procfs_readdir_root;
+                  dir->cldir = procfs_closedir_noop;
+            } else if (strcmp(path, "/taskname/") == 0) {
                   dir->dd    = NULL;
                   dir->items = moni_GetTaskCount();
-                  dir->rddir = readdir_tasks;
-                  dir->seek  = 0;
-            } else if (strncmp(path, "/tasks/", 7) == 0) {
+                  dir->rddir = procfs_readdir_taskname;
+                  dir->cldir = procfs_closedir_noop;
+            } else if (strcmp(path, "/taskid/") == 0) {
+                  dir->dd    = calloc(TASK_NAME_LEN, sizeof(ch_t));
+                  dir->items = moni_GetTaskCount();
+                  dir->rddir = procfs_readdir_taskid;
+                  dir->cldir = procfs_closedir;
+            } else if (strncmp(path, "/taskid/", 7) == 0) {
+                  path = strchr(path + 1, '/') + 1;
+
+                  if (path) {
+                        u32_t taskHdl = 0;
+                        struct taskstat taskdata;
+
+                        atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
+
+                        if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) == STD_RET_OK) {
+                              dir->dd    = (void*)taskHdl;
+                              dir->items = 6;
+                              dir->rddir = procfs_readdir_taskid_n;
+                              dir->cldir = procfs_closedir_noop;
+                        }
+                  }
+            } else {
+                  status = STD_RET_ERROR;
             }
       }
 
       return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function close opened dir (is used when dd contains pointer to allocated block)
+ *
+ * @param  dev          device number
+ * @param *dir          directory object
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+static stdRet_t procfs_closedir(devx_t dev, DIR_t *dir)
+{
+      (void)dev;
+
+      stdRet_t status = STD_RET_ERROR;
+
+      if (dir) {
+            if (dir->dd) {
+                  free(dir->dd);
+                  dir->dd = NULL;
+
+                  status = STD_RET_OK;
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function close opened dir (is used when dd contains data which cannot be freed)
+ *
+ * @param  dev          device number
+ * @param *dir          directory object
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+static stdRet_t procfs_closedir_noop(devx_t dev, DIR_t *dir)
+{
+      (void)dev;
+      (void)dir;
+
+      return STD_RET_OK;
 }
 
 
@@ -492,17 +573,53 @@ stdRet_t procfs_release(devx_t dev)
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t readdir_root(DIR_t *dir)
+static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir)
 {
+      (void)dev;
+
       dirent_t dirent;
       dirent.name = NULL;
       dirent.size = 0;
 
       if (dir) {
-            if (dir->seek == 0) {
-                  dirent.filetype = FILE_TYPE_DIR;
-                  dirent.name     = "tasks";
+            dirent.filetype = FILE_TYPE_DIR;
+            dirent.size     = 0;
+
+            switch (dir->seek++) {
+            case 0: dirent.name = "taskid";   break;
+            case 1: dirent.name = "taskname"; break;
+            default: break;
+            }
+      }
+
+      return dirent;
+}
+
+//================================================================================================//
+/**
+ * @brief Read item from opened directory
+ *
+ * @param *dir          directory object
+ *
+ * @return directory entry
+ */
+//================================================================================================//
+static dirent_t procfs_readdir_taskname(devx_t dev, DIR_t *dir)
+{
+      (void)dev;
+
+      dirent_t dirent;
+      dirent.name = NULL;
+      dirent.size = 0;
+
+      struct taskstat taskdata;
+
+      if (dir) {
+            if (moni_GetTaskStat(dir->seek, &taskdata) == STD_RET_OK) {
+                  dirent.filetype = FILE_TYPE_REGULAR;
+                  dirent.name     = taskdata.taskName;
                   dirent.size     = 0;
+
                   dir->seek++;
             }
       }
@@ -520,8 +637,10 @@ static dirent_t readdir_root(DIR_t *dir)
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t readdir_tasks(DIR_t *dir)
+static dirent_t procfs_readdir_taskid(devx_t dev, DIR_t *dir)
 {
+      (void)dev;
+
       dirent_t dirent;
       dirent.name = NULL;
       dirent.size = 0;
@@ -529,10 +648,12 @@ static dirent_t readdir_tasks(DIR_t *dir)
       struct taskstat taskdata;
 
       if (dir) {
-            if (dir->seek < moni_GetTaskCount()) {
+            if (dir->dd && dir->seek < moni_GetTaskCount()) {
                   if (moni_GetTaskStat(dir->seek, &taskdata) == STD_RET_OK) {
+                        snprintf(dir->dd, TASK_NAME_LEN, "%x", (u32_t)taskdata.taskHdl);
+
                         dirent.filetype = FILE_TYPE_DIR;
-                        dirent.name     = taskdata.taskName;
+                        dirent.name     = dir->dd;
                         dirent.size     = 0;
 
                         dir->seek++;
@@ -553,14 +674,33 @@ static dirent_t readdir_tasks(DIR_t *dir)
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t readdir_tasks_n(DIR_t *dir)
+static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir)
 {
+      (void)dev;
+
       dirent_t dirent;
       dirent.name = NULL;
       dirent.size = 0;
 
       if (dir) {
+            struct taskstat taskdata;
 
+            if (dir->seek < 6 && moni_GetTaskHdlStat((task_t)dir->dd, &taskdata) == STD_RET_OK) {
+                  dirent.filetype = FILE_TYPE_REGULAR;
+                  dirent.size = sizeof(u32_t);
+
+                  switch (dir->seek) {
+                  case 0: dirent.name = "name"; dirent.size = strlen(taskdata.taskName); break;
+                  case 1: dirent.name = "priority";  break;
+                  case 2: dirent.name = "freestack"; break;
+                  case 3: dirent.name = "usedmem";   break;
+                  case 4: dirent.name = "openfiles"; break;
+                  case 5: dirent.name = "cpuload";   break;
+                  default: break;
+                  }
+
+                  dir->seek++;
+            }
       }
 
       return dirent;

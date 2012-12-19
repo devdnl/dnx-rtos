@@ -115,24 +115,24 @@ struct vfs_drvcfg {
 };
 
 struct vfs_fscfg {
-      u32_t     dev;
-      stdRet_t  (*f_init   )(devx_t dev);
-      stdRet_t  (*f_open   )(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
-      stdRet_t  (*f_close  )(devx_t dev, fd_t fd);
-      size_t    (*f_write  )(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t    (*f_read   )(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-      stdRet_t  (*f_ioctl  )(devx_t dev, fd_t fd, IORq_t iroq, void *data);
-      stdRet_t  (*f_fstat  )(devx_t dev, fd_t fd, struct vfs_stat *stat);
-      stdRet_t  (*f_mkdir  )(devx_t dev, const ch_t *path);
-      stdRet_t  (*f_mknod  )(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg);
-      stdRet_t  (*f_opendir)(devx_t dev, const ch_t *path, DIR_t *dir);
-      stdRet_t  (*f_remove )(devx_t dev, const ch_t *path);
-      stdRet_t  (*f_rename )(devx_t dev, const ch_t *oldName, const ch_t *newName);
-      stdRet_t  (*f_chmod  )(devx_t dev, const ch_t *path, u32_t mode);
-      stdRet_t  (*f_chown  )(devx_t dev, const ch_t *path, u16_t owner, u16_t group);
-      stdRet_t  (*f_stat   )(devx_t dev, const ch_t *path, struct vfs_stat *stat);
-      stdRet_t  (*f_statfs )(devx_t dev, struct vfs_statfs *statfs);
-      stdRet_t  (*f_release)(devx_t dev);
+      u32_t    dev;
+      stdRet_t (*f_init    )(devx_t dev);
+      stdRet_t (*f_open    )(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
+      stdRet_t (*f_close   )(devx_t dev, fd_t fd);
+      size_t   (*f_write   )(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*f_read    )(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+      stdRet_t (*f_ioctl   )(devx_t dev, fd_t fd, IORq_t iroq, void *data);
+      stdRet_t (*f_fstat   )(devx_t dev, fd_t fd, struct vfs_stat *stat);
+      stdRet_t (*f_mkdir   )(devx_t dev, const ch_t *path);
+      stdRet_t (*f_mknod   )(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg);
+      stdRet_t (*f_opendir )(devx_t dev, const ch_t *path, DIR_t *dir);
+      stdRet_t (*f_remove  )(devx_t dev, const ch_t *path);
+      stdRet_t (*f_rename  )(devx_t dev, const ch_t *oldName, const ch_t *newName);
+      stdRet_t (*f_chmod   )(devx_t dev, const ch_t *path, u32_t mode);
+      stdRet_t (*f_chown   )(devx_t dev, const ch_t *path, u16_t owner, u16_t group);
+      stdRet_t (*f_stat    )(devx_t dev, const ch_t *path, struct vfs_stat *stat);
+      stdRet_t (*f_statfs  )(devx_t dev, struct vfs_statfs *statfs);
+      stdRet_t (*f_release )(devx_t dev);
 };
 
 

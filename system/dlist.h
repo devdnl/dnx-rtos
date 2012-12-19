@@ -70,7 +70,7 @@ extern void   *ListGetItemDataByID(list_t *list, u32_t id);
 extern i32_t   ListUnlinkItemDataByNo(list_t *list, i32_t nitem);
 extern i32_t   ListUnlinkItemDataByID(list_t *list, u32_t id);
 extern i32_t   ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid);
-extern i32_t   ListGetItemNo(list_t *list, u32_t id, u32_t *nitem);
+extern i32_t   ListGetItemNo(list_t *list, u32_t id, i32_t *nitem);
 extern i32_t   ListGetItemCount(list_t *list);
 
 

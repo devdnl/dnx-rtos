@@ -93,7 +93,8 @@ struct fshdl_s {
 static stdRet_t  rmNode(node_t *base, node_t *target, u32_t baseitemid);
 static node_t   *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
 static i32_t     GetPathDeep(const ch_t *path);
-static dirent_t  lfs_readdir(DIR_t *dir);
+static dirent_t  lfs_readdir(devx_t dev, DIR_t *dir);
+static stdRet_t  lfs_closedir(devx_t dev, DIR_t *dir);
 
 /*==================================================================================================
                                       Local object definitions
@@ -339,6 +340,7 @@ stdRet_t lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
                         if (dir) {
                               dir->items = ListGetItemCount(node->data);
                               dir->rddir = lfs_readdir;
+                              dir->cldir = lfs_closedir;
                               dir->seek  = 0;
                               dir->dd    = node;
                         }
@@ -356,6 +358,26 @@ stdRet_t lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
 
 //================================================================================================//
 /**
+ * @brief Function close dir
+ *
+ * @param  dev          device number
+ * @param *dir          directory info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+static stdRet_t lfs_closedir(devx_t dev, DIR_t *dir)
+{
+      (void)dev;
+      (void)dir;
+
+      return STD_RET_OK;
+}
+
+
+//================================================================================================//
+/**
  * @brief Function read next item of opened directory
  *
  * @param *dir          directory object
@@ -363,8 +385,10 @@ stdRet_t lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
  * @return element attributes
  */
 //================================================================================================//
-static dirent_t lfs_readdir(DIR_t *dir)
+static dirent_t lfs_readdir(devx_t dev, DIR_t *dir)
 {
+      (void)dev;
+
       dirent_t dirent;
       dirent.name   = NULL;
       dirent.size   = 0;

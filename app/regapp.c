@@ -55,7 +55,8 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static dirent_t readrootdir(DIR_t *dir);
+static dirent_t appfs_readrootdir(devx_t dev, DIR_t *dir);
+static stdRet_t appfs_closedir(devx_t dev, DIR_t *dir);
 
 
 /*==================================================================================================
@@ -335,7 +336,8 @@ stdRet_t appfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
             if (path[0] == '/' && strlen(path) == 1) {
                   dir->dd    = 0;
                   dir->items = ARRAY_SIZE(appList);
-                  dir->rddir = readrootdir;
+                  dir->rddir = appfs_readrootdir;
+                  dir->cldir = appfs_closedir;
                   dir->seek  = 0;
 
                   status = STD_RET_OK;
@@ -343,6 +345,26 @@ stdRet_t appfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
       }
 
       return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function closed opened dir
+ *
+ * @param  dev          device number
+ * @param *dir          directory object
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+static stdRet_t appfs_closedir(devx_t dev, DIR_t *dir)
+{
+      (void)dev;
+      (void)dir;
+
+      return STD_RET_OK;
 }
 
 
@@ -522,13 +544,16 @@ stdRet_t appfs_release(devx_t dev)
 /**
  * @brief Read item from opened directory
  *
+ * @param dev           device number
  * @param *dir          directory object
  *
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t readrootdir(DIR_t *dir)
+static dirent_t appfs_readrootdir(devx_t dev, DIR_t *dir)
 {
+      (void)dev;
+
       dirent_t dirent;
       dirent.name = NULL;
       dirent.size = 0;

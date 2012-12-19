@@ -116,10 +116,12 @@ typedef struct
 /** directory type */
 typedef struct dir_s
 {
-      dirent_t  (*rddir)(struct dir_s *dir);
+      dirent_t  (*rddir)(devx_t dev, struct dir_s *dir);
+      stdRet_t  (*cldir)(devx_t dev, struct dir_s *dir);
       size_t    items;
       size_t    seek;
       void     *dd;
+      devx_t    dev;
 } DIR_t;
 
 
