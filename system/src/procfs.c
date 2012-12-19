@@ -324,13 +324,17 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
                         u32_t taskHdl = 0;
                         struct taskstat taskdata;
 
-                        atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
+                        path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
 
-                        if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) == STD_RET_OK) {
-                              dir->dd    = (void*)taskHdl;
-                              dir->items = 6;
-                              dir->rddir = procfs_readdir_taskid_n;
-                              dir->cldir = procfs_closedir_noop;
+                        if ((*path == '/' && *(path + 1) == '\0') || *path == '\0') {
+                              if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) == STD_RET_OK) {
+                                    dir->dd    = (void*)taskHdl;
+                                    dir->items = 6;
+                                    dir->rddir = procfs_readdir_taskid_n;
+                                    dir->cldir = procfs_closedir_noop;
+                              }
+                        } else {
+                              status = STD_RET_ERROR;
                         }
                   }
             } else {
