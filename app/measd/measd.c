@@ -115,6 +115,15 @@ stdRet_t appmain(ch_t *argv)
 {
       (void)argv;
 
+      /* check if measure daemon is already running */
+      FILE_t *testdaemon = fopen("/proc/taskname/"MEASD_NAME, "r");
+
+      if (testdaemon) {
+            fclose(testdaemon);
+            kprint("%s daemon is already started!\n", MEASD_NAME);
+            return STD_RET_ERROR;
+      }
+
       /* clear measurement */
       for (u32_t i = 0; i < ARRAY_SIZE(dataList); i++)
       {

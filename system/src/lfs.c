@@ -200,8 +200,7 @@ stdRet_t lfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
                                           memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
 
                                           dirfile->name  = filename;
-                                          dirfile->size  = sizeof(node_t) + strlen(filename)
-                                                         + sizeof(struct vfs_drvcfg);
+                                          dirfile->size  = 0;
                                           dirfile->type  = NODE_TYPE_DRV;
                                           dirfile->data  = dcfg;
                                           dirfile->dev   = dcfg->dev;
@@ -524,7 +523,7 @@ stdRet_t lfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
                               if (node->type == NODE_TYPE_DIR)
                                     node->size = sizeof(node_t) + strlen(name);
                               else if (node->type == NODE_TYPE_DRV)
-                                    node->size = sizeof(node_t) + strlen(name) + sizeof(struct vfs_drvcfg);
+                                    node->size = 0;
 
                               status = STD_RET_OK;
                         } else {

@@ -567,12 +567,16 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
       cmdStatus_t status = CMD_NOT_EXIST;
 
+      TaskSuspendAll();
+
       app_t *appHdl = Exec(cmd, arg);
 
       if (appHdl)
       {
             appHdl->stdin  = stdin;
             appHdl->stdout = stdout;
+            appHdl->cwd    = cdpath;
+            TaskResumeAll();
 
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
@@ -582,6 +586,8 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
             KillApp(appHdl);
 
             status = CMD_EXECUTED;
+      } else {
+            TaskResumeAll();
       }
 
       return status;

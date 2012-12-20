@@ -52,7 +52,7 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static stdRet_t procfs_closedir(devx_t dev, DIR_t *dir);
+static stdRet_t procfs_closedir_freedd(devx_t dev, DIR_t *dir);
 static stdRet_t procfs_closedir_noop(devx_t dev, DIR_t *dir);
 static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir);
 static dirent_t procfs_readdir_taskname(devx_t dev, DIR_t *dir);
@@ -109,12 +109,32 @@ stdRet_t procfs_init(devx_t dev)
 stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
 {
       (void)dev;
-      (void)fd;
-      (void)seek;
-      (void)path;
-      (void)mode;
 
-      return STD_RET_ERROR;
+      stdRet_t status = STD_RET_ERROR;
+
+      if (path && mode) {
+            if (strncmp(mode, "r", 2) == 0 && strncmp(path, "/taskid/", 7) == 0) {
+                  path = strchr(path + 1, '/') + 1;
+
+                  if (path) {
+                        u32_t taskHdl = 0;
+                        struct taskstat taskdata;
+
+                        path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
+
+                        if ((*path == '/' && *(path + 1) == '\0') || *path == '\0') {
+                              if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) == STD_RET_OK) {
+                                    *fd   = (void*)taskHdl;
+                                    *seek = 0;
+
+                                    status = STD_RET_OK;
+                              }
+                        }
+                  }
+            }
+      }
+
+      return status;
 }
 
 
@@ -316,7 +336,7 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
                   dir->dd    = calloc(TASK_NAME_LEN, sizeof(ch_t));
                   dir->items = moni_GetTaskCount();
                   dir->rddir = procfs_readdir_taskid;
-                  dir->cldir = procfs_closedir;
+                  dir->cldir = procfs_closedir_freedd;
             } else if (strncmp(path, "/taskid/", 7) == 0) {
                   path = strchr(path + 1, '/') + 1;
 
@@ -357,7 +377,7 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-static stdRet_t procfs_closedir(devx_t dev, DIR_t *dir)
+static stdRet_t procfs_closedir_freedd(devx_t dev, DIR_t *dir)
 {
       (void)dev;
 

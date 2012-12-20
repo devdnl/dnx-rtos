@@ -1,11 +1,11 @@
-#ifndef APPRUNTIME_H_
-#define APPRUNTIME_H_
+#ifndef CAT_H_
+#define CAT_H_
 /*=============================================================================================*//**
-@file    appruntime.h
+@file    cat.h
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,44 +33,22 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "systypes.h"
-#include "oswrap.h"
+#include "system.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/** application section */
-#define APPLICATION(name)                 void name(void *appArgument)
-#define APP_SEC_BEGIN                     { InitApp();
-#define APP_SEC_END                       Exit(appmain(argv));}
+/** define stack size for this application */
+#define CAT_STACK_SIZE               (3 * MINIMAL_STACK_SIZE)
 
-#define InitApp()                         FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
-                                          FILE_t *stdout = ((app_t*)appArgument)->stdout; \
-                                          ch_t   *argv   = ((app_t*)appArgument)->arg;    \
-                                          ch_t   *cwd    = ((app_t*)appArgument)->cwd;    \
-                                          (void)stdin; (void)stdout; (void)argv; (void)cwd
-
-
-/** simpler definition of terminating application */
-#define Exit(exitCode)                    TerminateApplication(appArgument, exitCode)
+/** define application name */
+#define CAT_NAME                     "cat"
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** type which define parse possibilities */
-typedef enum parseType_enum
-{
-      PARSE_AS_BIN,
-      PARSE_AS_OCT,
-      PARSE_AS_DEC,
-      PARSE_AS_HEX,
-      PARSE_AS_STRING,
-      PARSE_AS_CHAR,
-      PARSE_AS_EXIST,
-      PARSE_AS_UNKNOWN
-} parseType_t;
 
 
 /*==================================================================================================
@@ -81,18 +59,14 @@ typedef enum parseType_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern app_t    *Exec(const ch_t *name, ch_t *argv);
-extern app_t    *Execd(const ch_t *name, ch_t *argv);
-extern stdRet_t  StartDaemon(const ch_t *name, ch_t *argv);
-extern stdRet_t  KillApp(app_t *appArgs);
-extern void      TerminateApplication(app_t *appArgument, stdRet_t exitCode);
-extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
+extern APPLICATION(cat);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* APPRUNTIME_H_ */
+#endif
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

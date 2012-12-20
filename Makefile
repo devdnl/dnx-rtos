@@ -31,6 +31,7 @@
 ####################################################################################################
 CSRC = $(sort \
    app/regapp.c \
+   app/cat/cat.c \
    app/date/date.c \
    app/measd/measd.c \
    app/terminal/terminal.c \

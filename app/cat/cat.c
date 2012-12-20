@@ -1,11 +1,9 @@
-#ifndef APPRUNTIME_H_
-#define APPRUNTIME_H_
 /*=============================================================================================*//**
-@file    appruntime.h
+@file    cat.c
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,66 +31,111 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "systypes.h"
-#include "oswrap.h"
+#include "cat.h"
+#include "tty_def.h"
+#include <string.h>
+
+/* Begin of application section declaration */
+APPLICATION(cat)
+APP_SEC_BEGIN
+
+/*==================================================================================================
+                                  Local symbolic constants/macros
+==================================================================================================*/
 
 
 /*==================================================================================================
-                                 Exported symbolic constants/macros
+                                   Local types, enums definitions
 ==================================================================================================*/
-/** application section */
-#define APPLICATION(name)                 void name(void *appArgument)
-#define APP_SEC_BEGIN                     { InitApp();
-#define APP_SEC_END                       Exit(appmain(argv));}
-
-#define InitApp()                         FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
-                                          FILE_t *stdout = ((app_t*)appArgument)->stdout; \
-                                          ch_t   *argv   = ((app_t*)appArgument)->arg;    \
-                                          ch_t   *cwd    = ((app_t*)appArgument)->cwd;    \
-                                          (void)stdin; (void)stdout; (void)argv; (void)cwd
-
-
-/** simpler definition of terminating application */
-#define Exit(exitCode)                    TerminateApplication(appArgument, exitCode)
 
 
 /*==================================================================================================
-                                  Exported types, enums definitions
+                                      Local object definitions
 ==================================================================================================*/
-/** type which define parse possibilities */
-typedef enum parseType_enum
+
+
+/*==================================================================================================
+                                        Function definitions
+==================================================================================================*/
+
+
+//================================================================================================//
+/**
+ * @brief clear main function
+ */
+//================================================================================================//
+stdRet_t appmain(ch_t *argv)
 {
-      PARSE_AS_BIN,
-      PARSE_AS_OCT,
-      PARSE_AS_DEC,
-      PARSE_AS_HEX,
-      PARSE_AS_STRING,
-      PARSE_AS_CHAR,
-      PARSE_AS_EXIST,
-      PARSE_AS_UNKNOWN
-} parseType_t;
+      stdRet_t status = STD_RET_OK;
 
+      u32_t col = 80;
+      ioctl(stdin, TTY_IORQ_GETCOL, &col);
 
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
+      ch_t *data     = calloc(col + 1, sizeof(ch_t));
+      ch_t *filepath = calloc(128, sizeof(ch_t));
 
+      if (data && filepath) {
+            if (argv[0] == '/') {
+                  strcpy(filepath, argv);
+            } else {
+                  getcwd(filepath, 128);
 
-/*==================================================================================================
-                                     Exported function prototypes
-==================================================================================================*/
-extern app_t    *Exec(const ch_t *name, ch_t *argv);
-extern app_t    *Execd(const ch_t *name, ch_t *argv);
-extern stdRet_t  StartDaemon(const ch_t *name, ch_t *argv);
-extern stdRet_t  KillApp(app_t *appArgs);
-extern void      TerminateApplication(app_t *appArgument, stdRet_t exitCode);
-extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
+                  if (filepath[strlen(filepath) - 1] != '/') {
+                        strcat(filepath, "/");
+                  }
+
+                  strcat(filepath, argv);
+            }
+
+            FILE_t *file = fopen(filepath, "r");
+
+            if (file) {
+                  fseek(file, 0, SEEK_END);
+                  i32_t filesize = ftell(file);
+                  fseek(file, 0, SEEK_SET);
+
+                  while (filesize > 0) {
+                        i32_t n = fread(data, sizeof(ch_t), col, file);
+
+                        if (n == 0)
+                              break;
+
+                        printf("%s\n", data);
+
+                        memset(data, 0, col + 1);
+
+                        filesize -= n;
+                  }
+
+                  fclose(file);
+            } else {
+                  printf("No such file\n");
+
+                  status = STD_RET_ERROR;
+            }
+
+      } else {
+            printf("Enough free memory\n");
+
+            status = STD_RET_ERROR;
+      }
+
+      if (data)
+            free(data);
+
+      if (filepath)
+            free(filepath);
+
+      return status;
+}
+
+/* End of application section declaration */
+APP_SEC_END
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* APPRUNTIME_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

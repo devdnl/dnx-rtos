@@ -56,9 +56,9 @@ extern "C" {
 /** default system status */
 enum status_enum
 {
-      STD_RET_OK                 = 0,
-      STD_RET_ERROR              = 1,
-      STD_RET_UNKNOWN            = 127,
+      STD_RET_OK      = 0,
+      STD_RET_ERROR   = 1,
+      STD_RET_UNKNOWN = 127,
 };
 
 /** file types */
@@ -133,6 +133,7 @@ typedef struct appArgs_struct
       FILE_t  *stdout;                    /* file used only to write to terminal */
       void    *TaskHandle;                /* FreeRTOS task handling for children */
       void    *ParentTaskHandle;          /* FreeRTOS task handling for parent */
+      ch_t    *cwd;                       /* current working path */
       stdRet_t exitCode;                  /* exit code */
 } app_t;
 

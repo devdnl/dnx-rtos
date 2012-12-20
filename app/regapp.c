@@ -40,6 +40,7 @@ extern "C" {
 #include "top.h"
 #include "httpd.h"
 #include "measd.h"
+#include "cat.h"
 
 
 /*==================================================================================================
@@ -69,6 +70,7 @@ static const regAppData_t appList[] =
       {TOP_NAME     , top     , TOP_STACK_SIZE     },
       {HTTPD_NAME   , httpd   , HTTPD_STACK_SIZE   },
       {MEASD_NAME   , measd   , MEASD_STACK_SIZE   },
+      {CAT_NAME     , cat     , CAT_STACK_SIZE     },
 };
 
 

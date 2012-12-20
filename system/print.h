@@ -49,6 +49,7 @@ extern "C" {
 #define getChar()                               getChart(stdin)
 #define ugetChar()                              ugetChart(stdin)
 #define atoi(string, base, valuePtr)            a2i(string, base, valuePtr)
+#define getcwd(buf, size)                       strncpy(buf, cwd, size)
 
 /** VT100 terminal commands */
 #define enableLineWrap()                        printf("\x1B[?7h")
