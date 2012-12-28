@@ -496,7 +496,7 @@ i32_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
  * @brief Function return item data pointer by ID
  *
  * @param *list         pointer to list
- * @param nitem         item number
+ * @param  id           item ID
  *
  * @return pointer to item user data
  */

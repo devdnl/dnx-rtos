@@ -34,19 +34,56 @@ extern "C" {
 #include "procfs.h"
 #include "sysdrv.h"
 #include "print.h"
+#include "dlist.h"
 #include <string.h>
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-/* task name length (8B name + \0). Name is 32b hex number converted to string */
-#define TASK_NAME_LEN               9
+/* task ID string length (8B name + \0). ID is 32b hex number converted to string */
+#define TASK_ID_STR_LEN                   9
+
+
+#define DIR_TASKID_STR                    "taskid"
+#define DIR_TASKNAME_STR                  "taskname"
+#define TASK_FILE_NAME_STR                "name"
+#define TASK_FILE_PRIO_STR                "priority"
+#define TASK_FILE_FREESTACK_STR           "freestack"
+#define TASK_FILE_USEDMEM_STR             "usedmem"
+#define TASK_FILE_OPENFILES_STR           "openfiles"
+#define TASK_FILE_CPULOAD_STR             "cpuload"
+
+
+#define MTX_BLOCK_TIME                    10
 
 
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+enum taskInfFile {
+      TASK_FILE_NAME,
+      TASK_FILE_PRIO,
+      TASK_FILE_FREESTACK,
+      TASK_FILE_USEDMEM,
+      TASK_FILE_OPENFILES,
+      TASK_FILE_CPULOAD,
+      COUNT_OF_TASK_FILE,
+      TASK_FILE_NONE
+};
+
+
+struct procmem {
+      list_t *flist;
+      u32_t   idcnt;
+      mutex_t mtx;
+};
+
+
+struct fileinfo {
+      task_t taskHdl;         /* task handle */
+      u8_t   taskFile;        /* task info file */
+};
 
 
 /*==================================================================================================
@@ -63,6 +100,7 @@ static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir);
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+static struct procmem *procmem;
 
 
 /*==================================================================================================
@@ -76,7 +114,7 @@ static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir);
 
 //================================================================================================//
 /**
- * @brief Function initialize appfs
+ * @brief Function initialize FS
  *
  * @param dev           device number
  *
@@ -88,7 +126,66 @@ stdRet_t procfs_init(devx_t dev)
 {
       (void)dev;
 
-      return STD_RET_OK;
+      stdRet_t status = STD_RET_OK;
+
+      if (procmem == NULL) {
+            status = STD_RET_ERROR;
+
+            if ((procmem = calloc(1, sizeof(struct procmem))) != NULL) {
+                  procmem->flist = ListCreate();
+                  CreateMutex(procmem->mtx);
+
+                  if (procmem->flist && procmem->mtx) {
+                        status = STD_RET_OK;
+                  } else {
+                        if (procmem->flist) {
+                              ListDelete(procmem->flist);
+                        }
+
+                        if (procmem->mtx) {
+                              DeleteMutex(procmem->mtx);
+                        }
+
+                        free(procmem);
+                        procmem = NULL;
+                  }
+            }
+      }
+
+      return status;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Release file system
+ *
+ * @param dev           device number
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//================================================================================================//
+stdRet_t procfs_release(devx_t dev)
+{
+      (void)dev;
+
+      stdRet_t status = STD_RET_ERROR;
+
+      if (procmem) {
+            while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+            TaskSuspendAll();
+            GiveMutex(procmem->mtx);
+            DeleteMutex(procmem->mtx);
+            ListDelete(procmem->flist);
+            free(procmem);
+            procmem = NULL;
+            TaskResumeAll();
+
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 
@@ -112,28 +209,102 @@ stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (path && mode) {
-            if (strncmp(mode, "r", 2) == 0 && strncmp(path, "/taskid/", 7) == 0) {
+      if (path && mode && procmem) {
+            if (strncmp(mode, "r", 2) != 0) {
+                  goto procfs_open_end;
+            }
+
+            struct taskstat taskdata;
+
+            if (strncmp(path, "/"DIR_TASKID_STR"/", 8) == 0) {
                   path = strchr(path + 1, '/') + 1;
 
-                  if (path) {
-                        u32_t taskHdl = 0;
-                        struct taskstat taskdata;
+                  if (path == NULL) {
+                        goto procfs_open_end;
+                  }
 
-                        path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
+                  u32_t taskHdl = 0;
 
-                        if ((*path == '/' && *(path + 1) == '\0') || *path == '\0') {
-                              if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) == STD_RET_OK) {
-                                    *fd   = (void*)taskHdl;
-                                    *seek = 0;
+                  path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
 
-                                    status = STD_RET_OK;
+                  if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) != STD_RET_OK) {
+                        goto procfs_open_end;
+                  }
+
+                  if ((path = strrchr(path, '/')) == NULL) {
+                        goto procfs_open_end;
+                  } else {
+                        path++;
+                  }
+
+                  struct fileinfo *fileInf = calloc(1, sizeof(struct fileinfo));
+
+                  if (fileInf) {
+                        fileInf->taskHdl = (task_t)taskHdl;
+
+                        if (strcmp((ch_t*)path, TASK_FILE_NAME_STR) == 0) {
+                              fileInf->taskFile = TASK_FILE_NAME;
+                        } else if (strcmp((ch_t*)path, TASK_FILE_CPULOAD_STR) == 0) {
+                              fileInf->taskFile = TASK_FILE_CPULOAD;
+                        } else if (strcmp((ch_t*)path, TASK_FILE_FREESTACK_STR) == 0) {
+                              fileInf->taskFile = TASK_FILE_FREESTACK;
+                        } else if (strcmp((ch_t*)path, TASK_FILE_OPENFILES_STR) == 0) {
+                              fileInf->taskFile = TASK_FILE_OPENFILES;
+                        } else if (strcmp((ch_t*)path, TASK_FILE_PRIO_STR) == 0) {
+                              fileInf->taskFile = TASK_FILE_PRIO;
+                        } else if (strcmp((ch_t*)path, TASK_FILE_USEDMEM_STR) == 0) {
+                              fileInf->taskFile = TASK_FILE_USEDMEM;
+                        } else {
+                              free(fileInf);
+                              goto procfs_open_end;
+                        }
+
+                        while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        if (ListAddItem(procmem->flist, procmem->idcnt, fileInf) == 0) {
+                              *fd   = procmem->idcnt++;
+                              *seek = 0;
+
+                              status = STD_RET_OK;
+                        }
+                        GiveMutex(procmem->mtx);
+                  }
+            } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", 8) == 0) {
+                  path = strrchr(path, '/');
+
+                  if (path == NULL) {
+                        goto procfs_open_end;
+                  } else {
+                        path++;
+                  }
+
+                  u16_t n = moni_GetTaskCount();
+                  u16_t i = 0;
+
+                  while (n-- && moni_GetTaskStat(i, &taskdata) == STD_RET_OK) {
+                        if (strcmp(path , taskdata.taskName) == 0) {
+                              struct fileinfo *fileInf = calloc(1, sizeof(struct fileinfo));
+
+                              if (fileInf) {
+                                    fileInf->taskHdl = taskdata.taskHdl;
+                                    fileInf->taskFile = TASK_FILE_NONE;
+
+                                    while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+                                    if (ListAddItem(procmem->flist, procmem->idcnt, fileInf) == 0) {
+                                          *fd   = procmem->idcnt++;
+                                          *seek = 0;
+
+                                          status = STD_RET_OK;
+                                    }
+                                    GiveMutex(procmem->mtx);
                               }
+
+                              break;
                         }
                   }
             }
       }
 
+      procfs_open_end:
       return status;
 }
 
@@ -152,9 +323,20 @@ stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const
 stdRet_t procfs_close(devx_t dev, fd_t fd)
 {
       (void)dev;
-      (void)fd;
 
-      return STD_RET_ERROR;
+      stdRet_t status = STD_RET_ERROR;
+
+      if (procmem) {
+            while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+
+            if (ListRmItemByID(procmem->flist, fd) == 0) {
+                  status = STD_RET_OK;
+            }
+
+            GiveMutex(procmem->mtx);
+      }
+
+      return status;
 }
 
 
@@ -181,7 +363,7 @@ size_t procfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, 
       (void)nitems;
       (void)seek;
 
-      return STD_RET_ERROR;
+      return 0;
 }
 
 
@@ -202,13 +384,73 @@ size_t procfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, 
 size_t procfs_read(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
       (void)dev;
-      (void)fd;
-      (void)dst;
-      (void)size;
-      (void)nitems;
-      (void)seek;
 
-      return STD_RET_ERROR;
+      size_t n = 0;
+
+      if (dst && procmem) {
+            while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+            struct fileinfo *fileInf = ListGetItemDataByID(procmem->flist, fd);
+            GiveMutex(procmem->mtx);
+
+            if (fileInf){
+                  if (fileInf->taskFile >= COUNT_OF_TASK_FILE) {
+                        goto procfs_read_end;
+                  }
+
+                  struct taskstat taskInfo;
+
+                  if (moni_GetTaskHdlStat(fileInf->taskHdl, &taskInfo) != STD_RET_OK) {
+                        goto procfs_read_end;
+                  }
+
+                  ch_t  data[12] = {0};
+                  ch_t *dataPtr = data;
+                  u8_t  dataSize = 0;
+
+                  switch (fileInf->taskFile) {
+                  case TASK_FILE_CPULOAD:
+                        dataSize = snprintf(data, sizeof(data), "%u",
+                                            (taskInfo.cpuUsage * 100)/taskInfo.cpuUsageTotal);
+                        break;
+
+                  case TASK_FILE_FREESTACK:
+                        dataSize = snprintf(data, sizeof(data), "%u", taskInfo.taskFreeStack);
+                        break;
+
+                  case TASK_FILE_NAME:
+                        dataSize = strlen(taskInfo.taskName);
+                        dataPtr  = taskInfo.taskName;
+                        break;
+
+                  case TASK_FILE_OPENFILES:
+                        dataSize = snprintf(data, sizeof(data), "%u", taskInfo.fileUsage);
+                        break;
+
+                  case TASK_FILE_PRIO:
+                        dataSize = snprintf(data, sizeof(data), "%d", taskInfo.taskPriority);
+                        break;
+
+                  case TASK_FILE_USEDMEM:
+                        dataSize = snprintf(data, sizeof(data), "%u", taskInfo.memUsage);
+                        break;
+                  }
+
+                  if (seek > dataSize) {
+                        n = 0;
+                  } else {
+                        if (dataSize - seek < size * nitems) {
+                              n = dataSize - seek;
+                              strncpy(dst, dataPtr + seek, n);
+                        } else {
+                              n = size * nitems;
+                              strncpy(dst, dataPtr + seek, n);
+                        }
+                  }
+            }
+      }
+
+      procfs_read_end:
+      return n;
 }
 
 
@@ -254,7 +496,21 @@ stdRet_t procfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
       (void)fd;
       (void)stat;
 
-      return STD_RET_ERROR;
+      stdRet_t status = STD_RET_ERROR;
+
+      if (stat) {
+            stat->st_dev   = 0;
+            stat->st_gid   = 0;
+            stat->st_mode  = 0444;
+            stat->st_mtime = 0;
+            stat->st_rdev  = 0;
+            stat->st_size  = 0;
+            stat->st_uid   = 0;
+
+            status = STD_RET_OK;
+      }
+
+      return status;
 }
 
 
@@ -319,7 +575,6 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && dir) {
-            status    = STD_RET_OK;
             dir->seek = 0;
 
             if (strcmp(path, "/") == 0) {
@@ -327,41 +582,47 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
                   dir->items = 2;
                   dir->rddir = procfs_readdir_root;
                   dir->cldir = procfs_closedir_noop;
-            } else if (strcmp(path, "/taskname/") == 0) {
+                  status     = STD_RET_OK;
+            } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
                   dir->dd    = NULL;
                   dir->items = moni_GetTaskCount();
                   dir->rddir = procfs_readdir_taskname;
                   dir->cldir = procfs_closedir_noop;
-            } else if (strcmp(path, "/taskid/") == 0) {
-                  dir->dd    = calloc(TASK_NAME_LEN, sizeof(ch_t));
+                  status     = STD_RET_OK;
+            } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
+                  dir->dd    = calloc(TASK_ID_STR_LEN, sizeof(ch_t));
                   dir->items = moni_GetTaskCount();
                   dir->rddir = procfs_readdir_taskid;
                   dir->cldir = procfs_closedir_freedd;
-            } else if (strncmp(path, "/taskid/", 7) == 0) {
+                  status     = STD_RET_OK;
+            } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
                   path = strchr(path + 1, '/') + 1;
 
-                  if (path) {
-                        u32_t taskHdl = 0;
-                        struct taskstat taskdata;
-
-                        path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
-
-                        if ((*path == '/' && *(path + 1) == '\0') || *path == '\0') {
-                              if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) == STD_RET_OK) {
-                                    dir->dd    = (void*)taskHdl;
-                                    dir->items = 6;
-                                    dir->rddir = procfs_readdir_taskid_n;
-                                    dir->cldir = procfs_closedir_noop;
-                              }
-                        } else {
-                              status = STD_RET_ERROR;
-                        }
+                  if (path == NULL) {
+                        goto procfs_opendir_end;
                   }
-            } else {
-                  status = STD_RET_ERROR;
+
+                  u32_t taskHdl = 0;
+
+                  path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
+
+                  if (!((*path == '/' && *(path + 1) == '\0') || *path == '\0')) {
+                        goto procfs_opendir_end;
+                  }
+
+                  struct taskstat taskdata;
+
+                  if ((status = moni_GetTaskHdlStat((task_t)taskHdl, &taskdata)) == STD_RET_OK) {
+                        dir->dd    = (void*)taskHdl;
+                        dir->items = COUNT_OF_TASK_FILE;
+                        dir->rddir = procfs_readdir_taskid_n;
+                        dir->cldir = procfs_closedir_noop;
+                        status     = STD_RET_OK;
+                  }
             }
       }
 
+      procfs_opendir_end:
       return status;
 }
 
@@ -523,15 +784,7 @@ stdRet_t procfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && stat) {
-            stat->st_dev   = 0;
-            stat->st_gid   = 0;
-            stat->st_mode  = 0444;
-            stat->st_mtime = 0;
-            stat->st_rdev  = 0;
-            stat->st_size  = 0;
-            stat->st_uid   = 0;
-
-            status = STD_RET_OK;
+            status = procfs_fstat(dev, 0, stat);
       }
 
       return status;
@@ -572,24 +825,6 @@ stdRet_t procfs_statfs(devx_t dev, struct vfs_statfs *statfs)
 
 //================================================================================================//
 /**
- * @brief Release file system
- *
- * @param dev           device number
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//================================================================================================//
-stdRet_t procfs_release(devx_t dev)
-{
-      (void)dev;
-
-      return STD_RET_OK;
-}
-
-
-//================================================================================================//
-/**
  * @brief Read item from opened directory
  *
  * @param *dir          directory object
@@ -610,8 +845,8 @@ static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir)
             dirent.size     = 0;
 
             switch (dir->seek++) {
-            case 0: dirent.name = "taskid";   break;
-            case 1: dirent.name = "taskname"; break;
+            case 0: dirent.name = DIR_TASKID_STR;   break;
+            case 1: dirent.name = DIR_TASKNAME_STR; break;
             default: break;
             }
       }
@@ -674,7 +909,7 @@ static dirent_t procfs_readdir_taskid(devx_t dev, DIR_t *dir)
       if (dir) {
             if (dir->dd && dir->seek < moni_GetTaskCount()) {
                   if (moni_GetTaskStat(dir->seek, &taskdata) == STD_RET_OK) {
-                        snprintf(dir->dd, TASK_NAME_LEN, "%x", (u32_t)taskdata.taskHdl);
+                        snprintf(dir->dd, TASK_ID_STR_LEN, "%x", (u32_t)taskdata.taskHdl);
 
                         dirent.filetype = FILE_TYPE_DIR;
                         dirent.name     = dir->dd;
@@ -709,17 +944,20 @@ static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir)
       if (dir) {
             struct taskstat taskdata;
 
-            if (dir->seek < 6 && moni_GetTaskHdlStat((task_t)dir->dd, &taskdata) == STD_RET_OK) {
+            if (  dir->seek < COUNT_OF_TASK_FILE
+               && moni_GetTaskHdlStat((task_t)dir->dd, &taskdata) == STD_RET_OK) {
                   dirent.filetype = FILE_TYPE_REGULAR;
                   dirent.size = sizeof(u32_t);
 
                   switch (dir->seek) {
-                  case 0: dirent.name = "name"; dirent.size = strlen(taskdata.taskName); break;
-                  case 1: dirent.name = "priority";  break;
-                  case 2: dirent.name = "freestack"; break;
-                  case 3: dirent.name = "usedmem";   break;
-                  case 4: dirent.name = "openfiles"; break;
-                  case 5: dirent.name = "cpuload";   break;
+                  case TASK_FILE_NAME     : dirent.name = TASK_FILE_NAME_STR;
+                                            dirent.size = strlen(taskdata.taskName);
+                                            break;
+                  case TASK_FILE_PRIO     : dirent.name = TASK_FILE_PRIO_STR;      break;
+                  case TASK_FILE_FREESTACK: dirent.name = TASK_FILE_FREESTACK_STR; break;
+                  case TASK_FILE_USEDMEM  : dirent.name = TASK_FILE_USEDMEM_STR;   break;
+                  case TASK_FILE_OPENFILES: dirent.name = TASK_FILE_OPENFILES_STR; break;
+                  case TASK_FILE_CPULOAD  : dirent.name = TASK_FILE_CPULOAD_STR;   break;
                   default: break;
                   }
 

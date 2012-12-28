@@ -33,6 +33,7 @@ extern "C" {
 ==================================================================================================*/
 #include "taskmoni.h"
 #include "dlist.h"
+#include "cpuctl.h"
 #include <string.h>
 
 

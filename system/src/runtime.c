@@ -51,8 +51,8 @@
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
-static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg);
+static app_t *RunAsApp(task_t app, const ch_t *appName, u32_t stackSize, void *arg);
+static app_t *RunAsDaemon(task_t app, const ch_t *appName, u32_t stackSize, void *arg);
 
 
 /*==================================================================================================
@@ -81,7 +81,7 @@ static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize,
  * @return application handler
  */
 //================================================================================================//
-static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+static app_t *RunAsApp(task_t app, const ch_t *appName, u32_t stackSize, void *arg)
 {
       app_t *appHandle = NULL;
 
@@ -126,7 +126,7 @@ static app_t *RunAsApp(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, vo
  * @return application handler
  */
 //================================================================================================//
-static app_t *RunAsDaemon(pdTASK_CODE app, const ch_t *appName, u32_t stackSize, void *arg)
+static app_t *RunAsDaemon(task_t app, const ch_t *appName, u32_t stackSize, void *arg)
 {
       app_t *appHandle = NULL;
 
@@ -266,6 +266,8 @@ void TerminateApplication(app_t *appObj, stdRet_t exitCode)
       /* set exit code */
       appObj->exitCode   = exitCode;
       appObj->TaskHandle = NULL;
+
+      /* DNLTODO here killed application must resume parent if sleep */
 
       TaskTerminate();
 }

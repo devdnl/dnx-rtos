@@ -68,7 +68,7 @@ struct termHdl
                   ch_t  buffer[TTY_OUT_BFR_SIZE];
                   u16_t txidx;
                   u16_t rxidx;
-            } input;
+            } input; /* DNLTODO use counting semaphore to handle input buffer efficient */
       } *tty[TTY_LAST];
 
       u8_t   curTTY;          /* current terminal */
@@ -377,6 +377,7 @@ size_t TTY_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
 
                   while ((input->level > 0) && (nitems > 0))
                   {
+                        /* DNLTODO use counting semaphore to handle input buffer efficient */
                         *((ch_t*)dst) = input->buffer[input->rxidx++];
 
                         dst += size;

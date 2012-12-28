@@ -341,8 +341,8 @@ status :
 	@echo $$(($$($(CAT) $(INFO_LOC)/build) + 1)) > $(INFO_LOC)/build
 
 	@echo '/* application version created automatically by $(THIS_MAKEFILE) */' > $(INFO_LOC)/version.h
-	@echo '#'ifndef DSYS_VERSION >> $(INFO_LOC)/version.h
-	@echo '#'define DSYS_VERSION `$(DATE) "+%Y%m%d"`UL >> $(INFO_LOC)/version.h
+	@echo '#'ifndef VERSION >> $(INFO_LOC)/version.h
+	@echo '#'define VERSION `$(DATE) "+%Y%m%d"`UL >> $(INFO_LOC)/version.h
 	@echo '#'endif >> $(INFO_LOC)/version.h
 
 	@echo "Build: `$(CAT) $(INFO_LOC)/build` `$(DATE) "+completed: %k:%M:%S"`"
