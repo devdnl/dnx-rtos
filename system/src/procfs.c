@@ -116,7 +116,7 @@ static struct procmem *procmem;
 /**
  * @brief Function initialize FS
  *
- * @param dev           device number
+ * @param[in] dev           device number
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -160,7 +160,7 @@ stdRet_t procfs_init(devx_t dev)
 /**
  * @brief Release file system
  *
- * @param dev           device number
+ * @param[in] dev           device number
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -193,11 +193,11 @@ stdRet_t procfs_release(devx_t dev)
 /**
  * @brief Function open selected file
  *
- * @param  dev          device number
- * @param *fd           file descriptor
- * @param *seek         file position
- * @param *path         file name
- * @param *mode         file mode
+ * @param[in]   dev          device number
+ * @param[out] *fd           file descriptor
+ * @param[out] *seek         file position
+ * @param[in]  *path         file name
+ * @param[in]  *mode         file mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -313,8 +313,8 @@ stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const
 /**
  * @brief Close file
  *
- * @param  dev          device number
- * @param *fd           file descriptor
+ * @param[in]  dev          device number
+ * @param[in] *fd           file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -344,12 +344,12 @@ stdRet_t procfs_close(devx_t dev, fd_t fd)
 /**
  * @brief Write data file
  *
- * @param  dev          device number
- * @param *fd           file descriptor
- * @param *src          data source
- * @param  size         item size
- * @param  nitems       item count
- * @param  seek         file position
+ * @param[in]  dev          device number
+ * @param[in] *fd           file descriptor
+ * @param[in] *src          data source
+ * @param[in]  size         item size
+ * @param[in]  nitems       item count
+ * @param[in]  seek         file position
  *
  * @return written nitems
  */
@@ -371,12 +371,12 @@ size_t procfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, 
 /**
  * @brief Read data files
  *
- * @param  dev          device number
- * @param *fd           file descriptor
- * @param *src          data source
- * @param  size         item size
- * @param  nitems       item count
- * @param  seek         file position
+ * @param[in]   dev          device number
+ * @param[in]  *fd           file descriptor
+ * @param[out] *dst          data destination
+ * @param[in]   size         item size
+ * @param[in]   nitems       item count
+ * @param[in]   seek         file position
  *
  * @retval read nitems
  */
@@ -458,10 +458,10 @@ size_t procfs_read(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, s
 /**
  * @brief Control file
  *
- * @param  dev          device number
- * @param  fd           file descriptor
- * @param  iorq         request
- * @param *data         data
+ * @param[in]      dev          device number
+ * @param[in]      fd           file descriptor
+ * @param[in]      iorq         request
+ * @param[in,out] *data         data
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -482,9 +482,9 @@ stdRet_t procfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
 /**
  * @brief Statistics of opened file
  *
- * @param  dev          device number
- * @param *fd           file descriptor
- * @param *stat         output statistics
+ * @param[in]   dev          device number
+ * @param[in]  *fd           file descriptor
+ * @param[out] *stat         output statistics
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -518,8 +518,8 @@ stdRet_t procfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
 /**
  * @brief Create directory
  *
- * @param  dev          device number
- * @param *path         directory path
+ * @param[in]  dev          device number
+ * @param[in] *path         directory path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -538,9 +538,9 @@ stdRet_t procfs_mkdir(devx_t dev, const ch_t *path)
 /**
  * @brief Create device node
  *
- * @param  dev          device number
- * @param *path         node path
- * @param *dcfg         device configuration
+ * @param[in]  dev          device number
+ * @param[in] *path         node path
+ * @param[in] *dcfg         device configuration
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -560,9 +560,9 @@ stdRet_t procfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg)
 /**
  * @brief Opens directory
  *
- * @param  dev          device number
- * @param *path         directory path
- * @param *dir          directory object to fill
+ * @param[in]   dev          device number
+ * @param[in]  *path         directory path
+ * @param[out] *dir          directory object to fill
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -631,8 +631,8 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
 /**
  * @brief Function close opened dir (is used when dd contains pointer to allocated block)
  *
- * @param  dev          device number
- * @param *dir          directory object
+ * @param[in]   dev          device number
+ * @param[out] *dir          directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -661,8 +661,8 @@ static stdRet_t procfs_closedir_freedd(devx_t dev, DIR_t *dir)
 /**
  * @brief Function close opened dir (is used when dd contains data which cannot be freed)
  *
- * @param  dev          device number
- * @param *dir          directory object
+ * @param[in]   dev          device number
+ * @param[out] *dir          directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -681,8 +681,8 @@ static stdRet_t procfs_closedir_noop(devx_t dev, DIR_t *dir)
 /**
  * @brief Remove file
  *
- * @param  dev          device number
- * @param *path         file path
+ * @param[in]   dev          device number
+ * @param[out] *path         file path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -701,9 +701,9 @@ stdRet_t procfs_remove(devx_t dev, const ch_t *path)
 /**
  * @brief Rename file
  *
- * @param  dev          device number
- * @param *oldName      old file name
- * @param *newName      new file name
+ * @param[in]  dev          device number
+ * @param[in] *oldName      old file name
+ * @param[in] *newName      new file name
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -723,9 +723,9 @@ stdRet_t procfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
 /**
  * @brief Change file mode
  *
- * @param  dev          device number
- * @param *path         file path
- * @param  mode         new mode
+ * @param[in]  dev          device number
+ * @param[in] *path         file path
+ * @param[in]  mode         new mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -745,10 +745,10 @@ stdRet_t procfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
 /**
  * @brief Change file owner and group
  *
- * @param  dev          device number
- * @param *path         file path
- * @param  owner        owner
- * @param  group        group
+ * @param[in]  dev          device number
+ * @param[in] *path         file path
+ * @param[in]  owner        owner
+ * @param[in]  group        group
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -769,9 +769,9 @@ stdRet_t procfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
 /**
  * @brief File statistics
  *
- * @param  dev          device number
- * @param *path         file path
- * @param *stat         file statistics
+ * @param[in]   dev          device number
+ * @param[in]  *path         file path
+ * @param[out] *stat         file statistics
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -795,8 +795,8 @@ stdRet_t procfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
 /**
  * @brief File system statistics
  *
- * @param  dev          device number
- * @param *statfs       FS statistics
+ * @param[in]   dev          device number
+ * @param[out] *statfs       FS statistics
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -827,7 +827,8 @@ stdRet_t procfs_statfs(devx_t dev, struct vfs_statfs *statfs)
 /**
  * @brief Read item from opened directory
  *
- * @param *dir          directory object
+ * @param[in]   dev          device number
+ * @param[out] *dir          directory object
  *
  * @return directory entry
  */
@@ -858,7 +859,8 @@ static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param *dir          directory object
+ * @param[in]   dev          device number
+ * @param[out] *dir          directory object
  *
  * @return directory entry
  */
@@ -891,7 +893,8 @@ static dirent_t procfs_readdir_taskname(devx_t dev, DIR_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param *dir          directory object
+ * @param[in]   dev          device number
+ * @param[out] *dir          directory object
  *
  * @return directory entry
  */
@@ -928,7 +931,8 @@ static dirent_t procfs_readdir_taskid(devx_t dev, DIR_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param *dir          directory object
+ * @param[in]   dev          device number
+ * @param[out] *dir          directory object
  *
  * @return directory entry
  */
@@ -958,7 +962,6 @@ static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir)
                   case TASK_FILE_USEDMEM  : dirent.name = TASK_FILE_USEDMEM_STR;   break;
                   case TASK_FILE_OPENFILES: dirent.name = TASK_FILE_OPENFILES_STR; break;
                   case TASK_FILE_CPULOAD  : dirent.name = TASK_FILE_CPULOAD_STR;   break;
-                  default: break;
                   }
 
                   dir->seek++;
