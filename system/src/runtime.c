@@ -97,13 +97,13 @@ static app_t *RunAsApp(task_t app, const ch_t *appName, u32_t stackSize, void *a
             /* initialize stdio data */
             appHandle->arg              = arg;
             appHandle->exitCode         = STD_RET_UNKNOWN;
-            appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
-            appHandle->TaskHandle       = NULL;
+            appHandle->parentTaskHandle = TaskGetCurrentTaskHandle();
+            appHandle->taskHandle       = NULL;
             appHandle->stdin            = NULL;
             appHandle->stdout           = NULL;
 
             /* start application task */
-            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != OS_OK) {
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->taskHandle) != OS_OK) {
                   free(appHandle);
                   appHandle = NULL;
             }
@@ -144,11 +144,11 @@ static app_t *RunAsDaemon(task_t app, const ch_t *appName, u32_t stackSize, void
             appHandle->exitCode         = STD_RET_UNKNOWN;
             appHandle->stdin            = NULL;
             appHandle->stdout           = NULL;
-            appHandle->ParentTaskHandle = TaskGetCurrentTaskHandle();
-            appHandle->TaskHandle       = NULL;
+            appHandle->parentTaskHandle = TaskGetCurrentTaskHandle();
+            appHandle->taskHandle       = NULL;
 
             /* start daemon task */
-            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->TaskHandle) != OS_OK) {
+            if (TaskCreate(app, appName, stackSize, appHandle, 0, &appHandle->taskHandle) != OS_OK) {
                   free(appHandle);
                   appHandle = NULL;
             }
@@ -240,8 +240,8 @@ stdRet_t KillApp(app_t *appArgs)
       stdRet_t status = STD_RET_ERROR;
 
       if (appArgs) {
-            if (appArgs->TaskHandle) {
-                  TaskDelete(appArgs->TaskHandle);
+            if (appArgs->taskHandle) {
+                  TaskDelete(appArgs->taskHandle);
             }
 
             free(appArgs);
@@ -265,7 +265,7 @@ void TerminateApplication(app_t *appObj, stdRet_t exitCode)
 {
       /* set exit code */
       appObj->exitCode   = exitCode;
-      appObj->TaskHandle = NULL;
+      appObj->taskHandle = NULL;
 
       /* DNLTODO here killed application must resume parent if sleep */
 
