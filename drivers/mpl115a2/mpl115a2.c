@@ -143,7 +143,7 @@ stdRet_t MPL115A2_Init(devx_t dev, fd_t part)
             mplmem = calloc(1, sizeof(struct mplst));
 
             if (mplmem) {
-                  CreateMutex(mplmem->mtx);
+                  mplmem->mtx = CreateMutex();
 
                   if (mplmem->mtx) {
                         FILE_t *fi2c;

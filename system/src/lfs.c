@@ -126,7 +126,7 @@ stdRet_t lfs_init(devx_t dev)
             lfs = calloc(1, sizeof(struct fshdl_s));
 
             if (lfs) {
-                  CreateMutex(lfs->mtx);
+                  lfs->mtx = CreateMutex();
                   lfs->root.data = ListCreate();
                   lfs->openFile  = ListCreate();
 

@@ -116,6 +116,22 @@ void TaskDelete(task_t taskHdl)
 }
 
 
+//================================================================================================//
+/**
+ * @brief Function create binary semaphore
+ *
+ * @return binary semaphore object
+ */
+//================================================================================================//
+sem_t CreateSemBin(void)
+{
+      sem_t sem = NULL;
+
+      vSemaphoreCreateBinary(sem);
+
+      return sem;
+}
+
 #ifdef __cplusplus
 }
 #endif

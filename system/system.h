@@ -94,11 +94,14 @@ extern "C" {
 #define SystemGetHostname()               LwIP_GetHostname()
 #define SystemGetUptime()                 GetUptimeCnt()
 #define SystemGetTaskCount()              TaskGetNumberOfTasks()
-//#define SystemGetRunTimeStats(dst)        TaskGetRunTimeStats(dst)
 #define SystemGetOSTickCnt()              TaskGetTickCount()
 #define SystemGetAppName()                TaskGetName(NULL)
 #define SystemGetTaskStat(item, statPtr)  moni_GetTaskStat(item, statPtr)
 #define SystemGetMoniTaskCount()          moni_GetTaskCount()
+#define SystemGetOSName()                 "dnx"
+#define SystemGetKernelName()             "FreeRTOS"
+#define SystemGetOSVersion()              "0.5.1"
+#define SystemGetKernelVersion()          "7.1.1"
 
 
 /*==================================================================================================

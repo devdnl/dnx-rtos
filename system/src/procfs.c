@@ -133,7 +133,7 @@ stdRet_t procfs_init(devx_t dev)
 
             if ((procmem = calloc(1, sizeof(struct procmem))) != NULL) {
                   procmem->flist = ListCreate();
-                  CreateMutex(procmem->mtx);
+                  procmem->mtx   = CreateMutex();
 
                   if (procmem->flist && procmem->mtx) {
                         status = STD_RET_OK;

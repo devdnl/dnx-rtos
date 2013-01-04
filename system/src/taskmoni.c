@@ -142,7 +142,7 @@ static stdRet_t moni_Init(void)
 
             if (moni) {
                   moni->tasks = ListCreate();
-                  CreateRecMutex(moni->mtx);
+                  moni->mtx   = CreateRecMutex();
 
                   if (!moni->tasks || !moni->mtx) {
                         if (moni->tasks)

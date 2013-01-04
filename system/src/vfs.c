@@ -99,7 +99,7 @@ stdRet_t vfs_init(void)
             vfs = calloc(1, sizeof(struct vfshdl));
 
             if (vfs) {
-                  CreateMutex(vfs->mtx);
+                  vfs->mtx     = CreateMutex();
                   vfs->mntList = ListCreate();
 
                   if (!vfs->mtx || !vfs->mntList) {

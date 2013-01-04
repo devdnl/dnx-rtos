@@ -648,7 +648,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       u32_t tty = 0;
       ioctl(stdin, TTY_IORQ_GETCURRENTTTY, &tty);
 
-      printf("Welcome to Tinix RTOS (tty%u)\n", tty);
+      printf("Welcome to %s/%s (tty%u)\n", SystemGetOSName(), SystemGetKernelName(), tty);
 
       /* main loop ------------------------------------------------------------------------------ */
       for (;;)

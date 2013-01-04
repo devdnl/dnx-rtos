@@ -74,10 +74,9 @@ extern "C" {
 #define TaskGetTag(taskhdl)               xTaskGetApplicationTaskTag(taskhdl)
 
 /** SEMAPHORES AND MUTEXES */
-#define CreateSemBin(sem)                 vSemaphoreCreateBinary(sem)
-#define CreateSemCnt(sem, maxCnt, intCnt) sem = xSemaphoreCreateCounting(maxCnt, intCnt)
-#define CreateMutex(mutex)                mutex = xSemaphoreCreateMutex()
-#define CreateRecMutex(mutex)             mutex = xSemaphoreCreateRecursiveMutex()
+#define CreateSemCnt(maxCnt, intCnt)      xSemaphoreCreateCounting(maxCnt, intCnt)
+#define CreateMutex()                     xSemaphoreCreateMutex()
+#define CreateRecMutex()                  xSemaphoreCreateRecursiveMutex()
 #define DeleteSemBin(sem)                 vSemaphoreDelete(sem)
 #define DeleteSemCnt(sem)                 vSemaphoreDelete(sem)
 #define DeleteMutex(mutex)                vSemaphoreDelete(mutex)
@@ -116,6 +115,7 @@ typedef xSemaphoreHandle mutex_t;
 ==================================================================================================*/
 extern int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack, void *argv, i8_t priority, task_t *taskHdl);
 extern void  TaskDelete(task_t taskHdl);
+extern sem_t CreateSemBin(void);
 
 #ifdef __cplusplus
 }

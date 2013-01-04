@@ -177,14 +177,7 @@ void Initd(void *arg)
 
       /* something about board and system */
       kprint("\x1B[32m\x1B[1m");
-      kprint(".--------. .--. .---. .--. .--. ,--. ,--,\n");
-      kprint("|__    __| |  | |    \\|  | |  | \\   V  /\n");
-      kprint("   |  |    |  | |  |\\    | |  |  \\    /\n");
-      kprint("   |  |    |  | |  | \\   | |  |  /    \\\n");
-      kprint("   |  |    |  | |  |  \\  | |  | /  /\\  \\\n");
-      kprint("   `--'    `--' `--'   `-' `--' `-'  `-'  RTOS 0.5.0\x1B[0m\n\n");
-
-      kprint("powered by \x1B[32mFreeRTOS\x1B[0m\n");
+      kprint("%s/%s\x1B[0m\n", SystemGetOSName(), SystemGetKernelName());
       kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
 
       /* driver initialization */

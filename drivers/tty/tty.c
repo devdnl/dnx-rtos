@@ -140,7 +140,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
 
                   if (term)
                   {
-                        CreateSemCnt(term->semcnt, 10, 0);
+                        term->semcnt = CreateSemCnt(10, 0);
 
                         if (term->semcnt)
                         {
@@ -202,7 +202,7 @@ stdRet_t TTY_Open(devx_t dev, fd_t part)
 
                         if (TTY(dev))
                         {
-                              CreateRecMutex(TTY(dev)->mtx);
+                              TTY(dev)->mtx = CreateRecMutex();
 
                               if (TTY(dev)->mtx != NULL)
                               {

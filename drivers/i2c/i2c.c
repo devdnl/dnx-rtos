@@ -133,7 +133,7 @@ stdRet_t I2C_Init(devx_t dev, fd_t part)
 
                   if (I2CP(dev) != NULL)
                   {
-                        CreateRecMutex(I2CP(dev)->mtx);
+                        I2CP(dev)->mtx = CreateRecMutex();
 
                         if (I2CP(dev)->mtx)
                         {
