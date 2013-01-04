@@ -1,4 +1,4 @@
 /* application version created automatically by Makefile */
-#ifndef DSYS_VERSION
-#define DSYS_VERSION 20121224UL
+#ifndef VERSION
+#define VERSION 20130104UL
 #endif

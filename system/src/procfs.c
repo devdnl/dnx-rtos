@@ -493,23 +493,66 @@ stdRet_t procfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
 stdRet_t procfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
 {
       (void)dev;
-      (void)fd;
-      (void)stat;
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (stat) {
-            stat->st_dev   = 0;
-            stat->st_gid   = 0;
-            stat->st_mode  = 0444;
-            stat->st_mtime = 0;
-            stat->st_rdev  = 0;
-            stat->st_size  = 0;
-            stat->st_uid   = 0;
+      if (stat && procmem) {
+            while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+            struct fileinfo *fileInf = ListGetItemDataByID(procmem->flist, fd);
+            GiveMutex(procmem->mtx);
 
-            status = STD_RET_OK;
+            if (fileInf){
+                  if (fileInf->taskFile >= COUNT_OF_TASK_FILE) {
+                        goto procfs_fstat_end;
+                  }
+
+                  struct taskstat taskInfo;
+
+                  if (moni_GetTaskHdlStat(fileInf->taskHdl, &taskInfo) != STD_RET_OK) {
+                        goto procfs_fstat_end;
+                  }
+
+                  stat->st_dev   = 0;
+                  stat->st_mode  = 0444;
+                  stat->st_mtime = 0;
+                  stat->st_rdev  = 0;
+                  stat->st_size  = 0;
+                  stat->st_gid   = 0;
+                  stat->st_uid   = 0;
+
+                  ch_t data[12] = {0};
+
+                  switch (fileInf->taskFile) {
+                  case TASK_FILE_CPULOAD:
+                        stat->st_size = 3;
+                        break;
+
+                  case TASK_FILE_FREESTACK:
+                        stat->st_size = snprintf(data, sizeof(data), "%u", taskInfo.taskFreeStack);
+                        break;
+
+                  case TASK_FILE_NAME:
+                        stat->st_size = strlen(taskInfo.taskName);
+                        break;
+
+                  case TASK_FILE_OPENFILES:
+                        stat->st_size = snprintf(data, sizeof(data), "%u", taskInfo.fileUsage);
+                        break;
+
+                  case TASK_FILE_PRIO:
+                        stat->st_size = snprintf(data, sizeof(data), "%d", taskInfo.taskPriority);
+                        break;
+
+                  case TASK_FILE_USEDMEM:
+                        stat->st_size = snprintf(data, sizeof(data), "%u", taskInfo.memUsage);
+                        break;
+                  }
+
+                  status = STD_RET_OK;
+            }
       }
 
+      procfs_fstat_end:
       return status;
 }
 
@@ -784,7 +827,15 @@ stdRet_t procfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
       stdRet_t status = STD_RET_ERROR;
 
       if (path && stat) {
-            status = procfs_fstat(dev, 0, stat);
+            stat->st_dev   = 0;
+            stat->st_gid   = 0;
+            stat->st_mode  = 0444;
+            stat->st_mtime = 0;
+            stat->st_rdev  = 0;
+            stat->st_size  = 0;
+            stat->st_uid   = 0;
+
+            status = STD_RET_OK;
       }
 
       return status;
