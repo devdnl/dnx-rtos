@@ -578,7 +578,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
             appHdl->cwd    = cdpath;
             TaskResumeAll();
 
-            /* DNLTODO terminal must suspend and will be resumed when application was killed */
+            /* DNLTODO terminal must suspend and will be resumed when application is killed */
 
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
