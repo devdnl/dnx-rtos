@@ -177,8 +177,8 @@ void Initd(void *arg)
 
       /* something about board and system */
       kprint("\x1B[32m\x1B[1m");
-      kprint("%s/%s\x1B[0m\n", SystemGetOSName(), SystemGetKernelName());
-      kprint("by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n");
+      kprint("%s/%s\x1B[0m by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n",
+             SystemGetOSName(), SystemGetKernelName());
 
       /* driver initialization */
       InitDrv("tty1", "/dev/tty1");

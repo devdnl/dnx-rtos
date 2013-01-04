@@ -216,7 +216,7 @@ stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const
 
             struct taskstat taskdata;
 
-            if (strncmp(path, "/"DIR_TASKID_STR"/", 8) == 0) {
+            if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
                   path = strchr(path + 1, '/') + 1;
 
                   if (path == NULL) {
@@ -268,7 +268,7 @@ stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const
                         }
                         GiveMutex(procmem->mtx);
                   }
-            } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", 8) == 0) {
+            } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", strlen(DIR_TASKNAME_STR) + 2) == 0) {
                   path = strrchr(path, '/');
 
                   if (path == NULL) {
@@ -280,7 +280,7 @@ stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const
                   u16_t n = moni_GetTaskCount();
                   u16_t i = 0;
 
-                  while (n-- && moni_GetTaskStat(i, &taskdata) == STD_RET_OK) {
+                  while (n-- && moni_GetTaskStat(i++, &taskdata) == STD_RET_OK) {
                         if (strcmp(path , taskdata.taskName) == 0) {
                               struct fileinfo *fileInf = calloc(1, sizeof(struct fileinfo));
 

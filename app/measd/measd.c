@@ -115,13 +115,10 @@ stdRet_t appmain(ch_t *argv)
 {
       (void)argv;
 
-      /* check if measure daemon is already running */
-      FILE_t *testdaemon = fopen("/proc/taskname/"MEASD_NAME, "r");
-
-      if (testdaemon) {
-            fclose(testdaemon);
-            kprint("%s daemon is already started!\n", MEASD_NAME);
-            return STD_RET_ERROR;
+      /* check if application is started as daemon */
+      if (stdout != NULL) {
+            printf("%s can be started only as daemon!\n", MEASD_NAME);
+            goto measd_exit;
       }
 
       /* clear measurement */
@@ -234,6 +231,7 @@ stdRet_t appmain(ch_t *argv)
             SleepUntil(&LastWakeTime, SLEEP_TIME);
       }
 
+      measd_exit:
       return STD_RET_OK;
 }
 

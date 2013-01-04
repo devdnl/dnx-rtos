@@ -436,6 +436,12 @@ stdRet_t appmain(ch_t *argv)
 {
       (void)argv;
 
+      /* check if application is started as daemon */
+      if (stdout != NULL) {
+            printf("%s can be started only as daemon!\n", HTTPD_NAME);
+            goto httpd_exit;
+      }
+
       struct tcp_pcb *pcb;
 
       htmlBuffer = malloc(BFR_SIZE);
@@ -456,6 +462,7 @@ stdRet_t appmain(ch_t *argv)
             Sleep(2000);
       }
 
+      httpd_exit:
       return STD_RET_OK;
 }
 
