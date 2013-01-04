@@ -264,10 +264,13 @@ stdRet_t KillApp(app_t *appArgs)
 void TerminateApplication(app_t *appObj, stdRet_t exitCode)
 {
       /* set exit code */
-      appObj->exitCode   = exitCode;
-      appObj->taskHandle = NULL;
+      appObj->exitCode = exitCode;
 
-      /* DNLTODO here killed application must resume parent if sleep */
+      TaskSuspend(appObj->parentTaskHandle);
+      TaskResume(appObj->parentTaskHandle);
+
+      appObj->taskHandle       = NULL;
+      appObj->parentTaskHandle = NULL;
 
       TaskTerminate();
 }

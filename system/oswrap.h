@@ -34,6 +34,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "basic_types.h"
+#include "ostypes.h"
 #include "systypes.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -47,6 +48,8 @@ extern "C" {
 #define MINIMAL_STACK_SIZE                configMINIMAL_STACK_SIZE
 #define THIS_TASK                         NULL
 #define EMPTY_TASK                        UINT32_MAX
+#define OS_OK                             pdTRUE
+#define OS_NOT_OK                         pdFALSE
 
 /** TASK LEVEL DEFINITIONS */
 #define TaskTerminate()                   TaskDelete(TaskGetCurrentTaskHandle())
@@ -92,17 +95,10 @@ extern "C" {
 #define GiveSemBinFromISR(sem, woke)      xSemaphoreGiveFromISR(sem, woke)
 #define GiveSemCntFromISR(sem, woke)      xSemaphoreGiveFromISR(sem, woke)
 
-#define OS_OK                             pdTRUE
-#define OS_NOT_OK                         pdFALSE
-
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-typedef xTaskHandle      task_t;
-typedef pdTASK_CODE      taskCode_t;
-typedef xSemaphoreHandle sem_t;
-typedef xSemaphoreHandle mutex_t;
 
 
 /*==================================================================================================

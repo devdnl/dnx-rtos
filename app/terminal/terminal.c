@@ -582,7 +582,11 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
-                  Sleep(250);
+                  if (TaskGetName(appHdl->taskHandle) == NULL) {
+                        break;
+                  }
+
+                  Sleep(1000);
             }
 
             KillApp(appHdl);

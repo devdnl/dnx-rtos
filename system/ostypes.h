@@ -1,11 +1,11 @@
-#ifndef SYSTYPES_H_
-#define SYSTYPES_H_
+#ifndef OSTYPES_H_
+#define OSTYPES_H_
 /*=============================================================================================*//**
-@file    systypes.h
+@file    ostypes.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains all system types
+@brief   This file contains operating system types
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -35,15 +35,15 @@ extern "C" {
 ==================================================================================================*/
 #include <stddef.h>
 #include "basic_types.h"
-#include "ostypes.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-/* disable conflicting types from standard libraries */
-#undef stdin
-#undef stdout
 
 
 /*==================================================================================================
@@ -54,110 +54,10 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-/** default system status */
-enum status_enum
-{
-      STD_RET_OK      = 0,
-      STD_RET_ERROR   = 1,
-      STD_RET_UNKNOWN = 127,
-};
-
-/** file types */
-typedef enum
-{
-      FILE_TYPE_REGULAR,
-      FILE_TYPE_DIR,
-      FILE_TYPE_DRV,
-      FILE_TYPE_LINK
-} tfile_t;
-
-/** universal status type */
-typedef signed char stdRet_t;
-
-
-/** device number type */
-typedef size_t devx_t;
-
-
-/** task/application ID */
-typedef size_t PID_t;
-
-
-/** IO request type */
-typedef u8_t IORq_t;
-
-
-/** file descriptor */
-typedef u32_t fd_t;
-
-
-/** file type */
-typedef struct
-{
-      devx_t   dev;
-      fd_t     fd;
-      stdRet_t (*f_close)(devx_t dev, fd_t fd);
-      size_t   (*f_write)(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*f_read )(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*f_ioctl)(devx_t dev, fd_t fd, IORq_t iorq, void *data);
-      stdRet_t (*f_stat )(devx_t dev, fd_t fd, void *stat);
-      size_t   f_seek;
-} FILE_t;
-
-
-/** directory entry */
-typedef struct
-{
-      ch_t   *name;
-      size_t  size;
-      tfile_t filetype;
-} dirent_t;
-
-
-/** directory type */
-typedef struct dir_s
-{
-      dirent_t  (*rddir)(devx_t dev, struct dir_s *dir);
-      stdRet_t  (*cldir)(devx_t dev, struct dir_s *dir);
-      size_t    items;
-      size_t    seek;
-      void     *dd;
-      devx_t    dev;
-} DIR_t;
-
-
-/** application standard arguments type */
-typedef struct appArgs_struct
-{
-      void    *arg;                       /* pointer to the argument */
-      FILE_t  *stdin;                     /* file used only to read keyboard */
-      FILE_t  *stdout;                    /* file used only to write to terminal */
-      task_t   taskHandle;                /* task handling for children */
-      task_t   parentTaskHandle;          /* task handling for parent */
-//      sem_t    sem;                       /* semaphore used to sleep parent app if necessary */ /* DNLFIXME */
-      ch_t    *cwd;                       /* current working path */
-      stdRet_t exitCode;                  /* exit code */
-} app_t;
-
-
-/** time structure */
-typedef struct time_struct
-{
-      u8_t seconds;     /**< [BCD] */
-      u8_t minutes;     /**< [BCD] */
-      u8_t hours;       /**< [BCD] */
-} bcdTime_t;
-
-
-/** date structure */
-typedef struct date_struct
-{
-      u8_t weekday;     /**< [BCD] */
-      u8_t day;         /**< [BCD] */
-      u8_t month;       /**< [BCD] */
-      u8_t year;        /**< [BCD] */
-} bcdDate_t;
-
+typedef xTaskHandle      task_t;
+typedef pdTASK_CODE      taskCode_t;
+typedef xSemaphoreHandle sem_t;
+typedef xSemaphoreHandle mutex_t;
 
 /*==================================================================================================
                                      Exported object declarations
@@ -173,7 +73,7 @@ typedef struct date_struct
 }
 #endif
 
-#endif /* SYSTYPES_H_ */
+#endif /* OSTYPES_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/
