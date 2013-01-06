@@ -228,7 +228,7 @@ SIZE = arm-none-eabi-size
 # C compiler flags
 CFLAGS_micro = -c -mcpu=$(CPU) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
                -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
-               -D$(MCU) -D$(TARGET) -DGCC_ARMCM3 -D$(ARCH)
+               -D$(MCU) -D$(TARGET) -DGCC_ARMCM3 -DARCH=$(ARCH)
 
 CFLAGS_qemu  = $(CFLAGS_micro)
 

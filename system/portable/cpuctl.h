@@ -49,6 +49,7 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
+extern void  cpuctl_BasicConfig(void);
 extern void  cpuctl_SystemReboot(void);
 extern void  cpuctl_CfgTimeStatCnt(void);
 extern void  cpuctl_TaskSwitchedIn(void);

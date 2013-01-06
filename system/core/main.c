@@ -32,9 +32,8 @@ extern "C" {
                                              Include files
 ==================================================================================================*/
 #include "memman.h"
-#include "taskmoni.h"
+#include "cpuctl.h"
 #include "initd.h"
-#include "misc.h"
 
 
 /*==================================================================================================
@@ -50,7 +49,6 @@ extern "C" {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static void basicConf(void);
 
 
 /*==================================================================================================
@@ -75,33 +73,18 @@ static void basicConf(void);
 int main(void)
 {
       /* basic configuration depending on architecture */
-      basicConf();
+      cpuctl_BasicConfig();
 
       /* dynamic memory management initialization */
       mm_init();
 
-      /* create init task */
+      /* create initialize task */
       TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, -1, NULL);
 
       /* start OS */
       vTaskStartScheduler();
 
       return 0;
-}
-
-
-//================================================================================================//
-/**
- * @brief Basic configuration
- * Function configure the basic of the basic configuration of CPU. This function is depending on
- * CPU architecture.
- */
-//================================================================================================//
-static void basicConf(void)
-{
-      /* set interrupt vectors and NVIC priority */
-      NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
-      NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 }
 
 
