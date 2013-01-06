@@ -134,7 +134,6 @@ typedef struct appArgs_struct
       FILE_t  *stdout;                    /* file used only to write to terminal */
       task_t   taskHandle;                /* task handling for children */
       task_t   parentTaskHandle;          /* task handling for parent */
-//      sem_t    sem;                       /* semaphore used to sleep parent app if necessary */ /* DNLFIXME */
       ch_t    *cwd;                       /* current working path */
       stdRet_t exitCode;                  /* exit code */
 } app_t;

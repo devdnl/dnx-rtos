@@ -45,9 +45,9 @@ extern "C" {
 #define printf(...)                             printt(stdout, __VA_ARGS__)
 #define snprintf(stream, size, ...)             snprintb(stream, size, __VA_ARGS__)
 #define scanf(format, result)                   scant(stdin, stdout, format, result)
-#define putChar(c)                              putChart(stdout, c)
-#define getChar()                               getChart(stdin)
-#define ugetChar()                              ugetChart(stdin)
+#define putchar(c)                              putChart(stdout, c)
+#define getchar()                               getChart(stdin)
+#define ugetchar()                              ugetChart(stdin)
 #define atoi(string, base, valuePtr)            a2i(string, base, valuePtr)
 #define getcwd(buf, size)                       strncpy(buf, cwd, size)
 

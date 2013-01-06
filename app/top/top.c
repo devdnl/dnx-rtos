@@ -65,7 +65,7 @@ stdRet_t appmain(ch_t *argv)
 
       u8_t divcnt = 10;
 
-      while (ugetChar() != 'q') {
+      while (ugetchar() != 'q') {
             Sleep(100);
 
             if (divcnt >= 10) {

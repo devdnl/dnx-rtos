@@ -578,10 +578,10 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
             appHdl->cwd    = cdpath;
             TaskResumeAll();
 
-            /* DNLTODO terminal must suspend and will be resumed when application is killed */
-
+            /* waiting for application exit */
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
+                  /* check if application exist */
                   if (TaskGetName(appHdl->taskHandle) == NULL) {
                         break;
                   }
@@ -674,7 +674,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
 
                   do
                   {
-                        character = getChar();
+                        character = getchar();
                   }
                   while (!(character == ASCII_LF || character == ASCII_CR));
 

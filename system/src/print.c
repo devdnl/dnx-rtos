@@ -510,27 +510,34 @@ void putChart(FILE_t *stdout, ch_t c)
 
 //================================================================================================//
 /**
- * @brief Function get character from virtual terminal
+ * @brief Function get character from file
  *
- * @param stdin            virtual terminal (keyboard)
+ * @param stdin            source file
  *
  * @retval character
  */
 //================================================================================================//
 ch_t getChart(FILE_t *stdin)
 {
-      ch_t chr = 0;
+      ch_t  chr  = 0;
+      int_t dcnt = 0;
 
       if (stdin)
       {
-            while (TRUE)
+            while (fread(&chr, sizeof(chr), 1, stdin) < 1)
             {
-                  if ((fread(&chr, sizeof(chr), 1, stdin) == 1) && chr)
+                  if (dcnt >= 60000)
                   {
-                        break;
+                        TaskDelay(200);
+                  }
+                  else if (dcnt >= 2000)
+                  {
+                        dcnt += 100;
+                        TaskDelay(100);
                   }
                   else
                   {
+                        dcnt += 20;
                         TaskDelay(20);
                   }
             }
@@ -544,7 +551,7 @@ ch_t getChart(FILE_t *stdin)
 /**
  * @brief Function get character from virtual terminal in unblocking mode
  *
- * @param tty            virtual terminal number
+ * @param stdin            source file
  *
  * @retval character
  */
