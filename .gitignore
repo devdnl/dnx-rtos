@@ -1,7 +1,5 @@
-01_binaries/
+target/
 .settings/
-doc/dsys/html/
-doc/dsys/latex/
 *.o
 *.lst
 *.src

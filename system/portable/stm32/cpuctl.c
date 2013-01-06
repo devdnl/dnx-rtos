@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    top.c
+@file    cpuctl.c
 
 @author  Daniel Zorychta
 
-@brief   Application show CPU load
+@brief   This file support CPU control
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,20 +24,23 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "top.h"
-#include "regapp.h"
-#include <string.h>
+#include "cpuctl.h"
+#include "stm32f10x.h"
+#include "oswrap.h"
 
-/* Begin of application section declaration */
-APPLICATION(top)
-APP_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define APB1FREQ                    36000000UL
+#define TIM2FREQ                    1000000UL
 
 
 /*==================================================================================================
@@ -46,8 +49,14 @@ APP_SEC_BEGIN
 
 
 /*==================================================================================================
+                                      Local function prototypes
+==================================================================================================*/
+
+
+/*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+static u32_t TotalCPUTime;
 
 
 /*==================================================================================================
@@ -56,59 +65,89 @@ APP_SEC_BEGIN
 
 //================================================================================================//
 /**
- * @brief clear main function
+ * @brief Restart CPU
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+void cpuctl_SystemReboot(void)
 {
-      (void) argv;
-
-      u8_t divcnt = 10;
-
-      while (ugetchar() != 'q') {
-            Sleep(100);
-
-            if (divcnt >= 10) {
-                  u8_t n = SystemGetMoniTaskCount();
-
-                  printf("\x1B[2J\x1B[HPress q to quit\n");
-
-                  printf("Total tasks: %u\n", n);
-
-                  printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                         SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
-
-                  printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
-
-                  for (u16_t i = 0; i < n; i++) {
-                        struct taskstat taskinfo;
-
-                        if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
-                                     taskinfo.handle,
-                                     taskinfo.priority,
-                                     taskinfo.freeStack,
-                                     taskinfo.memUsage,
-                                     taskinfo.openFiles,
-                                     ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
-                                     ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
-                                     taskinfo.name);
-                        } else {
-                              break;
-                        }
-                  }
-
-                  divcnt = 0;
-            } else {
-                  divcnt++;
-            }
-      }
-
-      return STD_RET_OK;
+      NVIC_SystemReset();
 }
 
-/* End of application section declaration */
-APP_SEC_END
+
+//================================================================================================//
+/**
+ * @brief Start counter used in CPU load measurement
+ */
+//================================================================================================//
+void cpuctl_CfgTimeStatCnt(void)
+{
+      /* enable clock */
+      RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
+
+      /* reset timer */
+      RCC->APB1RSTR |= RCC_APB1RSTR_TIM2RST;
+      RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
+
+      /* configure timer */
+      TIM2->PSC = (APB1FREQ/TIM2FREQ) - 1;
+      TIM2->ARR = 0xFFFF;
+      TIM2->CR1 = TIM_CR1_CEN;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function called after task go to ready state
+ */
+//================================================================================================//
+void cpuctl_TaskSwitchedIn(void)
+{
+      TIM2->CNT = 0;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function called when task go out ready state
+ */
+//================================================================================================//
+void cpuctl_TaskSwitchedOut(void)
+{
+      u16_t  cnt     = TIM2->CNT;
+      task_t taskhdl = TaskGetCurrentTaskHandle();
+      u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
+      TotalCPUTime  += cnt;
+      TaskSetTag(taskhdl, (void*)tmp);
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns CPU total time
+ *
+ * @return CPU total time
+ */
+//================================================================================================//
+u32_t cpuctl_GetCPUTotalTime(void)
+{
+      return TotalCPUTime;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function clear CPU total time
+ */
+//================================================================================================//
+void cpuctl_ClearCPUTotalTime(void)
+{
+      TotalCPUTime = 0;
+}
+
+
+#ifdef __cplusplus
+}
+#endif
 
 /*==================================================================================================
                                             End of file

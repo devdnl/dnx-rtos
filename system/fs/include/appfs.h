@@ -1,9 +1,11 @@
+#ifndef APPFS_H_
+#define APPFS_H_
 /*=============================================================================================*//**
-@file    top.c
+@file    appfs.h
 
 @author  Daniel Zorychta
 
-@brief   Application show CPU load
+@brief   This file implement application file system
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,92 +26,57 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "top.h"
-#include "regapp.h"
-#include <string.h>
+#include "vfs.h"
 
-/* Begin of application section declaration */
-APPLICATION(top)
-APP_SEC_BEGIN
 
 /*==================================================================================================
-                                  Local symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                      Local object definitions
+                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                        Function definitions
+                                     Exported function prototypes
 ==================================================================================================*/
+extern stdRet_t appfs_init   (devx_t dev);
+extern stdRet_t appfs_open   (devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
+extern stdRet_t appfs_close  (devx_t dev, fd_t fd);
+extern size_t   appfs_write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+extern size_t   appfs_read   (devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+extern stdRet_t appfs_ioctl  (devx_t dev, fd_t fd, IORq_t iorq, void *data);
+extern stdRet_t appfs_fstat  (devx_t dev, fd_t fd, struct vfs_stat *stat);
+extern stdRet_t appfs_mkdir  (devx_t dev, const ch_t *path);
+extern stdRet_t appfs_mknod  (devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg);
+extern stdRet_t appfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir);
+extern stdRet_t appfs_remove (devx_t dev, const ch_t *path);
+extern stdRet_t appfs_rename (devx_t dev, const ch_t *oldName, const ch_t *newName);
+extern stdRet_t appfs_chmod  (devx_t dev, const ch_t *path, u32_t mode);
+extern stdRet_t appfs_chown  (devx_t dev, const ch_t *path, u16_t owner, u16_t group);
+extern stdRet_t appfs_stat   (devx_t dev, const ch_t *path, struct vfs_stat *stat);
+extern stdRet_t appfs_statfs (devx_t dev, struct vfs_statfs *statfs);
+extern stdRet_t appfs_release(devx_t dev);
 
-//================================================================================================//
-/**
- * @brief clear main function
- */
-//================================================================================================//
-stdRet_t appmain(ch_t *argv)
-{
-      (void) argv;
-
-      u8_t divcnt = 10;
-
-      while (ugetchar() != 'q') {
-            Sleep(100);
-
-            if (divcnt >= 10) {
-                  u8_t n = SystemGetMoniTaskCount();
-
-                  printf("\x1B[2J\x1B[HPress q to quit\n");
-
-                  printf("Total tasks: %u\n", n);
-
-                  printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                         SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
-
-                  printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
-
-                  for (u16_t i = 0; i < n; i++) {
-                        struct taskstat taskinfo;
-
-                        if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
-                                     taskinfo.handle,
-                                     taskinfo.priority,
-                                     taskinfo.freeStack,
-                                     taskinfo.memUsage,
-                                     taskinfo.openFiles,
-                                     ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
-                                     ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
-                                     taskinfo.name);
-                        } else {
-                              break;
-                        }
-                  }
-
-                  divcnt = 0;
-            } else {
-                  divcnt++;
-            }
-      }
-
-      return STD_RET_OK;
+#ifdef __cplusplus
 }
+#endif
 
-/* End of application section declaration */
-APP_SEC_END
-
+#endif /* APPFS_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

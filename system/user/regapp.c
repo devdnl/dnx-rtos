@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    top.c
+@file    regapp.c
 
 @author  Daniel Zorychta
 
-@brief   Application show CPU load
+@brief   This file is used to registration applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,16 +24,24 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "top.h"
 #include "regapp.h"
 #include <string.h>
 
-/* Begin of application section declaration */
-APPLICATION(top)
-APP_SEC_BEGIN
+/* include here applications headers */
+#include "terminal.h"
+#include "date.h"
+#include "top.h"
+#include "httpd.h"
+#include "measd.h"
+#include "cat.h"
+
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -46,7 +54,25 @@ APP_SEC_BEGIN
 
 
 /*==================================================================================================
+                                      Local function prototypes
+==================================================================================================*/
+
+
+/*==================================================================================================
                                       Local object definitions
+==================================================================================================*/
+static const regAppData_t appList[] = {
+      {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
+      {DATE_NAME    , date    , DATE_STACK_SIZE    },
+      {TOP_NAME     , top     , TOP_STACK_SIZE     },
+      {HTTPD_NAME   , httpd   , HTTPD_STACK_SIZE   },
+      {MEASD_NAME   , measd   , MEASD_STACK_SIZE   },
+      {CAT_NAME     , cat     , CAT_STACK_SIZE     },
+};
+
+
+/*==================================================================================================
+                                     Exported object definitions
 ==================================================================================================*/
 
 
@@ -56,59 +82,57 @@ APP_SEC_BEGIN
 
 //================================================================================================//
 /**
- * @brief clear main function
+ * @brief Function find in the application list selected application's parameters
+ *
+ * @param *appName            application name
+ *
+ * @return application informations needed to run
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+regAppData_t regapp_GetAppData(const ch_t *appName)
 {
-      (void) argv;
+      regAppData_t appNULL = {NULL, NULL, 0};
 
-      u8_t divcnt = 10;
-
-      while (ugetchar() != 'q') {
-            Sleep(100);
-
-            if (divcnt >= 10) {
-                  u8_t n = SystemGetMoniTaskCount();
-
-                  printf("\x1B[2J\x1B[HPress q to quit\n");
-
-                  printf("Total tasks: %u\n", n);
-
-                  printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                         SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
-
-                  printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
-
-                  for (u16_t i = 0; i < n; i++) {
-                        struct taskstat taskinfo;
-
-                        if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
-                                     taskinfo.handle,
-                                     taskinfo.priority,
-                                     taskinfo.freeStack,
-                                     taskinfo.memUsage,
-                                     taskinfo.openFiles,
-                                     ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
-                                     ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
-                                     taskinfo.name);
-                        } else {
-                              break;
-                        }
-                  }
-
-                  divcnt = 0;
-            } else {
-                  divcnt++;
+      for (int_t i = 0; i < ARRAY_SIZE(appList); i++) {
+            if (strcmp(appList[i].appName, appName) == 0) {
+                  appNULL = appList[i];
+                  break;
             }
       }
 
-      return STD_RET_OK;
+      return appNULL;
 }
 
-/* End of application section declaration */
-APP_SEC_END
+
+//================================================================================================//
+/**
+ * @brief Function returns pointer to application list
+ *
+ * @return pointer to application list
+ */
+//================================================================================================//
+regAppData_t *regapp_GetAppListPtr(void)
+{
+      return (regAppData_t*)appList;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns application count
+ *
+ * @return application count
+ */
+//================================================================================================//
+int_t regapp_GetAppCount(void)
+{
+      return ARRAY_SIZE(appList);
+}
+
+
+#ifdef __cplusplus
+}
+#endif
 
 /*==================================================================================================
                                             End of file

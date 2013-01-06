@@ -1,9 +1,11 @@
+#ifndef REGAPP_H_
+#define REGAPP_H_
 /*=============================================================================================*//**
-@file    top.c
+@file    regapp.h
 
 @author  Daniel Zorychta
 
-@brief   Application show CPU load
+@brief   This file is used to registration applications
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,92 +26,48 @@
 
 *//*==============================================================================================*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "top.h"
-#include "regapp.h"
-#include <string.h>
-
-/* Begin of application section declaration */
-APPLICATION(top)
-APP_SEC_BEGIN
+#include "systypes.h"
 
 /*==================================================================================================
-                                  Local symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                  Exported types, enums definitions
 ==================================================================================================*/
-
-
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
-
-//================================================================================================//
-/**
- * @brief clear main function
- */
-//================================================================================================//
-stdRet_t appmain(ch_t *argv)
+typedef struct
 {
-      (void) argv;
+      const ch_t *appName;
+      void       (*appPtr)(void *argv);
+      u32_t      stackSize;
+} regAppData_t;
 
-      u8_t divcnt = 10;
 
-      while (ugetchar() != 'q') {
-            Sleep(100);
+/*==================================================================================================
+                                     Exported object declarations
+==================================================================================================*/
 
-            if (divcnt >= 10) {
-                  u8_t n = SystemGetMoniTaskCount();
 
-                  printf("\x1B[2J\x1B[HPress q to quit\n");
+/*==================================================================================================
+                                     Exported function prototypes
+==================================================================================================*/
+extern regAppData_t  regapp_GetAppData   (const ch_t *appName);
+extern regAppData_t *regapp_GetAppListPtr(void);
+extern int_t         regapp_GetAppCount  (void);
 
-                  printf("Total tasks: %u\n", n);
-
-                  printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                         SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
-
-                  printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
-
-                  for (u16_t i = 0; i < n; i++) {
-                        struct taskstat taskinfo;
-
-                        if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
-                                     taskinfo.handle,
-                                     taskinfo.priority,
-                                     taskinfo.freeStack,
-                                     taskinfo.memUsage,
-                                     taskinfo.openFiles,
-                                     ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
-                                     ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
-                                     taskinfo.name);
-                        } else {
-                              break;
-                        }
-                  }
-
-                  divcnt = 0;
-            } else {
-                  divcnt++;
-            }
-      }
-
-      return STD_RET_OK;
+#ifdef __cplusplus
 }
+#endif
 
-/* End of application section declaration */
-APP_SEC_END
-
+#endif /* REGAPP_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

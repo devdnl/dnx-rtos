@@ -27,32 +27,47 @@
 ####################################################################################################
 
 ####################################################################################################
+# PROJECT CONFIGURATION
+####################################################################################################
+# project name
+PROJECT = main
+
+# project architecture
+ARCH = stm32
+
+# cpu type
+CPU = cortex-m3
+
+# mcu type
+MCU = STM32F10X_CL
+
+# optymalization
+OPT = s
+
+# linker script
+LD_SCRIPT_micro = system/portable/stm32/stm32f107xx.ld
+LD_SCRIPT_qemu  = system/portable/qemu/stm32f107xx_qemu.ld
+
+####################################################################################################
 # INSERT HERE C SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC = $(sort \
-   app/regapp.c \
    app/cat/cat.c \
    app/date/date.c \
    app/measd/measd.c \
    app/terminal/terminal.c \
    app/httpd/httpd.c \
    app/top/top.c \
-   cpu/stm32/stm32f10x_vectors.c \
-   drivers/regdrv.c \
-   drivers/ds1307/ds1307.c \
-   drivers/ether/ether.c \
-   drivers/gpio/gpio.c \
-   drivers/i2c/i2c.c \
-   drivers/pll/pll.c \
-   drivers/tty/tty.c \
-   drivers/uart/uart.c \
-   drivers/mpl115a2/mpl115a2.c \
-   kernel/croutine.c \
-   kernel/list.c \
-   kernel/queue.c \
-   kernel/tasks.c \
-   kernel/timers.c \
-   kernel/portable/GCC/ARM_CM3/port.c \
+   \
+   drivers/ds1307/arch/noarch/ds1307.c \
+   drivers/ether/arch/stm32/ether.c \
+   drivers/gpio/arch/stm32/gpio.c \
+   drivers/i2c/arch/stm32/i2c.c \
+   drivers/pll/arch/stm32/pll.c \
+   drivers/tty/arch/noarch/tty.c \
+   drivers/uart/arch/stm32/uart.c \
+   drivers/mpl115a2/arch/noarch/mpl115a2.c \
+   \
    lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
@@ -90,20 +105,31 @@ CSRC = $(sort \
    lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    lib/STM32F10x_StdPeriph_Driver/misc.c \
    lib/utils/utils.c \
-   system/src/taskmoni.c \
-   system/src/runtime.c \
-   system/src/cpuctl.c \
-   system/src/hooks.c \
-   system/src/idle.c \
-   system/src/initd.c \
-   system/src/dlist.c \
-   system/src/main.c \
-   system/src/memman.c \
-   system/src/print.c \
-   system/src/procfs.c \
-   system/src/lfs.c \
-   system/src/vfs.c \
-   system/src/oswrap.c \
+   \
+   system/kernel/freertos/Source/croutine.c \
+   system/kernel/freertos/Source/list.c \
+   system/kernel/freertos/Source/queue.c \
+   system/kernel/freertos/Source/tasks.c \
+   system/kernel/freertos/Source/timers.c \
+   system/kernel/freertos/Source/portable/GCC/ARM_CM3/port.c \
+   \
+   system/core/taskmoni.c \
+   system/core/runtime.c \
+   system/core/dlist.c \
+   system/core/main.c \
+   system/core/memman.c \
+   system/core/print.c \
+   system/core/vfs.c \
+   system/user/initd.c \
+   system/user/regapp.c \
+   system/user/regdrv.c \
+   system/fs/procfs.c \
+   system/fs/lfs.c \
+   system/fs/appfs.c \
+   system/portable/stm32/cpuctl.c \
+   system/portable/stm32/stm32f10x_vectors.c \
+   system/portable/rtos/hooks.c \
+   system/portable/rtos/oswrap.c \
    )
 
 ####################################################################################################
@@ -116,17 +142,28 @@ CXXSRC = $(sort \
 # INSERT HERE ASSEMBLER SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 ASRC = $(sort \
-   cpu/startup/cm_startup.s \
+   system/portable/lib/cm_startup.s \
    )
 
 ####################################################################################################
 # INSERT HERE PATHS WITH HEADER FILES ONLY
 ####################################################################################################
 HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
-   cfg \
-   cpu \
-   cpu/CMSIS \
-   kernel/include \
+   drivers/ds1307 \
+   drivers/ether \
+   drivers/gpio \
+   drivers/i2c \
+   drivers/pll \
+   drivers/tty \
+   drivers/uart \
+   drivers/mpl115a2 \
+   system/portable/lib/CMSIS \
+   system/kernel/freertos/Source/include \
+   system/config \
+   system/core/include \
+   system/fs/include \
+   system/user/include \
+   system/portable \
    lib/lwip \
    lib/lwip/include \
    lib/lwip/include/lwip \
@@ -135,28 +172,7 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    lib/lwip/include/netif \
    lib/lwip/port \
    lib/lwip/port/arch \
-   system \
    )
-
-####################################################################################################
-# PROJECT CONFIGURATION
-####################################################################################################
-# project name
-PROJECT = main
-
-# cpu type
-CPU = cortex-m3
-
-# mcu type
-MCU = STM32F10X_CL
-
-# optymalization
-OPT = s
-
-# linker script
-LD_SCRIPT_micro = cpu/stm32/stm32f107xx.ld
-LD_SCRIPT_qemu  = cpu/qemu/stm32f107xx_qemu.ld
-
 
 ####################################################################################################
 ####################################################################################################
@@ -175,16 +191,16 @@ AS_EXT = s
 
 # --------------------------------------------------------------------------------------------------
 # defines project path with binaries
-BIN_LOC = 01_binaries
+BIN_LOC = target
 
 # defines project path with build info
-INFO_LOC = 02_info
+INFO_LOC = $(BIN_LOC)/info
 
 # defines object folder name
-OBJ_LOC = Objects
+OBJ_LOC = obj
 
 # dependencies file name
-DEP_FILE = depends.d
+DEP_FILE = dep.d
 
 # --------------------------------------------------------------------------------------------------
 # C compiler
@@ -212,7 +228,7 @@ SIZE = arm-none-eabi-size
 # C compiler flags
 CFLAGS_micro = -c -mcpu=$(CPU) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
                -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
-               -D$(MCU) -D$(TARGET) -DGCC_ARMCM3
+               -D$(MCU) -D$(TARGET) -DGCC_ARMCM3 -D$(ARCH)
 
 CFLAGS_qemu  = $(CFLAGS_micro)
 
@@ -224,7 +240,7 @@ CXXFLAGS_quemu =
 # linker flags
 LFLAGS_micro = -mcpu=$(CPU) -mthumb -T$(LD_SCRIPT_$(TARGET)) -g -nostartfiles -Wl,--gc-sections -Wall \
                -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-               -D$(TARGET) -DGCC_ARMCM3
+               -D$(TARGET) -DGCC_ARMCM3 -D$(ARCH)
 
 LFLAGS_qemu  = $(LFLAGS_micro)
 
