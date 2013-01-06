@@ -37,19 +37,20 @@ extern "C" {
 #include "oswrap.h"
 #include "memman.h"
 #include "vfs.h"
+#include "config.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /* USER CFG: enable (1) or disable (0) application memory usage monitoring */
-#define APP_MONITOR_MEMORY_USAGE                (1)
+#define APP_MONITOR_MEMORY_USAGE                CONFIG_MONITOR_MEMORY_USAGE
 
 /* USER CFG: enable (1) or disable (0) application opened file monitoring */
-#define APP_MONITOR_FILE_USAGE                  (1)
+#define APP_MONITOR_FILE_USAGE                  CONFIG_MONITOR_FILE_USAGE
 
 /* USER CFG: enable (1) or disable (0) task CPU load monitoring */
-#define APP_MONITOR_CPU_LOAD                    (1)
+#define APP_MONITOR_CPU_LOAD                    CONFIG_MONITOR_CPU_LOAD
 
 /* ---------------------------------------------------------------------------------------------- */
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */

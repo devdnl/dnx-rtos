@@ -224,7 +224,9 @@ stdRet_t appmain(ch_t *argv)
                   }
 
                   if (fclose(file) != STD_RET_OK)
+                  {
                         kprint("measd: error while closing 'file' file\n");
+                  }
             }
 
             /* sleep in equal periods */

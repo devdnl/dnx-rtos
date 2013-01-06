@@ -216,10 +216,10 @@ app_t *Execd(const ch_t *name, ch_t *argv)
 stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
 {
       if (Execd(name, argv) != NULL) {
-            kprint("%s daemon started\n", name);
+             kprint("%s daemon started\n", name);
             return STD_RET_OK;
       } else {
-            kprint("\x1B[31m%s start failed\x1B[0m\n", name);
+             kprint("\x1B[31m%s start failed\x1B[0m\n", name);
             return STD_RET_ERROR;
       }
 }
@@ -371,7 +371,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
                         default: goto ParseArg_end;
                         }
 
-                        a2i(argv, base, value);
+                        atoi(argv, base, value);
 
                         status = STD_RET_OK;
                   }

@@ -36,19 +36,27 @@ extern "C" {
 #include <stdarg.h>
 #include "basic_types.h"
 #include "systypes.h"
+#include "config.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** translate function to STDC */
-#define printf(...)                             printt(stdout, __VA_ARGS__)
-#define snprintf(stream, size, ...)             snprintb(stream, size, __VA_ARGS__)
-#define scanf(format, result)                   scant(stdin, stdout, format, result)
-#define putchar(c)                              putChart(stdout, c)
-#define getchar()                               getChart(stdin)
-#define ugetchar()                              ugetChart(stdin)
-#define atoi(string, base, valuePtr)            a2i(string, base, valuePtr)
+#define printf(...)                             pr_printf(stdout, __VA_ARGS__)
+#define fprintf(...)                            pr_printf(__VA_ARGS__)
+#define kprint(...)                             pr_kprint(__VA_ARGS__)
+#define kprintOK()                              pr_kprintOK()
+#define kprintFail()                            pr_kprintFail()
+#define kprintErrorNo(errorNo)                  pr_kprintErrorNo(errorNo)
+#define kprintEnable(path)                      pr_kprintEnable(path)
+#define kprintDisable()                         pr_kprintDisable()
+#define snprintf(stream, size, ...)             pr_snprintf(stream, size, __VA_ARGS__)
+#define scanf(format, result)                   pr_scanf(stdin, stdout, format, result)
+#define putchar(c)                              pr_putchar(stdout, c)
+#define getchar()                               pr_getchar(stdin)
+#define ugetchar()                              pr_ugetchar(stdin)
+#define atoi(string, base, valuePtr)            pr_atoi(string, base, valuePtr)
 #define getcwd(buf, size)                       strncpy(buf, cwd, size)
 
 /** VT100 terminal commands */
@@ -102,21 +110,36 @@ extern "C" {
 
 /*==================================================================================================
                                      Exported function prototypes
-//==================================================================================================*/
-//extern ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired);
-extern ch_t  *a2i(ch_t *string, u8_t base, i32_t *value);
-extern u32_t snprintb(ch_t *stream, u32_t size, const ch_t *format, ...);
-extern u32_t kprint(const ch_t *format, ...);
-extern u32_t kprintOK(void);
-extern u32_t kprintFail(void);
-extern u32_t kprintErrorNo(i8_t errorNo);
-extern u32_t printt(FILE_t *file, const ch_t *format, ...);
-extern void  kprintEnableOn(ch_t *filename);
-extern void  kprintDisable(void);
-extern void  putChart(FILE_t *stdout, ch_t c);
-extern ch_t  getChart(FILE_t *stdin);
-extern ch_t  ugetChart(FILE_t *stdin);
-extern u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var);
+==================================================================================================*/
+#if (CONFIG_PRINT_ENABLE == 1)
+extern ch_t  *pr_atoi(ch_t *string, u8_t base, i32_t *value);
+extern int_t  pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...);
+extern int_t  pr_kprint(const ch_t *format, ...);
+extern int_t  pr_kprintOK(void);
+extern int_t  pr_kprintFail(void);
+extern int_t  pr_kprintErrorNo(i8_t errorNo);
+extern int_t  pr_printf(FILE_t *file, const ch_t *format, ...);
+extern void   pr_kprintEnable(ch_t *filename);
+extern void   pr_kprintDisable(void);
+extern void   pr_putchar(FILE_t *stdout, ch_t c);
+extern ch_t   pr_getchar(FILE_t *stdin);
+extern ch_t   pr_ugetchar(FILE_t *stdin);
+extern int_t  pr_scanf(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var);
+#else
+#define pr_atoi(string, base, value)                  NULL
+#define pr_snprintf(stream, size, format, ...)        0
+#define pr_kprint(format, ...)                        0
+#define pr_kprintOK()                                 0
+#define pr_kprintFail()                               0
+#define pr_kprintErrorNo(errorNo)                     0
+#define pr_printf(file, format, ...)                  0
+#define pr_kprintEnableOn(filename)                   (void)0
+#define pr_kprintDisable()                            (void)0
+#define pr_putchar(stdout, c)                         (void)0
+#define pr_getchar(stdin)                             '\0'
+#define pr_ugetchar(stdin)                            '\0'
+#define pr_scanf(stdin, stdout, format, var)          0
+#endif
 
 #ifdef __cplusplus
 }

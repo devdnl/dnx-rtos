@@ -173,7 +173,7 @@ void Initd(void *arg)
       /* early initialization - terminal support */
       InitDrv("uart1", "/dev/ttyS0");
       InitDrv("tty0", "/dev/tty0");
-      kprintEnableOn("/dev/tty0");
+      kprintEnable("/dev/tty0");
 
       /* something about board and system */
       kprint("\x1B[32m\x1B[1m");
@@ -200,7 +200,7 @@ void Initd(void *arg)
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
-      kprintEnableOn("/dev/tty3");
+      kprintEnable("/dev/tty3");
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications

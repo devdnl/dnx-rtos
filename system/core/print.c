@@ -33,6 +33,7 @@
 #include "memman.h"
 #include "oswrap.h"
 
+#if (CONFIG_PRINT_ENABLE == 1)
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -59,9 +60,9 @@
                                       Local function prototypes
 ==================================================================================================*/
 static void  reverseBuffer(ch_t *begin, ch_t *end);
-static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg);
+static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format, va_list arg);
 static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8_t zerosRequired);
-static u32_t CalcFormatSize(const ch_t *format, va_list arg);
+static int_t CalcFormatSize(const ch_t *format, va_list arg);
 
 
 /*==================================================================================================
@@ -82,9 +83,11 @@ static FILE_t *kprintFile;
 //================================================================================================//
 /**
  * @brief Enable kprint functionality
+ *
+ * @param filename      path to file used to write kernel log
  */
 //================================================================================================//
-void kprintEnableOn(ch_t *filename)
+void pr_kprintEnable(ch_t *filename)
 {
       /* close file if opened */
       if (kprintFile)
@@ -106,7 +109,7 @@ void kprintEnableOn(ch_t *filename)
  * @brief Disable kprint functionality
  */
 //================================================================================================//
-void kprintDisable(void)
+void pr_kprintDisable(void)
 {
       fclose(kprintFile);
       kprintFile = NULL;
@@ -214,7 +217,7 @@ static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8
  * @return pointer in string when operation was finished
  */
 //================================================================================================//
-ch_t *a2i(ch_t *string, u8_t base, i32_t *value)
+ch_t *pr_atoi(ch_t *string, u8_t base, i32_t *value)
 {
       ch_t   character;
       i32_t  sign      = 1;
@@ -291,13 +294,13 @@ ch_t *a2i(ch_t *string, u8_t base, i32_t *value)
  * @param[in] *format        message format
  * @param[in] arg            argument list
  *
- * @return size of snprint result
+ * @return size of snprintf result
  */
 //================================================================================================//
-static u32_t CalcFormatSize(const ch_t *format, va_list arg)
+static int_t CalcFormatSize(const ch_t *format, va_list arg)
 {
       ch_t  chr;
-      u32_t size = 1;
+      int_t size = 1;
 
       while ((chr = *format++) != ASCII_NULL)
       {
@@ -356,10 +359,10 @@ static u32_t CalcFormatSize(const ch_t *format, va_list arg)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t snprintb(ch_t *stream, u32_t size, const ch_t *format, ...)
+int_t pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...)
 {
       va_list args;
-      u32_t n = 0;
+      int_t   n = 0;
 
       if (stream)
       {
@@ -383,10 +386,10 @@ u32_t snprintb(ch_t *stream, u32_t size, const ch_t *format, ...)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t printt(FILE_t *file, const ch_t *format, ...)
+int_t pr_printf(FILE_t *file, const ch_t *format, ...)
 {
       va_list args;
-      u32_t n = 0;
+      int_t   n = 0;
 
       if (file)
       {
@@ -422,15 +425,15 @@ u32_t printt(FILE_t *file, const ch_t *format, ...)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t kprint(const ch_t *format, ...)
+int_t pr_kprint(const ch_t *format, ...)
 {
       va_list args;
-      u32_t   n = 0;
+      int_t   n = 0;
 
       if (kprintFile)
       {
             va_start(args, format);
-            u32_t size = CalcFormatSize(format, args);
+            int_t size = CalcFormatSize(format, args);
             va_end(args);
 
             ch_t *buffer = calloc(size, sizeof(ch_t));
@@ -458,9 +461,9 @@ u32_t kprint(const ch_t *format, ...)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t kprintOK(void)
+int_t pr_kprintOK(void)
 {
-      return kprint("\r\x1B[72C[\x1B[32m  OK  \x1B[0m]\n");
+      return pr_kprint("\r\x1B[72C[\x1B[32m  OK  \x1B[0m]\n");
 }
 
 
@@ -471,9 +474,9 @@ u32_t kprintOK(void)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t kprintFail(void)
+int_t pr_kprintFail(void)
 {
-      return kprint("\r\x1B[72C[\x1B[31m FAIL \x1B[0m]\n");
+      return pr_kprint("\r\x1B[72C[\x1B[31m FAIL \x1B[0m]\n");
 }
 
 
@@ -484,9 +487,9 @@ u32_t kprintFail(void)
  * @retval number of written characters
  */
 //================================================================================================//
-u32_t kprintErrorNo(i8_t errorNo)
+int_t pr_kprintErrorNo(i8_t errorNo)
 {
-      return kprint("\r\x1B[72C[\x1B[31m Er%d \x1B[0m]\n", errorNo);
+      return pr_kprint("\r\x1B[72C[\x1B[31m Er%d \x1B[0m]\n", errorNo);
 }
 
 
@@ -498,7 +501,7 @@ u32_t kprintErrorNo(i8_t errorNo)
  * @param c                   character
  */
 //================================================================================================//
-void putChart(FILE_t *stdout, ch_t c)
+void pr_putchar(FILE_t *stdout, ch_t c)
 {
       if (stdout)
       {
@@ -517,7 +520,7 @@ void putChart(FILE_t *stdout, ch_t c)
  * @retval character
  */
 //================================================================================================//
-ch_t getChart(FILE_t *stdin)
+ch_t pr_getchar(FILE_t *stdin)
 {
       ch_t  chr  = 0;
       u16_t dcnt = 0;
@@ -556,7 +559,7 @@ ch_t getChart(FILE_t *stdin)
  * @retval character
  */
 //================================================================================================//
-ch_t ugetChart(FILE_t *stdin)
+ch_t pr_ugetchar(FILE_t *stdin)
 {
       ch_t chr = 0;
 
@@ -581,11 +584,11 @@ ch_t ugetChart(FILE_t *stdin)
  * @return number of printed characters
  */
 //================================================================================================//
-static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
+static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format, va_list arg)
 {
       #define putCharacter(character)           \
       {                                         \
-            if (slen < size)                    \
+            if ((size_t)slen < size)            \
             {                                   \
                   *stream++ = character;        \
                   slen++;                       \
@@ -598,7 +601,7 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
 
 
       ch_t  chr;
-      u32_t slen = 1;
+      int_t slen = 1;
 
       /* analyze format */
       while ((chr = *format++) != ASCII_NULL)
@@ -686,11 +689,11 @@ static u32_t vsnprint(ch_t *stream, u32_t size, const ch_t *format, va_list arg)
  * @return number of printed characters
  */
 //================================================================================================//
-u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
+int_t pr_scanf(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 {
       ch_t  chr;
-      u32_t streamLen = 1;
-      i32_t value = 0;
+      int_t streamLen = 1;
+      int_t value = 0;
 
       while ((chr = *format++) != '\0')
       {
@@ -698,10 +701,10 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
             {
                   if (chr == ASCII_LF)
                   {
-                        putChart(stdout, ASCII_CR);
+                        pr_putchar(stdout, ASCII_CR);
                   }
 
-                  putChart(stdout, chr);
+                  pr_putchar(stdout, chr);
             }
             else
             {
@@ -726,23 +729,23 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(stdin);
+                              chr = pr_getchar(stdin);
 
                               if (  (chr >= '0' && chr <= '9')
                                  || (chr == '-' && !uint && sign == 1) )
                               {
-                                    putChart(stdout, chr);
+                                    pr_putchar(stdout, chr);
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *dec *= sign;
-                                    putChart(stdin, ASCII_CR);
-                                    putChart(stdin, ASCII_LF);
+                                    pr_putchar(stdin, ASCII_CR);
+                                    pr_putchar(stdin, ASCII_LF);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    printt(stdout, "%c\x1B[K", chr);
+                                    pr_printf(stdout, "%c\x1B[K", chr);
 
                                     if (streamLen == 2 && sign == -1)
                                           sign = 1;
@@ -784,22 +787,22 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(stdin);
+                              chr = pr_getchar(stdin);
 
                               if (  ((chr >= '0') && (chr <= '9'))
                                  || ((chr >= 'A') && (chr <= 'F'))
                                  || ((chr >= 'a') && (chr <= 'f')) )
                               {
-                                    putChart(stdout, chr);
+                                    pr_putchar(stdout, chr);
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    printt(stdout, "\r\n", chr);
+                                    pr_printf(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    printt(stdout, "%c\x1B[K", chr);
+                                    pr_printf(stdout, "%c\x1B[K", chr);
                                     *hex >>= 4;
                                     streamLen--;
                                     continue;
@@ -838,20 +841,20 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(stdin);
+                              chr = pr_getchar(stdin);
 
                               if (chr == '0' || chr == '1')
                               {
-                                    putChart(stdin, chr);
+                                    pr_putchar(stdin, chr);
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    printt(stdout, "\r\n", chr);
+                                    pr_printf(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    printt(stdout, "%c\x1B[K", chr);
+                                    pr_printf(stdout, "%c\x1B[K", chr);
                                     *bin >>= 1;
                                     streamLen--;
                                     continue;
@@ -882,18 +885,18 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
 
                         while (TRUE)
                         {
-                              chr = getChart(stdin);
+                              chr = pr_getchar(stdin);
 
                               /* put character */
                               if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *(string++) = 0x00;
-                                    printt(stdout, "\r\n", chr);
+                                    pr_printf(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1) && strLen)
                               {
-                                    printt(stdout, "%c\x1B[K", chr);
+                                    pr_printf(stdout, "%c\x1B[K", chr);
                                     *(--string) = 0x00;
                                     streamLen--;
                                     strLen--;
@@ -901,7 +904,7 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               }
                               else if ((chr >= ' ') && (strLen < bfrSize))
                               {
-                                    putChart(stdout, chr);
+                                    pr_putchar(stdout, chr);
                                     *(string++) = chr;
                                     strLen++;
                               }
@@ -920,6 +923,7 @@ u32_t scant(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
       return (streamLen - 1);
 }
 
+#endif
 
 /*==================================================================================================
                                             End of file

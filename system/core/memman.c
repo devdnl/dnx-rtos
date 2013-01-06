@@ -71,6 +71,12 @@ extern "C" {
 /*==================================================================================================
                                    Local symbolic constants/macros
 ==================================================================================================*/
+/** USER CFG: heap protection */
+#define MEMMAM_FREE_PROTECT()             TaskSuspendAll()
+#define MEMMAM_FREE_UNPROTECT()           TaskResumeAll()
+#define MEMMAM_ALLOC_PROTECT()            TaskSuspendAll()
+#define MEMMAM_ALLOC_UNPROTECT()          TaskResumeAll()
+
 /** MEM_ALIGNMENT: should be set to the alignment of the CPU for which
    program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
    byte alignment -> define MEM_ALIGNMENT to 2. */
@@ -80,13 +86,13 @@ extern "C" {
  * multiple of MEM_ALIGNMENT (e.g. MEM_ALIGN_SIZE(3) and
  * MEM_ALIGN_SIZE(4) will both yield 4 for MEM_ALIGNMENT == 4).
  */
-#define MEM_ALIGN_SIZE(size) (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
+#define MEM_ALIGN_SIZE(size)              (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
 
 /** Calculate safe memory size for an aligned buffer when using an unaligned
  * type as storage. This includes a safety-margin on (MEM_ALIGNMENT - 1) at the
  * start (e.g. if buffer is u8_t[] and actual data will be u32_t*)
  */
-#define MEM_ALIGN_BUFFER(size) (((size) + MEM_ALIGNMENT - 1))
+#define MEM_ALIGN_BUFFER(size)            (((size) + MEM_ALIGNMENT - 1))
 
 /** Align a memory pointer to the alignment defined by MEM_ALIGNMENT
  * so that ADDR % MEM_ALIGNMENT == 0
@@ -94,21 +100,21 @@ extern "C" {
 #define MEM_ALIGN(addr) ((void *)(((ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(ptr_t)(MEM_ALIGNMENT-1)))
 
 /** some alignment macros: we define them here for better source code layout */
-#define BLOCK_MIN_SIZE_ALIGNED      MEM_ALIGN_SIZE(BLOCK_MIN_SIZE)
-#define SIZEOF_STRUCT_MEM           MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED            MEM_ALIGN_SIZE(MEMMAN_HEAP_SIZE)
+#define BLOCK_MIN_SIZE_ALIGNED            MEM_ALIGN_SIZE(BLOCK_MIN_SIZE)
+#define SIZEOF_STRUCT_MEM                 MEM_ALIGN_SIZE(sizeof(struct mem))
+#define MEM_SIZE_ALIGNED                  MEM_ALIGN_SIZE(MEMMAN_HEAP_SIZE)
 
 /** heap protection */
-#define MEM_FREE_PROTECT()          MEMMAM_FREE_PROTECT()
-#define MEM_FREE_UNPROTECT()        MEMMAM_FREE_UNPROTECT()
+#define MEM_FREE_PROTECT()                MEMMAM_FREE_PROTECT()
+#define MEM_FREE_UNPROTECT()              MEMMAM_FREE_UNPROTECT()
 
 /** heap protection */
-#define MEM_ALLOC_PROTECT()         MEMMAM_ALLOC_PROTECT()
-#define MEM_ALLOC_UNPROTECT()       MEMMAM_ALLOC_UNPROTECT()
+#define MEM_ALLOC_PROTECT()               MEMMAM_ALLOC_PROTECT()
+#define MEM_ALLOC_UNPROTECT()             MEMMAM_ALLOC_UNPROTECT()
 
 /** RAM usage modifications */
-#define MEM_STATS_INC_USED(size)    used_mem += size
-#define MEM_STATS_DEC_USED(size)    used_mem -= size
+#define MEM_STATS_INC_USED(size)          used_mem += size
+#define MEM_STATS_DEC_USED(size)          used_mem -= size
 
 
 /*==================================================================================================

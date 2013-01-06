@@ -40,12 +40,13 @@ extern "C" {
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+#include "config.h"
 
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
-#define MINIMAL_STACK_SIZE                configMINIMAL_STACK_SIZE
+#define MINIMAL_STACK_SIZE                CONFIG_RTOS_TASK_MIN_STACK_SIZE
 #define THIS_TASK                         NULL
 #define EMPTY_TASK                        UINT32_MAX
 #define OS_OK                             pdTRUE
@@ -68,7 +69,7 @@ extern "C" {
 #define TaskGetName(taskhdl)              (ch_t*)pcTaskGetTaskName(taskhdl)
 #define TaskGetCurrentTaskHandle()        xTaskGetCurrentTaskHandle()
 #define TaskGetIdleTaskHandle()           xTaskGetIdleTaskHandle()
-#define TaskGetPriority(taskhdl)          (i16_t)(uxTaskPriorityGet(taskhdl) - (configMAX_PRIORITIES / 2))
+#define TaskGetPriority(taskhdl)          (i16_t)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
 #define TaskGetStackFreeSpace(taskhdl)    uxTaskGetStackHighWaterMark(taskhdl)
 #define TaskGetNumberOfTasks()            uxTaskGetNumberOfTasks()
 #define TaskGetRunTimeStats(dst)          vTaskGetRunTimeStats((signed char*)dst)

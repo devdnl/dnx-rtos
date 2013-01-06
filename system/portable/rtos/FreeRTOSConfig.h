@@ -67,9 +67,9 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
-#include "pll_cfg.h"          /* CPU_TARGET_FREQ */
-#include "memman.h"           /* dynamic memory management */
+#include "config.h"
 #include "cpuctl.h"
+#include "memman.h"
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -85,16 +85,16 @@
 #define configUSE_PREEMPTION                    1
 #define configUSE_IDLE_HOOK                     1
 #define configUSE_TICK_HOOK                     1
-#define configCPU_CLOCK_HZ                      CPU_TARGET_FREQ
-#define configTICK_RATE_HZ                      ( ( portTickType ) 1000 )
-#define configMAX_PRIORITIES                    ( ( unsigned portBASE_TYPE ) 7 )
-#define configMINIMAL_STACK_SIZE                ( ( unsigned short ) 40 )
-#define configMAX_TASK_NAME_LEN                 ( 16 )
+#define configCPU_CLOCK_HZ                      CONFIG_CPU_TARGET_FREQ
+#define configTICK_RATE_HZ                      ((portTickType) 1000)
+#define configMAX_PRIORITIES                    ((unsigned portBASE_TYPE) CONFIG_RTOS_TASK_MAX_PRIORITIES)
+#define configMINIMAL_STACK_SIZE                ((unsigned short) CONFIG_RTOS_TASK_MIN_STACK_SIZE)
+#define configMAX_TASK_NAME_LEN                 (CONFIG_RTOS_TASK_NAME_LEN)
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 1
 #define configUSE_CO_ROUTINES                   0
-#define configMAX_CO_ROUTINE_PRIORITIES         ( 2 )
+#define configMAX_CO_ROUTINE_PRIORITIES         2
 #define configUSE_MUTEXES                       1
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configUSE_ALTERNATIVE_API               0
@@ -108,7 +108,6 @@ to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet                1
 #define INCLUDE_uxTaskPriorityGet               1
 #define INCLUDE_vTaskDelete                     1
-//#define INCLUDE_vTaskCleanUpResources           0
 #define INCLUDE_vTaskSuspend                    1
 #define INCLUDE_xTaskResumeFromISR              1
 #define INCLUDE_vTaskDelayUntil                 1
@@ -116,18 +115,19 @@ to exclude the API function. */
 #define INCLUDE_uxTaskGetStackHighWaterMark     1
 #define INCLUDE_pcTaskGetTaskName               1
 #define INCLUDE_xTaskGetCurrentTaskHandle       1
-#define INCLUDE_xTaskGetIdleTaskHandle          1
+#define INCLUDE_xTaskGetIdleTaskHandle          0
+#define INCLUDE_vTaskCleanUpResources           0
 
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
 (lowest) to 0 (1?) (highest). */
-#define configKERNEL_INTERRUPT_PRIORITY         255
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    191 /* equivalent to 0xb0, or priority 11. */
+#define configKERNEL_INTERRUPT_PRIORITY         CONFIG_RTOS_KERNEL_IRQ_PRIO
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY    CONFIG_RTOS_SYSCALL_IRQ_PRIO
 
 /* This is the value being used as per the ST library which permits 16
 priority values, 0 to 15.  This must correspond to the
 configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NVIC value of 255. */
-#define configLIBRARY_KERNEL_INTERRUPT_PRIORITY 15
+#define configLIBRARY_KERNEL_INTERRUPT_PRIORITY CONFIG_RTOS_LIB_KERNEL_IRQ_PRIO
 
 /* interrupt rename */
 #define xPortPendSVHandler                      PendSV_Handler

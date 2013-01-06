@@ -93,7 +93,7 @@ regAppData_t regapp_GetAppData(const ch_t *appName)
 {
       regAppData_t appNULL = {NULL, NULL, 0};
 
-      for (int_t i = 0; i < ARRAY_SIZE(appList); i++) {
+      for (uint_t i = 0; i < ARRAY_SIZE(appList); i++) {
             if (strcmp(appList[i].appName, appName) == 0) {
                   appNULL = appList[i];
                   break;

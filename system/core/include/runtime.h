@@ -42,15 +42,14 @@ extern "C" {
 ==================================================================================================*/
 /** application section */
 #define APPLICATION(name)                 void name(void *appArgument)
-#define APP_SEC_BEGIN                     { InitApp();
+
+#define APP_SEC_BEGIN                     {FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
+                                           FILE_t *stdout = ((app_t*)appArgument)->stdout; \
+                                           ch_t   *argv   = ((app_t*)appArgument)->arg;    \
+                                           ch_t   *cwd    = ((app_t*)appArgument)->cwd;    \
+                                           (void)stdin; (void)stdout; (void)argv; (void)cwd;
+
 #define APP_SEC_END                       Exit(appmain(argv));}
-
-#define InitApp()                         FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
-                                          FILE_t *stdout = ((app_t*)appArgument)->stdout; \
-                                          ch_t   *argv   = ((app_t*)appArgument)->arg;    \
-                                          ch_t   *cwd    = ((app_t*)appArgument)->cwd;    \
-                                          (void)stdin; (void)stdout; (void)argv; (void)cwd
-
 
 /** simpler definition of terminating application */
 #define Exit(exitCode)                    TerminateApplication(appArgument, exitCode)

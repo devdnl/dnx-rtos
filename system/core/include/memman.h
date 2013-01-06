@@ -67,27 +67,22 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "basic_types.h"
+#include "config.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** USER CFG: HEAP size */
-#define MEMMAN_HEAP_SIZE                  (size_t)(41*1024)
+#define MEMMAN_HEAP_SIZE                  (size_t)CONFIG_HEAP_SIZE
 
 /** USER CFG: aligment */
-#define MEMMAM_ALIGNMENT                  4
+#define MEMMAM_ALIGNMENT                  CONFIG_HEAP_ALIGN
 
 /** USER CFG: All allocated blocks will be BLOCK_MIN_SIZE bytes big, at least!
  * BLOCK_MIN_SIZE can be overridden to suit your needs. Smaller values save space,
  * larger values could prevent too small blocks to fragment the RAM too much. */
-#define BLOCK_MIN_SIZE                    16
-
-/** USER CFG: heap protection */
-#define MEMMAM_FREE_PROTECT()             TaskSuspendAll()
-#define MEMMAM_FREE_UNPROTECT()           TaskResumeAll()
-#define MEMMAM_ALLOC_PROTECT()            TaskSuspendAll()
-#define MEMMAM_ALLOC_UNPROTECT()          TaskResumeAll()
+#define BLOCK_MIN_SIZE                    CONFIG_HEAP_BLOCK_SIZE
 
 
 /*==================================================================================================
