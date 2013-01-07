@@ -58,13 +58,7 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t DS1307_Init   (devx_t dev, fd_t fd);
-extern stdRet_t DS1307_Open   (devx_t dev, fd_t fd);
-extern stdRet_t DS1307_Close  (devx_t dev, fd_t fd);
-extern size_t   DS1307_Write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   DS1307_Read   (devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t DS1307_IOCtl  (devx_t dev, fd_t fd, IORq_t ioRQ, void *data);
-extern stdRet_t DS1307_Release(devx_t dev, fd_t fd);
+DRIVER_INTERFACE_CLASS(DS1307);
 
 
 #ifdef __cplusplus

@@ -50,6 +50,17 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define IMPORT_DRIVER_INTERFACE_CLASS(classname, drvname, devno, devpart)\
+{.drvName    = drvname,\
+ .drvInit    = classname##_Init,\
+ .drvRelease = classname##_Release,\
+ .drvCfg     = {.dev     = devno,\
+               .part    = devpart,\
+               .f_open  = classname##_Open,\
+               .f_close = classname##_Close,\
+               .f_write = classname##_Write,\
+               .f_read  = classname##_Read,\
+               .f_ioctl = classname##_IOCtl}}
 
 
 /*==================================================================================================
@@ -76,172 +87,51 @@ typedef struct
 static const regDrv_t drvList[] =
 {
       #ifdef UART_H_
-      {
-             .drvName    = "uart1",
-             .drvInit    = UART_Init,
-             .drvRelease = UART_Release,
-             .drvCfg     = {.dev     = UART_DEV_1,
-                            .part    = UART_PART_NONE,
-                            .f_open  = UART_Open,
-                            .f_close = UART_Close,
-                            .f_write = UART_Write,
-                            .f_read  = UART_Read,
-                            .f_ioctl = UART_IOCtl}
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(UART, "uart1", UART_DEV_1, UART_PART_NONE),
       #endif
+
       #ifdef GPIO_H_
-      {
-             .drvName    = "gpio",
-             .drvInit    = GPIO_Init,
-             .drvRelease = GPIO_Release,
-             .drvCfg     = {.dev     = GPIO_DEV_NONE,
-                            .part    = GPIO_PART_NONE,
-                            .f_open  = GPIO_Open,
-                            .f_close = GPIO_Close,
-                            .f_write = GPIO_Write,
-                            .f_read  = GPIO_Read,
-                            .f_ioctl = GPIO_IOCtl}
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
       #endif
+
       #ifdef PLL_H_
-      {
-             .drvName    = "pll",
-             .drvInit    = PLL_Init,
-             .drvRelease = PLL_Release,
-             .drvCfg     = {.dev     = PLL_DEV_NONE,
-                            .part    = PLL_PART_NONE,
-                            .f_open  = PLL_Open,
-                            .f_close = PLL_Close,
-                            .f_write = PLL_Write,
-                            .f_read  = PLL_Read,
-                            .f_ioctl = PLL_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
       #endif
+
       #ifdef I2C_H_
-      {
-            .drvName    = "i2c1",
-            .drvInit    = I2C_Init,
-            .drvRelease = I2C_Release,
-            .drvCfg     = {.dev     = I2C_DEV_1,
-                           .part    = I2C_PART_NONE,
-                           .f_open  = I2C_Open,
-                           .f_close = I2C_Close,
-                           .f_write = I2C_Write,
-                           .f_read  = I2C_Read,
-                           .f_ioctl = I2C_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(I2C, "i2c1", I2C_DEV_1, I2C_PART_NONE),
       #endif
+
       #ifdef ETH_H_
-      {
-             .drvName    = "eth0",
-             .drvInit    = ETHER_Init,
-             .drvRelease = ETHER_Release,
-             .drvCfg     = {.dev     = ETH_DEV_1,
-                            .part    = ETH_PART_NONE,
-                            .f_open  = ETHER_Open,
-                            .f_close = ETHER_Close,
-                            .f_write = ETHER_Write,
-                            .f_read  = ETHER_Read,
-                            .f_ioctl = ETHER_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(ETHER, "eth0", ETH_DEV_1, ETH_PART_NONE),
       #endif
+
       #ifdef DS1307_H_
-      {
-             .drvName    = "ds1307nvm",
-             .drvInit    = DS1307_Init,
-             .drvRelease = DS1307_Release,
-             .drvCfg     = {.dev     = DS1307_DEV_NVM,
-                            .part    = DS1307_PART_NONE,
-                            .f_open  = DS1307_Open,
-                            .f_close = DS1307_Close,
-                            .f_write = DS1307_Write,
-                            .f_read  = DS1307_Read,
-                            .f_ioctl = DS1307_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307nvm", DS1307_DEV_NVM, DS1307_PART_NONE),
       #endif
+
       #ifdef DS1307_H_
-      {
-             .drvName    = "ds1307rtc",
-             .drvInit    = DS1307_Init,
-             .drvRelease = DS1307_Release,
-             .drvCfg     = {.dev     = DS1307_DEV_RTC,
-                            .part    = DS1307_PART_NONE,
-                            .f_open  = DS1307_Open,
-                            .f_close = DS1307_Close,
-                            .f_write = DS1307_Write,
-                            .f_read  = DS1307_Read,
-                            .f_ioctl = DS1307_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307rtc", DS1307_DEV_RTC, DS1307_PART_NONE),
       #endif
+
       #if (TTY_NUMBER_OF_VT > 0)
-      {
-             .drvName    = "tty0",
-             .drvInit    = TTY_Init,
-             .drvRelease = TTY_Release,
-             .drvCfg     = {.dev     = TTY_DEV_0,
-                            .part    = TTY_PART_NONE,
-                            .f_open  = TTY_Open,
-                            .f_close = TTY_Close,
-                            .f_write = TTY_Write,
-                            .f_read  = TTY_Read,
-                            .f_ioctl = TTY_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
       #endif
+
       #if (TTY_NUMBER_OF_VT > 1)
-      {
-             .drvName    = "tty1",
-             .drvInit    = TTY_Init,
-             .drvRelease = TTY_Release,
-             .drvCfg     = {.dev     = TTY_DEV_1,
-                            .part    = TTY_PART_NONE,
-                            .f_open  = TTY_Open,
-                            .f_close = TTY_Close,
-                            .f_write = TTY_Write,
-                            .f_read  = TTY_Read,
-                            .f_ioctl = TTY_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty1", TTY_DEV_1, TTY_PART_NONE),
       #endif
+
       #if (TTY_NUMBER_OF_VT > 2)
-      {
-             .drvName    = "tty2",
-             .drvInit    = TTY_Init,
-             .drvRelease = TTY_Release,
-             .drvCfg     = {.dev     = TTY_DEV_2,
-                            .part    = TTY_PART_NONE,
-                            .f_open  = TTY_Open,
-                            .f_close = TTY_Close,
-                            .f_write = TTY_Write,
-                            .f_read  = TTY_Read,
-                            .f_ioctl = TTY_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty2", TTY_DEV_2, TTY_PART_NONE),
       #endif
+
       #if (TTY_NUMBER_OF_VT > 3)
-      {
-             .drvName    = "tty3",
-             .drvInit    = TTY_Init,
-             .drvRelease = TTY_Release,
-             .drvCfg     = {.dev     = TTY_DEV_3,
-                            .part    = TTY_PART_NONE,
-                            .f_open  = TTY_Open,
-                            .f_close = TTY_Close,
-                            .f_write = TTY_Write,
-                            .f_read  = TTY_Read,
-                            .f_ioctl = TTY_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
       #endif
+
       #ifdef MPL115A2_H_
-      {
-             .drvName    = "mpl115a2",
-             .drvInit    = MPL115A2_Init,
-             .drvRelease = MPL115A2_Release,
-             .drvCfg     = {.dev     = MPL115A2_DEV_NONE,
-                            .part    = MPL115A2_PART_NONE,
-                            .f_open  = MPL115A2_Open,
-                            .f_close = MPL115A2_Close,
-                            .f_write = MPL115A2_Write,
-                            .f_read  = MPL115A2_Read,
-                            .f_ioctl = MPL115A2_IOCtl},
-      },
+      IMPORT_DRIVER_INTERFACE_CLASS(MPL115A2, "mpl115a2", MPL115A2_DEV_NONE, MPL115A2_PART_NONE),
       #endif
 };
 

@@ -57,13 +57,8 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t MPL115A2_Init   (devx_t dev, fd_t fd);
-extern stdRet_t MPL115A2_Open   (devx_t dev, fd_t fd);
-extern stdRet_t MPL115A2_Close  (devx_t dev, fd_t fd);
-extern size_t   MPL115A2_Write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   MPL115A2_Read   (devx_t dev, fd_t fd , void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t MPL115A2_IOCtl  (devx_t dev, fd_t fd, IORq_t ioRQ, void *data);
-extern stdRet_t MPL115A2_Release(devx_t dev, fd_t fd);
+DRIVER_INTERFACE_CLASS(MPL115A2);
+
 
 #ifdef __cplusplus
 }

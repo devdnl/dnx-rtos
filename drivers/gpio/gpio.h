@@ -59,13 +59,7 @@ enum GPIO_DEV_NUMBER_enum
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern stdRet_t GPIO_Init   (devx_t dev, fd_t fd);
-extern stdRet_t GPIO_Open   (devx_t dev, fd_t fd);
-extern stdRet_t GPIO_Close  (devx_t dev, fd_t fd);
-extern size_t   GPIO_Write  (devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-extern size_t   GPIO_Read   (devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-extern stdRet_t GPIO_IOCtl  (devx_t dev, fd_t fd, IORq_t ioRQ, void *data);
-extern stdRet_t GPIO_Release(devx_t dev, fd_t fd);
+DRIVER_INTERFACE_CLASS(GPIO);
 
 #ifdef __cplusplus
 }
