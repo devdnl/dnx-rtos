@@ -26,30 +26,9 @@
 #
 ####################################################################################################
 
-####################################################################################################
-# PROJECT CONFIGURATION
-####################################################################################################
-# project name
-PROJECT = main
-
-# project architecture
-ARCH = stm32
-
-# cpu type
-CPU = cortex-m3
-
-# mcu type
-MCU = STM32F10X_CL
-
-# optymalization
-OPT = s
-
-# linker script
-LD_SCRIPT_micro = system/portable/stm32/stm32f107xx.ld
-LD_SCRIPT_qemu  = system/portable/qemu/stm32f107xx_qemu.ld
 
 ####################################################################################################
-# INSERT HERE C SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+# INSERT HERE C SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC = $(sort \
    app/cat/cat.c \
@@ -60,12 +39,7 @@ CSRC = $(sort \
    app/top/top.c \
    \
    drivers/ds1307/arch/noarch/ds1307.c \
-   drivers/ether/arch/stm32/ether.c \
-   drivers/gpio/arch/stm32/gpio.c \
-   drivers/i2c/arch/stm32/i2c.c \
-   drivers/pll/arch/stm32/pll.c \
    drivers/tty/arch/noarch/tty.c \
-   drivers/uart/arch/stm32/uart.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \
    \
    lib/lwip/netconf.c \
@@ -101,7 +75,6 @@ CSRC = $(sort \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
-   lib/STM32_ETH_Driver/stm32_eth.c \
    lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    lib/STM32F10x_StdPeriph_Driver/misc.c \
    lib/utils/utils.c \
@@ -111,7 +84,6 @@ CSRC = $(sort \
    system/kernel/freertos/Source/queue.c \
    system/kernel/freertos/Source/tasks.c \
    system/kernel/freertos/Source/timers.c \
-   system/kernel/freertos/Source/portable/GCC/ARM_CM3/port.c \
    \
    system/core/taskmoni.c \
    system/core/runtime.c \
@@ -126,29 +98,54 @@ CSRC = $(sort \
    system/fs/procfs.c \
    system/fs/lfs.c \
    system/fs/appfs.c \
-   system/portable/stm32/cpuctl.c \
-   system/portable/stm32/stm32f10x_vectors.c \
    system/portable/rtos/hooks.c \
    system/portable/rtos/oswrap.c \
    )
-
+   
 ####################################################################################################
-# INSERT HERE C++ SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+# INSERT HERE C SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
-CXXSRC = $(sort \
+CSRC_stm32 = $(sort \
+	drivers/ether/arch/stm32/ether.c \
+   drivers/gpio/arch/stm32/gpio.c \
+   drivers/i2c/arch/stm32/i2c.c \
+   drivers/uart/arch/stm32/uart.c \
+   drivers/pll/arch/stm32/pll.c \
+   system/portable/stm32/cpuctl.c \
+   system/portable/stm32/stm32f10x_vectors.c \
+   system/kernel/freertos/Source/portable/GCC/ARM_CM3/port.c \
+   lib/STM32_ETH_Driver/stm32_eth.c \
    )
 
 ####################################################################################################
-# INSERT HERE ASSEMBLER SOURCES WHICH MUST BE COMPILED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+# INSERT HERE C++ SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+####################################################################################################
+CXXSRC = $(sort \
+   )
+   
+####################################################################################################
+# INSERT HERE C++ SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+####################################################################################################
+CXXSRC_stm32 = $(sort \
+   )
+
+####################################################################################################
+# INSERT HERE ASSEMBLER SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 ASRC = $(sort \
+   )
+   
+####################################################################################################
+# INSERT HERE ASSEMBLER SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+####################################################################################################
+ASRC_stm32 = $(sort \
    system/portable/lib/cm_startup.s \
    )
 
 ####################################################################################################
 # INSERT HERE PATHS WITH HEADER FILES ONLY
 ####################################################################################################
-HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
+HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CSRC_$(TARGET))) $(dir $(CXXSRC)) $(dir $(CXXSRC_$(TARGET))) \
    drivers/ds1307 \
    drivers/ether \
    drivers/gpio \
@@ -176,7 +173,48 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
 
 ####################################################################################################
 ####################################################################################################
-# --------------------------------------------------------------------------------------------------
+####################################################################################################
+# PROJECT CONFIGURATION
+####################################################################################################
+# project name
+PROJECT = main
+
+# optymalization
+OPT = s
+
+#---------------------------------------------------------------------------------------------------
+# ARCHITECTURE CONFIG: STM32
+#---------------------------------------------------------------------------------------------------
+CC_stm32        = arm-none-eabi-gcc
+CXX_stm32       = arm-none-eabi-g++
+LINKER_stm32    = arm-none-eabi-gcc
+AS_stm32        = arm-none-eabi-gcc -x assembler-with-cpp
+OBJCOPY_stm32   = arm-none-eabi-objcopy
+OBJDUMP_stm32   = arm-none-eabi-objdump
+SIZE_stm32      = arm-none-eabi-size
+LD_SCRIPT_stm32 = system/portable/stm32/stm32f107xx.ld
+CPU_stm32       = cortex-m3
+MCU_stm32       = STM32F10X_CL
+
+CFLAGS_stm32    = -c -mcpu=$(CPU_stm32) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
+                  -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
+                  -D$(MCU_stm32) -DGCC_ARMCM3 -DARCH=$(TARGET)
+
+CXXFLAGS_stm32  =
+
+LFLAGS_stm32    = -mcpu=$(CPU_stm32) -mthumb -T$(LD_SCRIPT_stm32) -g -nostartfiles -Wl,--gc-sections -Wall \
+                  -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+                  -DGCC_ARMCM3 -DARCH=$(TARGET)
+
+AFLAGS_stm32    = -c -mcpu=$(CPU_stm32) -mthumb -g -ggdb3 -DARCH=$(TARGET)
+
+#---------------------------------------------------------------------------------------------------
+# ARCHITECTURE CONFIG: POSIX
+#---------------------------------------------------------------------------------------------------
+
+
+#---------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # object extension
 OBJ_EXT = o
 
@@ -189,7 +227,7 @@ CXX_EXT = cpp
 # assembler extension
 AS_EXT = s
 
-# --------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # defines project path with binaries
 BIN_LOC = target
 
@@ -202,54 +240,7 @@ OBJ_LOC = obj
 # dependencies file name
 DEP_FILE = dep.d
 
-# --------------------------------------------------------------------------------------------------
-# C compiler
-CC = arm-none-eabi-gcc
-
-# C++ compiler
-CXX = arm-none-eabi-g++
-
-# linker
-LINKER = arm-none-eabi-gcc
-
-# assembler
-AS = arm-none-eabi-gcc -x assembler-with-cpp
-
-# object copy program
-OBJCOPY = arm-none-eabi-objcopy
-
-# object copy program
-OBJDUMP = arm-none-eabi-objdump
-
-# size program
-SIZE = arm-none-eabi-size
-
-# --------------------------------------------------------------------------------------------------
-# C compiler flags
-CFLAGS_micro = -c -mcpu=$(CPU) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
-               -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
-               -D$(MCU) -D$(TARGET) -DGCC_ARMCM3 -DARCH=$(ARCH)
-
-CFLAGS_qemu  = $(CFLAGS_micro)
-
-# C++ compiler flags
-CXXFLAGS_micro =
-
-CXXFLAGS_quemu =
-
-# linker flags
-LFLAGS_micro = -mcpu=$(CPU) -mthumb -T$(LD_SCRIPT_$(TARGET)) -g -nostartfiles -Wl,--gc-sections -Wall \
-               -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-               -D$(TARGET) -DGCC_ARMCM3 -D$(ARCH)
-
-LFLAGS_qemu  = $(LFLAGS_micro)
-
-# assembler flags
-AFLAGS_micro = -c -mcpu=$(CPU) -mthumb -g -ggdb3 -D$(TARGET)
-
-AFLAGS_qemu  = $(AFLAGS_micro)
-
-# --------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # basic programs definitions
 SHELL   = sh
 RM      = rm -f
@@ -262,7 +253,7 @@ WC      = wc
 GREP    = grep
 SIZEOF  = stat -c %s
 
-# --------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 # defines this makefile name (do not edit)
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
@@ -284,13 +275,13 @@ TARGET_PATH = $(BIN_LOC)/$(TARGET)
 # object path (do not edit)
 OBJ_PATH = $(BIN_LOC)/$(TARGET)/$(OBJ_LOC)
 
-# defines sources (do not edit)
-SRC = $(dir $(CSRC)) $(dir $(ASRC))
-
 # defines objects names (do not edit)
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) \
-          $(CSRC:.$(C_EXT)=.$(OBJ_EXT))  \
-          $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT))
+          $(ASRC_$(TARGET):.$(AS_EXT)=.$(OBJ_EXT)) \
+          $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_$(TARGET):.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT)) \
+          $(CXXSRC_$(TARGET):.$(CXX_EXT)=.$(OBJ_EXT))
 
 
 ####################################################################################################
@@ -299,19 +290,10 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) \
 ####################################################################################################
 .PHONY : all
 all :
-	@$(MAKE) -s -f$(THIS_MAKEFILE) micro
-
-####################################################################################################
-# help for this Makefile
-####################################################################################################
-.PHONY : help
-help :
 	@echo "This is help for this $(THIS_MAKEFILE)"
 	@echo "Possible targets:"
-	@echo "   all or no target    compile default target"
 	@echo "   help                this help"
-	@echo "   micro               compilation for ARM-Cortex-M3 arch"
-	@echo "   qemu                compilation for ARM-Cortex-M3 arch for qemu"
+	@echo "   stm32               compilation for ARM-Cortex-M3 stm32"
 	@echo "   clean               clean project"
 	@echo "   cleanall            clean all non-project files"
 	@echo ""
@@ -321,9 +303,8 @@ help :
 ####################################################################################################
 # targets
 ####################################################################################################
-.PHONY : micro qemu
-micro : dependencies buildobjects linkobjects hex status
-qemu  : dependencies buildobjects linkobjects hex status
+.PHONY : stm32
+stm32 : dependencies buildobjects linkobjects hex status
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.
@@ -331,19 +312,19 @@ qemu  : dependencies buildobjects linkobjects hex status
 .PHONY : hex
 hex :
 	@echo 'Creating IHEX image...'
-	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O ihex $(TARGET_PATH)/$(PROJECT).hex
+	@$(OBJCOPY_$(TARGET)) $(TARGET_PATH)/$(PROJECT).elf -O ihex $(TARGET_PATH)/$(PROJECT).hex
 
 	@echo 'Creating binary image...'
-	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O binary $(TARGET_PATH)/$(PROJECT).bin
+	@$(OBJCOPY_$(TARGET)) $(TARGET_PATH)/$(PROJECT).elf -O binary $(TARGET_PATH)/$(PROJECT).bin
 
 	@echo 'Creating memory dump...'
-	@$(OBJDUMP) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
+	@$(OBJDUMP_$(TARGET)) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
 
 	@echo 'Creating extended listing....'
-	@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
+	@$(OBJDUMP_$(TARGET)) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
 
 	@echo 'Size of modules:'
-	@$(SIZE) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
+	@$(SIZE_$(TARGET)) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 
 	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) B\n"
 
@@ -370,13 +351,16 @@ status :
 ####################################################################################################
 .PHONY : dependencies
 dependencies :
-	@echo "Creating dependencies for $(TARGET) target..."
+	@echo "Creating dependencies for '$(TARGET)' target..."
 	@$(MKDIR) $(TARGET_PATH)
 	@echo "" > $(BIN_LOC)/$(DEP_FILE)
 	@$(DEPAPP) -f$(BIN_LOC)/$(DEP_FILE) -p$(OBJ_PATH)/ -o.$(OBJ_EXT) $(SEARCHPATH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >& /dev/null
 	@echo -e "$(foreach var,$(CSRC),\n$(OBJ_PATH)/$(var:.$(C_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
+	@echo -e "$(foreach var,$(CSRC_$(TARGET)),\n$(OBJ_PATH)/$(var:.$(C_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
 	@echo -e "$(foreach var,$(CXXSRC),\n$(OBJ_PATH)/$(var:.$(CXX_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
+	@echo -e "$(foreach var,$(CXXSRC_$(TARGET)),\n$(OBJ_PATH)/$(var:.$(CXX_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
 	@echo -e "$(foreach var,$(ASRC),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
+	@echo -e "$(foreach var,$(ASRC_$(TARGET)),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
 
 ####################################################################################################
 # linking rules
@@ -386,7 +370,7 @@ linkobjects :
 	@echo "Linking..."
 	@$(MKDIR) $(TARGET_PATH)
 	@$(RM) $(TARGET_PATH)/*.*
-	@$(LINKER) $(LFLAGS_$(TARGET)) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) -o $(TARGET_PATH)/$(PROJECT).elf
+	@$(LINKER_$(TARGET)) $(LFLAGS_$(TARGET)) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
 # build objects
@@ -404,7 +388,7 @@ buildobjects_$(TARGET) : $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CC) $(CFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
+	$(CC_$(TARGET)) $(CFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from C++ sources
@@ -412,7 +396,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CXX) $(CXXFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
+	$(CXX_$(TARGET)) $(CXXFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from assembler sources
@@ -420,7 +404,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	@$(AS) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	@$(AS_$(TARGET)) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
 ####################################################################################################
 # clean target
