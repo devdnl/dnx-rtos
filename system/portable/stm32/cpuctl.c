@@ -93,7 +93,7 @@ void cpuctl_SystemReboot(void)
  * @brief Start counter used in CPU load measurement
  */
 //================================================================================================//
-void cpuctl_CfgTimeStatCnt(void)
+void cpuctl_InitTimeStatCnt(void)
 {
       /* enable clock */
       RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
@@ -114,7 +114,7 @@ void cpuctl_CfgTimeStatCnt(void)
  * @brief Function called after task go to ready state
  */
 //================================================================================================//
-void cpuctl_TaskSwitchedIn(void)
+void cpuctl_ClearTimeStatCnt(void)
 {
       TIM2->CNT = 0;
 }
@@ -125,13 +125,11 @@ void cpuctl_TaskSwitchedIn(void)
  * @brief Function called when task go out ready state
  */
 //================================================================================================//
-void cpuctl_TaskSwitchedOut(void)
+u32_t cpuctl_GetTimeStatCnt(void)
 {
-      u16_t  cnt     = TIM2->CNT;
-      task_t taskhdl = TaskGetCurrentTaskHandle();
-      u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
-      TotalCPUTime  += cnt;
-      TaskSetTag(taskhdl, (void*)tmp);
+      u16_t cnt     = TIM2->CNT;
+      TotalCPUTime += cnt;
+      return cnt;
 }
 
 

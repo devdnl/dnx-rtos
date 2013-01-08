@@ -34,6 +34,7 @@ extern "C" {
 #include "taskmoni.h"
 #include "dlist.h"
 #include "cpuctl.h"
+#include "oswrap.h"
 #include <string.h>
 
 
@@ -156,7 +157,7 @@ static stdRet_t moni_Init(void)
 
                         status = STD_RET_ERROR;
                   } else {
-                        cpuctl_CfgTimeStatCnt();
+                        cpuctl_InitTimeStatCnt();
                   }
             }
       }
@@ -856,6 +857,35 @@ extern stdRet_t moni_closedir(DIR_t *dir)
       }
 
       return status;
+}
+#endif
+
+
+//================================================================================================//
+/**
+ * @brief Function called after task go to ready state
+ */
+//================================================================================================//
+#if (APP_MONITOR_CPU_LOAD > 0)
+void moni_TaskSwitchedIn(void)
+{
+      cpuctl_ClearTimeStatCnt();
+}
+#endif
+
+
+//================================================================================================//
+/**
+ * @brief Function called when task go out ready state
+ */
+//================================================================================================//
+#if (APP_MONITOR_CPU_LOAD > 0)
+void moni_TaskSwitchedOut(void)
+{
+      u16_t  cnt     = cpuctl_GetTimeStatCnt();//TIM2->CNT;
+      task_t taskhdl = TaskGetCurrentTaskHandle();
+      u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
+      TaskSetTag(taskhdl, (void*)tmp);
 }
 #endif
 

@@ -34,7 +34,6 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "systypes.h"
-#include "oswrap.h"
 #include "memman.h"
 #include "vfs.h"
 #include "config.h"
@@ -66,6 +65,12 @@ extern "C" {
 #define moni_fclose(file)                       vfs_fclose(file)
 #define moni_opendir(path)                      vfs_opendir(path)
 #define moni_closedir(dir)                      vfs_closedir(dir)
+#endif
+
+/* DIRECT FUNCTIONS IF MONITORING DISABLED */
+#if (APP_MONITOR_CPU_LOAD == 0)
+#define moni_TaskSwitchedIn()
+#define moni_TaskSwitchedOut()
 #endif
 
 /* DIRECT FUNCTION BECAUSE MONITORING IS NOT NECESSARY */
@@ -122,22 +127,26 @@ struct taskstat {
                                      Exported function prototypes
 ==================================================================================================*/
 #if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
-extern stdRet_t  moni_AddTask       (task_t taskHdl);
-extern stdRet_t  moni_DelTask       (task_t taskHdl);
-extern stdRet_t  moni_GetTaskStat   (i32_t item, struct taskstat *stat);
-extern stdRet_t  moni_GetTaskHdlStat(task_t taskHdl, struct taskstat *stat);
-extern u16_t     moni_GetTaskCount  (void);
+extern stdRet_t  moni_AddTask        (task_t taskHdl);
+extern stdRet_t  moni_DelTask        (task_t taskHdl);
+extern stdRet_t  moni_GetTaskStat    (i32_t item, struct taskstat *stat);
+extern stdRet_t  moni_GetTaskHdlStat (task_t taskHdl, struct taskstat *stat);
+extern u16_t     moni_GetTaskCount   (void);
 #endif
 #if (APP_MONITOR_MEMORY_USAGE > 0)
-extern void     *moni_malloc        (u32_t size);
-extern void     *moni_calloc        (u32_t nmemb, u32_t msize);
-extern void      moni_free          (void *mem);
+extern void     *moni_malloc         (u32_t size);
+extern void     *moni_calloc         (u32_t nmemb, u32_t msize);
+extern void      moni_free           (void *mem);
 #endif
 #if (APP_MONITOR_FILE_USAGE > 0)
-extern FILE_t   *moni_fopen         (const ch_t *path, const ch_t *mode);
-extern stdRet_t  moni_fclose        (FILE_t *file);
-extern DIR_t    *moni_opendir       (const ch_t *path);
-extern stdRet_t  moni_closedir      (DIR_t *dir);
+extern FILE_t   *moni_fopen          (const ch_t *path, const ch_t *mode);
+extern stdRet_t  moni_fclose         (FILE_t *file);
+extern DIR_t    *moni_opendir        (const ch_t *path);
+extern stdRet_t  moni_closedir       (DIR_t *dir);
+#endif
+#if (APP_MONITOR_CPU_LOAD > 0)
+extern void      moni_TaskSwitchedIn (void);
+extern void      moni_TaskSwitchedOut(void);
 #endif
 
 #ifdef __cplusplus

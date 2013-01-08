@@ -39,6 +39,10 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/* interrupt rename */
+#define xPortPendSVHandler                      PendSV_Handler
+#define xPortSysTickHandler                     SysTick_Handler
+#define vPortSVCHandler                         SVC_Handler
 
 
 /*==================================================================================================
@@ -51,9 +55,9 @@ extern "C" {
 ==================================================================================================*/
 extern void  cpuctl_BasicConfig(void);
 extern void  cpuctl_SystemReboot(void);
-extern void  cpuctl_CfgTimeStatCnt(void);
-extern void  cpuctl_TaskSwitchedIn(void);
-extern void  cpuctl_TaskSwitchedOut(void);
+extern void  cpuctl_InitTimeStatCnt(void);
+extern u32_t cpuctl_GetTimeStatCnt(void);
+extern void  cpuctl_ClearTimeStatCnt(void);
 extern u32_t cpuctl_GetCPUTotalTime(void);
 extern void  cpuctl_ClearCPUTotalTime(void);
 

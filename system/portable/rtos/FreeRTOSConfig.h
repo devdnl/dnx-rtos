@@ -68,8 +68,8 @@
 #define FREERTOS_CONFIG_H
 
 #include "config.h"
-#include "cpuctl.h"
 #include "memman.h"
+#include "cpuctl.h"
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -129,14 +129,13 @@ configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY CONFIG_RTOS_LIB_KERNEL_IRQ_PRIO
 
-/* interrupt rename */
-#define xPortPendSVHandler                      PendSV_Handler
-#define xPortSysTickHandler                     SysTick_Handler
-#define vPortSVCHandler                         SVC_Handler
-
 /* required functions in cpu load stats */
-#define traceTASK_SWITCHED_OUT()                cpuctl_TaskSwitchedIn()
-#define traceTASK_SWITCHED_IN()                 cpuctl_TaskSwitchedOut()
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+extern void moni_TaskSwitchedIn(void);
+extern void moni_TaskSwitchedOut(void);
+#define traceTASK_SWITCHED_OUT()                moni_TaskSwitchedIn()
+#define traceTASK_SWITCHED_IN()                 moni_TaskSwitchedOut()
+#endif
 
 #endif /* FREERTOS_CONFIG_H */
 

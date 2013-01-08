@@ -37,11 +37,9 @@ CSRC = $(sort \
    app/terminal/terminal.c \
    app/httpd/httpd.c \
    app/top/top.c \
-   \
    drivers/ds1307/arch/noarch/ds1307.c \
    drivers/tty/arch/noarch/tty.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \
-   \
    lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
@@ -75,16 +73,12 @@ CSRC = $(sort \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
-   lib/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
-   lib/STM32F10x_StdPeriph_Driver/misc.c \
    lib/utils/utils.c \
-   \
    system/kernel/freertos/Source/croutine.c \
    system/kernel/freertos/Source/list.c \
    system/kernel/freertos/Source/queue.c \
    system/kernel/freertos/Source/tasks.c \
    system/kernel/freertos/Source/timers.c \
-   \
    system/core/taskmoni.c \
    system/core/runtime.c \
    system/core/dlist.c \
@@ -107,14 +101,16 @@ CSRC = $(sort \
 ####################################################################################################
 CSRC_stm32 = $(sort \
 	drivers/ether/arch/stm32/ether.c \
+	drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
    drivers/gpio/arch/stm32/gpio.c \
    drivers/i2c/arch/stm32/i2c.c \
    drivers/uart/arch/stm32/uart.c \
    drivers/pll/arch/stm32/pll.c \
+   system/kernel/freertos/Source/portable/GCC/ARM_CM3/port.c \
    system/portable/stm32/cpuctl.c \
    system/portable/stm32/stm32f10x_vectors.c \
-   system/kernel/freertos/Source/portable/GCC/ARM_CM3/port.c \
-   lib/STM32_ETH_Driver/stm32_eth.c \
+   system/portable/stm32/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
+   system/portable/stm32/STM32F10x_StdPeriph_Driver/misc.c \
    )
 
 ####################################################################################################
@@ -298,7 +294,7 @@ all :
 	@echo "   cleanall            clean all non-project files"
 	@echo ""
 	@echo "Non-build targets:"
-	@echo "   flash               flashing micro using openOCD debbuger"
+	@echo "   flash               flashing uC (stm32) using openOCD debbuger"
 
 ####################################################################################################
 # targets
@@ -443,6 +439,6 @@ cleanall:
 .PHONY : flash
 flash :
 	@echo -e "target remote localhost:3333\nmonitor reset halt\nload\nmonitor reset halt\nq\ny\n" > $(BIN_LOC)/gdbcmd
-	@arm-none-eabi-gdb $(BIN_LOC)/micro/main.elf -x $(BIN_LOC)/gdbcmd
+	@arm-none-eabi-gdb $(BIN_LOC)/stm32/main.elf -x $(BIN_LOC)/gdbcmd
 	-@$(RM) $(BIN_LOC)/gdbcmd
 
