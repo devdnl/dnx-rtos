@@ -39,7 +39,7 @@ extern "C" {
 #include "oswrap.h"
 #include "print.h"
 #include "runtime.h"
-#include "hooks.h"
+#include "oshooks.h"
 #include "netconf.h"
 #include "dlist.h"
 #include "taskmoni.h"

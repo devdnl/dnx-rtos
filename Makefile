@@ -92,7 +92,7 @@ CSRC = $(sort \
    system/fs/procfs.c \
    system/fs/lfs.c \
    system/fs/appfs.c \
-   system/portable/rtos/hooks.c \
+   system/portable/rtos/oshooks.c \
    system/portable/rtos/oswrap.c \
    )
    
@@ -108,6 +108,7 @@ CSRC_stm32 = $(sort \
    drivers/pll/arch/stm32/pll.c \
    system/kernel/freertos/Source/portable/GCC/ARM_CM3/port.c \
    system/portable/stm32/cpuctl.c \
+   system/portable/stm32/cpuhooks.c \
    system/portable/stm32/stm32f10x_vectors.c \
    system/portable/stm32/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    system/portable/stm32/STM32F10x_StdPeriph_Driver/misc.c \
