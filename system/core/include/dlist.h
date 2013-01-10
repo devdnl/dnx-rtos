@@ -41,9 +41,9 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /* USER CFG: memory management */
-#define DLIST_CALLOC(nmemb, msize)        mm_calloc(nmemb, msize)
-#define DLIST_MALLOC(size)                mm_malloc(size)
-#define DLIST_FREE(mem)                   mm_free(mem)
+#define DLIST_CALLOC(nmemb, msize)        memman_calloc(nmemb, msize)
+#define DLIST_MALLOC(size)                memman_malloc(size)
+#define DLIST_FREE(mem)                   memman_free(mem)
 
 
 /*==================================================================================================

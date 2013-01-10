@@ -49,15 +49,15 @@ extern "C" {
 #endif
 
 #ifndef calloc
-#define calloc(nmemb, msize)              mm_calloc(nmemb, msize)
+#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
 #endif
 
 #ifndef malloc
-#define malloc(size)                      mm_malloc(size)
+#define malloc(size)                      memman_malloc(size)
 #endif
 
 #ifndef free
-#define free(mem)                         mm_free(mem)
+#define free(mem)                         memman_free(mem)
 #endif
 
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)

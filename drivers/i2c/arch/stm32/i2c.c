@@ -32,6 +32,7 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "i2c.h"
+#include "i2c_cfg.h"
 
 
 /*==================================================================================================
@@ -229,7 +230,7 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
                   switch (dev)
                   {
                         #ifdef RCC_APB1ENR_I2C1EN
-                        #if (I2C1_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_I2C1EN) && (I2C1_ENABLE > 0)
                         case I2C_DEV_1:
                               RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
                               break;
@@ -237,7 +238,7 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
                         #endif
 
                         #ifdef RCC_APB1ENR_I2C2EN
-                        #if (I2C2_ENABLE > 0)
+                        #if defined(RCC_APB1ENR_I2C2EN) && (I2C2_ENABLE > 0)
                         case I2C_DEV_2:
                               RCC->APB1ENR |= RCC_APB1ENR_I2C2EN;
                               break;

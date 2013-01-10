@@ -37,6 +37,7 @@ extern "C" {
 #include "print.h"
 
 /* include here drivers headers */
+#if defined(ARCH_stm32)
 #include "uart.h"
 #include "gpio.h"
 #include "pll.h"
@@ -45,6 +46,12 @@ extern "C" {
 #include "ds1307.h"
 #include "tty.h"
 #include "mpl115a2.h"
+#elif defined(ARCH_posix)
+#include "uart.h"
+#include "tty.h"
+#include "pll.h"
+#else
+#endif
 
 
 /*==================================================================================================

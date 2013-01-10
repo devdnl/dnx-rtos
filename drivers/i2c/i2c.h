@@ -35,7 +35,6 @@ extern "C" {
 ==================================================================================================*/
 #include "i2c_cfg.h"
 #include "i2c_def.h"
-#include "stm32f10x.h"
 #include "sysdrv.h"
 
 
@@ -47,27 +46,6 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-#define I2C_PART_NONE         0
-
-/** port names */
-enum I2C_DEV_NUMBER_enum
-{
-      #ifdef RCC_APB1ENR_I2C1EN
-      #if (I2C1_ENABLE > 0)
-            I2C_DEV_1,
-      #define I2C_DEV_1_DEFINED
-      #endif
-      #endif
-
-      #ifdef RCC_APB1ENR_I2C2EN
-      #if (I2C2_ENABLE > 0)
-            I2C_DEV_2,
-      #define I2C_DEV_2_DEFINED
-      #endif
-      #endif
-
-      I2C_DEV_LAST
-};
 
 
 /*==================================================================================================

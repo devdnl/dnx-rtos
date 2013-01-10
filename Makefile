@@ -35,11 +35,38 @@ CSRC = $(sort \
    app/date/date.c \
    app/measd/measd.c \
    app/terminal/terminal.c \
-   app/httpd/httpd.c \
    app/top/top.c \
    drivers/ds1307/arch/noarch/ds1307.c \
    drivers/tty/arch/noarch/tty.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \
+   lib/utils/utils.c \
+   system/kernel/freertos/Source/croutine.c \
+   system/kernel/freertos/Source/list.c \
+   system/kernel/freertos/Source/queue.c \
+   system/kernel/freertos/Source/tasks.c \
+   system/kernel/freertos/Source/timers.c \
+   system/core/taskmoni.c \
+   system/core/runtime.c \
+   system/core/dlist.c \
+   system/core/main.c \
+   system/core/memman.c \
+   system/core/print.c \
+   system/core/vfs.c \
+   system/user/initd.c \
+   system/user/regapp.c \
+   system/user/regdrv.c \
+   system/fs/procfs.c \
+   system/fs/lfs.c \
+   system/fs/appfs.c \
+   system/portable/rtos/oshooks.c \
+   system/portable/rtos/oswrap.c \
+   )
+   
+####################################################################################################
+# INSERT HERE C SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+####################################################################################################
+CSRC_stm32 = $(sort \
+   app/httpd/httpd.c \
    lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
@@ -73,33 +100,6 @@ CSRC = $(sort \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
-   lib/utils/utils.c \
-   system/kernel/freertos/Source/croutine.c \
-   system/kernel/freertos/Source/list.c \
-   system/kernel/freertos/Source/queue.c \
-   system/kernel/freertos/Source/tasks.c \
-   system/kernel/freertos/Source/timers.c \
-   system/core/taskmoni.c \
-   system/core/runtime.c \
-   system/core/dlist.c \
-   system/core/main.c \
-   system/core/memman.c \
-   system/core/print.c \
-   system/core/vfs.c \
-   system/user/initd.c \
-   system/user/regapp.c \
-   system/user/regdrv.c \
-   system/fs/procfs.c \
-   system/fs/lfs.c \
-   system/fs/appfs.c \
-   system/portable/rtos/oshooks.c \
-   system/portable/rtos/oswrap.c \
-   )
-   
-####################################################################################################
-# INSERT HERE C SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-CSRC_stm32 = $(sort \
 	drivers/ether/arch/stm32/ether.c \
 	drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
    drivers/gpio/arch/stm32/gpio.c \
@@ -113,6 +113,14 @@ CSRC_stm32 = $(sort \
    system/portable/stm32/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    system/portable/stm32/STM32F10x_StdPeriph_Driver/misc.c \
    )
+   
+CSRC_posix = $(sort \
+   drivers/i2c/arch/posix/i2c.c \
+   drivers/uart/arch/posix/uart.c \
+   drivers/pll/arch/posix/pll.c \
+   system/kernel/freertos/Source/portable/GCC/Posix/port.c \
+   system/portable/posix/cpuctl.c \
+   )
 
 ####################################################################################################
 # INSERT HERE C++ SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
@@ -124,6 +132,9 @@ CXXSRC = $(sort \
 # INSERT HERE C++ SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CXXSRC_stm32 = $(sort \
+   )
+   
+CXXSRC_posix = $(sort \
    )
 
 ####################################################################################################
@@ -138,26 +149,35 @@ ASRC = $(sort \
 ASRC_stm32 = $(sort \
    system/portable/lib/cm_startup.s \
    )
+   
+ASCR_posix = $(sort \
+   )
 
 ####################################################################################################
 # INSERT HERE PATHS WITH HEADER FILES ONLY
 ####################################################################################################
-HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CSRC_$(TARGET))) $(dir $(CXXSRC)) $(dir $(CXXSRC_$(TARGET))) \
+HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    drivers/ds1307 \
-   drivers/ether \
-   drivers/gpio \
-   drivers/i2c \
-   drivers/pll \
    drivers/tty \
-   drivers/uart \
    drivers/mpl115a2 \
-   system/portable/lib/CMSIS \
    system/kernel/freertos/Source/include \
    system/config \
    system/core/include \
    system/fs/include \
    system/user/include \
    system/portable \
+   )
+   
+####################################################################################################
+# INSERT HERE PATHS WITH HEADER FILES ONLY WHICH ARE DEPENDING ON ARCHITECTURE
+####################################################################################################
+HDRLOC_stm32 = $(sort $(dir $(CSRC_stm32)) $(dir $(CXXSRC_stm32)) \
+   drivers/ether \
+   drivers/gpio \
+   drivers/i2c \
+   drivers/pll \
+   drivers/uart \
+   system/portable/lib/CMSIS \
    lib/lwip \
    lib/lwip/include \
    lib/lwip/include/lwip \
@@ -167,6 +187,13 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CSRC_$(TARGET))) $(dir $(CXXSRC)) $(dir $
    lib/lwip/port \
    lib/lwip/port/arch \
    )
+   
+HDRLOC_posix = $(sort $(dir $(CSRC_posix)) $(dir $(CXXSRC_posix)) \
+   drivers/i2c \
+   drivers/uart \
+   drivers/pll \
+   )
+
 
 ####################################################################################################
 ####################################################################################################
@@ -195,20 +222,41 @@ MCU_stm32       = STM32F10X_CL
 
 CFLAGS_stm32    = -c -mcpu=$(CPU_stm32) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
                   -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
-                  -D$(MCU_stm32) -DGCC_ARMCM3 -DARCH=$(TARGET)
+                  -D$(MCU_stm32) -DGCC_ARMCM3 -DARCH_$(TARGET)
 
 CXXFLAGS_stm32  =
 
 LFLAGS_stm32    = -mcpu=$(CPU_stm32) -mthumb -T$(LD_SCRIPT_stm32) -g -nostartfiles -Wl,--gc-sections -Wall \
                   -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                  -DGCC_ARMCM3 -DARCH=$(TARGET)
+                  -DGCC_ARMCM3 -DARCH_$(TARGET)
 
-AFLAGS_stm32    = -c -mcpu=$(CPU_stm32) -mthumb -g -ggdb3 -DARCH=$(TARGET)
+AFLAGS_stm32    = -c -mcpu=$(CPU_stm32) -mthumb -g -ggdb3 -DARCH_$(TARGET)
 
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: POSIX
 #---------------------------------------------------------------------------------------------------
+CC_posix        = gcc
+CXX_posix       = g++
+LINKER_posix    = gcc
+AS_posix        = gcc -x assembler-with-cpp
+OBJCOPY_posix   = 
+OBJDUMP_posix   = 
+SIZE_posix      = 
+LD_SCRIPT_posix = 
+CPU_posix       = 
+MCU_posix       = 
 
+CFLAGS_posix    = -m32 -c -O0 -Wall -Wstrict-prototypes -Wextra -std=gnu99 -g -Wparentheses\
+                  -DARCH_$(TARGET) -Wno-pointer-sign \
+                  -D__GCC_POSIX__=1 -DDEBUG_BUILD=1 -DUSE_STDIO=1 -fmessage-length=0 -pthread -lrt
+
+CXXFLAGS_posix  =
+
+LFLAGS_posix    = -m32 -g -Wall -pthread -lrt \
+                  -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+                  -DARCH_$(TARGET)
+
+AFLAGS_posix    = -m32 -c -g -DARCH_$(TARGET)
 
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
@@ -258,10 +306,7 @@ THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 THREAD = $(shell echo $$[ $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l) + 1 ])
 
 # sets header search path (adds -I flags to paths) (do not edit)
-SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var))
-
-# first make goal (do not edit)
-FIRST_GOAL = $(firstword $(MAKECMDGOALS))
+SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
 # main target without defined prefixes (do not edit)
 TARGET = $(lastword $(subst _, ,$(MAKECMDGOALS)))
@@ -291,6 +336,7 @@ all :
 	@echo "Possible targets:"
 	@echo "   help                this help"
 	@echo "   stm32               compilation for ARM-Cortex-M3 stm32"
+	@echo "   posix               compilation for POSIX system"
 	@echo "   clean               clean project"
 	@echo "   cleanall            clean all non-project files"
 	@echo ""
@@ -300,8 +346,9 @@ all :
 ####################################################################################################
 # targets
 ####################################################################################################
-.PHONY : stm32
+.PHONY : stm32 posix
 stm32 : dependencies buildobjects linkobjects hex status
+posix : dependencies buildobjects linkobjects status
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.

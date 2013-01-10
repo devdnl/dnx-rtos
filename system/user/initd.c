@@ -191,10 +191,12 @@ void Initd(void *arg)
       InitDrv("mpl115a2", "/dev/sensor");
 
 
+#if !defined(ARCH_posix)
       if (LwIP_Init() == STD_RET_OK) {
             StartDaemon("measd", NULL);
             StartDaemon("httpd", NULL);
       }
+#endif
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
@@ -207,7 +209,7 @@ void Initd(void *arg)
        *------------------------------------------------------------------------------------------*/
       u8_t    ctty = -1;
       app_t  *apphdl[TTY_LAST] = {NULL};
-      FILE_t *ttyx[TTY_LAST] = {NULL};
+      FILE_t *ttyx[TTY_LAST]   = {NULL};
 
       while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL)
       {

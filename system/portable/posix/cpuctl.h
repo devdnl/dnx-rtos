@@ -1,11 +1,11 @@
-#ifndef PLL_H_
-#define PLL_H_
+#ifndef CPUCTL_H_
+#define CPUCTL_H_
 /*=============================================================================================*//**
-@file    pll.h
+@file    cpuctl.h
 
 @author  Daniel Zorychta
 
-@brief   File support PLL
+@brief   This file support CPU control
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,14 +33,16 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "pll_cfg.h"
-#include "pll_def.h"
-#include "sysdrv.h"
+#include "basic_types.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+/* interrupt rename */
+#define xPortPendSVHandler                      PendSV_Handler
+#define xPortSysTickHandler                     SysTick_Handler
+#define vPortSVCHandler                         SVC_Handler
 
 
 /*==================================================================================================
@@ -51,14 +53,19 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-DRIVER_INTERFACE_CLASS(PLL);
-
+extern void  cpuctl_BasicConfig(void);
+extern void  cpuctl_SystemReboot(void);
+extern void  cpuctl_InitTimeStatCnt(void);
+extern u32_t cpuctl_GetTimeStatCnt(void);
+extern void  cpuctl_ClearTimeStatCnt(void);
+extern u32_t cpuctl_GetCPUTotalTime(void);
+extern void  cpuctl_ClearCPUTotalTime(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PLL_H_ */
+#endif /* CPUCTL_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

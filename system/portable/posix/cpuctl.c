@@ -1,9 +1,9 @@
 /*=============================================================================================*//**
-@file    regapp.c
+@file    cpuctl.c
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration applications
+@brief   This file support CPU control
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,18 +31,9 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "regapp.h"
-#include <string.h>
+#include "cpuctl.h"
+#include "oswrap.h"
 
-/* include here applications headers */
-#include "terminal.h"
-#include "date.h"
-#include "top.h"
-#if !defined(ARCH_posix) /* DNLFIXME this must be changed!! LwIP correction needed! */
-#include "httpd.h"
-#endif
-#include "measd.h"
-#include "cat.h"
 
 
 /*==================================================================================================
@@ -63,21 +54,7 @@ extern "C" {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-static const regAppData_t appList[] = {
-      {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
-      {DATE_NAME    , date    , DATE_STACK_SIZE    },
-      {TOP_NAME     , top     , TOP_STACK_SIZE     },
-#if !defined(ARCH_posix)
-      {HTTPD_NAME   , httpd   , HTTPD_STACK_SIZE   },
-#endif
-      {MEASD_NAME   , measd   , MEASD_STACK_SIZE   },
-      {CAT_NAME     , cat     , CAT_STACK_SIZE     },
-};
-
-
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
+static u32_t TotalCPUTime;
 
 
 /*==================================================================================================
@@ -86,51 +63,76 @@ static const regAppData_t appList[] = {
 
 //================================================================================================//
 /**
- * @brief Function find in the application list selected application's parameters
- *
- * @param *appName            application name
- *
- * @return application informations needed to run
+ * @brief Basic (first) CPU/microcontroller configuration
  */
 //================================================================================================//
-regAppData_t regapp_GetAppData(const ch_t *appName)
+void cpuctl_BasicConfig(void)
 {
-      regAppData_t appNULL = {NULL, NULL, 0};
-
-      for (uint_t i = 0; i < ARRAY_SIZE(appList); i++) {
-            if (strcmp(appList[i].appName, appName) == 0) {
-                  appNULL = appList[i];
-                  break;
-            }
-      }
-
-      return appNULL;
 }
 
 
 //================================================================================================//
 /**
- * @brief Function returns pointer to application list
- *
- * @return pointer to application list
+ * @brief Restart CPU
  */
 //================================================================================================//
-regAppData_t *regapp_GetAppListPtr(void)
+void cpuctl_SystemReboot(void)
 {
-      return (regAppData_t*)appList;
 }
 
 
 //================================================================================================//
 /**
- * @brief Function returns application count
- *
- * @return application count
+ * @brief Start counter used in CPU load measurement
  */
 //================================================================================================//
-int_t regapp_GetAppCount(void)
+void cpuctl_InitTimeStatCnt(void)
 {
-      return ARRAY_SIZE(appList);
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function called after task go to ready state
+ */
+//================================================================================================//
+void cpuctl_ClearTimeStatCnt(void)
+{
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function called when task go out ready state
+ */
+//================================================================================================//
+u32_t cpuctl_GetTimeStatCnt(void)
+{
+      return 0;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function returns CPU total time
+ *
+ * @return CPU total time
+ */
+//================================================================================================//
+u32_t cpuctl_GetCPUTotalTime(void)
+{
+      return TotalCPUTime;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function clear CPU total time
+ */
+//================================================================================================//
+void cpuctl_ClearCPUTotalTime(void)
+{
+      TotalCPUTime = 0;
 }
 
 

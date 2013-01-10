@@ -724,8 +724,8 @@ stdRet_t lfs_statfs(devx_t dev, struct vfs_statfs *statfs)
       stdRet_t status = STD_RET_ERROR;
 
       if (statfs) {
-            statfs->f_bfree  = mm_GetFreeHeapSize();
-            statfs->f_blocks = mm_GetHeapSize();
+            statfs->f_bfree  = memman_GetFreeHeapSize();
+            statfs->f_blocks = memman_GetHeapSize();
             statfs->f_ffree  = 0;
             statfs->f_files  = 0;
             statfs->f_type   = 0x01;

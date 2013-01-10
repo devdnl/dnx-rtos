@@ -33,6 +33,7 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "stm32f10x.h"
 
 
 /*==================================================================================================
@@ -49,6 +50,29 @@ extern "C" {
 
 /** set SCL frequency [Hz] */
 #define I2C_DEFAULT_SCL_FREQ              (100000UL)
+
+/** I2C part */
+#define I2C_PART_NONE                     (0)
+
+/** port names */
+enum I2C_DEV_NUMBER_enum
+{
+      #ifdef RCC_APB1ENR_I2C1EN
+      #if (I2C1_ENABLE > 0)
+            I2C_DEV_1,
+      #define I2C_DEV_1_DEFINED
+      #endif
+      #endif
+
+      #ifdef RCC_APB1ENR_I2C2EN
+      #if (I2C2_ENABLE > 0)
+            I2C_DEV_2,
+      #define I2C_DEV_2_DEFINED
+      #endif
+      #endif
+
+      I2C_DEV_LAST
+};
 
 
 /*==================================================================================================

@@ -42,13 +42,13 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /* USER CFG: memory management, free memory */
-#define LFS_FREE(ptr)               mm_free(ptr)
+#define LFS_FREE(ptr)               memman_free(ptr)
 
 /* USER CFG: memory management, memory allocation */
-#define LFS_CALLOC(nmemb, msize)    mm_calloc(nmemb, msize)
+#define LFS_CALLOC(nmemb, msize)    memman_calloc(nmemb, msize)
 
 /* USER CFG: memory management, memory allocation */
-#define LFS_MALLOC(size)            mm_malloc(size)
+#define LFS_MALLOC(size)            memman_malloc(size)
 
 /* USER CFG: getting task name */
 //#define GET_TASK_NAME()             TaskGetName(NULL)

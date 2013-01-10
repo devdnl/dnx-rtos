@@ -233,7 +233,7 @@ static void plug_holes(struct mem *mem)
 * @brief Zero the heap and initialize start, end and lowest-free
 */
 //================================================================================================//
-void mm_init(void)
+void memman_init(void)
 {
       struct mem *mem;
 
@@ -268,7 +268,7 @@ void mm_init(void)
  *             call to mem_malloc()
  */
 //================================================================================================//
-void mm_free(void *rmem)
+void memman_free(void *rmem)
 {
       struct mem *mem;
 
@@ -308,143 +308,6 @@ void mm_free(void *rmem)
 
 //================================================================================================//
 /**
- * @brief Shrink memory returned by mem_malloc().
- *
- * @param rmem pointer to memory allocated by mem_malloc the is to be shrinked
- * @param newsize required size after shrinking (needs to be smaller than or
- *                equal to the previous size)
- * @return for compatibility reasons: is always == rmem, at the moment
- *         or NULL if newsize is > old size, in which case rmem is NOT touched
- *         or freed!
- */
-//================================================================================================//
-void *mm_trim(void *rmem, size_t newsize)
-{
-      size_t size;
-      size_t ptr, ptr2;
-      struct mem *mem, *mem2;
-
-      /* Expand the size of the allocated memory region so that we can adjust for alignment. */
-      newsize = MEM_ALIGN_SIZE(newsize);
-
-      if(newsize < BLOCK_MIN_SIZE_ALIGNED)
-      {
-            /* every data block must be at least BLOCK_MIN_SIZE_ALIGNED long */
-            newsize = BLOCK_MIN_SIZE_ALIGNED;
-      }
-
-      if (newsize > MEM_SIZE_ALIGNED)
-      {
-            return NULL;
-      }
-
-      if ((u8_t *)rmem < (u8_t *)ram || (u8_t *)rmem >= (u8_t *)ram_end)
-      {
-            return rmem;
-      }
-      /* Get the corresponding struct mem ... */
-      mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
-
-      /* ... and its offset pointer */
-      ptr = (size_t)((u8_t *)mem - ram);
-
-      size = mem->next - ptr - SIZEOF_STRUCT_MEM;
-
-      if (newsize > size)
-      {
-            /* not supported */
-            return NULL;
-      }
-
-      if (newsize == size)
-      {
-            /* No change in size, simply return */
-            return rmem;
-      }
-
-      /* protect the heap from concurrent access */
-      MEM_FREE_PROTECT();
-
-      mem2 = (struct mem *)(void *)&ram[mem->next];
-
-      if(mem2->used == 0)
-      {
-            /* The next struct is unused, we can simply move it at little */
-            size_t next;
-
-            /* remember the old next pointer */
-            next = mem2->next;
-
-            /* create new struct mem which is moved directly after the shrinked mem */
-            ptr2 = ptr + SIZEOF_STRUCT_MEM + newsize;
-
-            if (lfree == mem2)
-            {
-                  lfree = (struct mem *)(void *)&ram[ptr2];
-            }
-
-            mem2 = (struct mem *)(void *)&ram[ptr2];
-            mem2->used = 0;
-
-            /* restore the next pointer */
-            mem2->next = next;
-
-            /* link it back to mem */
-            mem2->prev = ptr;
-
-            /* link mem to it */
-            mem->next = ptr2;
-
-            /* last thing to restore linked list: as we have moved mem2,
-            * let 'mem2->next->prev' point to mem2 again. but only if mem2->next is not
-            * the end of the heap */
-            if (mem2->next != MEM_SIZE_ALIGNED)
-            {
-                  ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
-            }
-
-            MEM_STATS_DEC_USED(size - newsize);
-            /* no need to plug holes, we've already done that */
-      }
-      else if (newsize + SIZEOF_STRUCT_MEM + BLOCK_MIN_SIZE_ALIGNED <= size)
-      {
-            /* Next struct is used but there's room for another struct mem with
-            * at least BLOCK_MIN_SIZE_ALIGNED of data.
-            * Old size ('size') must be big enough to contain at least 'newsize' plus a struct mem
-            * ('SIZEOF_STRUCT_MEM') with some data ('BLOCK_MIN_SIZE_ALIGNED').
-            * @todo we could leave out BLOCK_MIN_SIZE_ALIGNED. We would create an empty
-            *       region that couldn't hold data, but when mem->next gets freed,
-            *       the 2 regions would be combined, resulting in more free memory */
-            ptr2 = ptr + SIZEOF_STRUCT_MEM + newsize;
-            mem2 = (struct mem *)(void *)&ram[ptr2];
-
-            if (mem2 < lfree)
-            {
-                  lfree = mem2;
-            }
-
-            mem2->used = 0;
-            mem2->next = mem->next;
-            mem2->prev = ptr;
-            mem->next = ptr2;
-
-            if (mem2->next != MEM_SIZE_ALIGNED)
-            {
-                  ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
-            }
-
-            MEM_STATS_DEC_USED(size - newsize);
-            /* the original mem->next is used, so no need to plug holes! */
-      }
-
-      MEM_FREE_UNPROTECT();
-
-      return rmem;
-}
-
-
-//================================================================================================//
-/**
  * Adam's mem_malloc() plus solution for bug #17922
  * Allocate a block of memory with a minimum of 'size' bytes.
  *
@@ -454,7 +317,7 @@ void *mm_trim(void *rmem, size_t newsize)
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
  */
 //================================================================================================//
-void *mm_malloc(size_t size)
+void *memman_malloc(size_t size)
 {
       size_t ptr, ptr2;
       struct mem *mem, *mem2;
@@ -581,12 +444,12 @@ void *mm_malloc(size_t size)
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
 //================================================================================================//
-void *mm_calloc(size_t count, size_t size)
+void *memman_calloc(size_t count, size_t size)
 {
       void *p;
 
       /* allocate 'count' objects of size 'size' */
-      p = mm_malloc(count * size);
+      p = memman_malloc(count * size);
 
       if (p)
       {
@@ -605,7 +468,7 @@ void *mm_calloc(size_t count, size_t size)
  * @return free memory
  */
 //================================================================================================//
-u32_t mm_GetFreeHeapSize(void)
+u32_t memman_GetFreeHeapSize(void)
 {
       return (MEMMAN_HEAP_SIZE - used_mem);
 }
@@ -618,7 +481,7 @@ u32_t mm_GetFreeHeapSize(void)
  * @return used memory
  */
 //================================================================================================//
-u32_t mm_GetUsedHeapSize(void)
+u32_t memman_GetUsedHeapSize(void)
 {
       return used_mem;
 }
@@ -631,7 +494,7 @@ u32_t mm_GetUsedHeapSize(void)
  * @return memory size
  */
 //================================================================================================//
-u32_t mm_GetHeapSize(void)
+u32_t memman_GetHeapSize(void)
 {
       return MEMMAN_HEAP_SIZE;
 }

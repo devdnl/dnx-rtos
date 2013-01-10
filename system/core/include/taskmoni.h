@@ -54,9 +54,9 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
 #if (APP_MONITOR_MEMORY_USAGE == 0)
-#define moni_malloc(size)                       mm_malloc(size)
-#define moni_calloc(nmemb, msize)               mm_calloc(nmemb, msize)
-#define moni_free(mem)                          mm_free(mem)
+#define moni_malloc(size)                       mem_malloc(size)
+#define moni_calloc(nmemb, msize)               mem_calloc(nmemb, msize)
+#define moni_free(mem)                          mem_free(mem)
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */

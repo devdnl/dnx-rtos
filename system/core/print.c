@@ -38,9 +38,9 @@
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define calloc(nmemb, msize)              mm_calloc(nmemb, msize)
-#define malloc(size)                      mm_malloc(size)
-#define free(mem)                         mm_free(mem)
+#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
+#define malloc(size)                      memman_malloc(size)
+#define free(mem)                         memman_free(mem)
 
 #define fopen(path, mode)                 vfs_fopen(path, mode)
 #define fclose(file)                      vfs_fclose(file)

@@ -40,9 +40,12 @@ extern "C" {
 #include "print.h"
 #include "runtime.h"
 #include "oshooks.h"
-#include "netconf.h"
 #include "dlist.h"
 #include "taskmoni.h"
+
+#if !defined(ARCH_posix)
+#include "netconf.h"
+#endif
 
 
 /*==================================================================================================
@@ -88,10 +91,14 @@ extern "C" {
 #define SystemGetPID()                    TaskGetPID()
 #define SystemGetAppHandle()              TaskGetCurrentTaskHandle()
 #define SystemAppSuspend()                TaskSuspend(NULL)
-#define SystemGetFreeMemSize()            mm_GetFreeHeapSize()
-#define SystemGetUsedMemSize()            mm_GetUsedHeapSize()
+#define SystemGetFreeMemSize()            memman_GetFreeHeapSize()
+#define SystemGetUsedMemSize()            memman_GetUsedHeapSize()
 #define SystemGetMemSize()                MEMMAN_HEAP_SIZE
+#if defined(NETCONF_H_)
 #define SystemGetHostname()               LwIP_GetHostname()
+#else
+#define SystemGetHostname()               "localhost"
+#endif
 #define SystemGetUptime()                 GetUptimeCnt()
 #define SystemGetTaskCount()              TaskGetNumberOfTasks()
 #define SystemGetOSTickCnt()              TaskGetTickCount()

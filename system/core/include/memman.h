@@ -98,14 +98,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern void   mm_init(void);
-extern void  *mm_malloc(size_t size);
-extern void  *mm_calloc(size_t count, size_t size);
-extern void  *mm_trim(void *rmem, size_t newsize);
-extern void   mm_free(void *mem);
-extern u32_t  mm_GetFreeHeapSize(void);
-extern u32_t  mm_GetUsedHeapSize(void);
-extern u32_t  mm_GetHeapSize(void);
+extern void   memman_init(void);
+extern void  *memman_malloc(size_t size);
+extern void  *memman_calloc(size_t count, size_t size);
+extern void   memman_free(void *mem);
+extern u32_t  memman_GetFreeHeapSize(void);
+extern u32_t  memman_GetUsedHeapSize(void);
+extern u32_t  memman_GetHeapSize(void);
 
 #ifdef __cplusplus
 }

@@ -76,7 +76,7 @@ int main(void)
       cpuctl_BasicConfig();
 
       /* dynamic memory management initialization */
-      mm_init();
+      memman_init();
 
       /* create initialize task */
       TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, -1, NULL);

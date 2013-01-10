@@ -41,9 +41,9 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define calloc(nmemb, msize)        mm_calloc(nmemb, msize)
-#define malloc(size)                mm_malloc(size)
-#define free(mem)                   mm_free(mem)
+#define calloc(nmemb, msize)        memman_calloc(nmemb, msize)
+#define malloc(size)                memman_malloc(size)
+#define free(mem)                   memman_free(mem)
 
 #define MEM_BLOCK_COUNT             4
 #define MEM_ADR_IN_BLOCK            7

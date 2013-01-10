@@ -365,10 +365,10 @@ extern "C" {
 /*
  * Map to the memory management routines required for the port.
  */
-#define pvPortMalloc(xSize)                     mm_malloc(xSize)
-#define vPortFree(pv)                           mm_free(pv)
+#define pvPortMalloc(xSize)                     memman_malloc(xSize)
+#define vPortFree(pv)                           memman_free(pv)
 #define vPortInitialiseBlocks()
-#define xPortGetFreeHeapSize()                  mm_GetFreeHeapSize()
+#define xPortGetFreeHeapSize()                  memman_GetFreeHeapSize()
 
 /*
  * Setup the hardware ready for the scheduler to take control.  This generally
