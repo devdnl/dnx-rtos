@@ -67,9 +67,16 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
-#include "config.h"
-#include "memman.h"
-#include "cpuctl.h"
+#include "config.h"     /* general configuration  */
+#include "cpuctl.h"     /* CPU specified settings */
+
+/*-------------------------------------------------------------
+ * Used prototypes from external modules
+ *-----------------------------------------------------------*/
+extern void *memman_malloc       (size_t size);
+extern void  memman_free         (void *mem);
+extern void  moni_TaskSwitchedIn (void);
+extern void  moni_TaskSwitchedOut(void);
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -129,10 +136,12 @@ configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY CONFIG_RTOS_LIB_KERNEL_IRQ_PRIO
 
+/** dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
+#define malloc(size)                            memman_malloc(size)
+#define free(mem)                               memman_free(mem)
+
 /* required functions in cpu load stats */
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-extern void moni_TaskSwitchedIn(void);
-extern void moni_TaskSwitchedOut(void);
 #define traceTASK_SWITCHED_OUT()                moni_TaskSwitchedIn()
 #define traceTASK_SWITCHED_IN()                 moni_TaskSwitchedOut()
 #endif

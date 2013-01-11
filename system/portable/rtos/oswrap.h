@@ -46,6 +46,11 @@ extern "C" {
 /*==================================================================================================
                                   Exported symbolic constants/macros
 ==================================================================================================*/
+/** UNDEFINE MEMORY MANAGEMENT DEFINITIONS LOCALIZED IN FreeRTOS.h file (IMPORTANT!) */
+#undef free
+#undef malloc
+
+/** OS BASIC DEFINITIONS */
 #define MINIMAL_STACK_SIZE                CONFIG_RTOS_TASK_MIN_STACK_SIZE
 #define THIS_TASK                         NULL
 #define EMPTY_TASK                        UINT32_MAX

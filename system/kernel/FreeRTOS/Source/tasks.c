@@ -1,6 +1,6 @@
 /*
     FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
-
+	
 
     ***************************************************************************
      *                                                                       *
@@ -40,7 +40,7 @@
     FreeRTOS WEB site.
 
     1 tab == 4 spaces!
-
+    
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
@@ -50,17 +50,17 @@
      *                                                                       *
     ***************************************************************************
 
-
-    http://www.FreeRTOS.org - Documentation, training, latest information,
+    
+    http://www.FreeRTOS.org - Documentation, training, latest information, 
     license and contact details.
-
+    
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool.
 
-    Real Time Engineers ltd license FreeRTOS to High Integrity Systems, who sell
-    the code with commercial support, indemnification, and middleware, under
+    Real Time Engineers ltd license FreeRTOS to High Integrity Systems, who sell 
+    the code with commercial support, indemnification, and middleware, under 
     the OpenRTOS brand: http://www.OpenRTOS.com.  High Integrity Systems also
-    provide a safety engineered and independently SIL3 certified version under
+    provide a safety engineered and independently SIL3 certified version under 
     the SafeRTOS brand: http://www.SafeRTOS.com.
 */
 
@@ -96,8 +96,8 @@ typedef struct tskTaskControlBlock
 
 	#if ( portUSING_MPU_WRAPPERS == 1 )
 		xMPU_SETTINGS xMPUSettings;				/*< The MPU settings are defined as part of the port layer.  THIS MUST BE THE SECOND MEMBER OF THE STRUCT. */
-	#endif
-
+	#endif	
+	
 	xListItem				xGenericListItem;	/*< List item used to place the TCB in ready and blocked queues. */
 	xListItem				xEventListItem;		/*< List item used to place the TCB in event lists. */
 	unsigned portBASE_TYPE	uxPriority;			/*< The priority of the task where 0 is the lowest priority. */
@@ -166,9 +166,9 @@ PRIVILEGED_DATA static xList xPendingReadyList;							/*< Tasks that have been r
 #endif
 
 #if ( INCLUDE_xTaskGetIdleTaskHandle == 1 )
-
+	
 	PRIVILEGED_DATA static xTaskHandle xIdleTaskHandle = NULL;
-
+	
 #endif
 
 /* File private variables. --------------------------------*/
@@ -298,7 +298,7 @@ portTickType xItemValue;																\
 /* Callback function prototypes. --------------------------*/
 extern void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskName );
 extern void vApplicationTickHook( void );
-
+		
 /* File private functions. --------------------------------*/
 
 /*
@@ -438,7 +438,7 @@ tskTCB * pxNewTCB;
 		#else
 		{
 			pxTopOfStack = pxNewTCB->pxStack;
-
+			
 			/* Check the alignment of the stack buffer is correct. */
 			configASSERT( ( ( ( unsigned long ) pxNewTCB->pxStack & ( unsigned long ) portBYTE_ALIGNMENT_MASK ) == 0UL ) );
 
@@ -476,7 +476,7 @@ tskTCB * pxNewTCB;
 			required.*/
 			*pxCreatedTask = ( xTaskHandle ) pxNewTCB;
 		}
-
+		
 		/* We are going to manipulate the task queues to add this task to a
 		ready list, so must make sure no interrupts occur. */
 		taskENTER_CRITICAL();
@@ -1100,7 +1100,7 @@ portBASE_TYPE xReturn;
 		macro must be defined to configure the timer/counter used to generate
 		the run time counter time base. */
 		portCONFIGURE_TIMER_FOR_RUN_TIME_STATS();
-
+		
 		/* Setting up the timer tick is hardware specific and thus in the
 		portable interface. */
 		if( xPortStartScheduler() != pdFALSE )
@@ -1360,7 +1360,7 @@ unsigned portBASE_TYPE uxTaskGetNumberOfTasks( void )
 			/* Divide ulTotalRunTime by 100 to make the percentage caluclations
 			simpler in the prvGenerateRunTimeStatsForTasksInList() function. */
 			ulTotalRunTime /= 100UL;
-
+			
 			/* Run through all the lists that could potentially contain a TCB,
 			generating a table of run timer percentages in the provided
 			buffer. */
@@ -1423,7 +1423,7 @@ unsigned portBASE_TYPE uxTaskGetNumberOfTasks( void )
 		configASSERT( ( xIdleTaskHandle != NULL ) );
 		return xIdleTaskHandle;
 	}
-
+	
 #endif
 
 /*-----------------------------------------------------------
@@ -1449,17 +1449,17 @@ tskTCB * pxTCB;
 			If there are any items in pxDelayedTaskList here then there is
 			an error! */
 			configASSERT( ( listLIST_IS_EMPTY( pxDelayedTaskList ) ) );
-
+			
 			pxTemp = pxDelayedTaskList;
 			pxDelayedTaskList = pxOverflowDelayedTaskList;
 			pxOverflowDelayedTaskList = pxTemp;
 			xNumOfOverflows++;
-
+	
 			if( listLIST_IS_EMPTY( pxDelayedTaskList ) != pdFALSE )
 			{
 				/* The new current delayed list is empty.  Set
 				xNextTaskUnblockTime to the maximum possible value so it is
-				extremely unlikely that the
+				extremely unlikely that the	
 				if( xTickCount >= xNextTaskUnblockTime ) test will pass until
 				there is an item in the delayed list. */
 				xNextTaskUnblockTime = portMAX_DELAY;
@@ -1604,17 +1604,17 @@ void vTaskSwitchContext( void )
 	else
 	{
 		traceTASK_SWITCHED_OUT();
-
+	
 		#if ( configGENERATE_RUN_TIME_STATS == 1 )
 		{
 			unsigned long ulTempCounter;
-
+			
 				#ifdef portALT_GET_RUN_TIME_COUNTER_VALUE
 					portALT_GET_RUN_TIME_COUNTER_VALUE( ulTempCounter );
 				#else
 					ulTempCounter = portGET_RUN_TIME_COUNTER_VALUE();
 				#endif
-
+	
 				/* Add the amount of time the task has been running to the accumulated
 				time so far.  The time the task started running was stored in
 				ulTaskSwitchedInTime.  Note that there is no overflow protection here
@@ -1624,21 +1624,21 @@ void vTaskSwitchContext( void )
 				ulTaskSwitchedInTime = ulTempCounter;
 		}
 		#endif
-
+	
 		taskFIRST_CHECK_FOR_STACK_OVERFLOW();
 		taskSECOND_CHECK_FOR_STACK_OVERFLOW();
-
+	
 		/* Find the highest priority queue that contains ready tasks. */
 		while( listLIST_IS_EMPTY( &( pxReadyTasksLists[ uxTopReadyPriority ] ) ) )
 		{
 			configASSERT( uxTopReadyPriority );
 			--uxTopReadyPriority;
 		}
-
+	
 		/* listGET_OWNER_OF_NEXT_ENTRY walks through the list, so the tasks of the
 		same priority get an equal share of the processor time. */
 		listGET_OWNER_OF_NEXT_ENTRY( pxCurrentTCB, &( pxReadyTasksLists[ uxTopReadyPriority ] ) );
-
+	
 		traceTASK_SWITCHED_IN();
 	}
 }
@@ -1705,7 +1705,7 @@ portTickType xTimeToWake;
 		designed for use by kernel code, and has special calling requirements -
 		it should be called from a critical section. */
 
-
+	
 		/* Place the event list item of the TCB in the appropriate event list.
 		In this case it is assume that this is the only task that is going to
 		be waiting on this event list, so the faster vListInsertEnd() function
@@ -1722,7 +1722,7 @@ portTickType xTimeToWake;
 		xTimeToWake = xTickCount + xTicksToWait;
 		prvAddCurrentTaskToDelayedList( xTimeToWake );
 	}
-
+	
 #endif /* configUSE_TIMERS */
 /*-----------------------------------------------------------*/
 
@@ -1741,7 +1741,7 @@ portBASE_TYPE xReturn;
 	If an event is for a queue that is locked then this function will never
 	get called - the lock count on the queue will get modified instead.  This
 	means we can always expect exclusive access to the event list here.
-
+	
 	This function assumes that a check has already been made to ensure that
 	pxEventList is not empty. */
 	pxUnblockedTCB = ( tskTCB * ) listGET_OWNER_OF_HEAD_ENTRY( pxEventList );
@@ -1842,7 +1842,7 @@ void vTaskMissedYield( void )
 	{
 	unsigned portBASE_TYPE uxReturn;
 	tskTCB *pxTCB;
-
+	
 		if( xTask != NULL )
 		{
 			pxTCB = ( tskTCB * ) xTask;
@@ -1852,7 +1852,7 @@ void vTaskMissedYield( void )
 		{
 			uxReturn = 0U;
 		}
-
+		
 		return uxReturn;
 	}
 #endif
@@ -1862,7 +1862,7 @@ void vTaskMissedYield( void )
 	void vTaskSetTaskNumber( xTaskHandle xTask, unsigned portBASE_TYPE uxHandle )
 	{
 	tskTCB *pxTCB;
-
+	
 		if( xTask != NULL )
 		{
 			pxTCB = ( tskTCB * ) xTask;
@@ -2020,7 +2020,7 @@ static void prvInitialiseTCBVariables( tskTCB *pxTCB, const signed char * const 
 	void vTaskAllocateMPURegions( xTaskHandle xTaskToModify, const xMemoryRegion * const xRegions )
 	{
 	tskTCB *pxTCB;
-
+	
 		if( xTaskToModify == pxCurrentTCB )
 		{
 			xTaskToModify = NULL;
@@ -2180,8 +2180,8 @@ tskTCB *pxNewTCB;
 			{
 				usStackRemaining = usTaskCheckFreeStackSpace( ( unsigned char * ) pxNextTCB->pxStack );
 			}
-			#endif
-
+			#endif			
+			
 			sprintf( pcStatusString, ( char * ) "%s\t\t%c\t%u\t%u\t%u\r\n", pxNextTCB->pcTaskName, cStatus, ( unsigned int ) pxNextTCB->uxPriority, usStackRemaining, ( unsigned int ) pxNextTCB->uxTCBNumber );
 			strcat( ( char * ) pcWriteBuffer, ( char * ) pcStatusString );
 
@@ -2225,7 +2225,7 @@ tskTCB *pxNewTCB;
 					{
 						#ifdef portLU_PRINTF_SPECIFIER_REQUIRED
 						{
-							sprintf( pcStatsString, ( char * ) "%s\t\t%lu\t\t%lu%%\r\n", pxNextTCB->pcTaskName, pxNextTCB->ulRunTimeCounter, ulStatsAsPercentage );
+							sprintf( pcStatsString, ( char * ) "%s\t\t%lu\t\t%lu%%\r\n", pxNextTCB->pcTaskName, pxNextTCB->ulRunTimeCounter, ulStatsAsPercentage );							
 						}
 						#else
 						{
@@ -2241,7 +2241,7 @@ tskTCB *pxNewTCB;
 						consumed less than 1% of the total run time. */
 						#ifdef portLU_PRINTF_SPECIFIER_REQUIRED
 						{
-							sprintf( pcStatsString, ( char * ) "%s\t\t%lu\t\t<1%%\r\n", pxNextTCB->pcTaskName, pxNextTCB->ulRunTimeCounter );
+							sprintf( pcStatsString, ( char * ) "%s\t\t%lu\t\t<1%%\r\n", pxNextTCB->pcTaskName, pxNextTCB->ulRunTimeCounter );							
 						}
 						#else
 						{
@@ -2474,3 +2474,7 @@ void vTaskExitCritical( void )
 
 #endif
 /*-----------------------------------------------------------*/
+
+
+
+

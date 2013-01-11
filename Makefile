@@ -40,11 +40,12 @@ CSRC = $(sort \
    drivers/tty/arch/noarch/tty.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \
    lib/utils/utils.c \
-   system/kernel/freertos/Source/croutine.c \
-   system/kernel/freertos/Source/list.c \
-   system/kernel/freertos/Source/queue.c \
-   system/kernel/freertos/Source/tasks.c \
-   system/kernel/freertos/Source/timers.c \
+   system/kernel/FreeRTOS/Source/croutine.c \
+   system/kernel/FreeRTOS/Source/list.c \
+   system/kernel/FreeRTOS/Source/queue.c \
+   system/kernel/FreeRTOS/Source/tasks.c \
+   system/kernel/FreeRTOS/Source/timers.c \
+   system/kernel/FreeRTOS/Source/portable/MemMang/heap_3.c \
    system/core/taskmoni.c \
    system/core/runtime.c \
    system/core/dlist.c \
@@ -106,7 +107,7 @@ CSRC_stm32 = $(sort \
    drivers/i2c/arch/stm32/i2c.c \
    drivers/uart/arch/stm32/uart.c \
    drivers/pll/arch/stm32/pll.c \
-   system/kernel/freertos/Source/portable/GCC/ARM_CM3/port.c \
+   system/kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c \
    system/portable/stm32/cpuctl.c \
    system/portable/stm32/cpuhooks.c \
    system/portable/stm32/stm32f10x_vectors.c \
@@ -118,7 +119,7 @@ CSRC_posix = $(sort \
    drivers/i2c/arch/posix/i2c.c \
    drivers/uart/arch/posix/uart.c \
    drivers/pll/arch/posix/pll.c \
-   system/kernel/freertos/Source/portable/GCC/Posix/port.c \
+   system/kernel/FreeRTOS/Source/portable/GCC/Posix/port.c \
    system/portable/posix/cpuctl.c \
    )
 
@@ -160,7 +161,7 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    drivers/ds1307 \
    drivers/tty \
    drivers/mpl115a2 \
-   system/kernel/freertos/Source/include \
+   system/kernel/FreeRTOS/Source/include \
    system/config \
    system/core/include \
    system/fs/include \
