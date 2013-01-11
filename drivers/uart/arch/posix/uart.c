@@ -175,12 +175,11 @@ size_t UART_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, 
       (void)part;
       (void)seek;
 
-      ch_t buf[512];
-      memset(buf, 0, sizeof(buf));
+      ch_t *buf = calloc(256, sizeof(ch_t));
 
-      uint_t datasize;
+      size_t datasize = 0;
 
-      if (size * nitems < sizeof(buf)) {
+      if (size * nitems < 256) {
             datasize = size * nitems;
       } else {
             datasize = sizeof(buf);
@@ -188,7 +187,9 @@ size_t UART_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, 
 
       snprintf(buf, datasize, "%s", (ch_t*)src);
 
-      return 0;
+      printf("%s", buf);
+
+      return datasize;
 }
 
 
@@ -215,7 +216,15 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
       (void)nitems;
       (void)seek;
 
-      return 0;
+      if (dst) {
+            ch_t *data = dst;
+
+            for (uint_t i = 0; i < (size * nitems); i++) {
+                  *(data++) = getc(stdin);
+            }
+      }
+
+      return nitems;
 }
 
 
