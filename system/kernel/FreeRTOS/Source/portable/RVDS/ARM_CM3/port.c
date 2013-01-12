@@ -1,6 +1,8 @@
 /*
-    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
-	
+    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
@@ -44,15 +46,15 @@
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?                                      *
+     *    not run, what could be wrong?"                                     *
      *                                                                       *
      *    http://www.FreeRTOS.org/FAQHelp.html                               *
      *                                                                       *
     ***************************************************************************
 
     
-    http://www.FreeRTOS.org - Documentation, training, latest information, 
-    license and contact details.
+    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
+    and contact details.  
     
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool.
@@ -76,17 +78,40 @@
 	#define configKERNEL_INTERRUPT_PRIORITY 255
 #endif
 
-/* Constants required to manipulate the NVIC. */
-#define portNVIC_SYSTICK_CTRL		( ( volatile unsigned long *) 0xe000e010 )
-#define portNVIC_SYSTICK_LOAD		( ( volatile unsigned long *) 0xe000e014 )
-#define portNVIC_INT_CTRL			( ( volatile unsigned long *) 0xe000ed04 )
-#define portNVIC_SYSPRI2			( ( volatile unsigned long *) 0xe000ed20 )
-#define portNVIC_SYSTICK_CLK		0x00000004
-#define portNVIC_SYSTICK_INT		0x00000002
-#define portNVIC_SYSTICK_ENABLE		0x00000001
-#define portNVIC_PENDSVSET			0x10000000
-#define portNVIC_PENDSV_PRI			( ( ( unsigned long ) configKERNEL_INTERRUPT_PRIORITY ) << 16 )
-#define portNVIC_SYSTICK_PRI		( ( ( unsigned long ) configKERNEL_INTERRUPT_PRIORITY ) << 24 )
+#if configMAX_SYSCALL_INTERRUPT_PRIORITY == 0
+	#error configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to 0.  See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html
+#endif
+
+#ifndef configSYSTICK_CLOCK_HZ
+	#define configSYSTICK_CLOCK_HZ configCPU_CLOCK_HZ
+#endif
+
+/* The __weak attribute does not work as you might expect with the Keil tools
+so the configOVERRIDE_DEFAULT_TICK_CONFIGURATION constant must be set to 1 if
+the application writer wants to provide their own implementation of 
+vPortSetupTimerInterrupt().  Ensure configOVERRIDE_DEFAULT_TICK_CONFIGURATION
+is defined. */
+#ifndef configOVERRIDE_DEFAULT_TICK_CONFIGURATION
+	#define configOVERRIDE_DEFAULT_TICK_CONFIGURATION 0
+#endif
+
+/* Constants required to manipulate the core.  Registers first... */
+#define portNVIC_SYSTICK_CTRL_REG			( * ( ( volatile unsigned long * ) 0xe000e010 ) )
+#define portNVIC_SYSTICK_LOAD_REG			( * ( ( volatile unsigned long * ) 0xe000e014 ) )
+#define portNVIC_SYSTICK_CURRENT_VALUE_REG	( * ( ( volatile unsigned long * ) 0xe000e018 ) )
+#define portNVIC_INT_CTRL_REG				( * ( ( volatile unsigned long * ) 0xe000ed04 ) )
+#define portNVIC_SYSPRI2_REG				( * ( ( volatile unsigned long * ) 0xe000ed20 ) )
+/* ...then bits in the registers. */
+#define portNVIC_SYSTICK_CLK_BIT			( 1UL << 2UL )
+#define portNVIC_SYSTICK_INT_BIT			( 1UL << 1UL )
+#define portNVIC_SYSTICK_ENABLE_BIT			( 1UL << 0UL )
+#define portNVIC_SYSTICK_COUNT_FLAG_BIT		( 1UL << 16UL )
+#define portNVIC_PENDSVSET_BIT				( 1UL << 28UL )
+#define portNVIC_PENDSVCLEAR_BIT 			( 1UL << 27UL )
+#define portNVIC_PEND_SYSTICK_CLEAR_BIT		( 1UL << 25UL )
+
+#define portNVIC_PENDSV_PRI					( ( ( unsigned long ) configKERNEL_INTERRUPT_PRIORITY ) << 16 )
+#define portNVIC_SYSTICK_PRI				( ( ( unsigned long ) configKERNEL_INTERRUPT_PRIORITY ) << 24 )
 
 /* Constants required to set up the initial stack. */
 #define portINITIAL_XPSR			( 0x01000000 )
@@ -95,10 +120,12 @@
 variable. */
 static unsigned portBASE_TYPE uxCriticalNesting = 0xaaaaaaaa;
 
-/* 
- * Setup the timer to generate the tick interrupts.
+/*
+ * Setup the timer to generate the tick interrupts.  The implementation in this
+ * file is weak to allow application writers to change the timer used to 
+ * generate the tick interrupt.
  */
-static void prvSetupTimerInterrupt( void );
+void vPortSetupTimerInterrupt( void );
 
 /*
  * Exception handlers.
@@ -110,12 +137,37 @@ void vPortSVCHandler( void );
 /*
  * Start first task is a separate function so it can be tested in isolation.
  */
-void vPortStartFirstTask( void );
+static void prvStartFirstTask( void );
 
 /*-----------------------------------------------------------*/
 
-/* 
- * See header file for description. 
+/*
+ * The number of SysTick increments that make up one tick period.
+ */
+#if configUSE_TICKLESS_IDLE == 1
+	static unsigned long ulTimerReloadValueForOneTick = 0;
+#endif
+
+/*
+ * The maximum number of tick periods that can be suppressed is limited by the
+ * 24 bit resolution of the SysTick timer.
+ */
+#if configUSE_TICKLESS_IDLE == 1
+	static unsigned long xMaximumPossibleSuppressedTicks = 0;
+#endif /* configUSE_TICKLESS_IDLE */
+
+/*
+ * Compensate for the CPU cycles that pass while the SysTick is stopped (low
+ * power functionality only.
+ */
+#if configUSE_TICKLESS_IDLE == 1
+	static unsigned long ulStoppedTimerCompensation = 0;
+#endif /* configUSE_TICKLESS_IDLE */
+
+/*-----------------------------------------------------------*/
+
+/*
+ * See header file for description.
  */
 portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
 {
@@ -139,19 +191,19 @@ __asm void vPortSVCHandler( void )
 {
 	PRESERVE8
 
-	ldr	r3, =pxCurrentTCB		/* Restore the context. */
-	ldr r1, [r3]				/* Use pxCurrentTCBConst to get the pxCurrentTCB address. */
-	ldr r0, [r1]				/* The first item in pxCurrentTCB is the task top of stack. */
+	ldr	r3, =pxCurrentTCB	/* Restore the context. */
+	ldr r1, [r3]			/* Use pxCurrentTCBConst to get the pxCurrentTCB address. */
+	ldr r0, [r1]			/* The first item in pxCurrentTCB is the task top of stack. */
 	ldmia r0!, {r4-r11}		/* Pop the registers that are not automatically saved on exception entry and the critical nesting count. */
-	msr psp, r0					/* Restore the task stack pointer. */
+	msr psp, r0				/* Restore the task stack pointer. */
 	mov r0, #0
 	msr	basepri, r0
-	orr r14, #0xd				
-	bx r14						
+	orr r14, #0xd
+	bx r14
 }
 /*-----------------------------------------------------------*/
 
-__asm void vPortStartFirstTask( void )
+__asm void prvStartFirstTask( void )
 {
 	PRESERVE8
 
@@ -169,24 +221,24 @@ __asm void vPortStartFirstTask( void )
 }
 /*-----------------------------------------------------------*/
 
-/* 
- * See header file for description. 
+/*
+ * See header file for description.
  */
 portBASE_TYPE xPortStartScheduler( void )
 {
-	/* Make PendSV, CallSV and SysTick the same priroity as the kernel. */
-	*(portNVIC_SYSPRI2) |= portNVIC_PENDSV_PRI;
-	*(portNVIC_SYSPRI2) |= portNVIC_SYSTICK_PRI;
+	/* Make PendSV, CallSV and SysTick the same priority as the kernel. */
+	portNVIC_SYSPRI2_REG |= portNVIC_PENDSV_PRI;
+	portNVIC_SYSPRI2_REG |= portNVIC_SYSTICK_PRI;
 
 	/* Start the timer that generates the tick ISR.  Interrupts are disabled
 	here already. */
-	prvSetupTimerInterrupt();
-	
+	vPortSetupTimerInterrupt();
+
 	/* Initialise the critical nesting count ready for the first task. */
 	uxCriticalNesting = 0;
 
 	/* Start the first task. */
-	vPortStartFirstTask();
+	prvStartFirstTask();
 
 	/* Should not get here! */
 	return 0;
@@ -203,7 +255,7 @@ void vPortEndScheduler( void )
 void vPortYieldFromISR( void )
 {
 	/* Set a PendSV to request a context switch. */
-	*(portNVIC_INT_CTRL) = portNVIC_PENDSVSET;
+	portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
 }
 /*-----------------------------------------------------------*/
 
@@ -232,26 +284,26 @@ __asm void xPortPendSVHandler( void )
 
 	PRESERVE8
 
-	mrs r0, psp						 
+	mrs r0, psp
 
-	ldr	r3, =pxCurrentTCB		 	 /* Get the location of the current TCB. */
-	ldr	r2, [r3]						
+	ldr	r3, =pxCurrentTCB		/* Get the location of the current TCB. */
+	ldr	r2, [r3]
 
-	stmdb r0!, {r4-r11}				 /* Save the remaining registers. */
-	str r0, [r2]					 /* Save the new top of stack into the first member of the TCB. */
+	stmdb r0!, {r4-r11}			/* Save the remaining registers. */
+	str r0, [r2]				/* Save the new top of stack into the first member of the TCB. */
 
-	stmdb sp!, {r3, r14}		
+	stmdb sp!, {r3, r14}
 	mov r0, #configMAX_SYSCALL_INTERRUPT_PRIORITY
-	msr basepri, r0		 
+	msr basepri, r0
 	bl vTaskSwitchContext
 	mov r0, #0
 	msr basepri, r0
-	ldmia sp!, {r3, r14}			
+	ldmia sp!, {r3, r14}
 
-	ldr r1, [r3]					 
-	ldr r0, [r1]					 /* The first item in pxCurrentTCB is the task top of stack. */
-	ldmia r0!, {r4-r11}			 /* Pop the registers and the critical nesting count. */
-	msr psp, r0						 
+	ldr r1, [r3]
+	ldr r0, [r1]				/* The first item in pxCurrentTCB is the task top of stack. */
+	ldmia r0!, {r4-r11}			/* Pop the registers and the critical nesting count. */
+	msr psp, r0
 	bx r14
 	nop
 }
@@ -259,53 +311,177 @@ __asm void xPortPendSVHandler( void )
 
 void xPortSysTickHandler( void )
 {
-unsigned long ulDummy;
-
-	/* If using preemption, also force a context switch. */
 	#if configUSE_PREEMPTION == 1
-		*(portNVIC_INT_CTRL) = portNVIC_PENDSVSET;	
+	{
+		/* If using preemption, also force a context switch. */
+		portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
+	}
 	#endif
 
-	ulDummy = portSET_INTERRUPT_MASK_FROM_ISR();
+	/* Only reset the systick load register if configUSE_TICKLESS_IDLE is set to
+	1.  If it is set to 0 tickless idle is not being used.  If it is set to a 
+	value other than 0 or 1 then a timer other than the SysTick is being used
+	to generate the tick interrupt. */
+	#if configUSE_TICKLESS_IDLE == 1
+		portNVIC_SYSTICK_LOAD_REG = ulTimerReloadValueForOneTick;
+	#endif
+
+	( void ) portSET_INTERRUPT_MASK_FROM_ISR();
 	{
 		vTaskIncrementTick();
 	}
-	portCLEAR_INTERRUPT_MASK_FROM_ISR( ulDummy );
+	portCLEAR_INTERRUPT_MASK_FROM_ISR( 0 );
 }
+/*-----------------------------------------------------------*/
+
+#if configUSE_TICKLESS_IDLE == 1
+
+	__weak void vPortSuppressTicksAndSleep( portTickType xExpectedIdleTime )
+	{
+	unsigned long ulReloadValue, ulCompleteTickPeriods, ulCompletedSysTickIncrements;
+
+		/* Make sure the SysTick reload value does not overflow the counter. */
+		if( xExpectedIdleTime > xMaximumPossibleSuppressedTicks )
+		{
+			xExpectedIdleTime = xMaximumPossibleSuppressedTicks;
+		}
+
+		/* Calculate the reload value required to wait xExpectedIdleTime
+		tick periods.  -1 is used because this code will execute part way
+		through one of the tick periods, and the fraction of a tick period is
+		accounted for later. */
+		ulReloadValue = ( ulTimerReloadValueForOneTick * ( xExpectedIdleTime - 1UL ) );
+		if( ulReloadValue > ulStoppedTimerCompensation )
+		{
+			ulReloadValue -= ulStoppedTimerCompensation;
+		}
+
+		/* Stop the SysTick momentarily.  The time the SysTick is stopped for
+		is accounted for as best it can be, but using the tickless mode will
+		inevitably result in some tiny drift of the time maintained by the
+		kernel with respect to calendar time. */
+		portNVIC_SYSTICK_CTRL_REG = portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT;
+
+		/* If a context switch is pending then abandon the low power entry as
+		the context switch might have been pended by an external interrupt that
+		requires processing. */
+		if( ( portNVIC_INT_CTRL_REG & portNVIC_PENDSVSET_BIT ) != 0 )
+		{
+			/* Restart SysTick. */
+			portNVIC_SYSTICK_CTRL_REG = portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT;
+		}
+		else
+		{
+			/* Adjust the reload value to take into account that the current
+			time slice is already partially complete. */
+			ulReloadValue += ( portNVIC_SYSTICK_LOAD_REG - ( portNVIC_SYSTICK_LOAD_REG - portNVIC_SYSTICK_CURRENT_VALUE_REG ) );
+			portNVIC_SYSTICK_LOAD_REG = ulReloadValue;
+
+			/* Clear the SysTick count flag and set the count value back to
+			zero. */
+			portNVIC_SYSTICK_CURRENT_VALUE_REG = 0UL;
+
+			/* Restart SysTick. */
+			portNVIC_SYSTICK_CTRL_REG = portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT;
+
+			/* Sleep until something happens. */
+			configPRE_SLEEP_PROCESSING( xExpectedIdleTime );
+			if( xExpectedIdleTime > 0 )
+			{
+				__wfi();
+			}
+			configPOST_SLEEP_PROCESSING( xExpectedIdleTime );
+
+			/* Stop SysTick.  Again, the time the SysTick is stopped for is
+			accounted for as best it can be, but using the tickless mode will
+			inevitably result in some tiny drift of the time maintained by the
+			kernel with respect to calendar time. */
+			portNVIC_SYSTICK_CTRL_REG = portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT;
+
+			if( ( portNVIC_SYSTICK_CTRL_REG & portNVIC_SYSTICK_COUNT_FLAG_BIT ) != 0 )
+			{
+				/* The tick interrupt has already executed, and the SysTick
+				count reloaded with the portNVIC_SYSTICK_LOAD_REG value.
+				Reset the portNVIC_SYSTICK_LOAD_REG with whatever remains of
+				this tick period. */
+				portNVIC_SYSTICK_LOAD_REG = ulTimerReloadValueForOneTick - ( ulReloadValue - portNVIC_SYSTICK_CURRENT_VALUE_REG );
+
+				/* The tick interrupt handler will already have pended the tick
+				processing in the kernel.  As the pending tick will be
+				processed as soon as this function exits, the tick value
+				maintained by the tick is stepped forward by one less than the
+				time spent waiting. */
+				ulCompleteTickPeriods = xExpectedIdleTime - 1UL;
+			}
+			else
+			{
+				/* Something other than the tick interrupt ended the sleep.
+				Work out how long the sleep lasted. */
+				ulCompletedSysTickIncrements = ( xExpectedIdleTime * ulTimerReloadValueForOneTick ) - portNVIC_SYSTICK_CURRENT_VALUE_REG;
+
+				/* How many complete tick periods passed while the processor
+				was waiting? */
+				ulCompleteTickPeriods = ulCompletedSysTickIncrements / ulTimerReloadValueForOneTick;
+
+				/* The reload value is set to whatever fraction of a single tick
+				period remains. */
+				portNVIC_SYSTICK_LOAD_REG = ( ( ulCompleteTickPeriods + 1 ) * ulTimerReloadValueForOneTick ) - ulCompletedSysTickIncrements;
+			}
+
+			/* Restart SysTick so it runs from portNVIC_SYSTICK_LOAD_REG
+			again, then set portNVIC_SYSTICK_LOAD_REG back to its standard
+			value. */
+			portNVIC_SYSTICK_CURRENT_VALUE_REG = 0UL;
+			portNVIC_SYSTICK_CTRL_REG = portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT;
+
+			vTaskStepTick( ulCompleteTickPeriods );
+		}
+	}
+
+#endif /* #if configUSE_TICKLESS_IDLE */
+
 /*-----------------------------------------------------------*/
 
 /*
- * Setup the systick timer to generate the tick interrupts at the required
+ * Setup the SysTick timer to generate the tick interrupts at the required
  * frequency.
  */
-void prvSetupTimerInterrupt( void )
-{
-	/* Configure SysTick to interrupt at the requested rate. */
-	*(portNVIC_SYSTICK_LOAD) = ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
-	*(portNVIC_SYSTICK_CTRL) = portNVIC_SYSTICK_CLK | portNVIC_SYSTICK_INT | portNVIC_SYSTICK_ENABLE;
-}
+#if configOVERRIDE_DEFAULT_TICK_CONFIGURATION == 0
+
+	void vPortSetupTimerInterrupt( void )
+	{
+		/* Calculate the constants required to configure the tick interrupt. */		
+		#if configUSE_TICKLESS_IDLE == 1
+		{
+			ulTimerReloadValueForOneTick = ( configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
+			xMaximumPossibleSuppressedTicks = 0xffffffUL / ( ( configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL );
+			ulStoppedTimerCompensation = 45UL / ( configCPU_CLOCK_HZ / configSYSTICK_CLOCK_HZ );
+		}
+		#endif /* configUSE_TICKLESS_IDLE */
+	
+		/* Configure SysTick to interrupt at the requested rate. */
+		portNVIC_SYSTICK_LOAD_REG = ( configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;;
+		portNVIC_SYSTICK_CTRL_REG = portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT;
+	}
+	
+#endif /* configOVERRIDE_DEFAULT_TICK_CONFIGURATION */
 /*-----------------------------------------------------------*/
 
-__asm void vPortSetInterruptMask( void )
+__asm unsigned long ulPortSetInterruptMask( void )
 {
 	PRESERVE8
 
-	push { r0 }
-	mov r0, #configMAX_SYSCALL_INTERRUPT_PRIORITY
-	msr basepri, r0
-	pop { r0 }
+	mrs r0, basepri
+	mov r1, #configMAX_SYSCALL_INTERRUPT_PRIORITY
+	msr basepri, r1
 	bx r14
 }
-
 /*-----------------------------------------------------------*/
 
-__asm void vPortClearInterruptMask( void )
+__asm void vPortClearInterruptMask( unsigned long ulNewMask )
 {
 	PRESERVE8
 
-	push { r0 }
-	mov r0, #0
 	msr basepri, r0
-	pop { r0 }
 	bx r14
 }

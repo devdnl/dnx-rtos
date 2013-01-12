@@ -1,6 +1,8 @@
 /*
-    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
-	
+    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
@@ -44,15 +46,15 @@
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?                                      *
+     *    not run, what could be wrong?"                                     *
      *                                                                       *
      *    http://www.FreeRTOS.org/FAQHelp.html                               *
      *                                                                       *
     ***************************************************************************
 
     
-    http://www.FreeRTOS.org - Documentation, training, latest information, 
-    license and contact details.
+    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
+    and contact details.  
     
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool.
@@ -126,10 +128,13 @@ extern void vPortYieldFromISR( void );
 	
 /*
  * Set basepri back to 0 without effective other registers.
- * r0 is clobbered.
+ * r0 is clobbered.  FAQ:  Setting BASEPRI to 0 is not a bug.  Please see 
+ * http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html before disagreeing.
  */
 #define portCLEAR_INTERRUPT_MASK() __set_BASEPRI( 0 )
 
+/* FAQ:  Setting BASEPRI to 0 is not a bug.  Please see 
+http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html before disagreeing. */
 #define portSET_INTERRUPT_MASK_FROM_ISR()		0;portSET_INTERRUPT_MASK()
 #define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	portCLEAR_INTERRUPT_MASK();(void)x
 

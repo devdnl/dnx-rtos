@@ -1,6 +1,8 @@
 /*
-    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
+    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
 
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
@@ -44,15 +46,15 @@
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?                                      *
+     *    not run, what could be wrong?"                                     *
      *                                                                       *
      *    http://www.FreeRTOS.org/FAQHelp.html                               *
      *                                                                       *
     ***************************************************************************
 
     
-    http://www.FreeRTOS.org - Documentation, training, latest information, 
-    license and contact details.
+    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
+    and contact details.  
     
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool.
@@ -85,7 +87,7 @@ task.h is included from an application file. */
  * PUBLIC LIST API documented in list.h
  *----------------------------------------------------------*/
 
-/* Constants used with the cRxLock and cTxLock structure members. */
+/* Constants used with the cRxLock and xTxLock structure members. */
 #define queueUNLOCKED					( ( signed portBASE_TYPE ) -1 )
 #define queueLOCKED_UNMODIFIED			( ( signed portBASE_TYPE ) 0 )
 
@@ -133,9 +135,9 @@ typedef struct QueueDefinition
 	unsigned portBASE_TYPE uxLength;		/*< The length of the queue defined as the number of items it will hold, not the number of bytes. */
 	unsigned portBASE_TYPE uxItemSize;		/*< The size of each items that the queue will hold. */
 
-	signed portBASE_TYPE xRxLock;			/*< Stores the number of items received from the queue (removed from the queue) while the queue was locked.  Set to queueUNLOCKED when the queue is not locked. */
-	signed portBASE_TYPE xTxLock;			/*< Stores the number of items transmitted to the queue (added to the queue) while the queue was locked.  Set to queueUNLOCKED when the queue is not locked. */
-	
+	volatile signed portBASE_TYPE xRxLock;	/*< Stores the number of items received from the queue (removed from the queue) while the queue was locked.  Set to queueUNLOCKED when the queue is not locked. */
+	volatile signed portBASE_TYPE xTxLock;	/*< Stores the number of items transmitted to the queue (added to the queue) while the queue was locked.  Set to queueUNLOCKED when the queue is not locked. */
+
 	#if ( configUSE_TRACE_FACILITY == 1 )
 		unsigned char ucQueueNumber;
 		unsigned char ucQueueType;
@@ -157,12 +159,12 @@ typedef xQUEUE * xQueueHandle;
  * functions are documented in the API header file.
  */
 xQueueHandle xQueueGenericCreate( unsigned portBASE_TYPE uxQueueLength, unsigned portBASE_TYPE uxItemSize, unsigned char ucQueueType ) PRIVILEGED_FUNCTION;
-signed portBASE_TYPE xQueueGenericSend( xQueueHandle xQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
+signed portBASE_TYPE xQueueGenericSend( xQueueHandle pxQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
 unsigned portBASE_TYPE uxQueueMessagesWaiting( const xQueueHandle pxQueue ) PRIVILEGED_FUNCTION;
 void vQueueDelete( xQueueHandle xQueue ) PRIVILEGED_FUNCTION;
 signed portBASE_TYPE xQueueGenericSendFromISR( xQueueHandle pxQueue, const void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
 signed portBASE_TYPE xQueueGenericReceive( xQueueHandle pxQueue, void * const pvBuffer, portTickType xTicksToWait, portBASE_TYPE xJustPeeking ) PRIVILEGED_FUNCTION;
-signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void * const pvBuffer, signed portBASE_TYPE *pxTaskWoken ) PRIVILEGED_FUNCTION;
+signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void * const pvBuffer, signed portBASE_TYPE *pxHigherPriorityTaskWoken ) PRIVILEGED_FUNCTION;
 xQueueHandle xQueueCreateMutex( unsigned char ucQueueType ) PRIVILEGED_FUNCTION;
 xQueueHandle xQueueCreateCountingSemaphore( unsigned portBASE_TYPE uxCountValue, unsigned portBASE_TYPE uxInitialCount ) PRIVILEGED_FUNCTION;
 portBASE_TYPE xQueueTakeMutexRecursive( xQueueHandle xMutex, portTickType xBlockTime ) PRIVILEGED_FUNCTION;
@@ -278,26 +280,9 @@ static void prvCopyDataFromQueue( xQUEUE * const pxQueue, const void *pvBuffer )
 
 portBASE_TYPE xQueueGenericReset( xQueueHandle pxQueue, portBASE_TYPE xNewQueue )
 {
-portBASE_TYPE xReturn = pdPASS;
-
 	configASSERT( pxQueue );
 
-	/* If the queue being reset has already been used (has not just been
-	created), then only reset the queue if its event lists are empty. */
-	if( xNewQueue != pdTRUE )
-	{
-		if( listLIST_IS_EMPTY( &( pxQueue->xTasksWaitingToReceive ) ) == pdFALSE )
-		{
-			xReturn = pdFAIL;
-		}
-
-		if( listLIST_IS_EMPTY( &( pxQueue->xTasksWaitingToSend ) ) == pdFALSE )
-		{
-			xReturn = pdFAIL;
-		}
-	}
-
-	if( xReturn == pdPASS )
+	taskENTER_CRITICAL();
 	{
 		pxQueue->pcTail = pxQueue->pcHead + ( pxQueue->uxLength * pxQueue->uxItemSize );
 		pxQueue->uxMessagesWaiting = ( unsigned portBASE_TYPE ) 0U;
@@ -306,12 +291,33 @@ portBASE_TYPE xReturn = pdPASS;
 		pxQueue->xRxLock = queueUNLOCKED;
 		pxQueue->xTxLock = queueUNLOCKED;
 
-		/* Ensure the event queues start with the correct state. */
-		vListInitialise( &( pxQueue->xTasksWaitingToSend ) );
-		vListInitialise( &( pxQueue->xTasksWaitingToReceive ) );
+		if( xNewQueue == pdFALSE )
+		{
+			/* If there are tasks blocked waiting to read from the queue, then
+			the tasks will remain blocked as after this function exits the queue
+			will still be empty.  If there are tasks blocked waiting to	write to
+			the queue, then one should be unblocked as after this function exits
+			it will be possible to write to it. */
+			if( listLIST_IS_EMPTY( &( pxQueue->xTasksWaitingToSend ) ) == pdFALSE )
+			{
+				if( xTaskRemoveFromEventList( &( pxQueue->xTasksWaitingToSend ) ) == pdTRUE )
+				{
+					portYIELD_WITHIN_API();
+				}
+			}
+		}
+		else
+		{
+			/* Ensure the event queues start in the correct state. */
+			vListInitialise( &( pxQueue->xTasksWaitingToSend ) );
+			vListInitialise( &( pxQueue->xTasksWaitingToReceive ) );
+		}
 	}
+	taskEXIT_CRITICAL();
 
-	return xReturn;
+	/* A value is returned for calling semantic consistency with previous
+	versions. */
+	return pdPASS;
 }
 /*-----------------------------------------------------------*/
 
@@ -425,7 +431,7 @@ xQueueHandle xReturn = NULL;
 #endif /* configUSE_MUTEXES */
 /*-----------------------------------------------------------*/
 
-#if ( configUSE_MUTEXES == 1 )
+#if ( ( configUSE_MUTEXES == 1 ) && ( INCLUDE_xQueueGetMutexHolder == 1 ) )
 
 	void* xQueueGetMutexHolder( xQueueHandle xSemaphore )
 	{
@@ -434,7 +440,7 @@ xQueueHandle xReturn = NULL;
 		/* This function is called by xSemaphoreGetMutexHolder(), and should not
 		be called directly.  Note:  This is is a good way of determining if the
 		calling task is the mutex holder, but not a good way of determining the
-		identity of the mutex holder, as the holder may change between the 
+		identity of the mutex holder, as the holder may change between the
 		following critical section exiting and the function returning. */
 		taskENTER_CRITICAL();
 		{
@@ -448,7 +454,7 @@ xQueueHandle xReturn = NULL;
 			}
 		}
 		taskEXIT_CRITICAL();
-		
+
 		return pxReturn;
 	}
 
@@ -870,7 +876,9 @@ xTimeOutType xTimeOut;
 							if( pxQueue->uxQueueType == queueQUEUE_IS_MUTEX )
 							{
 								portENTER_CRITICAL();
+								{
 									vTaskPriorityInherit( ( void * ) pxQueue->pxMutexHolder );
+								}
 								portEXIT_CRITICAL();
 							}
 						}
@@ -901,7 +909,6 @@ signed portBASE_TYPE xReturn;
 unsigned portBASE_TYPE uxSavedInterruptStatus;
 
 	configASSERT( pxQueue );
-	configASSERT( pxHigherPriorityTaskWoken );
 	configASSERT( !( ( pvItemToQueue == NULL ) && ( pxQueue->uxItemSize != ( unsigned portBASE_TYPE ) 0U ) ) );
 
 	/* Similar to xQueueGenericSend, except we don't block if there is no room
@@ -927,7 +934,10 @@ unsigned portBASE_TYPE uxSavedInterruptStatus;
 					{
 						/* The task waiting has a higher priority so record that a
 						context	switch is required. */
-						*pxHigherPriorityTaskWoken = pdTRUE;
+						if( pxHigherPriorityTaskWoken != NULL )
+						{
+							*pxHigherPriorityTaskWoken = pdTRUE;
+						}
 					}
 				}
 			}
@@ -1024,7 +1034,6 @@ signed char *pcOriginalReadPosition;
 							portYIELD_WITHIN_API();
 						}
 					}
-
 				}
 
 				taskEXIT_CRITICAL();
@@ -1102,13 +1111,12 @@ signed char *pcOriginalReadPosition;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void * const pvBuffer, signed portBASE_TYPE *pxTaskWoken )
+signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void * const pvBuffer, signed portBASE_TYPE *pxHigherPriorityTaskWoken )
 {
 signed portBASE_TYPE xReturn;
 unsigned portBASE_TYPE uxSavedInterruptStatus;
 
 	configASSERT( pxQueue );
-	configASSERT( pxTaskWoken );
 	configASSERT( !( ( pvBuffer == NULL ) && ( pxQueue->uxItemSize != ( unsigned portBASE_TYPE ) 0U ) ) );
 
 	uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
@@ -1132,7 +1140,10 @@ unsigned portBASE_TYPE uxSavedInterruptStatus;
 					{
 						/* The task waiting has a higher priority than us so
 						force a context switch. */
-						*pxTaskWoken = pdTRUE;
+						if( pxHigherPriorityTaskWoken != NULL )
+						{
+							*pxHigherPriorityTaskWoken = pdTRUE;
+						}
 					}
 				}
 			}

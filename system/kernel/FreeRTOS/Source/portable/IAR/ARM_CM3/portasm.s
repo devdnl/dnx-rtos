@@ -1,6 +1,8 @@
 /*
-    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
-	
+    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
@@ -44,15 +46,15 @@
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?                                      *
+     *    not run, what could be wrong?"                                     *
      *                                                                       *
      *    http://www.FreeRTOS.org/FAQHelp.html                               *
      *                                                                       *
     ***************************************************************************
 
     
-    http://www.FreeRTOS.org - Documentation, training, latest information, 
-    license and contact details.
+    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
+    and contact details.  
     
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool.
@@ -66,35 +68,20 @@
 
 #include <FreeRTOSConfig.h>
 
-/* For backward compatibility, ensure configKERNEL_INTERRUPT_PRIORITY is
-defined.  The value zero should also ensure backward compatibility.
-FreeRTOS.org versions prior to V4.3.0 did not include this definition. */
-#ifndef configKERNEL_INTERRUPT_PRIORITY
-	#define configKERNEL_INTERRUPT_PRIORITY 0
-#endif
-
-	
 	RSEG    CODE:CODE(2)
 	thumb
 
-	EXTERN vPortYieldFromISR
 	EXTERN pxCurrentTCB
 	EXTERN vTaskSwitchContext
 
-	PUBLIC vSetMSP
 	PUBLIC xPortPendSVHandler
-	PUBLIC vPortSetInterruptMask
+	PUBLIC ulPortSetInterruptMask
 	PUBLIC vPortClearInterruptMask
 	PUBLIC vPortSVCHandler
 	PUBLIC vPortStartFirstTask
 
 
-/*-----------------------------------------------------------*/
 
-vSetMSP
-	msr msp, r0
-	bx lr
-	
 /*-----------------------------------------------------------*/
 
 xPortPendSVHandler:
@@ -122,30 +109,26 @@ xPortPendSVHandler:
 
 /*-----------------------------------------------------------*/
 
-vPortSetInterruptMask:
-	push { r0 }
-	mov R0, #configMAX_SYSCALL_INTERRUPT_PRIORITY
-	msr BASEPRI, R0
-	pop { R0 }
-
+ulPortSetInterruptMask:
+	mrs r0, basepri
+	mov r1, #configMAX_SYSCALL_INTERRUPT_PRIORITY
+	msr basepri, r1
 	bx r14
 	
 /*-----------------------------------------------------------*/
 
 vPortClearInterruptMask:
-	PUSH { r0 }
-	MOV R0, #0
-	MSR BASEPRI, R0
-	POP	 { R0 }
-
+	msr basepri, r0
 	bx r14
 
 /*-----------------------------------------------------------*/
 
-vPortSVCHandler;
+vPortSVCHandler:
+	/* Get the location of the current TCB. */
 	ldr	r3, =pxCurrentTCB
 	ldr r1, [r3]
 	ldr r0, [r1]
+	/* Pop the core registers. */
 	ldmia r0!, {r4-r11}
 	msr psp, r0
 	mov r0, #0

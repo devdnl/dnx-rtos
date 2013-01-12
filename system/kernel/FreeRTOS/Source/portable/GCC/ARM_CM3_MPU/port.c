@@ -1,6 +1,8 @@
 /*
-    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
+    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
 
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
@@ -44,15 +46,15 @@
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?                                      *
+     *    not run, what could be wrong?"                                     *
      *                                                                       *
      *    http://www.FreeRTOS.org/FAQHelp.html                               *
      *                                                                       *
     ***************************************************************************
 
     
-    http://www.FreeRTOS.org - Documentation, training, latest information, 
-    license and contact details.
+    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
+    and contact details.  
     
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool.
@@ -178,6 +180,7 @@ void MPU_vTaskDelayUntil( portTickType * const pxPreviousWakeTime, portTickType 
 void MPU_vTaskDelay( portTickType xTicksToDelay );
 unsigned portBASE_TYPE MPU_uxTaskPriorityGet( xTaskHandle pxTask );
 void MPU_vTaskPrioritySet( xTaskHandle pxTask, unsigned portBASE_TYPE uxNewPriority );
+eTaskState MPU_eTaskStateGet( xTaskHandle pxTask );
 void MPU_vTaskSuspend( xTaskHandle pxTaskToSuspend );
 signed portBASE_TYPE MPU_xTaskIsTaskSuspended( xTaskHandle xTask );
 void MPU_vTaskResume( xTaskHandle pxTaskToResume );
@@ -187,8 +190,6 @@ portTickType MPU_xTaskGetTickCount( void );
 unsigned portBASE_TYPE MPU_uxTaskGetNumberOfTasks( void );
 void MPU_vTaskList( signed char *pcWriteBuffer );
 void MPU_vTaskGetRunTimeStats( signed char *pcWriteBuffer );
-void MPU_vTaskStartTrace( signed char * pcBuffer, unsigned long ulBufferSize );
-unsigned long MPU_ulTaskEndTrace( void );
 void MPU_vTaskSetApplicationTaskTag( xTaskHandle xTask, pdTASK_HOOK_CODE pxTagValue );
 pdTASK_HOOK_CODE MPU_xTaskGetApplicationTaskTag( xTaskHandle xTask );
 portBASE_TYPE MPU_xTaskCallApplicationTaskHook( xTaskHandle xTask, void *pvParameter );
@@ -206,6 +207,7 @@ portBASE_TYPE MPU_xQueueGiveMutexRecursive( xQueueHandle xMutex );
 signed portBASE_TYPE MPU_xQueueAltGenericSend( xQueueHandle pxQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition );
 signed portBASE_TYPE MPU_xQueueAltGenericReceive( xQueueHandle pxQueue, void * const pvBuffer, portTickType xTicksToWait, portBASE_TYPE xJustPeeking );
 void MPU_vQueueAddToRegistry( xQueueHandle xQueue, signed char *pcName );
+void MPU_vQueueDelete( xQueueHandle xQueue );
 void *MPU_pvPortMalloc( size_t xSize );
 void MPU_vPortFree( void *pv );
 void MPU_vPortInitialiseBlocks( void );
@@ -256,13 +258,9 @@ void vPortSVCHandler( void )
 		#else
 			"	mrs r0, psp						\n"
 		#endif
-			"	b prvSVCHandler					\n"
-			:::"r0"
+			"	b %0							\n"
+			::"i"(prvSVCHandler):"r0"
 	);
-
-	/* This will never get executed, but is required to prevent prvSVCHandler
-	being removed by the optimiser. */
-	prvSVCHandler( NULL );
 }
 /*-----------------------------------------------------------*/
 
@@ -331,7 +329,11 @@ static void prvRestoreContextOfFirstTask( void )
  */
 portBASE_TYPE xPortStartScheduler( void )
 {
-	/* Make PendSV and SysTick the same priroity as the kernel. */
+	/* configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to 0.  See
+	http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html */
+	configASSERT( ( configMAX_SYSCALL_INTERRUPT_PRIORITY ) );
+
+	/* Make PendSV and SysTick the same priority as the kernel. */
 	*(portNVIC_SYSPRI2) |= portNVIC_PENDSV_PRI;
 	*(portNVIC_SYSPRI2) |= portNVIC_SYSTICK_PRI;
 
@@ -734,6 +736,19 @@ portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
 #endif
 /*-----------------------------------------------------------*/
 
+#if ( INCLUDE_eTaskStateGet == 1 )
+	eTaskState MPU_eTaskStateGet( xTaskHandle pxTask )
+	{
+    portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+	eTaskState eReturn;
+
+		eReturn = eTaskStateGet( pxTask );
+        portRESET_PRIVILEGE( xRunningPrivileged );
+		return eReturn;
+	}
+#endif
+/*-----------------------------------------------------------*/
+
 #if ( INCLUDE_vTaskSuspend == 1 )
 	void MPU_vTaskSuspend( xTaskHandle pxTaskToSuspend )
 	{
@@ -829,30 +844,6 @@ portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
 
 		vTaskGetRunTimeStats( pcWriteBuffer );
         portRESET_PRIVILEGE( xRunningPrivileged );
-	}
-#endif
-/*-----------------------------------------------------------*/
-
-#if ( configUSE_TRACE_FACILITY == 1 )
-	void MPU_vTaskStartTrace( signed char * pcBuffer, unsigned long ulBufferSize )
-	{
-    portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
-
-		vTaskStartTrace( pcBuffer, ulBufferSize );
-        portRESET_PRIVILEGE( xRunningPrivileged );
-	}
-#endif
-/*-----------------------------------------------------------*/
-
-#if ( configUSE_TRACE_FACILITY == 1 )
-	unsigned long MPU_ulTaskEndTrace( void )
-	{
-	unsigned long ulReturn;
-    portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
-
-		ulReturn = ulTaskEndTrace();
-        portRESET_PRIVILEGE( xRunningPrivileged );
-		return ulReturn;
 	}
 #endif
 /*-----------------------------------------------------------*/
@@ -1065,6 +1056,16 @@ signed portBASE_TYPE xReturn;
 		portRESET_PRIVILEGE( xRunningPrivileged );
 	}
 #endif
+/*-----------------------------------------------------------*/
+
+void MPU_vQueueDelete( xQueueHandle xQueue )
+{
+portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+
+	vQueueDelete( xQueue );
+
+	portRESET_PRIVILEGE( xRunningPrivileged );
+}
 /*-----------------------------------------------------------*/
 
 void *MPU_pvPortMalloc( size_t xSize )

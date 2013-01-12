@@ -1,6 +1,8 @@
 /*
-    FreeRTOS V7.1.1 - Copyright (C) 2012 Real Time Engineers Ltd.
-	
+    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
      *                                                                       *
@@ -44,15 +46,15 @@
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?                                      *
+     *    not run, what could be wrong?"                                     *
      *                                                                       *
      *    http://www.FreeRTOS.org/FAQHelp.html                               *
      *                                                                       *
     ***************************************************************************
 
     
-    http://www.FreeRTOS.org - Documentation, training, latest information, 
-    license and contact details.
+    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
+    and contact details.  
     
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool.
@@ -83,6 +85,10 @@
 the first task is being restored. */
 #define portINITIAL_SR				( portIE_BIT | portEXL_BIT )
 
+#ifndef configTICK_INTERRUPT_VECTOR
+	#define configTICK_INTERRUPT_VECTOR _TIMER_1_VECTOR
+#endif
+
 /* Records the interrupt nesting depth.  This starts at one as it will be
 decremented to 0 when the first task starts. */
 volatile unsigned portBASE_TYPE uxInterruptNesting = 0x01;
@@ -101,9 +107,9 @@ const portSTACK_TYPE * const xISRStackTop = &( xISRStack[ configISR_STACK_SIZE -
  * Place the prototype here to ensure the interrupt vector is correctly installed. 
  * Note that because the interrupt is written in assembly, the IPL setting in the
  * following line of code has no effect.  The interrupt priority is set by the
- * call to ConfigIntTimer1() in prvSetupTimerInterrupt(). 
+ * call to ConfigIntTimer1() in vApplicationSetupTickTimerInterrupt(). 
  */
-extern void __attribute__( (interrupt(ipl1), vector(_TIMER_1_VECTOR))) vT1InterruptHandler( void );
+extern void __attribute__( (interrupt(ipl1), vector( configTICK_INTERRUPT_VECTOR ))) vPortTickInterruptHandler( void );
 
 /*
  * The software interrupt handler that performs the yield.  Note that, because
@@ -152,9 +158,15 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 /*-----------------------------------------------------------*/
 
 /*
- * Setup a timer for a regular tick.
+ * Setup a timer for a regular tick.  This function uses peripheral timer 1.
+ * The function is declared weak so an application writer can use a different
+ * timer by redefining this implementation.  If a different timer is used then
+ * configTICK_INTERRUPT_VECTOR must also be defined in FreeRTOSConfig.h to
+ * ensure the RTOS provided tick interrupt handler is installed on the correct
+ * vector number.  When Timer 1 is used the vector number is defined as 
+ * _TIMER_1_VECTOR.
  */
-void prvSetupTimerInterrupt( void )
+__attribute__(( weak )) void vApplicationSetupTickTimerInterrupt( void )
 {
 const unsigned long ulCompareMatch = ( (configPERIPHERAL_CLOCK_HZ / portTIMER_PRESCALE) / configTICK_RATE_HZ ) - 1;
 
@@ -182,7 +194,7 @@ extern void *pxCurrentTCB;
 
 	/* Setup the timer to generate the tick.  Interrupts will have been 
 	disabled by the time we get here. */
-	prvSetupTimerInterrupt();
+	vApplicationSetupTickTimerInterrupt();
 
 	/* Kick off the highest priority task that has been created so far. 
 	Its stack location is loaded into uxSavedTaskStackPointer. */
