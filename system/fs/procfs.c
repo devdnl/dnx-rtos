@@ -117,15 +117,17 @@ static struct procmem *procmem;
 /**
  * @brief Function initialize FS
  *
- * @param[in] dev           device number
+ * @param[in] dev             device number
+ * @param[in] srcPath         source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_init(devx_t dev)
+stdRet_t procfs_init(devx_t dev, const ch_t *srcPath)
 {
       (void)dev;
+      (void)srcPath;
 
       stdRet_t status = STD_RET_OK;
 

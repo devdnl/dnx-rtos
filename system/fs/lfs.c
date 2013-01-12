@@ -34,7 +34,6 @@ extern "C" {
 #include "lfs.h"
 #include "dlist.h"
 #include <string.h>
-#include "oswrap.h"
 
 
 /*==================================================================================================
@@ -42,10 +41,6 @@ extern "C" {
 ==================================================================================================*/
 /* wait time for operation on FS */
 #define MTX_BLOCK_TIME                    10
-
-#define calloc(nmemb, msize)              LFS_CALLOC(nmemb, msize)
-#define malloc(size)                      LFS_MALLOC(size)
-#define free(mem)                         LFS_FREE(mem)
 
 
 /*==================================================================================================
@@ -111,14 +106,16 @@ static struct fshdl_s *lfs;
  * @brief Initialize VFS module
  *
  * @param  dev          device number
+ * @param *srcPath      source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_init(devx_t dev)
+stdRet_t lfs_init(devx_t dev, const ch_t *srcPath)
 {
       (void)dev;
+      (void)srcPath;
 
       stdRet_t ret = STD_RET_OK;
 
@@ -729,7 +726,7 @@ stdRet_t lfs_statfs(devx_t dev, struct vfs_statfs *statfs)
             statfs->f_ffree  = 0;
             statfs->f_files  = 0;
             statfs->f_type   = 0x01;
-            statfs->fsname   = "LFS";
+            statfs->fsname   = "lfs";
 
             status = STD_RET_OK;
       }

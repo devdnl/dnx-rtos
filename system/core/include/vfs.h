@@ -116,7 +116,7 @@ struct vfs_drvcfg {
 
 struct vfs_fscfg {
       u32_t    dev;
-      stdRet_t (*f_init    )(devx_t dev);
+      stdRet_t (*f_init    )(devx_t dev, const ch_t *path);
       stdRet_t (*f_open    )(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode);
       stdRet_t (*f_close   )(devx_t dev, fd_t fd);
       size_t   (*f_write   )(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
@@ -140,7 +140,7 @@ struct vfs_fscfg {
                                      Exported function prototypes
 ==================================================================================================*/
 extern stdRet_t vfs_init(void);
-extern stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg);
+extern stdRet_t vfs_mount(const ch_t *srcPath, const ch_t *mntPoint, struct vfs_fscfg *mountcfg);
 extern stdRet_t vfs_umount(const ch_t *path);
 extern stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent);
 extern stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg);

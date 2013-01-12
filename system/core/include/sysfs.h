@@ -1,11 +1,11 @@
-#ifndef LFS_H_
-#define LFS_H_
+#ifndef SYSFS_H_
+#define SYSFS_H_
 /*=============================================================================================*//**
-@file    lfs.h
+@file    sysfs.h
 
 @author  Daniel Zorychta
 
-@brief   This file support lfs - list file system
+@brief   This function provide all required function needed to write file systems.
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,13 +33,49 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "sysfs.h"
+#include "systypes.h"
+#include "memman.h"
+#include "oswrap.h"
+#include "vfs.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+#ifdef SYSTEM_H_
+#error "system.h and sysfs.h cannot never included together!"
+#endif
 
+#ifndef calloc
+#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
+#endif
+
+#ifndef malloc
+#define malloc(size)                      memman_malloc(size)
+#endif
+
+#ifndef free
+#define free(mem)                         memman_free(mem)
+#endif
+
+#define FS_INTERFACE_CLASS(classname)                                                     \
+extern stdRet_t  classname##_init   (devx_t, const ch_t*);                                \
+extern stdRet_t  classname##_open   (devx_t, fd_t*, size_t*, const ch_t*, const ch_t*);   \
+extern stdRet_t  classname##_close  (devx_t, fd_t);                                       \
+extern size_t    classname##_write  (devx_t, fd_t, void*, size_t, size_t, size_t);        \
+extern size_t    classname##_read   (devx_t, fd_t, void*, size_t, size_t, size_t);        \
+extern stdRet_t  classname##_ioctl  (devx_t, fd_t, IORq_t, void*);                        \
+extern stdRet_t  classname##_mkdir  (devx_t, const ch_t*);                                \
+extern stdRet_t  classname##_mknod  (devx_t, const ch_t*, struct vfs_drvcfg*);            \
+extern stdRet_t  classname##_opendir(devx_t, const ch_t*, DIR_t*);                        \
+extern stdRet_t  classname##_remove (devx_t, const ch_t*);                                \
+extern stdRet_t  classname##_rename (devx_t, const ch_t*, const ch_t*);                   \
+extern stdRet_t  classname##_chmod  (devx_t, const ch_t*, u32_t);                         \
+extern stdRet_t  classname##_chown  (devx_t, const ch_t*, u16_t, u16_t);                  \
+extern stdRet_t  classname##_stat   (devx_t, const ch_t*, struct vfs_stat*);              \
+extern stdRet_t  classname##_fstat  (devx_t, fd_t, struct vfs_stat*);                     \
+extern stdRet_t  classname##_statfs (devx_t, struct vfs_statfs*);                         \
+extern stdRet_t  classname##_release(devx_t)
 
 /*==================================================================================================
                                   Exported types, enums definitions
@@ -47,16 +83,20 @@ extern "C" {
 
 
 /*==================================================================================================
+                                     Exported object declarations
+==================================================================================================*/
+
+
+/*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-FS_INTERFACE_CLASS(lfs);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LFS_H_ */
+#endif /* SYSFS_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

@@ -42,6 +42,8 @@ extern "C" {
 #include "oshooks.h"
 #include "dlist.h"
 #include "taskmoni.h"
+#include "regfs.h"
+#include "regdrv.h"
 
 #if !defined(ARCH_posix)
 #include "netconf.h"
@@ -57,7 +59,6 @@ extern "C" {
 #define free(mem)                         moni_free(mem)
 
 /** FILE ACCESS MANAGEMENT */
-#define mount(path, fs_cfgPtr)            moni_mount(path, fs_cfgPtr)
 #define umount(path)                      moni_umount(path)
 #define getmntentry(item, mntentPtr)      moni_getmntentry(item, mntentPtr)
 #define mknod(path, drv_cfgPtr)           moni_mknod(path, drv_cfgPtr)

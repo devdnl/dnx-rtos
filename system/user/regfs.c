@@ -34,25 +34,36 @@ extern "C" {
 #include "regfs.h"
 #include <string.h>
 #include "vfs.h"
-#include "print.h"
 
-/* include here drivers headers */
+/* include here FS headers */
+#include "lfs.h"
+#include "appfs.h"
+#include "procfs.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define IMPORT_FS_INTERFACE_CLASS(classname, fsname, devno, devpart)\
-{.drvName    = drvname,\
- .drvInit    = classname##_Init,\
- .drvRelease = classname##_Release,\
- .drvCfg     = {.dev     = devno,\
-               .part    = devpart,\
-               .f_open  = classname##_Open,\
-               .f_close = classname##_Close,\
-               .f_write = classname##_Write,\
-               .f_read  = classname##_Read,\
-               .f_ioctl = classname##_IOCtl}}
+#define IMPORT_FS_INTERFACE_CLASS(classname, fsname, devno)\
+{.fsName = fsname,\
+ .mntcfg = {.dev       = devno,\
+            .f_init    = classname##_init,\
+            .f_chmod   = classname##_chmod,\
+            .f_chown   = classname##_chown,\
+            .f_close   = classname##_close,\
+            .f_ioctl   = classname##_ioctl,\
+            .f_mkdir   = classname##_mkdir,\
+            .f_mknod   = classname##_mknod,\
+            .f_open    = classname##_open,\
+            .f_opendir = classname##_opendir,\
+            .f_read    = classname##_read,\
+            .f_release = classname##_release,\
+            .f_remove  = classname##_remove,\
+            .f_rename  = classname##_rename,\
+            .f_stat    = classname##_stat,\
+            .f_fstat   = classname##_fstat,\
+            .f_statfs  = classname##_statfs,\
+            .f_write   = classname##_write}}
 
 
 /*==================================================================================================
@@ -60,11 +71,9 @@ extern "C" {
 ==================================================================================================*/
 typedef struct
 {
-      ch_t  *drvName;
-      stdRet_t (*drvInit   )(devx_t dev, fd_t part);
-      stdRet_t (*drvRelease)(devx_t dev, fd_t part);
-      struct vfs_drvcfg drvCfg;
-} regDrv_t;
+      ch_t             *fsName;
+      struct vfs_fscfg  mntcfg;
+} regFS_t;
 
 
 /*==================================================================================================
@@ -76,55 +85,11 @@ typedef struct
                                       Local object definitions
 ==================================================================================================*/
 /* driver registration */
-static const regDrv_t drvList[] =
+static const regFS_t fsList[] =
 {
-      #ifdef UART_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(UART, "uart1", UART_DEV_1, UART_PART_NONE),
-      #endif
-
-      #ifdef GPIO_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
-      #endif
-
-      #ifdef PLL_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
-      #endif
-
-      #ifdef I2C_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(I2C, "i2c1", I2C_DEV_1, I2C_PART_NONE),
-      #endif
-
-      #ifdef ETH_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(ETHER, "eth0", ETH_DEV_1, ETH_PART_NONE),
-      #endif
-
-      #ifdef DS1307_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307nvm", DS1307_DEV_NVM, DS1307_PART_NONE),
-      #endif
-
-      #ifdef DS1307_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307rtc", DS1307_DEV_RTC, DS1307_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 0)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 1)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty1", TTY_DEV_1, TTY_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 2)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty2", TTY_DEV_2, TTY_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 3)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
-      #endif
-
-      #ifdef MPL115A2_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(MPL115A2, "mpl115a2", MPL115A2_DEV_NONE, MPL115A2_PART_NONE),
-      #endif
+      IMPORT_FS_INTERFACE_CLASS(lfs   , "lfs"   , 0),
+      IMPORT_FS_INTERFACE_CLASS(appfs , "appfs" , 0),
+      IMPORT_FS_INTERFACE_CLASS(procfs, "procfs", 0),
 };
 
 
@@ -139,23 +104,52 @@ static const regDrv_t drvList[] =
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function mount file system
+ *
+ * @param *fsname       file system name
+ * @param *srcpath      path to file with source data
+ * @param *mountpoint   mount point of file system
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t mount(ch_t *fstype, ch_t *srcpath, ch_t *mountpoint)
+stdRet_t mount(const ch_t *fsname, const ch_t *srcpath, const ch_t *mountpoint)
 {
+      stdRet_t status = STD_RET_ERROR;
 
+      if (fsname && mountpoint) {
+            for (uint_t i = 0; i < ARRAY_SIZE(fsList); i++) {
+                  if (strcmp(fsList[i].fsName, fsname) == 0) {
+                        status = vfs_mount(srcpath, mountpoint, (struct vfs_fscfg*)&fsList[i].mntcfg);
+                        break;
+                  }
+            }
+      }
+
+      return status;
 }
 
 
 //================================================================================================//
 /**
- * @brief
+ * @brief Function unmount file system
+ *
+ * @param *mountpoint   path to file system
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t umount(ch_t *mountpoint)
+stdRet_t umount(const ch_t *mountpoint)
 {
+      stdRet_t status = STD_RET_ERROR;
 
+      if (mountpoint) {
+            status = vfs_umount(mountpoint);
+      }
+
+      return status;
 }
 
 

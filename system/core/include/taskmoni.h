@@ -74,7 +74,6 @@ extern "C" {
 #endif
 
 /* DIRECT FUNCTION BECAUSE MONITORING IS NOT NECESSARY */
-#define moni_mount(path, fs_cfgPtr)             vfs_mount(path, fs_cfgPtr)
 #define moni_umount(path)                       vfs_umount(path)
 #define moni_getmntentry(item, mntentPtr)       vfs_getmntentry(item, mntentPtr)
 #define moni_mknod(path, drv_cfgPtr)            vfs_mknod(path, drv_cfgPtr)

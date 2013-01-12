@@ -128,23 +128,24 @@ stdRet_t vfs_init(void)
  * External file system is mounted to empty directory. If directory is not empty mounting is not
  * possible.
  *
- * @param *path               path when dir shall be mounted
+ * @param *srcPath            path to source file when file system load data
+ * @param *mntPoint           path when dir shall be mounted
  * @param *mountcfg           pointer to description of mount FS
  *
  * @retval STD_RET_OK         mount success
  * @retval STD_RET_ERROR      mount error
  */
 //================================================================================================//
-stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
+stdRet_t vfs_mount(const ch_t *srcPath, const ch_t *mntPoint, struct vfs_fscfg *mountcfg)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (path && mountcfg && vfs) {
+      if (mntPoint && mountcfg && vfs) {
             struct fsinfo *mountfs = NULL;
             struct fsinfo *basefs  = NULL;
             ch_t          *extPath = NULL;
             struct fsinfo *newfs   = NULL;
-            ch_t          *newpath = AddEndSlash(path);
+            ch_t          *newpath = AddEndSlash(mntPoint);
 
             if (newpath && vfs) {
                   while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
@@ -172,8 +173,8 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
 
                   /* mount FS if created -------------------------------------------------------- */
                   if (newfs && mountcfg->f_init) {
-                        if (mountcfg->f_init(mountcfg->dev) == STD_RET_OK) {
-                              newfs->mntpoint     = newpath;
+                        if (mountcfg->f_init(mountcfg->dev, srcPath) == STD_RET_OK) {
+                              newfs->mntpoint = newpath;
                               newfs->basefs   = basefs;
                               newfs->fs       = *mountcfg;
                               newfs->mntFSCnt = 0;
@@ -189,8 +190,9 @@ stdRet_t vfs_mount(const ch_t *path, struct vfs_fscfg *mountcfg)
 
             /* free allocated memory if error */
             if (status == STD_RET_ERROR) {
-                  if (newfs)
+                  if (newfs) {
                         free(newfs);
+                  }
 
                   free(newpath);
             }

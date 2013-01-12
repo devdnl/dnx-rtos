@@ -73,14 +73,16 @@ static stdRet_t appfs_closedir(devx_t dev, DIR_t *dir);
  * @brief Function initialize appfs
  *
  * @param dev           device number
+ * @param srcPath       source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t appfs_init(devx_t dev)
+stdRet_t appfs_init(devx_t dev, const ch_t *srcPath)
 {
       (void)dev;
+      (void)srcPath;
 
       return STD_RET_OK;
 }

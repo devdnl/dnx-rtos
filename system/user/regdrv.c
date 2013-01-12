@@ -159,7 +159,7 @@ static const regDrv_t drvList[] =
  * @param *drvName            driver name
  * @param *nodeName           file name in /dev/ directory
  *
- * @return driver depending value, all not equal to STD_RET_OK are errors
+ * @return driver depending value, everything not equal to STD_RET_OK are errors
  */
 //================================================================================================//
 stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
