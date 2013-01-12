@@ -54,9 +54,9 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
 #if (APP_MONITOR_MEMORY_USAGE == 0)
-#define moni_malloc(size)                       mem_malloc(size)
-#define moni_calloc(nmemb, msize)               mem_calloc(nmemb, msize)
-#define moni_free(mem)                          mem_free(mem)
+#define moni_malloc(size)                       memman_malloc(size)
+#define moni_calloc(nmemb, msize)               memman_calloc(nmemb, msize)
+#define moni_free(mem)                          memman_free(mem)
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -99,6 +99,7 @@ extern "C" {
 #define moni_AddTask(pid)
 #define moni_DelTask(pid)
 #define moni_GetTaskStat(item, statPtr)         !memset(statPtr, 0, sizeof(struct taskstat))
+#define moni_GetTaskHdlStat(hdl, statPtr)       !memset(statPtr, 0, sizeof(struct taskstat))
 #define moni_GetTaskCount()                     0
 #endif
 

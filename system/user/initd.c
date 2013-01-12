@@ -172,9 +172,12 @@ void Initd(void *arg)
 
       /* early initialization - terminal support */
       InitDrv("uart1", "/dev/ttyS0");
-//      InitDrv("tty0", "/dev/tty0");
-//      kprintEnable("/dev/tty0");
+      InitDrv("tty0", "/dev/tty0");
+      kprintEnable("/dev/tty0");
+
+#if defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
       kprintEnable("/dev/ttyS0");
+#endif
 
       /* something about board and system */
       kprint("\x1B[32m\x1B[1m");
@@ -182,9 +185,11 @@ void Initd(void *arg)
              SystemGetOSName(), SystemGetKernelName());
 
       /* driver initialization */
-//      InitDrv("tty1", "/dev/tty1");
-//      InitDrv("tty2", "/dev/tty2");
-//      InitDrv("tty3", "/dev/tty3");
+      InitDrv("tty1", "/dev/tty1");
+      InitDrv("tty2", "/dev/tty2");
+#if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
+      InitDrv("tty3", "/dev/tty3");
+#endif
       InitDrv("i2c1", "/dev/i2c");
       InitDrv("ds1307rtc", "/dev/rtc");
       InitDrv("ds1307nvm", "/dev/nvm");
@@ -203,18 +208,26 @@ void Initd(void *arg)
       kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
+#if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
       kprintEnable("/dev/tty3");
+#endif
 
       /*--------------------------------------------------------------------------------------------
        * main loop which read stdios from applications
        *------------------------------------------------------------------------------------------*/
-//      u8_t    ctty = -1;
+#if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
+      u8_t    ctty = -1; /* DNLTEST */
+#else
       u8_t    ctty = 0;
+#endif
       app_t  *apphdl[TTY_LAST] = {NULL};
       FILE_t *ttyx[TTY_LAST]   = {NULL};
 
-//      while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL)
+#if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
+      while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL)
+#else
       while ((ttyx[0] = fopen("/dev/ttyS0", "r+")) == NULL)
+#endif
       {
             Sleep(200);
       }

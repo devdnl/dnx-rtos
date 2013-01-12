@@ -69,6 +69,8 @@
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "portmacro.h"
+
 /*-----------------------------------------------------------*/
 
 #define MAX_NUMBER_OF_TASKS 		( _POSIX_THREAD_THREADS_MAX )
@@ -242,6 +244,7 @@ portLONG lIndex;
 	/* Cleanup the mutexes */
 	xResult = pthread_mutex_destroy( &xSuspendResumeThreadMutex );
 	xResult = pthread_mutex_destroy( &xSingleThreadMutex );
+	(void)xResult;
 	vPortFree( (void *)pxThreads );
 
 	/* Should not get here! */
@@ -259,6 +262,7 @@ portBASE_TYPE xResult;
 		{
 			/* Kill all of the threads, they are in the detached state. */
 			xResult = pthread_cancel( pxThreads[ xNumberOfThreads ].hThread );
+		      (void)xResult;
 		}
 	}
 
@@ -398,6 +402,7 @@ portTickType xMicroSeconds = portTICK_RATE_MICROSECONDS;
 
 void vPortSystemTickHandler( int sig )
 {
+      (void)sig;
 pthread_t xTaskToSuspend;
 pthread_t xTaskToResume;
 
@@ -475,6 +480,7 @@ portBASE_TYPE xResult;
 				pthread_testcancel();
 				xResult = pthread_cancel( xTaskToDelete );
 				/* Pthread Clean-up function will note the cancellation. */
+			      (void)xResult;
 			}
 			(void)pthread_mutex_unlock( &xSingleThreadMutex );
 		}
@@ -568,6 +574,7 @@ portBASE_TYPE xResult = pthread_mutex_lock( &xSuspendResumeThreadMutex );
 
 void prvResumeSignalHandler(int sig)
 {
+      (void)sig;
 	/* Yield the Scheduler to ensure that the yielding thread completes. */
 	if ( 0 == pthread_mutex_lock( &xSingleThreadMutex ) )
 	{
@@ -584,6 +591,7 @@ portBASE_TYPE xResult;
 		if ( pthread_self() != xThreadId )
 		{
 			xResult = pthread_kill( xThreadId, SIG_RESUME );
+		      (void)xResult;
 		}
 		xResult = pthread_mutex_unlock( &xSuspendResumeThreadMutex );
 	}
