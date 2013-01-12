@@ -56,6 +56,7 @@ CSRC = $(sort \
    system/user/initd.c \
    system/user/regapp.c \
    system/user/regdrv.c \
+   system/user/regfs.c \
    system/fs/procfs.c \
    system/fs/lfs.c \
    system/fs/appfs.c \
