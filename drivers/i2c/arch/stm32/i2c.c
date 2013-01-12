@@ -629,7 +629,8 @@ static stdRet_t StartCondition(I2C_t *i2c, u8_t slaveaddr)
             goto StartCondition_end;
 
       /* clear ADDR flag */
-      volatile u32_t tmp = i2c->SR2;
+      volatile u16_t tmp = i2c->SR2;
+      (void)tmp;
 
       StartCondition_end:
             return status;
