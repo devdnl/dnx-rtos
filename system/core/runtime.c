@@ -261,7 +261,7 @@ stdRet_t KillApp(app_t *appArgs)
  * @param  exitCode           return value
  */
 //================================================================================================//
-void TerminateApplication(app_t *appObj, stdRet_t exitCode)
+void CloseApp(app_t *appObj, stdRet_t exitCode)
 {
       /* set exit code */
       appObj->exitCode = exitCode;
