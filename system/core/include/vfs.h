@@ -34,22 +34,11 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "systypes.h"
-#include "memman.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
-/* USER CFG: memory management, free memory */
-#define VFS_FREE(ptr)               memman_free(ptr)
-
-/* USER CFG: memory management, memory allocation */
-#define VFS_CALLOC(nmemb, msize)    memman_calloc(nmemb, msize)
-
-/* USER CFG: memory management, memory allocation */
-#define VFS_MALLOC(size)            memman_malloc(size)
-
-
 /* set position equal to offset bytes */
 #define VFS_SEEK_SET    0
 

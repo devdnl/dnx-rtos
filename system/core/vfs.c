@@ -34,6 +34,7 @@ extern "C" {
 #include "vfs.h"
 #include "dlist.h"
 #include "oswrap.h"
+#include "memman.h"
 #include <string.h>
 
 
@@ -43,9 +44,10 @@ extern "C" {
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                    10
 
-#define calloc(nmemb, msize)              VFS_CALLOC(nmemb, msize)
-#define malloc(size)                      VFS_MALLOC(size)
-#define free(mem)                         VFS_FREE(mem)
+#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
+#define malloc(size)                      memman_malloc(size)
+#define free(mem)                         memman_free(mem)
+
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -103,11 +105,13 @@ stdRet_t vfs_init(void)
                   vfs->mntList = ListCreate();
 
                   if (!vfs->mtx || !vfs->mntList) {
-                        if (vfs->mtx)
+                        if (vfs->mtx) {
                               DeleteMutex(vfs->mtx);
+                        }
 
-                        if (vfs->mntList)
+                        if (vfs->mntList) {
                               ListDelete(vfs->mntList);
+                        }
 
                         free(vfs);
                         vfs = NULL;
