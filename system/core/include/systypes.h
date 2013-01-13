@@ -76,11 +76,11 @@ typedef signed char stdRet_t;
 
 
 /** device number type */
-typedef size_t devx_t;
+typedef uint_t devx_t;
 
 
 /** task/application ID */
-typedef size_t PID_t;
+typedef uint_t PID_t;
 
 
 /** IO request type */
@@ -88,19 +88,23 @@ typedef u8_t IORq_t;
 
 
 /** file descriptor */
-typedef u32_t fd_t;
+typedef uint_t fd_t;
+
+
+/** file system descriptor */
+typedef uint_t fsd_t;
 
 
 /** file type */
 typedef struct
 {
-      devx_t   dev;
-      fd_t     fd;
-      stdRet_t (*f_close)(devx_t dev, fd_t fd);
-      size_t   (*f_write)(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-      size_t   (*f_read )(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
-      stdRet_t (*f_ioctl)(devx_t dev, fd_t fd, IORq_t iorq, void *data);
-      stdRet_t (*f_stat )(devx_t dev, fd_t fd, void *stat);
+      uint_t   dev;
+      uint_t   fd;
+      stdRet_t (*f_close)(uint_t dev, uint_t fd);
+      size_t   (*f_write)(uint_t dev, uint_t fd, void *src, size_t size, size_t nitems, size_t seek);
+      size_t   (*f_read )(uint_t dev, uint_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+      stdRet_t (*f_ioctl)(uint_t dev, uint_t fd, IORq_t iorq, void *data);
+      stdRet_t (*f_stat )(uint_t dev, uint_t fd, void *stat);
       size_t   f_seek;
 } FILE_t;
 
@@ -117,12 +121,12 @@ typedef struct
 /** directory type */
 typedef struct dir_s
 {
-      dirent_t  (*rddir)(devx_t dev, struct dir_s *dir);
-      stdRet_t  (*cldir)(devx_t dev, struct dir_s *dir);
+      dirent_t  (*rddir)(fsd_t fsd, struct dir_s *dir);
+      stdRet_t  (*cldir)(fsd_t fsd, struct dir_s *dir);
       size_t    items;
       size_t    seek;
       void     *dd;
-      devx_t    dev;
+      fsd_t     fsd;
 } DIR_t;
 
 

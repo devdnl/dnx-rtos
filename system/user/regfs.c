@@ -44,9 +44,9 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define IMPORT_FS_INTERFACE_CLASS(classname, fsname, devno)\
+#define IMPORT_FS_INTERFACE_CLASS(classname, fsname)\
 {.fsName = fsname,\
- .mntcfg = {.dev       = devno,\
+ .mntcfg = {.f_fsd     = 0,\
             .f_init    = classname##_init,\
             .f_chmod   = classname##_chmod,\
             .f_chown   = classname##_chown,\
@@ -87,9 +87,9 @@ typedef struct
 /* driver registration */
 static const regFS_t fsList[] =
 {
-      IMPORT_FS_INTERFACE_CLASS(lfs   , "lfs"   , 0),
-      IMPORT_FS_INTERFACE_CLASS(appfs , "appfs" , 0),
-      IMPORT_FS_INTERFACE_CLASS(procfs, "procfs", 0),
+      IMPORT_FS_INTERFACE_CLASS(lfs   , "lfs"   ),
+      IMPORT_FS_INTERFACE_CLASS(appfs , "appfs" ),
+      IMPORT_FS_INTERFACE_CLASS(procfs, "procfs"),
 };
 
 

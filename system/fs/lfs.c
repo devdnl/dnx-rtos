@@ -88,8 +88,8 @@ struct fshdl_s {
 static stdRet_t  rmNode(node_t *base, node_t *target, u32_t baseitemid);
 static node_t   *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
 static i32_t     GetPathDeep(const ch_t *path);
-static dirent_t  lfs_readdir(devx_t dev, DIR_t *dir);
-static stdRet_t  lfs_closedir(devx_t dev, DIR_t *dir);
+static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
+static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
 
 /*==================================================================================================
                                       Local object definitions
@@ -105,16 +105,16 @@ static struct fshdl_s *lfs;
 /**
  * @brief Initialize VFS module
  *
- * @param  dev          device number
  * @param *srcPath      source path
+ * @param *fsd          file system descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_init(devx_t dev, const ch_t *srcPath)
+stdRet_t lfs_init(const ch_t *srcPath, fsd_t *fsd)
 {
-      (void)dev;
+      (void)fsd;
       (void)srcPath;
 
       stdRet_t ret = STD_RET_OK;
@@ -159,7 +159,7 @@ stdRet_t lfs_init(devx_t dev, const ch_t *srcPath)
 /**
  * @brief Function create node for driver file
  *
- * @param  dev                device number
+ * @param  fsd                file system descriptor
  * @param *path               path when driver-file shall be created
  * @param *drvcfg             pointer to description of driver
  *
@@ -167,9 +167,9 @@ stdRet_t lfs_init(devx_t dev, const ch_t *srcPath)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
+stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -235,16 +235,16 @@ stdRet_t lfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *drvcfg)
 /**
  * @brief Create directory
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param *path         path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
+stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -311,7 +311,7 @@ stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
 /**
  * @brief Function open directory
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param *path         directory path
  * @param *dir          directory info
  *
@@ -319,9 +319,9 @@ stdRet_t lfs_mkdir(devx_t dev, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
+stdRet_t lfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -356,16 +356,16 @@ stdRet_t lfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
 /**
  * @brief Function close dir
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param *dir          directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-static stdRet_t lfs_closedir(devx_t dev, DIR_t *dir)
+static stdRet_t lfs_closedir(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
       (void)dir;
 
       return STD_RET_OK;
@@ -381,9 +381,9 @@ static stdRet_t lfs_closedir(devx_t dev, DIR_t *dir)
  * @return element attributes
  */
 //================================================================================================//
-static dirent_t lfs_readdir(devx_t dev, DIR_t *dir)
+static dirent_t lfs_readdir(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       dirent_t dirent;
       dirent.name   = NULL;
@@ -412,16 +412,16 @@ static dirent_t lfs_readdir(devx_t dev, DIR_t *dir)
 /**
  * @brief Remove file
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param *patch        localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_remove(devx_t dev, const ch_t *path)
+stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -482,7 +482,7 @@ stdRet_t lfs_remove(devx_t dev, const ch_t *path)
  * The implementation of rename can move files only if external FS provide functionality. Local
  * VFS can not do this.
  *
- * @param  dev                device number
+ * @param  fsd                file system descriptor
  * @param *oldName            old file name
  * @param *newName            new file name
  *
@@ -490,9 +490,9 @@ stdRet_t lfs_remove(devx_t dev, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
+stdRet_t lfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -552,9 +552,9 @@ stdRet_t lfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
+stdRet_t lfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -589,9 +589,9 @@ stdRet_t lfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
+stdRet_t lfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
 {
-      (void)dev;
+      (void)fsd;
       stdRet_t status = STD_RET_ERROR;
 
       if (path && lfs) {
@@ -617,7 +617,7 @@ stdRet_t lfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
 /**
  * @brief Function returns file/dir status
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param *path         file/dir path
  * @param *stat         pointer to stat structure
  *
@@ -625,9 +625,9 @@ stdRet_t lfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
+stdRet_t lfs_stat(fsd_t fsd, const ch_t *path, struct vfs_stat *stat)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -662,7 +662,7 @@ stdRet_t lfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
 /**
  * @brief Function returns file status
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param  fd           file descriptor
  * @param *stat         pointer to status structure
  *
@@ -670,9 +670,9 @@ stdRet_t lfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
+stdRet_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -714,9 +714,9 @@ stdRet_t lfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_statfs(devx_t dev, struct vfs_statfs *statfs)
+stdRet_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -745,9 +745,9 @@ stdRet_t lfs_statfs(devx_t dev, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_release(devx_t dev)
+stdRet_t lfs_release(fsd_t fsd)
 {
-      (void)dev;
+      (void)fsd;
 
       return STD_RET_OK;
 }
@@ -757,7 +757,7 @@ stdRet_t lfs_release(devx_t dev)
 /**
  * @brief Function open selected file
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param *name         file path
  * @param *mode         file mode
  *
@@ -765,9 +765,9 @@ stdRet_t lfs_release(devx_t dev)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
+stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -905,7 +905,9 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
                         }
 
                         /* everything success - load FD */
-                        ListGetItemID(lfs->openFile, item, fd);
+                        u32_t cfd;
+                        ListGetItemID(lfs->openFile, item, &cfd);
+                        *fd = (fd_t)cfd;
                   }
             }
 
@@ -928,9 +930,9 @@ stdRet_t lfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t lfs_close(devx_t dev, fd_t fd)
+stdRet_t lfs_close(fsd_t fsd, fd_t fd)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t     status = STD_RET_ERROR;
       node_t      *node;
@@ -999,7 +1001,7 @@ stdRet_t lfs_close(devx_t dev, fd_t fd)
 /**
  * @brief Function write to file data
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param  fd           file descriptor
  * @param *src          data source
  * @param  size         item size
@@ -1009,9 +1011,9 @@ stdRet_t lfs_close(devx_t dev, fd_t fd)
  * @return number of written items
  */
 //================================================================================================//
-size_t lfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
+      (void)fsd;
 
       size_t n = 0;
 
@@ -1075,7 +1077,7 @@ size_t lfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, siz
 /**
  * @brief Function read from file data
  *
- * @param  dev          device number
+ * @param  fsd          file system descriptor
  * @param  fd           file descriptor
  * @param *dst          data destination
  * @param  size         item size
@@ -1085,9 +1087,9 @@ size_t lfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, siz
  * @return number of read items
  */
 //================================================================================================//
-size_t lfs_read(devx_t dev, u32_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
+      (void)fsd;
 
       size_t n = 0;
 
@@ -1148,7 +1150,7 @@ size_t lfs_read(devx_t dev, u32_t fd, void *dst, size_t size, size_t nitems, siz
 /**
  * @brief IO operations on files
  *
- * @param  dev    fs device number
+ * @param  fsd    file system descriptor
  * @param  fd     file descriptor
  * @param  iorq   request
  * @param *data   data pointer
@@ -1157,9 +1159,9 @@ size_t lfs_read(devx_t dev, u32_t fd, void *dst, size_t size, size_t nitems, siz
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t lfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
+stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
       node_t  *node   = NULL;

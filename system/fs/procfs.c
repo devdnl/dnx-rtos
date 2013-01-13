@@ -90,12 +90,12 @@ struct fileinfo {
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static stdRet_t procfs_closedir_freedd(devx_t dev, DIR_t *dir);
-static stdRet_t procfs_closedir_noop(devx_t dev, DIR_t *dir);
-static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir);
-static dirent_t procfs_readdir_taskname(devx_t dev, DIR_t *dir);
-static dirent_t procfs_readdir_taskid(devx_t dev, DIR_t *dir);
-static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir);
+static stdRet_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir);
+static stdRet_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir);
+static dirent_t procfs_readdir_root(fsd_t fsd, DIR_t *dir);
+static dirent_t procfs_readdir_taskname(fsd_t fsd, DIR_t *dir);
+static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir);
+static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir);
 
 
 /*==================================================================================================
@@ -117,16 +117,16 @@ static struct procmem *procmem;
 /**
  * @brief Function initialize FS
  *
- * @param[in] dev             device number
- * @param[in] srcPath         source path
+ * @param[in]  *srcPath         source path
+ * @param[out] *fsd             file system descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_init(devx_t dev, const ch_t *srcPath)
+stdRet_t procfs_init(const ch_t *srcPath, fsd_t *fsd)
 {
-      (void)dev;
+      (void)fsd;
       (void)srcPath;
 
       stdRet_t status = STD_RET_OK;
@@ -163,15 +163,15 @@ stdRet_t procfs_init(devx_t dev, const ch_t *srcPath)
 /**
  * @brief Release file system
  *
- * @param[in] dev           device number
+ * @param[in] fsd           file system descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_release(devx_t dev)
+stdRet_t procfs_release(fsd_t fsd)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -196,7 +196,7 @@ stdRet_t procfs_release(devx_t dev)
 /**
  * @brief Function open selected file
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *fd           file descriptor
  * @param[out] *seek         file position
  * @param[in]  *path         file name
@@ -206,9 +206,9 @@ stdRet_t procfs_release(devx_t dev)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
+stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -316,16 +316,16 @@ stdRet_t procfs_open(devx_t dev, fd_t *fd, size_t *seek, const ch_t *path, const
 /**
  * @brief Close file
  *
- * @param[in]  dev          device number
+ * @param[in]  fsd          file system descriptor
  * @param[in] *fd           file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_close(devx_t dev, fd_t fd)
+stdRet_t procfs_close(fsd_t fsd, fd_t fd)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -347,7 +347,7 @@ stdRet_t procfs_close(devx_t dev, fd_t fd)
 /**
  * @brief Write data file
  *
- * @param[in]  dev          device number
+ * @param[in]  fsd          file system descriptor
  * @param[in] *fd           file descriptor
  * @param[in] *src          data source
  * @param[in]  size         item size
@@ -357,9 +357,9 @@ stdRet_t procfs_close(devx_t dev, fd_t fd)
  * @return written nitems
  */
 //================================================================================================//
-size_t procfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+size_t procfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
+      (void)fsd;
       (void)fd;
       (void)src;
       (void)size;
@@ -374,7 +374,7 @@ size_t procfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, 
 /**
  * @brief Read data files
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[in]  *fd           file descriptor
  * @param[out] *dst          data destination
  * @param[in]   size         item size
@@ -384,9 +384,9 @@ size_t procfs_write(devx_t dev, fd_t fd, void *src, size_t size, size_t nitems, 
  * @retval read nitems
  */
 //================================================================================================//
-size_t procfs_read(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
+      (void)fsd;
 
       size_t n = 0;
 
@@ -472,7 +472,7 @@ size_t procfs_read(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, s
 /**
  * @brief Control file
  *
- * @param[in]      dev          device number
+ * @param[in]      fsd          file system descriptor
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
  * @param[in,out] *data         data
@@ -481,9 +481,9 @@ size_t procfs_read(devx_t dev, fd_t fd, void *dst, size_t size, size_t nitems, s
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
+stdRet_t procfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
 {
-      (void)dev;
+      (void)fsd;
       (void)fd;
       (void)iorq;
       (void)data;
@@ -496,7 +496,7 @@ stdRet_t procfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
 /**
  * @brief Statistics of opened file
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[in]  *fd           file descriptor
  * @param[out] *stat         output statistics
  *
@@ -504,9 +504,9 @@ stdRet_t procfs_ioctl(devx_t dev, fd_t fd, IORq_t iorq, void *data)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
+stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -577,16 +577,16 @@ stdRet_t procfs_fstat(devx_t dev, fd_t fd, struct vfs_stat *stat)
 /**
  * @brief Create directory
  *
- * @param[in]  dev          device number
+ * @param[in]  fsd          file system descriptor
  * @param[in] *path         directory path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_mkdir(devx_t dev, const ch_t *path)
+stdRet_t procfs_mkdir(fsd_t fsd, const ch_t *path)
 {
-      (void)dev;
+      (void)fsd;
       (void)path;
 
       return STD_RET_ERROR;
@@ -597,7 +597,7 @@ stdRet_t procfs_mkdir(devx_t dev, const ch_t *path)
 /**
  * @brief Create device node
  *
- * @param[in]  dev          device number
+ * @param[in]  fsd          file system descriptor
  * @param[in] *path         node path
  * @param[in] *dcfg         device configuration
  *
@@ -605,9 +605,9 @@ stdRet_t procfs_mkdir(devx_t dev, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg)
+stdRet_t procfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *dcfg)
 {
-      (void)dev;
+      (void)fsd;
       (void)path;
       (void)dcfg;
 
@@ -619,7 +619,7 @@ stdRet_t procfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg)
 /**
  * @brief Opens directory
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[in]  *path         directory path
  * @param[out] *dir          directory object to fill
  *
@@ -627,9 +627,9 @@ stdRet_t procfs_mknod(devx_t dev, const ch_t *path, struct vfs_drvcfg *dcfg)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
+stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -690,16 +690,16 @@ stdRet_t procfs_opendir(devx_t dev, const ch_t *path, DIR_t *dir)
 /**
  * @brief Function close opened dir (is used when dd contains pointer to allocated block)
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *dir          directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-static stdRet_t procfs_closedir_freedd(devx_t dev, DIR_t *dir)
+static stdRet_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -720,16 +720,16 @@ static stdRet_t procfs_closedir_freedd(devx_t dev, DIR_t *dir)
 /**
  * @brief Function close opened dir (is used when dd contains data which cannot be freed)
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *dir          directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-static stdRet_t procfs_closedir_noop(devx_t dev, DIR_t *dir)
+static stdRet_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
       (void)dir;
 
       return STD_RET_OK;
@@ -740,16 +740,16 @@ static stdRet_t procfs_closedir_noop(devx_t dev, DIR_t *dir)
 /**
  * @brief Remove file
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *path         file path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_remove(devx_t dev, const ch_t *path)
+stdRet_t procfs_remove(fsd_t fsd, const ch_t *path)
 {
-      (void)dev;
+      (void)fsd;
       (void)path;
 
       return STD_RET_ERROR;
@@ -760,7 +760,7 @@ stdRet_t procfs_remove(devx_t dev, const ch_t *path)
 /**
  * @brief Rename file
  *
- * @param[in]  dev          device number
+ * @param[in]  fsd          file system descriptor
  * @param[in] *oldName      old file name
  * @param[in] *newName      new file name
  *
@@ -768,9 +768,9 @@ stdRet_t procfs_remove(devx_t dev, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
+stdRet_t procfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
 {
-      (void)dev;
+      (void)fsd;
       (void)oldName;
       (void)newName;
 
@@ -782,7 +782,7 @@ stdRet_t procfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
 /**
  * @brief Change file mode
  *
- * @param[in]  dev          device number
+ * @param[in]  fsd          file system descriptor
  * @param[in] *path         file path
  * @param[in]  mode         new mode
  *
@@ -790,9 +790,9 @@ stdRet_t procfs_rename(devx_t dev, const ch_t *oldName, const ch_t *newName)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
+stdRet_t procfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
 {
-      (void)dev;
+      (void)fsd;
       (void)path;
       (void)mode;
 
@@ -804,7 +804,7 @@ stdRet_t procfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
 /**
  * @brief Change file owner and group
  *
- * @param[in]  dev          device number
+ * @param[in]  fsd          file system descriptor
  * @param[in] *path         file path
  * @param[in]  owner        owner
  * @param[in]  group        group
@@ -813,9 +813,9 @@ stdRet_t procfs_chmod(devx_t dev, const ch_t *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
+stdRet_t procfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
 {
-      (void)dev;
+      (void)fsd;
       (void)path;
       (void)owner;
       (void)group;
@@ -828,7 +828,7 @@ stdRet_t procfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
 /**
  * @brief File statistics
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[in]  *path         file path
  * @param[out] *stat         file statistics
  *
@@ -836,9 +836,9 @@ stdRet_t procfs_chown(devx_t dev, const ch_t *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
+stdRet_t procfs_stat(fsd_t fsd, const ch_t *path, struct vfs_stat *stat)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -862,16 +862,16 @@ stdRet_t procfs_stat(devx_t dev, const ch_t *path, struct vfs_stat *stat)
 /**
  * @brief File system statistics
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *statfs       FS statistics
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t procfs_statfs(devx_t dev, struct vfs_statfs *statfs)
+stdRet_t procfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
 {
-      (void)dev;
+      (void)fsd;
 
       stdRet_t status = STD_RET_ERROR;
 
@@ -894,15 +894,15 @@ stdRet_t procfs_statfs(devx_t dev, struct vfs_statfs *statfs)
 /**
  * @brief Read item from opened directory
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir)
+static dirent_t procfs_readdir_root(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       dirent_t dirent;
       dirent.name = NULL;
@@ -926,15 +926,15 @@ static dirent_t procfs_readdir_root(devx_t dev, DIR_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t procfs_readdir_taskname(devx_t dev, DIR_t *dir)
+static dirent_t procfs_readdir_taskname(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       dirent_t dirent;
       dirent.name = NULL;
@@ -960,15 +960,15 @@ static dirent_t procfs_readdir_taskname(devx_t dev, DIR_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t procfs_readdir_taskid(devx_t dev, DIR_t *dir)
+static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       dirent_t dirent;
       dirent.name = NULL;
@@ -998,15 +998,15 @@ static dirent_t procfs_readdir_taskid(devx_t dev, DIR_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param[in]   dev          device number
+ * @param[in]   fsd          file system descriptor
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //================================================================================================//
-static dirent_t procfs_readdir_taskid_n(devx_t dev, DIR_t *dir)
+static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
 {
-      (void)dev;
+      (void)fsd;
 
       dirent_t dirent;
       dirent.name = NULL;

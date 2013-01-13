@@ -58,24 +58,24 @@ extern "C" {
 #define free(mem)                         memman_free(mem)
 #endif
 
-#define FS_INTERFACE_CLASS(classname)                                                     \
-extern stdRet_t  classname##_init   (devx_t, const ch_t*);                                \
-extern stdRet_t  classname##_open   (devx_t, fd_t*, size_t*, const ch_t*, const ch_t*);   \
-extern stdRet_t  classname##_close  (devx_t, fd_t);                                       \
-extern size_t    classname##_write  (devx_t, fd_t, void*, size_t, size_t, size_t);        \
-extern size_t    classname##_read   (devx_t, fd_t, void*, size_t, size_t, size_t);        \
-extern stdRet_t  classname##_ioctl  (devx_t, fd_t, IORq_t, void*);                        \
-extern stdRet_t  classname##_mkdir  (devx_t, const ch_t*);                                \
-extern stdRet_t  classname##_mknod  (devx_t, const ch_t*, struct vfs_drvcfg*);            \
-extern stdRet_t  classname##_opendir(devx_t, const ch_t*, DIR_t*);                        \
-extern stdRet_t  classname##_remove (devx_t, const ch_t*);                                \
-extern stdRet_t  classname##_rename (devx_t, const ch_t*, const ch_t*);                   \
-extern stdRet_t  classname##_chmod  (devx_t, const ch_t*, u32_t);                         \
-extern stdRet_t  classname##_chown  (devx_t, const ch_t*, u16_t, u16_t);                  \
-extern stdRet_t  classname##_stat   (devx_t, const ch_t*, struct vfs_stat*);              \
-extern stdRet_t  classname##_fstat  (devx_t, fd_t, struct vfs_stat*);                     \
-extern stdRet_t  classname##_statfs (devx_t, struct vfs_statfs*);                         \
-extern stdRet_t  classname##_release(devx_t)
+#define FS_INTERFACE_CLASS(classname)                                                    \
+extern stdRet_t  classname##_init   (const ch_t*, fsd_t*);                               \
+extern stdRet_t  classname##_open   (fsd_t, fd_t*, size_t*, const ch_t*, const ch_t*);   \
+extern stdRet_t  classname##_close  (fsd_t, fd_t);                                       \
+extern size_t    classname##_write  (fsd_t, fd_t, void*, size_t, size_t, size_t);        \
+extern size_t    classname##_read   (fsd_t, fd_t, void*, size_t, size_t, size_t);        \
+extern stdRet_t  classname##_ioctl  (fsd_t, fd_t, IORq_t, void*);                        \
+extern stdRet_t  classname##_mkdir  (fsd_t, const ch_t*);                                \
+extern stdRet_t  classname##_mknod  (fsd_t, const ch_t*, struct vfs_drvcfg*);            \
+extern stdRet_t  classname##_opendir(fsd_t, const ch_t*, DIR_t*);                        \
+extern stdRet_t  classname##_remove (fsd_t, const ch_t*);                                \
+extern stdRet_t  classname##_rename (fsd_t, const ch_t*, const ch_t*);                   \
+extern stdRet_t  classname##_chmod  (fsd_t, const ch_t*, u32_t);                         \
+extern stdRet_t  classname##_chown  (fsd_t, const ch_t*, u16_t, u16_t);                  \
+extern stdRet_t  classname##_stat   (fsd_t, const ch_t*, struct vfs_stat*);              \
+extern stdRet_t  classname##_fstat  (fsd_t, fd_t, struct vfs_stat*);                     \
+extern stdRet_t  classname##_statfs (fsd_t, struct vfs_statfs*);                         \
+extern stdRet_t  classname##_release(fsd_t)
 
 /*==================================================================================================
                                   Exported types, enums definitions
