@@ -211,11 +211,13 @@ stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
 
                                     /* free memory when error */
                                     if (status == STD_RET_ERROR) {
-                                          if (dirfile)
+                                          if (dirfile) {
                                                 free(dirfile);
+                                          }
 
-                                          if (dcfg)
+                                          if (dcfg) {
                                                 free(dcfg);
+                                          }
 
                                           free(filename);
                                     }
@@ -287,8 +289,9 @@ stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
                                     /* free memory when error */
                                     if (status == STD_RET_ERROR) {
                                           if (dir) {
-                                                if (dir->data)
+                                                if (dir->data) {
                                                       ListDelete(dir->data);
+                                                }
 
                                                 free(dir);
                                           }
@@ -461,8 +464,9 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
                   if (dorm == TRUE) {
                         u32_t itemid;
 
-                        if (ListGetItemID(nodebase->data, item, &itemid) == 0)
+                        if (ListGetItemID(nodebase->data, item, &itemid) == 0) {
                               status = rmNode(nodebase, nodeobj, itemid);
+                        }
                   } else {
                         status = STD_RET_OK;
                   }
@@ -512,23 +516,27 @@ stdRet_t lfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
                         if (name && node) {
                               strcpy(name, strrchr(newName, '/') + 1);
 
-                              if (node->name)
+                              if (node->name) {
                                     free(node->name);
+                              }
 
                               node->name = name;
 
-                              if (node->type == NODE_TYPE_DIR)
+                              if (node->type == NODE_TYPE_DIR) {
                                     node->size = sizeof(node_t) + strlen(name);
-                              else if (node->type == NODE_TYPE_DRV)
+                              } else if (node->type == NODE_TYPE_DRV) {
                                     node->size = 0;
+                              }
 
                               status = STD_RET_OK;
                         } else {
-                              if (name)
+                              if (name) {
                                     free(name);
+                              }
 
-                              if (node)
+                              if (node) {
                                     free(node);
+                              }
                         }
                   }
             }
@@ -683,8 +691,9 @@ stdRet_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 
             fopenInfo_t *foi = ListGetItemDataByID(lfs->openFile, fd);
 
-            if (foi)
+            if (foi) {
                   node = foi->node;
+            }
 
             if (node) {
                   stat->st_dev   = node->dev;
