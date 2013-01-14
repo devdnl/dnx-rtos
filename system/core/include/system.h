@@ -59,7 +59,6 @@ extern "C" {
 #define free(mem)                         moni_free(mem)
 
 /** FILE ACCESS MANAGEMENT */
-#define umount(path)                      moni_umount(path)
 #define getmntentry(item, mntentPtr)      moni_getmntentry(item, mntentPtr)
 #define mknod(path, drv_cfgPtr)           moni_mknod(path, drv_cfgPtr)
 #define mkdir(path)                       moni_mkdir(path)

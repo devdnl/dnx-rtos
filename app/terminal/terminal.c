@@ -497,6 +497,9 @@ cmdStatus_t cmdDF(ch_t *arg)
                                mnt.free,
                                ((mnt.total - mnt.free) * 100)/mnt.total,
                                mnt.mnt_dir);
+
+                        memset(mnt.mnt_dir, 0, 64);
+                        memset(mnt.mnt_fsname, 0, 64);
                   } else {
                         break;
                   }
@@ -508,6 +511,97 @@ cmdStatus_t cmdDF(ch_t *arg)
 
       if (mnt.mnt_fsname)
             free(mnt.mnt_fsname);
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function mount file system
+ */
+//================================================================================================//
+cmdStatus_t cmdMOUNT(ch_t *arg)
+{
+      ch_t *strb   = NULL;
+      ch_t *stre   = NULL;
+      ch_t *fstype = NULL;
+      ch_t *fssrc  = NULL;
+      ch_t *fsmntp = NULL;
+      i8_t  len    = 0;
+
+      strb = arg;
+      stre = strchr(strb, ' ');
+      len  = stre - strb;
+
+      if ((fstype = calloc(len + 1, sizeof(ch_t))) != NULL) {
+            strncpy(fstype, strb, stre - strb);
+      } else {
+            goto cmdMOUNT_end;
+      }
+
+      strb = stre + 1;
+      stre = strchr(strb, ' ');
+      len  = stre - strb;
+
+      if ((fssrc = calloc(len + 1, sizeof(ch_t))) != NULL) {
+            strncpy(fssrc, strb, stre - strb);
+      } else {
+            goto cmdMOUNT_end;
+      }
+
+      strb = stre + 1;
+      len  = strlen(strb);
+
+      if ((fsmntp = calloc(len + 1, sizeof(ch_t))) != NULL) {
+            strcpy(fsmntp, strb);
+      } else {
+            goto cmdMOUNT_end;
+      }
+
+      cmdMOUNT_end:
+      if (!fstype || !fssrc || !fsmntp) {
+            printf("Bad arguments!\n");
+      } else {
+            if (fssrc[0] == '/' || fssrc[0] == '-') {
+                  if (mount(fstype, fssrc, fsmntp) != STD_RET_OK) {
+                        printf("File error while mounting file system!\n");
+                  }
+            } else {
+                  printf("Select file to mount or '-' if FS not need source file.\n");
+            }
+      }
+
+      if (fstype) {
+            free(fstype);
+      }
+
+      if (fssrc) {
+            free(fssrc);
+      }
+
+      if (fsmntp) {
+            free(fsmntp);
+      }
+
+      return CMD_EXECUTED;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function unmount file system
+ */
+//================================================================================================//
+cmdStatus_t cmdUMOUNT(ch_t *arg)
+{
+      if (!arg) {
+            printf("Bad arguments!\n");
+      } else {
+            if (umount(arg) != STD_RET_OK) {
+                  printf("File error while unmounting file system!\n");
+            }
+      }
 
       return CMD_EXECUTED;
 }
@@ -539,6 +633,8 @@ cmdStatus_t FindInternalCmd(ch_t *cmd, ch_t *arg)
             {"clear" , cmdCLEAR },
             {"reboot", cmdREBOOT},
             {"df"    , cmdDF    },
+            {"mount" , cmdMOUNT },
+            {"umount", cmdUMOUNT},
       };
 
       u8_t i;

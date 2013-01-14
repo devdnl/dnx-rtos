@@ -59,8 +59,7 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 /** type which define parse possibilities */
-typedef enum parseType_enum
-{
+typedef enum parseType_enum {
       PARSE_AS_BIN,
       PARSE_AS_OCT,
       PARSE_AS_DEC,
