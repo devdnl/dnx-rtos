@@ -56,7 +56,7 @@ extern "C" {
 #include "lwip/snmp.h"
 #include "netif/etharp.h"
 #include "netif/ppp_oe.h"
-#include "err.h"
+#include "lwip/err.h"
 #include "ethernetif.h"
 #include "stm32_eth.h"
 #include <string.h>

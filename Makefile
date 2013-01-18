@@ -182,12 +182,7 @@ HDRLOC_stm32 = $(sort $(dir $(CSRC_stm32)) $(dir $(CXXSRC_stm32)) \
    system/portable/lib/CMSIS \
    lib/lwip \
    lib/lwip/include \
-   lib/lwip/include/lwip \
    lib/lwip/include/ipv4 \
-   lib/lwip/include/ipv4/lwip \
-   lib/lwip/include/netif \
-   lib/lwip/port \
-   lib/lwip/port/arch \
    )
    
 HDRLOC_posix = $(sort $(dir $(CSRC_posix)) $(dir $(CXXSRC_posix)) \
