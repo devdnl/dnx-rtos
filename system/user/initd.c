@@ -112,8 +112,8 @@ void Initd(void *arg)
 #endif
 
       /* something about board and system */
-      kprint("\x1B[32m\x1B[1m");
-      kprint("%s/%s\x1B[0m by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n",
+      kprint(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by " FONT_COLOR_CYAN "Daniel Zorychta "
+             FONT_COLOR_YELLOW "<daniel.zorychta@gmail.com>" FONT_NORMAL "\n\n",
              SystemGetOSName(), SystemGetKernelName());
 
       /* driver initialization */

@@ -43,12 +43,12 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** translate function to STDC */
-#define printf(...)                             pr_printf(stdout, __VA_ARGS__)
-#define fprintf(...)                            pr_printf(__VA_ARGS__)
+#define printf(...)                             pr_fprintf(stdout, __VA_ARGS__)
+#define fprintf(...)                            pr_fprintf(__VA_ARGS__)
 #define kprint(...)                             pr_kprint(__VA_ARGS__)
-#define kprintOK()                              pr_kprintOK()
-#define kprintFail()                            pr_kprintFail()
-#define kprintErrorNo(errorNo)                  pr_kprintErrorNo(errorNo)
+#define kprintOK()                              pr_kprint("\r\x1B[72C[\x1B[32m  OK  \x1B[0m]\n")
+#define kprintFail()                            pr_kprint("\r\x1B[72C[\x1B[31m FAIL \x1B[0m]\n")
+#define kprintErrorNo(errorNo)                  pr_kprint("\r\x1B[72C[\x1B[31m Er%d \x1B[0m]\n", errorNo)
 #define kprintEnable(path)                      pr_kprintEnable(path)
 #define kprintDisable()                         pr_kprintDisable()
 #define snprintf(stream, size, ...)             pr_snprintf(stream, size, __VA_ARGS__)
@@ -60,34 +60,34 @@ extern "C" {
 #define getcwd(buf, size)                       strncpy(buf, cwd, size)
 
 /** VT100 terminal commands */
-#define enableLineWrap()                        printf("\x1B[?7h")
-#define setNewLineMode()                        printf("\x1B[20h")
-#define setLineFeedMode()                       printf("\x1B[20l")
-#define clrscr()                                printf("\x1B[2J")
-#define eraseLine()                             printf("\x1B[2K")
-#define eraseLineEnd()                          printf("\x1B[K")
-#define cursorHome()                            printf("\x1B[H")
-#define resetAttr()                             printf("\x1B[0m")
-#define fontBlink()                             printf("\x1B[5m")
-#define fontUnderl()                            printf("\x1B[4m")
-#define fontNormal()                            printf("\x1B[0m")
-#define fontBold()                              printf("\x1B[1m")
-#define fontBlack()                             printf("\x1B[30m")
-#define fontRed()                               printf("\x1B[31m")
-#define fontGreen()                             printf("\x1B[32m")
-#define fontYellow()                            printf("\x1B[33m")
-#define fontBlue()                              printf("\x1B[34m")
-#define fontMagenta()                           printf("\x1B[35m")
-#define fontCyan()                              printf("\x1B[36m")
-#define fontWhite()                             printf("\x1B[37m")
-#define bgBlack()                               printf("\x1B[40m")
-#define bgRed()                                 printf("\x1B[41m")
-#define bgGreen()                               printf("\x1B[42m")
-#define bgYellow()                              printf("\x1B[43m")
-#define bgBlue()                                printf("\x1B[44m")
-#define bgMagenta()                             printf("\x1B[45m")
-#define bgCyan()                                printf("\x1B[46m")
-#define bgWhite()                               printf("\x1B[47m")
+#define ENABLE_LINE_WRAP                        "\x1B[?7h"
+#define SET_NEW_LINE_MODE                       "\x1B[20h"
+#define SET_LINE_FEED_MODE                      "\x1B[20l"
+#define CLRSRC                                  "\x1B[2J"
+#define ERASE_LINE                              "\x1B[2K"
+#define ERASE_LINE_END                          "\x1B[K"
+#define CUR_HOME                                "\x1B[H"
+#define RESET_ATTRIBUTES                        "\x1B[0m"
+#define FONT_BLINKING                           "\x1B[5m"
+#define FONT_UNDERLINE                          "\x1B[4m"
+#define FONT_NORMAL                             "\x1B[0m"
+#define FONT_BOLD                               "\x1B[1m"
+#define FONT_COLOR_BLACK                        "\x1B[30m"
+#define FONT_COLOR_RED                          "\x1B[31m"
+#define FONT_COLOR_GREEN                        "\x1B[32m"
+#define FONT_COLOR_YELLOW                       "\x1B[33m"
+#define FONT_COLOR_BLUE                         "\x1B[34m"
+#define FONT_COLOR_MAGENTA                      "\x1B[35m"
+#define FONT_COLOR_CYAN                         "\x1B[36m"
+#define FONT_COLOR_WHITE                        "\x1B[37m"
+#define BACK_COLOR_BLACK                        "\x1B[40m"
+#define BACK_COLOR_RED                          "\x1B[41m"
+#define BACK_COLOR_GREEN                        "\x1B[42m"
+#define BACK_COLOR_YELLOW                       "\x1B[43m"
+#define BACK_COLOR_BLUE                         "\x1B[44m"
+#define BACK_COLOR_MAGENTA                      "\x1B[45m"
+#define BACK_COLOR_CYAN                         "\x1B[46m"
+#define BACK_COLOR_WHITE                        "\x1B[47m"
 
 /** key definitions */
 #define ASCII_LF                                0x0A
@@ -115,10 +115,7 @@ extern "C" {
 extern ch_t  *pr_atoi(ch_t *string, u8_t base, i32_t *value);
 extern int_t  pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...);
 extern int_t  pr_kprint(const ch_t *format, ...);
-extern int_t  pr_kprintOK(void);
-extern int_t  pr_kprintFail(void);
-extern int_t  pr_kprintErrorNo(i8_t errorNo);
-extern int_t  pr_printf(FILE_t *file, const ch_t *format, ...);
+extern int_t  pr_fprintf(FILE_t *file, const ch_t *format, ...);
 extern void   pr_kprintEnable(ch_t *filename);
 extern void   pr_kprintDisable(void);
 extern void   pr_putchar(FILE_t *stdout, ch_t c);
