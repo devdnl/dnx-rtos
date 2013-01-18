@@ -45,9 +45,9 @@ extern "C" {
 ==================================================================================================*/
 typedef struct
 {
-      const ch_t *appName;
-      void       (*appPtr)(void *argv);
-      u32_t      stackSize;
+      const ch_t  *appName;
+      void        (*appPtr)(void *argv);
+      const int_t *stackSize;
 } regAppData_t;
 
 

@@ -173,11 +173,11 @@ app_t *Exec(const ch_t *name, ch_t *argv)
 {
       regAppData_t appData = regapp_GetAppData(name);
 
-      if (appData.appPtr == NULL || appData.stackSize < MINIMAL_STACK_SIZE) {
+      if (appData.appPtr == NULL || *appData.stackSize < MINIMAL_STACK_SIZE) {
             return NULL;
       }
 
-      return RunAsApp(appData.appPtr, appData.appName, appData.stackSize, argv);
+      return RunAsApp(appData.appPtr, appData.appName, *appData.stackSize, argv);
 }
 
 
@@ -199,7 +199,7 @@ app_t *Execd(const ch_t *name, ch_t *argv)
             return NULL;
       }
 
-      return RunAsDaemon(appData.appPtr, appData.appName, appData.stackSize, argv);
+      return RunAsDaemon(appData.appPtr, appData.appName, *appData.stackSize, argv);
 }
 
 

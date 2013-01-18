@@ -1,5 +1,7 @@
+#ifndef LWIPD_H_
+#define LWIPD_H_
 /*=============================================================================================*//**
-@file    cat.c
+@file    lwipd.h
 
 @author  Daniel Zorychta
 
@@ -31,111 +33,35 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "cat.h"
-#include "tty_def.h"
-#include <string.h>
+#include "system.h"
 
-/* Begin of application section declaration */
-APPLICATION(cat, 3)
-APP_SEC_BEGIN
 
 /*==================================================================================================
-                                  Local symbolic constants/macros
+                                 Exported symbolic constants/macros
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                   Local types, enums definitions
+                                  Exported types, enums definitions
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                      Local object definitions
+                                     Exported object declarations
 ==================================================================================================*/
 
 
 /*==================================================================================================
-                                        Function definitions
+                                     Exported function prototypes
 ==================================================================================================*/
+EXTERN_APPLICATION(lwipd);
 
-
-//================================================================================================//
-/**
- * @brief clear main function
- */
-//================================================================================================//
-stdRet_t appmain(ch_t *argv)
-{
-      stdRet_t status = STD_RET_OK;
-
-      u32_t col = 80;
-      ioctl(stdin, TTY_IORQ_GETCOL, &col);
-
-      ch_t *data     = calloc(col + 1, sizeof(ch_t));
-      ch_t *filepath = calloc(128, sizeof(ch_t));
-
-      if (data && filepath) {
-            if (argv[0] == '/') {
-                  strcpy(filepath, argv);
-            } else {
-                  getcwd(filepath, 128);
-
-                  if (filepath[strlen(filepath) - 1] != '/') {
-                        strcat(filepath, "/");
-                  }
-
-                  strcat(filepath, argv);
-            }
-
-            FILE_t *file = fopen(filepath, "r");
-
-            if (file) {
-                  fseek(file, 0, SEEK_END);
-                  i32_t filesize = ftell(file);
-                  fseek(file, 0, SEEK_SET);
-
-                  while (filesize > 0) {
-                        i32_t n = fread(data, sizeof(ch_t), col, file);
-
-                        if (n == 0)
-                              break;
-
-                        printf("%s\n", data);
-
-                        memset(data, 0, col + 1);
-
-                        filesize -= n;
-                  }
-
-                  fclose(file);
-            } else {
-                  printf("No such file\n");
-
-                  status = STD_RET_ERROR;
-            }
-
-      } else {
-            printf("Enough free memory\n");
-
-            status = STD_RET_ERROR;
-      }
-
-      if (data)
-            free(data);
-
-      if (filepath)
-            free(filepath);
-
-      return status;
-}
-
-/* End of application section declaration */
-APP_SEC_END
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

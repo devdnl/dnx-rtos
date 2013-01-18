@@ -76,7 +76,7 @@
 #include "ds1307_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(httpd)
+APPLICATION(httpd, 10 + 2)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -438,7 +438,7 @@ stdRet_t appmain(ch_t *argv)
 
       /* check if application is started as daemon */
       if (stdout != NULL) {
-            printf("%s can be started only as daemon!\n", HTTPD_NAME);
+            printf("httpd can be started only as daemon!\n");
             goto httpd_exit;
       }
 

@@ -33,7 +33,7 @@
 #include "ds1307_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(terminal)
+APPLICATION(term, 5)
 APP_SEC_BEGIN
 
 /*==================================================================================================

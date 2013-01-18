@@ -32,7 +32,7 @@
 #include <string.h>
 
 /* Begin of application section declaration */
-APPLICATION(top)
+APPLICATION(top, 3)
 APP_SEC_BEGIN
 
 /*==================================================================================================

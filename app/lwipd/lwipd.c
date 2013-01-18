@@ -1,5 +1,5 @@
 /*=============================================================================================*//**
-@file    cat.c
+@file    lwipd.c
 
 @author  Daniel Zorychta
 
@@ -31,12 +31,11 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "cat.h"
-#include "tty_def.h"
+#include "lwipd.h"
 #include <string.h>
 
 /* Begin of application section declaration */
-APPLICATION(cat, 3)
+APPLICATION(lwipd, 3)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -52,6 +51,19 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+//static struct   netif netif;
+//static volatile u32_t TCPTimer = 0;
+//static volatile u32_t ARPTimer = 0;
+//
+//#if LWIP_DHCP
+//static volatile u32_t DHCPfineTimer   = 0;
+//static volatile u32_t DHCPcoarseTimer = 0;
+//#endif
+//
+//static bool_t packetReceived  = FALSE;
+//static bool_t netifInit       = FALSE;
+//
+//static ch_t *defaultHostname = "localhost";
 
 
 /*==================================================================================================
@@ -66,67 +78,62 @@ APP_SEC_BEGIN
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      stdRet_t status = STD_RET_OK;
-
-      u32_t col = 80;
-      ioctl(stdin, TTY_IORQ_GETCOL, &col);
-
-      ch_t *data     = calloc(col + 1, sizeof(ch_t));
-      ch_t *filepath = calloc(128, sizeof(ch_t));
-
-      if (data && filepath) {
-            if (argv[0] == '/') {
-                  strcpy(filepath, argv);
-            } else {
-                  getcwd(filepath, 128);
-
-                  if (filepath[strlen(filepath) - 1] != '/') {
-                        strcat(filepath, "/");
-                  }
-
-                  strcat(filepath, argv);
-            }
-
-            FILE_t *file = fopen(filepath, "r");
-
-            if (file) {
-                  fseek(file, 0, SEEK_END);
-                  i32_t filesize = ftell(file);
-                  fseek(file, 0, SEEK_SET);
-
-                  while (filesize > 0) {
-                        i32_t n = fread(data, sizeof(ch_t), col, file);
-
-                        if (n == 0)
-                              break;
-
-                        printf("%s\n", data);
-
-                        memset(data, 0, col + 1);
-
-                        filesize -= n;
-                  }
-
-                  fclose(file);
-            } else {
-                  printf("No such file\n");
-
-                  status = STD_RET_ERROR;
-            }
-
-      } else {
-            printf("Enough free memory\n");
-
-            status = STD_RET_ERROR;
-      }
-
-      if (data)
-            free(data);
-
-      if (filepath)
-            free(filepath);
-
-      return status;
+//      (void) argv;
+//
+//      while (TRUE)
+//      {
+//            /* receive packet from MAC */
+//            if (packetReceived)
+//            {
+//                  /* Handles all the received frames */
+//                  while(ETH_GetRxPktSize() != 0)
+//                  {
+//                        /*
+//                         * read a received packet from the Ethernet buffers and send it to the lwIP
+//                         * for handling
+//                         */
+//                        ethernetif_input(&netif);
+//                  }
+//
+//                  packetReceived = FALSE;
+//            }
+//
+//            u32_t localtime = TaskGetTickCount();
+//
+//            /* TCP periodic process every 250 ms */
+//            if (localtime - TCPTimer >= TCP_TMR_INTERVAL)
+//            {
+//                  TCPTimer = localtime;
+//                  tcp_tmr();
+//            }
+//
+//            /* ARP periodic process every 5s */
+//            if (localtime - ARPTimer >= ARP_TMR_INTERVAL)
+//            {
+//                  ARPTimer = localtime;
+//                  etharp_tmr();
+//            }
+//
+//            #if LWIP_DHCP
+//            /* fine DHCP periodic process every 500ms */
+//            if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS)
+//            {
+//                  DHCPfineTimer = localtime;
+//                  dhcp_fine_tmr();
+//            }
+//
+//            /* DHCP Coarse periodic process every 60s */
+//            if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS)
+//            {
+//                  DHCPcoarseTimer = localtime;
+//                  dhcp_coarse_tmr();
+//            }
+//            #endif
+//
+//            TaskDelay(50);
+//      }
+//
+//      TaskTerminate();
 }
 
 /* End of application section declaration */
