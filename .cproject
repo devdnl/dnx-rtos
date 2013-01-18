@@ -101,7 +101,6 @@
 									<listOptionValue builtIn="false" value="__INT_LEAST16_MAX__"/>
 									<listOptionValue builtIn="false" value="__DEC128_EPSILON__"/>
 									<listOptionValue builtIn="false" value="__FLT_DECIMAL_DIG__"/>
-									<listOptionValue builtIn="false" value="__GNUC__"/>
 									<listOptionValue builtIn="false" value="__INT_LEAST8_TYPE__"/>
 									<listOptionValue builtIn="false" value="__GCC_ATOMIC_WCHAR_T_LOCK_FREE"/>
 									<listOptionValue builtIn="false" value="__GCC_ATOMIC_LONG_LOCK_FREE"/>
@@ -259,6 +258,7 @@
 									<listOptionValue builtIn="false" value="STM32F10X_CL"/>
 									<listOptionValue builtIn="false" value="GCC_ARMCM3"/>
 									<listOptionValue builtIn="false" value="ARCH_stm32"/>
+									<listOptionValue builtIn="false" value="__GNUC__"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1059955023" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -320,8 +320,8 @@
 									<listOptionValue builtIn="false" value="__INT_LEAST64_TYPE__"/>
 									<listOptionValue builtIn="false" value="__SCHAR_MAX__"/>
 									<listOptionValue builtIn="false" value="__DEC128_MANT_DIG__"/>
-									<listOptionValue builtIn="false" value="__UINTPTR_TYPE__"/>
 									<listOptionValue builtIn="false" value="__GCC_ATOMIC_INT_LOCK_FREE"/>
+									<listOptionValue builtIn="false" value="__UINTPTR_TYPE__"/>
 									<listOptionValue builtIn="false" value="__DBL_MIN_10_EXP__"/>
 									<listOptionValue builtIn="false" value="__unix__"/>
 									<listOptionValue builtIn="false" value="__DBL_DENORM_MIN__"/>
@@ -543,6 +543,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.148387178" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="ARCH_posix"/>
+									<listOptionValue builtIn="false" value="__GNUC__"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2063118160" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
