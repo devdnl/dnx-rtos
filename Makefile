@@ -70,7 +70,6 @@ CSRC = $(sort \
 ####################################################################################################
 CSRC_stm32 = $(sort \
    app/httpd/httpd.c \
-   lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
    lib/lwip/api/netbuf.c \
@@ -103,8 +102,8 @@ CSRC_stm32 = $(sort \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
    lib/lwip/port/ethernetif.c \
-	drivers/ether/arch/stm32/ether.c \
-	drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
+   drivers/ether/arch/stm32/ether.c \
+   drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
    drivers/gpio/arch/stm32/gpio.c \
    drivers/i2c/arch/stm32/i2c.c \
    drivers/uart/arch/stm32/uart.c \

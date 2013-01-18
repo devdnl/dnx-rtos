@@ -41,10 +41,10 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** application section */
-#define APPLICATION(name, stackMultiple)  const int_t name##_stack_size = stackMultiple * MINIMAL_STACK_SIZE; \
+#define APPLICATION(name, stackMultiple)  const uint_t name##_stack_size = stackMultiple * MINIMAL_STACK_SIZE; \
                                           void name(void *appArgument)
 
-#define EXTERN_APPLICATION(name)          extern const int_t name##_stack_size; \
+#define EXTERN_APPLICATION(name)          extern const uint_t name##_stack_size; \
                                           extern void name(void *appArgument)
 
 

@@ -45,10 +45,6 @@ extern "C" {
 #include "regfs.h"
 #include "regdrv.h"
 
-#if !defined(ARCH_posix)
-#include "netconf.h"
-#endif
-
 
 /*==================================================================================================
                                   Exported symbolic constants/macros
@@ -95,11 +91,6 @@ extern "C" {
 #define SystemGetFreeMemSize()            memman_GetFreeHeapSize()
 #define SystemGetUsedMemSize()            memman_GetUsedHeapSize()
 #define SystemGetMemSize()                MEMMAN_HEAP_SIZE
-#if defined(NETCONF_H_)
-#define SystemGetHostname()               LwIP_GetHostname()
-#else
-#define SystemGetHostname()               "localhost"
-#endif
 #define SystemGetUptime()                 GetUptimeCnt()
 #define SystemGetTaskCount()              TaskGetNumberOfTasks()
 #define SystemGetOSTickCnt()              TaskGetTickCount()
@@ -109,8 +100,9 @@ extern "C" {
 #define SystemReboot()                    cpuctl_SystemReboot()
 #define SystemGetOSName()                 "dnx"
 #define SystemGetKernelName()             "FreeRTOS"
-#define SystemGetOSVersion()              "0.5.1"
-#define SystemGetKernelVersion()          "7.1.1"
+#define SystemGetOSVersion()              "0.6.1"
+#define SystemGetKernelVersion()          "7.3.0"
+#define SystemGetHostname()               "weatherst"
 
 
 /*==================================================================================================

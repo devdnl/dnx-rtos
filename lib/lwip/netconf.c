@@ -189,7 +189,7 @@ stdRet_t LwIP_Init(void)
       /* checking that DHCP connect */
       if (times > 0)
       {
-            kprintOK();
+            pr_kprint("\r\x1B[72C[\x1B[32m  OK  \x1B[0m]\n");
 
             ip_addr_set(&ipaddr,  &netif.ip_addr);
             ip_addr_set(&netmask, &netif.netmask);
@@ -200,7 +200,7 @@ stdRet_t LwIP_Init(void)
             dhcp_release(&netif);
             dhcp_stop(&netif);
 
-            kprintFail();
+            pr_kprint("\r\x1B[72C[\x1B[31m FAIL \x1B[0m]\n");
 
             kprint("Setting static IP...\n");
             IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
@@ -227,12 +227,12 @@ stdRet_t LwIP_Init(void)
       kprint("lwIP configuration: ");
 
       /* configuration finished successfully */
-      kprintOK();
+      pr_kprint("\r\x1B[72C[\x1B[32m  OK  \x1B[0m]\n");
       return STD_RET_OK;
 
       /* error occur */
       LwIP_Init_exit_Failure:
-      kprintFail();
+      pr_kprint("\r\x1B[72C[\x1B[31m FAIL \x1B[0m]\n");
       return STD_RET_ERROR;
 }
 

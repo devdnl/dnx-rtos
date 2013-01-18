@@ -45,7 +45,9 @@ extern "C" {
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
-
+struct eth_mem {
+      bool_t RxDataReady;
+};
 
 /*==================================================================================================
                                       Local function prototypes
@@ -55,6 +57,7 @@ extern "C" {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+static struct eth_mem *eth_mem;
 
 
 /*==================================================================================================
@@ -83,6 +86,14 @@ stdRet_t ETHER_Init(devx_t dev, fd_t part)
       (void)dev;
 
       stdRet_t status = STD_RET_ERROR;
+
+      if (eth_mem == NULL) {
+            eth_mem = calloc(1, sizeof(struct eth_mem));
+
+            if (eth_mem == NULL) {
+                  goto ETHER_Init_End;
+            }
+      }
 
       /* enable Ethernet clock */
       RCC->AHBENR |= RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN;
@@ -146,8 +157,12 @@ stdRet_t ETHER_Init(devx_t dev, fd_t part)
             ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
 
             status = STD_RET_OK;
+      } else {
+            free(eth_mem);
+            eth_mem = NULL;
       }
 
+      ETHER_Init_End:
       return status;
 }
 
@@ -258,10 +273,24 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 {
       (void)dev;
       (void)part;
-      (void)ioRq;
-      (void)data;
 
-      return STD_RET_OK;
+      stdRet_t status = STD_RET_ERROR;
+
+      if (eth_mem) {
+            switch (ioRq) {
+            case ETHER_IORQ_GET_RX_FLAG:
+                  *(bool_t*)data = eth_mem->RxDataReady;
+                  status = STD_RET_OK;
+                  break;
+
+            case ETHER_IORQ_CLEAR_RX_FLAG:
+                  eth_mem->RxDataReady = FALSE;
+                  status = STD_RET_OK;
+                  break;
+            }
+      }
+
+      return status;
 }
 
 
@@ -292,7 +321,8 @@ stdRet_t ETHER_Release(devx_t dev, fd_t part)
 //================================================================================================//
 void ETH_IRQHandler(void)
 {
-      LwIP_SetReceiveFlag();
+//      LwIP_SetReceiveFlag();
+      eth_mem->RxDataReady = TRUE;
 
       /* Clear the Eth DMA Rx IT pending bits */
       ETH_DMAClearITPendingBit(ETH_DMA_IT_R);

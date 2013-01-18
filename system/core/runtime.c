@@ -51,8 +51,8 @@
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static app_t *RunAsApp(task_t app, const ch_t *appName, u32_t stackSize, void *arg);
-static app_t *RunAsDaemon(task_t app, const ch_t *appName, u32_t stackSize, void *arg);
+static app_t *RunAsApp(task_t app, const ch_t *appName, uint_t stackSize, void *arg);
+static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, void *arg);
 
 
 /*==================================================================================================
@@ -81,7 +81,7 @@ static app_t *RunAsDaemon(task_t app, const ch_t *appName, u32_t stackSize, void
  * @return application handler
  */
 //================================================================================================//
-static app_t *RunAsApp(task_t app, const ch_t *appName, u32_t stackSize, void *arg)
+static app_t *RunAsApp(task_t app, const ch_t *appName, uint_t stackSize, void *arg)
 {
       app_t *appHandle = NULL;
 
@@ -126,7 +126,7 @@ static app_t *RunAsApp(task_t app, const ch_t *appName, u32_t stackSize, void *a
  * @return application handler
  */
 //================================================================================================//
-static app_t *RunAsDaemon(task_t app, const ch_t *appName, u32_t stackSize, void *arg)
+static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, void *arg)
 {
       app_t *appHandle = NULL;
 
@@ -216,10 +216,10 @@ app_t *Execd(const ch_t *name, ch_t *argv)
 stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
 {
       if (Execd(name, argv) != NULL) {
-             kprint("%s daemon started\n", name);
+            kprint("%s daemon started\n", name);
             return STD_RET_OK;
       } else {
-             kprint("\x1B[31m%s start failed\x1B[0m\n", name);
+            kprint("\x1B[31m%s start failed\x1B[0m\n", name);
             return STD_RET_ERROR;
       }
 }

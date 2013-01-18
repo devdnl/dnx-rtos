@@ -40,6 +40,15 @@
 ==================================================================================================*/
 #define ETHER_PHY_ADDRESS                 0x01
 
+#define ETH_PART_NONE                     0
+
+/** port names */
+enum ETH_DEV_NUMBER_enum
+{
+      ETH_DEV_1,
+      ETH_DEV_LAST
+};
+
 
 /*==================================================================================================
                                   Exported types, enums definitions

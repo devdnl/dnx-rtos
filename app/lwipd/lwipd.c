@@ -34,8 +34,19 @@ extern "C" {
 #include "lwipd.h"
 #include <string.h>
 
+#include "lwip/init.h"
+#include "lwip/netif.h"
+#include "lwip/tcp_impl.h"
+#include "netif/etharp.h"
+#include "lwip/dhcp.h"
+
+#include "ethernetif.h"
+#include "stm32_eth.h"
+
+#include "ether_def.h"
+
 /* Begin of application section declaration */
-APPLICATION(lwipd, 3)
+APPLICATION(lwipd, 5)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -51,25 +62,24 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-//static struct   netif netif;
-//static volatile u32_t TCPTimer = 0;
-//static volatile u32_t ARPTimer = 0;
-//
-//#if LWIP_DHCP
-//static volatile u32_t DHCPfineTimer   = 0;
-//static volatile u32_t DHCPcoarseTimer = 0;
-//#endif
-//
-//static bool_t packetReceived  = FALSE;
-//static bool_t netifInit       = FALSE;
-//
-//static ch_t *defaultHostname = "localhost";
+//struct   netif netif;
+u32_t TCPTimer = 0;
+u32_t ARPTimer = 0;
+
+#if LWIP_DHCP
+u32_t DHCPfineTimer   = 0;
+u32_t DHCPcoarseTimer = 0;
+#endif
+
+//bool_t packetReceived  = FALSE;
+bool_t netifConfigured = FALSE;
+
+//ch_t *defaultHostname = "localhost";
 
 
 /*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
-
 
 //================================================================================================//
 /**
@@ -78,62 +88,186 @@ APP_SEC_BEGIN
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-//      (void) argv;
-//
-//      while (TRUE)
-//      {
-//            /* receive packet from MAC */
-//            if (packetReceived)
-//            {
-//                  /* Handles all the received frames */
-//                  while(ETH_GetRxPktSize() != 0)
-//                  {
-//                        /*
-//                         * read a received packet from the Ethernet buffers and send it to the lwIP
-//                         * for handling
-//                         */
-//                        ethernetif_input(&netif);
-//                  }
-//
-//                  packetReceived = FALSE;
-//            }
-//
-//            u32_t localtime = TaskGetTickCount();
-//
-//            /* TCP periodic process every 250 ms */
-//            if (localtime - TCPTimer >= TCP_TMR_INTERVAL)
-//            {
-//                  TCPTimer = localtime;
-//                  tcp_tmr();
-//            }
-//
-//            /* ARP periodic process every 5s */
-//            if (localtime - ARPTimer >= ARP_TMR_INTERVAL)
-//            {
-//                  ARPTimer = localtime;
-//                  etharp_tmr();
-//            }
-//
-//            #if LWIP_DHCP
-//            /* fine DHCP periodic process every 500ms */
-//            if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS)
-//            {
-//                  DHCPfineTimer = localtime;
-//                  dhcp_fine_tmr();
-//            }
-//
-//            /* DHCP Coarse periodic process every 60s */
-//            if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS)
-//            {
-//                  DHCPcoarseTimer = localtime;
-//                  dhcp_coarse_tmr();
-//            }
-//            #endif
-//
-//            TaskDelay(50);
-//      }
-//
-//      TaskTerminate();
+      (void)argv;
+
+      stdRet_t status = STD_RET_ERROR;
+      FILE_t *eth     = NULL;
+
+      struct netif *netif = malloc(sizeof(struct netif));
+
+      if (netif == NULL) {
+            kprint(FONT_COLOR_RED "Unable to allocate netif interface!\n" RESET_ATTRIBUTES);
+            goto lwipd_end;
+      }
+
+      struct ip_addr ipaddr;
+      struct ip_addr netmask;
+      struct ip_addr gw;
+      u8_t macaddress[6] = {0, 0, 0, 0, 0, 1};
+
+      /* check if Ethernet interface exist */
+      eth = fopen("/dev/eth0", "r");
+
+      if (eth == NULL) {
+            kprint("lwipd: Ethernet interface does not exist!");
+            goto lwipd_end;
+      }
+
+      lwip_init();
+
+      #if LWIP_DHCP
+      ipaddr.addr  = 0;
+      netmask.addr = 0;
+      gw.addr      = 0;
+      #else
+      IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
+      IP4_ADDR(&netmask, 255, 255, 255, 0  );
+      IP4_ADDR(&gw     , 192, 168, 0  , 1  );
+      #endif
+
+      Set_MAC_Address(macaddress);
+
+      /*
+       * the init function pointer must point to a initialization function for your ethernet netif
+       * interface. The following code illustrates it's use.
+       */
+      if (netif_add(netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &ethernet_input) == NULL) {
+            goto lwipd_end;
+      }
+
+      /* registers the default network interface */
+      netif_set_default(netif);
+
+#if LWIP_DHCP
+      /*
+       * creates a new DHCP client for this interface on the first call.
+       * Note: you must call dhcp_fine_tmr() and dhcp_coarse_tmr() at the predefined regular
+       * intervals after starting the client. You can peek in the netif->dhcp struct for the actual
+       * DHCP status.
+       */
+      kprint("Starting DHCP Client..");
+      if (ERR_MEM == dhcp_start(netif)) {
+            kprint(". " FONT_COLOR_RED "Fail" RESET_ATTRIBUTES "\n");
+            goto lwipd_end;
+      }
+#endif
+
+      while (TRUE) {
+            if (netifConfigured == FALSE) {
+#if LWIP_DHCP
+                  /* waiting for DHCP connection */
+                  u8_t times = 100;
+
+                  if (netif->dhcp->state != DHCP_BOUND && times > 0) {
+//                        kprint(".");
+//                        TaskDelay(20);
+                        times--;
+                  } else {
+                        /* checking that DHCP connect */
+                        if (times > 0) {
+                              kprint(FONT_COLOR_GREEN "OK" RESET_ATTRIBUTES "\n");
+
+                              ip_addr_set(&ipaddr,  &netif->ip_addr);
+                              ip_addr_set(&netmask, &netif->netmask);
+                              ip_addr_set(&gw,      &netif->gw);
+                        } else {
+                              dhcp_release(netif);
+                              dhcp_stop(netif);
+
+                              kprint(FONT_COLOR_RED "Fail" RESET_ATTRIBUTES "\n");
+
+                              kprint("Setting static IP...\n");
+                              IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
+                              IP4_ADDR(&netmask, 255, 255, 255, 0  );
+                              IP4_ADDR(&gw     , 192, 168, 0  , 1  );
+
+                              netif_set_addr(netif, &ipaddr, &netmask, &gw);
+                        }
+#endif
+
+                        /* when the netif is fully configured this function must be called.*/
+                        netif_set_up(netif);
+                        netifConfigured = TRUE;
+
+                        kprint("Hostname  : %s\n", netif->hostname);
+                        kprint("MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n", macaddress[0], macaddress[1], macaddress[2],
+                                                                        macaddress[3], macaddress[4], macaddress[5]);
+                        kprint("IP Address: %d.%d.%d.%d\n", ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
+                                                            ip4_addr3(&ipaddr),  ip4_addr4(&ipaddr));
+                        kprint("Net Mask  : %d.%d.%d.%d\n", ip4_addr1(&netmask), ip4_addr2(&netmask),
+                                                            ip4_addr3(&netmask), ip4_addr4(&netmask));
+                        kprint("Gateway   : %d.%d.%d.%d\n", ip4_addr1(&gw),      ip4_addr2(&gw),
+                                                            ip4_addr3(&gw),      ip4_addr4(&gw));
+
+                        status = STD_RET_OK;
+#if LWIP_DHCP
+                  }
+#endif
+            }
+
+
+            /* receive packet from MAC */
+            bool_t rxflag = FALSE;
+
+            if (ioctl(eth, ETHER_IORQ_GET_RX_FLAG, &rxflag) == STD_RET_OK) {
+                  if (rxflag == TRUE) {
+                        /* Handles all the received frames */
+                        while(ETH_GetRxPktSize() != 0) {
+                              /*
+                               * read a received packet from the Ethernet buffers and send it to the
+                               * lwIP for handling
+                               */
+                              ethernetif_input(netif);
+                        }
+
+                        ioctl(eth, ETHER_IORQ_CLEAR_RX_FLAG, NULL);
+                  }
+            }
+
+            u32_t localtime = TaskGetTickCount();
+
+            /* TCP periodic process every 250 ms */
+            if (localtime - TCPTimer >= TCP_TMR_INTERVAL)
+            {
+                  TCPTimer = localtime;
+                  tcp_tmr();
+            }
+
+            /* ARP periodic process every 5s */
+            if (localtime - ARPTimer >= ARP_TMR_INTERVAL)
+            {
+                  ARPTimer = localtime;
+                  etharp_tmr();
+            }
+
+#if LWIP_DHCP
+            /* fine DHCP periodic process every 500ms */
+            if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS)
+            {
+                  DHCPfineTimer = localtime;
+                  dhcp_fine_tmr();
+            }
+
+            /* DHCP Coarse periodic process every 60s */
+            if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS)
+            {
+                  DHCPcoarseTimer = localtime;
+                  dhcp_coarse_tmr();
+            }
+#endif
+
+            Sleep(50);
+      }
+
+
+      lwipd_end:
+      if (netif) {
+            free(netif);
+      }
+
+      fclose(eth);
+
+      return status;
 }
 
 /* End of application section declaration */
