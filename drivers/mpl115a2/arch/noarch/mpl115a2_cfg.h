@@ -1,11 +1,11 @@
-#ifndef NET_H_
-#define NET_H_
+#ifndef MPL115A2_CFG_H_
+#define MPL115A2_CFG_H_
 /*=============================================================================================*//**
-@file    net.h
+@file    mpl115a2_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   This file support upper layer of Ethernet interface and LwIP stack
+@brief   This file support temperature and pressure sensor - MPL115A2
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,32 +33,22 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
-#include "lwip/tcp.h"
 
 
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+#define MPL115A2_DEV_NONE                 0
+#define MPL115A2_PART_NONE                0
+
+
+/** sensor safe SCL frequency [Hz] */
+#define MPL115A2_SCL_FREQUENCY            100000
 
 
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-typedef u32_t netSoc_t;
-
-typedef union
-{
-      struct
-      {
-            bool_t BindAccepted:1;
-            bool_t DataReceived:1;
-            bool_t DataPosted:1;
-            bool_t ConnectionError:1;
-            bool_t Poll:1;
-      } flag;
-      u8_t integer;
-} netStatus_t;
 
 
 /*==================================================================================================
@@ -69,24 +59,13 @@ typedef union
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern netSoc_t    NET_NewTCPSocket(ip_addr_t *ipaddr, u16_t port);
-extern stdRet_t NET_CloseTCPSocket(netSoc_t socket);
-extern stdRet_t NET_GetTCPStatus(netSoc_t socket, netStatus_t *status);
-extern stdRet_t NET_TCPAcceptReceived(netSoc_t socket);
-extern void        *NET_GetReceivedDataBuffer(netSoc_t socket);
-extern void        NET_FreeReceivedBuffer(netSoc_t socket);
-extern stdRet_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
-extern stdRet_t NET_TCPClose(netSoc_t socket);
-extern stdRet_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
-extern stdRet_t NET_TCPAcceptError(netSoc_t socket);
-extern stdRet_t NET_TCPAcceptPoll(netSoc_t socket);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* NET_H_ */
+#endif /* MPL115A2_CFG_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

@@ -120,7 +120,7 @@ volatile int tcp_end_time;
 volatile int arp_end_time;
 
 /* MAC address */
-uint8_t MACaddr[6];
+//uint8_t MACaddr[6];
 
 /* Ethernet Rx & Tx DMA Descriptors */
 ETH_DMADESCTypeDef *DMARxDscrTab;
@@ -151,17 +151,17 @@ extern ETH_DMADESCTypeDef *DMARxDescToGet;
  * @param netif the already initialized lwip network interface structure for this ethernetif
  */
 //================================================================================================//
-void Set_MAC_Address(uint8_t* macadd)
-{
-      MACaddr[0] = macadd[0];
-      MACaddr[1] = macadd[1];
-      MACaddr[2] = macadd[2];
-      MACaddr[3] = macadd[3];
-      MACaddr[4] = macadd[4];
-      MACaddr[5] = macadd[5];
-
-      ETH_MACAddressConfig(ETH_MAC_Address0, macadd);
-}
+//void Set_MAC_Address(uint8_t* macadd) /* DNLFIXME delete this if OK */
+//{
+//      MACaddr[0] = macadd[0];
+//      MACaddr[1] = macadd[1];
+//      MACaddr[2] = macadd[2];
+//      MACaddr[3] = macadd[3];
+//      MACaddr[4] = macadd[4];
+//      MACaddr[5] = macadd[5];
+//
+//      ETH_MACAddressConfig(ETH_MAC_Address0, macadd);
+//}
 
 
 //================================================================================================//
@@ -200,13 +200,13 @@ static void low_level_init(struct netif *netif)
       /* set MAC hardware address length */
       netif->hwaddr_len = ETHARP_HWADDR_LEN;
 
-      /* set MAC hardware address */
-      netif->hwaddr[0] = MACaddr[0];
-      netif->hwaddr[1] = MACaddr[1];
-      netif->hwaddr[2] = MACaddr[2];
-      netif->hwaddr[3] = MACaddr[3];
-      netif->hwaddr[4] = MACaddr[4];
-      netif->hwaddr[5] = MACaddr[5];
+//      /* set MAC hardware address */
+//      netif->hwaddr[0] = MACaddr[0];
+//      netif->hwaddr[1] = MACaddr[1];
+//      netif->hwaddr[2] = MACaddr[2];
+//      netif->hwaddr[3] = MACaddr[3];
+//      netif->hwaddr[4] = MACaddr[4];
+//      netif->hwaddr[5] = MACaddr[5];
 
       /* maximum transfer unit */
       netif->mtu = 1500;

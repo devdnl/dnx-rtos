@@ -46,6 +46,7 @@ extern "C" {
 enum ETHER_IORQ {
       ETHER_IORQ_GET_RX_FLAG,
       ETHER_IORQ_CLEAR_RX_FLAG,
+      ETHER_IORQ_SET_MAC_ADR,
 };
 
 

@@ -150,6 +150,12 @@ stdRet_t MPL115A2_Init(devx_t dev, fd_t part)
                         u8_t    tmp[8];
 
                         if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
+                              u32_t freq = MPL115A2_SCL_FREQUENCY;
+
+                              if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                                    goto MPL115A2_Init_File_Error;
+                              }
+
                               tmp[0] = MPL115A2_ADDRESS;
 
                               if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
@@ -165,13 +171,15 @@ stdRet_t MPL115A2_Init(devx_t dev, fd_t part)
                                     }
                               }
 
+                              MPL115A2_Init_File_Error:
                               fclose(fi2c);
                         }
                   }
 
                   if (status == STD_RET_ERROR) {
-                        if (mplmem->mtx)
+                        if (mplmem->mtx) {
                               DeleteMutex(mplmem->mtx);
+                        }
 
                         free(mplmem);
                         mplmem = NULL;
@@ -374,17 +382,25 @@ static stdRet_t GetTemperature(i8_t *temperature)
 
       if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
+                  u32_t freq = MPL115A2_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto MPL115A2_GetTemperature_ClosePort;
+                  }
+
                   tmp[0] = MPL115A2_ADDRESS;
 
-                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)
+                  if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK) {
                         goto MPL115A2_GetTemperature_ClosePort;
+                  }
 
                   /* start new conversion */
                   tmp[0] = 0x01;
                   fseek(fi2c, REG_CONVERT, SEEK_SET);
 
-                  if (fwrite(&tmp, sizeof(u8_t), 1, fi2c) != 1)
+                  if (fwrite(&tmp, sizeof(u8_t), 1, fi2c) != 1) {
                         goto MPL115A2_GetTemperature_ClosePort;
+                  }
 
                   TaskDelay(5);
 
@@ -430,6 +446,12 @@ static stdRet_t GetPressure(u16_t *pressure)
 
       if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
+                  u32_t freq = MPL115A2_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto MPL115A2_GetPressure_ClosePort;
+                  }
+
                   tmp[0] = MPL115A2_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) != STD_RET_OK)

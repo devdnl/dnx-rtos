@@ -33,7 +33,6 @@ extern "C" {
 ==================================================================================================*/
 #include "ether.h"
 #include "stm32_eth.h"
-#include "netconf.h"
 #include "lwipopts.h"
 
 
@@ -47,6 +46,7 @@ extern "C" {
 ==================================================================================================*/
 struct eth_mem {
       bool_t RxDataReady;
+      u8_t   MACaddr[6];
 };
 
 /*==================================================================================================
@@ -279,13 +279,31 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
       if (eth_mem) {
             switch (ioRq) {
             case ETHER_IORQ_GET_RX_FLAG:
-                  *(bool_t*)data = eth_mem->RxDataReady;
-                  status = STD_RET_OK;
+                  if (data) {
+                        *(bool_t*)data = eth_mem->RxDataReady;
+                        status = STD_RET_OK;
+                  }
                   break;
 
             case ETHER_IORQ_CLEAR_RX_FLAG:
                   eth_mem->RxDataReady = FALSE;
                   status = STD_RET_OK;
+                  break;
+
+            case ETHER_IORQ_SET_MAC_ADR:
+                  if (data) {
+                        u8_t *MAC = data;
+                        eth_mem->MACaddr[0] = MAC[0];
+                        eth_mem->MACaddr[1] = MAC[1];
+                        eth_mem->MACaddr[2] = MAC[2];
+                        eth_mem->MACaddr[3] = MAC[3];
+                        eth_mem->MACaddr[4] = MAC[4];
+                        eth_mem->MACaddr[5] = MAC[5];
+
+                        ETH_MACAddressConfig(ETH_MAC_Address0, eth_mem->MACaddr);
+
+                        status = STD_RET_OK;
+                  }
                   break;
             }
       }

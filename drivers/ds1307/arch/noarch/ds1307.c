@@ -162,9 +162,15 @@ stdRet_t DS1307_Init(devx_t dev, fd_t part)
 
                         if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
 
-                              u8_t tmp = DS1307_ADDRESS;
+                              u32_t tmp = DS1307_ADDRESS;
 
                               if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp) != STD_RET_OK) {
+                                    goto DS1307_Init_CloseFile;
+                              }
+
+                              tmp = DS1307_SCL_FREQUENCY;
+
+                              if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &tmp) != STD_RET_OK) {
                                     goto DS1307_Init_CloseFile;
                               }
 
@@ -304,11 +310,17 @@ size_t DS1307_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems
       (void)part;
 
       size_t  n = 0;
-      u8_t    tmp;
+      u32_t   tmp;
       FILE_t *fi2c;
 
       if (dev == DS1307_DEV_NVM) {
             if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
+                  u32_t freq = DS1307_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto DS1307_Write_End;
+                  }
+
                   tmp = DS1307_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp) == STD_RET_OK) {
@@ -317,6 +329,7 @@ size_t DS1307_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems
                         n = fwrite(src, size, nitems, fi2c);
                   }
 
+                  DS1307_Write_End:
                   fclose(fi2c);
             }
       }
@@ -348,6 +361,12 @@ size_t DS1307_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems,
 
       if (dev == DS1307_DEV_NVM) {
             if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
+                  u32_t freq = DS1307_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto DS1307_Read_End;
+                  }
+
                   tmp = DS1307_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp) == STD_RET_OK) {
@@ -355,6 +374,7 @@ size_t DS1307_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems,
                         n = fread(dst, size, nitems, fi2c);
                   }
 
+                  DS1307_Read_End:
                   fclose(fi2c);
             }
       }
@@ -438,6 +458,12 @@ static bcdTime_t GetTime(void)
 
       if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
+                  u32_t freq = DS1307_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto GetTime_End;
+                  }
+
                   tmp[0] = DS1307_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
@@ -450,6 +476,7 @@ static bcdTime_t GetTime(void)
                         }
                   }
 
+                  GetTime_End:
                   fclose(fi2c);
             }
 
@@ -478,6 +505,12 @@ static stdRet_t SetTime(bcdTime_t *time)
 
       if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
+                  u32_t freq = DS1307_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto SetTime_End;
+                  }
+
                   tmp[0] = DS1307_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
@@ -494,6 +527,7 @@ static stdRet_t SetTime(bcdTime_t *time)
                         }
                   }
 
+                  SetTime_End:
                   fclose(fi2c);
             }
 
@@ -520,6 +554,12 @@ static bcdDate_t GetDate(void)
 
       if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
+                  u32_t freq = DS1307_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto GetDate_End;
+                  }
+
                   tmp[0] = DS1307_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
@@ -533,6 +573,7 @@ static bcdDate_t GetDate(void)
                         }
                   }
 
+                  GetDate_End:
                   fclose(fi2c);
             }
 
@@ -561,6 +602,12 @@ static stdRet_t SetDate(bcdDate_t *date)
 
       if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
+                  u32_t freq = DS1307_SCL_FREQUENCY;
+
+                  if (ioctl(fi2c, I2C_IORQ_SETSCLFREQ, &freq) != STD_RET_OK) {
+                        goto SetDate_End;
+                  }
+
                   tmp[0] = DS1307_ADDRESS;
 
                   if (ioctl(fi2c, I2C_IORQ_SETSLAVEADDR, &tmp[0]) == STD_RET_OK) {
@@ -579,6 +626,7 @@ static stdRet_t SetDate(bcdDate_t *date)
                         }
                   }
 
+                  SetDate_End:
                   fclose(fi2c);
             }
 
@@ -604,13 +652,10 @@ static u8_t WeekDay(u16_t year, u8_t month, u8_t day)
 {
       u16_t z, c;
 
-      if (month < 3)
-      {
+      if (month < 3) {
             z = year--;
             c = 0;
-      }
-      else
-      {
+      } else {
             z = year;
             c = 2;
       }

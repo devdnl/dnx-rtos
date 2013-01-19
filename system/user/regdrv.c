@@ -180,11 +180,15 @@ stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
 
                               if (status != STD_RET_OK) {
                                     drvList[i].drvRelease(dev, part);
-                                    kprint("\x1B[31mCreate node %s failed\x1B[0m\n", nodeName);
+                                    kprint(FONT_COLOR_RED"Create node %s failed"RESET_ATTRIBUTES"\n", nodeName);
                               } else {
                                     kprint("Created node %s\n", nodeName);
                               }
+
+                              goto InitDrv_end;
                         }
+
+                        kprint(FONT_COLOR_RED"Driver %s initialization error!"RESET_ATTRIBUTES"\n", drvName);
 
                         goto InitDrv_end;
                   }

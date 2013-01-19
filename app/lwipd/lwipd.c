@@ -62,7 +62,6 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
-//struct   netif netif;
 u32_t TCPTimer = 0;
 u32_t ARPTimer = 0;
 
@@ -71,10 +70,9 @@ u32_t DHCPfineTimer   = 0;
 u32_t DHCPcoarseTimer = 0;
 #endif
 
-//bool_t packetReceived  = FALSE;
 bool_t netifConfigured = FALSE;
+FILE_t *ethf           = NULL;
 
-//ch_t *defaultHostname = "localhost";
 
 
 /*==================================================================================================
@@ -91,7 +89,6 @@ stdRet_t appmain(ch_t *argv)
       (void)argv;
 
       stdRet_t status = STD_RET_ERROR;
-      FILE_t *eth     = NULL;
 
       struct netif *netif = malloc(sizeof(struct netif));
 
@@ -106,9 +103,9 @@ stdRet_t appmain(ch_t *argv)
       u8_t macaddress[6] = {0, 0, 0, 0, 0, 1};
 
       /* check if Ethernet interface exist */
-      eth = fopen("/dev/eth0", "r");
+      ethf = fopen("/dev/eth0", "r");
 
-      if (eth == NULL) {
+      if (ethf == NULL) {
             kprint("lwipd: Ethernet interface does not exist!");
             goto lwipd_end;
       }
@@ -125,7 +122,7 @@ stdRet_t appmain(ch_t *argv)
       IP4_ADDR(&gw     , 192, 168, 0  , 1  );
       #endif
 
-      Set_MAC_Address(macaddress);
+      ioctl(ethf, ETHER_IORQ_SET_MAC_ADR, macaddress);
 
       /*
        * the init function pointer must point to a initialization function for your ethernet netif
@@ -134,6 +131,14 @@ stdRet_t appmain(ch_t *argv)
       if (netif_add(netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &ethernet_input) == NULL) {
             goto lwipd_end;
       }
+
+      /* set MAC hardware address */
+      netif->hwaddr[0] = macaddress[0];
+      netif->hwaddr[1] = macaddress[1];
+      netif->hwaddr[2] = macaddress[2];
+      netif->hwaddr[3] = macaddress[3];
+      netif->hwaddr[4] = macaddress[4];
+      netif->hwaddr[5] = macaddress[5];
 
       /* registers the default network interface */
       netif_set_default(netif);
@@ -209,7 +214,7 @@ stdRet_t appmain(ch_t *argv)
             /* receive packet from MAC */
             bool_t rxflag = FALSE;
 
-            if (ioctl(eth, ETHER_IORQ_GET_RX_FLAG, &rxflag) == STD_RET_OK) {
+            if (ioctl(ethf, ETHER_IORQ_GET_RX_FLAG, &rxflag) == STD_RET_OK) {
                   if (rxflag == TRUE) {
                         /* Handles all the received frames */
                         while(ETH_GetRxPktSize() != 0) {
@@ -220,37 +225,33 @@ stdRet_t appmain(ch_t *argv)
                               ethernetif_input(netif);
                         }
 
-                        ioctl(eth, ETHER_IORQ_CLEAR_RX_FLAG, NULL);
+                        ioctl(ethf, ETHER_IORQ_CLEAR_RX_FLAG, NULL);
                   }
             }
 
             u32_t localtime = TaskGetTickCount();
 
             /* TCP periodic process every 250 ms */
-            if (localtime - TCPTimer >= TCP_TMR_INTERVAL)
-            {
+            if (localtime - TCPTimer >= TCP_TMR_INTERVAL) {
                   TCPTimer = localtime;
                   tcp_tmr();
             }
 
             /* ARP periodic process every 5s */
-            if (localtime - ARPTimer >= ARP_TMR_INTERVAL)
-            {
+            if (localtime - ARPTimer >= ARP_TMR_INTERVAL) {
                   ARPTimer = localtime;
                   etharp_tmr();
             }
 
 #if LWIP_DHCP
             /* fine DHCP periodic process every 500ms */
-            if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS)
-            {
+            if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS) {
                   DHCPfineTimer = localtime;
                   dhcp_fine_tmr();
             }
 
             /* DHCP Coarse periodic process every 60s */
-            if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS)
-            {
+            if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS) {
                   DHCPcoarseTimer = localtime;
                   dhcp_coarse_tmr();
             }
@@ -265,7 +266,7 @@ stdRet_t appmain(ch_t *argv)
             free(netif);
       }
 
-      fclose(eth);
+      fclose(ethf);
 
       return status;
 }
