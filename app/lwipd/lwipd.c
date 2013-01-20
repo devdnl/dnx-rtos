@@ -41,7 +41,6 @@ extern "C" {
 #include "lwip/dhcp.h"
 
 #include "ethernetif.h" /* DNLFIXME to remove */
-#include "stm32_eth.h" /* DNLFIXME to remove */
 
 #include "ether_def.h"
 
@@ -118,18 +117,52 @@ struct pbuf *low_level_input(struct netif *netif)
             }
       }
 
-      /* when Rx Buffer unavailable flag is set: clear it and resume reception */
-      if ((ETH->DMASR & ETH_DMASR_RBUS) != (u32) RESET)
-      {
-            /* Clear RBUS ETHERNET DMA flag */
-            ETH->DMASR = ETH_DMASR_RBUS;
+      bool_t flag = FALSE;
+      ioctl(ethf, ETHER_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
 
-            /* Resume DMA reception */
-            ETH->DMARPDR = 0;
+      if (flag == TRUE) {
+            ioctl(ethf, ETHER_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS, NULL);
+            ioctl(ethf, ETHER_IORQ_RESUME_DMA_RECEPTION, NULL);
       }
 
       low_level_input_end:
       return p;
+}
+
+
+//================================================================================================//
+/**
+ * This function should do the actual transmission of the packet. The packet is
+ * contained in the pbuf that is passed to the function. This pbuf might be chained.
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ * @param p the MAC packet to send (e.g. IP packet including MAC addresses and type)
+ * @return ERR_OK if the packet could be sent an err_t value if the packet couldn't be sent
+ *
+ * @note Returning ERR_MEM here if a DMA queue of your MAC is full can lead to
+ *       strange results. You might consider waiting for space in the DMA queue
+ *       to become availale since the stack doesn't retry to send a packet
+ *       dropped because of memory failure (except for the TCP timers).
+ */
+//================================================================================================//
+err_t low_level_output(struct netif *netif, struct pbuf *p)
+{
+      (void)netif;
+
+      struct pbuf *q;
+      int l = 0;
+
+      u8_t *buffer = NULL;
+      ioctl(ethf, ETHER_IORQ_GET_CURRENT_TX_BUFFER, &buffer);
+
+      for (q = p; q != NULL; q = q->next) {
+            memcpy((u8_t*)&buffer[l], q->payload, q->len);
+            l = l + q->len;
+      }
+
+      ioctl(ethf, ETHER_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE, &l);
+
+      return ERR_OK;
 }
 
 
@@ -193,6 +226,8 @@ stdRet_t appmain(ch_t *argv)
       netif->hwaddr[3] = macaddress[3];
       netif->hwaddr[4] = macaddress[4];
       netif->hwaddr[5] = macaddress[5];
+
+      netif->linkoutput = low_level_output;
 
       /* registers the default network interface */
       netif_set_default(netif);

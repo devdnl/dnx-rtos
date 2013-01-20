@@ -45,11 +45,16 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 enum ETHER_IORQ {
-      ETHER_IORQ_GET_RX_FLAG,                   /* [out] bool_t */
-      ETHER_IORQ_CLEAR_RX_FLAG,                 /* -- */
-      ETHER_IORQ_SET_MAC_ADR,                   /* [in]  ch_t[] */
-      ETHER_IORQ_GET_RX_PACKET_SIZE,            /* [out] u32_t  */
-      ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE,      /* [out] struct ether_frame */
+      ETHER_IORQ_GET_RX_FLAG,                         /* [out] bool_t */
+      ETHER_IORQ_CLEAR_RX_FLAG,                       /* -- */
+      ETHER_IORQ_SET_MAC_ADR,                         /* [in]  ch_t[] */
+      ETHER_IORQ_GET_RX_PACKET_SIZE,                  /* [out] u32_t  */
+      ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE,            /* [out] struct ether_frame */
+      ETHER_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS,    /* [out] boot_t */
+      ETHER_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS,  /* --- */
+      ETHER_IORQ_RESUME_DMA_RECEPTION,                /* --- */
+      ETHER_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE,      /* [in]  u16_t */
+      ETHER_IORQ_GET_CURRENT_TX_BUFFER,               /* [out] u8_t* */
 };
 
 

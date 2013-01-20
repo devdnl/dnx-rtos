@@ -59,6 +59,7 @@ struct eth_mem {
                                       Local object definitions
 ==================================================================================================*/
 extern ETH_DMADESCTypeDef *DMARxDescToGet;
+extern ETH_DMADESCTypeDef *DMATxDescToSet;
 
 static struct eth_mem *eth_mem;
 
@@ -384,6 +385,79 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
                         ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE_End:
                         *(struct ether_frame*)data = frame;
                         status = STD_RET_OK;
+                  }
+
+                  break;
+
+            case ETHER_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS:
+                  if (data) {
+                        if (ETH->DMASR & ETH_DMASR_RBUS) {
+                              *(bool_t*)data = TRUE;
+                        } else {
+                              *(bool_t*)data = FALSE;
+                        }
+
+                        status = STD_RET_OK;
+                  }
+
+                  break;
+
+            case ETHER_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS:
+                  ETH->DMASR = ETH_DMASR_RBUS;
+                  status = STD_RET_OK;
+                  break;
+
+            case ETHER_IORQ_RESUME_DMA_RECEPTION:
+                  ETH->DMARPDR = 0;
+                  status = STD_RET_OK;
+                  break;
+
+            case ETHER_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE:
+                  if (data) {
+                        u16_t FrameLength = *(u16_t*)data;
+
+                        /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
+                        if ((DMATxDescToSet->Status & ETH_DMATxDesc_OWN) != (u32)RESET) {
+                              /* Return ERROR: OWN bit set */
+                              status = STD_RET_ERROR;
+                        } else {
+                              /* Setting the Frame Length: bits[12:0] */
+                              DMATxDescToSet->ControlBufferSize = (FrameLength & ETH_DMATxDesc_TBS1);
+
+                              /* Setting the last segment and first segment bits (in this case a frame is transmitted in one descriptor) */
+                              DMATxDescToSet->Status |= ETH_DMATxDesc_LS | ETH_DMATxDesc_FS;
+
+                              /* Set Own bit of the Tx descriptor Status: gives the buffer back to ETHERNET DMA */
+                              DMATxDescToSet->Status |= ETH_DMATxDesc_OWN;
+
+                              /* When Tx Buffer unavailable flag is set: clear it and resume transmission */
+                              if ((ETH->DMASR & ETH_DMASR_TBUS) != (u32)RESET) {
+                                    /* Clear TBUS ETHERNET DMA flag */
+                                    ETH->DMASR = ETH_DMASR_TBUS;
+
+                                    /* Resume DMA transmission*/
+                                    ETH->DMATPDR = 0;
+                              }
+
+                              /* Update the ETHERNET DMA global Tx descriptor with next Tx decriptor */
+                              /* Chained Mode */
+                              /* Selects the next DMA Tx descriptor list for next buffer to send */
+                              DMATxDescToSet = (ETH_DMADESCTypeDef*) (DMATxDescToSet->Buffer2NextDescAddr);
+
+                              /* Return SUCCESS */
+                              status = STD_RET_OK;
+                        }
+                  }
+
+                  break;
+
+            case ETHER_IORQ_GET_CURRENT_TX_BUFFER:
+                  if (data) {
+                        u8_t **buffer = data;
+
+                        *buffer = (u8_t*)DMATxDescToSet->Buffer1Addr;
+
+                        status  = STD_RET_OK;
                   }
 
                   break;

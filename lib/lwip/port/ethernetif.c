@@ -105,10 +105,10 @@ typedef struct{
                                       Local function prototypes
 ==================================================================================================*/
 //static FrameTypeDef ETH_RxPkt_ChainMode(void);
-static u32          ETH_GetCurrentTxBuffer(void);
-static u32          ETH_TxPkt_ChainMode(u16 FrameLength);
+//static u32          ETH_GetCurrentTxBuffer(void);
+//static u32          ETH_TxPkt_ChainMode(u16 FrameLength);
 static void         low_level_init(struct netif *netif);
-static err_t        low_level_output(struct netif *netif, struct pbuf *p);
+//static err_t        low_level_output(struct netif *netif, struct pbuf *p);
 //static struct pbuf  *low_level_input(struct netif *netif);
 
 
@@ -131,7 +131,7 @@ uint8_t *Rx_Buff;
 uint8_t *Tx_Buff;
 
 //ETH_DMADESCTypeDef *DMATxDesc = DMATxDscrTab;
-extern ETH_DMADESCTypeDef *DMATxDescToSet;
+//extern ETH_DMADESCTypeDef *DMATxDescToSet;
 //extern ETH_DMADESCTypeDef *DMARxDescToGet;
 
 
@@ -251,8 +251,7 @@ static void low_level_init(struct netif *netif)
 //================================================================================================//
 /**
  * This function should do the actual transmission of the packet. The packet is
- * contained in the pbuf that is passed to the function. This pbuf
- * might be chained.
+ * contained in the pbuf that is passed to the function. This pbuf might be chained.
  *
  * @param netif the lwip network interface structure for this ethernetif
  * @param p the MAC packet to send (e.g. IP packet including MAC addresses and type)
@@ -264,24 +263,24 @@ static void low_level_init(struct netif *netif)
  *       dropped because of memory failure (except for the TCP timers).
  */
 //================================================================================================//
-static err_t low_level_output(struct netif *netif, struct pbuf *p)
-{
-      (void) netif;
-
-      struct pbuf *q;
-      int l = 0;
-      u8 *buffer = (u8 *) ETH_GetCurrentTxBuffer();
-
-      for (q = p; q != NULL; q = q->next)
-      {
-            memcpy((u8_t*) &buffer[l], q->payload, q->len);
-            l = l + q->len;
-      }
-
-      ETH_TxPkt_ChainMode(l);
-
-      return ERR_OK;
-}
+//static err_t low_level_output(struct netif *netif, struct pbuf *p)
+//{
+//      (void) netif;
+//
+//      struct pbuf *q;
+//      int l = 0;
+//      u8 *buffer = (u8 *) ETH_GetCurrentTxBuffer();
+//
+//      for (q = p; q != NULL; q = q->next)
+//      {
+//            memcpy((u8_t*) &buffer[l], q->payload, q->len);
+//            l = l + q->len;
+//      }
+//
+//      ETH_TxPkt_ChainMode(l);
+//
+//      return ERR_OK;
+//}
 
 
 //================================================================================================//
@@ -424,7 +423,7 @@ err_t ethernetif_init(struct netif *netif)
        * from it if you have to do some checks before sending (e.g. if link
        * is available...) */
       netif->output = etharp_output;
-      netif->linkoutput = low_level_output;
+//      netif->linkoutput = low_level_output;
 
       ethernetif->ethaddr = (struct eth_addr *) &(netif->hwaddr[0]);
 
@@ -503,42 +502,42 @@ err_t ethernetif_init(struct netif *netif)
  * @retval ETH_ERROR          in case of Tx desc owned by DMA
  */
 //================================================================================================//
-u32 ETH_TxPkt_ChainMode(u16 FrameLength)
-{
-      /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
-      if ((DMATxDescToSet->Status & ETH_DMATxDesc_OWN) != (u32) RESET)
-      {
-            /* Return ERROR: OWN bit set */
-            return ETH_ERROR;
-      }
-
-      /* Setting the Frame Length: bits[12:0] */
-      DMATxDescToSet->ControlBufferSize = (FrameLength & ETH_DMATxDesc_TBS1);
-
-      /* Setting the last segment and first segment bits (in this case a frame is transmitted in one descriptor) */
-      DMATxDescToSet->Status |= ETH_DMATxDesc_LS | ETH_DMATxDesc_FS;
-
-      /* Set Own bit of the Tx descriptor Status: gives the buffer back to ETHERNET DMA */
-      DMATxDescToSet->Status |= ETH_DMATxDesc_OWN;
-
-      /* When Tx Buffer unavailable flag is set: clear it and resume transmission */
-      if ((ETH->DMASR & ETH_DMASR_TBUS) != (u32) RESET)
-      {
-            /* Clear TBUS ETHERNET DMA flag */
-            ETH->DMASR = ETH_DMASR_TBUS;
-
-            /* Resume DMA transmission*/
-            ETH->DMATPDR = 0;
-      }
-
-      /* Update the ETHERNET DMA global Tx descriptor with next Tx decriptor */
-      /* Chained Mode */
-      /* Selects the next DMA Tx descriptor list for next buffer to send */
-      DMATxDescToSet = (ETH_DMADESCTypeDef*) (DMATxDescToSet->Buffer2NextDescAddr);
-
-      /* Return SUCCESS */
-      return ETH_SUCCESS;
-}
+//u32 ETH_TxPkt_ChainMode(u16 FrameLength)
+//{
+//      /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
+//      if ((DMATxDescToSet->Status & ETH_DMATxDesc_OWN) != (u32) RESET)
+//      {
+//            /* Return ERROR: OWN bit set */
+//            return ETH_ERROR;
+//      }
+//
+//      /* Setting the Frame Length: bits[12:0] */
+//      DMATxDescToSet->ControlBufferSize = (FrameLength & ETH_DMATxDesc_TBS1);
+//
+//      /* Setting the last segment and first segment bits (in this case a frame is transmitted in one descriptor) */
+//      DMATxDescToSet->Status |= ETH_DMATxDesc_LS | ETH_DMATxDesc_FS;
+//
+//      /* Set Own bit of the Tx descriptor Status: gives the buffer back to ETHERNET DMA */
+//      DMATxDescToSet->Status |= ETH_DMATxDesc_OWN;
+//
+//      /* When Tx Buffer unavailable flag is set: clear it and resume transmission */
+//      if ((ETH->DMASR & ETH_DMASR_TBUS) != (u32) RESET)
+//      {
+//            /* Clear TBUS ETHERNET DMA flag */
+//            ETH->DMASR = ETH_DMASR_TBUS;
+//
+//            /* Resume DMA transmission*/
+//            ETH->DMATPDR = 0;
+//      }
+//
+//      /* Update the ETHERNET DMA global Tx descriptor with next Tx decriptor */
+//      /* Chained Mode */
+//      /* Selects the next DMA Tx descriptor list for next buffer to send */
+//      DMATxDescToSet = (ETH_DMADESCTypeDef*) (DMATxDescToSet->Buffer2NextDescAddr);
+//
+//      /* Return SUCCESS */
+//      return ETH_SUCCESS;
+//}
 
 
 //================================================================================================//
@@ -548,11 +547,11 @@ u32 ETH_TxPkt_ChainMode(u16 FrameLength)
  * @return Buffer address
  */
 //================================================================================================//
-u32 ETH_GetCurrentTxBuffer(void)
-{
-      /* Return Buffer address */
-      return (DMATxDescToSet->Buffer1Addr);
-}
+//u32 ETH_GetCurrentTxBuffer(void)
+//{
+//      /* Return Buffer address */
+//      return (DMATxDescToSet->Buffer1Addr);
+//}
 
 
 #ifdef __cplusplus
