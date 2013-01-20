@@ -51,11 +51,20 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define MACADDR0        0x00
+#define MACADDR1        0x00
+#define MACADDR2        0x00
+#define MACADDR3        0x00
+#define MACADDR4        0x00
+#define MACADDR5        0x01
 
 
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
+struct ethernetif {
+      struct eth_addr *ethaddr;
+};
 
 
 /*==================================================================================================
@@ -168,6 +177,70 @@ err_t low_level_output(struct netif *netif, struct pbuf *p)
 
 //================================================================================================//
 /**
+ * Should be called at the beginning of the program to set up the
+ * network interface. It calls the function low_level_init() to do the
+ * actual setup of the hardware.
+ *
+ * This function should be passed as a parameter to netif_add().
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ * @return ERR_OK if the loopif is initialized
+ *         ERR_MEM if private data couldn't be allocated
+ *         any other err_t on error
+ */
+//================================================================================================//
+err_t ethernetif_init(struct netif *netif)
+{
+      struct ethernetif *ethernetif;
+
+      ethernetif = mem_malloc(sizeof(struct ethernetif));
+
+      if (ethernetif == NULL) {
+            return ERR_MEM;
+      }
+
+#if LWIP_NETIF_HOSTNAME
+      /* Initialize interface hostname */
+      netif->hostname = SystemGetHostname();
+#endif /* LWIP_NETIF_HOSTNAME */
+
+      /*
+       * Initialize the snmp variables and counters inside the struct netif.
+       * The last argument should be replaced with your link speed, in units
+       * of bits per second.
+       */
+      NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 100000000);
+
+      netif->state   = ethernetif;
+      netif->name[0] = 'e';
+      netif->name[1] = '0';
+
+      /* We directly use etharp_output() here to save a function call.
+       * You can instead declare your own function an call etharp_output()
+       * from it if you have to do some checks before sending (e.g. if link
+       * is available...) */
+      netif->output     = etharp_output;
+      netif->linkoutput = low_level_output;
+
+      /* set MAC hardware address */
+      netif->hwaddr[0] = MACADDR0;
+      netif->hwaddr[1] = MACADDR1;
+      netif->hwaddr[2] = MACADDR2;
+      netif->hwaddr[3] = MACADDR3;
+      netif->hwaddr[4] = MACADDR4;
+      netif->hwaddr[5] = MACADDR5;
+
+      ethernetif->ethaddr = (struct eth_addr*)&(netif->hwaddr[0]);
+
+      /* initialize the hardware */
+      low_level_init(netif);
+
+      return ERR_OK;
+}
+
+
+//================================================================================================//
+/**
  * @brief clear main function
  */
 //================================================================================================//
@@ -187,7 +260,7 @@ stdRet_t appmain(ch_t *argv)
       struct ip_addr ipaddr;
       struct ip_addr netmask;
       struct ip_addr gw;
-      u8_t macaddress[6] = {0, 0, 0, 0, 0, 1};
+      u8_t macaddress[6] = {MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5};
 
       /* check if Ethernet interface exist */
       ethf = fopen("/dev/eth0", "r");
@@ -218,16 +291,6 @@ stdRet_t appmain(ch_t *argv)
       if (netif_add(netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &ethernet_input) == NULL) {
             goto lwipd_end;
       }
-
-      /* set MAC hardware address */
-      netif->hwaddr[0] = macaddress[0];
-      netif->hwaddr[1] = macaddress[1];
-      netif->hwaddr[2] = macaddress[2];
-      netif->hwaddr[3] = macaddress[3];
-      netif->hwaddr[4] = macaddress[4];
-      netif->hwaddr[5] = macaddress[5];
-
-      netif->linkoutput = low_level_output;
 
       /* registers the default network interface */
       netif_set_default(netif);
