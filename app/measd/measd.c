@@ -32,7 +32,7 @@
 #include "mpl115a2_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(measd, 4)
+APPLICATION(measd, 10 + 4)
 APP_SEC_BEGIN
 
 /*==================================================================================================

@@ -46,7 +46,7 @@ extern "C" {
 #include "ether_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(lwipd, 5)
+APPLICATION(lwipd, 6)
 APP_SEC_BEGIN
 
 /*==================================================================================================

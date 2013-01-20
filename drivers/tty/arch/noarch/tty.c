@@ -51,10 +51,8 @@ extern "C" {
                                    Local types, enums definitions
 ==================================================================================================*/
 /* memory structure */
-struct termHdl
-{
-      struct ttyEntry
-      {
+struct termHdl {
+      struct ttyEntry {
             ch_t    *line[TTY_MAX_LINES];       /* line buffer */
             u8_t     wrIdx;                     /* write index */
             u8_t     newMsgCnt;                 /* new message counter */
@@ -62,8 +60,7 @@ struct termHdl
             mutex_t  mtx;                       /* resources security */
 
             /* FIFO used in keyboard read */
-            struct inputfifo
-            {
+            struct inputfifo {
                   u16_t level;
                   ch_t  buffer[TTY_OUT_BFR_SIZE];
                   u16_t txidx;
@@ -81,8 +78,7 @@ struct termHdl
 
 
 /* key detector results */
-typedef enum
-{
+typedef enum {
       TTY1_SELECTED,
       TTY2_SELECTED,
       TTY3_SELECTED,
@@ -131,42 +127,30 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (dev < TTY_LAST)
-      {
-
-            if (term == NULL)
-            {
+      if (dev < TTY_LAST) {
+            if (term == NULL) {
                   term = calloc(1, sizeof(struct termHdl));
 
-                  if (term)
-                  {
+                  if (term) {
                         term->semcnt = CreateSemCnt(10, 0);
 
-                        if (term->semcnt)
-                        {
+                        if (term->semcnt) {
                               if (TaskCreate(ttyd, TTYD_NAME, TTYD_STACK_SIZE,
-                                             NULL, -1, &term->taskHdl) == OS_OK)
-                              {
+                                             NULL, -1, &term->taskHdl) == OS_OK) {
                                     term->col   = 80;
                                     term->row   = 24;
                                     term->chTTY = -1;
 
                                     status = STD_RET_OK;
-                              }
-                              else
-                              {
+                              } else {
                                     DeleteSemCnt(term->semcnt);
                                     free(term);
                               }
-                        }
-                        else
-                        {
+                        } else {
                               free(term);
                         }
                   }
-            }
-            else
-            {
+            } else {
                   status = STD_RET_OK;
             }
       }
@@ -192,32 +176,21 @@ stdRet_t TTY_Open(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (dev < TTY_LAST)
-      {
-            if (term)
-            {
-                  if (TTY(dev) == NULL)
-                  {
-                        TTY(dev) = calloc(1, sizeof(struct ttyEntry));
+      if (dev < TTY_LAST && term) {
+            if (TTY(dev) == NULL) {
+                  TTY(dev) = calloc(1, sizeof(struct ttyEntry));
 
-                        if (TTY(dev))
-                        {
-                              TTY(dev)->mtx = CreateRecMutex();
+                  if (TTY(dev)) {
+                        TTY(dev)->mtx = CreateRecMutex();
 
-                              if (TTY(dev)->mtx != NULL)
-                              {
-                                    status = STD_RET_OK;
-                              }
-                              else
-                              {
-                                    free(TTY(dev));
-                              }
+                        if (TTY(dev)->mtx != NULL) {
+                              status = STD_RET_OK;
+                        } else {
+                              free(TTY(dev));
                         }
                   }
-                  else
-                  {
-                        status = STD_RET_OK;
-                  }
+            } else {
+                  status = STD_RET_OK;
             }
       }
 
@@ -242,8 +215,7 @@ stdRet_t TTY_Close(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (dev < TTY_LAST)
-      {
+      if (dev < TTY_LAST) {
             status = STD_RET_OK;
       }
 
@@ -272,22 +244,18 @@ size_t TTY_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, s
 
       size_t n = 0;
 
-      if (dev < TTY_LAST && src && size && nitems)
-      {
+      if (term && dev < TTY_LAST && src && size && nitems) {
             /* if current TTY is showing wait to show refreshed line */
-            while (TTY(dev)->refLstLn == SET && dev == term->curTTY)
-            {
+            while (TTY(dev)->refLstLn == SET && dev == term->curTTY) {
                   TaskDelay(10);
             }
 
             /* wait for secure access to data */
-            if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
-            {
+            if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                   ch_t *msg;
 
                   /* check if screen is cleared */
-                  if (strncmp("\x1B[2J", src, 4) == 0)
-                  {
+                  if (strncmp("\x1B[2J", src, 4) == 0) {
                         ClearTTY(dev);
                   }
 
@@ -295,26 +263,22 @@ size_t TTY_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, s
                   ch_t   *lstmsg  = TTY(dev)->line[GetMsgIdx(dev, 1)];
                   size_t  msgsize = strlen(lstmsg);
 
-                  if (lstmsg && (*(lstmsg + msgsize - 1) != '\n'))
-                  {
+                  if (lstmsg && (*(lstmsg + msgsize - 1) != '\n')) {
                         msgsize += nitems + 1;
 
                         /* create buffer for new msg */
                         msg = malloc(msgsize);
 
-                        if (msg)
-                        {
+                        if (msg) {
                               /* move message pointer back */
                               TTY(dev)->wrIdx--;
 
-                              if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
-                              {
+                              if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
                                     TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
                               }
 
                               /* if no message to refresh setup refresh only one */
-                              if (TTY(dev)->newMsgCnt == 0)
-                              {
+                              if (TTY(dev)->newMsgCnt == 0) {
                                     TTY(dev)->refLstLn = SET;
                               }
 
@@ -324,14 +288,11 @@ size_t TTY_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, s
                               /* free last message and add new on the same place */
                               AddMsg(dev, msg, FALSE);
                         }
-                  }
-                  else
-                  {
+                  } else {
                         /* add new message */
                         msg = malloc(nitems);
 
-                        if (msg)
-                        {
+                        if (msg) {
                               strncpy(msg, src, nitems);
 
                               AddMsg(dev, msg, TRUE);
@@ -369,20 +330,16 @@ size_t TTY_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
 
       size_t n = 0;
 
-      if (dev < TTY_LAST && dst && size && nitems)
-      {
-            if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK)
-            {
+      if (term && dev < TTY_LAST && dst && size && nitems) {
+            if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK) {
                   struct inputfifo *input = &TTY(dev)->input;
 
-                  while ((input->level > 0) && (nitems > 0))
-                  {
+                  while ((input->level > 0) && (nitems > 0)) {
                         *((ch_t*)dst) = input->buffer[input->rxidx++];
 
                         dst += size;
 
-                        if (input->rxidx >= TTY_OUT_BFR_SIZE)
-                        {
+                        if (input->rxidx >= TTY_OUT_BFR_SIZE) {
                               input->rxidx = 0;
                         }
 
@@ -424,97 +381,74 @@ stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (dev < TTY_LAST)
-      {
+      if (term && dev < TTY_LAST) {
             status = STD_RET_OK;
 
-            switch (ioRQ)
-            {
-                  /* return current TTY */
-                  case TTY_IORQ_GETCURRENTTTY:
-                  {
-                        *((u8_t*)data) = term->curTTY;
-                        break;
-                  }
+            switch (ioRQ) {
+            /* return current TTY */
+            case TTY_IORQ_GETCURRENTTTY:
+                  *((u8_t*)data) = term->curTTY;
+                  break;
 
-                  /* set active terminal */
-                  case TTY_IORQ_SETACTIVETTY:
-                  {
-                        term->chTTY = *((u8_t*)data);
-                        GiveSemCnt(term->semcnt);
-                        break;
-                  }
+            /* set active terminal */
+            case TTY_IORQ_SETACTIVETTY:
+                  term->chTTY = *((u8_t*)data);
+                  GiveSemCnt(term->semcnt);
+                  break;
 
-                  /* clear terminal */
-                  case TTY_IORQ_CLEARTTY:
-                  {
-                        ClearTTY(dev);
-                        break;
-                  }
+            /* clear terminal */
+            case TTY_IORQ_CLEARTTY:
+                  ClearTTY(dev);
+                  break;
 
-                  /* terminal size - number of columns */
-                  case TTY_IORQ_GETCOL:
-                  {
-                        *((u8_t*)data) = term->col;
-                        break;
-                  }
+            /* terminal size - number of columns */
+            case TTY_IORQ_GETCOL:
+                  *((u8_t*)data) = term->col;
+                  break;
 
-                  /* terminal size - number of rows */
-                  case TTY_IORQ_GETROW:
-                  {
-                        *((u8_t*)data) = term->row;
-                        break;
-                  }
+            /* terminal size - number of rows */
+            case TTY_IORQ_GETROW:
+                  *((u8_t*)data) = term->row;
+                  break;
 
-                  /* clear screen */
-                  case TTY_IORQ_CLEARSCR:
-                  {
-                        term->chTTY = term->curTTY;
-                        ClearTTY(dev);
+            /* clear screen */
+            case TTY_IORQ_CLEARSCR:
+                  term->chTTY = term->curTTY;
+                  ClearTTY(dev);
+                  break;
 
-                        break;
-                  }
+            /* clear last line */
+            case TTY_IORQ_CLEARLASTLINE:
+                  if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+                        ch_t *msg = malloc(2);
 
-                  /* clear last line */
-                  case TTY_IORQ_CLEARLASTLINE:
-                  {
-                        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
-                        {
-                              ch_t *msg = malloc(2);
+                        if (msg) {
+                              msg[0] = '\r';
+                              msg[1] = '\0';
 
-                              if (msg)
-                              {
-                                    msg[0] = '\r';
-                                    msg[1] = '\0';
+                              /* move message pointer back */
+                              TTY(dev)->wrIdx--;
 
-                                    /* move message pointer back */
-                                    TTY(dev)->wrIdx--;
-
-                                    if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
-                                    {
-                                          TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
-                                    }
-
-                                    /* if no message to refresh setup refresh only one */
-                                    if (TTY(dev)->newMsgCnt == 0)
-                                    {
-                                          TTY(dev)->refLstLn = SET;
-                                    }
-
-                                    AddMsg(dev, msg, FALSE);
+                              if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
+                                    TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
                               }
 
-                              GiveRecMutex(TTY(dev)->mtx);
+                              /* if no message to refresh setup refresh only one */
+                              if (TTY(dev)->newMsgCnt == 0) {
+                                    TTY(dev)->refLstLn = SET;
+                              }
+
+                              AddMsg(dev, msg, FALSE);
                         }
 
-                        break;
+                        GiveRecMutex(TTY(dev)->mtx);
                   }
 
-                  default:
-                  {
-                        status = STD_RET_ERROR;
-                        break;
-                  }
+                  break;
+
+            default:
+                  status = STD_RET_ERROR;
+                  break;
             }
       }
 
@@ -539,19 +473,14 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (dev < TTY_LAST)
-      {
-            if (TTY(dev))
-            {
-                  if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
-                  {
+      if (term && dev < TTY_LAST) {
+            if (TTY(dev)) {
+                  if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                         mutex_t mtx = TTY(dev)->mtx;
 
                         /* free unused terminal */
-                        if (TTY(dev))
-                        {
-                              for (u8_t i = 0; i < TTY_MAX_LINES; i++)
-                              {
+                        if (TTY(dev)) {
+                              for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
                                     if (TTY(dev)->line[i]) {
                                           free(TTY(dev)->line[i]);
                                     }
@@ -566,10 +495,8 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                         status = STD_RET_OK;
 
                         /* if all terminal are unused free terminal handler */
-                        for (u8_t i = 0; i < TTY_LAST; i++)
-                        {
-                              if (term->tty[i])
-                              {
+                        for (u8_t i = 0; i < TTY_LAST; i++) {
+                              if (term->tty[i]) {
                                     goto TTY_Release_End;
                               }
                         }
@@ -578,9 +505,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                         TaskDelete(term->taskHdl);
                         free(term);
                   }
-            }
-            else
-            {
+            } else {
                   status = STD_RET_OK;
             }
       }
@@ -605,8 +530,7 @@ static void ttyd(void *arg)
       dfn_t   keyfn;
 
       /* try open selected file */
-      while ((ttys = fopen(FILE, "r+")) == NULL)
-      {
+      while ((ttys = fopen(FILE, "r+")) == NULL) {
             TaskDelay(250);
       }
 
@@ -617,27 +541,21 @@ static void ttyd(void *arg)
       GetTermSize(ttys);
 
       /* main daemon loop */
-      for (;;)
-      {
+      for (;;) {
             /* pointer to current terminal */
             struct ttyEntry *ttyPtr = TTY(term->curTTY);
 
-            if (ttyPtr == NULL)
-            {
+            if (ttyPtr == NULL) {
                   TaskDelay(100);
                   continue;
             }
 
             /* STDOUT support ------------------------------------------------------------------- */
-            if (ttyPtr->newMsgCnt > 0)
-            {
-                  if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
-                  {
+            if (ttyPtr->newMsgCnt > 0) {
+                  if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK) {
                         /* write all new messages in series */
-                        while (ttyPtr->newMsgCnt)
-                        {
-                              if (ttyPtr->newMsgCnt > term->row)
-                              {
+                        while (ttyPtr->newMsgCnt) {
+                              if (ttyPtr->newMsgCnt > term->row) {
                                     ttyPtr->newMsgCnt = term->row;
                               }
 
@@ -645,8 +563,7 @@ static void ttyd(void *arg)
 
                               ttyPtr->newMsgCnt--;
 
-                              if (msg)
-                              {
+                              if (msg) {
                                     fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
                               }
                         }
@@ -655,11 +572,8 @@ static void ttyd(void *arg)
 
                         GiveRecMutex(ttyPtr->mtx);
                   }
-            }
-            else if (ttyPtr->refLstLn == SET)
-            {
-                  if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
-                  {
+            } else if (ttyPtr->refLstLn == SET) {
+                  if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK) {
                         /* cursor off, carriage return, line erase from cursor, font attributes reset */
                         msg = "\x1B[?25l\r\x1B[K\x1B[0m";
                         fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
@@ -679,21 +593,16 @@ static void ttyd(void *arg)
             }
 
             /* STDIN support -------------------------------------------------------------------- */
-            if (ioctl(ttys, UART_IORQ_GET_BYTE, &chr) == STD_RET_OK)
-            {
+            if (ioctl(ttys, UART_IORQ_GET_BYTE, &chr) == STD_RET_OK) {
                   keyfn = decFn(chr);
 
                   /* no Fn key was detected */
-                  if (keyfn == TTY_SEL_NONE)
-                  {
-                        if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK)
-                        {
-                              if (ttyPtr->input.level < TTY_OUT_BFR_SIZE)
-                              {
+                  if (keyfn == TTY_SEL_NONE) {
+                        if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK) {
+                              if (ttyPtr->input.level < TTY_OUT_BFR_SIZE) {
                                     ttyPtr->input.buffer[ttyPtr->input.txidx++] = chr;
 
-                                    if (ttyPtr->input.txidx >= TTY_OUT_BFR_SIZE)
-                                    {
+                                    if (ttyPtr->input.txidx >= TTY_OUT_BFR_SIZE) {
                                           ttyPtr->input.txidx = 0;
                                     }
 
@@ -702,35 +611,28 @@ static void ttyd(void *arg)
 
                               GiveRecMutex(ttyPtr->mtx);
                         }
-                  }
-                  /* Fn key was hit */
-                  else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->curTTY) )
-                  {
+                  } else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->curTTY) ) { /* Fn key was hit */
                         term->curTTY = keyfn;
 
-                        if (TTY(keyfn) == NULL)
-                        {
+                        if (TTY(keyfn) == NULL) {
                               TTY_Open(keyfn, TTY_PART_NONE);
                         }
 
-                        if (TTY(keyfn))
-                        {
+                        if (TTY(keyfn)) {
                               RefreshTTY(keyfn, ttys);
                         }
                   }
             }
 
             /* external trigger: terminal switch */
-            if (term->chTTY != -1)
-            {
+            if (term->chTTY != -1) {
                   term->curTTY = term->chTTY;
                   term->chTTY  = -1;
                   RefreshTTY(term->curTTY, ttys);
             }
 
             /* check if task can go to short TaskDelay */
-            if (ttyPtr->newMsgCnt == 0)
-            {
+            if (ttyPtr->newMsgCnt == 0) {
                   TakeSemCnt(term->semcnt, BLOCK_TIME);
             }
       }
@@ -749,12 +651,9 @@ static void ttyd(void *arg)
 //================================================================================================//
 static void ClearTTY(u8_t dev)
 {
-      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
-      {
-            for (u8_t i = 0; i < TTY_MAX_LINES; i++)
-            {
-                  if (TTY(dev)->line[i])
-                  {
+      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+            for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
+                  if (TTY(dev)->line[i]) {
                         free(TTY(dev)->line[i]);
                         TTY(dev)->line[i] = NULL;
                   }
@@ -786,39 +685,31 @@ static void AddMsg(u8_t dev, ch_t *msg, bool_t incMsgCnt)
       u8_t mgcnt = 1;
 
       /* find all messages which are not ended by LF (this is common line) */
-      for (u8_t i = 0; i < TTY_MAX_LINES; i++)
-      {
+      for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
             ch_t *lastmsg = TTY(dev)->line[wridx++];
 
-            if (wridx >= TTY_MAX_LINES)
-            {
+            if (wridx >= TTY_MAX_LINES) {
                   wridx = 0;
             }
 
-            if (lastmsg == NULL)
-            {
+            if (lastmsg == NULL) {
                   break;
             }
 
-            if (*(lastmsg + strlen(lastmsg) - 1) != '\n')
-            {
+            if (*(lastmsg + strlen(lastmsg) - 1) != '\n') {
                   mgcnt++;
-            }
-            else
-            {
+            } else {
                   break;
             }
       }
 
       /* free current line and group if exist */
       wridx = TTY(dev)->wrIdx;
-      while (mgcnt--)
-      {
+      while (mgcnt--) {
             free(TTY(dev)->line[wridx]);
             TTY(dev)->line[wridx++] = NULL;
 
-            if (wridx >= TTY_MAX_LINES)
-            {
+            if (wridx >= TTY_MAX_LINES) {
                   wridx = 0;
             }
       }
@@ -826,16 +717,13 @@ static void AddMsg(u8_t dev, ch_t *msg, bool_t incMsgCnt)
       /* add new message */
       TTY(dev)->line[TTY(dev)->wrIdx++] = msg;
 
-      if (TTY(dev)->wrIdx >= TTY_MAX_LINES)
-      {
+      if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
             TTY(dev)->wrIdx = 0;
       }
 
       /* increase new message counter */
-      if (incMsgCnt)
-      {
-            if (TTY(dev)->newMsgCnt < TTY_MAX_LINES)
-            {
+      if (incMsgCnt) {
+            if (TTY(dev)->newMsgCnt < TTY_MAX_LINES) {
                   TTY(dev)->newMsgCnt++;
             }
       }
@@ -859,12 +747,9 @@ static u8_t GetMsgIdx(u8_t dev, u8_t back)
       u8_t ridx = 0;
 
       /* check if index underflow when calculating with back */
-      if (TTY(dev)->wrIdx < back)
-      {
+      if (TTY(dev)->wrIdx < back) {
             ridx = TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
-      }
-      else
-      {
+      } else {
             ridx = TTY(dev)->wrIdx - back;
       }
 
@@ -885,63 +770,42 @@ static dfn_t decFn(ch_t character)
       dfn_t state = TTY_SEL_NONE;
 
       /* try detect function keys ^[OP */
-      switch (funcStep)
-      {
-            case 0:
-            {
-                  if (character == 0x1B)
-                  {
-                        funcStep++;
-                        state = TTY_SEL_PEND;
-                  }
-                  else
-                  {
-                        funcStep = 0;
-                  }
-                  break;
-            }
-
-            case 1:
-            {
-                  if (character == 'O')
-                  {
-                        funcStep++;
-                        state = TTY_SEL_PEND;
-                  }
-                  else
-                  {
-                        funcStep = 0;
-                  }
-                  break;
-            }
-
-            case 2:
-            {
-                  if (character == 'P')
-                  {
-                        state = TTY1_SELECTED;
-                  }
-                  else if (character == 'Q')
-                  {
-                        state = TTY2_SELECTED;
-                  }
-                  else if (character == 'R')
-                  {
-                        state = TTY3_SELECTED;
-                  }
-                  else if (character == 'S')
-                  {
-                        state = TTY4_SELECTED;
-                  }
-
-                  funcStep = 0;
-                  break;
-            }
-
-            default:
-            {
+      switch (funcStep) {
+      case 0:
+            if (character == 0x1B) {
+                  funcStep++;
+                  state = TTY_SEL_PEND;
+            } else {
                   funcStep = 0;
             }
+            break;
+
+      case 1:
+            if (character == 'O') {
+                  funcStep++;
+                  state = TTY_SEL_PEND;
+            } else {
+                  funcStep = 0;
+            }
+            break;
+
+      case 2:
+            if (character == 'P') {
+                  state = TTY1_SELECTED;
+            } else if (character == 'Q') {
+                  state = TTY2_SELECTED;
+            } else if (character == 'R') {
+                  state = TTY3_SELECTED;
+            } else if (character == 'S') {
+                  state = TTY4_SELECTED;
+            }
+
+            funcStep = 0;
+            break;
+
+      default:
+            funcStep = 0;
+            break;
       }
 
       return state;
@@ -964,21 +828,19 @@ static void RefreshTTY(u8_t dev, FILE_t *file)
 
       fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
 
-      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK)
-      {
+      if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
             i8_t rows;
 
-            if (term->row < TTY_MAX_LINES)
+            if (term->row < TTY_MAX_LINES) {
                   rows = term->row;
-            else
+            } else {
                   rows = TTY_MAX_LINES;
+            }
 
-            for (i8_t i = rows - 1; i > 0; i--)
-            {
+            for (i8_t i = rows - 1; i > 0; i--) {
                   ch_t *msg = TTY(dev)->line[GetMsgIdx(term->curTTY, i)];
 
-                  if (msg)
-                  {
+                  if (msg) {
                         fwrite(msg, sizeof(ch_t), strlen(msg), file);
                   }
             }
@@ -1013,42 +875,35 @@ static void GetTermSize(FILE_t *ttysfile)
 
       /* waiting for ESC byte */
       u8_t try = 10;
-      do
-      {
-            if (ioctl(ttysfile, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK)
-            {
+      do {
+            if (ioctl(ttysfile, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK) {
                   TaskDelay(100);
             }
 
       } while (--try && chr != '\x1B');
 
-      if (try == 0)
-      {
+      if (try == 0) {
             return;
       }
 
       /* get data */
       ch_t *respPtr = &resp[0];
       flag_t finded = RESET;
-      for (u8_t i = 0; i < sizeof(resp) - 1; i++)
-      {
+      for (u8_t i = 0; i < sizeof(resp) - 1; i++) {
             try = 10;
 
-            while ((ioctl(ttysfile, UART_IORQ_GET_BYTE, respPtr) != STD_RET_OK) && try)
-            {
+            while ((ioctl(ttysfile, UART_IORQ_GET_BYTE, respPtr) != STD_RET_OK) && try) {
                   TaskDelay(10);
                   try--;
             }
 
-            if (*respPtr++ == 'R')
-            {
+            if (*respPtr++ == 'R') {
                   finded = SET;
                   break;
             }
       }
 
-      if (finded == RESET)
-      {
+      if (finded == RESET) {
             return;
       }
 
@@ -1064,15 +919,13 @@ static void GetTermSize(FILE_t *ttysfile)
       u8_t col = 0;
 
       /* calculate row */
-      while ((chr = *(seek++)) != ';')
-      {
+      while ((chr = *(seek++)) != ';') {
             row *= 10;
             row += chr - '0';
       }
 
       /* calculate columns */
-      while ((chr = *(seek++)) != 'R')
-      {
+      while ((chr = *(seek++)) != 'R') {
             col *= 10;
             col += chr - '0';
       }
