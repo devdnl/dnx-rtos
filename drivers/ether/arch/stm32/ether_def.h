@@ -33,6 +33,7 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
+#include "basic_types.h"
 
 
 /*==================================================================================================
@@ -44,10 +45,18 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 enum ETHER_IORQ {
-      ETHER_IORQ_GET_RX_FLAG,             /* [out] bool_t */
-      ETHER_IORQ_CLEAR_RX_FLAG,           /* -- */
-      ETHER_IORQ_SET_MAC_ADR,             /* [in]  ch_t[] */
-      ETHER_IORQ_GET_RX_PACKET_SIZE,      /* [out] u32_t  */
+      ETHER_IORQ_GET_RX_FLAG,                   /* [out] bool_t */
+      ETHER_IORQ_CLEAR_RX_FLAG,                 /* -- */
+      ETHER_IORQ_SET_MAC_ADR,                   /* [in]  ch_t[] */
+      ETHER_IORQ_GET_RX_PACKET_SIZE,            /* [out] u32_t  */
+      ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE,      /* [out] struct ether_frame */
+};
+
+
+/* ethernet frame data */
+struct ether_frame {
+      u32_t length;
+      u32_t buffer;
 };
 
 

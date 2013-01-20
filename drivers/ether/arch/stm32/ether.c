@@ -39,6 +39,7 @@ extern "C" {
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define ETH_DMARxDesc_FrameLengthShift          16
 
 
 /*==================================================================================================
@@ -57,6 +58,8 @@ struct eth_mem {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+extern ETH_DMADESCTypeDef *DMARxDescToGet;
+
 static struct eth_mem *eth_mem;
 
 
@@ -169,6 +172,26 @@ stdRet_t ETHER_Init(devx_t dev, fd_t part)
 
 //================================================================================================//
 /**
+ * @brief Release ethernet device
+ *
+ * @param eth                 ethernet number
+ * @param part                device part
+ *
+ * @retval STD_RET_OK         success
+ * @retval STD_RET_ERROR      error
+ */
+//================================================================================================//
+stdRet_t ETHER_Release(devx_t dev, fd_t part)
+{
+      (void)dev;
+      (void)part;
+
+      return STD_RET_OK;
+}
+
+
+//================================================================================================//
+/**
  * @brief Open device
  *
  * @param dev     device number
@@ -274,9 +297,11 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
       (void)dev;
       (void)part;
 
-      stdRet_t status = STD_RET_ERROR;
+      stdRet_t status = ETHER_STD_RET_BAD_REQUEST;
 
       if (eth_mem) {
+            status = ETHER_STD_RET_NULL_DATA;
+
             switch (ioRq) {
             case ETHER_IORQ_GET_RX_FLAG:
                   if (data) {
@@ -312,30 +337,60 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
                         status = STD_RET_OK;
                   }
                   break;
+
+            /* returns ethernet rx buffer frame data */
+            case ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE:
+                  if (data) {
+                        struct ether_frame frame = {0, 0};
+
+                        /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
+                        if ((DMARxDescToGet->Status & ETH_DMARxDesc_OWN) != (u32) RESET) {
+                              frame.length = 0;
+
+                              if ((ETH->DMASR & ETH_DMASR_RBUS) != (u32) RESET) {
+                                    /* Clear RBUS ETHERNET DMA flag */
+                                    ETH->DMASR = ETH_DMASR_RBUS;
+
+                                    /* Resume DMA reception */
+                                    ETH->DMARPDR = 0;
+                              }
+
+                              /* Return error: OWN bit set */
+                              goto ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE_End;
+                        }
+
+                        if (  ((DMARxDescToGet->Status & ETH_DMARxDesc_ES) == (u32) RESET)
+                           && ((DMARxDescToGet->Status & ETH_DMARxDesc_LS) != (u32) RESET)
+                           && ((DMARxDescToGet->Status & ETH_DMARxDesc_FS) != (u32) RESET) ) {
+                              /* Get the Frame Length of the received packet: substruct 4 bytes of the CRC */
+                              frame.length = ((DMARxDescToGet->Status & ETH_DMARxDesc_FL)
+                                              >> ETH_DMARxDesc_FrameLengthShift) - 4;
+
+                              /* Get the addrees of the actual buffer */
+                              frame.buffer = DMARxDescToGet->Buffer1Addr;
+                        } else {
+                              /* Return ERROR */
+                              frame.length = 0;
+                        }
+
+                        /* Set Own bit of the Rx descriptor Status: gives the buffer back to ETHERNET DMA */
+                        DMARxDescToGet->Status = ETH_DMARxDesc_OWN;
+
+                        /* Update the ETHERNET DMA global Rx descriptor with next Rx decriptor */
+                        /* Chained Mode */
+                        /* Selects the next DMA Rx descriptor list for next buffer to read */
+                        DMARxDescToGet = (ETH_DMADESCTypeDef*) (DMARxDescToGet->Buffer2NextDescAddr);
+
+                        ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE_End:
+                        *(struct ether_frame*)data = frame;
+                        status = STD_RET_OK;
+                  }
+
+                  break;
             }
       }
 
       return status;
-}
-
-
-//================================================================================================//
-/**
- * @brief Release ethernet device
- *
- * @param eth                 ethernet number
- * @param part                device part
- *
- * @retval STD_RET_OK         success
- * @retval STD_RET_ERROR      error
- */
-//================================================================================================//
-stdRet_t ETHER_Release(devx_t dev, fd_t part)
-{
-      (void)dev;
-      (void)part;
-
-      return STD_RET_OK;
 }
 
 

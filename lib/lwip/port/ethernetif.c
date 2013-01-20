@@ -104,7 +104,7 @@ typedef struct{
 /*==================================================================================================
                                       Local function prototypes
 ==================================================================================================*/
-static FrameTypeDef ETH_RxPkt_ChainMode(void);
+//static FrameTypeDef ETH_RxPkt_ChainMode(void);
 static u32          ETH_GetCurrentTxBuffer(void);
 static u32          ETH_TxPkt_ChainMode(u16 FrameLength);
 static void         low_level_init(struct netif *netif);
@@ -132,7 +132,7 @@ uint8_t *Tx_Buff;
 
 //ETH_DMADESCTypeDef *DMATxDesc = DMATxDscrTab;
 extern ETH_DMADESCTypeDef *DMATxDescToSet;
-extern ETH_DMADESCTypeDef *DMARxDescToGet;
+//extern ETH_DMADESCTypeDef *DMARxDescToGet;
 
 
 /*==================================================================================================
@@ -294,51 +294,51 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
  *         NULL on memory error
  */
 //================================================================================================//
-struct pbuf *low_level_input(struct netif *netif)
-{
-      (void) netif;
-
-      struct pbuf *p, *q;
-      u16_t len;
-      int l = 0;
-      FrameTypeDef frame;
-      u8 *buffer;
-
-      p = NULL;
-      frame = ETH_RxPkt_ChainMode();
-
-      /* Obtain the size of the packet and put it into the "len" variable. */
-      len = frame.length;
-
-      buffer = (u8 *) frame.buffer;
-
-      /* We allocate a pbuf chain of pbufs from the pool. */
-      p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
-
-      if (p != NULL)
-      {
-            for (q = p; q != NULL; q = q->next)
-            {
-                  memcpy((u8_t*) q->payload, (u8_t*) &buffer[l], q->len);
-                  l = l + q->len;
-            }
-      }
-
-      /* Set Own bit of the Rx descriptor Status: gives the buffer back to ETHERNET DMA */
-      frame.descriptor->Status = ETH_DMARxDesc_OWN;
-
-      /* When Rx Buffer unavailable flag is set: clear it and resume reception */
-      if ((ETH->DMASR & ETH_DMASR_RBUS) != (u32) RESET)
-      {
-            /* Clear RBUS ETHERNET DMA flag */
-            ETH->DMASR = ETH_DMASR_RBUS;
-
-            /* Resume DMA reception */
-            ETH->DMARPDR = 0;
-      }
-
-      return p;
-}
+//struct pbuf *low_level_input(struct netif *netif)
+//{
+//      (void) netif;
+//
+//      struct pbuf *p, *q;
+//      u16_t len;
+//      int l = 0;
+//      FrameTypeDef frame;
+//      u8 *buffer;
+//
+//      p = NULL;
+//      frame = ETH_RxPkt_ChainMode();
+//
+//      /* Obtain the size of the packet and put it into the "len" variable. */
+//      len = frame.length;
+//
+//      buffer = (u8 *) frame.buffer;
+//
+//      /* We allocate a pbuf chain of pbufs from the pool. */
+//      p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
+//
+//      if (p != NULL)
+//      {
+//            for (q = p; q != NULL; q = q->next)
+//            {
+//                  memcpy((u8_t*) q->payload, (u8_t*) &buffer[l], q->len);
+//                  l = l + q->len;
+//            }
+//      }
+//
+//      /* Set Own bit of the Rx descriptor Status: gives the buffer back to ETHERNET DMA */
+////      frame.descriptor->Status = ETH_DMARxDesc_OWN; /* DNLTEST */
+//
+//      /* When Rx Buffer unavailable flag is set: clear it and resume reception */
+//      if ((ETH->DMASR & ETH_DMASR_RBUS) != (u32) RESET)
+//      {
+//            /* Clear RBUS ETHERNET DMA flag */
+//            ETH->DMASR = ETH_DMASR_RBUS;
+//
+//            /* Resume DMA reception */
+//            ETH->DMARPDR = 0;
+//      }
+//
+//      return p;
+//}
 
 
 //================================================================================================//
@@ -442,58 +442,55 @@ err_t ethernetif_init(struct netif *netif)
  * @retval frame size and location
  */
 //================================================================================================//
-FrameTypeDef ETH_RxPkt_ChainMode(void)
-{
-      u32 framelength    = 0;
-      FrameTypeDef frame = {0, 0, NULL};
-
-      /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
-      if ((DMARxDescToGet->Status & ETH_DMARxDesc_OWN) != (u32) RESET)
-      {
-            frame.length = ETH_ERROR;
-
-            if ((ETH->DMASR & ETH_DMASR_RBUS) != (u32) RESET)
-            {
-                  /* Clear RBUS ETHERNET DMA flag */
-                  ETH->DMASR = ETH_DMASR_RBUS;
-
-                  /* Resume DMA reception */
-                  ETH->DMARPDR = 0;
-            }
-
-            /* Return error: OWN bit set */
-            return frame;
-      }
-
-      if (  ((DMARxDescToGet->Status & ETH_DMARxDesc_ES) == (u32) RESET)
-         && ((DMARxDescToGet->Status & ETH_DMARxDesc_LS) != (u32) RESET)
-         && ((DMARxDescToGet->Status & ETH_DMARxDesc_FS) != (u32) RESET) )
-      {
-            /* Get the Frame Length of the received packet: substruct 4 bytes of the CRC */
-            framelength = ((DMARxDescToGet->Status & ETH_DMARxDesc_FL)
-                        >> ETH_DMARxDesc_FrameLengthShift) - 4;
-
-            /* Get the addrees of the actual buffer */
-            frame.buffer = DMARxDescToGet->Buffer1Addr;
-      }
-      else
-      {
-            /* Return ERROR */
-            framelength = ETH_ERROR;
-      }
-
-      frame.length = framelength;
-
-      frame.descriptor = DMARxDescToGet;
-
-      /* Update the ETHERNET DMA global Rx descriptor with next Rx decriptor */
-      /* Chained Mode */
-      /* Selects the next DMA Rx descriptor list for next buffer to read */
-      DMARxDescToGet = (ETH_DMADESCTypeDef*) (DMARxDescToGet->Buffer2NextDescAddr);
-
-      /* Return Frame */
-      return (frame);
-}
+//FrameTypeDef ETH_RxPkt_ChainMode(void)
+//{
+////      u32 framelength    = 0;
+//      FrameTypeDef frame = {0, 0, NULL};
+//
+//      /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
+//      if ((DMARxDescToGet->Status & ETH_DMARxDesc_OWN) != (u32) RESET) {
+//            frame.length = ETH_ERROR;
+//
+//            if ((ETH->DMASR & ETH_DMASR_RBUS) != (u32) RESET) {
+//                  /* Clear RBUS ETHERNET DMA flag */
+//                  ETH->DMASR = ETH_DMASR_RBUS;
+//
+//                  /* Resume DMA reception */
+//                  ETH->DMARPDR = 0;
+//            }
+//
+//            /* Return error: OWN bit set */
+//            goto ETH_RxPkt_ChainMode_End;
+//      }
+//
+//      if (  ((DMARxDescToGet->Status & ETH_DMARxDesc_ES) == (u32) RESET)
+//         && ((DMARxDescToGet->Status & ETH_DMARxDesc_LS) != (u32) RESET)
+//         && ((DMARxDescToGet->Status & ETH_DMARxDesc_FS) != (u32) RESET) ) {
+//            /* Get the Frame Length of the received packet: substruct 4 bytes of the CRC */
+//            frame.length = ((DMARxDescToGet->Status & ETH_DMARxDesc_FL)
+//                        >> ETH_DMARxDesc_FrameLengthShift) - 4;
+//
+//            /* Get the addrees of the actual buffer */
+//            frame.buffer = DMARxDescToGet->Buffer1Addr;
+//      } else {
+//            /* Return ERROR */
+//            frame.length = ETH_ERROR;
+//      }
+//
+////      frame.length = framelength;
+//
+////      frame.descriptor = DMARxDescToGet; /* DNLTEST */
+//      DMARxDescToGet->Status = ETH_DMARxDesc_OWN;
+////      frame.descriptor->Status = ETH_DMARxDesc_OWN; /* DNLTEST */
+//
+//      /* Update the ETHERNET DMA global Rx descriptor with next Rx decriptor */
+//      /* Chained Mode */
+//      /* Selects the next DMA Rx descriptor list for next buffer to read */
+//      DMARxDescToGet = (ETH_DMADESCTypeDef*) (DMARxDescToGet->Buffer2NextDescAddr);
+//
+//      ETH_RxPkt_ChainMode_End:
+//      return frame;
+//}
 
 
 //================================================================================================//

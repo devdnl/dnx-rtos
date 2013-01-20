@@ -40,8 +40,8 @@ extern "C" {
 #include "netif/etharp.h"
 #include "lwip/dhcp.h"
 
-#include "ethernetif.h"
-#include "stm32_eth.h"
+#include "ethernetif.h" /* DNLFIXME to remove */
+#include "stm32_eth.h" /* DNLFIXME to remove */
 
 #include "ether_def.h"
 
@@ -78,6 +78,60 @@ FILE_t *ethf           = NULL;
 /*==================================================================================================
                                         Function definitions
 ==================================================================================================*/
+
+//================================================================================================//
+/**
+ * Should allocate a pbuf and transfer the bytes of the incoming packet from the interface into
+ * the pbuf.
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ * @return a pbuf filled with the received packet (including MAC header) NULL on memory error
+ */
+//================================================================================================//
+struct pbuf *low_level_input(struct netif *netif)
+{
+      (void)netif;
+
+      struct pbuf *p = NULL;
+      struct pbuf *q = NULL;
+      uint_t       l = 0;
+
+      struct ether_frame frame = {0, 0};
+
+      if (ioctl(ethf, ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
+            goto low_level_input_end;
+      }
+
+      if (frame.length == 0) {
+            goto low_level_input_end;
+      }
+
+      u8_t *buffer = (u8_t*) frame.buffer;
+
+      /* We allocate a pbuf chain of pbufs from the pool. */
+      p = pbuf_alloc(PBUF_RAW, frame.length, PBUF_POOL);
+
+      if (p != NULL) {
+            for (q = p; q != NULL; q = q->next) {
+                  memcpy((u8_t*) q->payload, (u8_t*) &buffer[l], q->len);
+                  l = l + q->len;
+            }
+      }
+
+      /* when Rx Buffer unavailable flag is set: clear it and resume reception */
+      if ((ETH->DMASR & ETH_DMASR_RBUS) != (u32) RESET)
+      {
+            /* Clear RBUS ETHERNET DMA flag */
+            ETH->DMASR = ETH_DMASR_RBUS;
+
+            /* Resume DMA reception */
+            ETH->DMARPDR = 0;
+      }
+
+      low_level_input_end:
+      return p;
+}
+
 
 //================================================================================================//
 /**
@@ -239,24 +293,6 @@ stdRet_t appmain(ch_t *argv)
                               }
 
                         } while (rxPktSize != 0);
-
-
-//                        /* Handles all the received frames */
-//                        while(ETH_GetRxPktSize() != 0) {
-//                              /*
-//                               * read a received packet from the Ethernet buffers and send it to the
-//                               * lwIP for handling
-//                               */
-//
-//                              /* move received packet into a new pbuf */
-//                              struct pbuf *p = low_level_input(netif);
-//
-//                              if (p) {
-//                                    if (netif->input(p, netif) != ERR_OK) {
-//                                          pbuf_free(p);
-//                                    }
-//                              }
-//                        }
 
                         ioctl(ethf, ETHER_IORQ_CLEAR_RX_FLAG, NULL);
                   }

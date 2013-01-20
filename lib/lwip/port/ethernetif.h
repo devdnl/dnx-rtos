@@ -55,10 +55,10 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern struct pbuf *low_level_input(struct netif *netif);
+//extern struct pbuf *low_level_input(struct netif *netif);
 extern err_t ethernetif_init(struct netif *netif);
-extern err_t ethernetif_input(struct netif *netif);
-extern void  Set_MAC_Address(unsigned char *macadd);
+//extern err_t ethernetif_input(struct netif *netif);
+//extern void  Set_MAC_Address(unsigned char *macadd);
 
 
 #ifdef __cplusplus
