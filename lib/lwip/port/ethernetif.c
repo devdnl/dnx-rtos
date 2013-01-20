@@ -109,7 +109,7 @@ static u32          ETH_GetCurrentTxBuffer(void);
 static u32          ETH_TxPkt_ChainMode(u16 FrameLength);
 static void         low_level_init(struct netif *netif);
 static err_t        low_level_output(struct netif *netif, struct pbuf *p);
-static struct pbuf  *low_level_input(struct netif *netif);
+//static struct pbuf  *low_level_input(struct netif *netif);
 
 
 /*==================================================================================================
@@ -294,7 +294,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
  *         NULL on memory error
  */
 //================================================================================================//
-static struct pbuf *low_level_input(struct netif *netif)
+struct pbuf *low_level_input(struct netif *netif)
 {
       (void) netif;
 
@@ -352,28 +352,28 @@ static struct pbuf *low_level_input(struct netif *netif)
  * @param netif the lwip network interface structure for this ethernetif
  */
 //================================================================================================//
-err_t ethernetif_input(struct netif *netif)
-{
-      err_t err;
-      struct pbuf *p;
-
-      /* move received packet into a new pbuf */
-      p = low_level_input(netif);
-
-      /* no packet could be read, silently ignore this */
-      if (p == NULL)
-            return ERR_MEM;
-
-      err = netif->input(p, netif);
-      if (err != ERR_OK)
-      {
-            LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
-            pbuf_free(p);
-            p = NULL;
-      }
-
-      return err;
-}
+//err_t ethernetif_input(struct netif *netif)
+//{
+//      err_t err;
+//      struct pbuf *p;
+//
+//      /* move received packet into a new pbuf */
+//      p = low_level_input(netif);
+//
+//      /* no packet could be read, silently ignore this */
+//      if (p == NULL)
+//            return ERR_MEM;
+//
+//      err = netif->input(p, netif);
+//      if (err != ERR_OK)
+//      {
+//            LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
+//            pbuf_free(p);
+//            p = NULL;
+//      }
+//
+//      return err;
+//}
 
 
 //================================================================================================//

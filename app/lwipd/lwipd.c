@@ -216,14 +216,47 @@ stdRet_t appmain(ch_t *argv)
 
             if (ioctl(ethf, ETHER_IORQ_GET_RX_FLAG, &rxflag) == STD_RET_OK) {
                   if (rxflag == TRUE) {
-                        /* Handles all the received frames */
-                        while(ETH_GetRxPktSize() != 0) {
-                              /*
-                               * read a received packet from the Ethernet buffers and send it to the
-                               * lwIP for handling
-                               */
-                              ethernetif_input(netif);
-                        }
+                        u32_t rxPktSize;
+
+                        do {
+                              rxPktSize = 0;
+                              ioctl(ethf, ETHER_IORQ_GET_RX_PACKET_SIZE, &rxPktSize);
+
+                              if (rxPktSize != 0) {
+                                    /*
+                                     * read a received packet from the Ethernet buffers and send it to the
+                                     * lwIP for handling
+                                     */
+
+                                    /* move received packet into a new pbuf */
+                                    struct pbuf *p = low_level_input(netif);
+
+                                    if (p) {
+                                          if (netif->input(p, netif) != ERR_OK) {
+                                                pbuf_free(p);
+                                          }
+                                    }
+                              }
+
+                        } while (rxPktSize != 0);
+
+
+//                        /* Handles all the received frames */
+//                        while(ETH_GetRxPktSize() != 0) {
+//                              /*
+//                               * read a received packet from the Ethernet buffers and send it to the
+//                               * lwIP for handling
+//                               */
+//
+//                              /* move received packet into a new pbuf */
+//                              struct pbuf *p = low_level_input(netif);
+//
+//                              if (p) {
+//                                    if (netif->input(p, netif) != ERR_OK) {
+//                                          pbuf_free(p);
+//                                    }
+//                              }
+//                        }
 
                         ioctl(ethf, ETHER_IORQ_CLEAR_RX_FLAG, NULL);
                   }

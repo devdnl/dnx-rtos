@@ -44,9 +44,10 @@ extern "C" {
                                   Exported types, enums definitions
 ==================================================================================================*/
 enum ETHER_IORQ {
-      ETHER_IORQ_GET_RX_FLAG,
-      ETHER_IORQ_CLEAR_RX_FLAG,
-      ETHER_IORQ_SET_MAC_ADR,
+      ETHER_IORQ_GET_RX_FLAG,             /* [out] bool_t */
+      ETHER_IORQ_CLEAR_RX_FLAG,           /* -- */
+      ETHER_IORQ_SET_MAC_ADR,             /* [in]  ch_t[] */
+      ETHER_IORQ_GET_RX_PACKET_SIZE,      /* [out] u32_t  */
 };
 
 

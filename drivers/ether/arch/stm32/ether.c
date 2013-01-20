@@ -305,6 +305,13 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
                         status = STD_RET_OK;
                   }
                   break;
+
+            case ETHER_IORQ_GET_RX_PACKET_SIZE:
+                  if (data) {
+                        *(u32_t*)data = ETH_GetRxPktSize();
+                        status = STD_RET_OK;
+                  }
+                  break;
             }
       }
 
