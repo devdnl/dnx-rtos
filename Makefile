@@ -101,7 +101,6 @@ CSRC_stm32 = $(sort \
    lib/lwip/core/ipv4/ip_addr.c \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
-   lib/lwip/port/ethernetif.c \
    drivers/ether/arch/stm32/ether.c \
    drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
    drivers/gpio/arch/stm32/gpio.c \
@@ -168,6 +167,7 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    system/fs/include \
    system/user/include \
    system/portable \
+   lib/lwip/port \
    )
    
 ####################################################################################################

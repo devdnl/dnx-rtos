@@ -496,7 +496,7 @@ stdRet_t appmain(ch_t *argv)
             }
 #endif
 
-            Sleep(50);
+            Sleep(250);
       }
 
 
