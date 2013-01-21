@@ -46,8 +46,12 @@ extern "C" {
                                    Local types, enums definitions
 ==================================================================================================*/
 struct eth_mem {
-      bool_t RxDataReady;
-      u8_t   MACaddr[6];
+      bool_t              RxDataReady;
+      u8_t                MACaddr[6];
+      ETH_DMADESCTypeDef *DMATxDscrTab;
+      u8_t                TxBfrCount;
+      ETH_DMADESCTypeDef *DMARxDscrTab;
+      u8_t                RxBfrCount;
 };
 
 /*==================================================================================================
@@ -298,7 +302,7 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
       (void)dev;
       (void)part;
 
-      stdRet_t status = ETHER_STD_RET_BAD_REQUEST;
+      stdRet_t status = STD_RET_ERROR;
 
       if (eth_mem) {
             status = ETHER_STD_RET_NULL_DATA;
@@ -461,6 +465,76 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
                   }
 
                   break;
+
+            case ETHER_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE:
+                  if (data) {
+                        struct DMADesc DMADesc = *(struct DMADesc*)data;
+                        eth_mem->TxBfrCount   = DMADesc.buffer_count;
+                        eth_mem->DMATxDscrTab = malloc(sizeof(ETH_DMADESCTypeDef) * eth_mem->TxBfrCount);
+
+                        if (eth_mem->DMATxDscrTab) {
+                              ETH_DMATxDescChainInit(eth_mem->DMATxDscrTab,
+                                                     DMADesc.buffer,
+                                                     eth_mem->TxBfrCount);
+
+                              status  = STD_RET_OK;
+                        }
+                  }
+
+                  break;
+
+            case ETHER_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE:
+                  if (data) {
+                        struct DMADesc DMADesc = *(struct DMADesc*)data;
+                        eth_mem->RxBfrCount   = DMADesc.buffer_count;
+                        eth_mem->DMARxDscrTab = malloc(sizeof(ETH_DMADESCTypeDef) * eth_mem->RxBfrCount);
+
+                        if (eth_mem->DMARxDscrTab) {
+                              ETH_DMARxDescChainInit(eth_mem->DMARxDscrTab,
+                                                     DMADesc.buffer,
+                                                     eth_mem->RxBfrCount);
+
+                              status  = STD_RET_OK;
+                        }
+                  }
+
+                  break;
+
+            case ETHER_IORQ_ENABLE_RX_IRQ:
+                  if (eth_mem->DMARxDscrTab != NULL) {
+                        for (uint_t i = 0; i < eth_mem->RxBfrCount; i++) {
+                              ETH_DMARxDescReceiveITConfig(&eth_mem->DMARxDscrTab[i], ENABLE);
+                        }
+
+                        status = STD_RET_OK;
+                  } else {
+                        status = STD_RET_ERROR;
+                  }
+
+                  break;
+
+            case ETHER_IORQ_ENABLE_TX_HARDWARE_CHECKSUM:
+                  if (eth_mem->DMATxDscrTab != NULL) {
+                        for (uint_t i = 0; i < eth_mem->TxBfrCount; i++) {
+                              ETH_DMATxDescChecksumInsertionConfig(&eth_mem->DMATxDscrTab[i],
+                                                                   ETH_DMATxDesc_ChecksumTCPUDPICMPFull);
+                        }
+
+                        status = STD_RET_OK;
+                  } else {
+                        status = STD_RET_ERROR;
+                  }
+
+                  break;
+
+            case ETHER_IORQ_ETHERNET_START:
+                  ETH_Start();
+                  status = STD_RET_OK;
+                  break;
+
+            default:
+                  status = ETHER_STD_RET_BAD_REQUEST;
+                  break;
             }
       }
 
@@ -475,7 +549,6 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 //================================================================================================//
 void ETH_IRQHandler(void)
 {
-//      LwIP_SetReceiveFlag();
       eth_mem->RxDataReady = TRUE;
 
       /* Clear the Eth DMA Rx IT pending bits */

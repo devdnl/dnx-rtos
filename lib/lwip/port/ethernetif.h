@@ -59,7 +59,7 @@ extern "C" {
 //extern err_t ethernetif_init(struct netif *netif);
 //extern err_t ethernetif_input(struct netif *netif);
 //extern void  Set_MAC_Address(unsigned char *macadd);
-extern void low_level_init(struct netif *netif);
+//extern void low_level_init(struct netif *netif);
 
 
 #ifdef __cplusplus

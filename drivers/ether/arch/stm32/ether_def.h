@@ -44,6 +44,15 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+struct DMADesc {
+      u8_t *buffer;
+      u8_t  buffer_count;
+};
+
+
+/*==================================================================================================
+                                  Exported types, enums definitions
+==================================================================================================*/
 enum ETHER_IORQ {
       ETHER_IORQ_GET_RX_FLAG,                         /* [out] bool_t */
       ETHER_IORQ_CLEAR_RX_FLAG,                       /* -- */
@@ -55,6 +64,11 @@ enum ETHER_IORQ {
       ETHER_IORQ_RESUME_DMA_RECEPTION,                /* --- */
       ETHER_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE,      /* [in]  u16_t */
       ETHER_IORQ_GET_CURRENT_TX_BUFFER,               /* [out] u8_t* */
+      ETHER_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE,    /* [in]  struct DMADesc */
+      ETHER_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE,    /* [in]  struct DMADesc */
+      ETHER_IORQ_ENABLE_RX_IRQ,                       /* --- (require: ETHER_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE) */
+      ETHER_IORQ_ENABLE_TX_HARDWARE_CHECKSUM,         /* --- (require: ETHER_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE) */
+      ETHER_IORQ_ETHERNET_START,                      /* --- */
 };
 
 

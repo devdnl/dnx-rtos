@@ -70,12 +70,12 @@ extern "C" {
 //#define IFNAME0                                 's'
 //#define IFNAME1                                 't'
 
-#define ETH_DMARxDesc_FrameLengthShift          16
-#define ETH_ERROR                               ((u32)0)
-#define ETH_SUCCESS                             ((u32)1)
+//#define ETH_DMARxDesc_FrameLengthShift          16
+//#define ETH_ERROR                               ((u32)0)
+//#define ETH_SUCCESS                             ((u32)1)
 
-#define ETH_RXBUFNB                             4
-#define ETH_TXBUFNB                             2
+//#define ETH_RXBUFNB                             2
+//#define ETH_TXBUFNB                             2
 
 
 /*==================================================================================================
@@ -116,19 +116,19 @@ extern "C" {
                                       Local object definitions
 ==================================================================================================*/
 /* TCP and ARP timeouts */
-volatile int tcp_end_time;
-volatile int arp_end_time;
+//volatile int tcp_end_time;
+//volatile int arp_end_time;
 
 /* MAC address */
 //uint8_t MACaddr[6];
 
 /* Ethernet Rx & Tx DMA Descriptors */
-ETH_DMADESCTypeDef *DMARxDscrTab;
-ETH_DMADESCTypeDef *DMATxDscrTab;
+//ETH_DMADESCTypeDef *DMARxDscrTab;
+//ETH_DMADESCTypeDef *DMATxDscrTab;
 
 /* Ethernet buffers */
-uint8_t *Rx_Buff;
-uint8_t *Tx_Buff;
+//uint8_t *Rx_Buff;
+//uint8_t *Tx_Buff;
 
 //ETH_DMADESCTypeDef *DMATxDesc = DMATxDscrTab;
 //extern ETH_DMADESCTypeDef *DMATxDescToSet;
@@ -172,33 +172,33 @@ uint8_t *Tx_Buff;
  * @param netif the already initialized lwip network interface structure for this ethernetif
  */
 //================================================================================================//
-void low_level_init(struct netif *netif)
-{
+//void low_level_init(struct netif *netif)
+//{
       /* allocate memory */
-      Rx_Buff = malloc(sizeof(uint8_t) * ETH_RXBUFNB * ETH_MAX_PACKET_SIZE);
-      Tx_Buff = malloc(sizeof(uint8_t) * ETH_TXBUFNB * ETH_MAX_PACKET_SIZE);
-      DMARxDscrTab = malloc(sizeof(ETH_DMADESCTypeDef) * ETH_RXBUFNB);
-      DMATxDscrTab = malloc(sizeof(ETH_DMADESCTypeDef) * ETH_TXBUFNB);
+//      Rx_Buff = malloc(sizeof(uint8_t) * ETH_RXBUFNB * ETH_MAX_PACKET_SIZE);
+//      Tx_Buff = malloc(sizeof(uint8_t) * ETH_TXBUFNB * ETH_MAX_PACKET_SIZE);
+//      DMARxDscrTab = malloc(sizeof(ETH_DMADESCTypeDef) * ETH_RXBUFNB);
+//      DMATxDscrTab = malloc(sizeof(ETH_DMADESCTypeDef) * ETH_TXBUFNB);
 
-      if (!Rx_Buff || !Tx_Buff || !DMARxDscrTab || !DMATxDscrTab)
-      {
-            if (Rx_Buff)
-                  free(Rx_Buff);
-
-            if (Tx_Buff)
-                  free(Tx_Buff);
-
-            if (DMARxDscrTab)
-                  free(DMARxDscrTab);
-
-            if (DMATxDscrTab)
-                  free(DMATxDscrTab);
-
-            return;
-      }
+//      if (/*!Rx_Buff || !Tx_Buff || */!DMARxDscrTab || !DMATxDscrTab)
+//      {
+//            if (Rx_Buff)
+//                  free(Rx_Buff);
+//
+//            if (Tx_Buff)
+//                  free(Tx_Buff);
+//
+//            if (DMARxDscrTab)
+//                  free(DMARxDscrTab);
+//
+//            if (DMATxDscrTab)
+//                  free(DMATxDscrTab);
+//
+//            return;
+//      }
 
       /* set MAC hardware address length */
-      netif->hwaddr_len = ETHARP_HWADDR_LEN;
+//      netif->hwaddr_len = ETHARP_HWADDR_LEN;
 
 //      /* set MAC hardware address */
 //      netif->hwaddr[0] = MACaddr[0];
@@ -209,43 +209,43 @@ void low_level_init(struct netif *netif)
 //      netif->hwaddr[5] = MACaddr[5];
 
       /* maximum transfer unit */
-      netif->mtu = 1500;
+//      netif->mtu = 1500;
 
       /* device capabilities */
       /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
-      netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
+//      netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 
       /* Initialize Tx Descriptors list: Chain Mode */
-      ETH_DMATxDescChainInit(DMATxDscrTab, Tx_Buff, ETH_TXBUFNB);
+//      ETH_DMATxDescChainInit(DMATxDscrTab, Tx_Buff, ETH_TXBUFNB);
 
       /* Initialize Rx Descriptors list: Chain Mode  */
-      ETH_DMARxDescChainInit(DMARxDscrTab, Rx_Buff, ETH_RXBUFNB);
+//      ETH_DMARxDescChainInit(DMARxDscrTab, Rx_Buff, ETH_RXBUFNB);
 
       /* Enable Ethernet Rx interrrupt */
-      {
-            int i;
-            for (i = 0; i < ETH_RXBUFNB; i++)
-            {
-                  ETH_DMARxDescReceiveITConfig(&DMARxDscrTab[i], ENABLE);
-            }
-      }
+//      {
+//            int i;
+//            for (i = 0; i < ETH_RXBUFNB; i++)
+//            {
+//                  ETH_DMARxDescReceiveITConfig(&DMARxDscrTab[i], ENABLE);
+//            }
+//      }
 
-#ifdef CHECKSUM_BY_HARDWARE
+//#ifdef CHECKSUM_BY_HARDWARE
       /* Enable the checksum insertion for the Tx frames */
-      {
-            int i;
-            for (i = 0; i < ETH_TXBUFNB; i++)
-            {
-                  ETH_DMATxDescChecksumInsertionConfig(&DMATxDscrTab[i],
-                                                       ETH_DMATxDesc_ChecksumTCPUDPICMPFull);
-            }
-      }
-#endif
+//      {
+//            int i;
+//            for (i = 0; i < ETH_TXBUFNB; i++)
+//            {
+//                  ETH_DMATxDescChecksumInsertionConfig(&DMATxDscrTab[i],
+//                                                       ETH_DMATxDesc_ChecksumTCPUDPICMPFull);
+//            }
+//      }
+//#endif
 
       /* Enable MAC and DMA transmission and reception */
-      ETH_Start();
+//      ETH_Start();
 
-}
+//}
 
 
 //================================================================================================//

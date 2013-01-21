@@ -40,8 +40,6 @@ extern "C" {
 #include "netif/etharp.h"
 #include "lwip/dhcp.h"
 
-#include "ethernetif.h" /* DNLFIXME to remove */
-
 #include "ether_def.h"
 
 /* Begin of application section declaration */
@@ -51,12 +49,18 @@ APP_SEC_BEGIN
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-#define MACADDR0        0x00
-#define MACADDR1        0x00
-#define MACADDR2        0x00
-#define MACADDR3        0x00
-#define MACADDR4        0x00
-#define MACADDR5        0x01
+#define MACADDR0                    0x00
+#define MACADDR1                    0x00
+#define MACADDR2                    0x00
+#define MACADDR3                    0x00
+#define MACADDR4                    0x00
+#define MACADDR5                    0x01
+
+/* ETH_HEADER + ETH_EXTRA + MAX_ETH_PAYLOAD + ETH_CRC */
+#define ETH_MAX_PACKET_SIZE         1520
+
+#define ETH_RXBUFNB                 2
+#define ETH_TXBUFNB                 2
 
 
 /*==================================================================================================
@@ -81,6 +85,8 @@ u32_t DHCPcoarseTimer = 0;
 bool_t netifConfigured = FALSE;
 FILE_t *ethf           = NULL;
 
+u8_t *Rx_Buff = NULL;
+u8_t *Tx_Buff = NULL;
 
 
 /*==================================================================================================
@@ -191,23 +197,19 @@ err_t low_level_output(struct netif *netif, struct pbuf *p)
 //================================================================================================//
 err_t ethernetif_init(struct netif *netif)
 {
-      struct ethernetif *ethernetif;
-
-      ethernetif = mem_malloc(sizeof(struct ethernetif));
+      struct ethernetif *ethernetif = malloc(sizeof(struct ethernetif));
 
       if (ethernetif == NULL) {
-            return ERR_MEM;
+            goto ethernetif_init_error;
       }
 
 #if LWIP_NETIF_HOSTNAME
-      /* Initialize interface hostname */
       netif->hostname = SystemGetHostname();
-#endif /* LWIP_NETIF_HOSTNAME */
+#endif
 
       /*
-       * Initialize the snmp variables and counters inside the struct netif.
-       * The last argument should be replaced with your link speed, in units
-       * of bits per second.
+       * Initialize the snmp variables and counters inside the struct netif.  The last argument
+       * should be replaced with your link speed, in units of bits per second.
        */
       NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 100000000);
 
@@ -215,12 +217,23 @@ err_t ethernetif_init(struct netif *netif)
       netif->name[0] = 'e';
       netif->name[1] = '0';
 
-      /* We directly use etharp_output() here to save a function call.
-       * You can instead declare your own function an call etharp_output()
-       * from it if you have to do some checks before sending (e.g. if link
-       * is available...) */
+      /*
+       * we directly use etharp_output() here to save a function call. You can instead declare your
+       * own function an call etharp_output() from it if you have to do some checks before sending
+       * (e.g. if linkis available...)
+       */
       netif->output     = etharp_output;
       netif->linkoutput = low_level_output;
+
+      /* maximum transfer unit */
+      netif->mtu = 1500;
+
+      /* device capabilities */
+      /* don't set NETIF_FLAG_ETHARP if this device is not an Ethernet one */
+      netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
+
+      /* set MAC hardware address length */
+      netif->hwaddr_len = ETHARP_HWADDR_LEN;
 
       /* set MAC hardware address */
       netif->hwaddr[0] = MACADDR0;
@@ -232,10 +245,72 @@ err_t ethernetif_init(struct netif *netif)
 
       ethernetif->ethaddr = (struct eth_addr*)&(netif->hwaddr[0]);
 
-      /* initialize the hardware */
-      low_level_init(netif);
+      u8_t macaddress[6] = {MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5};
 
+      if (ioctl(ethf, ETHER_IORQ_SET_MAC_ADR, macaddress) != STD_RET_OK) {
+            goto ethernetif_init_error;
+      }
+
+      /* allocate Rx and Tx buffers */
+      Rx_Buff = malloc(sizeof(u8_t) * ETH_RXBUFNB * ETH_MAX_PACKET_SIZE);
+      Tx_Buff = malloc(sizeof(u8_t) * ETH_TXBUFNB * ETH_MAX_PACKET_SIZE);
+
+      if (!Rx_Buff || !Tx_Buff) {
+            goto ethernetif_init_error;
+      }
+
+      /* initialize Tx Descriptors list: Chain Mode */
+      struct DMADesc DMADesc;
+
+      DMADesc.buffer       = Tx_Buff;
+      DMADesc.buffer_count = ETH_TXBUFNB;
+
+      if (ioctl(ethf, ETHER_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE, &DMADesc) != STD_RET_OK) {
+            goto ethernetif_init_error;
+      }
+
+      /* initialize Rx Descriptors list: Chain Mode */
+      DMADesc.buffer       = Rx_Buff;
+      DMADesc.buffer_count = ETH_RXBUFNB;
+
+      if (ioctl(ethf, ETHER_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE, &DMADesc) != STD_RET_OK) {
+            goto ethernetif_init_error;
+      }
+
+      /* enable Ethernet Rx interrrupt */
+      if (ioctl(ethf, ETHER_IORQ_ENABLE_RX_IRQ, NULL) != STD_RET_OK) {
+            goto ethernetif_init_error;
+      }
+
+#ifdef CHECKSUM_BY_HARDWARE
+      if (ioctl(ethf, ETHER_IORQ_ENABLE_TX_HARDWARE_CHECKSUM, NULL) != STD_RET_OK) {
+            goto ethernetif_init_error;
+      }
+#endif
+
+      /* start Ethernet interface */
+      if (ioctl(ethf, ETHER_IORQ_ETHERNET_START, NULL) != STD_RET_OK) {
+            goto ethernetif_init_error;
+      }
+
+      /* initialization OK */
       return ERR_OK;
+
+      /* initialization error */
+      ethernetif_init_error:
+      if (ethernetif) {
+            free(ethernetif);
+      }
+
+      if (Rx_Buff) {
+            free(Rx_Buff);
+      }
+
+      if (Tx_Buff) {
+            free(Tx_Buff);
+      }
+
+      return ERR_MEM;
 }
 
 
@@ -260,7 +335,6 @@ stdRet_t appmain(ch_t *argv)
       struct ip_addr ipaddr;
       struct ip_addr netmask;
       struct ip_addr gw;
-      u8_t macaddress[6] = {MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5};
 
       /* check if Ethernet interface exist */
       ethf = fopen("/dev/eth0", "r");
@@ -281,8 +355,6 @@ stdRet_t appmain(ch_t *argv)
       IP4_ADDR(&netmask, 255, 255, 255, 0  );
       IP4_ADDR(&gw     , 192, 168, 0  , 1  );
       #endif
-
-      ioctl(ethf, ETHER_IORQ_SET_MAC_ADR, macaddress);
 
       /*
        * the init function pointer must point to a initialization function for your ethernet netif
@@ -347,8 +419,8 @@ stdRet_t appmain(ch_t *argv)
                         netifConfigured = TRUE;
 
                         kprint("Hostname  : %s\n", netif->hostname);
-                        kprint("MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n", macaddress[0], macaddress[1], macaddress[2],
-                                                                        macaddress[3], macaddress[4], macaddress[5]);
+                        kprint("MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n", MACADDR0, MACADDR1, MACADDR2,
+                                                                        MACADDR3, MACADDR4, MACADDR5);
                         kprint("IP Address: %d.%d.%d.%d\n", ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
                                                             ip4_addr3(&ipaddr),  ip4_addr4(&ipaddr));
                         kprint("Net Mask  : %d.%d.%d.%d\n", ip4_addr1(&netmask), ip4_addr2(&netmask),

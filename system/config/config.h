@@ -118,6 +118,10 @@ extern "C" {
 #define CONFIG_MONITOR_CPU_LOAD                       (1)
 
 
+/**=== SYSTEM ENVIRONMENT CONFIGURATION ==========================================================*/
+#define CONFIG_HOSTNAME                               "watherst"
+
+
 #ifdef __cplusplus
 }
 #endif

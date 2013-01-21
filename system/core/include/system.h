@@ -102,7 +102,7 @@ extern "C" {
 #define SystemGetKernelName()             "FreeRTOS"
 #define SystemGetOSVersion()              "0.6.1"
 #define SystemGetKernelVersion()          "7.3.0"
-#define SystemGetHostname()               "weatherst"
+#define SystemGetHostname()               CONFIG_HOSTNAME
 
 
 /*==================================================================================================
