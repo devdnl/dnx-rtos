@@ -132,8 +132,36 @@ void Initd(void *arg)
 
 #if !defined(ARCH_posix)
       if (StartDaemon("lwipd", NULL) == STD_RET_OK) {
-            StartDaemon("measd", NULL);
-            StartDaemon("httpd", NULL);
+            FILE_t *netif;
+            uint_t  i = 0;
+
+            kprint("Configuring network.");
+
+            while ((netif = fopen("/etc/netif", "r")) == NULL) {
+                  if (++i >= 3) {
+                        i = 0;
+                        kprint(".");
+                  }
+
+                  Sleep(250);
+            }
+
+            kprint("\n");
+
+            fseek(netif, 0, SEEK_END);
+            uint_t size = ftell(netif) + 1;
+
+            ch_t *bfr = calloc(size, sizeof(ch_t));
+
+            if (bfr) {
+                  fread(bfr, sizeof(ch_t), size, netif);
+                  kprint("%s", bfr);
+                  fclose(netif);
+                  free(bfr);
+
+                  StartDaemon("measd", NULL);
+                  StartDaemon("httpd", NULL);
+            }
       }
 #endif
 
