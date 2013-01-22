@@ -210,11 +210,12 @@ stdRet_t ETHER_Release(devx_t dev, fd_t part)
             free(eth_mem);
             eth_mem = NULL;
             TaskResumeAll();
+            ETH_DeInit();
 
             status = STD_RET_OK;
       }
 
-      return status;;
+      return status;
 }
 
 
