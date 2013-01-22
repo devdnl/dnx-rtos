@@ -372,7 +372,7 @@ stdRet_t appmain(ch_t *argv)
       #else
       IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
       IP4_ADDR(&netmask, 255, 255, 255, 0  );
-      IP4_ADDR(&gateway     , 192, 168, 0  , 1  );
+      IP4_ADDR(&gateway, 192, 168, 0  , 1  );
       #endif
 
       /*
@@ -406,10 +406,6 @@ stdRet_t appmain(ch_t *argv)
 
       while (TRUE) {
             if (netifConfigured == FALSE) {
-                  if (fnetinf == NULL) {
-                        fnetinf = fopen(STATUS_FILE, "w");
-                  }
-
 #if LWIP_DHCP
                   /* waiting for DHCP connection */
                   u8_t times = DHCP_CLIENT_WAIT_TIME / BASE_TIME;
@@ -417,6 +413,10 @@ stdRet_t appmain(ch_t *argv)
                   if (netif->dhcp->state != DHCP_BOUND && times > 0) {
                         times--;
                   } else {
+                        if (fnetinf == NULL) {
+                              fnetinf = fopen(STATUS_FILE, "w");
+                        }
+
                         /* checking that DHCP connect */
                         if (times > 0) {
                               fprintf(fnetinf, FONT_COLOR_GREEN "DHCP Client connected to server." RESET_ATTRIBUTES "\n");
@@ -440,27 +440,49 @@ stdRet_t appmain(ch_t *argv)
                         }
 #endif
 
+#if !LWIP_DHCP
+                        if (fnetinf == NULL) {
+                              fnetinf = fopen(STATUS_FILE, "w");
+                        }
+#endif
+
                         /* when the netif is fully configured this function must be called.*/
                         netif_set_up(netif);
                         netifConfigured = TRUE;
 
                         /* print daemon information to file */
-                        fprintf(fnetinf, "Hostname  : %s\n", SystemGetHostname());
-
-                        fprintf(fnetinf, "MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n",
-                                MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5);
-
-                        fprintf(fnetinf, "IP Address: %d.%d.%d.%d\n",
-                                ip4_addr1(&ipaddr), ip4_addr2(&ipaddr),
-                                ip4_addr3(&ipaddr), ip4_addr4(&ipaddr));
-
-                        fprintf(fnetinf, "Net Mask  : %d.%d.%d.%d\n",
+                        fprintf(fnetinf, "Hostname  : %s\n"
+                                         "MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n"
+                                         "IP Address: %d.%d.%d.%d\n"
+                                         "Net Mask  : %d.%d.%d.%d\n"
+                                         "Gateway   : %d.%d.%d.%d\n",
+                                SystemGetHostname(),
+                                MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5,
+                                ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
+                                ip4_addr3(&ipaddr),  ip4_addr4(&ipaddr),
                                 ip4_addr1(&netmask), ip4_addr2(&netmask),
-                                ip4_addr3(&netmask), ip4_addr4(&netmask));
-
-                        fprintf(fnetinf, "Gateway   : %d.%d.%d.%d\n",
+                                ip4_addr3(&netmask), ip4_addr4(&netmask),
                                 ip4_addr1(&gateway), ip4_addr2(&gateway),
-                                ip4_addr3(&gateway), ip4_addr4(&gateway));
+                                ip4_addr3(&gateway), ip4_addr4(&gateway)
+                        );
+
+
+//                        fprintf(fnetinf, "Hostname  : %s\n", SystemGetHostname());
+//
+//                        fprintf(fnetinf, "MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n",
+//                                MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5);
+//
+//                        fprintf(fnetinf, "IP Address: %d.%d.%d.%d\n",
+//                                ip4_addr1(&ipaddr), ip4_addr2(&ipaddr),
+//                                ip4_addr3(&ipaddr), ip4_addr4(&ipaddr));
+//
+//                        fprintf(fnetinf, "Net Mask   : %d.%d.%d.%d\n",
+//                                ip4_addr1(&netmask), ip4_addr2(&netmask),
+//                                ip4_addr3(&netmask), ip4_addr4(&netmask));
+//
+//                        fprintf(fnetinf, "Gateway   : %d.%d.%d.%d\n",
+//                                ip4_addr1(&gateway), ip4_addr2(&gateway),
+//                                ip4_addr3(&gateway), ip4_addr4(&gateway));
 
                         fclose(fnetinf);
                         fnetinf = NULL;
