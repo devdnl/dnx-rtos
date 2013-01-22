@@ -52,8 +52,8 @@ APP_SEC_BEGIN
 /* Ethernet interface file */
 #define ETH_FILE                    "/dev/eth0"
 
-/* deamon status file */
-#define STATUS_FILE                 "/etc/netif"
+/* daemon status file */
+#define STATUS_FILE                 "/etc/netinf"
 
 /* wait time to connect to DHCP server [ms] */
 #define DHCP_CLIENT_WAIT_TIME       2000
@@ -348,17 +348,17 @@ stdRet_t appmain(ch_t *argv)
 
       if (netif == NULL) {
             if ((fnetinf = fopen(STATUS_FILE, "w")) != NULL) {
-                  fprintf(fnetinf, FONT_COLOR_RED "Unable to allocate netif interface!\n" RESET_ATTRIBUTES);
+                  fprintf(fnetinf, "\x1"FONT_COLOR_RED "Unable to allocate netif interface!"RESET_ATTRIBUTES"\n");
             }
             goto lwipd_end;
       }
 
       /* check if Ethernet interface exist */
-      ethf = fopen(ETH_FILE, "rw");
+      ethf = fopen(ETH_FILE, "r");
 
       if (ethf == NULL) {
             if ((fnetinf = fopen(STATUS_FILE, "w")) != NULL) {
-                  fprintf(fnetinf, FONT_COLOR_RED "Ethernet interface does not exist!\n" RESET_ATTRIBUTES);
+                  fprintf(fnetinf, "\x1"FONT_COLOR_RED "Ethernet interface does not exist!"RESET_ATTRIBUTES"\n");
             }
             goto lwipd_end;
       }
@@ -381,7 +381,7 @@ stdRet_t appmain(ch_t *argv)
        */
       if (netif_add(netif, &ipaddr, &netmask, &gateway, NULL, &ethernetif_init, &ethernet_input) == NULL) {
             if ((fnetinf = fopen(STATUS_FILE, "w")) != NULL) {
-                  fprintf(fnetinf, FONT_COLOR_RED "Cannot register network interface!\n" RESET_ATTRIBUTES);
+                  fprintf(fnetinf, "\x1"FONT_COLOR_RED "Cannot register network interface!"RESET_ATTRIBUTES"\n");
             }
             goto lwipd_end;
       }
@@ -398,7 +398,7 @@ stdRet_t appmain(ch_t *argv)
        */
       if (ERR_MEM == dhcp_start(netif)) {
             if ((fnetinf = fopen(STATUS_FILE, "w")) != NULL) {
-                  fprintf(fnetinf, FONT_COLOR_RED "DHCP start failed: out of memory!\n" RESET_ATTRIBUTES);
+                  fprintf(fnetinf, "\x1"FONT_COLOR_RED "DHCP start failed: out of memory!"RESET_ATTRIBUTES"\n");
             }
             goto lwipd_end;
       }
@@ -406,6 +406,7 @@ stdRet_t appmain(ch_t *argv)
 
       while (TRUE) {
             if (netifConfigured == FALSE) {
+                  const ch_t *dhcp_msg;
 #if LWIP_DHCP
                   /* waiting for DHCP connection */
                   u8_t times = DHCP_CLIENT_WAIT_TIME / BASE_TIME;
@@ -413,13 +414,9 @@ stdRet_t appmain(ch_t *argv)
                   if (netif->dhcp->state != DHCP_BOUND && times > 0) {
                         times--;
                   } else {
-                        if (fnetinf == NULL) {
-                              fnetinf = fopen(STATUS_FILE, "w");
-                        }
-
                         /* checking that DHCP connect */
                         if (times > 0) {
-                              fprintf(fnetinf, FONT_COLOR_GREEN "DHCP Client connected to server." RESET_ATTRIBUTES "\n");
+                              dhcp_msg = FONT_COLOR_GREEN "DHCP Client connected to server." RESET_ATTRIBUTES;
 
                               ip_addr_set(&ipaddr,  &netif->ip_addr);
                               ip_addr_set(&netmask, &netif->netmask);
@@ -428,9 +425,8 @@ stdRet_t appmain(ch_t *argv)
                               dhcp_release(netif);
                               dhcp_stop(netif);
 
-                              fprintf(fnetinf, FONT_COLOR_RED "DHCP Client not connected to server!" RESET_ATTRIBUTES "\n");
-
-                              fprintf(fnetinf, "Setting static IP...\n");
+                              dhcp_msg = FONT_COLOR_RED "DHCP Client not connected to server!" RESET_ATTRIBUTES
+                                         "Setting static IP...\n";
 
                               IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
                               IP4_ADDR(&netmask, 255, 255, 255, 0  );
@@ -438,12 +434,8 @@ stdRet_t appmain(ch_t *argv)
 
                               netif_set_addr(netif, &ipaddr, &netmask, &gateway);
                         }
-#endif
-
-#if !LWIP_DHCP
-                        if (fnetinf == NULL) {
-                              fnetinf = fopen(STATUS_FILE, "w");
-                        }
+#else
+                        dhcp_msg = "Setting static IP...\n";
 #endif
 
                         /* when the netif is fully configured this function must be called.*/
@@ -451,11 +443,15 @@ stdRet_t appmain(ch_t *argv)
                         netifConfigured = TRUE;
 
                         /* print daemon information to file */
-                        fprintf(fnetinf, "Hostname  : %s\n"
-                                         "MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n"
-                                         "IP Address: %d.%d.%d.%d\n"
-                                         "Net Mask  : %d.%d.%d.%d\n"
-                                         "Gateway   : %d.%d.%d.%d\n",
+                        fnetinf = fopen(STATUS_FILE, "w");
+
+                        fprintf(fnetinf, "%s\n"
+                                         "  Hostname  : %s\n"
+                                         "  MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n"
+                                         "  IP Address: %d.%d.%d.%d\n"
+                                         "  Net Mask  : %d.%d.%d.%d\n"
+                                         "  Gateway   : %d.%d.%d.%d\n",
+                                dhcp_msg,
                                 SystemGetHostname(),
                                 MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5,
                                 ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
@@ -466,26 +462,7 @@ stdRet_t appmain(ch_t *argv)
                                 ip4_addr3(&gateway), ip4_addr4(&gateway)
                         );
 
-
-//                        fprintf(fnetinf, "Hostname  : %s\n", SystemGetHostname());
-//
-//                        fprintf(fnetinf, "MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n",
-//                                MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5);
-//
-//                        fprintf(fnetinf, "IP Address: %d.%d.%d.%d\n",
-//                                ip4_addr1(&ipaddr), ip4_addr2(&ipaddr),
-//                                ip4_addr3(&ipaddr), ip4_addr4(&ipaddr));
-//
-//                        fprintf(fnetinf, "Net Mask   : %d.%d.%d.%d\n",
-//                                ip4_addr1(&netmask), ip4_addr2(&netmask),
-//                                ip4_addr3(&netmask), ip4_addr4(&netmask));
-//
-//                        fprintf(fnetinf, "Gateway   : %d.%d.%d.%d\n",
-//                                ip4_addr1(&gateway), ip4_addr2(&gateway),
-//                                ip4_addr3(&gateway), ip4_addr4(&gateway));
-
                         fclose(fnetinf);
-                        fnetinf = NULL;
 
                         status = STD_RET_OK;
 #if LWIP_DHCP

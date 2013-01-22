@@ -1061,10 +1061,11 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
                                           free(node->data);
                                     }
 
+                                    memcpy(newdata + seek, src, wrsize);
+
                                     node->data  = newdata;
                                     node->size += wrsize - (filelen - seek);
 
-                                    memcpy(newdata + seek, src, wrsize);
                                     n = nitems;
                               }
                         } else {

@@ -132,15 +132,21 @@ void Initd(void *arg)
 
 #if !defined(ARCH_posix)
       if (StartDaemon("lwipd", NULL) == STD_RET_OK) {
-            FILE_t *netif;
+            FILE_t *netinf;
             uint_t  i = 0;
+            uint_t  t = 20;
 
             kprint("Configuring network.");
 
-            while ((netif = fopen("/etc/netif", "r")) == NULL) {
+            while ((netinf = fopen("/etc/netinf", "r")) == NULL) {
                   if (++i >= 3) {
                         i = 0;
                         kprint(".");
+                  }
+
+                  if (--t == 0) {
+                        kprint("timeout!");
+                        break;
                   }
 
                   Sleep(250);
@@ -148,19 +154,30 @@ void Initd(void *arg)
 
             kprint("\n");
 
-            fseek(netif, 0, SEEK_END);
-            uint_t size = ftell(netif) + 1;
+            if (t != 0) {
+                  fseek(netinf, 0, SEEK_END);
+                  uint_t size = ftell(netinf) + 1;
+                  fseek(netinf, 0, SEEK_SET);
 
-            ch_t *bfr = calloc(size, sizeof(ch_t));
+                  ch_t *bfr = calloc(size, sizeof(ch_t));
 
-            if (bfr) {
-                  fread(bfr, sizeof(ch_t), size, netif);
-                  kprint("%s", bfr);
-                  fclose(netif);
-                  free(bfr);
+                  if (bfr) {
+                        fread(bfr, sizeof(ch_t), size, netinf);
+                        fclose(netinf);
 
-                  StartDaemon("measd", NULL);
-                  StartDaemon("httpd", NULL);
+                        if (bfr[0] == STD_RET_ERROR) {
+                              kprint("%s", bfr + 1);
+                        } else {
+                              kprint("%s", bfr);
+                        }
+
+                        if (bfr[0] != STD_RET_ERROR) {
+                              StartDaemon("measd", NULL);
+                              StartDaemon("httpd", NULL);
+                        }
+
+                        free(bfr);
+                  }
             }
       }
 #endif
