@@ -149,7 +149,7 @@ void Initd(void *arg)
                         break;
                   }
 
-                  Sleep(250);
+                  milisleep(250);
             }
 
             kprint("\n");
@@ -206,7 +206,7 @@ void Initd(void *arg)
 #else
       while ((ttyx[0] = fopen("/dev/ttyS0", "r+")) == NULL) {
 #endif
-            Sleep(200);
+            milisleep(200);
       }
 
       for (;;) {

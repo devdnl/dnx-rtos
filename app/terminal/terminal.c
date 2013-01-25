@@ -140,7 +140,7 @@ cmdStatus_t cmdREBOOT(ch_t *arg)
       (void)arg;
 
       printf("Rebooting...\n");
-      Sleep(500);
+      milisleep(500);
 
       SystemReboot();
 
@@ -586,7 +586,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
                         break;
                   }
 
-                  Sleep(1000);
+                  sleep(1);
             }
 
             KillApp(appHdl);

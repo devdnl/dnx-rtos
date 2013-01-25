@@ -532,7 +532,7 @@ stdRet_t appmain(ch_t *argv)
             }
 #endif
 
-            Sleep(BASE_TIME);
+            milisleep(BASE_TIME);
       }
 
 

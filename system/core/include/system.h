@@ -78,7 +78,8 @@ extern "C" {
 #define fstat(file, statPtr)              moni_fstat(file, stat)
 
 /** APPLICATION LEVEL DEFINITIONS */
-#define Sleep(delay)                      TaskDelay(delay)
+#define milisleep(msdelay)                TaskDelay(msdelay)
+#define sleep(seconds)                    TaskDelay((seconds) * 1000)
 #define SleepUntil(lastTime, sleepTime)   TaskDelayUntil(lastTime, sleepTime)
 #define SystemGetStackFreeSpace()         TaskGetStackFreeSpace(THIS_TASK)
 #define SystemEnterCritical()             TaskEnterCritical()
