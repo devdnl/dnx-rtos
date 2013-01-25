@@ -73,7 +73,7 @@ APP_SEC_BEGIN
 #define ETH_MAX_PACKET_SIZE         1520
 
 /* number of Rx buffers */
-#define ETH_RXBUFNB                 2
+#define ETH_RXBUFNB                 3
 
 /* number of Tx buffers */
 #define ETH_TXBUFNB                 2

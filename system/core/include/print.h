@@ -94,6 +94,9 @@ extern "C" {
 #define ASCII_ESC                               0x1B
 #define ASCII_CANCEL                            0x18
 
+/** stream values */
+#define EOF                                     (-1)
+
 
 /*==================================================================================================
                                   Exported types, enums definitions

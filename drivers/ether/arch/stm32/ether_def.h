@@ -72,7 +72,7 @@ enum ETHER_IORQ {
 };
 
 
-/* ethernet frame data */
+/* Ethernet frame data */
 struct ether_frame {
       u32_t length;
       u32_t buffer;
