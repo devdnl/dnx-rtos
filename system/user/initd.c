@@ -131,7 +131,7 @@ void Initd(void *arg)
 
 
 #if !defined(ARCH_posix)
-      if (StartDaemon("lwipd", NULL) == STD_RET_OK) {
+      if (StartDaemon("lwipd", "--dhcp") == STD_RET_OK) {
             FILE_t *netinf;
             uint_t  i = 0;
             uint_t  t = 20;

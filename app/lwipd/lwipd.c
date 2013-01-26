@@ -90,19 +90,42 @@ struct ethernetif {
 /*==================================================================================================
                                       Local object definitions
 ==================================================================================================*/
+/** TCP Timer */
 u32_t TCPTimer = 0;
+
+/** ARP timer */
 u32_t ARPTimer = 0;
 
 #if LWIP_DHCP
+/** DHCP timers */
 u32_t DHCPfineTimer   = 0;
 u32_t DHCPcoarseTimer = 0;
 #endif
 
-bool_t netifConfigured = FALSE;
-FILE_t *ethf           = NULL;
+/** network interface status */
+bool_t netif_ready = FALSE;
 
+/** Ethernet device file */
+FILE_t *ethf = NULL;
+
+/** Rx buffer */
 u8_t *Rx_Buff = NULL;
+
+/** Tx buffer */
 u8_t *Tx_Buff = NULL;
+
+/** IP addresses */
+struct ip_addr ipaddr;
+struct ip_addr netmask;
+struct ip_addr gateway;
+
+/** DHCP connection timeout */
+#if LWIP_DHCP
+u8_t dhcp_timeout_counter = DHCP_CLIENT_WAIT_TIME / BASE_TIME;
+#endif
+
+/** daemon status file */
+FILE_t *fnetinf = NULL;
 
 
 /*==================================================================================================
@@ -332,20 +355,192 @@ err_t ethernetif_init(struct netif *netif)
 
 //================================================================================================//
 /**
+ * @brief Function write status to file
+ */
+//================================================================================================//
+void print_daemon_status(const ch_t *statusStr)
+{
+      u8_t retry = 5;
+
+      /* print daemon information to file */
+      while ((fnetinf = fopen(STATUS_FILE, "w")) == NULL && retry > 0) {
+            retry--;
+            milisleep(250);
+      }
+
+      if (fnetinf) {
+            fprintf(fnetinf, "%s\n"
+                             "  Hostname  : %s\n"
+                             "  MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n"
+                             "  IP Address: %d.%d.%d.%d\n"
+                             "  Net Mask  : %d.%d.%d.%d\n"
+                             "  Gateway   : %d.%d.%d.%d\n",
+                    statusStr,
+                    SystemGetHostname(),
+                    MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5,
+                    ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
+                    ip4_addr3(&ipaddr),  ip4_addr4(&ipaddr),
+                    ip4_addr1(&netmask), ip4_addr2(&netmask),
+                    ip4_addr3(&netmask), ip4_addr4(&netmask),
+                    ip4_addr1(&gateway), ip4_addr2(&gateway),
+                    ip4_addr3(&gateway), ip4_addr4(&gateway)
+            );
+
+            fclose(fnetinf);
+      } else {
+            kprint("lwip: unable to open "STATUS_FILE"!\n");
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function wait to DHCP connection
+ */
+//================================================================================================//
+void dhcp_conn_wait(bool_t dhcp_en, struct netif *netif)
+{
+      const ch_t *msg;
+
+      if (netif_ready == FALSE) {
+            if (dhcp_en == TRUE) {
+#if LWIP_DHCP
+                  if (netif->dhcp->state != DHCP_BOUND && dhcp_timeout_counter > 0) {
+                        dhcp_timeout_counter--;
+                        return;
+                  }
+
+                  if (dhcp_timeout_counter != 0) {
+                        ip_addr_set(&ipaddr,  &netif->ip_addr);
+                        ip_addr_set(&netmask, &netif->netmask);
+                        ip_addr_set(&gateway, &netif->gw);
+
+                        msg = FONT_COLOR_GREEN "DHCP Client connected to server." RESET_ATTRIBUTES;
+                  } else {
+                        dhcp_release(netif);
+                        dhcp_stop(netif);
+
+                        IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
+                        IP4_ADDR(&netmask, 255, 255, 255, 0  );
+                        IP4_ADDR(&gateway, 192, 168, 0  , 1  );
+
+                        netif_set_addr(netif, &ipaddr, &netmask, &gateway);
+
+                        msg = FONT_COLOR_RED "DHCP Client not connected to server!" RESET_ATTRIBUTES "\n"
+                              " Setting static IP...";
+                  }
+#else
+                  msg = "Setting static IP...";
+#endif
+
+            } else {
+                  msg = "Setting static IP...";
+            }
+
+            netif_set_up(netif);
+            netif_ready = TRUE;
+
+            print_daemon_status(msg);
+      }
+
+      return;
+}
+
+
+//================================================================================================//
+/**
+ * @brief Function receive data from MAC
+ */
+//================================================================================================//
+void receive_packet(struct netif *netif)
+{
+      bool_t rxflag = FALSE;
+
+      if (ioctl(ethf, ETHER_IORQ_GET_RX_FLAG, &rxflag) == STD_RET_OK) {
+            if (rxflag == TRUE) {
+                  u32_t rxPktSize;
+
+                  do {
+                        rxPktSize = 0;
+                        ioctl(ethf, ETHER_IORQ_GET_RX_PACKET_SIZE, &rxPktSize);
+
+                        if (rxPktSize != 0) {
+                              /*
+                               * read a received packet from the Ethernet buffers and send it to the
+                               * lwIP for handling
+                               */
+
+                              /* move received packet into a new pbuf */
+                              struct pbuf *p = low_level_input(netif);
+
+                              if (p) {
+                                    if (netif->input(p, netif) != ERR_OK) {
+                                          pbuf_free(p);
+                                    }
+                              }
+                        }
+
+                  } while (rxPktSize != 0);
+
+                  ioctl(ethf, ETHER_IORQ_CLEAR_RX_FLAG, NULL);
+            }
+      }
+}
+
+
+//================================================================================================//
+/**
+ * @brief Functions propel timers
+ */
+//================================================================================================//
+void propel_timers(u32_t localtime)
+{
+      /* TCP periodic process every 250 ms */
+      if (localtime - TCPTimer >= TCP_TMR_INTERVAL) {
+            TCPTimer = localtime;
+            tcp_tmr();
+      }
+
+      /* ARP periodic process every 5s */
+      if (localtime - ARPTimer >= ARP_TMR_INTERVAL) {
+            ARPTimer = localtime;
+            etharp_tmr();
+      }
+
+#if LWIP_DHCP
+      /* fine DHCP periodic process every 500ms */
+      if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS) {
+            DHCPfineTimer = localtime;
+            dhcp_fine_tmr();
+      }
+
+      /* DHCP Coarse periodic process every 60s */
+      if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS) {
+            DHCPcoarseTimer = localtime;
+            dhcp_coarse_tmr();
+      }
+#endif
+}
+
+
+//================================================================================================//
+/**
  * @brief clear main function
  */
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void)argv;
+      stdRet_t      status = STD_RET_ERROR;
+      struct netif *netif  = malloc(sizeof(struct netif));
+      bool_t        dhcp   = FALSE;
 
-      stdRet_t        status  = STD_RET_ERROR;
-      struct netif   *netif   = malloc(sizeof(struct netif));
-      FILE_t         *fnetinf = NULL;
-      struct ip_addr  ipaddr;
-      struct ip_addr  netmask;
-      struct ip_addr  gateway;
+      if (ParseArg(argv, "dhcp", PARSE_AS_EXIST, NULL) == STD_RET_OK) {
+#if LWIP_DHCP
+            dhcp = TRUE;
+#endif
+      }
 
+      /* check if net interface was allocated */
       if (netif == NULL) {
             if ((fnetinf = fopen(STATUS_FILE, "w")) != NULL) {
                   fprintf(fnetinf, "\x1"FONT_COLOR_RED "Unable to allocate netif interface!"RESET_ATTRIBUTES"\n");
@@ -363,17 +558,21 @@ stdRet_t appmain(ch_t *argv)
             goto lwipd_end;
       }
 
+      /* initialize lwIP stack */
       lwip_init();
 
-      #if LWIP_DHCP
-      ipaddr.addr  = 0;
-      netmask.addr = 0;
-      gateway.addr      = 0;
-      #else
-      IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
-      IP4_ADDR(&netmask, 255, 255, 255, 0  );
-      IP4_ADDR(&gateway, 192, 168, 0  , 1  );
-      #endif
+      /* DHCP or static initialization */
+      if (dhcp == TRUE) {
+#if LWIP_DHCP
+            ipaddr.addr  = 0;
+            netmask.addr = 0;
+            gateway.addr = 0;
+#endif
+      } else {
+            IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
+            IP4_ADDR(&netmask, 255, 255, 255, 0  );
+            IP4_ADDR(&gateway, 192, 168, 0  , 1  );
+      }
 
       /*
        * the init function pointer must point to a initialization function for your ethernet netif
@@ -390,147 +589,28 @@ stdRet_t appmain(ch_t *argv)
       netif_set_default(netif);
 
 #if LWIP_DHCP
-      /*
-       * creates a new DHCP client for this interface on the first call.
-       * Note: you must call dhcp_fine_tmr() and dhcp_coarse_tmr() at the predefined regular
-       * intervals after starting the client. You can peek in the netif->dhcp struct for the actual
-       * DHCP status.
-       */
-      if (ERR_MEM == dhcp_start(netif)) {
-            if ((fnetinf = fopen(STATUS_FILE, "w")) != NULL) {
-                  fprintf(fnetinf, "\x1"FONT_COLOR_RED "DHCP start failed: out of memory!"RESET_ATTRIBUTES"\n");
+      if (dhcp == TRUE) {
+            /*
+             * creates a new DHCP client for this interface on the first call.
+             * Note: you must call dhcp_fine_tmr() and dhcp_coarse_tmr() at the predefined regular
+             * intervals after starting the client. You can peek in the netif->dhcp struct for the actual
+             * DHCP status.
+             */
+            if (ERR_MEM == dhcp_start(netif)) {
+                  if ((fnetinf = fopen(STATUS_FILE, "w")) != NULL) {
+                        fprintf(fnetinf, "\x1"FONT_COLOR_RED "DHCP start failed: out of memory!"RESET_ATTRIBUTES"\n");
+                  }
+                  goto lwipd_end;
             }
-            goto lwipd_end;
       }
 #endif
 
       while (TRUE) {
-            if (netifConfigured == FALSE) {
-                  const ch_t *dhcp_msg;
-#if LWIP_DHCP
-                  /* waiting for DHCP connection */
-                  u8_t times = DHCP_CLIENT_WAIT_TIME / BASE_TIME;
-
-                  if (netif->dhcp->state != DHCP_BOUND && times > 0) {
-                        times--;
-                  } else {
-                        /* checking that DHCP connect */
-                        if (times > 0) {
-                              dhcp_msg = FONT_COLOR_GREEN "DHCP Client connected to server." RESET_ATTRIBUTES;
-
-                              ip_addr_set(&ipaddr,  &netif->ip_addr);
-                              ip_addr_set(&netmask, &netif->netmask);
-                              ip_addr_set(&gateway, &netif->gw);
-                        } else {
-                              dhcp_release(netif);
-                              dhcp_stop(netif);
-
-                              dhcp_msg = FONT_COLOR_RED "DHCP Client not connected to server!" RESET_ATTRIBUTES
-                                         "Setting static IP...\n";
-
-                              IP4_ADDR(&ipaddr , 192, 168, 0  , 20 );
-                              IP4_ADDR(&netmask, 255, 255, 255, 0  );
-                              IP4_ADDR(&gateway, 192, 168, 0  , 1  );
-
-                              netif_set_addr(netif, &ipaddr, &netmask, &gateway);
-                        }
-#else
-                        dhcp_msg = "Setting static IP...\n";
-#endif
-
-                        /* when the netif is fully configured this function must be called.*/
-                        netif_set_up(netif);
-                        netifConfigured = TRUE;
-
-                        /* print daemon information to file */
-                        fnetinf = fopen(STATUS_FILE, "w");
-
-                        fprintf(fnetinf, "%s\n"
-                                         "  Hostname  : %s\n"
-                                         "  MAC       : %x2:%x2:%x2:%x2:%x2:%x2\n"
-                                         "  IP Address: %d.%d.%d.%d\n"
-                                         "  Net Mask  : %d.%d.%d.%d\n"
-                                         "  Gateway   : %d.%d.%d.%d\n",
-                                dhcp_msg,
-                                SystemGetHostname(),
-                                MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5,
-                                ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
-                                ip4_addr3(&ipaddr),  ip4_addr4(&ipaddr),
-                                ip4_addr1(&netmask), ip4_addr2(&netmask),
-                                ip4_addr3(&netmask), ip4_addr4(&netmask),
-                                ip4_addr1(&gateway), ip4_addr2(&gateway),
-                                ip4_addr3(&gateway), ip4_addr4(&gateway)
-                        );
-
-                        fclose(fnetinf);
-
-                        status = STD_RET_OK;
-#if LWIP_DHCP
-                  }
-#endif
-            }
-
-
-            /* receive packet from MAC */
-            bool_t rxflag = FALSE;
-
-            if (ioctl(ethf, ETHER_IORQ_GET_RX_FLAG, &rxflag) == STD_RET_OK) {
-                  if (rxflag == TRUE) {
-                        u32_t rxPktSize;
-
-                        do {
-                              rxPktSize = 0;
-                              ioctl(ethf, ETHER_IORQ_GET_RX_PACKET_SIZE, &rxPktSize);
-
-                              if (rxPktSize != 0) {
-                                    /*
-                                     * read a received packet from the Ethernet buffers and send it to the
-                                     * lwIP for handling
-                                     */
-
-                                    /* move received packet into a new pbuf */
-                                    struct pbuf *p = low_level_input(netif);
-
-                                    if (p) {
-                                          if (netif->input(p, netif) != ERR_OK) {
-                                                pbuf_free(p);
-                                          }
-                                    }
-                              }
-
-                        } while (rxPktSize != 0);
-
-                        ioctl(ethf, ETHER_IORQ_CLEAR_RX_FLAG, NULL);
-                  }
-            }
-
             u32_t localtime = SystemGetOSTickCnt();
 
-            /* TCP periodic process every 250 ms */
-            if (localtime - TCPTimer >= TCP_TMR_INTERVAL) {
-                  TCPTimer = localtime;
-                  tcp_tmr();
-            }
-
-            /* ARP periodic process every 5s */
-            if (localtime - ARPTimer >= ARP_TMR_INTERVAL) {
-                  ARPTimer = localtime;
-                  etharp_tmr();
-            }
-
-#if LWIP_DHCP
-            /* fine DHCP periodic process every 500ms */
-            if (localtime - DHCPfineTimer >= DHCP_FINE_TIMER_MSECS) {
-                  DHCPfineTimer = localtime;
-                  dhcp_fine_tmr();
-            }
-
-            /* DHCP Coarse periodic process every 60s */
-            if (localtime - DHCPcoarseTimer >= DHCP_COARSE_TIMER_MSECS) {
-                  DHCPcoarseTimer = localtime;
-                  dhcp_coarse_tmr();
-            }
-#endif
+            dhcp_conn_wait(dhcp, netif);
+            receive_packet(netif);
+            propel_timers(localtime);
 
             milisleep(BASE_TIME);
       }
