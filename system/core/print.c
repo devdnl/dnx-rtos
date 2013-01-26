@@ -379,14 +379,14 @@ int_t pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...)
 /**
  * @brief Function send on a standard output string
  *
- * @param *file               virtual terminal file
+ * @param *file               file
  * @param *format             formated text
  * @param ...                 format arguments
  *
  * @retval number of written characters
  */
 //================================================================================================//
-int_t pr_printf(FILE_t *file, const ch_t *format, ...)
+int_t pr_fprintf(FILE_t *file, const ch_t *format, ...)
 {
       va_list args;
       int_t   n = 0;
@@ -456,48 +456,9 @@ int_t pr_kprint(const ch_t *format, ...)
 
 //================================================================================================//
 /**
- * @brief Function send kernel message with success on terminal
+ * @brief Function put character into file
  *
- * @retval number of written characters
- */
-//================================================================================================//
-int_t pr_kprintOK(void)
-{
-      return pr_kprint("\r\x1B[72C[\x1B[32m  OK  \x1B[0m]\n");
-}
-
-
-//================================================================================================//
-/**
- * @brief Function send kernel message with failure on terminal
- *
- * @retval number of written characters
- */
-//================================================================================================//
-int_t pr_kprintFail(void)
-{
-      return pr_kprint("\r\x1B[72C[\x1B[31m FAIL \x1B[0m]\n");
-}
-
-
-//================================================================================================//
-/**
- * @brief Function send kernel message with error number on terminal
- *
- * @retval number of written characters
- */
-//================================================================================================//
-int_t pr_kprintErrorNo(i8_t errorNo)
-{
-      return pr_kprint("\r\x1B[72C[\x1B[31m Er%d \x1B[0m]\n", errorNo);
-}
-
-
-//================================================================================================//
-/**
- * @brief Function put character into virtual terminal
- *
- * @param stdout              file to virtual terminal
+ * @param stdout              file
  * @param c                   character
  */
 //================================================================================================//
@@ -745,7 +706,7 @@ int_t pr_scanf(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    pr_printf(stdout, "%c\x1B[K", chr);
+                                    pr_fprintf(stdout, "%c\x1B[K", chr);
 
                                     if (streamLen == 2 && sign == -1)
                                           sign = 1;
@@ -797,12 +758,12 @@ int_t pr_scanf(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    pr_printf(stdout, "\r\n", chr);
+                                    pr_fprintf(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    pr_printf(stdout, "%c\x1B[K", chr);
+                                    pr_fprintf(stdout, "%c\x1B[K", chr);
                                     *hex >>= 4;
                                     streamLen--;
                                     continue;
@@ -849,12 +810,12 @@ int_t pr_scanf(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               }
                               else if (chr == ASCII_CR || chr == ASCII_LF)
                               {
-                                    pr_printf(stdout, "\r\n", chr);
+                                    pr_fprintf(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1))
                               {
-                                    pr_printf(stdout, "%c\x1B[K", chr);
+                                    pr_fprintf(stdout, "%c\x1B[K", chr);
                                     *bin >>= 1;
                                     streamLen--;
                                     continue;
@@ -891,12 +852,12 @@ int_t pr_scanf(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
                               if (chr == ASCII_CR || chr == ASCII_LF)
                               {
                                     *(string++) = 0x00;
-                                    pr_printf(stdout, "\r\n", chr);
+                                    pr_fprintf(stdout, "\r\n", chr);
                                     goto tscan_end;
                               }
                               else if ((chr == ASCII_BS) && (streamLen > 1) && strLen)
                               {
-                                    pr_printf(stdout, "%c\x1B[K", chr);
+                                    pr_fprintf(stdout, "%c\x1B[K", chr);
                                     *(--string) = 0x00;
                                     streamLen--;
                                     strLen--;

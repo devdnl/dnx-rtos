@@ -46,16 +46,10 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-#define ETH_PART_NONE         0
-
-
-/** port names */
-enum ETH_DEV_NUMBER_enum
-{
-      ETH_DEV_1,
-      ETH_DEV_LAST
+enum ETHER_STD_RET {
+      ETHER_STD_RET_BAD_REQUEST = -1,
+      ETHER_STD_RET_NULL_DATA   = -2,
 };
-
 
 /*==================================================================================================
                                      Exported function prototypes

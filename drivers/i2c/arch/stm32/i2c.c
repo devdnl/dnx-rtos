@@ -402,16 +402,16 @@ size_t I2C_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, s
                         TaskDelay(1);
                   }
 
-                  StopCondition(i2cPtr);
-
                   n = nitems;
+
+                  I2C_Write_end:
+                  StopCondition(i2cPtr);
 
                   GiveRecMutex(I2CP(dev)->mtx);
             }
       }
 
-      I2C_Write_end:
-            return n;
+      return n;
 }
 
 
@@ -440,7 +440,7 @@ size_t I2C_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
             /* check that port is reserved for this task */
             if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  I2C_t *i2cPtr     = I2CP(dev)->Address;
+                  I2C_t    *i2cPtr  = I2CP(dev)->Address;
                   stdRet_t *i2cstat = &I2CP(dev)->status;
 
                   /* check arguments */
@@ -461,7 +461,9 @@ size_t I2C_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
                   u8_t regAddr = seek;
 
                   if ((*i2cstat = SendData(i2cPtr, &regAddr, 1)) != STD_RET_OK)
+                  {
                         goto I2C_Read_end;
+                  }
 
                   /* waiting for data sending was finished */
                   while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
@@ -484,19 +486,21 @@ size_t I2C_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
 
                   /* receive bytes */
                   if ((*i2cstat = ReadData(i2cPtr, dst, nitems * size)) != STD_RET_OK)
+                  {
                         goto I2C_Read_end;
-
-                  /* stop condition */
-                  StopCondition(i2cPtr);
+                  }
 
                   n = nitems;
+
+                  I2C_Read_end:
+                  /* stop condition */
+                  StopCondition(i2cPtr);
 
                   GiveRecMutex(I2CP(dev)->mtx);
             }
       }
 
-      I2C_Read_end:
-            return n;
+      return n;
 }
 
 

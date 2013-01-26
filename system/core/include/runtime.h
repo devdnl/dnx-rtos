@@ -41,7 +41,13 @@ extern "C" {
                                  Exported symbolic constants/macros
 ==================================================================================================*/
 /** application section */
-#define APPLICATION(name)                 void name(void *appArgument)
+#define APPLICATION(name, stackMultiple)  const uint_t name##_stack_size = stackMultiple * MINIMAL_STACK_SIZE; \
+                                          void name(void *appArgument)
+
+#define EXTERN_APPLICATION(name)          extern const uint_t name##_stack_size; \
+                                          extern void name(void *appArgument)
+
+
 
 #define APP_SEC_BEGIN                     {FILE_t *stdin  = ((app_t*)appArgument)->stdin;  \
                                            FILE_t *stdout = ((app_t*)appArgument)->stdout; \

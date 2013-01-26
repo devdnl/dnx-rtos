@@ -1,11 +1,11 @@
-#ifndef ETHER_DEF_H_
-#define ETHER_DEF_H_
+#ifndef MPL115A2_CFG_H_
+#define MPL115A2_CFG_H_
 /*=============================================================================================*//**
-@file    ether_def.h
+@file    mpl115a2_cfg.h
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This file support temperature and pressure sensor - MPL115A2
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -38,6 +38,12 @@ extern "C" {
 /*==================================================================================================
                                  Exported symbolic constants/macros
 ==================================================================================================*/
+#define MPL115A2_DEV_NONE                 0
+#define MPL115A2_PART_NONE                0
+
+
+/** sensor safe SCL frequency [Hz] */
+#define MPL115A2_SCL_FREQUENCY            100000
 
 
 /*==================================================================================================
@@ -59,7 +65,7 @@ extern "C" {
 }
 #endif
 
-#endif /* ETHER_CFG_H_ */
+#endif /* MPL115A2_CFG_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

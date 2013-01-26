@@ -1,7 +1,7 @@
-#ifndef DATE_H_
-#define DATE_H_
+#ifndef ETHER_DEF_H_
+#define ETHER_DEF_H_
 /*=============================================================================================*//**
-@file    date.h
+@file    ether_def.h
 
 @author  Daniel Zorychta
 
@@ -33,7 +33,7 @@ extern "C" {
 /*==================================================================================================
                                             Include files
 ==================================================================================================*/
-#include "system.h"
+#include "basic_types.h"
 
 
 /*==================================================================================================
@@ -44,6 +44,39 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
+struct DMADesc {
+      u8_t *buffer;
+      u8_t  buffer_count;
+};
+
+
+/*==================================================================================================
+                                  Exported types, enums definitions
+==================================================================================================*/
+enum ETHER_IORQ {
+      ETHER_IORQ_GET_RX_FLAG,                         /* [out] bool_t */
+      ETHER_IORQ_CLEAR_RX_FLAG,                       /* -- */
+      ETHER_IORQ_SET_MAC_ADR,                         /* [in]  ch_t[] */
+      ETHER_IORQ_GET_RX_PACKET_SIZE,                  /* [out] u32_t  */
+      ETHER_IORQ_GET_RX_PACKET_CHAIN_MODE,            /* [out] struct ether_frame */
+      ETHER_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS,    /* [out] boot_t */
+      ETHER_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS,  /* --- */
+      ETHER_IORQ_RESUME_DMA_RECEPTION,                /* --- */
+      ETHER_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE,      /* [in]  u16_t */
+      ETHER_IORQ_GET_CURRENT_TX_BUFFER,               /* [out] u8_t* */
+      ETHER_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE,    /* [in]  struct DMADesc */
+      ETHER_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE,    /* [in]  struct DMADesc */
+      ETHER_IORQ_ENABLE_RX_IRQ,                       /* --- (require: ETHER_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE) */
+      ETHER_IORQ_ENABLE_TX_HARDWARE_CHECKSUM,         /* --- (require: ETHER_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE) */
+      ETHER_IORQ_ETHERNET_START,                      /* --- */
+};
+
+
+/* Ethernet frame data */
+struct ether_frame {
+      u32_t length;
+      u32_t buffer;
+};
 
 
 /*==================================================================================================
@@ -54,14 +87,13 @@ extern "C" {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-EXTERN_APPLICATION(date);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* ETHER_CFG_H_ */
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

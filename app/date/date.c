@@ -37,7 +37,7 @@ extern "C" {
 #include "ds1307_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(date)
+APPLICATION(date, 4)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -78,7 +78,7 @@ stdRet_t appmain(ch_t *argv)
 
       if ( (ParseArg(argv, "help", PARSE_AS_EXIST, NULL) == STD_RET_OK)
          ||(ParseArg(argv, "h",    PARSE_AS_EXIST, NULL) == STD_RET_OK) ) {
-            printf("Syntax: %s [OPTION]...\n", DATE_NAME);
+            printf("Syntax: date [OPTION]...\n");
             printf("Print actual time and date.\n");
             printf("  -S,  --set    set RTC time and date\n");
             printf("  -H,           hours\n");

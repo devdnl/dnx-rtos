@@ -32,7 +32,7 @@
 #include "mpl115a2_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(measd)
+APPLICATION(measd, 10 + 4)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -117,7 +117,7 @@ stdRet_t appmain(ch_t *argv)
 
       /* check if application is started as daemon */
       if (stdout != NULL) {
-            printf("%s can be started only as daemon!\n", MEASD_NAME);
+            printf("measd can be started only as daemon!\n");
             goto measd_exit;
       }
 

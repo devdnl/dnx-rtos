@@ -97,8 +97,9 @@ void Initd(void *arg)
       mount("procfs", NULL, "/proc");
 
       /* early initialization - basic drivers start */
-      if (InitDrv("pll", "/dev/pll") != STD_RET_OK)
+      if (InitDrv("pll", "/dev/pll") != STD_RET_OK) {
             while (TRUE);
+      }
 
       InitDrv("gpio", "/dev/gpio");
 
@@ -112,8 +113,8 @@ void Initd(void *arg)
 #endif
 
       /* something about board and system */
-      kprint("\x1B[32m\x1B[1m");
-      kprint("%s/%s\x1B[0m by \x1B[36mDaniel Zorychta \x1B[33m<daniel.zorychta@gmail.com>\x1B[0m\n\n",
+      kprint(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by " FONT_COLOR_CYAN "Daniel Zorychta "
+             FONT_COLOR_YELLOW "<daniel.zorychta@gmail.com>" RESET_ATTRIBUTES "\n\n",
              SystemGetOSName(), SystemGetKernelName());
 
       /* driver initialization */
@@ -130,9 +131,54 @@ void Initd(void *arg)
 
 
 #if !defined(ARCH_posix)
-      if (LwIP_Init() == STD_RET_OK) {
-            StartDaemon("measd", NULL);
-            StartDaemon("httpd", NULL);
+      if (StartDaemon("lwipd", "--dhcp") == STD_RET_OK) {
+            FILE_t *netinf;
+            uint_t  i = 0;
+            uint_t  t = 20;
+
+            kprint("Configuring network.");
+
+            while ((netinf = fopen("/etc/netinf", "r")) == NULL) {
+                  if (++i >= 3) {
+                        i = 0;
+                        kprint(".");
+                  }
+
+                  if (--t == 0) {
+                        kprint("timeout!");
+                        break;
+                  }
+
+                  milisleep(250);
+            }
+
+            kprint("\n");
+
+            if (t != 0) {
+                  fseek(netinf, 0, SEEK_END);
+                  uint_t size = ftell(netinf) + 1;
+                  fseek(netinf, 0, SEEK_SET);
+
+                  ch_t *bfr = calloc(size, sizeof(ch_t));
+
+                  if (bfr) {
+                        fread(bfr, sizeof(ch_t), size, netinf);
+                        fclose(netinf);
+
+                        if (bfr[0] == STD_RET_ERROR) {
+                              kprint("%s", bfr + 1);
+                        } else {
+                              kprint("%s", bfr);
+                        }
+
+                        if (bfr[0] != STD_RET_ERROR) {
+                              StartDaemon("measd", NULL);
+                              StartDaemon("httpd", NULL);
+                        }
+
+                        free(bfr);
+                  }
+            }
       }
 #endif
 
@@ -156,25 +202,20 @@ void Initd(void *arg)
       FILE_t *ttyx[TTY_LAST]   = {NULL};
 
 #if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
-      while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL)
+      while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL) {
 #else
-      while ((ttyx[0] = fopen("/dev/ttyS0", "r+")) == NULL)
+      while ((ttyx[0] = fopen("/dev/ttyS0", "r+")) == NULL) {
 #endif
-      {
-            Sleep(200);
+            milisleep(200);
       }
 
-      for (;;)
-      {
+      for (;;) {
             /* load application if new TTY was created */
             ioctl(ttyx[0], TTY_IORQ_GETCURRENTTTY, &ctty);
 
-            if (ctty < TTY_LAST - 1)
-            {
-                  if (apphdl[ctty] == NULL)
-                  {
-                        if (ttyx[ctty] == NULL)
-                        {
+            if (ctty < TTY_LAST - 1) {
+                  if (apphdl[ctty] == NULL) {
+                        if (ttyx[ctty] == NULL) {
                               ch_t path[16];
                               snprintf(path, sizeof(path), "/dev/tty%c", '0' + ctty);
                               ttyx[ctty] = fopen(path, "r+");
@@ -185,13 +226,10 @@ void Initd(void *arg)
                         TaskSuspendAll();
                         apphdl[ctty] = Exec("term", NULL);
 
-                        if (apphdl[ctty] == NULL)
-                        {
+                        if (apphdl[ctty] == NULL) {
                               TaskResumeAll();
                               kprint("Not enough free memory to start application\n");
-                        }
-                        else
-                        {
+                        } else {
                               apphdl[ctty]->stdin  = ttyx[ctty];
                               apphdl[ctty]->stdout = ttyx[ctty];
 
@@ -202,12 +240,9 @@ void Initd(void *arg)
             }
 
             /* application monitoring */
-            for (u8_t i = 0; i < TTY_LAST - 1; i++)
-            {
-                  if (apphdl[i])
-                  {
-                        if (apphdl[i]->exitCode != STD_RET_UNKNOWN)
-                        {
+            for (u8_t i = 0; i < TTY_LAST - 1; i++) {
+                  if (apphdl[i]) {
+                        if (apphdl[i]->exitCode != STD_RET_UNKNOWN) {
                               kprint("Application closed on TTY%d\n", ctty);
 
                               KillApp(apphdl[i]);

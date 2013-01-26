@@ -43,11 +43,13 @@ extern "C" {
 #endif
 #include "measd.h"
 #include "cat.h"
+#include "lwipd.h"
 
 
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
+#define IMPORT_APPLICATION(name) {.appName = #name, .appPtr = name, .stackSize = &name##_stack_size}
 
 
 /*==================================================================================================
@@ -64,14 +66,15 @@ extern "C" {
                                       Local object definitions
 ==================================================================================================*/
 static const regAppData_t appList[] = {
-      {TERMINAL_NAME, terminal, TERMINAL_STACK_SIZE},
-      {DATE_NAME    , date    , DATE_STACK_SIZE    },
-      {TOP_NAME     , top     , TOP_STACK_SIZE     },
+      IMPORT_APPLICATION(term),
+      IMPORT_APPLICATION(date),
+      IMPORT_APPLICATION(top),
 #if !defined(ARCH_posix)
-      {HTTPD_NAME   , httpd   , HTTPD_STACK_SIZE   },
+      IMPORT_APPLICATION(httpd),
 #endif
-      {MEASD_NAME   , measd   , MEASD_STACK_SIZE   },
-      {CAT_NAME     , cat     , CAT_STACK_SIZE     },
+      IMPORT_APPLICATION(measd),
+      IMPORT_APPLICATION(cat),
+      IMPORT_APPLICATION(lwipd),
 };
 
 

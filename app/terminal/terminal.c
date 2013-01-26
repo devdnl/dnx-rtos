@@ -33,7 +33,7 @@
 #include "ds1307_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(terminal)
+APPLICATION(term, 5)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -140,7 +140,7 @@ cmdStatus_t cmdREBOOT(ch_t *arg)
       (void)arg;
 
       printf("Rebooting...\n");
-      Sleep(500);
+      milisleep(500);
 
       SystemReboot();
 
@@ -682,7 +682,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
                         break;
                   }
 
-                  Sleep(1000);
+                  sleep(1);
             }
 
             KillApp(appHdl);

@@ -32,7 +32,7 @@
 #include <string.h>
 
 /* Begin of application section declaration */
-APPLICATION(top)
+APPLICATION(top, 3)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -66,7 +66,7 @@ stdRet_t appmain(ch_t *argv)
       u8_t divcnt = 10;
 
       while (ugetchar() != 'q') {
-            Sleep(100);
+            milisleep(100);
 
             if (divcnt >= 10) {
                   u8_t n = SystemGetMoniTaskCount();

@@ -36,7 +36,7 @@ extern "C" {
 #include <string.h>
 
 /* Begin of application section declaration */
-APPLICATION(cat)
+APPLICATION(cat, 3)
 APP_SEC_BEGIN
 
 /*==================================================================================================
@@ -97,10 +97,15 @@ stdRet_t appmain(ch_t *argv)
                   while (filesize > 0) {
                         i32_t n = fread(data, sizeof(ch_t), col, file);
 
-                        if (n == 0)
+                        if (n == 0) {
                               break;
+                        }
 
-                        printf("%s\n", data);
+                        if (strchr(data, '\n') != NULL) {
+                              printf("%s", data);
+                        } else {
+                              printf("%s\n", data);
+                        }
 
                         memset(data, 0, col + 1);
 
@@ -120,11 +125,13 @@ stdRet_t appmain(ch_t *argv)
             status = STD_RET_ERROR;
       }
 
-      if (data)
+      if (data) {
             free(data);
+      }
 
-      if (filepath)
+      if (filepath) {
             free(filepath);
+      }
 
       return status;
 }

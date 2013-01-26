@@ -36,6 +36,7 @@ CSRC = $(sort \
    app/measd/measd.c \
    app/terminal/terminal.c \
    app/top/top.c \
+   app/lwipd/lwipd.c \
    drivers/ds1307/arch/noarch/ds1307.c \
    drivers/tty/arch/noarch/tty.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \
@@ -69,7 +70,6 @@ CSRC = $(sort \
 ####################################################################################################
 CSRC_stm32 = $(sort \
    app/httpd/httpd.c \
-   lib/lwip/netconf.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
    lib/lwip/api/netbuf.c \
@@ -101,9 +101,8 @@ CSRC_stm32 = $(sort \
    lib/lwip/core/ipv4/ip_addr.c \
    lib/lwip/core/ipv4/ip_frag.c \
    lib/lwip/netif/etharp.c \
-   lib/lwip/port/ethernetif.c \
-	drivers/ether/arch/stm32/ether.c \
-	drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
+   drivers/ether/arch/stm32/ether.c \
+   drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
    drivers/gpio/arch/stm32/gpio.c \
    drivers/i2c/arch/stm32/i2c.c \
    drivers/uart/arch/stm32/uart.c \
@@ -168,6 +167,7 @@ HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
    system/fs/include \
    system/user/include \
    system/portable \
+   lib/lwip/port \
    )
    
 ####################################################################################################
@@ -182,12 +182,7 @@ HDRLOC_stm32 = $(sort $(dir $(CSRC_stm32)) $(dir $(CXXSRC_stm32)) \
    system/portable/lib/CMSIS \
    lib/lwip \
    lib/lwip/include \
-   lib/lwip/include/lwip \
    lib/lwip/include/ipv4 \
-   lib/lwip/include/ipv4/lwip \
-   lib/lwip/include/netif \
-   lib/lwip/port \
-   lib/lwip/port/arch \
    )
    
 HDRLOC_posix = $(sort $(dir $(CSRC_posix)) $(dir $(CXXSRC_posix)) \

@@ -1,11 +1,11 @@
-#ifndef NET_H_
-#define NET_H_
+#ifndef LWIPD_H_
+#define LWIPD_H_
 /*=============================================================================================*//**
-@file    net.h
+@file    lwipd.h
 
 @author  Daniel Zorychta
 
-@brief   This file support upper layer of Ethernet interface and LwIP stack
+@brief
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -34,7 +34,6 @@ extern "C" {
                                             Include files
 ==================================================================================================*/
 #include "system.h"
-#include "lwip/tcp.h"
 
 
 /*==================================================================================================
@@ -45,20 +44,6 @@ extern "C" {
 /*==================================================================================================
                                   Exported types, enums definitions
 ==================================================================================================*/
-typedef u32_t netSoc_t;
-
-typedef union
-{
-      struct
-      {
-            bool_t BindAccepted:1;
-            bool_t DataReceived:1;
-            bool_t DataPosted:1;
-            bool_t ConnectionError:1;
-            bool_t Poll:1;
-      } flag;
-      u8_t integer;
-} netStatus_t;
 
 
 /*==================================================================================================
@@ -69,24 +54,14 @@ typedef union
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-extern netSoc_t    NET_NewTCPSocket(ip_addr_t *ipaddr, u16_t port);
-extern stdRet_t NET_CloseTCPSocket(netSoc_t socket);
-extern stdRet_t NET_GetTCPStatus(netSoc_t socket, netStatus_t *status);
-extern stdRet_t NET_TCPAcceptReceived(netSoc_t socket);
-extern void        *NET_GetReceivedDataBuffer(netSoc_t socket);
-extern void        NET_FreeReceivedBuffer(netSoc_t socket);
-extern stdRet_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
-extern stdRet_t NET_TCPClose(netSoc_t socket);
-extern stdRet_t NET_TCPWrite(netSoc_t socket, void *src, u32_t *len);
-extern stdRet_t NET_TCPAcceptError(netSoc_t socket);
-extern stdRet_t NET_TCPAcceptPoll(netSoc_t socket);
+EXTERN_APPLICATION(lwipd);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* NET_H_ */
+#endif
 /*==================================================================================================
                                             End of file
 ==================================================================================================*/

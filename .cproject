@@ -101,7 +101,6 @@
 									<listOptionValue builtIn="false" value="__INT_LEAST16_MAX__"/>
 									<listOptionValue builtIn="false" value="__DEC128_EPSILON__"/>
 									<listOptionValue builtIn="false" value="__FLT_DECIMAL_DIG__"/>
-									<listOptionValue builtIn="false" value="__GNUC__"/>
 									<listOptionValue builtIn="false" value="__INT_LEAST8_TYPE__"/>
 									<listOptionValue builtIn="false" value="__GCC_ATOMIC_WCHAR_T_LOCK_FREE"/>
 									<listOptionValue builtIn="false" value="__GCC_ATOMIC_LONG_LOCK_FREE"/>
@@ -257,9 +256,9 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1228156673" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F10X_CL"/>
-									<listOptionValue builtIn="false" value="ip_addr_t"/>
 									<listOptionValue builtIn="false" value="GCC_ARMCM3"/>
 									<listOptionValue builtIn="false" value="ARCH_stm32"/>
+									<listOptionValue builtIn="false" value="__GNUC__"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1059955023" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -280,6 +279,10 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.224052021" name="icmp.h" rcbsApplicability="disable" resourcePath="lib/lwip/include/ipv4/lwip/icmp.h" toolsToInvoke=""/>
+					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -317,8 +320,8 @@
 									<listOptionValue builtIn="false" value="__INT_LEAST64_TYPE__"/>
 									<listOptionValue builtIn="false" value="__SCHAR_MAX__"/>
 									<listOptionValue builtIn="false" value="__DEC128_MANT_DIG__"/>
-									<listOptionValue builtIn="false" value="__UINTPTR_TYPE__"/>
 									<listOptionValue builtIn="false" value="__GCC_ATOMIC_INT_LOCK_FREE"/>
+									<listOptionValue builtIn="false" value="__UINTPTR_TYPE__"/>
 									<listOptionValue builtIn="false" value="__DBL_MIN_10_EXP__"/>
 									<listOptionValue builtIn="false" value="__unix__"/>
 									<listOptionValue builtIn="false" value="__DBL_DENORM_MIN__"/>
@@ -539,8 +542,8 @@
 									<listOptionValue builtIn="false" value="__CHAR16_TYPE__"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.148387178" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="ip_addr_t"/>
 									<listOptionValue builtIn="false" value="ARCH_posix"/>
+									<listOptionValue builtIn="false" value="__GNUC__"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2063118160" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -561,6 +564,9 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry excluding="lib/lwip/include/ipv6|lib/lwip/core/ipv6" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -576,6 +582,15 @@
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461;cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.1269186262;cdt.managedbuild.tool.gnu.cross.c.compiler.1392687055;cdt.managedbuild.tool.gnu.c.compiler.input.1268421605">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461;cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.73009376;cdt.managedbuild.tool.gnu.cross.c.compiler.132166597;cdt.managedbuild.tool.gnu.c.compiler.input.347905927">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461;cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.1686867144;cdt.managedbuild.tool.gnu.cross.c.compiler.239868671;cdt.managedbuild.tool.gnu.c.compiler.input.281307042">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.2068779240;cdt.managedbuild.config.gnu.cross.exe.release.2068779240.;cdt.managedbuild.tool.gnu.cross.c.compiler.1237578017;cdt.managedbuild.tool.gnu.c.compiler.input.804374103">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
@@ -583,6 +598,9 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.1111572174;cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.1111572174.;cdt.managedbuild.tool.gnu.cross.c.compiler.906538334;cdt.managedbuild.tool.gnu.c.compiler.input.2063118160">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461;cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.1639630227;cdt.managedbuild.tool.gnu.cross.c.compiler.988186864;cdt.managedbuild.tool.gnu.c.compiler.input.812280987">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
