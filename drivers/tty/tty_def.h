@@ -86,6 +86,8 @@ enum TTY_IORQ_enum
       TTY_IORQ_GETROW,                          /* [out] u8_t */
       TTY_IORQ_CLEARSCR,                        /* none */
       TTY_IORQ_CLEARLASTLINE,                   /* none */
+      TTY_IORQ_ECHO_ON,                         /* none */
+      TTY_IORQ_ECHO_OFF,                        /* none */
 };
 
 

@@ -90,15 +90,13 @@ static FILE_t *kprintFile;
 void pr_kprintEnable(ch_t *filename)
 {
       /* close file if opened */
-      if (kprintFile)
-      {
+      if (kprintFile) {
             fclose(kprintFile);
             kprintFile = NULL;
       }
 
       /* open new file */
-      if (kprintFile == NULL)
-      {
+      if (kprintFile == NULL) {
             kprintFile = fopen(filename, "w");
       }
 }
@@ -128,8 +126,7 @@ static void reverseBuffer(ch_t *begin, ch_t *end)
 {
     ch_t temp;
 
-    while (end > begin)
-    {
+    while (end > begin) {
         temp     = *end;
         *end--   = *begin;
         *begin++ = temp;
@@ -158,42 +155,35 @@ static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue, u8
       i32_t quot;
       i32_t rem;
 
-      if ((base >= 2) && (base <= 16))
-      {
-            if (unsignedValue)
-            {
-                  do
-                  {
+      if ((base >= 2) && (base <= 16)) {
+            if (unsignedValue) {
+                  do {
                         quot = (u32_t)((u32_t)value / (u32_t)base);
                         rem  = (u32_t)((u32_t)value % (u32_t)base);
                         *buffer++   = digits[rem];
                         zeroCnt++;
-                  }
-                  while ((value = quot));
-            }
-            else
-            {
-                  if ((base == 10) && ((sign = value) < 0))
+                  } while ((value = quot));
+            } else {
+                  if ((base == 10) && ((sign = value) < 0)) {
                         value = -value;
+                  }
 
-                  do
-                  {
+                  do {
                         quot = value / base;
                         rem  = value % base;
                         *buffer++ = digits[rem];
                         zeroCnt++;
-                  }
-                  while ((value = quot));
+                  } while ((value = quot));
             }
 
-            while (zerosRequired > zeroCnt)
-            {
+            while (zerosRequired > zeroCnt) {
                   *buffer++ = '0';
                   zeroCnt++;
             }
 
-            if (sign < 0)
+            if (sign < 0) {
                   *buffer++ = '-';
+            }
 
             reverseBuffer(bufferCopy, (buffer - 1));
       }
@@ -225,52 +215,48 @@ ch_t *pr_atoi(ch_t *string, u8_t base, i32_t *value)
 
       *value = 0;
 
-      if (base < 2 && base > 16)
+      if (base < 2 && base > 16) {
             goto atoi_end;
+      }
 
-      while ((character = *string) != ASCII_NULL)
-      {
+      while ((character = *string) != ASCII_NULL) {
             /* if space exist, atoi continue finding correct character */
-            if ((character == ' ') && (charFound == FALSE))
-            {
+            if ((character == ' ') && (charFound == FALSE)) {
                   string++;
                   continue;
-            }
-            else
-            {
+            } else {
                   charFound = TRUE;
             }
 
             /* check signum */
-            if (character == '-')
-            {
-                  if (base == 10)
-                  {
-                        if (sign == 1)
+            if (character == '-') {
+                  if (base == 10) {
+                        if (sign == 1) {
                               sign = -1;
+                        }
 
                         string++;
                         continue;
-                  }
-                  else
-                  {
+                  } else {
                         goto atoi_sign;
                   }
             }
 
             /* check character range */
-            if (character >= 'a')
+            if (character >= 'a') {
                   character -= 'a' - 10;
-            else if (character >= 'A')
+            } else if (character >= 'A') {
                   character -= 'A' - 10;
-            else if (character >= '0')
+            } else if (character >= '0') {
                   character -= '0';
-            else
+            } else {
                   goto atoi_sign;
+            }
 
             /* check character range according to actual base */
-            if (character >= base)
+            if (character >= base) {
                   break;
+            }
 
             /* compute value */
             *value = *value * base;
@@ -302,40 +288,31 @@ static int_t CalcFormatSize(const ch_t *format, va_list arg)
       ch_t  chr;
       int_t size = 1;
 
-      while ((chr = *format++) != ASCII_NULL)
-      {
-            if (chr != '%')
-            {
-                  if (chr == '\n')
-                  {
+      while ((chr = *format++) != ASCII_NULL) {
+            if (chr != '%') {
+                  if (chr == '\n') {
                         size += 2;
-                  }
-                  else
-                  {
+                  } else {
                         size++;
                   }
-            }
-            else
-            {
+            } else {
                   chr = *format++;
 
-                  if (chr == '%' || chr == 'c')
-                  {
-                        if (chr == 'c')
+                  if (chr == '%' || chr == 'c') {
+                        if (chr == 'c') {
                               chr = va_arg(arg, i32_t);
+                        }
 
                         size++;
                         continue;
                   }
 
-                  if (chr == 's')
-                  {
+                  if (chr == 's') {
                         size += strlen(va_arg(arg, ch_t*));
                         continue;
                   }
 
-                  if (chr == 'd' || chr == 'x' || chr == 'u')
-                  {
+                  if (chr == 'd' || chr == 'x' || chr == 'u') {
                         chr = va_arg(arg, i32_t);
                         size += 11;
                         continue;
@@ -364,8 +341,7 @@ int_t pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...)
       va_list args;
       int_t   n = 0;
 
-      if (stream)
-      {
+      if (stream) {
             va_start(args, format);
             n = vsnprint(stream, size, format, args);
             va_end(args);
@@ -391,16 +367,14 @@ int_t pr_fprintf(FILE_t *file, const ch_t *format, ...)
       va_list args;
       int_t   n = 0;
 
-      if (file)
-      {
+      if (file) {
             va_start(args, format);
             u32_t size = CalcFormatSize(format, args);
             va_end(args);
 
             ch_t *str  = calloc(1, size);
 
-            if (str)
-            {
+            if (str) {
                   va_start(args, format);
                   n = vsnprint(str, size, format, args);
                   va_end(args);
@@ -430,16 +404,14 @@ int_t pr_kprint(const ch_t *format, ...)
       va_list args;
       int_t   n = 0;
 
-      if (kprintFile)
-      {
+      if (kprintFile) {
             va_start(args, format);
             int_t size = CalcFormatSize(format, args);
             va_end(args);
 
             ch_t *buffer = calloc(size, sizeof(ch_t));
 
-            if (buffer)
-            {
+            if (buffer) {
                   va_start(args, format);
                   n = vsnprint(buffer, size, format, args);
                   va_end(args);
@@ -464,8 +436,7 @@ int_t pr_kprint(const ch_t *format, ...)
 //================================================================================================//
 void pr_putchar(FILE_t *stdout, ch_t c)
 {
-      if (stdout)
-      {
+      if (stdout) {
             ch_t chr[2] = {c, 0};
             fwrite(chr, sizeof(ch_t), ARRAY_SIZE(chr), stdout);
       }
@@ -486,21 +457,14 @@ ch_t pr_getchar(FILE_t *stdin)
       ch_t  chr  = 0;
       u16_t dcnt = 0;
 
-      if (stdin)
-      {
-            while (fread(&chr, sizeof(chr), 1, stdin) < 1)
-            {
-                  if (dcnt >= 60000)
-                  {
+      if (stdin) {
+            while (fread(&chr, sizeof(chr), 1, stdin) < 1) {
+                  if (dcnt >= 60000) {
                         TaskDelay(200);
-                  }
-                  else if (dcnt >= 5000)
-                  {
+                  } else if (dcnt >= 5000) {
                         dcnt += 100;
                         TaskDelay(100);
-                  }
-                  else
-                  {
+                  } else {
                         dcnt += 20;
                         TaskDelay(20);
                   }
@@ -524,8 +488,7 @@ ch_t pr_ugetchar(FILE_t *stdin)
 {
       ch_t chr = 0;
 
-      if (stdin)
-      {
+      if (stdin) {
             fread(&chr, sizeof(ch_t), 1, stdin);
       }
 
@@ -549,13 +512,10 @@ static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format, va_list arg
 {
       #define putCharacter(character)           \
       {                                         \
-            if ((size_t)slen < size)            \
-            {                                   \
+            if ((size_t)slen < size)  {         \
                   *stream++ = character;        \
                   slen++;                       \
-            }                                   \
-            else                                \
-            {                                   \
+            }  else {                           \
                   goto vsnprint_end;            \
             }                                   \
       }
@@ -565,50 +525,38 @@ static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format, va_list arg
       int_t slen = 1;
 
       /* analyze format */
-      while ((chr = *format++) != ASCII_NULL)
-      {
-            if (chr != '%')
-            {
-                  if (chr == ASCII_LF)
-                  {
+      while ((chr = *format++) != ASCII_NULL) {
+            if (chr != '%') {
+                  if (chr == ASCII_LF) {
                         putCharacter(ASCII_CR);
                   }
 
                   putCharacter(chr);
-            }
-            else
-            {
+            } else {
                   chr = *format++;
 
-                  if (chr == '%' || chr == 'c')
-                  {
-                        if (chr == 'c')
+                  if (chr == '%' || chr == 'c') {
+                        if (chr == 'c') {
                               chr = va_arg(arg, i32_t);
+                        }
 
                         putCharacter(chr);
 
                         continue;
                   }
 
-                  if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u')
-                  {
+                  if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u') {
                         ch_t result[11];
                         ch_t *resultPtr;
 
-                        if (chr == 's')
-                        {
+                        if (chr == 's') {
                               resultPtr = va_arg(arg, ch_t*);
-                        }
-                        else
-                        {
+                        } else {
                               u8_t zeros = *format++;
 
-                              if (zeros >= '0' && zeros <= '9')
-                              {
+                              if (zeros >= '0' && zeros <= '9') {
                                     zeros -= '0';
-                              }
-                              else
-                              {
+                              } else {
                                     zeros = 0;
                                     format--;
                               }
@@ -619,8 +567,7 @@ static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format, va_list arg
                               resultPtr = itoa(va_arg(arg, i32_t), result, base, uint, zeros);
                         }
 
-                        while ((chr = *resultPtr++))
-                        {
+                        while ((chr = *resultPtr++)) {
                               putCharacter(chr);
                         }
 
@@ -641,247 +588,185 @@ static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format, va_list arg
 /**
  * @brief Function convert arguments to the stdio and gets data from stdin
  *
- * @param[in]  *stdin         file of virtual terminal (keyboard)
- * @param[in]  *stdout        file of virtual terminal (screen)
- * @param[in]  size           buffer size
+ * @param[in]  *stream        file of virtual terminal (keyboard)
  * @param[in]  *format        message format
- * @param[in]  *var           output
+ * @param[out] *var           output
  *
  * @return number of printed characters
  */
 //================================================================================================//
-int_t pr_scanf(FILE_t *stdin, FILE_t *stdout, const ch_t *format, void *var)
+int_t pr_fscanf(FILE_t *stream, const ch_t *format, void *var)
 {
-      ch_t  chr;
-      int_t streamLen = 1;
-      int_t value = 0;
+      ch_t   chr;
+      int_t  read_fields = 0;
+      int_t  value       = 0;
+      uint_t slen        = 0;
 
-      while ((chr = *format++) != '\0')
-      {
-            if (chr != '%')
-            {
-                  if (chr == ASCII_LF)
-                  {
-                        pr_putchar(stdout, ASCII_CR);
-                  }
+      if (!stream || !format || !var) {
+            read_fields = EOF;
+      }
 
-                  pr_putchar(stdout, chr);
-            }
-            else
-            {
+      while ((chr = *format++) != '\0') {
+            if (chr == '%') {
                   chr = *format++;
 
                   /* read value from format */
-                  while (chr >= '0' && chr <= '9')
-                  {
+                  while (chr >= '0' && chr <= '9') {
                         value *= 10;
                         value += chr - '0';
                         chr    = *format++;
                   }
 
                   /* check if digital value is to decode */
-                  if (chr == 'd' || chr == 'u')
-                  {
-                        i32_t  *dec = var;
-                        i32_t  sign = 1;
-                        bool_t uint = (chr == 'u' ? TRUE : FALSE);
+                  if (chr == 'd' || chr == 'u') {
+                        i32_t  *dec  = var;
+                        i32_t   sign = 1;
+                        bool_t  uint = (chr == 'u' ? TRUE : FALSE);
 
                         *dec = 0;
+                        read_fields++;
 
-                        while (TRUE)
-                        {
-                              chr = pr_getchar(stdin);
+                        while (TRUE) {
+                              chr = pr_getchar(stream);
 
                               if (  (chr >= '0' && chr <= '9')
-                                 || (chr == '-' && !uint && sign == 1) )
-                              {
-                                    pr_putchar(stdout, chr);
-                              }
-                              else if (chr == ASCII_CR || chr == ASCII_LF)
-                              {
+                                 || (chr == '-' && !uint && sign == 1) ) {
+
+                                    if (chr == '-' && sign == 1 && !uint) {
+                                          sign = -1;
+                                    }
+
+                                    if (chr >= '0' && chr <= '9') {
+                                          chr -= '0';
+
+                                          *dec *= 10;
+                                          *dec += chr;
+                                    }
+
+                                    slen++;
+
+                              } else if (chr == ASCII_CR || chr == ASCII_LF) {
                                     *dec *= sign;
-                                    pr_putchar(stdin, ASCII_CR);
-                                    pr_putchar(stdin, ASCII_LF);
                                     goto tscan_end;
-                              }
-                              else if ((chr == ASCII_BS) && (streamLen > 1))
-                              {
-                                    pr_fprintf(stdout, "%c\x1B[K", chr);
-
-                                    if (streamLen == 2 && sign == -1)
+                              } else if ((chr == ASCII_BS) && (slen > 1)) {
+                                    if (slen == 2 && sign == -1) {
                                           sign = 1;
-                                    else
+                                    } else {
                                           *dec /= 10;
-                                    streamLen--;
+                                    }
+
+                                    slen--;
                                     continue;
                               }
-                              else
-                              {
-                                    continue;
-                              }
-
-                              if (chr == '-' && sign == 1 && !uint)
-                              {
-                                    sign = -1;
-                              }
-
-                              if (chr >= '0' && chr <= '9')
-                              {
-                                    chr -= '0';
-
-                                    *dec *= 10;
-                                    *dec += chr;
-                              }
-
-                              streamLen++;
                         }
 
                         goto tscan_end;
                   }
 
                   /* check if hex value is to decode */
-                  if (chr == 'x')
-                  {
+                  if (chr == 'x') {
                         u32_t *hex = var;
 
                         *hex = 0;
+                        read_fields++;
 
-                        while (TRUE)
-                        {
-                              chr = pr_getchar(stdin);
+                        while (TRUE) {
+                              chr = pr_getchar(stream);
 
                               if (  ((chr >= '0') && (chr <= '9'))
                                  || ((chr >= 'A') && (chr <= 'F'))
-                                 || ((chr >= 'a') && (chr <= 'f')) )
-                              {
-                                    pr_putchar(stdout, chr);
-                              }
-                              else if (chr == ASCII_CR || chr == ASCII_LF)
-                              {
-                                    pr_fprintf(stdout, "\r\n", chr);
+                                 || ((chr >= 'a') && (chr <= 'f')) ) {
+
+                                    if ((chr >= 'A') && (chr <= 'F')) {
+                                          chr = chr - 'A' + 0x0A;
+                                    } else if ((chr >= 'a') && (chr <= 'f')) {
+                                          chr = chr - 'a' + 0x0A;
+                                    } else if ((chr >= '0') && (chr <= '9')) {
+                                          chr -= '0';
+                                    }
+
+                                    *hex <<= 4;
+                                    *hex |= chr;
+
+                                    slen++;
+
+                              } else if (chr == ASCII_CR || chr == ASCII_LF) {
                                     goto tscan_end;
-                              }
-                              else if ((chr == ASCII_BS) && (streamLen > 1))
-                              {
-                                    pr_fprintf(stdout, "%c\x1B[K", chr);
+                              } else if ((chr == ASCII_BS) && (slen > 1)) {
                                     *hex >>= 4;
-                                    streamLen--;
+                                    slen--;
                                     continue;
                               }
-                              else
-                              {
-                                    continue;
-                              }
-
-                              if ((chr >= 'A') && (chr <= 'F'))
-                              {
-                                    chr = chr - 'A' + 0x0A;
-                              }
-                              else if ((chr >= 'a') && (chr <= 'f'))
-                              {
-                                    chr = chr - 'a' + 0x0A;
-                              }
-                              else if ((chr >= '0') && (chr <= '9'))
-                              {
-                                    chr -= '0';
-                              }
-
-                              *hex <<= 4;
-                              *hex |= chr;
-
-                              streamLen++;
                         }
                   }
 
                   /* check if binary value is to decode */
-                  if (chr == 'b')
-                  {
+                  if (chr == 'b') {
                         u32_t *bin = var;
 
                         *bin = 0;
+                        read_fields++;
 
-                        while (TRUE)
-                        {
-                              chr = pr_getchar(stdin);
+                        while (TRUE) {
+                              chr = pr_getchar(stream);
 
-                              if (chr == '0' || chr == '1')
-                              {
-                                    pr_putchar(stdin, chr);
-                              }
-                              else if (chr == ASCII_CR || chr == ASCII_LF)
-                              {
-                                    pr_fprintf(stdout, "\r\n", chr);
+                              if (chr == '0' || chr == '1') {
+
+                                    chr -= '0';
+
+                                    *bin <<= 1;
+                                    *bin |= chr;
+
+                                    slen++;
+
+                              } else if (chr == ASCII_CR || chr == ASCII_LF) {
                                     goto tscan_end;
-                              }
-                              else if ((chr == ASCII_BS) && (streamLen > 1))
-                              {
-                                    pr_fprintf(stdout, "%c\x1B[K", chr);
+                              } else if ((chr == ASCII_BS) && (slen > 1)) {
                                     *bin >>= 1;
-                                    streamLen--;
+                                    slen--;
                                     continue;
                               }
-                              else
-                              {
-                                    continue;
-                              }
-
-                              chr -= '0';
-
-                              *bin <<= 1;
-                              *bin |= chr;
-
-                              streamLen++;
                         }
                   }
 
                   /* check if text string is to gets */
-                  if (chr == 's')
-                  {
+                  if (chr == 's') {
                         u16_t bfrSize = UINT16_MAX;
                         ch_t *string  = var;
                         u16_t strLen  = 0;
 
-                        if (*(--format) != '%' && value)
+                        if (*(--format) != '%' && value) {
                               bfrSize = value - 1;
+                        }
 
-                        while (TRUE)
-                        {
-                              chr = pr_getchar(stdin);
+                        read_fields++;
+
+                        while (TRUE) {
+                              chr = pr_getchar(stream);
 
                               /* put character */
-                              if (chr == ASCII_CR || chr == ASCII_LF)
-                              {
+                              if (chr == ASCII_CR || chr == ASCII_LF) {
                                     *(string++) = 0x00;
-                                    pr_fprintf(stdout, "\r\n", chr);
                                     goto tscan_end;
-                              }
-                              else if ((chr == ASCII_BS) && (streamLen > 1) && strLen)
-                              {
-                                    pr_fprintf(stdout, "%c\x1B[K", chr);
+                              } else if ((chr == ASCII_BS) && (slen > 1) && strLen) {
                                     *(--string) = 0x00;
-                                    streamLen--;
+                                    slen--;
                                     strLen--;
                                     continue;
-                              }
-                              else if ((chr >= ' ') && (strLen < bfrSize))
-                              {
-                                    pr_putchar(stdout, chr);
+                              } else if ((chr >= ' ') && (strLen < bfrSize)) {
                                     *(string++) = chr;
                                     strLen++;
+                                    slen++;
                               }
-                              else
-                              {
-                                    continue;
-                              }
-
-                              streamLen++;
                         }
                   }
             }
       }
 
+      read_fields = EOF;
+
       tscan_end:
-      return (streamLen - 1);
+      return read_fields;
 }
 
 #endif

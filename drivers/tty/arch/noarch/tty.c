@@ -46,6 +46,11 @@ extern "C" {
 #define TTY(number)                 term->tty[number]
 #define BLOCK_TIME                  10000
 
+#define VT100_RESET_ATTRIBUTES      "\x1B[0m"
+#define VT100_CLEAR_SCREEN          "\x1B[2J"
+#define VT100_NO_LINE_WRAP          "\x1B[?7l"
+#define VT100_CURSOR_HOME           "\x1B[H"
+
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -58,6 +63,7 @@ struct termHdl {
             u8_t     newMsgCnt;                 /* new message counter */
             flag_t   refLstLn;                  /* request to refresh last line */
             mutex_t  mtx;                       /* resources security */
+            flag_t   echoOn;                    /* echo indicator */
 
             /* FIFO used in keyboard read */
             struct inputfifo {
@@ -184,6 +190,8 @@ stdRet_t TTY_Open(devx_t dev, fd_t part)
                         TTY(dev)->mtx = CreateRecMutex();
 
                         if (TTY(dev)->mtx != NULL) {
+                              TTY(dev)->echoOn = SET;
+
                               status = STD_RET_OK;
                         } else {
                               free(TTY(dev));
@@ -446,6 +454,16 @@ stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
                   break;
 
+            /* turn on terminal echo */
+            case TTY_IORQ_ECHO_ON:
+                  TTY(dev)->echoOn = SET;
+                  break;
+
+            /* turn off terminal echo */
+            case TTY_IORQ_ECHO_OFF:
+                  TTY(dev)->echoOn = RESET;
+                  break;
+
             default:
                   status = STD_RET_ERROR;
                   break;
@@ -535,7 +553,7 @@ static void ttyd(void *arg)
       }
 
       /* configure terminal VT100: reset attributes, clear screen, line wrap, cursor HOME */
-      ch_t *termCfg = "\x1B[0m\x1B[2J\x1B[?7h\x1B[H";
+      ch_t *termCfg = VT100_RESET_ATTRIBUTES VT100_CLEAR_SCREEN VT100_NO_LINE_WRAP VT100_CURSOR_HOME;
       fwrite(termCfg, sizeof(ch_t), strlen(termCfg), ttys);
 
       GetTermSize(ttys);
@@ -610,6 +628,10 @@ static void ttyd(void *arg)
                               }
 
                               GiveRecMutex(ttyPtr->mtx);
+                        }
+
+                        if (ttyPtr->echoOn == SET) {
+                              ioctl(ttys, UART_IORQ_SEND_BYTE, &chr);
                         }
                   } else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->curTTY) ) { /* Fn key was hit */
                         term->curTTY = keyfn;
