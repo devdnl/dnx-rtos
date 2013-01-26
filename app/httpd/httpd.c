@@ -372,20 +372,15 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                         /* Tell TCP that we wish be to informed of data that has been
                          successfully sent by a call to the http_sent() function. */
                         tcp_sent(pcb, http_sent);
-                  }
-                  else
-                  {
+                  } else {
                         close_conn(pcb, hs);
                   }
-            }
-            else
-            {
+            } else {
                   pbuf_free(p);
             }
       }
 
-      if (err == ERR_OK && p == NULL)
-      {
+      if (err == ERR_OK && p == NULL) {
 
             close_conn(pcb, hs);
       }
@@ -405,8 +400,7 @@ err_t http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
       /* Allocate memory for the structure that holds the state of the connection */
       hs = mem_malloc(sizeof(struct http_state));
 
-      if (hs == NULL)
-      {
+      if (hs == NULL) {
             return ERR_MEM;
       }
 
@@ -446,8 +440,7 @@ stdRet_t appmain(ch_t *argv)
 
       htmlBuffer = malloc(BFR_SIZE);
 
-      if (!htmlBuffer)
-      {
+      if (!htmlBuffer) {
             kprint("httpd: not enough free memory\n");
             return STD_RET_ERROR;
       }
@@ -457,9 +450,8 @@ stdRet_t appmain(ch_t *argv)
       pcb = tcp_listen(pcb);
       tcp_accept(pcb, http_accept);
 
-      while (TRUE)
-      {
-            Sleep(2000);
+      while (TRUE) {
+            sleep(2);
       }
 
       httpd_exit:
