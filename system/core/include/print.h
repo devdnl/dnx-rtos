@@ -49,8 +49,8 @@ extern "C" {
 #define kprintEnable(path)                      pr_kprintEnable(path)
 #define kprintDisable()                         pr_kprintDisable()
 #define snprintf(stream, size, ...)             pr_snprintf(stream, size, __VA_ARGS__)
-#define scanf(format, result)                   pr_fscanf(stdin, format, result)
-#define fscanf(stream, format, result)          pr_fscanf(stream, format, result)
+#define scanf(format, ...)                      pr_fscanf(stdin, format, __VA_ARGS__)
+#define fscanf(stream, format, ...)             pr_fscanf(stream, format, __VA_ARGS__)
 #define putchar(c)                              pr_putchar(stdout, c)
 #define getchar()                               pr_getchar(stdin)
 #define ugetchar()                              pr_ugetchar(stdin)
@@ -122,7 +122,7 @@ extern void   pr_kprintDisable(void);
 extern void   pr_putchar(FILE_t *stream, ch_t c);
 extern ch_t   pr_getchar(FILE_t *stream);
 extern ch_t   pr_ugetchar(FILE_t *stream);
-extern int_t  pr_fscanf(FILE_t *stream, const ch_t *format, void *var);
+extern int_t  pr_fscanf(FILE_t *stream, const ch_t *format, ...);
 #else
 #define pr_atoi(string, base, value)                  NULL
 #define pr_snprintf(stream, size, format, ...)        0

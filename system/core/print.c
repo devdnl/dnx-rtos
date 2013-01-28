@@ -109,8 +109,10 @@ void pr_kprintEnable(ch_t *filename)
 //================================================================================================//
 void pr_kprintDisable(void)
 {
-      fclose(kprintFile);
-      kprintFile = NULL;
+      if (kprintFile) {
+            fclose(kprintFile);
+            kprintFile = NULL;
+      }
 }
 
 
@@ -430,15 +432,15 @@ int_t pr_kprint(const ch_t *format, ...)
 /**
  * @brief Function put character into file
  *
- * @param stdout              file
+ * @param stream              file
  * @param c                   character
  */
 //================================================================================================//
-void pr_putchar(FILE_t *stdout, ch_t c)
+void pr_putchar(FILE_t *stream, ch_t c)
 {
-      if (stdout) {
+      if (stream) {
             ch_t chr[2] = {c, 0};
-            fwrite(chr, sizeof(ch_t), ARRAY_SIZE(chr), stdout);
+            fwrite(chr, sizeof(ch_t), ARRAY_SIZE(chr), stream);
       }
 }
 
@@ -447,18 +449,18 @@ void pr_putchar(FILE_t *stdout, ch_t c)
 /**
  * @brief Function get character from file
  *
- * @param stdin            source file
+ * @param stream            source file
  *
  * @retval character
  */
 //================================================================================================//
-ch_t pr_getchar(FILE_t *stdin)
+ch_t pr_getchar(FILE_t *stream)
 {
       ch_t  chr  = 0;
       u16_t dcnt = 0;
 
-      if (stdin) {
-            while (fread(&chr, sizeof(chr), 1, stdin) < 1) {
+      if (stream) {
+            while (fread(&chr, sizeof(chr), 1, stream) < 1) {
                   if (dcnt >= 60000) {
                         TaskDelay(200);
                   } else if (dcnt >= 5000) {
@@ -479,17 +481,17 @@ ch_t pr_getchar(FILE_t *stdin)
 /**
  * @brief Function get character from virtual terminal in unblocking mode
  *
- * @param stdin            source file
+ * @param stream            source file
  *
  * @retval character
  */
 //================================================================================================//
-ch_t pr_ugetchar(FILE_t *stdin)
+ch_t pr_ugetchar(FILE_t *stream)
 {
       ch_t chr = 0;
 
-      if (stdin) {
-            fread(&chr, sizeof(ch_t), 1, stdin);
+      if (stream) {
+            fread(&chr, sizeof(ch_t), 1, stream);
       }
 
       return chr;
@@ -501,9 +503,9 @@ ch_t pr_ugetchar(FILE_t *stdin)
  * @brief Function convert arguments to stream
  *
  * @param[in] *stream        buffer for stream
- * @param[in] size           buffer size
+ * @param[in]  size          buffer size
  * @param[in] *format        message format
- * @param[in] arg            argument list
+ * @param[in]  arg           argument list
  *
  * @return number of printed characters
  */
@@ -590,19 +592,22 @@ static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format, va_list arg
  *
  * @param[in]  *stream        file of virtual terminal (keyboard)
  * @param[in]  *format        message format
- * @param[out] *var           output
+ * @param[out]  ...           output
  *
  * @return number of printed characters
  */
 //================================================================================================//
-int_t pr_fscanf(FILE_t *stream, const ch_t *format, void *var)
+int_t pr_fscanf(FILE_t *stream, const ch_t *format, ...)
 {
-      ch_t   chr;
-      int_t  read_fields = 0;
-      int_t  value       = 0;
-      uint_t slen        = 0;
+      int_t   read_fields = 0;
+      int_t   value       = 0;
+      uint_t  slen        = 0;
+      ch_t    chr;
+      va_list args;
 
-      if (!stream || !format || !var) {
+      va_start(args, format);
+
+      if (!stream || !format) {
             read_fields = EOF;
       }
 
@@ -617,7 +622,7 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, void *var)
                         chr    = *format++;
                   }
 
-                  /* check if digital value is to decode */
+                  /* get decimal value */
                   if (chr == 'd' || chr == 'u') {
                         i32_t  *dec  = var;
                         i32_t   sign = 1;
@@ -663,7 +668,7 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, void *var)
                         goto tscan_end;
                   }
 
-                  /* check if hex value is to decode */
+                  /* get hex value */
                   if (chr == 'x') {
                         u32_t *hex = var;
 
@@ -700,7 +705,7 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, void *var)
                         }
                   }
 
-                  /* check if binary value is to decode */
+                  /* get binary value */
                   if (chr == 'b') {
                         u32_t *bin = var;
 
@@ -729,7 +734,7 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, void *var)
                         }
                   }
 
-                  /* check if text string is to gets */
+                  /* get string */
                   if (chr == 's') {
                         u16_t bfrSize = UINT16_MAX;
                         ch_t *string  = var;
@@ -766,6 +771,7 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, void *var)
       read_fields = EOF;
 
       tscan_end:
+      va_end(args);
       return read_fields;
 }
 
