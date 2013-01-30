@@ -183,7 +183,8 @@ void Initd(void *arg)
 #endif
 
       /* initd info about stack usage */
-      kprint("[%d] initd: free stack: %d levels\n\n", TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
+      kprint("[%d] initd: free stack: %d levels\n\n",
+             TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
 
       /* change TTY for kprint to last TTY */
 #if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */

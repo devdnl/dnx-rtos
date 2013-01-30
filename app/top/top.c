@@ -61,50 +61,60 @@ APP_SEC_BEGIN
 //================================================================================================//
 stdRet_t appmain(ch_t *argv)
 {
-      (void) argv;
+        (void) argv;
 
-      u8_t divcnt = 10;
+        u8_t divcnt = 10;
 
-      while (ugetchar() != 'q') {
-            milisleep(100);
+        while (TRUE) {
+                ch_t chr = EOF;
+                fread(&chr, sizeof(ch_t), 1, stdin);
 
-            if (divcnt >= 10) {
-                  u8_t n = SystemGetMoniTaskCount();
+                if (chr == 'q') {
+                        break;
+                }
 
-                  printf("\x1B[2J\x1B[HPress q to quit\n");
+                milisleep(100);
 
-                  printf("Total tasks: %u\n", n);
+                if (divcnt < 10) {
+                        divcnt++;
+                        continue;
+                }
 
-                  printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                         SystemGetMemSize(), SystemGetUsedMemSize(), SystemGetFreeMemSize());
+                u8_t n = SystemGetMoniTaskCount();
 
-                  printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
+                printf("\x1B[2J\x1B[HPress q to quit\n");
 
-                  for (u16_t i = 0; i < n; i++) {
+                printf("Total tasks: %u\n", n);
+
+                printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
+                       SystemGetMemSize(),
+                       SystemGetUsedMemSize(),
+                       SystemGetFreeMemSize());
+
+                printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
+
+                for (int_t i = 0; i < n; i++) {
                         struct taskstat taskinfo;
 
                         if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
-                              printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
-                                     taskinfo.handle,
-                                     taskinfo.priority,
-                                     taskinfo.freeStack,
-                                     taskinfo.memUsage,
-                                     taskinfo.openFiles,
-                                     ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
-                                     ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
-                                     taskinfo.name);
+                                printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
+                                taskinfo.handle,
+                                taskinfo.priority,
+                                taskinfo.freeStack,
+                                taskinfo.memUsage,
+                                taskinfo.openFiles,
+                                ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
+                                ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
+                                taskinfo.name);
                         } else {
-                              break;
+                                break;
                         }
-                  }
+                }
 
-                  divcnt = 0;
-            } else {
-                  divcnt++;
-            }
-      }
+                divcnt = 0;
+        }
 
-      return STD_RET_OK;
+        return STD_RET_OK;
 }
 
 /* End of application section declaration */

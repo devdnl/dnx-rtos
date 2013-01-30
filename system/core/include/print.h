@@ -1,6 +1,6 @@
 #ifndef PRINT_H_
 #define PRINT_H_
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    print.h
 
 @author  Daniel Zorychta
@@ -24,36 +24,39 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
-                                            Include files
-==================================================================================================*/
+/*==============================================================================
+  Include files
+==============================================================================*/
 #include <stdarg.h>
 #include "basic_types.h"
 #include "systypes.h"
 #include "config.h"
 
-
-/*==================================================================================================
-                                 Exported symbolic constants/macros
-==================================================================================================*/
+/*==============================================================================
+  Exported symbolic constants/macros
+==============================================================================*/
 /** translate function to STDC */
 #define printf(...)                             pr_fprintf(stdout, __VA_ARGS__)
 #define fprintf(...)                            pr_fprintf(__VA_ARGS__)
 #define kprint(...)                             pr_kprint(__VA_ARGS__)
 #define kprintEnable(path)                      pr_kprintEnable(path)
 #define kprintDisable()                         pr_kprintDisable()
-#define snprintf(stream, size, ...)             pr_snprintf(stream, size, __VA_ARGS__)
+#define snprintf(str, size, ...)                pr_snprintf(str, size, __VA_ARGS__)
 #define scanf(format, ...)                      pr_fscanf(stdin, format, __VA_ARGS__)
 #define fscanf(stream, format, ...)             pr_fscanf(stream, format, __VA_ARGS__)
-#define putchar(c)                              pr_putchar(stdout, c)
-#define getchar()                               pr_getchar(stdin)
-#define ugetchar()                              pr_ugetchar(stdin)
+#define sscanf(str, format, ...)                pr_sscanf(str, format, __VA_ARGS__)
+#define putc(c, stream)                         pr_fputc(c, stream)
+#define fputc(c, stream)                        pr_fputc(c, stream)
+#define putchar(c)                              pr_fputc(c, stdout)
+#define getchar()                               pr_getc(stdin)
+#define getc(stream)                            pr_getc(stream)
+#define fgets(str, size, stream)                pr_fgets(str, size, stream)
 #define atoi(string, base, valuePtr)            pr_atoi(string, base, valuePtr)
 #define getcwd(buf, size)                       strncpy(buf, cwd, size)
 
@@ -98,20 +101,17 @@ extern "C" {
 /** stream values */
 #define EOF                                     (-1)
 
+/*==============================================================================
+  Exported types, enums definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                  Exported types, enums definitions
-==================================================================================================*/
+/*==============================================================================
+  Exported object declarations
+==============================================================================*/
 
-
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported function prototypes
-==================================================================================================*/
+/*==============================================================================
+  Exported function prototypes
+==============================================================================*/
 #if (CONFIG_PRINT_ENABLE == 1)
 extern ch_t  *pr_atoi(ch_t *string, u8_t base, i32_t *value);
 extern int_t  pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...);
@@ -119,10 +119,11 @@ extern int_t  pr_kprint(const ch_t *format, ...);
 extern int_t  pr_fprintf(FILE_t *file, const ch_t *format, ...);
 extern void   pr_kprintEnable(ch_t *filename);
 extern void   pr_kprintDisable(void);
-extern void   pr_putchar(FILE_t *stream, ch_t c);
-extern ch_t   pr_getchar(FILE_t *stream);
-extern ch_t   pr_ugetchar(FILE_t *stream);
+extern int_t  pr_fputc(int_t c, FILE_t *stream);
+extern int_t  pr_getc(FILE_t *stream);
+extern ch_t  *pr_fgets(ch_t *str, int_t size, FILE_t *stream);
 extern int_t  pr_fscanf(FILE_t *stream, const ch_t *format, ...);
+extern int_t  pr_sscanf(const ch_t *str, const ch_t *format, ...);
 #else
 #define pr_atoi(string, base, value)                  NULL
 #define pr_snprintf(stream, size, format, ...)        0
@@ -144,6 +145,6 @@ extern int_t  pr_fscanf(FILE_t *stream, const ch_t *format, ...);
 #endif
 
 #endif /* PRINT_H_ */
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/
