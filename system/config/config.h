@@ -96,9 +96,9 @@ extern "C" {
 
 /**=== PRINT CONFIGURATION =======================================================================*/
 /**
- * Enable (1) or disable (0) print functions
+ * Enable (1) or disable (0) standard io functions
  */
-#define CONFIG_PRINT_ENABLE                           (1)
+#define CONFIG_STDIO_ENABLE                           (1)
 
 
 /**=== APPLICATION MONITOR CONFIGURATION =========================================================*/

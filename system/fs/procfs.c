@@ -33,7 +33,7 @@ extern "C" {
 ==================================================================================================*/
 #include "procfs.h"
 #include "sysdrv.h"
-#include "print.h"
+#include "io.h"
 #include "dlist.h"
 #include "cpuctl.h"
 #include <string.h>

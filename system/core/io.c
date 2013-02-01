@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    print.c
+@file    io.c
 
 @author  Daniel Zorychta
 
-@brief   This file support message printing
+@brief   This file support standard io functions
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,13 +27,11 @@
 /*==============================================================================
  Include files
  =============================================================================*/
-#include "print.h"
+#include "io.h"
 #include <string.h>
 #include "vfs.h"
 #include "memman.h"
 #include "oswrap.h"
-
-#if (CONFIG_PRINT_ENABLE == 1)
 
 /*==============================================================================
  Local symbolic constants/macros
@@ -59,7 +57,7 @@
 /*==============================================================================
  Local function prototypes
 ==============================================================================*/
-static void reverseBuffer(ch_t *begin, ch_t *end);
+static void  reverseBuffer(ch_t *begin, ch_t *end);
 static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
                   u8_t zerosRequired);
 static int_t CalcFormatSize(const ch_t *format, va_list arg);
@@ -84,7 +82,7 @@ static FILE_t *kprintFile;
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-void pr_kprintEnable(ch_t *filename)
+void io_kprintEnable(ch_t *filename)
 {
         /* close file if opened */
         if (kprintFile) {
@@ -103,7 +101,7 @@ void pr_kprintEnable(ch_t *filename)
  * @brief Disable kprint functionality
  */
 //==============================================================================
-void pr_kprintDisable(void)
+void io_kprintDisable(void)
 {
         if (kprintFile) {
                 fclose(kprintFile);
@@ -206,7 +204,7 @@ static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
  * @return pointer in string when operation was finished
  */
 //==============================================================================
-ch_t *pr_atoi(ch_t *string, u8_t base, i32_t *value)
+ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
 {
         ch_t character;
         i32_t sign = 1;
@@ -331,7 +329,7 @@ static int_t CalcFormatSize(const ch_t *format, va_list arg)
  * @retval number of written characters
  */
 //==============================================================================
-int_t pr_kprint(const ch_t *format, ...)
+int_t io_kprint(const ch_t *format, ...)
 {
         va_list args;
         int_t n = 0;
@@ -345,7 +343,7 @@ int_t pr_kprint(const ch_t *format, ...)
 
                 if (buffer) {
                         va_start(args, format);
-                        n = pr_vsnprintf(buffer, size, format, args);
+                        n = io_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
                         fwrite(buffer, sizeof(ch_t), size, kprintFile);
@@ -367,7 +365,7 @@ int_t pr_kprint(const ch_t *format, ...)
  * @retval c if OK otherwise EOF
  */
 //==============================================================================
-int_t pr_fputc(int_t c, FILE_t *stream)
+int_t io_fputc(int_t c, FILE_t *stream)
 {
         if (stream) {
                 fwrite(&c, sizeof(ch_t), 1, stream);
@@ -386,7 +384,7 @@ int_t pr_fputc(int_t c, FILE_t *stream)
  * @retval character
  */
 //==============================================================================
-int_t pr_getc(FILE_t *stream)
+int_t io_getc(FILE_t *stream)
 {
         int_t chr  = EOF;
         u16_t dcnt = 0;
@@ -421,14 +419,14 @@ int_t pr_getc(FILE_t *stream)
  * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-ch_t *pr_fgets(ch_t *str, int_t size, FILE_t *stream)
+ch_t *io_fgets(ch_t *str, int_t size, FILE_t *stream)
 {
         if (!str || !size || !stream) {
                 return NULL;
         }
 
         for (int_t i = 0; i < size - 1; i++) {
-                str[i] = pr_getc(stream);
+                str[i] = io_getc(stream);
 
                 if (str[i] == (ch_t)EOF && i == 0) {
                         return NULL;
@@ -455,14 +453,14 @@ ch_t *pr_fgets(ch_t *str, int_t size, FILE_t *stream)
  * @retval number of written characters
  */
 //==============================================================================
-int_t pr_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
+int_t io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
 {
         va_list args;
         int_t n = 0;
 
         if (bfr) {
                 va_start(args, format);
-                n = pr_vsnprintf(bfr, size, format, args);
+                n = io_vsnprintf(bfr, size, format, args);
                 va_end(args);
         }
 
@@ -480,7 +478,7 @@ int_t pr_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
-int_t pr_fprintf(FILE_t *file, const ch_t *format, ...)
+int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
 {
         va_list args;
         int_t n = 0;
@@ -494,7 +492,7 @@ int_t pr_fprintf(FILE_t *file, const ch_t *format, ...)
 
                 if (str) {
                         va_start(args, format);
-                        n = pr_vsnprintf(str, size, format, args);
+                        n = io_vsnprintf(str, size, format, args);
                         va_end(args);
 
                         fwrite(str, sizeof(ch_t), size, file);
@@ -518,7 +516,7 @@ int_t pr_fprintf(FILE_t *file, const ch_t *format, ...)
  * @return number of printed characters
  */
 //==============================================================================
-int_t pr_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
+int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
 {
 #define putCharacter(character)                 \
       {                                         \
@@ -608,7 +606,7 @@ int_t pr_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
  * @return number of scanned elements
  */
 //==============================================================================
-int_t pr_fscanf(FILE_t *stream, const ch_t *format, ...)
+int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
 {
         int_t n = 0;
         va_list args;
@@ -619,7 +617,7 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, ...)
                 return 0;
         }
 
-        if (pr_fgets(str, FSCANF_STREAM_BUFFER_SIZE, stream) == str) {
+        if (io_fgets(str, FSCANF_STREAM_BUFFER_SIZE, stream) == str) {
                 for(uint_t i = 0; i < strlen(str); i++) {
                         if (str[i] == '\n') {
                                 str[i] = '\0';
@@ -628,7 +626,7 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, ...)
                 }
 
                 va_start(args, format);
-                n = pr_vsscanf(str, format, args);
+                n = io_vsscanf(str, format, args);
                 va_end(args);
         }
 
@@ -647,11 +645,11 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, ...)
  * @return number of printed characters
  */
 //==============================================================================
-int_t pr_sscanf(const ch_t *str, const ch_t *format, ...)
+int_t io_sscanf(const ch_t *str, const ch_t *format, ...)
 {
         va_list args;
         va_start(args, format);
-        int_t n = pr_vsscanf(str, format, args);
+        int_t n = io_vsscanf(str, format, args);
         va_end(args);
         return n;
 }
@@ -667,7 +665,7 @@ int_t pr_sscanf(const ch_t *str, const ch_t *format, ...)
  * @return number of printed characters
  */
 //============================================================================//
-int_t pr_vsscanf(const ch_t *str, const ch_t *format, va_list args)
+int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 {
         int_t   read_fields = 0;
         ch_t    chr;
@@ -703,7 +701,7 @@ int_t pr_vsscanf(const ch_t *str, const ch_t *format, va_list args)
                                         str++;
                                         continue;
                                 } else {
-                                        goto pr_sscanf_end;
+                                        goto io_sscanf_end;
                                 }
                                 break;
 
@@ -808,7 +806,7 @@ int_t pr_vsscanf(const ch_t *str, const ch_t *format, va_list args)
                                 string = va_arg(args, ch_t*);
                                 strcpy(string, str);
                                 read_fields++;
-                                goto pr_sscanf_end;
+                                goto io_sscanf_end;
                         }
                 } else if (chr <= ' ') {
                         while (*str <= ' ' && *str != '\0') {
@@ -834,11 +832,9 @@ int_t pr_vsscanf(const ch_t *str, const ch_t *format, va_list args)
                 }
         }
 
-        pr_sscanf_end:
+        io_sscanf_end:
         return read_fields;
 }
-
-#endif
 
 /*==============================================================================
  End of file

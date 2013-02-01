@@ -37,7 +37,7 @@ extern "C" {
 #include "systypes.h"
 #include "memman.h"
 #include "oswrap.h"
-#include "print.h"
+#include "io.h"
 #include "runtime.h"
 #include "oshooks.h"
 #include "dlist.h"
@@ -103,6 +103,7 @@ extern "C" {
 #define SystemGetOSVersion()              "0.6.1"
 #define SystemGetKernelVersion()          "7.3.0"
 #define SystemGetHostname()               CONFIG_HOSTNAME
+#define getcwd(buf, size)                 strncpy(buf, cwd, size)
 
 
 /*==================================================================================================

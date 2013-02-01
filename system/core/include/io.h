@@ -1,11 +1,11 @@
-#ifndef PRINT_H_
-#define PRINT_H_
+#ifndef IO_H_
+#define IO_H_
 /*=========================================================================*//**
-@file    print.h
+@file    io.h
 
 @author  Daniel Zorychta
 
-@brief   This file support message printing
+@brief   This file support standard io functions
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -42,25 +42,24 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** translate function to STDC */
-#define printf(...)                             pr_fprintf(stdout, __VA_ARGS__)
-#define fprintf(...)                            pr_fprintf(__VA_ARGS__)
-#define snprintf(bfr, size, ...)                pr_snprintf(bfr, size, __VA_ARGS__)
-#define vsnprintf(bfr, size, args)              pr_vsnprintf(bfr, size, args)
-#define kprint(...)                             pr_kprint(__VA_ARGS__)
-#define kprintEnable(path)                      pr_kprintEnable(path)
-#define kprintDisable()                         pr_kprintDisable()
-#define scanf(format, ...)                      pr_fscanf(stdin, format, __VA_ARGS__)
-#define fscanf(stream, format, ...)             pr_fscanf(stream, format, __VA_ARGS__)
-#define sscanf(str, format, ...)                pr_sscanf(str, format, __VA_ARGS__)
-#define vsscanf(str, format, args)              pr_vsscanf(str, format, args)
-#define putc(c, stream)                         pr_fputc(c, stream)
-#define fputc(c, stream)                        pr_fputc(c, stream)
-#define putchar(c)                              pr_fputc(c, stdout)
-#define getchar()                               pr_getc(stdin)
-#define getc(stream)                            pr_getc(stream)
-#define fgets(str, size, stream)                pr_fgets(str, size, stream)
-#define atoi(string, base, valuePtr)            pr_atoi(string, base, valuePtr)
-#define getcwd(buf, size)                       strncpy(buf, cwd, size)
+#define printf(...)                             io_fprintf(stdout, __VA_ARGS__)
+#define fprintf(...)                            io_fprintf(__VA_ARGS__)
+#define snprintf(bfr, size, ...)                io_snprintf(bfr, size, __VA_ARGS__)
+#define vsnprintf(bfr, size, args)              io_vsnprintf(bfr, size, args)
+#define kprint(...)                             io_kprint(__VA_ARGS__)
+#define kprintEnable(path)                      io_kprintEnable(path)
+#define kprintDisable()                         io_kprintDisable()
+#define scanf(format, ...)                      io_fscanf(stdin, format, __VA_ARGS__)
+#define fscanf(stream, format, ...)             io_fscanf(stream, format, __VA_ARGS__)
+#define sscanf(str, format, ...)                io_sscanf(str, format, __VA_ARGS__)
+#define vsscanf(str, format, args)              io_vsscanf(str, format, args)
+#define putc(c, stream)                         io_fputc(c, stream)
+#define fputc(c, stream)                        io_fputc(c, stream)
+#define putchar(c)                              io_fputc(c, stdout)
+#define getchar()                               io_getc(stdin)
+#define getc(stream)                            io_getc(stream)
+#define fgets(str, size, stream)                io_fgets(str, size, stream)
+#define atoi(string, base, valuePtr)            io_atoi(string, base, valuePtr)
 
 /** VT100 terminal commands */
 #define ENABLE_LINE_WRAP                        "\x1B[?7h"
@@ -114,41 +113,26 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-#if (CONFIG_PRINT_ENABLE == 1)
-extern ch_t  *pr_atoi(ch_t *string, u8_t base, i32_t *value);
-extern int_t  pr_kprint(const ch_t *format, ...);
-extern int_t  pr_snprintf(ch_t *buf, u32_t size, const ch_t *format, ...);
-extern int_t  pr_fprintf(FILE_t *file, const ch_t *format, ...);
-extern int_t  pr_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg);
-extern void   pr_kprintEnable(ch_t *filename);
-extern void   pr_kprintDisable(void);
-extern int_t  pr_fputc(int_t c, FILE_t *buf);
-extern int_t  pr_getc(FILE_t *buf);
-extern ch_t  *pr_fgets(ch_t *str, int_t size, FILE_t *stream);
-extern int_t  pr_fscanf(FILE_t *buf, const ch_t *format, ...);
-extern int_t  pr_sscanf(const ch_t *str, const ch_t *format, ...);
-extern int_t  pr_vsscanf(const ch_t *str, const ch_t *format, va_list args);
-#else /* DNLFIXME print.* disabled functions: correction needed */
-#define pr_atoi(string, base, value)                  NULL
-#define pr_snprintf(stream, size, format, ...)        0
-#define pr_kprint(format, ...)                        0
-#define pr_kprintOK()                                 0
-#define pr_kprintFail()                               0
-#define pr_kprintErrorNo(errorNo)                     0
-#define pr_printf(file, format, ...)                  0
-#define pr_kprintEnableOn(filename)                   (void)0
-#define pr_kprintDisable()                            (void)0
-#define pr_putchar(stdout, c)                         (void)0
-#define pr_getchar(stdin)                             '\0'
-#define pr_ugetchar(stdin)                            '\0'
-#define pr_scanf(stdin, stdout, format, var)          0
-#endif
+
+extern ch_t  *io_atoi(ch_t *string, u8_t base, i32_t *value);
+extern int_t  io_kprint(const ch_t *format, ...);
+extern int_t  io_snprintf(ch_t *buf, u32_t size, const ch_t *format, ...);
+extern int_t  io_fprintf(FILE_t *file, const ch_t *format, ...);
+extern int_t  io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg);
+extern void   io_kprintEnable(ch_t *filename);
+extern void   io_kprintDisable(void);
+extern int_t  io_fputc(int_t c, FILE_t *buf);
+extern int_t  io_getc(FILE_t *buf);
+extern ch_t  *io_fgets(ch_t *str, int_t size, FILE_t *stream);
+extern int_t  io_fscanf(FILE_t *buf, const ch_t *format, ...);
+extern int_t  io_sscanf(const ch_t *str, const ch_t *format, ...);
+extern int_t  io_vsscanf(const ch_t *str, const ch_t *format, va_list args);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PRINT_H_ */
+#endif /* IO_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

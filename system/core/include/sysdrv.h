@@ -82,7 +82,7 @@ extern "C" {
 #define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
 #define fstat(file, statPtr)              vfs_fstat(file, stat)
 
-#define DRIVER_INTERFACE_CLASS(classname)                                           \
+#define DRIVER_INTERFACE(classname)                                                 \
 extern stdRet_t classname##_Init   (devx_t, fd_t);                                  \
 extern stdRet_t classname##_Open   (devx_t, fd_t);                                  \
 extern stdRet_t classname##_Close  (devx_t, fd_t);                                  \

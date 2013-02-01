@@ -52,7 +52,7 @@ CSRC = $(sort \
    system/core/dlist.c \
    system/core/main.c \
    system/core/memman.c \
-   system/core/print.c \
+   system/core/io.c \
    system/core/vfs.c \
    system/user/initd.c \
    system/user/regapp.c \

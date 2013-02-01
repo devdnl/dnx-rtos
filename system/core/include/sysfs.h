@@ -58,7 +58,7 @@ extern "C" {
 #define free(mem)                         memman_free(mem)
 #endif
 
-#define FS_INTERFACE_CLASS(classname)                                                    \
+#define FILE_SYSTEM_INTERFACE(classname)                                                 \
 extern stdRet_t  classname##_init   (const ch_t*, fsd_t*);                               \
 extern stdRet_t  classname##_open   (fsd_t, fd_t*, size_t*, const ch_t*, const ch_t*);   \
 extern stdRet_t  classname##_close  (fsd_t, fd_t);                                       \

@@ -54,7 +54,7 @@ enum ETHER_STD_RET {
 /*==================================================================================================
                                      Exported function prototypes
 ==================================================================================================*/
-DRIVER_INTERFACE_CLASS(ETHER);
+DRIVER_INTERFACE(ETHER);
 
 
 #ifdef __cplusplus

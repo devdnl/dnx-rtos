@@ -50,7 +50,7 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-DRIVER_INTERFACE_CLASS(TTY);
+DRIVER_INTERFACE(TTY);
 
 
 #ifdef __cplusplus
