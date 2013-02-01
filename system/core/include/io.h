@@ -41,6 +41,9 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/** stream values */
+#define EOF                                     (-1)
+
 /** translate function to STDC */
 #define printf(...)                             io_fprintf(stdout, __VA_ARGS__)
 #define fprintf(...)                            io_fprintf(__VA_ARGS__)
@@ -69,6 +72,7 @@ extern "C" {
 #define ERASE_LINE                              "\x1B[2K"
 #define ERASE_LINE_END                          "\x1B[K"
 #define CUR_HOME                                "\x1B[H"
+#if (CONFIG_COLOR_TERM_ENABLE > 0)
 #define RESET_ATTRIBUTES                        "\x1B[0m"
 #define FONT_BLINKING                           "\x1B[5m"
 #define FONT_UNDERLINE                          "\x1B[4m"
@@ -90,17 +94,29 @@ extern "C" {
 #define BACK_COLOR_MAGENTA                      "\x1B[45m"
 #define BACK_COLOR_CYAN                         "\x1B[46m"
 #define BACK_COLOR_WHITE                        "\x1B[47m"
-
-/** key definitions */
-#define ASCII_LF                                0x0A
-#define ASCII_CR                                0x0D
-#define ASCII_BS                                0x08
-#define ASCII_NULL                              0x00
-#define ASCII_ESC                               0x1B
-#define ASCII_CANCEL                            0x18
-
-/** stream values */
-#define EOF                                     (-1)
+#else
+#define RESET_ATTRIBUTES
+#define FONT_BLINKING
+#define FONT_UNDERLINE
+#define FONT_NORMAL
+#define FONT_BOLD
+#define FONT_COLOR_BLACK
+#define FONT_COLOR_RED
+#define FONT_COLOR_GREEN
+#define FONT_COLOR_YELLOW
+#define FONT_COLOR_BLUE
+#define FONT_COLOR_MAGENTA
+#define FONT_COLOR_CYAN
+#define FONT_COLOR_WHITE
+#define BACK_COLOR_BLACK
+#define BACK_COLOR_RED
+#define BACK_COLOR_GREEN
+#define BACK_COLOR_YELLOW
+#define BACK_COLOR_BLUE
+#define BACK_COLOR_MAGENTA
+#define BACK_COLOR_CYAN
+#define BACK_COLOR_WHITE
+#endif
 
 /*==============================================================================
   Exported types, enums definitions
@@ -113,7 +129,6 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-
 extern ch_t  *io_atoi(ch_t *string, u8_t base, i32_t *value);
 extern int_t  io_kprint(const ch_t *format, ...);
 extern int_t  io_snprintf(ch_t *buf, u32_t size, const ch_t *format, ...);

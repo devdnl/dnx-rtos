@@ -251,10 +251,10 @@ cmdStatus_t cmdLS(ch_t *arg)
       if (dir) {
             dirent_t dirent;
 
-            ch_t *ccolor = "\x1B[33mc";
-            ch_t *rcolor = "\x1B[35m-";
-            ch_t *lcolor = "\x1B[36ml";
-            ch_t *dcolor = "\x1B[32md";
+            ch_t *ccolor = FONT_COLOR_YELLOW"c";
+            ch_t *rcolor = FONT_COLOR_MAGENTA"-";
+            ch_t *lcolor = FONT_COLOR_CYAN"l";
+            ch_t *dcolor = FONT_COLOR_GREEN"d";
 
             printf("Total %u\n", dir->items);
 
@@ -269,7 +269,7 @@ cmdStatus_t cmdLS(ch_t *arg)
                   default: type = "?";
                   }
 
-                  printf("%s %u\t%s\x1B[0m\n", type, dirent.size, dirent.name);
+                  printf("%s %u\t%s"RESET_ATTRIBUTES"\n", type, dirent.size, dirent.name);
             }
 
             closedir(dir);
@@ -703,8 +703,8 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 void PrintPrompt(void)
 {
-      printf("\x1B[32mroot@%s:%s\x1B[0m\n", SystemGetHostname(), cdpath);
-      printf("\x1B[32m$\x1B[0m ");
+      printf(FONT_COLOR_GREEN"root@%s:%s"RESET_ATTRIBUTES"\n", SystemGetHostname(), cdpath);
+      printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
 }
 
 
@@ -754,7 +754,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
       for (;;)
       {
             /* clear input line and print prompt */
-            memset(line, ASCII_NULL, PROMPT_LINE_SIZE);
+            memset(line, '\0', PROMPT_LINE_SIZE);
             PrintPrompt();
 
             /* waiting for command */
@@ -772,7 +772,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
                   {
                         character = getchar();
                   }
-                  while (!(character == ASCII_LF || character == ASCII_CR));
+                  while (!(character == '\n' || character == '\r'));
 
                   printf("\n");
             }
@@ -788,12 +788,12 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
             /* finds first space after command */
             if ((arg = strchr(cmd, ' ')) != NULL)
             {
-                  *(arg++) = ASCII_NULL;
+                  *(arg++) = '\0';
                   arg += strspn(arg, " ");
             }
             else
             {
-                  arg = strchr(cmd, ASCII_NULL);
+                  arg = strchr(cmd, '\0');
             }
 
             /* check internal commands */

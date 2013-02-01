@@ -302,7 +302,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
       u32_t findArgSize = strlen(findArg);
 
       /* scan argv line */
-      while (*argv != ASCII_NULL) {
+      while (*argv != '\0') {
             /* if find character which open string, parser must find end of a string */
             if (*argv == '"') {
                   ch_t *stringEnd;
@@ -346,7 +346,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
                                     *(string++) = character;
                               }
 
-                              *(string++) = ASCII_NULL;
+                              *(string++) = '\0';
 
                               status = STD_RET_OK;
                         }

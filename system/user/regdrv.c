@@ -194,7 +194,7 @@ stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
                   }
             }
 
-            kprint("\x1B[31mDriver %s does not exist!\x1B[0m\n", drvName);
+            kprint(FONT_COLOR_RED"Driver %s does not exist!"RESET_ATTRIBUTES"\n", drvName);
       }
 
       InitDrv_end:

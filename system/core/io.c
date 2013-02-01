@@ -48,8 +48,6 @@
 #define ftell(file)                       vfs_ftell(file)
 #define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
 
-#define FSCANF_STREAM_BUFFER_SIZE         100
-
 /*==============================================================================
  Local types, enums definitions
 ==============================================================================*/
@@ -57,15 +55,18 @@
 /*==============================================================================
  Local function prototypes
 ==============================================================================*/
+#if (CONFIG_PRINTF_ENABLE > 0)
 static void  reverseBuffer(ch_t *begin, ch_t *end);
-static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
-                  u8_t zerosRequired);
+static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_req);
 static int_t CalcFormatSize(const ch_t *format, va_list arg);
+#endif
 
 /*==============================================================================
  Local object definitions
 ==============================================================================*/
+#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
 static FILE_t *kprintFile;
+#endif
 
 /*==============================================================================
  Exported object definitions
@@ -77,74 +78,44 @@ static FILE_t *kprintFile;
 
 //==============================================================================
 /**
- * @brief Enable kprint functionality
- *
- * @param filename      path to file used to write kernel log
- */
-//==============================================================================
-void io_kprintEnable(ch_t *filename)
-{
-        /* close file if opened */
-        if (kprintFile) {
-                fclose(kprintFile);
-                kprintFile = NULL;
-        }
-
-        /* open new file */
-        if (kprintFile == NULL) {
-                kprintFile = fopen(filename, "w");
-        }
-}
-
-//==============================================================================
-/**
- * @brief Disable kprint functionality
- */
-//==============================================================================
-void io_kprintDisable(void)
-{
-        if (kprintFile) {
-                fclose(kprintFile);
-                kprintFile = NULL;
-        }
-}
-
-//==============================================================================
-/**
  * @brief Function reverse buffer
  *
  * @param *begin     buffer begin
  * @param *end       buffer end
  */
 //==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
 static void reverseBuffer(ch_t *begin, ch_t *end)
 {
         ch_t temp;
 
         while (end > begin) {
-                temp = *end;
-                *end-- = *begin;
+                temp     = *end;
+                *end--   = *begin;
                 *begin++ = temp;
         }
 }
+#endif
 
 //==============================================================================
 /**
  * @brief Function convert value to the character
  *
- * @param value         converted value
- * @param *buffer       result buffer
- * @param base          conversion base
+ * @param  val          converted value
+ * @param *buf          result buffer
+ * @param  base         conversion base
+ * @param  usign_val    unsigned value conversion
+ * @param  zeros_req    zeros required (added zeros to conversion)
  *
  * @return pointer in the buffer
  */
 //==============================================================================
-static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
-                  u8_t zerosRequired)
+#if (CONFIG_PRINTF_ENABLE > 0)
+static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_req)
 {
         static const ch_t digits[] = "0123456789ABCDEF";
 
-        ch_t  *bufferCopy = buffer;
+        ch_t  *bufferCopy = buf;
         i32_t  sign    = 0;
         u8_t   zeroCnt = 0;
         i32_t  quot;
@@ -154,41 +125,94 @@ static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
                 goto itoa_exit;
         }
 
-        if (unsignedValue) {
+        if (usign_val) {
                 do {
-                        quot = (u32_t) ((u32_t) value / (u32_t) base);
-                        rem = (u32_t) ((u32_t) value % (u32_t) base);
-                        *buffer++ = digits[rem];
+                        quot   = (u32_t) ((u32_t) val / (u32_t) base);
+                        rem    = (u32_t) ((u32_t) val % (u32_t) base);
+                        *buf++ = digits[rem];
                         zeroCnt++;
-                } while ((value = quot));
+                } while ((val = quot));
         } else {
-                if ((base == 10) && ((sign = value) < 0)) {
-                        value = -value;
+                if ((base == 10) && ((sign = val) < 0)) {
+                        val = -val;
                 }
 
                 do {
-                        quot = value / base;
-                        rem = value % base;
-                        *buffer++ = digits[rem];
+                        quot   = val / base;
+                        rem    = val % base;
+                        *buf++ = digits[rem];
                         zeroCnt++;
-                } while ((value = quot));
+                } while ((val = quot));
         }
 
-        while (zerosRequired > zeroCnt) {
-                *buffer++ = '0';
+        while (zeros_req > zeroCnt) {
+                *buf++ = '0';
                 zeroCnt++;
         }
 
         if (sign < 0) {
-                *buffer++ = '-';
+                *buf++ = '-';
         }
 
-        reverseBuffer(bufferCopy, (buffer - 1));
+        reverseBuffer(bufferCopy, (buf - 1));
 
         itoa_exit:
-        *buffer = '\0';
+        *buf = '\0';
         return bufferCopy;
 }
+#endif
+
+//==============================================================================
+/**
+ * @brief Function convert arguments to stream
+ *
+ * @param[in] *format        message format
+ * @param[in]  arg           argument list
+ *
+ * @return size of snprintf result
+ */
+//==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
+static int_t CalcFormatSize(const ch_t *format, va_list arg)
+{
+        ch_t chr;
+        int_t size = 1;
+
+        while ((chr = *format++) != '\0') {
+                if (chr != '%') {
+                        if (chr == '\n') {
+                                size += 2;
+                        } else {
+                                size++;
+                        }
+                } else {
+                        chr = *format++;
+
+                        if (chr == '%' || chr == 'c') {
+                                if (chr == 'c') {
+                                        chr = va_arg(arg, i32_t);
+                                }
+
+                                size++;
+                                continue;
+                        }
+
+                        if (chr == 's') {
+                                size += strlen(va_arg(arg, ch_t*));
+                                continue;
+                        }
+
+                        if (chr == 'd' || chr == 'x' || chr == 'u') {
+                                chr = va_arg(arg, i32_t);
+                                size += 11;
+                                continue;
+                        }
+                }
+        }
+
+        return size;
+}
+#endif
 
 //==============================================================================
 /**
@@ -198,7 +222,7 @@ static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
  * found
  *
  * @param[in]  *string       string to decode
- * @param[in]  base          decode base
+ * @param[in]   base         decode base
  * @param[out] *value        pointer to result
  *
  * @return pointer in string when operation was finished
@@ -216,7 +240,7 @@ ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
                 goto atoi_end;
         }
 
-        while ((character = *string) != ASCII_NULL) {
+        while ((character = *string) != '\0') {
                 /* if space exist, atoi continue finding correct character */
                 if ((character == ' ') && (charFound == FALSE)) {
                         string++;
@@ -271,52 +295,42 @@ ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
 
 //==============================================================================
 /**
- * @brief Function convert arguments to stream
+ * @brief Enable kprint functionality
  *
- * @param[in] *format        message format
- * @param[in] arg            argument list
- *
- * @return size of snprintf result
+ * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-static int_t CalcFormatSize(const ch_t *format, va_list arg)
+void io_kprintEnable(ch_t *filename)
 {
-        ch_t chr;
-        int_t size = 1;
-
-        while ((chr = *format++) != ASCII_NULL) {
-                if (chr != '%') {
-                        if (chr == '\n') {
-                                size += 2;
-                        } else {
-                                size++;
-                        }
-                } else {
-                        chr = *format++;
-
-                        if (chr == '%' || chr == 'c') {
-                                if (chr == 'c') {
-                                        chr = va_arg(arg, i32_t);
-                                }
-
-                                size++;
-                                continue;
-                        }
-
-                        if (chr == 's') {
-                                size += strlen(va_arg(arg, ch_t*));
-                                continue;
-                        }
-
-                        if (chr == 'd' || chr == 'x' || chr == 'u') {
-                                chr = va_arg(arg, i32_t);
-                                size += 11;
-                                continue;
-                        }
-                }
+#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
+        /* close file if opened */
+        if (kprintFile) {
+                fclose(kprintFile);
+                kprintFile = NULL;
         }
 
-        return size;
+        /* open new file */
+        if (kprintFile == NULL) {
+                kprintFile = fopen(filename, "w");
+        }
+#else
+        (void)filename;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Disable kprint functionality
+ */
+//==============================================================================
+void io_kprintDisable(void)
+{
+#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
+        if (kprintFile) {
+                fclose(kprintFile);
+                kprintFile = NULL;
+        }
+#endif
 }
 
 //==============================================================================
@@ -331,6 +345,7 @@ static int_t CalcFormatSize(const ch_t *format, va_list arg)
 //==============================================================================
 int_t io_kprint(const ch_t *format, ...)
 {
+#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
         va_list args;
         int_t n = 0;
 
@@ -353,6 +368,10 @@ int_t io_kprint(const ch_t *format, ...)
         }
 
         return n;
+#else
+        (void)format;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -455,6 +474,7 @@ ch_t *io_fgets(ch_t *str, int_t size, FILE_t *stream)
 //==============================================================================
 int_t io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
         int_t n = 0;
 
@@ -465,6 +485,12 @@ int_t io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
         }
 
         return n;
+#else
+        (void)bfr;
+        (void)size;
+        (void)format;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -480,6 +506,7 @@ int_t io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
 //==============================================================================
 int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
         int_t n = 0;
 
@@ -502,6 +529,11 @@ int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
         }
 
         return n;
+#else
+        (void)file;
+        (void)format;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -518,6 +550,7 @@ int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
 //==============================================================================
 int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
 #define putCharacter(character)                 \
       {                                         \
             if ((size_t)slen < size)  {         \
@@ -531,10 +564,10 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
         ch_t  chr;
         int_t slen = 1;
 
-        while ((chr = *format++) != ASCII_NULL) {
+        while ((chr = *format++) != '\0') {
                 if (chr != '%') {
-                        if (chr == ASCII_LF) {
-                                putCharacter(ASCII_CR);
+                        if (chr == '\n') {
+                                putCharacter('\r');
                         }
 
                         putCharacter(chr);
@@ -593,6 +626,13 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
         return (slen - 1);
 
 #undef putChar
+#else
+        (void)buf;
+        (void)size;
+        (void)format;
+        (void)arg;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -608,16 +648,17 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
 //==============================================================================
 int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
 {
+#if (CONFIG_SCANF_ENABLE > 0)
         int_t n = 0;
         va_list args;
 
-        ch_t *str = calloc(FSCANF_STREAM_BUFFER_SIZE, sizeof(ch_t));
+        ch_t *str = calloc(CONFIG_FSCANF_STREAM_BUFFER_SIZE, sizeof(ch_t));
 
         if (str == NULL) {
                 return 0;
         }
 
-        if (io_fgets(str, FSCANF_STREAM_BUFFER_SIZE, stream) == str) {
+        if (io_fgets(str, CONFIG_FSCANF_STREAM_BUFFER_SIZE, stream) == str) {
                 for(uint_t i = 0; i < strlen(str); i++) {
                         if (str[i] == '\n') {
                                 str[i] = '\0';
@@ -632,6 +673,11 @@ int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
 
         free(str);
         return n;
+#else
+        (void)stream;
+        (void)format;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -647,11 +693,17 @@ int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
 //==============================================================================
 int_t io_sscanf(const ch_t *str, const ch_t *format, ...)
 {
+#if (CONFIG_SCANF_ENABLE > 0)
         va_list args;
         va_start(args, format);
         int_t n = io_vsscanf(str, format, args);
         va_end(args);
         return n;
+#else
+        (void)str;
+        (void)format;
+        return 0;
+#endif
 }
 
 //============================================================================//
@@ -667,6 +719,7 @@ int_t io_sscanf(const ch_t *str, const ch_t *format, ...)
 //============================================================================//
 int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 {
+#if (CONFIG_SCANF_ENABLE > 0)
         int_t   read_fields = 0;
         ch_t    chr;
         int_t   value;
@@ -834,6 +887,12 @@ int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 
         io_sscanf_end:
         return read_fields;
+#else
+        (void)str;
+        (void)format;
+        (void)args;
+        return 0;
+#endif
 }
 
 /*==============================================================================

@@ -1,6 +1,6 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    config.h
 
 @author  Daniel Zorychta
@@ -24,28 +24,20 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
-                                            Include files
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                 Exported symbolic constants/macros
-==================================================================================================*/
-/**=== FREQ CONFIGURATION ========================================================================*/
+/**=== FREQ CONFIGURATION ====================================================*/
 /**
  * CPU frequency [Hz]
  */
 #define CONFIG_CPU_TARGET_FREQ                        (72000000UL)
 
 
-/**=== HEAP CONFIGURATION ========================================================================*/
+/**=== HEAP CONFIGURATION ====================================================*/
 /**
  * SIZE OF DYNAMIC ALLOCATED MEMORY (HEAP) [bytes]
  */
@@ -62,7 +54,7 @@ extern "C" {
 #define CONFIG_HEAP_BLOCK_SIZE                        (16)
 
 
-/**=== RTOS CONFIGURATION ========================================================================*/
+/**=== RTOS CONFIGURATION ====================================================*/
 /**
  * Task priorities
  */
@@ -94,14 +86,33 @@ extern "C" {
 #define CONFIG_RTOS_LIB_KERNEL_IRQ_PRIO               (15)
 
 
-/**=== PRINT CONFIGURATION =======================================================================*/
+/**=== PRINT CONFIGURATION ===================================================*/
 /**
- * Enable (1) or disable (0) standard io functions
+ * Enable (1) or disable (0) printf() family functions
  */
-#define CONFIG_STDIO_ENABLE                           (1)
+#define CONFIG_PRINTF_ENABLE                          (1)
 
+/**
+ * Enable (1) or disable (0) scanf() family functions
+ */
+#define CONFIG_SCANF_ENABLE                           (1)
 
-/**=== APPLICATION MONITOR CONFIGURATION =========================================================*/
+/**
+ * Enable (1) or disable (0) system messages
+ */
+#define CONFIG_SYSTEM_MSG_ENABLE                      (1)
+
+/**
+ * Enable (1) or disable (0) color definitions
+ */
+#define CONFIG_COLOR_TERM_ENABLE                      (1)
+
+/**
+ * Maximum stream buffer size
+ */
+#define CONFIG_FSCANF_STREAM_BUFFER_SIZE              (100)
+
+/**=== APPLICATION MONITOR CONFIGURATION =====================================*/
 /**
  * Enable (1) or disable (0) memory usage monitoring
  */
@@ -118,7 +129,7 @@ extern "C" {
 #define CONFIG_MONITOR_CPU_LOAD                       (1)
 
 
-/**=== SYSTEM ENVIRONMENT CONFIGURATION ==========================================================*/
+/**=== SYSTEM ENVIRONMENT CONFIGURATION ======================================*/
 #define CONFIG_HOSTNAME                               "watherst"
 
 
@@ -127,6 +138,6 @@ extern "C" {
 #endif
 
 #endif /* CONFIG_H_ */
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/
