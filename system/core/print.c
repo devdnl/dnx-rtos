@@ -669,12 +669,13 @@ int_t pr_sscanf(const ch_t *str, const ch_t *format, ...)
 //============================================================================//
 int_t pr_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 {
-        int_t    read_fields = 0;
-        ch_t     chr;
-        int_t    value;
-        ch_t    *strs;
-        int_t    sign;
-        ch_t    *string;
+        int_t   read_fields = 0;
+        ch_t    chr;
+        int_t   value;
+        ch_t   *strs;
+        int_t   sign;
+        ch_t   *string;
+        uint_t  bfr_size;
 
         if (!str || !format) {
                 return EOF;
@@ -687,6 +688,14 @@ int_t pr_vsscanf(const ch_t *str, const ch_t *format, va_list args)
         while ((chr = *format++) != '\0') {
                 if (chr == '%') {
                         chr = *format++;
+
+                        /* calculate buffer size */
+                        bfr_size = 0;
+                        while (chr >= '0' && chr <= '9') {
+                                bfr_size *= 10;
+                                bfr_size += chr - '0';
+                                chr       = *format++;
+                        }
 
                         switch (chr) {
                         case '%':
