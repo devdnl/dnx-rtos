@@ -50,7 +50,7 @@ extern "C" {
 
 #define VT100_RESET_ATTRIBUTES          "\x1B[0m"
 #define VT100_CLEAR_SCREEN              "\x1B[2J"
-#define VT100_NO_LINE_WRAP              "\x1B[?7l"
+#define VT100_DISABLE_LINE_WRAP         "\x1B[7l"
 #define VT100_CURSOR_HOME               "\x1B[H"
 #define VT100_CURSOR_OFF                "\x1B[?25l"
 #define VT100_CURSOR_ON                 "\x1B[?25h"
@@ -546,7 +546,7 @@ static void task_tty(void *arg)
                 TaskDelay(250);
         }
 
-        msg = VT100_RESET_ATTRIBUTES VT100_CLEAR_SCREEN VT100_NO_LINE_WRAP
+        msg = VT100_RESET_ATTRIBUTES VT100_CLEAR_SCREEN VT100_DISABLE_LINE_WRAP
               VT100_CURSOR_HOME;
 
         fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
@@ -616,6 +616,10 @@ static void task_tty(void *arg)
 
                         /* no Fn key was detected */
                         if (keyfn == TTY_SEL_NONE) {
+                                if (chr == '\r') {
+                                        chr = '\n';
+                                }
+
                                 if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK) {
                                         if (ttyPtr->input.level < TTY_OUT_BFR_SIZE) {
                                                 ttyPtr->input.buffer[ttyPtr->input.txidx++] = chr;

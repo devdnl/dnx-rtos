@@ -620,6 +620,13 @@ int_t pr_fscanf(FILE_t *stream, const ch_t *format, ...)
         }
 
         if (pr_fgets(str, FSCANF_STREAM_BUFFER_SIZE, stream) == str) {
+                for(uint_t i = 0; i < strlen(str); i++) {
+                        if (str[i] == '\n') {
+                                str[i] = '\0';
+                                break;
+                        }
+                }
+
                 va_start(args, format);
                 n = pr_vsscanf(str, format, args);
                 va_end(args);

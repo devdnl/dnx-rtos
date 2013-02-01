@@ -758,7 +758,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
             PrintPrompt();
 
             /* waiting for command */
-            scanf("%100s", line);
+            scanf("%s", line);
 
             /* check that history was called */
             if (strcmp(line, "\x1B[A") == 0)

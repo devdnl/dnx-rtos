@@ -56,7 +56,7 @@ APP_SEC_BEGIN
 #define STATUS_FILE                 "/etc/netinf"
 
 /* wait time to connect to DHCP server [ms] */
-#define DHCP_CLIENT_WAIT_TIME       2000
+#define DHCP_CLIENT_WAIT_TIME       5000
 
 /* base handling time [ms] */
 #define BASE_TIME                   250
