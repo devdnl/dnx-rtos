@@ -44,13 +44,15 @@ extern "C" {
 /** translate function to STDC */
 #define printf(...)                             pr_fprintf(stdout, __VA_ARGS__)
 #define fprintf(...)                            pr_fprintf(__VA_ARGS__)
+#define snprintf(bfr, size, ...)                pr_snprintf(bfr, size, __VA_ARGS__)
+#define vsnprintf(bfr, size, args)              pr_vsnprintf(bfr, size, args)
 #define kprint(...)                             pr_kprint(__VA_ARGS__)
 #define kprintEnable(path)                      pr_kprintEnable(path)
 #define kprintDisable()                         pr_kprintDisable()
-#define snprintf(str, size, ...)                pr_snprintf(str, size, __VA_ARGS__)
 #define scanf(format, ...)                      pr_fscanf(stdin, format, __VA_ARGS__)
 #define fscanf(stream, format, ...)             pr_fscanf(stream, format, __VA_ARGS__)
 #define sscanf(str, format, ...)                pr_sscanf(str, format, __VA_ARGS__)
+#define vsscanf(str, format, args)              pr_vsscanf(str, format, args)
 #define putc(c, stream)                         pr_fputc(c, stream)
 #define fputc(c, stream)                        pr_fputc(c, stream)
 #define putchar(c)                              pr_fputc(c, stdout)
@@ -114,17 +116,19 @@ extern "C" {
 ==============================================================================*/
 #if (CONFIG_PRINT_ENABLE == 1)
 extern ch_t  *pr_atoi(ch_t *string, u8_t base, i32_t *value);
-extern int_t  pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...);
 extern int_t  pr_kprint(const ch_t *format, ...);
+extern int_t  pr_snprintf(ch_t *buf, u32_t size, const ch_t *format, ...);
 extern int_t  pr_fprintf(FILE_t *file, const ch_t *format, ...);
+extern int_t  pr_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg);
 extern void   pr_kprintEnable(ch_t *filename);
 extern void   pr_kprintDisable(void);
-extern int_t  pr_fputc(int_t c, FILE_t *stream);
-extern int_t  pr_getc(FILE_t *stream);
+extern int_t  pr_fputc(int_t c, FILE_t *buf);
+extern int_t  pr_getc(FILE_t *buf);
 extern ch_t  *pr_fgets(ch_t *str, int_t size, FILE_t *stream);
-extern int_t  pr_fscanf(FILE_t *stream, const ch_t *format, ...);
+extern int_t  pr_fscanf(FILE_t *buf, const ch_t *format, ...);
 extern int_t  pr_sscanf(const ch_t *str, const ch_t *format, ...);
-#else
+extern int_t  pr_vsscanf(const ch_t *str, const ch_t *format, va_list args);
+#else /* DNLFIXME print.* disabled functions: correction needed */
 #define pr_atoi(string, base, value)                  NULL
 #define pr_snprintf(stream, size, format, ...)        0
 #define pr_kprint(format, ...)                        0

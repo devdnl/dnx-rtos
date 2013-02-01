@@ -50,6 +50,8 @@
 #define ftell(file)                       vfs_ftell(file)
 #define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
 
+#define FSCANF_STREAM_BUFFER_SIZE         100
+
 /*==============================================================================
  Local types, enums definitions
 ==============================================================================*/
@@ -58,8 +60,6 @@
  Local function prototypes
 ==============================================================================*/
 static void reverseBuffer(ch_t *begin, ch_t *end);
-static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format,
-                      va_list arg);
 static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
                   u8_t zerosRequired);
 static int_t CalcFormatSize(const ch_t *format, va_list arg);
@@ -195,8 +195,9 @@ static ch_t *itoa(i32_t value, ch_t *buffer, u8_t base, bool_t unsignedValue,
 //==============================================================================
 /**
  * @brief Function convert ASCII to the number
- * When function find any other character than number (depended of actual base) immediately finished
- * operation and return pointer when bad character was found
+ * When function find any other character than number (depended of actual base)
+ * immediately finished operation and return pointer when bad character was
+ * found
  *
  * @param[in]  *string       string to decode
  * @param[in]  base          decode base
@@ -322,69 +323,6 @@ static int_t CalcFormatSize(const ch_t *format, va_list arg)
 
 //==============================================================================
 /**
- * @brief Function send to buffer formated output string
- *
- * @param *stream             output buffer
- * @param size                buffer size
- * @param *format             formated text
- * @param ...                 format arguments
- *
- * @retval number of written characters
- */
-//==============================================================================
-int_t pr_snprintf(ch_t *stream, u32_t size, const ch_t *format, ...)
-{
-        va_list args;
-        int_t n = 0;
-
-        if (stream) {
-                va_start(args, format);
-                n = vsnprint(stream, size, format, args);
-                va_end(args);
-        }
-
-        return n;
-}
-
-//==============================================================================
-/**
- * @brief Function send on a standard output string
- *
- * @param *file               file
- * @param *format             formated text
- * @param ...                 format arguments
- *
- * @retval number of written characters
- */
-//==============================================================================
-int_t pr_fprintf(FILE_t *file, const ch_t *format, ...)
-{
-        va_list args;
-        int_t n = 0;
-
-        if (file) {
-                va_start(args, format);
-                u32_t size = CalcFormatSize(format, args);
-                va_end(args);
-
-                ch_t *str = calloc(1, size);
-
-                if (str) {
-                        va_start(args, format);
-                        n = vsnprint(str, size, format, args);
-                        va_end(args);
-
-                        fwrite(str, sizeof(ch_t), size, file);
-
-                        free(str);
-                }
-        }
-
-        return n;
-}
-
-//==============================================================================
-/**
  * @brief Function send kernel message on terminal
  *
  * @param *format             formated text
@@ -407,7 +345,7 @@ int_t pr_kprint(const ch_t *format, ...)
 
                 if (buffer) {
                         va_start(args, format);
-                        n = vsnprint(buffer, size, format, args);
+                        n = pr_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
                         fwrite(buffer, sizeof(ch_t), size, kprintFile);
@@ -453,17 +391,19 @@ int_t pr_getc(FILE_t *stream)
         int_t chr  = EOF;
         u16_t dcnt = 0;
 
-        if (stream) {
-                while (fread(&chr, sizeof(ch_t), 1, stream) < 1) {
-                        if (dcnt >= 60000) {
-                                TaskDelay(200);
-                        } else if (dcnt >= 5000) {
-                                dcnt += 100;
-                                TaskDelay(100);
-                        } else {
-                                dcnt += 20;
-                                TaskDelay(20);
-                        }
+        if (!stream) {
+                return EOF;
+        }
+
+        while (fread(&chr, sizeof(ch_t), 1, stream) < 1) {
+                if (dcnt >= 60000) {
+                        TaskDelay(200);
+                } else if (dcnt >= 5000) {
+                        dcnt += 100;
+                        TaskDelay(100);
+                } else {
+                        dcnt += 20;
+                        TaskDelay(20);
                 }
         }
 
@@ -473,6 +413,12 @@ int_t pr_getc(FILE_t *stream)
 //==============================================================================
 /**
  * @brief Function gets number of bytes from file
+ *
+ * @param[out] *str          buffer with string
+ * @param[in]   size         buffer size
+ * @param[in]  *stream       source stream
+ *
+ * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
 ch_t *pr_fgets(ch_t *str, int_t size, FILE_t *stream)
@@ -486,22 +432,85 @@ ch_t *pr_fgets(ch_t *str, int_t size, FILE_t *stream)
 
                 if (str[i] == (ch_t)EOF && i == 0) {
                         return NULL;
-                }
-
-                if (str[i] == '\n') {
+                } else if (str[i] == '\n' || str[i] == (ch_t)EOF) {
                         str[i + 1] = '\0';
                         break;
                 }
         }
+
+        str[size - 1] = '\0';
 
         return str;
 }
 
 //==============================================================================
 /**
+ * @brief Function send to buffer formated output string
+ *
+ * @param *bfr                output buffer
+ * @param  size               buffer size
+ * @param *format             formated text
+ * @param ...                 format arguments
+ *
+ * @retval number of written characters
+ */
+//==============================================================================
+int_t pr_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
+{
+        va_list args;
+        int_t n = 0;
+
+        if (bfr) {
+                va_start(args, format);
+                n = pr_vsnprintf(bfr, size, format, args);
+                va_end(args);
+        }
+
+        return n;
+}
+
+//==============================================================================
+/**
+ * @brief Function send on a standard output string
+ *
+ * @param *file               file
+ * @param *format             formated text
+ * @param ...                 format arguments
+ *
+ * @retval number of written characters
+ */
+//==============================================================================
+int_t pr_fprintf(FILE_t *file, const ch_t *format, ...)
+{
+        va_list args;
+        int_t n = 0;
+
+        if (file) {
+                va_start(args, format);
+                u32_t size = CalcFormatSize(format, args);
+                va_end(args);
+
+                ch_t *str = calloc(1, size);
+
+                if (str) {
+                        va_start(args, format);
+                        n = pr_vsnprintf(str, size, format, args);
+                        va_end(args);
+
+                        fwrite(str, sizeof(ch_t), size, file);
+
+                        free(str);
+                }
+        }
+
+        return n;
+}
+
+//==============================================================================
+/**
  * @brief Function convert arguments to stream
  *
- * @param[in] *stream        buffer for stream
+ * @param[in] *buf           buffer for stream
  * @param[in]  size          buffer size
  * @param[in] *format        message format
  * @param[in]  arg           argument list
@@ -509,23 +518,21 @@ ch_t *pr_fgets(ch_t *str, int_t size, FILE_t *stream)
  * @return number of printed characters
  */
 //==============================================================================
-static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format,
-                      va_list arg)
+int_t pr_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
 {
 #define putCharacter(character)                 \
       {                                         \
             if ((size_t)slen < size)  {         \
-                  *stream++ = character;        \
+                  *buf++ = character;           \
                   slen++;                       \
             }  else {                           \
                   goto vsnprint_end;            \
             }                                   \
       }
 
-        ch_t chr;
+        ch_t  chr;
         int_t slen = 1;
 
-        /* analyze format */
         while ((chr = *format++) != ASCII_NULL) {
                 if (chr != '%') {
                         if (chr == ASCII_LF) {
@@ -584,7 +591,7 @@ static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format,
         }
 
         vsnprint_end:
-        *stream = 0;
+        *buf = 0;
         return (slen - 1);
 
 #undef putChar
@@ -598,214 +605,221 @@ static int_t vsnprint(ch_t *stream, size_t size, const ch_t *format,
  * @param[in]  *format        message format
  * @param[out]  ...           output
  *
- * @return number of scaned elements
+ * @return number of scanned elements
  */
 //==============================================================================
 int_t pr_fscanf(FILE_t *stream, const ch_t *format, ...)
 {
-//        int_t read_fields = 0;
-//        int_t value = 0;
-//        uint_t slen = 0;
-//        ch_t chr;
-//        va_list args;
-//
-//        va_start(args, format);
-//
-//        if (!stream || !format) {
-//                read_fields = EOF;
-//        }
-//
-//        while ((chr = *format++) != '\0') {
-//                if (chr == '%') {
-//                        chr = *format++;
-//
-//                        /* read value from format */
-//                        while (chr >= '0' && chr <= '9') {
-//                                value *= 10;
-//                                value += chr - '0';
-//                                chr = *format++;
-//                        }
-//
-//                        /* get decimal value */
-//                        if (chr == 'd' || chr == 'u') {
-//                                i32_t *dec = var;
-//                                i32_t sign = 1;
-//                                bool_t uint = (chr == 'u' ? TRUE : FALSE);
-//
-//                                *dec = 0;
-//                                read_fields++;
-//
-//                                while (TRUE) {
-//                                        chr = pr_getchar(stream);
-//
-//                                        if ((chr >= '0' && chr <= '9')
-//                                            || (chr == '-' && !uint && sign == 1)) {
-//
-//                                                if (chr == '-' && sign == 1
-//                                                    && !uint) {
-//                                                        sign = -1;
-//                                                }
-//
-//                                                if (chr >= '0' && chr <= '9') {
-//                                                        chr -= '0';
-//
-//                                                        *dec *= 10;
-//                                                        *dec += chr;
-//                                                }
-//
-//                                                slen++;
-//
-//                                        } else if (chr == ASCII_CR
-//                                                   || chr == ASCII_LF) {
-//                                                *dec *= sign;
-//                                                goto tscan_end;
-//                                        } else if ((chr == ASCII_BS)
-//                                                   && (slen > 1)) {
-//                                                if (slen == 2 && sign == -1) {
-//                                                        sign = 1;
-//                                                } else {
-//                                                        *dec /= 10;
-//                                                }
-//
-//                                                slen--;
-//                                                continue;
-//                                        }
-//                                }
-//
-//                                goto tscan_end;
-//                        }
-//
-//                        /* get hex value */
-//                        if (chr == 'x') {
-//                                u32_t *hex = var;
-//
-//                                *hex = 0;
-//                                read_fields++;
-//
-//                                while (TRUE) {
-//                                        chr = pr_getchar(stream);
-//
-//                                        if (((chr >= '0') && (chr <= '9'))
-//                                            || ((chr >= 'A') && (chr <= 'F'))
-//                                            || ((chr >= 'a') && (chr <= 'f'))) {
-//
-//                                                if ((chr >= 'A')
-//                                                    && (chr <= 'F')) {
-//                                                        chr = chr - 'A' + 0x0A;
-//                                                } else if ((chr >= 'a')
-//                                                           && (chr <= 'f')) {
-//                                                        chr = chr - 'a' + 0x0A;
-//                                                } else if ((chr >= '0')
-//                                                           && (chr <= '9')) {
-//                                                        chr -= '0';
-//                                                }
-//
-//                                                *hex <<= 4;
-//                                                *hex |= chr;
-//
-//                                                slen++;
-//
-//                                        } else if (chr == ASCII_CR
-//                                                   || chr == ASCII_LF) {
-//                                                goto tscan_end;
-//                                        } else if ((chr == ASCII_BS)
-//                                                   && (slen > 1)) {
-//                                                *hex >>= 4;
-//                                                slen--;
-//                                                continue;
-//                                        }
-//                                }
-//                        }
-//
-//                        /* get binary value */
-//                        if (chr == 'b') {
-//                                u32_t *bin = var;
-//
-//                                *bin = 0;
-//                                read_fields++;
-//
-//                                while (TRUE) {
-//                                        chr = pr_getchar(stream);
-//
-//                                        if (chr == '0' || chr == '1') {
-//
-//                                                chr -= '0';
-//
-//                                                *bin <<= 1;
-//                                                *bin |= chr;
-//
-//                                                slen++;
-//
-//                                        } else if (chr == ASCII_CR
-//                                                   || chr == ASCII_LF) {
-//                                                goto tscan_end;
-//                                        } else if ((chr == ASCII_BS)
-//                                                   && (slen > 1)) {
-//                                                *bin >>= 1;
-//                                                slen--;
-//                                                continue;
-//                                        }
-//                                }
-//                        }
-//
-//                        /* get string */
-//                        if (chr == 's') {
-//                                u16_t bfrSize = UINT16_MAX;
-//                                ch_t *string = var;
-//                                u16_t strLen = 0;
-//
-//                                if (*(--format) != '%' && value) {
-//                                        bfrSize = value - 1;
-//                                }
-//
-//                                read_fields++;
-//
-//                                while (TRUE) {
-//                                        chr = pr_getchar(stream);
-//
-//                                        /* put character */
-//                                        if (chr == ASCII_CR || chr == ASCII_LF) {
-//                                                *(string++) = 0x00;
-//                                                goto tscan_end;
-//                                        } else if ((chr == ASCII_BS)
-//                                                   && (slen > 1) && strLen) {
-//                                                *(--string) = 0x00;
-//                                                slen--;
-//                                                strLen--;
-//                                                continue;
-//                                        } else if ((chr >= ' ')
-//                                                   && (strLen < bfrSize)) {
-//                                                *(string++) = chr;
-//                                                strLen++;
-//                                                slen++;
-//                                        }
-//                                }
-//                        }
-//                }
-//        }
-//
-//        read_fields = EOF;
-//
-//        tscan_end:
-//        va_end(args);
-//        return read_fields;
-        return 0;
+        int_t n = 0;
+        va_list args;
+
+        ch_t *str = calloc(FSCANF_STREAM_BUFFER_SIZE, sizeof(ch_t));
+
+        if (str == NULL) {
+                return 0;
+        }
+
+        if (pr_fgets(str, FSCANF_STREAM_BUFFER_SIZE, stream) == str) {
+                va_start(args, format);
+                n = pr_vsscanf(str, format, args);
+                va_end(args);
+        }
+
+        free(str);
+        return n;
 }
 
 //==============================================================================
 /**
- * @brief Function scan buffer
+ * @brief Function scan arguments defined by format (multiple argument version)
  *
- * @param[in]  *str           buffer
- * @param[in]  *format        message format
+ * @param[in]  *str           data buffer
+ * @param[in]  *format        scan format
  * @param[out]  ...           output
  *
- * @return number of scanned elements
+ * @return number of printed characters
  */
 //==============================================================================
 int_t pr_sscanf(const ch_t *str, const ch_t *format, ...)
 {
-        /* DNLTODO */
+        va_list args;
+        va_start(args, format);
+        int_t n = pr_vsscanf(str, format, args);
+        va_end(args);
+        return n;
+}
+
+//============================================================================//
+/**
+ * @brief Function scan arguments defined by format (argument list version)
+ *
+ * @param[in]  *str           data buffer
+ * @param[in]  *format        scan format
+ * @param[out]  ...           output
+ *
+ * @return number of printed characters
+ */
+//============================================================================//
+int_t pr_vsscanf(const ch_t *str, const ch_t *format, va_list args)
+{
+        int_t    read_fields = 0;
+        ch_t     chr;
+        int_t    value;
+        ch_t    *strs;
+        int_t    sign;
+        ch_t    *string;
+
+        if (!str || !format) {
+                return EOF;
+        }
+
+        if (str[0] == '\0') {
+                return EOF;
+        }
+
+        while ((chr = *format++) != '\0') {
+                if (chr == '%') {
+                        chr = *format++;
+
+                        switch (chr) {
+                        case '%':
+                                if (*str == '%') {
+                                        str++;
+                                        continue;
+                                } else {
+                                        goto pr_sscanf_end;
+                                }
+                                break;
+
+                        case 'd':
+                                value = 0;
+                                sign  = 1;
+
+                                if (*str == '-') {
+                                        sign = -1;
+                                        str++;
+                                }
+
+                                strs  = (ch_t*)str;
+
+                                while (*str >= '0' && *str <= '9') {
+                                        value *= 10;
+                                        value += *str - '0';
+                                        str++;
+                                }
+
+                                if (str != strs) {
+                                        int_t *var = va_arg(args, int_t*);
+                                        *var = value * sign;
+                                        read_fields++;
+                                }
+                                break;
+
+                        case 'x':
+                        case 'X':
+                                value = 0;
+                                sign  = 1;
+
+                                if (*str == '-') {
+                                        sign = -1;
+                                        str++;
+                                }
+
+                                strs  = (ch_t*)str;
+
+                                while (  (*str >= '0' && *str <= '9')
+                                      || (*str >= 'a' && *str <= 'f')
+                                      || (*str >= 'A' && *str <= 'F') ) {
+
+                                        uint_t var;
+
+                                        if (*str >= 'a') {
+                                                var = *str - 'a' + 10;
+                                        } else if (*str >= 'A') {
+                                                var = *str - 'A' + 10;
+                                        } else if (*str >= '0') {
+                                                var = *str - '0';
+                                        } else {
+                                                var = 0;
+                                        }
+
+                                        value *= 16;
+                                        value += var;
+                                        str++;
+                                }
+
+                                if (strs != str) {
+                                        int_t *var = va_arg(args, int_t*);
+                                        *var = value * sign;
+                                        read_fields++;
+                                }
+                                break;
+
+                        case 'o':
+                                value = 0;
+                                sign  = 1;
+
+                                if (*str == '-') {
+                                        sign = -1;
+                                        str++;
+                                }
+
+                                strs  = (ch_t*)str;
+
+                                while (*str >= '0' && *str <= '7') {
+                                        value *= 8;
+                                        value += *str - '0';
+                                        str++;
+                                }
+
+                                if (str != strs) {
+                                        int_t *var = va_arg(args, int_t*);
+                                        *var = value * sign;
+                                        read_fields++;
+                                }
+                                break;
+
+                        case 'c':
+                                if (*str >= ' ') {
+                                        ch_t *var = va_arg(args, ch_t*);
+                                        *var = *str;
+                                        read_fields++;
+                                        str++;
+                                }
+                                break;
+
+                        case 's':
+                                string = va_arg(args, ch_t*);
+                                strcpy(string, str);
+                                read_fields++;
+                                goto pr_sscanf_end;
+                        }
+                } else if (chr <= ' ') {
+                        while (*str <= ' ' && *str != '\0') {
+                                str++;
+                        }
+
+                        if (*str == '\0') {
+                                break;
+                        }
+                } else {
+                        while (  *str == chr && chr != '%'
+                              &&  chr > ' '  && chr != '\0') {
+                                str++;
+                                chr = *format++;
+                        }
+
+                        if (chr == '%' || chr <= ' ') {
+                                format--;
+                                continue;
+                        } else {
+                                break;
+                        }
+                }
+        }
+
+        pr_sscanf_end:
+        return read_fields;
 }
 
 #endif
