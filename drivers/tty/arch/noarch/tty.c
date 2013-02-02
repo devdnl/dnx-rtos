@@ -88,25 +88,27 @@ struct termHdl {
 };
 
 /* key detector results */
-typedef enum {
+enum keyfn {
         TTY1_SELECTED,
         TTY2_SELECTED,
         TTY3_SELECTED,
         TTY4_SELECTED,
         TTY_SEL_PEND,
         TTY_SEL_NONE
-} dfn_t;
+};
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void  task_tty(void *arg);
-static void  clear_tty(u8_t dev);
-static void  add_message(u8_t dev, ch_t *msg, bool_t incMsgCnt);
-static dfn_t decode_fn_keys(ch_t character);
-static u8_t  get_message_index(u8_t dev, u8_t back);
-static void  refresh_tty(u8_t dev, FILE_t *file);
-static void  get_vt100_size(FILE_t *ttysfile);
+static void       task_tty(void *arg);
+static void       stdout_service(FILE_t *stream, u8_t dev);
+static void       stdin_service(FILE_t *stream, u8_t dev);
+static void       clear_tty(u8_t dev);
+static void       add_message(u8_t dev, ch_t *msg, bool_t incMsgCnt);
+static enum keyfn decode_fn_keys(ch_t character);
+static u8_t       get_message_index(u8_t dev, u8_t back);
+static void       refresh_tty(u8_t dev, FILE_t *file);
+static void       get_vt100_size(FILE_t *ttysfile);
 
 /*==============================================================================
   Local object definitions
@@ -535,10 +537,8 @@ static void task_tty(void *arg)
 {
         (void) arg;
 
-        ch_t    chr;
         ch_t   *msg;
         FILE_t *ttys;
-        dfn_t   keyfn;
 
         /* try open selected file */
         while ((ttys = fopen(FILE, "r+")) == NULL) {
@@ -553,101 +553,14 @@ static void task_tty(void *arg)
         get_vt100_size(ttys);
 
         for (;;) {
-                /* pointer to current terminal */
-                struct ttyEntry *ttyPtr = TTY(term->curTTY);
-
-                if (ttyPtr == NULL) {
+                if (TTY(term->curTTY) == NULL) {
                         TaskDelay(100);
                         continue;
                 }
 
-                /* STDOUT support --------------------------------------------*/
-                if (ttyPtr->newMsgCnt > 0) {
-                        if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK) {
-                                /* write all new messages in series */
-                                while (ttyPtr->newMsgCnt) {
-                                        if (ttyPtr->newMsgCnt > term->row) {
-                                                ttyPtr->newMsgCnt = term->row;
-                                        }
+                stdout_service(ttys, term->curTTY);
 
-                                        msg = ttyPtr->line[get_message_index(term->curTTY,
-                                                                             ttyPtr->newMsgCnt)];
-
-                                        ttyPtr->newMsgCnt--;
-
-                                        if (msg) {
-                                                fwrite(msg, sizeof(ch_t),
-                                                       strlen(msg), ttys);
-                                        }
-                                }
-
-                                ttyPtr->refLstLn = RESET;
-
-                                GiveRecMutex(ttyPtr->mtx);
-                        }
-                } else if (ttyPtr->refLstLn == SET) {
-                        if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK) {
-
-                                msg = VT100_CURSOR_OFF
-                                      VT100_CARRIAGE_RETURN
-                                      VT100_LINE_ERASE_FROM_CUR
-                                      VT100_RESET_ATTRIBUTES;
-
-                                fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
-
-                                /* refresh line */
-                                msg = ttyPtr->line[get_message_index(term->curTTY, 1)];
-                                fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
-
-                                /* cursor on */
-                                msg = VT100_CURSOR_ON;
-                                fwrite(msg, sizeof(ch_t), strlen(msg), ttys);
-
-                                ttyPtr->refLstLn = RESET;
-
-                                GiveRecMutex(ttyPtr->mtx);
-                        }
-                }
-
-                /* STDIN support ---------------------------------------------*/
-                if (ioctl(ttys, UART_IORQ_GET_BYTE, &chr) == STD_RET_OK) {
-                        keyfn = decode_fn_keys(chr);
-
-                        /* no Fn key was detected */
-                        if (keyfn == TTY_SEL_NONE) {
-                                if (chr == '\r') {
-                                        chr = '\n';
-                                }
-
-                                if (TakeRecMutex(ttyPtr->mtx, BLOCK_TIME) == OS_OK) {
-                                        if (ttyPtr->input.level < TTY_OUT_BFR_SIZE) {
-                                                ttyPtr->input.buffer[ttyPtr->input.txidx++] = chr;
-
-                                                if (ttyPtr->input.txidx >= TTY_OUT_BFR_SIZE) {
-                                                        ttyPtr->input.txidx = 0;
-                                                }
-
-                                                ttyPtr->input.level++;
-                                        }
-
-                                        GiveRecMutex(ttyPtr->mtx);
-                                }
-
-                                if (ttyPtr->echoOn == SET) {
-                                        ioctl(ttys, UART_IORQ_SEND_BYTE, &chr);
-                                }
-                        } else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->curTTY) ) { /* Fn key was hit */
-                                term->curTTY = keyfn;
-
-                                if (TTY(keyfn) == NULL) {
-                                        TTY_Open(keyfn, TTY_PART_NONE);
-                                }
-
-                                if (TTY(keyfn)) {
-                                        refresh_tty(keyfn, ttys);
-                                }
-                        }
-                }
+                stdin_service(ttys, term->curTTY);
 
                 /* external trigger: terminal switch */
                 if (term->chTTY != -1) {
@@ -656,14 +569,126 @@ static void task_tty(void *arg)
                         refresh_tty(term->curTTY, ttys);
                 }
 
-                /* check if task can go to short TaskDelay */
-                if (ttyPtr->newMsgCnt == 0) {
+                /* check if task can go to short sleep */
+                if (TTY(term->curTTY)->newMsgCnt == 0) {
                         TakeSemCnt(term->semcnt, BLOCK_TIME);
                 }
         }
 
         /* this should never happen */
         TaskTerminate();
+}
+
+//==============================================================================
+/**
+ * @brief Function provide STDOUT service
+ *
+ * @param *stream       file
+ * @param  dev          terminal number
+ */
+//==============================================================================
+static void stdout_service(FILE_t *stream, u8_t dev)
+{
+        ch_t *msg;
+
+        if (TTY(dev)->newMsgCnt > 0) {
+                while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+
+                while (TTY(dev)->newMsgCnt) {
+                        if (TTY(dev)->newMsgCnt > term->row) {
+                                TTY(dev)->newMsgCnt = term->row;
+                        }
+
+                        msg = TTY(dev)->line[get_message_index(term->curTTY,
+                                                       TTY(dev)->newMsgCnt)];
+
+                        TTY(dev)->newMsgCnt--;
+
+                        if (msg) {
+                                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+                        }
+                }
+
+                TTY(dev)->refLstLn = RESET;
+
+                GiveRecMutex(TTY(dev)->mtx);
+        } else if (TTY(dev)->refLstLn == SET) {
+                while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+
+                msg = VT100_CURSOR_OFF
+                      VT100_CARRIAGE_RETURN
+                      VT100_LINE_ERASE_FROM_CUR
+                      VT100_RESET_ATTRIBUTES;
+
+                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+                /* refresh line */
+                msg = TTY(dev)->line[get_message_index(term->curTTY, 1)];
+                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+                /* cursor on */
+                msg = VT100_CURSOR_ON;
+                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+                TTY(dev)->refLstLn = RESET;
+
+                GiveRecMutex(TTY(dev)->mtx);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function provide STDIN service
+ *
+ * @param *stream       file
+ * @param  dev          terminal number
+ */
+//==============================================================================
+static void stdin_service(FILE_t *stream, u8_t dev)
+{
+        ch_t chr;
+        enum keyfn keyfn;
+
+        if (ioctl(stream, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK) {
+                return;
+        }
+
+        keyfn = decode_fn_keys(chr);
+
+        /* no Fn key was detected */
+        if (keyfn == TTY_SEL_NONE) {
+                if (chr == '\r') {
+                        chr = '\n';
+                }
+
+                if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+                        if (TTY(dev)->input.level < TTY_OUT_BFR_SIZE) {
+                                TTY(dev)->input.buffer[TTY(dev)->input.txidx++] = chr;
+
+                                if (TTY(dev)->input.txidx >= TTY_OUT_BFR_SIZE) {
+                                        TTY(dev)->input.txidx = 0;
+                                }
+
+                                TTY(dev)->input.level++;
+                        }
+
+                        GiveRecMutex(TTY(dev)->mtx);
+                }
+
+                if (TTY(dev)->echoOn == SET) {
+                        ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
+                }
+        } else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->curTTY) ) { /* Fn key was hit */
+                term->curTTY = keyfn;
+
+                if (TTY(keyfn) == NULL) {
+                        TTY_Open(keyfn, TTY_PART_NONE);
+                }
+
+                if (TTY(keyfn)) {
+                        refresh_tty(keyfn, stream);
+                }
+        }
 }
 
 //==============================================================================
@@ -785,10 +810,10 @@ static u8_t get_message_index(u8_t dev, u8_t back)
  * @param character     button part of code
  */
 //==============================================================================
-static dfn_t decode_fn_keys(ch_t character)
+static enum keyfn decode_fn_keys(ch_t character)
 {
         static u8_t funcStep = 0;
-        dfn_t state = TTY_SEL_NONE;
+        enum keyfn     state = TTY_SEL_NONE;
 
         /* try detect function keys ^[OP */
         switch (funcStep) {
