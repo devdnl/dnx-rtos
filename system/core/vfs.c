@@ -442,8 +442,7 @@ stdRet_t vfs_closedir(DIR_t *dir)
 {
       stdRet_t status = STD_RET_ERROR;
 
-      if (dir)
-      {
+      if (dir) {
             if (dir->cldir) {
                   status = dir->cldir(dir->fsd, dir);
 

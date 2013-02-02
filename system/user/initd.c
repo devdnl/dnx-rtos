@@ -97,11 +97,11 @@ void Initd(void *arg)
       mount("procfs", NULL, "/proc");
 
       /* early initialization - basic drivers start */
-      if (InitDrv("pll", "/dev/pll") != STD_RET_OK) {
+      if (InitDrv("pll", NULL) != STD_RET_OK) {
             while (TRUE);
       }
 
-      InitDrv("gpio", "/dev/gpio");
+      InitDrv("gpio", NULL);
 
       /* early initialization - terminal support */
       InitDrv("uart1", "/dev/ttyS0");
@@ -128,7 +128,6 @@ void Initd(void *arg)
       InitDrv("ds1307nvm", "/dev/nvm");
       InitDrv("eth0", "/dev/eth0");
       InitDrv("mpl115a2", "/dev/sensor");
-
 
 #if !defined(ARCH_posix)
       if (StartDaemon("lwipd", "--dhcp") == STD_RET_OK) {

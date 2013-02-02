@@ -720,7 +720,7 @@ static void clear_tty(u8_t dev)
 
 //==============================================================================
 /**
- * @brief Add new message or modifi existing
+ * @brief Add new message or modify existing
  *
  * @param dev           number of terminal
  * @param *msg          message

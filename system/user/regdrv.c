@@ -1,4 +1,4 @@
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    regdrv.c
 
 @author  Daniel Zorychta
@@ -22,15 +22,15 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
+/*==============================================================================
                                             Include files
-==================================================================================================*/
+==============================================================================*/
 #include "regdrv.h"
 #include <string.h>
 #include "vfs.h"
@@ -54,9 +54,9 @@ extern "C" {
 #endif
 
 
-/*==================================================================================================
-                                  Local symbolic constants/macros
-==================================================================================================*/
+/*==============================================================================
+  Local symbolic constants/macros
+==============================================================================*/
 #define IMPORT_DRIVER_INTERFACE_CLASS(classname, drvname, devno, devpart)\
 {.drvName    = drvname,\
  .drvInit    = classname##_Init,\
@@ -70,89 +70,68 @@ extern "C" {
                .f_ioctl = classname##_IOCtl}}
 
 
-/*==================================================================================================
-                                   Local types, enums definitions
-==================================================================================================*/
-typedef struct
-{
-      ch_t  *drvName;
-      stdRet_t (*drvInit   )(devx_t dev, fd_t part);
-      stdRet_t (*drvRelease)(devx_t dev, fd_t part);
-      struct vfs_drvcfg drvCfg;
+/*==============================================================================
+  Local types, enums definitions
+==============================================================================*/
+typedef struct {
+        ch_t  *drvName;
+        stdRet_t (*drvInit   )(devx_t dev, fd_t part);
+        stdRet_t (*drvRelease)(devx_t dev, fd_t part);
+        struct vfs_drvcfg drvCfg;
 } regDrv_t;
 
 
-/*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
 
 
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
 /* driver registration */
 static const regDrv_t drvList[] =
 {
-      #ifdef UART_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(UART, "uart1", UART_DEV_1, UART_PART_NONE),
-      #endif
+        IMPORT_DRIVER_INTERFACE_CLASS(UART, "uart1", UART_DEV_1, UART_PART_NONE),
+        IMPORT_DRIVER_INTERFACE_CLASS(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
+        IMPORT_DRIVER_INTERFACE_CLASS(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
+        IMPORT_DRIVER_INTERFACE_CLASS(I2C, "i2c1", I2C_DEV_1, I2C_PART_NONE),
+        IMPORT_DRIVER_INTERFACE_CLASS(ETHER, "eth0", ETH_DEV_1, ETH_PART_NONE),
+        IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307nvm", DS1307_DEV_NVM, DS1307_PART_NONE),
+        IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307rtc", DS1307_DEV_RTC, DS1307_PART_NONE),
 
-      #ifdef GPIO_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
-      #endif
+        #if (TTY_NUMBER_OF_VT > 0)
+        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
+        #endif
 
-      #ifdef PLL_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
-      #endif
+        #if (TTY_NUMBER_OF_VT > 1)
+        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty1", TTY_DEV_1, TTY_PART_NONE),
+        #endif
 
-      #ifdef I2C_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(I2C, "i2c1", I2C_DEV_1, I2C_PART_NONE),
-      #endif
+        #if (TTY_NUMBER_OF_VT > 2)
+        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty2", TTY_DEV_2, TTY_PART_NONE),
+        #endif
 
-      #ifdef ETH_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(ETHER, "eth0", ETH_DEV_1, ETH_PART_NONE),
-      #endif
+        #if (TTY_NUMBER_OF_VT > 3)
+        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
+        #endif
 
-      #ifdef DS1307_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307nvm", DS1307_DEV_NVM, DS1307_PART_NONE),
-      #endif
-
-      #ifdef DS1307_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307rtc", DS1307_DEV_RTC, DS1307_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 0)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 1)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty1", TTY_DEV_1, TTY_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 2)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty2", TTY_DEV_2, TTY_PART_NONE),
-      #endif
-
-      #if (TTY_NUMBER_OF_VT > 3)
-      IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
-      #endif
-
-      #ifdef MPL115A2_H_
-      IMPORT_DRIVER_INTERFACE_CLASS(MPL115A2, "mpl115a2", MPL115A2_DEV_NONE, MPL115A2_PART_NONE),
-      #endif
+        #ifdef MPL115A2_H_
+        IMPORT_DRIVER_INTERFACE_CLASS(MPL115A2, "mpl115a2", MPL115A2_DEV_NONE, MPL115A2_PART_NONE),
+        #endif
 };
 
 
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
 
 
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function find driver name and then initialize device
  *
@@ -161,48 +140,57 @@ static const regDrv_t drvList[] =
  *
  * @return driver depending value, everything not equal to STD_RET_OK are errors
  */
-//================================================================================================//
+//==============================================================================
 stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
 {
-      stdRet_t status = STD_RET_ERROR;
+        if (drvName == NULL) {
+                return STD_RET_ERROR;
+        }
 
-      if (drvName && nodeName) {
-            u16_t n = ARRAY_SIZE(drvList);
+        u16_t n = ARRAY_SIZE(drvList);
 
-            for (u16_t i = 0; i < n; i++) {
-                  if (strcmp(drvList[i].drvName, drvName) == 0) {
-                        devx_t dev  = drvList[i].drvCfg.dev;
-                        fd_t   part = drvList[i].drvCfg.part;
+        for (u16_t i = 0; i < n; i++) {
+                if (strcmp(drvList[i].drvName, drvName) != 0) {
+                        continue;
+                }
 
-                        if (drvList[i].drvInit(dev, part) == STD_RET_OK) {
+                devx_t dev  = drvList[i].drvCfg.dev;
+                fd_t   part = drvList[i].drvCfg.part;
 
-                              status = vfs_mknod(nodeName, (struct vfs_drvcfg*)&drvList[i].drvCfg);
+                if (drvList[i].drvInit(dev, part) != STD_RET_OK) {
+                        kprint(FONT_COLOR_RED"Driver %s initialization error!"
+                               RESET_ATTRIBUTES"\n", drvName);
 
-                              if (status != STD_RET_OK) {
-                                    drvList[i].drvRelease(dev, part);
-                                    kprint(FONT_COLOR_RED"Create node %s failed"RESET_ATTRIBUTES"\n", nodeName);
-                              } else {
-                                    kprint("Created node %s\n", nodeName);
-                              }
+                        return STD_RET_ERROR;
+                }
 
-                              goto InitDrv_end;
+                if (nodeName) {
+                        if (vfs_mknod(nodeName, (struct vfs_drvcfg*)
+                                      &drvList[i].drvCfg) == STD_RET_OK) {
+
+                                kprint("Created node %s\n", nodeName);
+                                return STD_RET_OK;
+                        } else {
+                                drvList[i].drvRelease(dev, part);
+                                kprint(FONT_COLOR_RED"Create node %s failed"
+                                       RESET_ATTRIBUTES"\n", nodeName);
+                                return STD_RET_ERROR;
                         }
 
-                        kprint(FONT_COLOR_RED"Driver %s initialization error!"RESET_ATTRIBUTES"\n", drvName);
+                } else {
+                        kprint("Driver %s initialized\n", drvName);
+                        return STD_RET_OK;
+                }
+        }
 
-                        goto InitDrv_end;
-                  }
-            }
+        kprint(FONT_COLOR_RED"Driver %s does not exist!"
+               RESET_ATTRIBUTES"\n", drvName);
 
-            kprint(FONT_COLOR_RED"Driver %s does not exist!"RESET_ATTRIBUTES"\n", drvName);
-      }
-
-      InitDrv_end:
-      return status;
+        return STD_RET_ERROR;
 }
 
 
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function find driver name and then release device
  *
@@ -210,7 +198,7 @@ stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
  *
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
-//================================================================================================//
+//==============================================================================
 stdRet_t ReleaseDrv(const ch_t *drvName)
 {
       stdRet_t status = STD_RET_ERROR;
@@ -230,7 +218,6 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
             }
       }
 
-
       return status;
 }
 
@@ -239,6 +226,6 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
 }
 #endif
 
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/
