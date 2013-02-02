@@ -53,22 +53,20 @@ extern "C" {
 #else
 #endif
 
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define IMPORT_DRIVER_INTERFACE_CLASS(classname, drvname, devno, devpart)\
+#define IMPORT_DRIVER_INTERFACE(classname, drvname, devno, devpart)\
 {.drvName    = drvname,\
  .drvInit    = classname##_Init,\
  .drvRelease = classname##_Release,\
- .drvCfg     = {.dev     = devno,\
+ .drvCfg     = {.dev    = devno,\
                .part    = devpart,\
                .f_open  = classname##_Open,\
                .f_close = classname##_Close,\
                .f_write = classname##_Write,\
                .f_read  = classname##_Read,\
                .f_ioctl = classname##_IOCtl}}
-
 
 /*==============================================================================
   Local types, enums definitions
@@ -80,11 +78,9 @@ typedef struct {
         struct vfs_drvcfg drvCfg;
 } regDrv_t;
 
-
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-
 
 /*==============================================================================
   Local object definitions
@@ -92,40 +88,38 @@ typedef struct {
 /* driver registration */
 static const regDrv_t drvList[] =
 {
-        IMPORT_DRIVER_INTERFACE_CLASS(UART, "uart1", UART_DEV_1, UART_PART_NONE),
-        IMPORT_DRIVER_INTERFACE_CLASS(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
-        IMPORT_DRIVER_INTERFACE_CLASS(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
-        IMPORT_DRIVER_INTERFACE_CLASS(I2C, "i2c1", I2C_DEV_1, I2C_PART_NONE),
-        IMPORT_DRIVER_INTERFACE_CLASS(ETHER, "eth0", ETH_DEV_1, ETH_PART_NONE),
-        IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307nvm", DS1307_DEV_NVM, DS1307_PART_NONE),
-        IMPORT_DRIVER_INTERFACE_CLASS(DS1307, "ds1307rtc", DS1307_DEV_RTC, DS1307_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1, UART_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(I2C, "i2c1", I2C_DEV_1, I2C_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(ETHER, "eth0", ETH_DEV_1, ETH_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(DS1307, "ds1307nvm", DS1307_DEV_NVM, DS1307_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(DS1307, "ds1307rtc", DS1307_DEV_RTC, DS1307_PART_NONE),
 
         #if (TTY_NUMBER_OF_VT > 0)
-        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
         #endif
 
         #if (TTY_NUMBER_OF_VT > 1)
-        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty1", TTY_DEV_1, TTY_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(TTY, "tty1", TTY_DEV_1, TTY_PART_NONE),
         #endif
 
         #if (TTY_NUMBER_OF_VT > 2)
-        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty2", TTY_DEV_2, TTY_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(TTY, "tty2", TTY_DEV_2, TTY_PART_NONE),
         #endif
 
         #if (TTY_NUMBER_OF_VT > 3)
-        IMPORT_DRIVER_INTERFACE_CLASS(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
         #endif
 
         #ifdef MPL115A2_H_
-        IMPORT_DRIVER_INTERFACE_CLASS(MPL115A2, "mpl115a2", MPL115A2_DEV_NONE, MPL115A2_PART_NONE),
+        IMPORT_DRIVER_INTERFACE(MPL115A2, "mpl115a2", MPL115A2_DEV_NONE, MPL115A2_PART_NONE),
         #endif
 };
-
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-
 
 /*==============================================================================
   Function definitions
@@ -189,7 +183,6 @@ stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
         return STD_RET_ERROR;
 }
 
-
 //==============================================================================
 /**
  * @brief Function find driver name and then release device
@@ -220,7 +213,6 @@ stdRet_t ReleaseDrv(const ch_t *drvName)
 
       return status;
 }
-
 
 #ifdef __cplusplus
 }
