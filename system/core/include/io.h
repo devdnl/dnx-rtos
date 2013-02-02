@@ -44,6 +44,9 @@ extern "C" {
 /** stream values */
 #define EOF                                     (-1)
 
+/** stdio buffer size */
+#define BUFSIZ                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
+
 /** translate function to STDC */
 #define printf(...)                             io_fprintf(stdout, __VA_ARGS__)
 #define fprintf(...)                            io_fprintf(__VA_ARGS__)

@@ -87,7 +87,6 @@ struct termHdl {
         sem_t  semcnt;          /* semaphore used to trigger daemon operation */
 };
 
-
 /* key detector results */
 typedef enum {
         TTY1_SELECTED,
@@ -876,7 +875,7 @@ static void refresh_tty(u8_t dev, FILE_t *file)
 /**
  * @brief Function gets terminal size
  *
- * @param *ttsfile      tty file
+ * @param *ttysfile     tty file
  */
 //==============================================================================
 static void get_vt100_size(FILE_t *ttysfile)

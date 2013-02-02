@@ -56,7 +56,6 @@
  Local function prototypes
 ==============================================================================*/
 #if (CONFIG_PRINTF_ENABLE > 0)
-static void  reverseBuffer(ch_t *begin, ch_t *end);
 static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_req);
 static int_t CalcFormatSize(const ch_t *format, va_list arg);
 #endif
@@ -75,27 +74,6 @@ static FILE_t *kprintFile;
 /*==============================================================================
  Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Function reverse buffer
- *
- * @param *begin     buffer begin
- * @param *end       buffer end
- */
-//==============================================================================
-#if (CONFIG_PRINTF_ENABLE > 0)
-static void reverseBuffer(ch_t *begin, ch_t *end)
-{
-        ch_t temp;
-
-        while (end > begin) {
-                temp     = *end;
-                *end--   = *begin;
-                *begin++ = temp;
-        }
-}
-#endif
 
 //==============================================================================
 /**
@@ -154,7 +132,16 @@ static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_
                 *buf++ = '-';
         }
 
-        reverseBuffer(bufferCopy, (buf - 1));
+        /* reverse buffer */
+        ch_t  temp;
+        ch_t *begin = bufferCopy;
+        ch_t *end   = (buf - 1);
+
+        while (end > begin) {
+                temp     = *end;
+                *end--   = *begin;
+                *begin++ = temp;
+        }
 
         itoa_exit:
         *buf = '\0';
@@ -551,15 +538,16 @@ int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
 int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
+
 #define putCharacter(character)                 \
-      {                                         \
-            if ((size_t)slen < size)  {         \
-                  *buf++ = character;           \
-                  slen++;                       \
-            }  else {                           \
-                  goto vsnprint_end;            \
-            }                                   \
-      }
+        {                                       \
+                if ((size_t)slen < size)  {     \
+                        *buf++ = character;     \
+                        slen++;                 \
+                }  else {                       \
+                        goto vsnprint_end;      \
+                }                               \
+        }
 
         ch_t  chr;
         int_t slen = 1;
@@ -652,13 +640,13 @@ int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
         int_t n = 0;
         va_list args;
 
-        ch_t *str = calloc(CONFIG_FSCANF_STREAM_BUFFER_SIZE, sizeof(ch_t));
+        ch_t *str = calloc(BUFSIZ, sizeof(ch_t));
 
         if (str == NULL) {
                 return 0;
         }
 
-        if (io_fgets(str, CONFIG_FSCANF_STREAM_BUFFER_SIZE, stream) == str) {
+        if (io_fgets(str, BUFSIZ, stream) == str) {
                 for(uint_t i = 0; i < strlen(str); i++) {
                         if (str[i] == '\n') {
                                 str[i] = '\0';
