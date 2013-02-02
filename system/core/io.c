@@ -374,8 +374,12 @@ int_t io_kprint(const ch_t *format, ...)
 int_t io_fputc(int_t c, FILE_t *stream)
 {
         if (stream) {
-                fwrite(&c, sizeof(ch_t), 1, stream);
-                return c;
+                ch_t ch = (ch_t)c;
+                if (fwrite(&ch, sizeof(ch_t), 1, stream) < 1) {
+                        return EOF;
+                } else {
+                        return c;
+                }
         } else {
                 return EOF;
         }
