@@ -57,6 +57,9 @@ extern "C" {
 #define OS_OK                             pdTRUE
 #define OS_NOT_OK                         pdFALSE
 
+/** OS kernel control functions */
+#define OSStartScheduler()                vTaskStartScheduler()
+
 /** TASK LEVEL DEFINITIONS */
 #define TaskTerminate()                   TaskDelete(TaskGetCurrentTaskHandle())
 #define TaskDelay(delay)                  vTaskDelay(delay)

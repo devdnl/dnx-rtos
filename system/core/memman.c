@@ -1,4 +1,4 @@
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    memman.c
 
 @author  Daniel Zorychta
@@ -22,7 +22,7 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 /*
 * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
 * All rights reserved.
@@ -54,23 +54,22 @@
 * Author: Adam Dunkels <adam@sics.se>
 *         Simon Goldschmidt
 *
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
-                                             Include files
-==================================================================================================*/
+/*==============================================================================
+  Include files
+==============================================================================*/
 #include "memman.h"
 #include <string.h>
 #include "oswrap.h"     /* this include must be here because is big problem when is in header */
 
-
-/*==================================================================================================
-                                   Local symbolic constants/macros
-==================================================================================================*/
+/*==============================================================================
+  Local symbolic constants/macros
+==============================================================================*/
 /** USER CFG: heap protection */
 #define MEMMAM_FREE_PROTECT()             TaskSuspendAll()
 #define MEMMAM_FREE_UNPROTECT()           TaskResumeAll()
@@ -116,10 +115,9 @@ extern "C" {
 #define MEM_STATS_INC_USED(size)          used_mem += size
 #define MEM_STATS_DEC_USED(size)          used_mem -= size
 
-
-/*==================================================================================================
-                                   Local types, enums definitions
-==================================================================================================*/
+/*==============================================================================
+  Local types, enums definitions
+==============================================================================*/
 /** type used as pointer */
 typedef u32_t ptr_t;
 
@@ -129,24 +127,22 @@ typedef u32_t ptr_t;
  * we only use the macro SIZEOF_STRUCT_MEM, which automatically alignes.
  */
 struct mem {
-      /** index (-> ram[next]) of the next struct */
-      size_t next;
-      /** index (-> ram[prev]) of the previous struct */
-      size_t prev;
-      /** 1: this area is used; 0: this area is unused */
-      u8_t used;
+        /** index (-> ram[next]) of the next struct */
+        size_t next;
+        /** index (-> ram[prev]) of the previous struct */
+        size_t prev;
+        /** 1: this area is used; 0: this area is unused */
+        u8_t used;
 };
 
-
-/*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
 static void plug_holes(struct mem *mem);
 
-
-/*==================================================================================================
+/*==============================================================================
                                       Local object definitions
-==================================================================================================*/
+==============================================================================*/
 /** If you want to relocate the heap to external memory, simply define
  * ram_heap as a void-pointer to that location.
  * If so, make sure the memory at that location is big enough (see below on
@@ -166,17 +162,15 @@ static struct mem *lfree;
 /** RAM usage */
 static u32_t used_mem;
 
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
-
-/*==================================================================================================
-                                         Function definitions
-==================================================================================================*/
-
-//================================================================================================//
+//==============================================================================
 /**
  * "Plug holes" by combining adjacent empty struct mems.
  * After this function is through, there should not exist
@@ -188,125 +182,115 @@ static u32_t used_mem;
  * This assumes access to the heap is protected by the calling function
  * already.
  */
-//================================================================================================//
+//==============================================================================
 static void plug_holes(struct mem *mem)
 {
-      struct mem *nmem;
-      struct mem *pmem;
+        struct mem *nmem;
+        struct mem *pmem;
 
-      /* plug hole forward */
-      nmem = (struct mem *)(void *)&ram[mem->next];
+        /* plug hole forward */
+        nmem = (struct mem *)(void *)&ram[mem->next];
 
-      if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)ram_end)
-      {
-            /* if mem->next is unused and not end of ram, combine mem and mem->next */
-            if (lfree == nmem)
-            {
-                  lfree = mem;
-            }
+        if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)ram_end) {
+                /* if mem->next is unused and not end of ram, combine mem and mem->next */
+                if (lfree == nmem) {
+                        lfree = mem;
+                }
 
-            mem->next = nmem->next;
+                mem->next = nmem->next;
 
-            ((struct mem *)(void *)&ram[nmem->next])->prev = (size_t)((u8_t *)mem - ram);
-      }
+                ((struct mem*)(void*)&ram[nmem->next])->prev = (size_t)((u8_t*)mem - ram);
+        }
 
-      /* plug hole backward */
-      pmem = (struct mem *)(void *)&ram[mem->prev];
+        /* plug hole backward */
+        pmem = (struct mem *)(void *)&ram[mem->prev];
 
-      if (pmem != mem && pmem->used == 0)
-      {
-            /* if mem->prev is unused, combine mem and mem->prev */
-            if (lfree == mem)
-            {
-                  lfree = pmem;
-            }
+        if (pmem != mem && pmem->used == 0) {
+                /* if mem->prev is unused, combine mem and mem->prev */
+                if (lfree == mem) {
+                        lfree = pmem;
+                }
 
-            pmem->next = mem->next;
+                pmem->next = mem->next;
 
-            ((struct mem *)(void *)&ram[mem->next])->prev = (size_t)((u8_t *)pmem - ram);
-      }
+                ((struct mem *)(void *)&ram[mem->next])->prev = (size_t)((u8_t *)pmem - ram);
+        }
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
 * @brief Zero the heap and initialize start, end and lowest-free
 */
-//================================================================================================//
+//==============================================================================
 void memman_init(void)
 {
-      struct mem *mem;
+        struct mem *mem;
 
-      /* align the heap */
-      ram = (u8_t *)MEM_ALIGN(ram_heap);
+        /* align the heap */
+        ram = (u8_t *)MEM_ALIGN(ram_heap);
 
-      /* initialize the start of the heap */
-      mem = (struct mem *)(void *)ram;
-      mem->next = MEM_SIZE_ALIGNED;
-      mem->prev = 0;
-      mem->used = 0;
+        /* initialize the start of the heap */
+        mem = (struct mem *)(void *)ram;
+        mem->next = MEM_SIZE_ALIGNED;
+        mem->prev = 0;
+        mem->used = 0;
 
-      /* initialize the end of the heap */
-      ram_end = (struct mem *)(void *)&ram[MEM_SIZE_ALIGNED];
-      ram_end->used = 1;
-      ram_end->next = MEM_SIZE_ALIGNED;
-      ram_end->prev = MEM_SIZE_ALIGNED;
+        /* initialize the end of the heap */
+        ram_end = (struct mem *)(void *)&ram[MEM_SIZE_ALIGNED];
+        ram_end->used = 1;
+        ram_end->next = MEM_SIZE_ALIGNED;
+        ram_end->prev = MEM_SIZE_ALIGNED;
 
-      /* initialize the lowest-free pointer to the start of the heap */
-      lfree = (struct mem *)(void *)ram;
+        /* initialize the lowest-free pointer to the start of the heap */
+        lfree = (struct mem *)(void *)ram;
 
-      //  if(sys_mutex_new(&mem_mutex) != ERR_OK) {
-      //  }
+        //  if(sys_mutex_new(&mem_mutex) != ERR_OK) {
+        //  }
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Put a struct mem back on the heap
  *
  * @param rmem is the data portion of a struct mem as returned by a previous
  *             call to mem_malloc()
  */
-//================================================================================================//
+//==============================================================================
 void memman_free(void *rmem)
 {
-      struct mem *mem;
+        struct mem *mem;
 
-      if (rmem == NULL)
-      {
-            return;
-      }
+        if (rmem == NULL) {
+                return;
+        }
 
-      if ((u8_t *)rmem < (u8_t *)ram || (u8_t *)rmem >= (u8_t *)ram_end)
-      {
-            return;
-      }
+        if ((u8_t *)rmem < (u8_t *)ram || (u8_t *)rmem >= (u8_t *)ram_end) {
+                return;
+        }
 
-      /* protect the heap from concurrent access */
-      MEM_FREE_PROTECT();
+        /* protect the heap from concurrent access */
+        MEM_FREE_PROTECT();
 
-      /* Get the corresponding struct mem ... */
-      mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
-      /* ... which has to be in a used state ... */
-      /* ... and is now unused. */
-      mem->used = 0;
+        /* Get the corresponding struct mem ... */
+        mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
+        /* ... which has to be in a used state ... */
+        /* ... and is now unused. */
+        mem->used = 0;
 
-      if (mem < lfree)
-      {
-            /* the newly freed struct is now the lowest */
-            lfree = mem;
-      }
+        if (mem < lfree) {
+                /* the newly freed struct is now the lowest */
+                lfree = mem;
+        }
 
-      MEM_STATS_DEC_USED(mem->next - (size_t)(((u8_t *)mem - ram)));
+        MEM_STATS_DEC_USED(mem->next - (size_t)(((u8_t *)mem - ram)));
 
-      /* finally, see if prev or next are free also */
-      plug_holes(mem);
+        /* finally, see if prev or next are free also */
+        plug_holes(mem);
 
-      MEM_FREE_UNPROTECT();
+        MEM_FREE_UNPROTECT();
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * Adam's mem_malloc() plus solution for bug #17922
  * Allocate a block of memory with a minimum of 'size' bytes.
@@ -316,123 +300,117 @@ void memman_free(void *rmem)
  *
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
  */
-//================================================================================================//
+//==============================================================================
 void *memman_malloc(size_t size)
 {
-      size_t ptr, ptr2;
-      struct mem *mem, *mem2;
+        size_t ptr, ptr2;
+        struct mem *mem, *mem2;
 
-      if (size == 0)
-      {
-            return NULL;
-      }
+        if (size == 0) {
+                return NULL;
+        }
 
-      /* Expand the size of the allocated memory region so that we can adjust for alignment. */
-      size = MEM_ALIGN_SIZE(size);
+        /* Expand the size of the allocated memory region so that we can adjust for alignment. */
+        size = MEM_ALIGN_SIZE(size);
 
-      if(size < BLOCK_MIN_SIZE_ALIGNED)
-      {
-            /* every data block must be at least BLOCK_MIN_SIZE_ALIGNED long */
-            size = BLOCK_MIN_SIZE_ALIGNED;
-      }
+        if(size < BLOCK_MIN_SIZE_ALIGNED) {
+                /* every data block must be at least BLOCK_MIN_SIZE_ALIGNED long */
+                size = BLOCK_MIN_SIZE_ALIGNED;
+        }
 
-      if (size > MEM_SIZE_ALIGNED)
-      {
-            return NULL;
-      }
+        if (size > MEM_SIZE_ALIGNED) {
+                return NULL;
+        }
 
-      /* protect the heap from concurrent access */
-      //  sys_mutex_lock(&mem_mutex);
-      MEM_ALLOC_PROTECT();
+        /* protect the heap from concurrent access */
+        //  sys_mutex_lock(&mem_mutex);
+        MEM_ALLOC_PROTECT();
 
-      /* Scan through the heap searching for a free block that is big enough,
-      * beginning with the lowest free block.
-      */
-      for (ptr = (size_t)((u8_t *)lfree - ram);
-           ptr < MEM_SIZE_ALIGNED - size;
-           ptr = ((struct mem *)(void *)&ram[ptr])->next)
-      {
-           mem = (struct mem *)(void *)&ram[ptr];
+        /* Scan through the heap searching for a free block that is big enough,
+        * beginning with the lowest free block.
+        */
+        for (ptr = (size_t)((u8_t *)lfree - ram);
+             ptr < MEM_SIZE_ALIGNED - size;
+             ptr = ((struct mem *)(void *)&ram[ptr])->next) {
 
-            if ((!mem->used) && (mem->next - (ptr + SIZEOF_STRUCT_MEM)) >= size)
-            {
-                  /* mem is not used and at least perfect fit is possible:
-                   * mem->next - (ptr + SIZEOF_STRUCT_MEM) gives us the 'user data size' of mem */
+                mem = (struct mem *)(void *)&ram[ptr];
 
-                  if (mem->next - (ptr + SIZEOF_STRUCT_MEM) >= (size + SIZEOF_STRUCT_MEM + BLOCK_MIN_SIZE_ALIGNED))
-                  {
-                        /* (in addition to the above, we test if another struct mem (SIZEOF_STRUCT_MEM) containing
-                        * at least BLOCK_MIN_SIZE_ALIGNED of data also fits in the 'user data space' of 'mem')
-                        * -> split large block, create empty remainder,
-                        * remainder must be large enough to contain BLOCK_MIN_SIZE_ALIGNED data: if
-                        * mem->next - (ptr + (2*SIZEOF_STRUCT_MEM)) == size,
-                        * struct mem would fit in but no data between mem2 and mem2->next
-                        * @todo we could leave out BLOCK_MIN_SIZE_ALIGNED. We would create an empty
-                        *       region that couldn't hold data, but when mem->next gets freed,
-                        *       the 2 regions would be combined, resulting in more free memory
-                        */
-                        ptr2 = ptr + SIZEOF_STRUCT_MEM + size;
+                if ((!mem->used) && (mem->next - (ptr + SIZEOF_STRUCT_MEM)) >= size) {
+                        /* mem is not used and at least perfect fit is possible:
+                        * mem->next - (ptr + SIZEOF_STRUCT_MEM) gives us the 'user data size' of mem */
 
-                        /* create mem2 struct */
-                        mem2 = (struct mem *)(void *)&ram[ptr2];
-                        mem2->used = 0;
-                        mem2->next = mem->next;
-                        mem2->prev = ptr;
+                        if (mem->next - (ptr + SIZEOF_STRUCT_MEM)
+                           >= (size + SIZEOF_STRUCT_MEM + BLOCK_MIN_SIZE_ALIGNED)) {
+                                /* (in addition to the above, we test if another struct mem
+                                * (SIZEOF_STRUCT_MEM) containing
+                                * at least BLOCK_MIN_SIZE_ALIGNED of data also fits in the 'user
+                                * data space' of 'mem')
+                                * -> split large block, create empty remainder,
+                                * remainder must be large enough to contain BLOCK_MIN_SIZE_ALIGNED data: if
+                                * mem->next - (ptr + (2*SIZEOF_STRUCT_MEM)) == size,
+                                * struct mem would fit in but no data between mem2 and mem2->next
+                                * @todo we could leave out BLOCK_MIN_SIZE_ALIGNED. We would create an empty
+                                *       region that couldn't hold data, but when mem->next gets freed,
+                                *       the 2 regions would be combined, resulting in more free memory
+                                */
+                                ptr2 = ptr + SIZEOF_STRUCT_MEM + size;
 
-                        /* and insert it between mem and mem->next */
-                        mem->next = ptr2;
-                        mem->used = 1;
+                                /* create mem2 struct */
+                                mem2 = (struct mem *)(void *)&ram[ptr2];
+                                mem2->used = 0;
+                                mem2->next = mem->next;
+                                mem2->prev = ptr;
 
-                        if (mem2->next != MEM_SIZE_ALIGNED)
-                        {
-                              ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
+                                /* and insert it between mem and mem->next */
+                                mem->next = ptr2;
+                                mem->used = 1;
+
+                                if (mem2->next != MEM_SIZE_ALIGNED) {
+                                        ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
+                                }
+
+                                MEM_STATS_INC_USED(size + SIZEOF_STRUCT_MEM);
+                        } else {
+                                /* (a mem2 struct does no fit into the user data space of
+                                 *  mem and mem->next will always
+                                 * be used at this point: if not we have 2 unused structs
+                                 * in a row, plug_holes should have
+                                 * take care of this).
+                                 * -> near fit or excact fit: do not split, no mem2 creation
+                                 * also can't move mem->next directly behind mem, since mem->next
+                                 * will always be used at this point!
+                                 */
+                                mem->used = 1;
+
+                                MEM_STATS_INC_USED(mem->next - (size_t)((u8_t *)mem - ram));
                         }
 
-                        MEM_STATS_INC_USED(size + SIZEOF_STRUCT_MEM);
-                  }
-                  else
-                  {
-                        /* (a mem2 struct does no fit into the user data space of mem and mem->next will always
-                        * be used at this point: if not we have 2 unused structs in a row, plug_holes should have
-                        * take care of this).
-                        * -> near fit or excact fit: do not split, no mem2 creation
-                        * also can't move mem->next directly behind mem, since mem->next
-                        * will always be used at this point!
-                        */
-                        mem->used = 1;
+                        if (mem == lfree) {
+                                /* Find next free block after mem and update lowest free pointer */
+                                while (lfree->used && lfree != ram_end) {
+                                        MEM_ALLOC_UNPROTECT();
 
-                        MEM_STATS_INC_USED(mem->next - (size_t)((u8_t *)mem - ram));
-                  }
-
-                  if (mem == lfree)
-                  {
-                        /* Find next free block after mem and update lowest free pointer */
-                        while (lfree->used && lfree != ram_end)
-                        {
-                              MEM_ALLOC_UNPROTECT();
-
-                              /* prevent high interrupt latency... */
-                              MEM_ALLOC_PROTECT();
-                              lfree = (struct mem *)(void *)&ram[lfree->next];
+                                        /* prevent high interrupt latency... */
+                                        MEM_ALLOC_PROTECT();
+                                        lfree = (struct mem *)(void *)&ram[lfree->next];
+                                }
                         }
-                  }
 
-                  MEM_ALLOC_UNPROTECT();
+                        MEM_ALLOC_UNPROTECT();
 
-                  //        sys_mutex_unlock(&mem_mutex);
+                        //        sys_mutex_unlock(&mem_mutex);
 
-                  return (u8_t *)mem + SIZEOF_STRUCT_MEM;
-            }
-      }
+                        return (u8_t *)mem + SIZEOF_STRUCT_MEM;
+                }
+        }
 
-      MEM_ALLOC_UNPROTECT();
-      //  sys_mutex_unlock(&mem_mutex);
+        MEM_ALLOC_UNPROTECT();
+        //  sys_mutex_unlock(&mem_mutex);
 
-      return NULL;
+        return NULL;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * Contiguously allocates enough space for count objects that are size bytes
  * of memory each and returns a pointer to the allocated memory.
@@ -443,67 +421,58 @@ void *memman_malloc(size_t size)
  * @param size size of the objects to allocate
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
-//================================================================================================//
+//==============================================================================
 void *memman_calloc(size_t count, size_t size)
 {
-      void *p;
+        void *p = memman_malloc(count * size);
 
-      /* allocate 'count' objects of size 'size' */
-      p = memman_malloc(count * size);
+        if (p) {
+                memset(p, 0, count * size);
+        }
 
-      if (p)
-      {
-            /* zero the memory */
-            memset(p, 0, count * size);
-      }
-
-      return p;
+        return p;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function return free memory
  *
  * @return free memory
  */
-//================================================================================================//
+//==============================================================================
 u32_t memman_GetFreeHeapSize(void)
 {
-      return (MEMMAN_HEAP_SIZE - used_mem);
+        return (MEMMAN_HEAP_SIZE - used_mem);
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function return used memory
  *
  * @return used memory
  */
-//================================================================================================//
+//==============================================================================
 u32_t memman_GetUsedHeapSize(void)
 {
-      return used_mem;
+        return used_mem;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function returns size of heap
  *
  * @return memory size
  */
-//================================================================================================//
+//==============================================================================
 u32_t memman_GetHeapSize(void)
 {
-      return MEMMAN_HEAP_SIZE;
+        return MEMMAN_HEAP_SIZE;
 }
-
 
 #ifdef __cplusplus
 }
 #endif
 
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/
