@@ -769,8 +769,11 @@ int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 
                                 if (str != strs) {
                                         int_t *var = va_arg(args, int_t*);
-                                        *var = value * sign;
-                                        read_fields++;
+
+                                        if (var) {
+                                                *var = value * sign;
+                                                read_fields++;
+                                        }
                                 }
                                 break;
 
@@ -809,8 +812,11 @@ int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 
                                 if (strs != str) {
                                         int_t *var = va_arg(args, int_t*);
-                                        *var = value * sign;
-                                        read_fields++;
+
+                                        if (var) {
+                                                *var = value * sign;
+                                                read_fields++;
+                                        }
                                 }
                                 break;
 
@@ -833,24 +839,32 @@ int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 
                                 if (str != strs) {
                                         int_t *var = va_arg(args, int_t*);
-                                        *var = value * sign;
-                                        read_fields++;
+
+                                        if (var) {
+                                                *var = value * sign;
+                                                read_fields++;
+                                        }
                                 }
                                 break;
 
                         case 'c':
                                 if (*str >= ' ') {
                                         ch_t *var = va_arg(args, ch_t*);
-                                        *var = *str;
-                                        read_fields++;
+
+                                        if (var) {
+                                                *var = *str;
+                                                read_fields++;
+                                        }
                                         str++;
                                 }
                                 break;
 
                         case 's':
                                 string = va_arg(args, ch_t*);
-                                strcpy(string, str);
-                                read_fields++;
+                                if (string) {
+                                        strcpy(string, str);
+                                        read_fields++;
+                                }
                                 goto io_sscanf_end;
                         }
                 } else if (chr <= ' ') {
