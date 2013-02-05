@@ -353,6 +353,8 @@ stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg)
 //==============================================================================
 stdRet_t vfs_mkdir(const ch_t *path)
 {
+        stdRet_t status = STD_RET_ERROR;
+
         if (path && vfs) {
                 ch_t *newpath = NewCorrectedPath(path, SUB_SLASH);
                 if (newpath == NULL) {
@@ -364,16 +366,17 @@ stdRet_t vfs_mkdir(const ch_t *path)
                 while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
                 struct fsinfo *fs = FindBaseFS(newpath, &extPath);
                 GiveMutex(vfs->mtx);
-                free(newpath);
 
                 if (fs) {
                         if (fs->fs.f_mkdir) {
-                                return fs->fs.f_mkdir(fs->fs.f_fsd, extPath);
+                                status = fs->fs.f_mkdir(fs->fs.f_fsd, extPath);
                         }
                 }
+
+                free(newpath);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -387,40 +390,44 @@ stdRet_t vfs_mkdir(const ch_t *path)
 //==============================================================================
 DIR_t *vfs_opendir(const ch_t *path)
 {
+        stdRet_t status = STD_RET_ERROR;
+        DIR_t *dir      = NULL;
+
         if (!path || !vfs) {
                 return NULL;
         }
 
-        DIR_t *dir = malloc(sizeof(DIR_t));
+        dir = malloc(sizeof(DIR_t));
         if (dir) {
                 ch_t *newpath = NewCorrectedPath(path, ADD_SLASH);
-                if (newpath == NULL) {
-                        goto vfs_opendir_error;
-                }
 
-                ch_t *extPath = NULL;
+                if (newpath) {
+                        ch_t *extPath = NULL;
 
-                while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
-                struct fsinfo *fs = FindBaseFS(newpath, &extPath);
-                GiveMutex(vfs->mtx);
-                free(newpath);
+                        while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        struct fsinfo *fs = FindBaseFS(newpath, &extPath);
+                        GiveMutex(vfs->mtx);
 
-                if (fs) {
-                        dir->fsd = fs->fs.f_fsd;
+                        if (fs) {
+                                dir->fsd = fs->fs.f_fsd;
 
-                        if (fs->fs.f_opendir) {
-                                if (fs->fs.f_opendir(fs->fs.f_fsd, extPath,
-                                                     dir) == STD_RET_OK) {
-                                        return dir;
+                                if (fs->fs.f_opendir) {
+                                        status = fs->fs.f_opendir(fs->fs.f_fsd,
+                                                                  extPath,
+                                                                  dir);
                                 }
                         }
+
+                        free(newpath);
                 }
 
-                vfs_opendir_error:
-                free(dir);
+                if (status == STD_RET_ERROR) {
+                        free(dir);
+                        dir = NULL;
+                }
         }
 
-        return NULL;
+        return dir;
 }
 
 //==============================================================================
@@ -482,6 +489,8 @@ dirent_t vfs_readdir(DIR_t *dir)
 //==============================================================================
 stdRet_t vfs_remove(const ch_t *path)
 {
+        stdRet_t status = STD_RET_ERROR;
+
         if (path && vfs) {
                 ch_t *newpath = NewCorrectedPath(path, ADD_SLASH);
                 if (newpath) {
@@ -491,18 +500,19 @@ stdRet_t vfs_remove(const ch_t *path)
                         struct fsinfo *mntfs  = FindMountedFS(newpath, -1, NULL);
                         struct fsinfo *basefs = FindBaseFS(path, &extPath);
                         GiveMutex(vfs->mtx);
-                        free(newpath);
 
                         if (basefs && mntfs == NULL) {
                                 if (basefs->fs.f_remove) {
-                                        return basefs->fs.f_remove(basefs->fs.f_fsd,
-                                                                   extPath);
+                                        status = basefs->fs.f_remove(basefs->fs.f_fsd,
+                                                                     extPath);
                                 }
                         }
+
+                        free(newpath);
                 }
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -650,7 +660,6 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
 {
         if (path && statfs && vfs) {
                 ch_t *newpath = NewCorrectedPath(path, ADD_SLASH);
-
                 if (newpath) {
                         while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
                         struct fsinfo *fs = FindMountedFS(newpath, -1, NULL);
