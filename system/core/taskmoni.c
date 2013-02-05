@@ -28,19 +28,18 @@
 extern "C" {
 #endif
 
-/*==================================================================================================
-                                            Include files
-==================================================================================================*/
+/*==============================================================================
+  Include files
+==============================================================================*/
 #include "taskmoni.h"
 #include "dlist.h"
 #include "cpuctl.h"
 #include "oswrap.h"
 #include <string.h>
 
-
-/*==================================================================================================
-                                  Local symbolic constants/macros
-==================================================================================================*/
+/*==============================================================================
+  Local symbolic constants/macros
+==============================================================================*/
 #define calloc(nmemb, msize)        memman_calloc(nmemb, msize)
 #define malloc(size)                memman_malloc(size)
 #define free(mem)                   memman_free(mem)
@@ -56,118 +55,119 @@ extern "C" {
 
 #define MTX_BLOCK_TIME              10
 
-/*==================================================================================================
-                                   Local types, enums definitions
-==================================================================================================*/
+/*==============================================================================
+  Local types, enums definitions
+==============================================================================*/
 /* task information */
 struct taskData {
 #if (APP_MONITOR_MEMORY_USAGE > 0)
-      struct memBlock {
-            bool_t full;
+        struct memBlock {
+                bool_t full;
 
-            struct memSlot {
-                void *addr;
-                u32_t size;
-            } mslot[MEM_ADR_IN_BLOCK];
+                struct memSlot {
+                        void *addr;
+                        u32_t size;
+                } mslot[MEM_ADR_IN_BLOCK];
 
-      } *mblock[MEM_BLOCK_COUNT];
+        }*mblock[MEM_BLOCK_COUNT];
 #endif
 
 #if (APP_MONITOR_FILE_USAGE > 0)
-      struct fileBlock {
-            bool_t full;
+        struct fileBlock {
+                bool_t full;
 
-            struct fileSlot {
-                  FILE_t *file;
-            } fslot[FLE_OPN_IN_BLOCK];
+                struct fileSlot {
+                        FILE_t *file;
+                } fslot[FLE_OPN_IN_BLOCK];
 
-      } *fblock[FLE_BLOCK_COUNT];
+        }*fblock[FLE_BLOCK_COUNT];
 
-      struct dirBlock {
-            bool_t full;
+        struct dirBlock {
+                bool_t full;
 
-            struct dirSlot {
-                  DIR_t *dir;
-            } dslot[DIR_OPN_IN_BLOCK];
-      } *dblock[DIR_BLOCK_COUNT];
+                struct dirSlot {
+                        DIR_t *dir;
+                } dslot[DIR_OPN_IN_BLOCK];
+        }*dblock[DIR_BLOCK_COUNT];
 #endif
 };
 
 /* main structure */
 struct moni {
-      list_t  *tasks;         /* list with task informations */
-      mutex_t  mtx;           /* mutex */
+        list_t *tasks;  /* list with task informations */
+        mutex_t mtx;    /* mutex */
 };
 
-
-/*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 static stdRet_t moni_Init(void);
 #endif
 
-
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 static struct moni *moni;
 #endif
 
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
-
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Initialize module
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+//==============================================================================
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 static stdRet_t moni_Init(void)
 {
-      stdRet_t status = STD_RET_OK;
+        stdRet_t status = STD_RET_OK;
 
-      if (moni == NULL) {
-            moni = calloc(1, sizeof(struct moni));
+        if (moni == NULL) {
+                moni = calloc(1, sizeof(struct moni));
 
-            if (moni) {
-                  moni->tasks = ListCreate();
-                  moni->mtx   = CreateRecMutex();
+                if (moni) {
+                        moni->tasks = ListCreate();
+                        moni->mtx = CreateRecMutex();
 
-                  if (!moni->tasks || !moni->mtx) {
-                        if (moni->tasks)
-                              ListDelete(moni->tasks);
+                        if (!moni->tasks || !moni->mtx) {
+                                if (moni->tasks)
+                                        ListDelete(moni->tasks);
 
-                        if (moni->mtx)
-                              DeleteRecMutex(moni->mtx);
+                                if (moni->mtx)
+                                        DeleteRecMutex(moni->mtx);
 
-                        free(moni);
-                        moni = NULL;
+                                free(moni);
+                                moni = NULL;
 
-                        status = STD_RET_ERROR;
-                  } else {
-                        cpuctl_InitTimeStatCnt();
-                  }
-            }
-      }
+                                status = STD_RET_ERROR;
+                        } else {
+                                cpuctl_InitTimeStatCnt();
+                        }
+                }
+        }
 
-      return status;
+        return status;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function adds task to monitoring
  *
@@ -176,128 +176,134 @@ static stdRet_t moni_Init(void)
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+//==============================================================================
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 stdRet_t moni_AddTask(task_t taskHdl)
 {
-      stdRet_t status = STD_RET_ERROR;
+        stdRet_t status = STD_RET_ERROR;
 
-      if (moni == NULL) {
-            moni_Init();
-      }
+        if (moni == NULL) {
+                moni_Init();
+        }
 
-      if (moni) {
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (moni) {
+                while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *task = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
+                struct taskData *task = ListGetItemDataByID(moni->tasks,
+                                                            (u32_t) taskHdl);
 
-            /* task does not exist */
-            if (task == NULL) {
-                  task = calloc(1, sizeof(struct taskData));
+                /* task does not exist */
+                if (task == NULL) {
+                        task = calloc(1, sizeof(struct taskData));
 
-                  if (task) {
-                        if (ListAddItem(moni->tasks, (u32_t)taskHdl, task) >= 0) {
-                              status = STD_RET_OK;
-                        } else {
-                              free(task);
+                        if (task) {
+                                if (ListAddItem(moni->tasks, (u32_t) taskHdl,
+                                                task) >= 0) {
+                                        status = STD_RET_OK;
+                                } else {
+                                        free(task);
+                                }
                         }
-                  }
-            }
+                }
 
-            GiveRecMutex(moni->mtx);
-      }
+                GiveRecMutex(moni->mtx);
+        }
 
-      return status;
+        return status;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function delete task monitoring
  *
  * @param pid     task ID
  */
-//================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+//==============================================================================
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 stdRet_t moni_DelTask(task_t taskHdl)
 {
-      stdRet_t status = STD_RET_ERROR;
+        if (moni == NULL) {
+                return STD_RET_ERROR;
+        }
 
-      while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-      struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
+        struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
 
-      if (taskInfo) {
-            #if (APP_MONITOR_MEMORY_USAGE > 0)
-            for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
-                  if (taskInfo->mblock[block]) {
+        if (taskInfo == NULL) {
+                return STD_RET_ERROR;
+        }
 
-                        for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
+#if (APP_MONITOR_MEMORY_USAGE > 0)
+        for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
+                if (taskInfo->mblock[block] == NULL) {
+                        continue;
+                }
 
-                              struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
+                for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
+                        struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
 
-                              if (mslot->addr) {
-                                    free(mslot->addr);
-                                    mslot->size = 0;
-                              }
+                        if (mslot->addr) {
+                                free(mslot->addr);
+                                mslot->size = 0;
                         }
+                }
 
-                        free(taskInfo->mblock[block]);
-                        taskInfo->mblock[block] = NULL;
-                  }
-            }
-            #endif
+                free(taskInfo->mblock[block]);
+                taskInfo->mblock[block] = NULL;
+        }
+#endif
 
-            #if (APP_MONITOR_FILE_USAGE > 0)
-            for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
-                  if (taskInfo->fblock[block]) {
+#if (APP_MONITOR_FILE_USAGE > 0)
+        for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
+                if (taskInfo->fblock[block] == NULL) {
+                        continue;
+                }
 
-                        for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                        struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
 
-                              struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
-
-                              if (fslot->file) {
-                                    vfs_fclose(fslot->file);
-                              }
+                        if (fslot->file) {
+                                vfs_fclose(fslot->file);
                         }
+                }
 
-                        free(taskInfo->fblock[block]);
-                        taskInfo->fblock[block] = NULL;
-                  }
-            }
+                free(taskInfo->fblock[block]);
+                taskInfo->fblock[block] = NULL;
+        }
 
-            for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
-                  if (taskInfo->dblock[block]) {
+        for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
+                if (taskInfo->dblock[block] == NULL) {
+                        continue;
+                }
 
-                        for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                        struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
 
-                              struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
-
-                              if (dslot->dir) {
-                                    vfs_closedir(dslot->dir);
-                              }
+                        if (dslot->dir) {
+                                vfs_closedir(dslot->dir);
                         }
+                }
 
-                        free(taskInfo->fblock[block]);
-                        taskInfo->fblock[block] = NULL;
-                  }
-            }
-            #endif
+                free(taskInfo->fblock[block]);
+                taskInfo->fblock[block] = NULL;
+        }
+#endif
 
-            ListRmItemByID(moni->tasks, (u32_t)taskHdl);
+        ListRmItemByID(moni->tasks, (u32_t) taskHdl);
 
-            status = STD_RET_OK;
-      }
+        GiveRecMutex(moni->mtx);
 
-      GiveRecMutex(moni->mtx);
-
-      return status;
+        return STD_RET_OK;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function gets task statistics
  *
@@ -307,123 +313,138 @@ stdRet_t moni_DelTask(task_t taskHdl)
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+//==============================================================================
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 {
-      stdRet_t status = STD_RET_ERROR;
+        if (!moni || !stat) {
+                return STD_RET_ERROR;
+        }
 
-      if (moni && stat) {
-            stat->memUsage  = 0;
-            stat->openFiles = 0;
+        stat->memUsage  = 0;
+        stat->openFiles = 0;
 
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            struct taskData *taskdata = ListGetItemDataByNo(moni->tasks, item);
+        struct taskData *taskdata = ListGetItemDataByNo(moni->tasks, item);
+        if (taskdata == NULL) {
+                return STD_RET_ERROR;
+        }
 
-            if (taskdata) {
-                  #if (APP_MONITOR_MEMORY_USAGE > 0)
-                  for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
-                        if (taskdata->mblock[block]) {
-                              for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                                    if (taskdata->mblock[block]->mslot[slot].addr) {
-                                          stat->memUsage += taskdata->mblock[block]->mslot[slot].size;
-                                    }
-                              }
+#if (APP_MONITOR_MEMORY_USAGE > 0)
+        for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
+                if (taskdata->mblock[block] == NULL) {
+                        continue;
+                }
+
+                for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
+                        if (taskdata->mblock[block]->mslot[slot].addr) {
+                                stat->memUsage += taskdata->mblock[block]->mslot[slot].size;
                         }
-                  }
-                  #endif
+                }
+        }
+#endif
 
-                  #if (APP_MONITOR_FILE_USAGE > 0)
-                  for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
-                        if (taskdata->fblock[block]) {
-                              for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
-                                    if (taskdata->fblock[block]->fslot[slot].file) {
-                                          stat->openFiles++;
-                                    }
-                              }
+#if (APP_MONITOR_FILE_USAGE > 0)
+        for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
+                if (taskdata->fblock[block] == NULL) {
+                        continue;
+                }
+
+                for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                        if (taskdata->fblock[block]->fslot[slot].file) {
+                                stat->openFiles++;
                         }
-                  }
+                }
+        }
 
-                  for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
-                        if (taskdata->dblock[block]) {
-                              for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
-                                    if (taskdata->dblock[block]->dslot[slot].dir) {
-                                          stat->openFiles++;
-                                    }
-                              }
+        for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
+                if (taskdata->dblock[block] == NULL) {
+                        continue;
+                }
+
+                for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                        if (taskdata->dblock[block]->dslot[slot].dir) {
+                                stat->openFiles++;
                         }
-                  }
-                  #endif
+                }
+        }
+#endif
 
-                  status = STD_RET_OK;
-            }
+        GiveRecMutex(moni->mtx);
 
-            GiveRecMutex(moni->mtx);
+        task_t taskHdl = 0;
+        ListGetItemID(moni->tasks, item, (task_t) &taskHdl);
 
-            if (status == STD_RET_OK) {
-                  task_t taskHdl = 0;
-                  ListGetItemID(moni->tasks, item, (task_t)&taskHdl);
+        stat->handle        = taskHdl;
+        stat->name          = TaskGetName(taskHdl);
+        stat->freeStack     = TaskGetStackFreeSpace(taskHdl);
+        TaskSuspendAll();
+        stat->cpuUsage      = (u32_t)TaskGetTag(taskHdl);
+        TaskSetTag(taskHdl, (void*)0);
+        TaskResumeAll();
+        stat->cpuUsageTotal = cpuctl_GetCPUTotalTime();
+        stat->priority      = TaskGetPriority(taskHdl);
 
-                  stat->handle        = taskHdl;
-                  stat->name          = TaskGetName(taskHdl);
-                  stat->freeStack     = TaskGetStackFreeSpace(taskHdl);
-                  TaskSuspendAll();
-                  stat->cpuUsage      = (u32_t)TaskGetTag(taskHdl);
-                  TaskSetTag(taskHdl, (void*)0);
-                  TaskResumeAll();
-                  stat->cpuUsageTotal = cpuctl_GetCPUTotalTime();
-                  stat->priority  = TaskGetPriority(taskHdl);
+        if (item == ListGetItemCount(moni->tasks) - 1) {
+                cpuctl_ClearCPUTotalTime();
+        }
 
-                  if (item == ListGetItemCount(moni->tasks) - 1) {
-                        cpuctl_ClearCPUTotalTime();
-                  }
-            }
-      }
-
-      return status;
+        return STD_RET_OK;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
- * @brief
+ * @brief Function gets task status
+ *
+ * @param  taskHdl      task handle
+ * @param *stat         status result
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+//==============================================================================
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 stdRet_t moni_GetTaskHdlStat(task_t taskHdl, struct taskstat *stat)
 {
-      stdRet_t status = STD_RET_ERROR;
+        if (taskHdl && moni) {
+                i32_t item = -1;
 
-      if (taskHdl) {
-            i32_t item = -1;
+                if (ListGetItemNo(moni->tasks, (u32_t) taskHdl, &item) == 0) {
+                        return moni_GetTaskStat(item, stat);
+                }
+        }
 
-            if (ListGetItemNo(moni->tasks, (u32_t)taskHdl, &item) == 0) {
-                  status = moni_GetTaskStat(item, stat);
-            }
-      }
-
-      return status;
+        return STD_RET_ERROR;
 }
 #endif
 
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function return number of monitor tasks
  *
  * @return number of monitor tasks
  */
-//================================================================================================//
-#if ((APP_MONITOR_MEMORY_USAGE > 0) || (APP_MONITOR_FILE_USAGE > 0) || (APP_MONITOR_CPU_LOAD > 0))
+//==============================================================================
+#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
+    || (APP_MONITOR_FILE_USAGE > 0  ) \
+    || (APP_MONITOR_CPU_LOAD > 0    ) )
 u16_t moni_GetTaskCount(void)
 {
-      return ListGetItemCount(moni->tasks);
+        if (!moni) {
+                return -1;
+        }
+
+        return ListGetItemCount(moni->tasks);
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Monitor memory allocation
  *
@@ -431,69 +452,71 @@ u16_t moni_GetTaskCount(void)
  *
  * @return pointer to allocated block or NULL if error
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void *moni_malloc(u32_t size)
 {
-      void *mem = NULL;
+        void   *mem   = NULL;
+        uint_t  block = 0;
+        struct taskData *taskInfo;
 
-      if (moni) {
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (!moni) {
+                return NULL;
+        }
 
-            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            if (taskInfo) {
-                  /* find empty address slot */
-                  u32_t block = 0;
+        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        if (taskInfo == NULL) {
+                return NULL;
+        }
 
-                  while (block < MEM_BLOCK_COUNT) {
-                        if (taskInfo->mblock[block]) {
+        /* find empty address slot */
+        while (block < MEM_BLOCK_COUNT) {
+                if (taskInfo->mblock[block] == NULL) {
+                        taskInfo->mblock[block] = calloc(1, sizeof(struct memBlock));
 
-                              /* find empty address slot in block */
-                              for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                                    if (taskInfo->mblock[block]->full == TRUE) {
-                                          break;
-                                    }
-
-                                    struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
-
-                                    if (mslot->addr == NULL) {
-                                          mslot->addr = malloc(size);
-
-                                          if (mslot->addr) {
-                                                mem = mslot->addr;
-                                                mslot->size = size;
-                                          }
-
-                                          if (slot == MEM_ADR_IN_BLOCK - 1)
-                                                taskInfo->mblock[block]->full = TRUE;
-
-                                          goto moni_malloc_end;
-                                    }
-                              }
-
-                              block++;
-                        } else {
-                              /* create new block */
-                              taskInfo->mblock[block] = calloc(1, sizeof(struct memBlock));
-
-                              if (taskInfo->mblock[block] == NULL) {
-                                    block++;
-                              }
+                        if (taskInfo->mblock[block] == NULL) {
+                                block++;
+                                continue;
                         }
-                  }
-            }
+                }
 
-            moni_malloc_end:
-            GiveRecMutex(moni->mtx);
-      }
+                /* find empty address slot in block */
+                for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
+                        if (taskInfo->mblock[block]->full == TRUE) {
+                                break;
+                        }
 
-      return mem;
+                        struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
+
+                        if (mslot->addr == NULL) {
+                                mslot->addr = malloc(size);
+
+                                if (mslot->addr) {
+                                        mem = mslot->addr;
+                                        mslot->size = size;
+                                }
+
+                                if (slot == MEM_ADR_IN_BLOCK - 1) {
+                                        taskInfo->mblock[block]->full = TRUE;
+                                }
+
+                                goto moni_malloc_end;
+                        }
+                }
+
+                block++;
+        }
+
+        moni_malloc_end:
+        GiveRecMutex(moni->mtx);
+
+        return mem;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Monitor memory allocation
  *
@@ -502,83 +525,93 @@ void *moni_malloc(u32_t size)
  *
  * @return pointer to allocated block or NULL if error
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void *moni_calloc(u32_t nmemb, u32_t msize)
 {
-      void *ptr = moni_malloc(nmemb * msize);
+        void *ptr = moni_malloc(nmemb * msize);
 
-      if (ptr)
-            memset(ptr, 0, nmemb * msize);
+        if (ptr) {
+                memset(ptr, 0, nmemb * msize);
+        }
 
-      return ptr;
+        return ptr;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Monitor memory freeing
  *
  * @param *mem          block to free
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_MEMORY_USAGE > 0)
 void moni_free(void *mem)
 {
-      if (moni) {
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        struct taskData *taskInfo;
 
-            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        if (moni == NULL) {
+                return;
+        }
 
-            if (taskInfo) {
-                  /* find address slot */
-                  for (u8_t block = 0; block < MEM_BLOCK_COUNT; block++) {
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                        if (taskInfo->mblock[block]) {
+        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        if (taskInfo == NULL) {
+                return;
+        }
 
-                              /* find empty address slot in block */
-                              for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
+        /* find address slot */
+        for (u8_t block = 0; block < MEM_BLOCK_COUNT; block++) {
+                if (taskInfo->mblock[block] == NULL) {
+                        continue;
+                }
 
-                                    struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
+                /* find empty address slot in block */
+                for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK;slot++) {
 
-                                    if (mslot->addr == mem) {
-                                          free(mslot->addr);
-                                          mslot->addr = NULL;
-                                          mslot->size = 0;
+                        struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
 
-                                          taskInfo->mblock[block]->full = FALSE;
-
-                                          /* check if block is empty */
-                                          if (block != 0) {
-                                                for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                                      if (taskInfo->mblock[block]->mslot[i].addr != NULL)
-                                                            goto moni_free_end;
-                                                }
-
-                                                /* block is empty - freeing memory */
-                                                free(taskInfo->mblock[block]);
-                                                taskInfo->mblock[block] = NULL;
-                                          }
-
-                                          goto moni_free_end;
-                                    }
-                              }
+                        if (mslot->addr != mem) {
+                                continue;
                         }
-                  }
 
-                  /* error: application try to free freed memory */
-                  /* signal code can be added here */
-            }
+                        free(mslot->addr);
+                        mslot->addr = NULL;
+                        mslot->size = 0;
 
-            moni_free_end:
-            GiveRecMutex(moni->mtx);
-      }
+                        taskInfo->mblock[block]->full = FALSE;
+
+                        /* first block cannot be freed */
+                        if (block == 0) {
+                                goto moni_free_end;
+                        }
+
+                        /* check if block is empty */
+                        for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
+                                if (taskInfo->mblock[block]->mslot[i].addr != NULL) {
+                                        goto moni_free_end;
+                                }
+                        }
+
+                        /* block is empty - freeing whole block */
+                        free(taskInfo->mblock[block]);
+                        taskInfo->mblock[block] = NULL;
+
+                        goto moni_free_end;
+                }
+        }
+
+        /* error: application try to free freed memory */
+        /* signal code can be added here */
+
+        moni_free_end:
+        GiveRecMutex(moni->mtx);
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function open selected file
  *
@@ -587,69 +620,70 @@ void moni_free(void *mem)
  *
  * @retval NULL if file can't be created
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_FILE_USAGE > 0)
 FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
 {
-      void *file = NULL;
+        FILE_t *file  = NULL;
+        uint_t  block = 0;
+        struct taskData *taskInfo;
 
-      if (moni) {
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (moni == NULL) {
+                return NULL;
+        }
 
-            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            if (taskInfo) {
-                  /* find empty file slot */
-                  u32_t block = 0;
+        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        if (taskInfo == NULL) {
+                return NULL;
+        }
 
-                  while (block < FLE_BLOCK_COUNT) {
-                        if (taskInfo->fblock[block]) {
+        /* find empty file slot */
+        while (block < FLE_BLOCK_COUNT) {
+                if (taskInfo->fblock[block] == NULL) {
+                        taskInfo->fblock[block] = calloc(1, sizeof(struct fileBlock));
 
-                              /* find empty file slot in block */
-                              for (u8_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
-
-                                    if (taskInfo->fblock[block]->full == TRUE) {
-                                          break;
-                                    }
-
-                                    struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
-
-                                    if (fslot->file == NULL) {
-                                          fslot->file = vfs_fopen(path, mode);
-
-                                          if (fslot->file) {
-                                                file = fslot->file;
-                                          }
-
-                                          if (slot == FLE_OPN_IN_BLOCK - 1)
-                                                taskInfo->fblock[block]->full = TRUE;
-
-                                          goto moni_fopen_end;
-                                    }
-                              }
-
-                              block++;
-                        } else {
-                              /* create new block */
-                              taskInfo->fblock[block] = calloc(1, sizeof(struct fileBlock));
-
-                              if (taskInfo->fblock[block] == NULL) {
-                                    block++;
-                              }
+                        if (taskInfo->fblock[block] == NULL) {
+                                block++;
+                                continue;
                         }
-                  }
-            }
+                }
 
-            moni_fopen_end:
-            GiveRecMutex(moni->mtx);
-      }
+                /* find empty file slot in block */
+                for (u8_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                        if (taskInfo->fblock[block]->full == TRUE) {
+                                break;
+                        }
 
-      return file;
+                        struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
+
+                        if (fslot->file == NULL) {
+                                fslot->file = vfs_fopen(path, mode);
+
+                                if (fslot->file) {
+                                        file = fslot->file;
+                                }
+
+                                if (slot == FLE_OPN_IN_BLOCK - 1) {
+                                        taskInfo->fblock[block]->full = TRUE;
+                                }
+
+                                goto moni_fopen_end;
+                        }
+                }
+
+                block++;
+        }
+
+        moni_fopen_end:
+        GiveRecMutex(moni->mtx);
+
+        return file;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function close opened file
  *
@@ -658,69 +692,72 @@ FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
  * @retval STD_RET_OK         file closed successfully
  * @retval STD_RET_ERROR      file not closed
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_FILE_USAGE > 0)
 stdRet_t moni_fclose(FILE_t *file)
 {
-      stdRet_t status = STD_RET_ERROR;
+        stdRet_t status = STD_RET_ERROR;
+        struct taskData *taskInfo;
 
-      if (moni) {
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (moni == NULL) {
+                return STD_RET_ERROR;
+        }
 
-            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            if (taskInfo) {
-                  /* find empty file slot */
-                  u32_t block = 0;
+        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        if (taskInfo == NULL) {
+                return STD_RET_ERROR;
+        }
 
-                  while (block < FLE_BLOCK_COUNT) {
-                        if (taskInfo->fblock[block]) {
+        /* find empty file slot */
+        for (u8_t block = 0; block < FLE_BLOCK_COUNT; block++) {
+                if (taskInfo->fblock[block] == NULL) {
+                        continue;
+                }
 
-                              /* find opened file */
-                              for (u8_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                /* find opened file */
+                for (u8_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                        struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
 
-                                    struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
-
-                                    if (fslot->file == file) {
-                                          status = vfs_fclose(file);
-
-                                          if (status == STD_RET_OK) {
-                                                fslot->file = NULL;
-
-                                                taskInfo->fblock[block]->full = FALSE;
-
-                                                if (block != 0) {
-                                                      /* check if block is empty */
-                                                      for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                                            if (taskInfo->fblock[block]->fslot[i].file != NULL)
-                                                                  goto moni_fclose_end;
-                                                      }
-
-                                                      /* block is empty - freeing memory */
-                                                      free(taskInfo->fblock[block]);
-                                                      taskInfo->fblock[block] = NULL;
-                                                }
-                                          }
-
-                                          goto moni_fclose_end;
-                                    }
-                              }
-
-                              block++;
+                        if (fslot->file != file) {
+                                continue;
                         }
-                  }
-            }
 
-            moni_fclose_end:
-            GiveRecMutex(moni->mtx);
-      }
+                        if ((status = vfs_fclose(file)) != STD_RET_OK) {
+                                goto moni_fclose_end;
+                        }
 
-      return status;
+                        fslot->file = NULL;
+                        taskInfo->fblock[block]->full = FALSE;
+
+                        if (block == 0) {
+                                goto moni_fclose_end;
+                        }
+
+                        /* check if block is empty */
+                        for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
+                                if (taskInfo->fblock[block]->fslot[i].file != NULL) {
+                                        goto moni_fclose_end;
+                                }
+                        }
+
+                        /* block is empty - freeing memory */
+                        free(taskInfo->fblock[block]);
+                        taskInfo->fblock[block] = NULL;
+
+                        goto moni_fclose_end;
+                }
+        }
+
+        moni_fclose_end:
+        GiveRecMutex(moni->mtx);
+
+        return status;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function open selected directory
  *
@@ -728,69 +765,70 @@ stdRet_t moni_fclose(FILE_t *file)
  *
  * @retval NULL if file can't be created
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_FILE_USAGE > 0)
 DIR_t *moni_opendir(const ch_t *path)
 {
-      void *dir = NULL;
+        DIR_t *dir   = NULL;
+        u32_t  block = 0;
+        struct taskData *taskInfo;
 
-      if (moni) {
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (moni == NULL) {
+                return NULL;
+        }
 
-            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            if (taskInfo) {
-                  /* find empty file slot */
-                  u32_t block = 0;
+        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        if (taskInfo == NULL) {
+                return NULL;
+        }
 
-                  while (block < DIR_BLOCK_COUNT) {
-                        if (taskInfo->dblock[block]) {
+        /* find empty file slot */
+        while (block < DIR_BLOCK_COUNT) {
+                if (taskInfo->dblock[block] == NULL) {
+                        taskInfo->dblock[block] = calloc(1, sizeof(struct dirBlock));
 
-                              /* find empty dir slot in block */
-                              for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
-
-                                    if (taskInfo->dblock[block]->full == TRUE) {
-                                          break;
-                                    }
-
-                                    struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
-
-                                    if (dslot->dir == NULL) {
-                                          dslot->dir = vfs_opendir(path);
-
-                                          if (dslot->dir) {
-                                                dir = dslot->dir;
-                                          }
-
-                                          if (slot == DIR_OPN_IN_BLOCK - 1)
-                                                taskInfo->dblock[block]->full = TRUE;
-
-                                          goto moni_opendir_end;
-                                    }
-                              }
-
-                              block++;
-                        } else {
-                              /* create new block */
-                              taskInfo->dblock[block] = calloc(1, sizeof(struct dirBlock));
-
-                              if (taskInfo->dblock[block] == NULL) {
-                                    block++;
-                              }
+                        if (taskInfo->dblock[block] == NULL) {
+                                block++;
+                                continue;
                         }
-                  }
-            }
+                }
 
-            moni_opendir_end:
-            GiveRecMutex(moni->mtx);
-      }
+                /* find empty dir slot in block */
+                for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                        if (taskInfo->dblock[block]->full == TRUE) {
+                                break;
+                        }
 
-      return dir;
+                        struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
+
+                        if (dslot->dir == NULL) {
+                                dslot->dir = vfs_opendir(path);
+
+                                if (dslot->dir) {
+                                        dir = dslot->dir;
+                                }
+
+                                if (slot == DIR_OPN_IN_BLOCK - 1) {
+                                        taskInfo->dblock[block]->full = TRUE;
+                                }
+
+                                goto moni_opendir_end;
+                        }
+                }
+
+                block++;
+        }
+
+        moni_opendir_end:
+        GiveRecMutex(moni->mtx);
+
+        return dir;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function close opened directory
  *
@@ -799,101 +837,102 @@ DIR_t *moni_opendir(const ch_t *path)
  * @retval STD_RET_OK         file closed successfully
  * @retval STD_RET_ERROR      file not closed
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_FILE_USAGE > 0)
 extern stdRet_t moni_closedir(DIR_t *dir)
 {
-      stdRet_t status = STD_RET_ERROR;
+        stdRet_t status = STD_RET_ERROR;
+        struct taskData *taskInfo;
 
-      if (moni) {
-            while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (moni == NULL) {
+                return STD_RET_ERROR;
+        }
 
-            struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            if (taskInfo) {
-                  /* find empty file slot */
-                  u32_t block = 0;
+        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        if (taskInfo == NULL) {
+                return STD_RET_ERROR;
+        }
 
-                  while (block < DIR_BLOCK_COUNT) {
-                        if (taskInfo->dblock[block]) {
+        /* find empty file slot */
+        for (u8_t block = 0; block < DIR_BLOCK_COUNT; block++) {
+                if (taskInfo->dblock[block] == NULL) {
+                        continue;
+                }
 
-                              /* find opened file */
-                              for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                /* find opened file */
+                for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                        struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
 
-                                    struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
-
-                                    if (dslot->dir == dir) {
-                                          status = vfs_closedir(dir);
-
-                                          if (status == STD_RET_OK) {
-                                                dslot->dir = NULL;
-
-                                                taskInfo->dblock[block]->full = FALSE;
-
-                                                if (block != 0) {
-                                                      /* check if block is empty */
-                                                      for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                                            if (taskInfo->dblock[block]->dslot[i].dir != NULL)
-                                                                  goto moni_closedir_end;
-                                                      }
-
-                                                      /* block is empty - freeing memory */
-                                                      free(taskInfo->dblock[block]);
-                                                      taskInfo->dblock[block] = NULL;
-                                                }
-                                          }
-
-                                          goto moni_closedir_end;
-                                    }
-                              }
-
-                              block++;
+                        if (dslot->dir != dir) {
+                                continue;
                         }
-                  }
-            }
 
-            moni_closedir_end:
-            GiveRecMutex(moni->mtx);
-      }
+                        if ((status = vfs_closedir(dir)) != STD_RET_OK) {
+                                goto moni_closedir_end;
+                        }
 
-      return status;
+                        dslot->dir = NULL;
+                        taskInfo->dblock[block]->full = FALSE;
+
+                        if (block == 0) {
+                                goto moni_closedir_end;
+                        }
+
+                        /* check if block is empty */
+                        for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
+                                if (taskInfo->dblock[block]->dslot[i].dir != NULL) {
+                                        goto moni_closedir_end;
+                                }
+                        }
+
+                        /* block is empty - freeing memory */
+                        free(taskInfo->dblock[block]);
+                        taskInfo->dblock[block] = NULL;
+
+                        goto moni_closedir_end;
+                }
+        }
+
+        moni_closedir_end:
+        GiveRecMutex(moni->mtx);
+
+        return status;
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function called after task go to ready state
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_CPU_LOAD > 0)
 void moni_TaskSwitchedIn(void)
 {
-      cpuctl_ClearTimeStatCnt();
+        cpuctl_ClearTimeStatCnt();
 }
 #endif
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function called when task go out ready state
  */
-//================================================================================================//
+//==============================================================================
 #if (APP_MONITOR_CPU_LOAD > 0)
 void moni_TaskSwitchedOut(void)
 {
-      u16_t  cnt     = cpuctl_GetTimeStatCnt();//TIM2->CNT;
-      task_t taskhdl = TaskGetCurrentTaskHandle();
-      u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
-      TaskSetTag(taskhdl, (void*)tmp);
+        u16_t  cnt     = cpuctl_GetTimeStatCnt();//TIM2->CNT;
+        task_t taskhdl = TaskGetCurrentTaskHandle();
+        u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
+        TaskSetTag(taskhdl, (void*)tmp);
 }
 #endif
-
 
 #ifdef __cplusplus
 }
 #endif
 
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/
