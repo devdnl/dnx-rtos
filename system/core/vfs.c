@@ -852,7 +852,7 @@ stdRet_t vfs_fseek(FILE_t *file, i32_t offset, i32_t mode)
                 case VFS_SEEK_SET: file->f_seek  = offset; break;
                 case VFS_SEEK_CUR: file->f_seek += offset; break;
                 case VFS_SEEK_END: file->f_seek  = stat.st_size + offset; break;
-                default: break;
+                default: return STD_RET_ERROR;
                 }
 
                 return STD_RET_OK;
