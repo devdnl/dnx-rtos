@@ -67,7 +67,7 @@ static int_t CalcFormatSize(const ch_t *format, va_list arg);
 /*==============================================================================
  Local object definitions
 ==============================================================================*/
-#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 static FILE_t *kprintFile;
 #endif
 
@@ -291,9 +291,9 @@ ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 void io_kprintEnable(ch_t *filename)
 {
-#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
         /* close file if opened */
         if (kprintFile) {
                 fclose(kprintFile);
@@ -304,25 +304,23 @@ void io_kprintEnable(ch_t *filename)
         if (kprintFile == NULL) {
                 kprintFile = fopen(filename, "w");
         }
-#else
-        (void)filename;
-#endif
 }
+#endif
 
 //==============================================================================
 /**
  * @brief Disable kprint functionality
  */
 //==============================================================================
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 void io_kprintDisable(void)
 {
-#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
         if (kprintFile) {
                 fclose(kprintFile);
                 kprintFile = NULL;
         }
-#endif
 }
+#endif
 
 //==============================================================================
 /**
@@ -334,11 +332,10 @@ void io_kprintDisable(void)
  * @retval number of written characters
  */
 //==============================================================================
-int_t io_kprint(const ch_t *format, ...)
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+void io_kprint(const ch_t *format, ...)
 {
-#if (CONFIG_SYSTEM_MSG_ENABLE > 0 && CONFIG_PRINTF_ENABLE > 0)
         va_list args;
-        int_t n = 0;
 
         if (kprintFile) {
                 va_start(args, format);
@@ -349,7 +346,7 @@ int_t io_kprint(const ch_t *format, ...)
 
                 if (buffer) {
                         va_start(args, format);
-                        n = io_vsnprintf(buffer, size, format, args);
+                        io_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
                         fwrite(buffer, sizeof(ch_t), size, kprintFile);
@@ -357,13 +354,8 @@ int_t io_kprint(const ch_t *format, ...)
                         free(buffer);
                 }
         }
-
-        return n;
-#else
-        (void)format;
-        return 0;
-#endif
 }
+#endif
 
 //==============================================================================
 /**
@@ -467,9 +459,9 @@ ch_t *io_fgets(ch_t *str, int_t size, FILE_t *stream)
  * @retval number of written characters
  */
 //==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
 int_t io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
         int_t n = 0;
 
@@ -480,13 +472,8 @@ int_t io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
         }
 
         return n;
-#else
-        (void)bfr;
-        (void)size;
-        (void)format;
-        return 0;
-#endif
 }
+#endif
 
 //==============================================================================
 /**
@@ -499,9 +486,9 @@ int_t io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
 int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
         int_t n = 0;
 
@@ -524,12 +511,8 @@ int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
         }
 
         return n;
-#else
-        (void)file;
-        (void)format;
-        return 0;
-#endif
 }
+#endif
 
 //==============================================================================
 /**
@@ -543,10 +526,9 @@ int_t io_fprintf(FILE_t *file, const ch_t *format, ...)
  * @return number of printed characters
  */
 //==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
 int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
 {
-#if (CONFIG_PRINTF_ENABLE > 0)
-
 #define putCharacter(character)                 \
         {                                       \
                 if ((size_t)slen < size)  {     \
@@ -622,14 +604,8 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
         return (slen - 1);
 
 #undef putChar
-#else
-        (void)buf;
-        (void)size;
-        (void)format;
-        (void)arg;
-        return 0;
-#endif
 }
+#endif
 
 //==============================================================================
 /**
@@ -642,9 +618,9 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
  * @return number of scanned elements
  */
 //==============================================================================
+#if (CONFIG_SCANF_ENABLE > 0)
 int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
 {
-#if (CONFIG_SCANF_ENABLE > 0)
         int_t n = 0;
         va_list args;
 
@@ -669,12 +645,8 @@ int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
 
         free(str);
         return n;
-#else
-        (void)stream;
-        (void)format;
-        return 0;
-#endif
 }
+#endif
 
 //==============================================================================
 /**
@@ -687,20 +659,16 @@ int_t io_fscanf(FILE_t *stream, const ch_t *format, ...)
  * @return number of printed characters
  */
 //==============================================================================
+#if (CONFIG_SCANF_ENABLE > 0)
 int_t io_sscanf(const ch_t *str, const ch_t *format, ...)
 {
-#if (CONFIG_SCANF_ENABLE > 0)
         va_list args;
         va_start(args, format);
         int_t n = io_vsscanf(str, format, args);
         va_end(args);
         return n;
-#else
-        (void)str;
-        (void)format;
-        return 0;
-#endif
 }
+#endif
 
 //============================================================================//
 /**
@@ -713,9 +681,9 @@ int_t io_sscanf(const ch_t *str, const ch_t *format, ...)
  * @return number of printed characters
  */
 //============================================================================//
+#if (CONFIG_SCANF_ENABLE > 0)
 int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 {
-#if (CONFIG_SCANF_ENABLE > 0)
         int_t   read_fields = 0;
         ch_t    chr;
         int_t   value;
@@ -897,13 +865,8 @@ int_t io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 
         io_sscanf_end:
         return read_fields;
-#else
-        (void)str;
-        (void)format;
-        (void)args;
-        return 0;
-#endif
 }
+#endif
 
 #ifdef __cplusplus
 }

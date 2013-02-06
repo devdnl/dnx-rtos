@@ -98,7 +98,7 @@ extern "C" {
 #define CONFIG_SCANF_ENABLE                           (1)
 
 /**
- * Enable (1) or disable (0) system messages
+ * Enable (1) or disable (0) system messages (required printf() enabled)
  */
 #define CONFIG_SYSTEM_MSG_ENABLE                      (1)
 

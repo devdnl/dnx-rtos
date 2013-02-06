@@ -121,6 +121,22 @@ extern "C" {
 #define BACK_COLOR_WHITE
 #endif
 
+#if ((CONFIG_SYSTEM_MSG_ENABLE == 0) || (CONFIG_PRINTF_ENABLE == 0))
+#define io_kprint(...)
+#define io_kprintEnable(...)
+#define io_kprintDisable(...)
+#endif
+#if (CONFIG_PRINTF_ENABLE == 0)
+#define io_snprintf(...)                        0
+#define io_fprintf(...)                         0
+#define io_vsnprintf(...)                       0
+#endif
+#if (CONFIG_SCANF_ENABLE == 0)
+#define io_fscanf(...)                          0
+#define io_sscanf(...)                          0
+#define io_vsscanf(...)                         0
+#endif
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -132,19 +148,25 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern ch_t  *io_atoi(ch_t *string, u8_t base, i32_t *value);
-extern int_t  io_kprint(const ch_t *format, ...);
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
+extern void   io_kprint(const ch_t *format, ...);
+extern void   io_kprintEnable(ch_t *filename);
+extern void   io_kprintDisable(void);
+#endif
+#if (CONFIG_PRINTF_ENABLE > 0)
 extern int_t  io_snprintf(ch_t *buf, u32_t size, const ch_t *format, ...);
 extern int_t  io_fprintf(FILE_t *file, const ch_t *format, ...);
 extern int_t  io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg);
-extern void   io_kprintEnable(ch_t *filename);
-extern void   io_kprintDisable(void);
-extern int_t  io_fputc(int_t c, FILE_t *buf);
-extern int_t  io_getc(FILE_t *buf);
-extern ch_t  *io_fgets(ch_t *str, int_t size, FILE_t *stream);
+#endif
+#if (CONFIG_SCANF_ENABLE > 0)
 extern int_t  io_fscanf(FILE_t *buf, const ch_t *format, ...);
 extern int_t  io_sscanf(const ch_t *str, const ch_t *format, ...);
 extern int_t  io_vsscanf(const ch_t *str, const ch_t *format, va_list args);
+#endif
+extern ch_t  *io_atoi(ch_t *string, u8_t base, i32_t *value);
+extern int_t  io_fputc(int_t c, FILE_t *buf);
+extern int_t  io_getc(FILE_t *buf);
+extern ch_t  *io_fgets(ch_t *str, int_t size, FILE_t *stream);
 
 #ifdef __cplusplus
 }

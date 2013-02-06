@@ -288,8 +288,9 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 {
                                                       ioctl(sensor, MPL115A2_IORQ_GETTEMP, &temp);
 
-                                                      if (fclose(sensor) != STD_RET_OK)
+                                                      if (fclose(sensor) != STD_RET_OK) {
                                                             kprint("httpd: error while closing 'sensor' file\n");
+                                                      }
                                                 }
 
                                                 n = snprintf(pagePtr, 50, "%d", (i32_t)temp);
@@ -305,8 +306,9 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 {
                                                       ioctl(sensor, MPL115A2_IORQ_GETPRES, &pressure);
 
-                                                      if (fclose(sensor) != STD_RET_OK)
+                                                      if (fclose(sensor) != STD_RET_OK) {
                                                             kprint("httpd: error while closing 'sensor' file\n");
+                                                      }
                                                 }
 
                                                 n = snprintf(pagePtr, 50, "%d", (u32_t)pressure);
@@ -323,8 +325,9 @@ err_t http_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
                                                 {
                                                       ioctl(rtc, RTC_IORQ_GETTIME, &time);
                                                       ioctl(rtc, RTC_IORQ_GETDATE, &date);
-                                                      if (fclose(rtc) != STD_RET_OK)
+                                                      if (fclose(rtc) != STD_RET_OK) {
                                                             kprint("httpd: error while closing 'rtc' file\n");
+                                                      }
                                                 }
 //                                                else
 //                                                {
