@@ -922,7 +922,7 @@ void moni_TaskSwitchedIn(void)
 #if (APP_MONITOR_CPU_LOAD > 0)
 void moni_TaskSwitchedOut(void)
 {
-        u16_t  cnt     = cpuctl_GetTimeStatCnt();//TIM2->CNT;
+        u16_t  cnt     = cpuctl_GetTimeStatCnt();
         task_t taskhdl = TaskGetCurrentTaskHandle();
         u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
         TaskSetTag(taskhdl, (void*)tmp);

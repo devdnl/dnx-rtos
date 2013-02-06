@@ -1,36 +1,33 @@
-/***************************************************************************************************
+/*******************************************************************************
  * @author: Daniel Zorychta [danz@jabster.pl]
  *
  * Vector file for STM32F10x microcontroller series
  * compiler: arm-none-eabi-gcc
-***************************************************************************************************/
+*******************************************************************************/
 
 #ifdef __cplusplus
    extern "C" {
 #endif
 
-
 /** define weak assign to the default function */
 #define WEAK_DEFAULT __attribute__ ((interrupt, weak, alias("__Default_Handler")))
 
-
-/*================================================================================================*/
+/*============================================================================*/
 /**
 * \brief Default interrupt handler.
 * \details Default interrupt handler, used for interrupts that don't have their
 * own handler defined.
 */
-/*================================================================================================*/
+/*============================================================================*/
 static void __Default_Handler(void) __attribute__ ((interrupt));
 static void __Default_Handler(void)
 {
-   while (1);
+        while (1);
 }
 
-
-/*==================================================================================================
+/*==============================================================================
 Assign all unused interrupts to the default handler
-==================================================================================================*/
+==============================================================================*/
 WEAK_DEFAULT void NMI_Handler(void);
 WEAK_DEFAULT void HardFault_Handler(void);
 WEAK_DEFAULT void MemManage_Handler(void);
@@ -46,7 +43,7 @@ WEAK_DEFAULT void __Reserved_0x34_IRQHandler(void);
 WEAK_DEFAULT void PendSV_Handler(void);
 WEAK_DEFAULT void SysTick_Handler(void);
 
-/* STM32 specific Interrupt Numbers ***************************************************************/
+/* STM32 specific Interrupt Numbers *******************************************/
 WEAK_DEFAULT void WWDG_IRQHandler(void);
 WEAK_DEFAULT void PVD_IRQHandler(void);
 WEAK_DEFAULT void TAMPER_IRQHandler(void);
@@ -373,7 +370,6 @@ WEAK_DEFAULT void __Reserved_46_IRQHandler(void);
 WEAK_DEFAULT void __Reserved_47_IRQHandler(void);
 WEAK_DEFAULT void __Reserved_48_IRQHandler(void);
 WEAK_DEFAULT void __Reserved_49_IRQHandler(void);
-WEAK_DEFAULT void __Reserved_50_IRQHandler(void);
 WEAK_DEFAULT void TIM5_IRQHandler(void);
 WEAK_DEFAULT void SPI3_IRQHandler(void);
 WEAK_DEFAULT void UART4_IRQHandler(void);
@@ -393,9 +389,6 @@ WEAK_DEFAULT void CAN2_RX1_IRQHandler(void);
 WEAK_DEFAULT void CAN2_SCE_IRQHandler(void);
 WEAK_DEFAULT void OTG_FS_IRQHandler(void);
 #endif /* STM32F10X_CL */
-
-
-
 
 /*==================================================================================================
 Vector table
