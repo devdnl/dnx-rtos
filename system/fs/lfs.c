@@ -44,6 +44,7 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/** file types */
 typedef enum {
         NODE_TYPE_DIR  = FILE_TYPE_DIR,
         NODE_TYPE_FILE = FILE_TYPE_REGULAR,
@@ -51,6 +52,7 @@ typedef enum {
         NODE_TYPE_LINK = FILE_TYPE_LINK
 } nodeType_t;
 
+/** node structure */
 typedef struct node {
         ch_t       *name;       /* file name */
         nodeType_t  type;       /* file type */
@@ -64,6 +66,7 @@ typedef struct node {
         void       *data;       /* file type specified data */
 } node_t;
 
+/** open file info */
 typedef struct openInfo {
         node_t *node;           /* opened node */
         node_t *nodebase;       /* base of opened node */
@@ -72,11 +75,12 @@ typedef struct openInfo {
         u32_t   itemID;         /* item ID in base directory list */
 } fopenInfo_t;
 
+/** main memory structure */
 struct fshdl_s {
         node_t   root;          /* root dir '/' */
         mutex_t  mtx;           /* lock mutex */
         list_t  *openFile;      /* list with opened files */
-        u32_t    idcnt;
+        u32_t    idcnt;         /* list ID counter */
 };
 
 /*==============================================================================
@@ -84,7 +88,7 @@ struct fshdl_s {
 ==============================================================================*/
 static stdRet_t  rmNode(node_t *base, node_t *target, u32_t baseitemid);
 static node_t   *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
-static i32_t     GetPathDeep(const ch_t *path);
+static uint_t    GetPathDeep(const ch_t *path);
 static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
 
@@ -170,10 +174,10 @@ stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
 
         node_t *node;
         node_t *ifnode;
-        ch_t   *drvname;
-        u32_t   drvnamelen;
-        ch_t   *filename;
         node_t *dirfile;
+        ch_t   *drvname;
+        ch_t   *filename;
+        uint_t  drvnamelen;
         struct vfs_drvcfg *dcfg;
 
         if (!path || !drvcfg || !lfs) {
@@ -346,12 +350,11 @@ stdRet_t lfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
                 if (node) {
                         if (node->type == NODE_TYPE_DIR) {
                                 if (dir) {
-                                        dir->items = ListGetItemCount(
-                                        node->data);
+                                        dir->items = ListGetItemCount(node->data);
                                         dir->rddir = lfs_readdir;
                                         dir->cldir = lfs_closedir;
-                                        dir->seek = 0;
-                                        dir->dd = node;
+                                        dir->seek  = 0;
+                                        dir->dd    = node;
                                 }
 
                                 GiveMutex(lfs->mtx);
@@ -660,31 +663,31 @@ stdRet_t lfs_stat(fsd_t fsd, const ch_t *path, struct vfs_stat *stat)
 {
         (void) fsd;
 
-        if (path && stat && lfs) {
-                while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
-
-                node_t *node = GetNode(path, &lfs->root, 0, NULL);
-
-                if (node) {
-                        if ( (  path[strlen(path) - 1] == '/'
-                             && node->type == NODE_TYPE_DIR)
-                           || path[strlen(path) - 1] != '/') {
-
-                                stat->st_dev   = node->dev;
-                                stat->st_rdev  = node->part;
-                                stat->st_gid   = node->gid;
-                                stat->st_mode  = node->mode;
-                                stat->st_mtime = node->mtime;
-                                stat->st_size  = node->size;
-                                stat->st_uid   = node->uid;
-
-                                GiveMutex(lfs->mtx);
-                                return STD_RET_OK;
-                        }
-                }
-
-                GiveMutex(lfs->mtx);
+        if (!path || !stat || !lfs) {
+                return STD_RET_ERROR;
         }
+
+        while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+
+        node_t *node = GetNode(path, &lfs->root, 0, NULL);
+        if (node) {
+                if ( (path[strlen(path) - 1] == '/' && node->type == NODE_TYPE_DIR)
+                   || path[strlen(path) - 1] != '/') {
+
+                        stat->st_dev   = node->dev;
+                        stat->st_rdev  = node->part;
+                        stat->st_gid   = node->gid;
+                        stat->st_mode  = node->mode;
+                        stat->st_mtime = node->mtime;
+                        stat->st_size  = node->size;
+                        stat->st_uid   = node->uid;
+
+                        GiveMutex(lfs->mtx);
+                        return STD_RET_OK;
+                }
+        }
+
+        GiveMutex(lfs->mtx);
 
         return STD_RET_ERROR;
 }
@@ -712,13 +715,13 @@ stdRet_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 
                 if (foi) {
                         if (foi->node) {
-                                stat->st_dev = foi->node->dev;
-                                stat->st_rdev = foi->node->part;
-                                stat->st_gid = foi->node->gid;
-                                stat->st_mode = foi->node->mode;
+                                stat->st_dev   = foi->node->dev;
+                                stat->st_rdev  = foi->node->part;
+                                stat->st_gid   = foi->node->gid;
+                                stat->st_mode  = foi->node->mode;
                                 stat->st_mtime = foi->node->mtime;
-                                stat->st_size = foi->node->size;
-                                stat->st_uid = foi->node->uid;
+                                stat->st_size  = foi->node->size;
+                                stat->st_uid   = foi->node->uid;
 
                                 GiveMutex(lfs->mtx);
                                 return STD_RET_OK;
@@ -747,12 +750,12 @@ stdRet_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
         (void) fsd;
 
         if (statfs) {
-                statfs->f_bfree = memman_GetFreeHeapSize();
+                statfs->f_bfree  = memman_GetFreeHeapSize();
                 statfs->f_blocks = memman_GetHeapSize();
-                statfs->f_ffree = 0;
-                statfs->f_files = 0;
-                statfs->f_type = 0x01;
-                statfs->fsname = "lfs";
+                statfs->f_ffree  = 0;
+                statfs->f_files  = 0;
+                statfs->f_type   = 0x01;
+                statfs->fsname   = "lfs";
 
                 return STD_RET_OK;
         }
@@ -947,7 +950,7 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_
 
                 if (drv->f_open) {
                         if (drv->f_open(drv->dev, drv->part) == STD_RET_OK) {
-                                *seek = 0;
+                                *seek  = 0;
                                 status = STD_RET_OK;
                         } else {
                                 ListRmItemByNo(lfs->openFile, item);
@@ -1154,60 +1157,67 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
 //==============================================================================
 size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      (void)fsd;
+        (void)fsd;
 
-      size_t n = 0;
+        node_t            *node;
+        fopenInfo_t       *foi;
+        struct vfs_drvcfg *drv;
+        size_t             filelen;
+        size_t             items2rd;
+        size_t             n = 0;
 
-      if (dst && size && nitems && lfs) {
-            node_t *node = NULL;
 
-            while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (!dst || !size || !nitems || !lfs) {
+                return 0;
+        }
 
-            fopenInfo_t *foi = ListGetItemDataByID(lfs->openFile, fd);
+        while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            if (foi)
-                  node = foi->node;
+        foi = ListGetItemDataByID(lfs->openFile, fd);
+        if (foi == NULL) {
+                goto lfs_read_end;
+        }
 
-            if (node) {
-                  if (node->type == NODE_TYPE_DRV && node->data) {
-                        struct vfs_drvcfg *drv = node->data;
+        node = foi->node;
+        if (node == NULL) {
+                goto lfs_read_end;
+        }
 
-                        if (drv->f_read) {
-                              GiveMutex(lfs->mtx);
-                              n = drv->f_read(drv->dev, drv->part, dst, size, nitems, seek);
-                              goto lfs_read_end;
+        if (node->type == NODE_TYPE_DRV && node->data) {
+                drv = node->data;
+
+                if (drv->f_read) {
+                        GiveMutex(lfs->mtx);
+                        return drv->f_read(drv->dev, drv->part, dst, size,
+                                           nitems, seek);
+                }
+        } else if (node->type == NODE_TYPE_FILE) {
+                filelen = node->size;
+
+                /* check if seek is not bigger than file length */
+                if (seek > filelen) {
+                        seek = filelen;
+                }
+
+                /* check how many items to read is on current file position */
+                if (((filelen - seek) / size) >= nitems) {
+                        items2rd = nitems;
+                } else {
+                        items2rd = (filelen - seek) / size;
+                }
+
+                /* copy if file buffer exist */
+                if (node->data) {
+                        if (items2rd > 0) {
+                                memcpy(dst, node->data + seek, items2rd * size);
+                                n = items2rd;
                         }
-                  } else if (node->type == NODE_TYPE_FILE) {
-                        size_t filelen = node->size;
-                        size_t items2rd;
+                }
+        }
 
-                        /* check if seek is not bigger than file length */
-                        if (seek > filelen) {
-                              seek = filelen;
-                        }
-
-                        /* check how many items to read is on current file position */
-                        if (((filelen - seek) / size) >= nitems) {
-                              items2rd = nitems;
-                        } else {
-                              items2rd = (filelen - seek) / size;
-                        }
-
-                        /* copy if file buffer exist */
-                        if (node->data) {
-                              if (items2rd > 0) {
-                                    memcpy(dst, node->data + seek, items2rd * size);
-                                    n = items2rd;
-                              }
-                        }
-                  }
-            }
-
-            GiveMutex(lfs->mtx);
-      }
-
-      lfs_read_end:
-      return n;
+        lfs_read_end:
+        GiveMutex(lfs->mtx);
+        return n;
 }
 
 //==============================================================================
@@ -1225,36 +1235,40 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
 //==============================================================================
 stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
 {
-      (void)fsd;
+        (void) fsd;
 
-      stdRet_t status = STD_RET_ERROR;
-      node_t  *node   = NULL;
+        fopenInfo_t       *foi;
+        struct vfs_drvcfg *drv;
 
-      if (lfs) {
-            while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            fopenInfo_t *foi = ListGetItemDataByID(lfs->openFile, fd);
+        if (lfs == NULL) {
+                return STD_RET_ERROR;
+        }
 
-            if (foi)
-                  node = foi->node;
+        while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-            if (node) {
-                  if (node->type == NODE_TYPE_DRV && node->data) {
-                        struct vfs_drvcfg *drv = node->data;
+        foi = ListGetItemDataByID(lfs->openFile, fd);
+        if (foi == NULL) {
+                goto lfs_ioctl_end;
+        }
 
-                        if (drv->f_ioctl) {
-                              GiveMutex(lfs->mtx);
-                              status = drv->f_ioctl(node->dev, node->part, iorq, data);
-                              goto lfs_ioctl_end;
-                        }
-                  }
-            }
+        if (foi->node == NULL) {
+                goto lfs_ioctl_end;
+        }
 
-            GiveMutex(lfs->mtx);
-      }
+        if (foi->node->type == NODE_TYPE_DRV && foi->node->data) {
+                drv = foi->node->data;
 
-      lfs_ioctl_end:
-      return status;
+                if (drv->f_ioctl) {
+                        GiveMutex(lfs->mtx);
+                        return drv->f_ioctl(foi->node->dev, foi->node->part,
+                                            iorq, data);
+                }
+        }
+
+        lfs_ioctl_end:
+        GiveMutex(lfs->mtx);
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -1271,30 +1285,30 @@ stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
 //==============================================================================
 static stdRet_t rmNode(node_t *base, node_t *target, u32_t baseitemid)
 {
-      stdRet_t status = STD_RET_ERROR;
+        /* if DIR check if is empty */
+        if (target->type == NODE_TYPE_DIR) {
 
-      /* if DIR check if is empty */
-      if (target->type == NODE_TYPE_DIR) {
+                if (ListGetItemCount(target->data) > 0) {
+                        return STD_RET_ERROR;
+                } else {
+                        ListDelete(target->data);
+                        target->data = NULL;
+                }
+        }
 
-            if (ListGetItemCount(target->data) > 0) {
-                  goto rmNode_end;
-            } else {
-                  ListDelete(target->data);
-                  target->data = NULL;
-            }
-      }
+        if (target->name) {
+                free(target->name);
+        }
 
-      if (target->name)
-            free(target->name);
+        if (target->data) {
+                free(target->data);
+        }
 
-      if (target->data)
-            free(target->data);
+        if (ListRmItemByID(base->data, baseitemid) == 0) {
+                return STD_RET_OK;
+        }
 
-      if (ListRmItemByID(base->data, baseitemid) == 0)
-            status = STD_RET_OK;
-
-      rmNode_end:
-      return status;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -1306,25 +1320,26 @@ static stdRet_t rmNode(node_t *base, node_t *target, u32_t baseitemid)
  * @return path deep
  */
 //==============================================================================
-static i32_t GetPathDeep(const ch_t *path)
+static uint_t GetPathDeep(const ch_t *path)
 {
-      u32_t deep = 0;
-      const ch_t *lastpath = NULL;
+        uint_t      deep     = 0;
+        const ch_t *lastpath = NULL;
 
-      if (path[0] == '/') {
-            lastpath = path++;
+        if (path[0] == '/') {
+                lastpath = path++;
 
-            while ((path = strchr(path, '/'))) {
-                  lastpath = path;
-                  path++;
-                  deep++;
-            }
+                while ((path = strchr(path, '/'))) {
+                        lastpath = path;
+                        path++;
+                        deep++;
+                }
 
-            if (lastpath[1] != '\0')
-                  deep++;
-      }
+                if (lastpath[1] != '\0') {
+                        deep++;
+                }
+        }
 
-      return deep;
+        return deep;
 }
 
 //==============================================================================
@@ -1342,67 +1357,78 @@ static i32_t GetPathDeep(const ch_t *path)
 //==============================================================================
 static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item)
 {
-      node_t *curnode = NULL;
+        node_t *curnode;
+        node_t *node;
+        ch_t   *pathend;
+        int_t   dirdeep;
+        uint_t  pathlen;
+        int_t   listsize;
 
-      if (path && startnode) {
-            if (startnode->type == NODE_TYPE_DIR) {
-                  curnode       = startnode;
-                  i32_t dirdeep = GetPathDeep(path);
-                  u16_t pathlen;
-                  ch_t *pathend;
 
-                  /* go to selected node ------------------------------------ */
-                  while (dirdeep + deep > 0) {
-                        /* get element from path */
-                        if ((path = strchr(path, '/')) == NULL)
-                              break;
-                        else
-                              path++;
+        if (!path || !startnode) {
+                return NULL;
+        }
 
-                        if ((pathend = strchr(path, '/')) == NULL)
-                              pathlen = strlen(path);
-                        else
-                              pathlen = pathend - path;
+        if (startnode->type != NODE_TYPE_DIR) {
+                return NULL;
+        }
 
-                        /* get number of list items */
-                        i32_t listsize = ListGetItemCount(curnode->data);
+        curnode = startnode;
+        dirdeep = GetPathDeep(path);
 
-                        /* find that object exist ----------------------------*/
-                        i32_t i = 0;
-                        while (listsize > 0) {
-                              node_t *node = ListGetItemDataByNo(curnode->data, i++);
+        /* go to selected node -----------------------------------------------*/
+        while (dirdeep + deep > 0) {
+                /* get element from path */
+                if ((path = strchr(path, '/')) == NULL) {
+                        break;
+                } else {
+                        path++;
+                }
 
-                              if (node) {
-                                    if (  strlen(node->name) == pathlen
-                                       && strncmp(node->name, path, pathlen) == 0) {
+                if ((pathend = strchr(path, '/')) == NULL) {
+                        pathlen = strlen(path);
+                } else {
+                        pathlen = pathend - path;
+                }
 
-                                          curnode = node;
+                /* get number of list items */
+                listsize = ListGetItemCount(curnode->data);
 
-                                          if (item)
-                                                *item = i - 1;
+                /* find that object exist ------------------------------------*/
+                int_t i = 0;
+                while (listsize > 0) {
+                        node = ListGetItemDataByNo(curnode->data, i++);
 
-                                          break;
-                                    }
-                              } else {
-                                    dirdeep = 1 - deep;
-                                    break;
-                              }
-
-                              listsize--;
+                        if (node == NULL) {
+                                dirdeep = 1 - deep;
+                                break;
                         }
 
-                        /* directory does not found or error */
-                        if (listsize == 0 || curnode == NULL) {
-                              curnode = NULL;
-                              break;
+                        if (  strlen(node->name) == pathlen
+                           && strncmp(node->name, path, pathlen) == 0 ) {
+
+                                curnode = node;
+
+                                if (item) {
+                                        *item = i - 1;
+                                }
+
+                                break;
                         }
 
-                        dirdeep--;
-                  }
-            }
-      }
+                        listsize--;
+                }
 
-      return curnode;
+                /* directory does not found or error */
+                if (listsize == 0 || curnode == NULL) {
+                        curnode = NULL;
+                        break;
+                }
+
+                dirdeep--;
+        }
+
+        return curnode;
 }
 
 #ifdef __cplusplus
