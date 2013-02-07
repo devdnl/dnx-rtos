@@ -70,8 +70,7 @@ typedef struct node {
 typedef struct openInfo {
         node_t *node;           /* opened node */
         node_t *nodebase;       /* base of opened node */
-        //ch_t   *taskName;       /* task name (debug only) */
-        bool_t  doRM;           /* file to remove after close */
+        bool_t  removeAtClose;  /* file to remove after close */
         u32_t   itemID;         /* item ID in base directory list */
 } fopenInfo_t;
 
@@ -91,6 +90,8 @@ static node_t   *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t 
 static uint_t    GetPathDeep(const ch_t *path);
 static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
+static node_t   *CreateNode(node_t *nodebase, ch_t *filename, i32_t *item);
+static stdRet_t  AddNodeToListOfOpenFiles(node_t *nodebase, node_t *node, i32_t *item);
 
 /*==============================================================================
   Local object definitions
@@ -117,7 +118,7 @@ stdRet_t lfs_init(const ch_t *srcPath, fsd_t *fsd)
         (void) fsd;
         (void) srcPath;
 
-        if (lfs == NULL) {
+        if (lfs != NULL) {
                 return STD_RET_OK;
         }
 
@@ -472,7 +473,7 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
                         fopenInfo_t *olfoi = ListGetItemDataByNo(lfs->openFile, i);
 
                         if (olfoi->node == nodeobj) {
-                                olfoi->doRM = TRUE;
+                                olfoi->removeAtClose = TRUE;
                                 dorm = FALSE;
                         }
                 }
@@ -784,28 +785,25 @@ stdRet_t lfs_release(fsd_t fsd)
 /**
  * @brief Function open selected file
  *
- * @param  fsd          file system descriptor
- * @param *name         file path
- * @param *mode         file mode
+ * @param [in]  fsd             file system descriptor
+ * @param[out] *fd              file descriptor
+ * @param[out] *seek            file position
+ * @param [in] *path            file path
+ * @param [in] *mode            file mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @retval STD_RET_OK           file opened/created
+ * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
 stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
 {
         (void) fsd;
 
-        node_t            *node;
-        node_t            *nodebase;
-        node_t            *fnode;
-        ch_t              *filename;
-        fopenInfo_t       *foi;
-        fopenInfo_t       *olfoi;
-        struct vfs_drvcfg *drv;
-        stdRet_t           status = STD_RET_ERROR;
-        i32_t              item;
-        u32_t              cfd;
+        node_t *node;
+        node_t *nodebase;
+        ch_t   *filename;
+        i32_t   item;
+        u32_t   cfd;
 
 
         if (!fd || !path || !mode || !lfs) {
@@ -813,121 +811,62 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_
         }
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+
         node     = GetNode(path, &lfs->root, 0, &item);
         nodebase = GetNode(path, &lfs->root, -1, NULL);
 
-        /* file creation if necessary ----------------------------------------*/
-        /* file base does not exist or file exist */
-        if (nodebase == NULL || node != NULL) {
-                goto lfs_open_check_exist;
-        }
+        /* create new file when necessary */
+        if (nodebase && node == NULL) {
+                if (   (strncmp("w",  mode, 2) != 0)
+                    && (strncmp("w+", mode, 2) != 0)
+                    && (strncmp("a",  mode, 2) != 0)
+                    && (strncmp("a+", mode, 2) != 0) ) {
+                        goto lfs_open_error;
+                }
 
-        /* base file is not a directory */
-        if (nodebase->type != NODE_TYPE_DIR) {
-                goto lfs_open_check_exist;
-        }
+                filename = calloc(1, strlen(strrchr(path, '/')));
+                if (filename == NULL) {
+                        goto lfs_open_error;
+                }
 
-        /* mode is not correct to create new file */
-        if (  (strncmp("w",  mode, 2) != 0)
-           && (strncmp("w+", mode, 2) != 0)
-           && (strncmp("a",  mode, 2) != 0)
-           && (strncmp("a+", mode, 2) == 0) ) {
-                goto lfs_open_check_exist;
-        }
-
-        filename = calloc(1, strlen(strrchr(path, '/')));
-        fnode    = calloc(1, sizeof(node_t));
-        if (filename && fnode) {
                 strcpy(filename, strrchr(path, '/') + 1);
+                node = CreateNode(nodebase, filename, &item);
 
-                fnode->name  = filename;
-                fnode->data  = NULL;
-                fnode->dev   = 0;
-                fnode->gid   = 0;
-                fnode->mode  = 0;
-                fnode->mtime = 0;
-                fnode->part  = 0;
-                fnode->size  = 0;
-                fnode->type  = NODE_TYPE_FILE;
-                fnode->uid   = 0;
-
-                node = fnode;
-
-                item = ListAddItem(nodebase->data, lfs->idcnt++, fnode);
-                if (item < 0) {
+                if (node == NULL) {
                         free(filename);
-                        free(fnode);
-                        goto lfs_open_end;
+                        goto lfs_open_error;
                 }
-        } else {
-                if (filename) {
-                        free(filename);
-                }
-
-                if (fnode) {
-                        free(fnode);
-                }
-
-                goto lfs_open_end;
         }
 
-        /* file exist --------------------------------------------------------*/
-        lfs_open_check_exist:
+        /* file shall exist */
         if (!node || !nodebase || item < 0) {
-                goto lfs_open_end;
+                goto lfs_open_error;
         }
 
+        /* node must be a file */
         if (node->type == NODE_TYPE_DIR) {
-                goto lfs_open_end;
+                goto lfs_open_error;
         }
 
-        /* add file to opened files list */
-        foi = calloc(1, sizeof(fopenInfo_t));
-        if (foi) {
-                foi->doRM     = FALSE;
-                foi->node     = node;
-                foi->nodebase = nodebase;
-                //foi->taskName = GET_TASK_NAME();
-
-                if (ListGetItemID(nodebase->data, item, &foi->itemID) == 0) {
-                        /* find if file shall be removed */
-                        i32_t n = ListGetItemCount(lfs->openFile);
-
-                        for (int_t i = 0; i < n; i++) {
-                                olfoi = ListGetItemDataByNo(lfs->openFile, i);
-
-                                if (olfoi->node != node) {
-                                        continue;
-                                }
-
-                                if (olfoi->doRM == TRUE) {
-                                        foi->doRM = TRUE;
-                                        break;
-                                }
-                        }
-
-                        /* add open file info to list */
-                        item = ListAddItem(lfs->openFile, lfs->idcnt++, foi);
-                        if (item  < 0) {
-                                free(foi);
-                                goto lfs_open_end;
-                        }
-                }
+        /* add file to list of open files */
+        if (AddNodeToListOfOpenFiles(nodebase, node,
+                                     &item) == STD_RET_ERROR) {
+                goto lfs_open_error;
         }
 
         /* set file parameters */
         if (node->type == NODE_TYPE_FILE) {
                 /* set seek at begin if selected */
-                if (   strncmp("r",  mode, 2) == 0
-                    || strncmp("r+", mode, 2) == 0
-                    || strncmp("w",  mode, 2) == 0
-                    || strncmp("w+", mode, 2) == 0 ) {
+                if (  strncmp("r",  mode, 2) == 0
+                   || strncmp("r+", mode, 2) == 0
+                   || strncmp("w",  mode, 2) == 0
+                   || strncmp("w+", mode, 2) == 0 ) {
                         *seek = 0;
                 }
 
                 /* set file size */
                 if (  strncmp("w",  mode, 2) == 0
-                   || strncmp("w+", mode, 2) == 0) {
+                   || strncmp("w+", mode, 2) == 0 ) {
 
                         if (node->data) {
                                 free(node->data);
@@ -939,33 +878,33 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_
 
                 /* set seek at file end */
                 if (  strncmp("a",  mode, 2) == 0
-                   || strncmp("a+", mode, 2) == 0) {
+                   || strncmp("a+", mode, 2) == 0 ) {
                         *seek = node->size;
                 }
-
-                status = STD_RET_OK;
-
         } else if (node->type == NODE_TYPE_DRV) {
-                drv = node->data;
+                struct vfs_drvcfg *drv = node->data;
 
-                if (drv->f_open) {
-                        if (drv->f_open(drv->dev, drv->part) == STD_RET_OK) {
-                                *seek  = 0;
-                                status = STD_RET_OK;
-                        } else {
-                                ListRmItemByNo(lfs->openFile, item);
-                                goto lfs_open_end;
-                        }
+                if (drv->f_open == NULL) {
+                        goto lfs_open_error;
+                }
+
+                if (drv->f_open(drv->dev, drv->part) == STD_RET_OK) {
+                        *seek = 0;
+                } else {
+                        ListRmItemByNo(lfs->openFile, item);
+                        goto lfs_open_error;
                 }
         }
 
         /* everything success - load FD */
         ListGetItemID(lfs->openFile, item, &cfd);
         *fd = (fd_t)cfd;
-
-        lfs_open_end:
         GiveMutex(lfs->mtx);
-        return status;
+        return STD_RET_OK;
+
+        lfs_open_error:
+        GiveMutex(lfs->mtx);
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -1033,7 +972,7 @@ stdRet_t lfs_close(fsd_t fsd, fd_t fd)
         /* file to remove, check if other app does not opens this file */
         status = STD_RET_OK;
 
-        if (finf.doRM == TRUE) {
+        if (finf.removeAtClose == TRUE) {
                 i32_t n = ListGetItemCount(lfs->openFile);
 
                 for (int_t i = 0; i < n; i++) {
@@ -1429,6 +1368,119 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
         }
 
         return curnode;
+}
+
+//==============================================================================
+/**
+ * @brief Function create new file in selected node
+ * Function allocate new node. If node is created successfully then filename
+ * cannot be freed!
+ *
+ * @param [in] *nodebase        node base
+ * @param [in] *filename        filename (must be earlier allocated)
+ * @param[out] *item            new node number in base node
+ *
+ * @return NULL if error, otherwise new node address
+ */
+//==============================================================================
+static node_t *CreateNode(node_t *nodebase, ch_t *filename, i32_t *item)
+{
+        node_t *fnode;
+        i32_t   nitem;
+
+        if (!nodebase || !filename) {
+                return NULL;
+        }
+
+        if (nodebase->type != NODE_TYPE_DIR) {
+                return NULL;
+        }
+
+        if ((fnode = calloc(1, sizeof(node_t))) == NULL) {
+                return NULL;
+        }
+
+        fnode->name  = filename;
+        fnode->data  = NULL;
+        fnode->dev   = 0;
+        fnode->gid   = 0;
+        fnode->mode  = 0;
+        fnode->mtime = 0;
+        fnode->part  = 0;
+        fnode->size  = 0;
+        fnode->type  = NODE_TYPE_FILE;
+        fnode->uid   = 0;
+
+        if ((nitem = ListAddItem(nodebase->data, lfs->idcnt++, fnode)) < 0) {
+                free(fnode);
+                return NULL;
+        }
+
+        *item = nitem;
+        return fnode;
+}
+
+//==============================================================================
+/**
+ * @brief Function add node to list of open files
+ *
+ * @param [in] *nodebase        base node
+ * @param [in] *node            node data added to list of open files
+ * @param [io] *item            in:  node number in base node
+ *                              out: open file's number in list of open files
+ *
+ * @retval STD_RET_OK           file registered in list of open files
+ * @retval STD_RET_ERROR        file not registered
+ */
+//==============================================================================
+static stdRet_t AddNodeToListOfOpenFiles(node_t *nodebase, node_t *node, i32_t *item)
+{
+        fopenInfo_t *openFileInfo;
+        fopenInfo_t *openedFile;
+        i32_t        openFileCount;
+        i32_t        openFileListPos;
+
+        if ((openFileInfo = calloc(1, sizeof(fopenInfo_t))) == NULL) {
+                return STD_RET_ERROR;
+        }
+
+        openFileInfo->removeAtClose = FALSE;
+        openFileInfo->node          = node;
+        openFileInfo->nodebase      = nodebase;
+
+        if (ListGetItemID(nodebase->data, *item, &openFileInfo->itemID) != 0) {
+                goto AddFileToListOfOpenFiles_Error;
+        }
+
+        /* find if file shall be removed */
+        openFileCount = ListGetItemCount(lfs->openFile);
+
+        for (i32_t i = 0; i < openFileCount; i++) {
+                openedFile = ListGetItemDataByNo(lfs->openFile, i);
+
+                if (openedFile->node != node) {
+                        continue;
+                }
+
+                if (openedFile->removeAtClose == TRUE) {
+                        openFileInfo->removeAtClose = TRUE;
+                        break;
+                }
+        }
+
+        /* add open file info to list */
+        openFileListPos = ListAddItem(lfs->openFile,
+                                      lfs->idcnt++,
+                                      openFileInfo);
+
+        if (openFileListPos >= 0) {
+                *item = openFileListPos;
+                return STD_RET_OK;
+        }
+
+        AddFileToListOfOpenFiles_Error:
+        free(openFileInfo);
+        return STD_RET_ERROR;
 }
 
 #ifdef __cplusplus
