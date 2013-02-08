@@ -76,13 +76,14 @@ struct termHdl {
                 mutex_t  mtx;                   /* resources security */
                 flag_t   echoOn;                /* echo indicator */
 
-                /* FIFO for keyboard read */
-                struct inputfifo {
+                struct inputstream {            /* FIFO for keyboard read */
                         u16_t level;
                         ch_t  buffer[TTY_OUT_BFR_SIZE];
                         u16_t txidx;
                         u16_t rxidx;
                 } input;
+
+                ch_t   *inputLine;              /* input line */
         } *tty[TTY_LAST];
 
         u8_t   currentTTY;      /* current terminal */
@@ -116,6 +117,8 @@ static enum keyfn decode_fn_keys(ch_t character);
 static u8_t       get_message_index(u8_t dev, u8_t back);
 static void       refresh_tty(u8_t dev, FILE_t *file);
 static void       get_vt100_size(FILE_t *ttysfile);
+static void       put_into_input_stream(ch_t chr, u8_t dev);
+static stdRet_t   get_from_input_stream(ch_t *chr, u8_t dev);
 
 /*==============================================================================
   Local object definitions
@@ -400,25 +403,17 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
         size_t n = 0;
 
         if (!term && dev >= TTY_LAST && !dst && !size && !nitems) {
-                return n;
+                return 0;
         }
 
         if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK) {
-                struct inputfifo *input = &TTY(dev)->input;
-
-                while ((input->level > 0) && (nitems > 0)) {
-                        *((ch_t*)dst) = input->buffer[input->rxidx++];
-
-                        dst += size;
-
-                        if (input->rxidx >= TTY_OUT_BFR_SIZE) {
-                                input->rxidx = 0;
+                while (nitems > 0) {
+                        if (get_from_input_stream(dst, dev) != STD_RET_OK) {
+                                break;
                         }
 
-                        input->level--;
-
+                        dst += size;
                         nitems--;
-
                         n++;
                 }
 
@@ -677,19 +672,7 @@ static void stdin_service(FILE_t *stream, u8_t dev)
                         chr = '\n';
                 }
 
-                if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
-                        if (TTY(dev)->input.level < TTY_OUT_BFR_SIZE) {
-                                TTY(dev)->input.buffer[TTY(dev)->input.txidx++] = chr;
-
-                                if (TTY(dev)->input.txidx >= TTY_OUT_BFR_SIZE) {
-                                        TTY(dev)->input.txidx = 0;
-                                }
-
-                                TTY(dev)->input.level++;
-                        }
-
-                        GiveRecMutex(TTY(dev)->mtx);
-                }
+                put_into_input_stream(chr, dev);
 
                 if (TTY(dev)->echoOn == SET) {
                         ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
@@ -988,6 +971,70 @@ static void get_vt100_size(FILE_t *ttysfile)
 
         term->row = row;
         term->col = col;
+}
+
+//==============================================================================
+/**
+ * @brief Function puts data to input stream
+ *
+ * @param chr           character
+ * @param dev           device
+ */
+//==============================================================================
+static void put_into_input_stream(ch_t chr, u8_t dev)
+{
+        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+                TTY(dev)->input.buffer[TTY(dev)->input.txidx++] = chr;
+
+                if (TTY(dev)->input.txidx >= TTY_OUT_BFR_SIZE) {
+                        TTY(dev)->input.txidx = 0;
+                }
+
+                if (TTY(dev)->input.level < TTY_OUT_BFR_SIZE) {
+                        TTY(dev)->input.level++;
+                } else {
+                        TTY(dev)->input.rxidx++;
+
+                        if (TTY(dev)->input.rxidx >= TTY_OUT_BFR_SIZE) {
+                                TTY(dev)->input.rxidx = 0;
+                        }
+                }
+
+                GiveRecMutex(TTY(dev)->mtx);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function gets character from input stream
+ *
+ * @param[out] *chr             pointer to character
+ * @param [in]  dev             device
+ *
+ * @retval STD_RET_OK           loaded character from stream
+ * @retval STD_RET_ERROR        stream is empty
+ */
+//==============================================================================
+static stdRet_t get_from_input_stream(ch_t *chr, u8_t dev)
+{
+        if (TTY(dev)->input.level == 0) {
+                return STD_RET_ERROR;
+        }
+
+        if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK) {
+                *chr = TTY(dev)->input.buffer[TTY(dev)->input.rxidx++];
+
+                if (TTY(dev)->input.rxidx >= TTY_OUT_BFR_SIZE) {
+                        TTY(dev)->input.rxidx = 0;
+                }
+
+                TTY(dev)->input.level--;
+
+                GiveRecMutex(TTY(dev)->mtx);
+                return STD_RET_OK;
+        }
+
+        return STD_RET_ERROR;
 }
 
 #ifdef __cplusplus
