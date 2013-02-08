@@ -33,7 +33,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "basic_types.h"
+#include "systypes.h"
 #include "memman.h"
 
 /*==============================================================================
@@ -52,24 +52,23 @@ typedef struct list list_t;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern list_t *ListCreate(void);
-extern void    ListDelete(list_t *list);
-extern i32_t   ListAddItem(list_t *list, u32_t id, void *data);
-extern i32_t   ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id, void *data);
-extern i32_t   ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data);
-extern i32_t   ListRmItemByNo(list_t *list, i32_t nitem);
-extern i32_t   ListRmItemByID(list_t *list, u32_t id);
-extern void    ListClear(list_t *list);
-extern i32_t   ListSetItemDataByNo(list_t *list, i32_t nitem, void *data);
-extern void   *ListGetItemDataByNo(list_t *list, i32_t nitem);
-extern i32_t   ListSetItemDataByID(list_t *list, u32_t id, void *data);
-extern void   *ListGetItemDataByID(list_t *list, u32_t id);
-extern i32_t   ListUnlinkItemDataByNo(list_t *list, i32_t nitem);
-extern i32_t   ListUnlinkItemDataByID(list_t *list, u32_t id);
-extern i32_t   ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid);
-extern i32_t   ListGetItemNo(list_t *list, u32_t id, i32_t *nitem);
-extern i32_t   ListGetItemCount(list_t *list);
-
+extern list_t  *ListCreate(void);
+extern stdRet_t ListDelete(list_t *list);
+extern i32_t    ListAddItem(list_t *list, u32_t id, void *data);
+extern stdRet_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id, void *data);
+extern stdRet_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data);
+extern stdRet_t ListRmItemByNo(list_t *list, i32_t nitem);
+extern stdRet_t ListRmItemByID(list_t *list, u32_t id);
+extern stdRet_t ListClear(list_t *list);
+extern stdRet_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data);
+extern void    *ListGetItemDataByNo(list_t *list, i32_t nitem);
+extern stdRet_t ListSetItemDataByID(list_t *list, u32_t id, void *data);
+extern void    *ListGetItemDataByID(list_t *list, u32_t id);
+extern stdRet_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem);
+extern stdRet_t ListUnlinkItemDataByID(list_t *list, u32_t id);
+extern stdRet_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid);
+extern stdRet_t ListGetItemNo(list_t *list, u32_t id, i32_t *nitem);
+extern i32_t    ListGetItemCount(list_t *list);
 
 #ifdef __cplusplus
 }

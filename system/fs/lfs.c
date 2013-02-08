@@ -481,7 +481,7 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
 
         /* remove node if possible */
         if (dorm == TRUE) {
-                if (ListGetItemID(nodebase->data, item, &itemid) == 0) {
+                if (ListGetItemID(nodebase->data, item, &itemid) == STD_RET_OK) {
                         GiveMutex(lfs->mtx);
                         return rmNode(nodebase, nodeobj, itemid);
                 }
@@ -964,7 +964,7 @@ stdRet_t lfs_close(fsd_t fsd, fd_t fd)
         /* delete file from open list */
         finf = *foi;
 
-        if (ListRmItemByID(lfs->openFile, fd) != 0) {
+        if (ListRmItemByID(lfs->openFile, fd) != STD_RET_OK) {
                 /* critical error! */
                 goto lfs_close_end;
         }
@@ -1243,7 +1243,7 @@ static stdRet_t rmNode(node_t *base, node_t *target, u32_t baseitemid)
                 free(target->data);
         }
 
-        if (ListRmItemByID(base->data, baseitemid) == 0) {
+        if (ListRmItemByID(base->data, baseitemid) == STD_RET_OK) {
                 return STD_RET_OK;
         }
 
@@ -1448,7 +1448,8 @@ static stdRet_t AddNodeToListOfOpenFiles(node_t *nodebase, node_t *node, i32_t *
         openFileInfo->node          = node;
         openFileInfo->nodebase      = nodebase;
 
-        if (ListGetItemID(nodebase->data, *item, &openFileInfo->itemID) != 0) {
+        if (ListGetItemID(nodebase->data, *item,
+                        &openFileInfo->itemID) != STD_RET_OK) {
                 goto AddFileToListOfOpenFiles_Error;
         }
 

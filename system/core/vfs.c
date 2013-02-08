@@ -238,29 +238,33 @@ stdRet_t vfs_umount(const ch_t *path)
         mountfs = FindMountedFS(newpath, -1, &itemid);
         free(newpath);
 
-        if (mountfs) {
-                if (mountfs->fs.f_release && mountfs->mntFSCnt == 0) {
-                        if (mountfs->fs.f_release(mountfs->fs.f_fsd) == STD_RET_OK) {
+        if (mountfs == NULL) {
+                goto vfs_umount_error;
+        }
 
-                                /* decrease mount points if base FS exist */
-                                if (mountfs->basefs) {
-                                        if (mountfs->basefs->mntFSCnt) {
-                                                mountfs->basefs->mntFSCnt--;
-                                        }
-                                }
+        if (mountfs->fs.f_release && mountfs->mntFSCnt == 0) {
+                if (mountfs->fs.f_release(mountfs->fs.f_fsd) != STD_RET_OK) {
+                        goto vfs_umount_error;
+                }
 
-                                if (mountfs->mntpoint) {
-                                        free(mountfs->mntpoint);
-                                }
-
-                                if (ListRmItemByID(vfs->mntList, itemid) == 0) {
-                                        GiveMutex(vfs->mtx);
-                                        return STD_RET_OK;
-                                }
+                /* decrease mount points if base FS exist */
+                if (mountfs->basefs) {
+                        if (mountfs->basefs->mntFSCnt) {
+                                mountfs->basefs->mntFSCnt--;
                         }
+                }
+
+                if (mountfs->mntpoint) {
+                        free(mountfs->mntpoint);
+                }
+
+                if (ListRmItemByID(vfs->mntList, itemid) == STD_RET_OK) {
+                        GiveMutex(vfs->mtx);
+                        return STD_RET_OK;
                 }
         }
 
+        vfs_umount_error:
         GiveMutex(vfs->mtx);
         return STD_RET_ERROR;
 }
@@ -947,17 +951,19 @@ static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid)
 
                 struct fsinfo *data = ListGetItemDataByNo(vfs->mntList, i);
 
-                if (strncmp(path, data->mntpoint, len) == 0) {
-                        fsinfo = data;
-
-                        if (itemid) {
-                                if (ListGetItemID(vfs->mntList, i, itemid) != 0) {
-                                        fsinfo = NULL;
-                                }
-                        }
-
-                        break;
+                if (strncmp(path, data->mntpoint, len) != 0) {
+                        continue;
                 }
+
+                fsinfo = data;
+
+                if (itemid) {
+                        if (ListGetItemID(vfs->mntList, i, itemid) != STD_RET_OK) {
+                                fsinfo = NULL;
+                        }
+                }
+
+                break;
         }
 
         return fsinfo;

@@ -79,9 +79,7 @@ static i32_t GetItemAddrByID(list_t *list, u32_t id, struct listitem **previtem,
 //==============================================================================
 list_t *ListCreate(void)
 {
-      list_t *newlist = calloc(1, sizeof(list_t));
-
-      return newlist;
+      return calloc(1, sizeof(list_t));
 }
 
 //==============================================================================
@@ -93,9 +91,12 @@ list_t *ListCreate(void)
  * to NULL before use this function.
  *
  * @param *list         pointer to list
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-void ListDelete(list_t *list)
+stdRet_t ListDelete(list_t *list)
 {
         if (list) {
                 struct listitem *item     = list->head;
@@ -114,7 +115,11 @@ void ListDelete(list_t *list)
                 }
 
                 free(list);
+
+                return STD_RET_OK;
         }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -130,8 +135,6 @@ void ListDelete(list_t *list)
 //==============================================================================
 i32_t ListAddItem(list_t *list, u32_t id, void *data)
 {
-        i32_t n = -1;
-
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
 
@@ -149,11 +152,11 @@ i32_t ListAddItem(list_t *list, u32_t id, void *data)
                         newitem->data = data;
                         newitem->id   = id;
 
-                        n = list->itemcount - 1;
+                        return list->itemcount - 1;
                 }
         }
 
-        return n;
+        return -1;
 }
 
 //==============================================================================
@@ -164,13 +167,12 @@ i32_t ListAddItem(list_t *list, u32_t id, void *data)
  * @param  id           item ID
  * @param *data         data pointer
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
+stdRet_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
 {
-        i32_t n = 1;
-
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
 
@@ -199,12 +201,12 @@ i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
                                 newitem->data = data;
                                 newitem->id   = id;
 
-                                n = 0;
+                                return STD_RET_OK;
                         }
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -215,13 +217,12 @@ i32_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
  * @param  id           item ID
  * @param *data         data pointer
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
+stdRet_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
 {
-        i32_t n = 1;
-
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
 
@@ -244,12 +245,12 @@ i32_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
                                 newitem->data = data;
                                 newitem->id   = id;
 
-                                n = 0;
+                                return STD_RET_OK;
                         }
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -259,13 +260,12 @@ i32_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
  * @param *list         pointer to list
  * @param nitem         item number
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListRmItemByNo(list_t *list, i32_t nitem)
+stdRet_t ListRmItemByNo(list_t *list, i32_t nitem)
 {
-        i32_t n = 1;
-
         if (list) {
                 if ((nitem >= 0) && (list->itemcount - 1 >= nitem)) {
                         struct listitem *item;
@@ -283,7 +283,7 @@ i32_t ListRmItemByNo(list_t *list, i32_t nitem)
                                         list->tail = previtem;
                                 }
 
-                                /* connect to previous item next item from current item */
+                                /* connect to previous item the next item */
                                 if (previtem) {
                                         previtem->next = item->next;
                                 }
@@ -296,12 +296,12 @@ i32_t ListRmItemByNo(list_t *list, i32_t nitem)
 
                                 list->itemcount--;
 
-                                n = 0;
+                                return STD_RET_OK;
                         }
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -311,13 +311,12 @@ i32_t ListRmItemByNo(list_t *list, i32_t nitem)
  * @param *list         pointer to list
  * @param  id           item ID
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListRmItemByID(list_t *list, u32_t id)
+stdRet_t ListRmItemByID(list_t *list, u32_t id)
 {
-        i32_t n = 1;
-
         if (list) {
                 struct listitem *item;
                 struct listitem *previtem;
@@ -347,11 +346,11 @@ i32_t ListRmItemByID(list_t *list, u32_t id)
 
                         list->itemcount--;
 
-                        n = 0;
+                        return STD_RET_OK;
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -363,9 +362,12 @@ i32_t ListRmItemByID(list_t *list, u32_t id)
  * function.
  *
  * @param *list         pointer to list
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-void ListClear(list_t *list)
+stdRet_t ListClear(list_t *list)
 {
         if (list) {
                 struct listitem *item     = list->head;
@@ -386,7 +388,11 @@ void ListClear(list_t *list)
                 list->head = NULL;
                 list->tail = NULL;
                 list->itemcount = 0;
+
+                return STD_RET_OK;
         }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -398,13 +404,12 @@ void ListClear(list_t *list)
  * @param nitem         item number
  * @param *data         data pointer
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data)
+stdRet_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data)
 {
-        i32_t n = 1;
-
         if (list && (nitem >= 0)) {
 
                 struct listitem *item;
@@ -417,11 +422,11 @@ i32_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data)
 
                         item->data = data;
 
-                        n = 0;
+                        return STD_RET_OK;
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -429,25 +434,23 @@ i32_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data)
  * @brief Function return item data pointer
  *
  * @param *list         pointer to list
- * @param nitem         item number
+ * @param  nitem        item number
  *
  * @return pointer to item user data
  */
 //==============================================================================
 void *ListGetItemDataByNo(list_t *list, i32_t nitem)
 {
-        void *data = NULL;
-
         if (list && (nitem >= 0)) {
                 struct listitem *item;
                 GetItemAddrByNo(list, nitem, NULL, &item);
 
                 if (item) {
-                        data = item->data;
+                        return item->data;
                 }
         }
 
-        return data;
+        return NULL;
 }
 
 //==============================================================================
@@ -459,13 +462,12 @@ void *ListGetItemDataByNo(list_t *list, i32_t nitem)
  * @param nitem         item number
  * @param *data         data pointer
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
+stdRet_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
 {
-        i32_t n = 1;
-
         if (list) {
                 struct listitem *item;
                 GetItemAddrByID(list, id, NULL, &item);
@@ -477,11 +479,11 @@ i32_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
 
                         item->data = data;
 
-                        n = 0;
+                        return STD_RET_OK;
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -496,18 +498,16 @@ i32_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
 //==============================================================================
 void *ListGetItemDataByID(list_t *list, u32_t id)
 {
-        void *data = NULL;
-
         if (list) {
                 struct listitem *item;
                 GetItemAddrByID(list, id, NULL, &item);
 
                 if (item) {
-                        data = item->data;
+                        return item->data;
                 }
         }
 
-        return data;
+        return NULL;
 }
 
 //==============================================================================
@@ -518,24 +518,23 @@ void *ListGetItemDataByID(list_t *list, u32_t id)
  * @param  nitem        item number
  * @param *itemid       item id
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid)
+stdRet_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid)
 {
-        i32_t n = 1;
-
         if (list && nitem >= 0 && itemid) {
                 struct listitem *item;
                 GetItemAddrByNo(list, nitem, NULL, &item);
 
                 if (item) {
                         *itemid = item->id;
-                        n = 0;
+                        return STD_RET_OK;
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -546,24 +545,23 @@ i32_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid)
  * @param  id           item ID
  * @param *nitem        item number
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListGetItemNo(list_t *list, u32_t id, i32_t *nitem)
+stdRet_t ListGetItemNo(list_t *list, u32_t id, i32_t *nitem)
 {
-        i32_t n = 1;
-
         if (list && nitem) {
                 struct listitem *item;
                 i32_t itemno = GetItemAddrByID(list, id, NULL, &item);
 
                 if (item) {
                         *nitem = itemno;
-                        n = 0;
+                        return STD_RET_OK;
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -575,13 +573,12 @@ i32_t ListGetItemNo(list_t *list, u32_t id, i32_t *nitem)
  * @param  nitem        item number
  * @param *data         data pointer
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem)
+stdRet_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem)
 {
-        i32_t n = 1;
-
         if (list) {
                 struct listitem *item;
                 GetItemAddrByNo(list, nitem, NULL, &item);
@@ -589,11 +586,11 @@ i32_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem)
                 if (item) {
                         item->data = NULL;
 
-                        n = 0;
+                        return STD_RET_OK;
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -605,13 +602,12 @@ i32_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem)
  * @param  id           item id
  * @param *data         data pointer
  *
- * @return 0 if ok, otherwise != 0
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-i32_t ListUnlinkItemDataByID(list_t *list, u32_t id)
+stdRet_t ListUnlinkItemDataByID(list_t *list, u32_t id)
 {
-        i32_t n = 1;
-
         if (list) {
                 struct listitem *item;
                 GetItemAddrByID(list, id, NULL, &item);
@@ -619,11 +615,11 @@ i32_t ListUnlinkItemDataByID(list_t *list, u32_t id)
                 if (item) {
                         item->data = NULL;
 
-                        n = 0;
+                        return STD_RET_OK;
                 }
         }
 
-        return n;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -637,13 +633,11 @@ i32_t ListUnlinkItemDataByID(list_t *list, u32_t id)
 //==============================================================================
 i32_t ListGetItemCount(list_t *list)
 {
-        i32_t n = -1;
-
         if (list) {
-                n = list->itemcount;
+                return list->itemcount;
         }
 
-        return n;
+        return -1;
 }
 
 //==============================================================================
@@ -720,6 +714,6 @@ static i32_t GetItemAddrByID(list_t *list, u32_t id, struct listitem **previtem,
 }
 #endif
 
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/

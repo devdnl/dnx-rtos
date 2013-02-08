@@ -412,12 +412,14 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
     || (APP_MONITOR_CPU_LOAD > 0    ) )
 stdRet_t moni_GetTaskHdlStat(task_t taskHdl, struct taskstat *stat)
 {
-        if (taskHdl && moni) {
-                i32_t item = -1;
+        if (!taskHdl || !moni) {
+                return STD_RET_ERROR;
+        }
 
-                if (ListGetItemNo(moni->tasks, (u32_t) taskHdl, &item) == 0) {
-                        return moni_GetTaskStat(item, stat);
-                }
+        i32_t item = -1;
+
+        if (ListGetItemNo(moni->tasks, (u32_t) taskHdl, &item) == STD_RET_OK) {
+                return moni_GetTaskStat(item, stat);
         }
 
         return STD_RET_ERROR;

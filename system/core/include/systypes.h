@@ -43,6 +43,8 @@ extern "C" {
 /* disable conflicting types from standard libraries */
 #undef stdin
 #undef stdout
+#undef malloc
+#undef free
 
 /*==============================================================================
   Exported symbolic constants/macros

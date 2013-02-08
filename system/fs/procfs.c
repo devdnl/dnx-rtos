@@ -339,7 +339,7 @@ stdRet_t procfs_close(fsd_t fsd, fd_t fd)
                 while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK)
                         ;
 
-                if (ListRmItemByID(procmem->flist, fd) == 0) {
+                if (ListRmItemByID(procmem->flist, fd) == STD_RET_OK) {
                         GiveMutex(procmem->mtx);
                         return STD_RET_OK;
                 }

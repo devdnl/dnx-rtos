@@ -39,25 +39,25 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* set position equal to offset bytes */
-#define VFS_SEEK_SET    0
+#define VFS_SEEK_SET            0
 
 /* set position to current location plus offset */
-#define VFS_SEEK_CUR    1
+#define VFS_SEEK_CUR            1
 
 /* set position to EOF plus offset */
-#define VFS_SEEK_END    2
+#define VFS_SEEK_END            2
 
 /* translate functions to STDC */
 #ifndef SEEK_SET
-#define SEEK_SET                          VFS_SEEK_SET
+#define SEEK_SET                VFS_SEEK_SET
 #endif
 
 #ifndef SEEK_CUR
-#define SEEK_CUR                          VFS_SEEK_CUR
+#define SEEK_CUR                VFS_SEEK_CUR
 #endif
 
 #ifndef SEEK_END
-#define SEEK_END                          VFS_SEEK_END
+#define SEEK_END                VFS_SEEK_END
 #endif
 
 /*==============================================================================
