@@ -40,7 +40,7 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 #define TTYD_NAME                       "ttyworker"
-#define TTYD_STACK_SIZE                 3*MINIMAL_STACK_SIZE
+#define TTYD_STACK_SIZE                 (3 * MINIMAL_STACK_SIZE)
 
 #define FILE                            "/dev/ttyS0"
 #define TTY_OUT_BFR_SIZE                8
@@ -56,6 +56,12 @@ extern "C" {
 #define VT100_CURSOR_ON                 "\x1B[?25h"
 #define VT100_CARRIAGE_RETURN           "\r"
 #define VT100_LINE_ERASE_FROM_CUR       "\x1B[K"
+#define VT100_SAVE_CURSOR_POSITION      "\x1B[s"
+#define VT100_CURSOR_OFF                "\x1B[?25l"
+#define VT100_SET_CURSOR_POSITION(r, c) "\x1B["#r";"#c"H"
+#define VT100_QUERY_CURSOR_POSITION     "\x1B[6n"
+#define VT100_RESTORE_CURSOR_POSITION   "\x1B[u"
+#define VT100_CURSOR_ON                 "\x1B[?25h"
 
 /*==============================================================================
   Local types, enums definitions
@@ -79,12 +85,13 @@ struct termHdl {
                 } input;
         } *tty[TTY_LAST];
 
-        u8_t   curTTY;          /* current terminal */
-        i8_t   chTTY;           /* terminal to change */
+        u8_t   currentTTY;      /* current terminal */
+        i8_t   changeToTTY;     /* terminal to change */
         u8_t   col;             /* terminal column count */
         u8_t   row;             /* terminal row count */
         task_t taskHdl;         /* task handle */
         sem_t  semcnt;          /* semaphore used to trigger daemon operation */
+        u8_t   decodeFnStep;    /* decode Fn key step */
 };
 
 /* key detector results */
@@ -146,9 +153,11 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                 if ((term->semcnt = CreateSemCnt(10, 0)) != NULL) {
                         if (TaskCreate(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
                                        NULL, -1, &term->taskHdl) == OS_OK) {
-                                term->col   = 80;
-                                term->row   = 24;
-                                term->chTTY = -1;
+
+                                term->col = 80;
+                                term->row = 24;
+
+                                term->changeToTTY = -1;
 
                                 return STD_RET_OK;
                         }
@@ -273,13 +282,11 @@ stdRet_t TTY_Close(devx_t dev, fd_t part)
 {
         (void)part;
 
-        stdRet_t status = STD_RET_ERROR;
-
         if (dev < TTY_LAST) {
-                status = STD_RET_OK;
+                return STD_RET_OK;
         }
 
-        return status;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -309,7 +316,7 @@ size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
         }
 
         /* if current TTY is showing wait to show refreshed line */
-        while (TTY(dev)->refLstLn == SET && dev == term->curTTY) {
+        while (TTY(dev)->refLstLn == SET && dev == term->currentTTY) {
                 TaskDelay(10);
         }
 
@@ -442,47 +449,58 @@ stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 {
         (void)part;
 
-        stdRet_t status = STD_RET_ERROR;
+        if (!term || dev >= TTY_LAST) {
+                return STD_RET_ERROR;
+        }
 
-        if (term && dev < TTY_LAST) {
-                status = STD_RET_OK;
+        switch (ioRQ) {
+        /* return current TTY */
+        case TTY_IORQ_GETCURRENTTTY:
+                if (data == NULL) {
+                        return STD_RET_ERROR;
+                }
+                *((u8_t*)data) = term->currentTTY;
+                break;
 
-                switch (ioRQ) {
-                /* return current TTY */
-                case TTY_IORQ_GETCURRENTTTY:
-                        *((u8_t*)data) = term->curTTY;
-                        break;
+        /* set active terminal */
+        case TTY_IORQ_SETACTIVETTY:
+                if (data == NULL) {
+                        return STD_RET_ERROR;
+                }
+                term->changeToTTY = *((u8_t*)data);
+                GiveSemCnt(term->semcnt);
+                break;
 
-                /* set active terminal */
-                case TTY_IORQ_SETACTIVETTY:
-                        term->chTTY = *((u8_t*)data);
-                        GiveSemCnt(term->semcnt);
-                        break;
+        /* clear terminal */
+        case TTY_IORQ_CLEARTTY:
+                clear_tty(dev);
+                break;
 
-                /* clear terminal */
-                case TTY_IORQ_CLEARTTY:
-                        clear_tty(dev);
-                        break;
+        /* terminal size - number of columns */
+        case TTY_IORQ_GETCOL:
+                if (data == NULL) {
+                        return STD_RET_ERROR;
+                }
+                *((u8_t*)data) = term->col;
+                break;
 
-                /* terminal size - number of columns */
-                case TTY_IORQ_GETCOL:
-                        *((u8_t*)data) = term->col;
-                        break;
+        /* terminal size - number of rows */
+        case TTY_IORQ_GETROW:
+                if (data == NULL) {
+                        return STD_RET_ERROR;
+                }
+                *((u8_t*)data) = term->row;
+                break;
 
-                /* terminal size - number of rows */
-                case TTY_IORQ_GETROW:
-                        *((u8_t*)data) = term->row;
-                        break;
+        /* clear screen */
+        case TTY_IORQ_CLEARSCR:
+                term->changeToTTY = term->currentTTY;
+                clear_tty(dev);
+                break;
 
-                /* clear screen */
-                case TTY_IORQ_CLEARSCR:
-                        term->chTTY = term->curTTY;
-                        clear_tty(dev);
-                        break;
-
-                /* clear last line */
-                case TTY_IORQ_CLEARLASTLINE:
-                        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        /* clear last line */
+        case TTY_IORQ_CLEARLASTLINE:
+                if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                         ch_t *msg = malloc(2);
 
                         if (msg) {
@@ -505,27 +523,25 @@ stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                         }
 
                         GiveRecMutex(TTY(dev)->mtx);
-                        }
-
-                        break;
-
-                /* turn on terminal echo */
-                case TTY_IORQ_ECHO_ON:
-                        TTY(dev)->echoOn = SET;
-                        break;
-
-                /* turn off terminal echo */
-                case TTY_IORQ_ECHO_OFF:
-                        TTY(dev)->echoOn = RESET;
-                        break;
-
-                default:
-                        status = STD_RET_ERROR;
-                        break;
                 }
+
+                break;
+
+        /* turn on terminal echo */
+        case TTY_IORQ_ECHO_ON:
+                TTY(dev)->echoOn = SET;
+                break;
+
+        /* turn off terminal echo */
+        case TTY_IORQ_ECHO_OFF:
+                TTY(dev)->echoOn = RESET;
+                break;
+
+        default:
+                return STD_RET_ERROR;
         }
 
-        return status;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -553,24 +569,24 @@ static void task_tty(void *arg)
         get_vt100_size(ttys);
 
         for (;;) {
-                if (TTY(term->curTTY) == NULL) {
+                if (TTY(term->currentTTY) == NULL) {
                         TaskDelay(100);
                         continue;
                 }
 
-                stdout_service(ttys, term->curTTY);
+                stdout_service(ttys, term->currentTTY);
 
-                stdin_service(ttys, term->curTTY);
+                stdin_service(ttys, term->currentTTY);
 
                 /* external trigger: terminal switch */
-                if (term->chTTY != -1) {
-                        term->curTTY = term->chTTY;
-                        term->chTTY  = -1;
-                        refresh_tty(term->curTTY, ttys);
+                if (term->changeToTTY != -1) {
+                        term->currentTTY  = term->changeToTTY;
+                        term->changeToTTY = -1;
+                        refresh_tty(term->currentTTY, ttys);
                 }
 
                 /* check if task can go to short sleep */
-                if (TTY(term->curTTY)->newMsgCnt == 0) {
+                if (TTY(term->currentTTY)->newMsgCnt == 0) {
                         TakeSemCnt(term->semcnt, BLOCK_TIME);
                 }
         }
@@ -599,7 +615,7 @@ static void stdout_service(FILE_t *stream, u8_t dev)
                                 TTY(dev)->newMsgCnt = term->row;
                         }
 
-                        msg = TTY(dev)->line[get_message_index(term->curTTY,
+                        msg = TTY(dev)->line[get_message_index(term->currentTTY,
                                                        TTY(dev)->newMsgCnt)];
 
                         TTY(dev)->newMsgCnt--;
@@ -623,7 +639,7 @@ static void stdout_service(FILE_t *stream, u8_t dev)
                 fwrite(msg, sizeof(ch_t), strlen(msg), stream);
 
                 /* refresh line */
-                msg = TTY(dev)->line[get_message_index(term->curTTY, 1)];
+                msg = TTY(dev)->line[get_message_index(term->currentTTY, 1)];
                 fwrite(msg, sizeof(ch_t), strlen(msg), stream);
 
                 /* cursor on */
@@ -678,8 +694,8 @@ static void stdin_service(FILE_t *stream, u8_t dev)
                 if (TTY(dev)->echoOn == SET) {
                         ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
                 }
-        } else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->curTTY) ) { /* Fn key was hit */
-                term->curTTY = keyfn;
+        } else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->currentTTY) ) { /* Fn key was hit */
+                term->currentTTY = keyfn;
 
                 if (TTY(keyfn) == NULL) {
                         TTY_Open(keyfn, TTY_PART_NONE);
@@ -791,16 +807,12 @@ static void add_message(u8_t dev, ch_t *msg, bool_t incMsgCnt)
 //==============================================================================
 static u8_t get_message_index(u8_t dev, u8_t back)
 {
-        u8_t ridx = 0;
-
         /* check if index underflow when calculating with back */
         if (TTY(dev)->wrIdx < back) {
-                ridx = TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
+                return TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
         } else {
-                ridx = TTY(dev)->wrIdx - back;
+                return TTY(dev)->wrIdx - back;
         }
-
-        return ridx;
 }
 
 //==============================================================================
@@ -812,49 +824,45 @@ static u8_t get_message_index(u8_t dev, u8_t back)
 //==============================================================================
 static enum keyfn decode_fn_keys(ch_t character)
 {
-        static u8_t funcStep = 0;
-        enum keyfn     state = TTY_SEL_NONE;
-
-        /* try detect function keys ^[OP */
-        switch (funcStep) {
+        switch (term->decodeFnStep) {
         case 0:
                 if (character == 0x1B) {
-                        funcStep++;
-                        state = TTY_SEL_PEND;
+                        term->decodeFnStep++;
+                        return TTY_SEL_PEND;
                 } else {
-                        funcStep = 0;
+                        term->decodeFnStep = 0;
                 }
                 break;
 
         case 1:
                 if (character == 'O') {
-                        funcStep++;
-                        state = TTY_SEL_PEND;
+                        term->decodeFnStep++;
+                        return TTY_SEL_PEND;
                 } else {
-                        funcStep = 0;
+                        term->decodeFnStep = 0;
                 }
                 break;
 
         case 2:
                 if (character == 'P') {
-                        state = TTY1_SELECTED;
+                        return TTY1_SELECTED;
                 } else if (character == 'Q') {
-                        state = TTY2_SELECTED;
+                        return TTY2_SELECTED;
                 } else if (character == 'R') {
-                        state = TTY3_SELECTED;
+                        return TTY3_SELECTED;
                 } else if (character == 'S') {
-                        state = TTY4_SELECTED;
+                        return TTY4_SELECTED;
                 }
 
-                funcStep = 0;
+                term->decodeFnStep = 0;
                 break;
 
         default:
-                funcStep = 0;
+                term->decodeFnStep = 0;
                 break;
         }
 
-        return state;
+        return TTY_SEL_NONE;
 }
 
 //==============================================================================
@@ -868,10 +876,10 @@ static void refresh_tty(u8_t dev, FILE_t *file)
 {
         get_vt100_size(file);
 
-        /* reset attributes, clear screen, line wrap, cursor HOME */
-        ch_t *clrscr = "\x1B[0m\x1B[2J\x1B[?7h\x1B[H";
+        ch_t *msg = VT100_RESET_ATTRIBUTES  VT100_CLEAR_SCREEN
+                    VT100_DISABLE_LINE_WRAP VT100_CURSOR_HOME;
 
-        fwrite(clrscr, sizeof(ch_t), strlen(clrscr), file);
+        fwrite(msg, sizeof(ch_t), strlen(msg), file);
 
         if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 i8_t rows;
@@ -883,7 +891,7 @@ static void refresh_tty(u8_t dev, FILE_t *file)
                 }
 
                 for (i8_t i = rows - 1; i > 0; i--) {
-                        ch_t *msg = TTY(dev)->line[get_message_index(term->curTTY, i)];
+                        msg = TTY(dev)->line[get_message_index(term->currentTTY, i)];
 
                         if (msg) {
                                 fwrite(msg, sizeof(ch_t), strlen(msg), file);
@@ -911,8 +919,11 @@ static void get_vt100_size(FILE_t *ttysfile)
         term->col = 80;
         term->row = 24;
 
-        /* save cursor position, cursor off, set max col and row position, query cursor position */
-        ch_t *rq = "\x1B[s\x1B[?25l\x1B[250;250H\x1B[6n";
+        ch_t *rq = VT100_SAVE_CURSOR_POSITION
+                   VT100_CURSOR_OFF
+                   VT100_SET_CURSOR_POSITION(250, 250)
+                   VT100_QUERY_CURSOR_POSITION;
+
         fwrite(rq, sizeof(ch_t), strlen(rq), ttysfile);
 
         /* buffer for response */
@@ -925,7 +936,6 @@ static void get_vt100_size(FILE_t *ttysfile)
                 if (ioctl(ttysfile, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK) {
                         TaskDelay(100);
                 }
-
         } while (--try && chr != '\x1B');
 
         if (try == 0) {
@@ -954,7 +964,7 @@ static void get_vt100_size(FILE_t *ttysfile)
         }
 
         /* restore cursor position, cursor on */
-        rq = "\x1B[u\x1B[?25h";
+        rq = VT100_RESTORE_CURSOR_POSITION VT100_CURSOR_ON;
         fwrite(rq, sizeof(ch_t), strlen(rq), ttysfile);
 
         /* find response begin */
@@ -984,6 +994,6 @@ static void get_vt100_size(FILE_t *ttysfile)
 }
 #endif
 
-/*==================================================================================================
+/*==============================================================================
   End of file
-==================================================================================================*/
+==============================================================================*/
