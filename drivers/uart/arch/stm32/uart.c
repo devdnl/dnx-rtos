@@ -791,75 +791,75 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
                         case UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK:
                               SetAddressMarkWakeMethod(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_ENABLE_PARITY_CHECK:
                               ParityCheckEnable(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_DISABLE_PARITY_CHECK:
                               ParityCheckEnable(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_SET_ODD_PARITY:
                               SetOddParity(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_SET_EVEN_PARITY:
                               SetOddParity(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE:
                               ReceiverWakeupMuteEnable(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE:
                               ReceiverWakeupMuteEnable(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_ENABLE_LIN_MODE:
                               LINModeEnable(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_DISABLE_LIN_MODE:
                               LINModeEnable(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_SET_1_STOP_BIT:
                               Set2StopBits(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_SET_2_STOP_BITS:
                               Set2StopBits(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS:
                               LINBreakDet11Bits(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS:
                               LINBreakDet11Bits(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_SET_ADDRESS_NODE:
                               SetAddressNode(uart_p, *(u8_t*)data);
-					break;
+                              break;
 
                         case UART_IORQ_ENABLE_CTS:
                               CTSEnable(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_DISABLE_CTS:
                               CTSEnable(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_ENABLE_RTS:
                               RTSEnable(uart_p, TRUE);
-					break;
+                              break;
 
                         case UART_IORQ_DISABLE_RTS:
                               RTSEnable(uart_p, FALSE);
-					break;
+                              break;
 
                         case UART_IORQ_GET_BYTE:
                         {
@@ -882,7 +882,37 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                               }
 
                               TaskExitCritical();
-					break;
+                              break;
+                        }
+
+                        case UART_IORQ_GET_BYTE_BLOCKING:
+                        {
+                                struct sRxFIFO *RxFIFO  = &UARTP(dev)->RxFIFO;
+                                u8_t  *dstPtr  = (u8_t*)data;
+
+                                while (TRUE)
+                                {
+                                      TaskEnterCritical();
+
+                                      if (RxFIFO->Level > 0)
+                                      {
+                                            *dstPtr = RxFIFO->Buffer[RxFIFO->RxIdx++];
+
+                                            if (RxFIFO->RxIdx >= UART_RX_BUFFER_SIZE)
+                                                  RxFIFO->RxIdx = 0;
+
+                                            RxFIFO->Level--;
+
+                                            TaskExitCritical();
+                                            break;
+                                      }
+                                      else
+                                      {
+                                            TaskExitCritical();
+                                            TaskSuspend(THIS_TASK);
+                                      }
+                                }
+                                break;
                         }
 
                         case UART_IORQ_SEND_BYTE:
@@ -894,7 +924,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
                               uart_p->DR = *(u8_t*)data;
 
-					break;
+                              break;
                         }
 
                         case UART_IORQ_SET_BAUDRATE:

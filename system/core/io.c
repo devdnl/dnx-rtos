@@ -544,12 +544,7 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
 
         while ((chr = *format++) != '\0') {
                 if (chr != '%') {
-                        if (chr == '\n') {
-                                putCharacter('\r');
-                        }
-
                         putCharacter(chr);
-
                         continue;
                 }
 
@@ -561,7 +556,6 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
                         }
 
                         putCharacter(chr);
-
                         continue;
                 }
 
