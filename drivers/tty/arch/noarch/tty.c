@@ -43,25 +43,26 @@ extern "C" {
 #define TTYD_STACK_SIZE                 (3 * MINIMAL_STACK_SIZE)
 
 #define FILE                            "/dev/ttyS0"
-#define TTY_OUT_BFR_SIZE                8
+#define TTY_STREAM_SIZE                 80
+#define TTY_EDIT_LINE_LEN               80
 
 #define TTY(number)                     term->tty[number]
 #define BLOCK_TIME                      10000
 
-#define VT100_RESET_ATTRIBUTES          "\x1B[0m"
-#define VT100_CLEAR_SCREEN              "\x1B[2J"
-#define VT100_DISABLE_LINE_WRAP         "\x1B[7l"
-#define VT100_CURSOR_HOME               "\x1B[H"
-#define VT100_CURSOR_OFF                "\x1B[?25l"
-#define VT100_CURSOR_ON                 "\x1B[?25h"
+#define VT100_RESET_ATTRIBUTES          "\e[0m"
+#define VT100_CLEAR_SCREEN              "\e[2J"
+#define VT100_DISABLE_LINE_WRAP         "\e[7l"
+#define VT100_CURSOR_HOME               "\e[H"
+#define VT100_CURSOR_OFF                "\e[?25l"
+#define VT100_CURSOR_ON                 "\e[?25h"
 #define VT100_CARRIAGE_RETURN           "\r"
-#define VT100_LINE_ERASE_FROM_CUR       "\x1B[K"
-#define VT100_SAVE_CURSOR_POSITION      "\x1B[s"
-#define VT100_CURSOR_OFF                "\x1B[?25l"
-#define VT100_SET_CURSOR_POSITION(r, c) "\x1B["#r";"#c"H"
-#define VT100_QUERY_CURSOR_POSITION     "\x1B[6n"
-#define VT100_RESTORE_CURSOR_POSITION   "\x1B[u"
-#define VT100_CURSOR_ON                 "\x1B[?25h"
+#define VT100_LINE_ERASE_FROM_CUR       "\e[K"
+#define VT100_SAVE_CURSOR_POSITION      "\e[s"
+#define VT100_CURSOR_OFF                "\e[?25l"
+#define VT100_SET_CURSOR_POSITION(r, c) "\e["#r";"#c"H"
+#define VT100_QUERY_CURSOR_POSITION     "\e[6n"
+#define VT100_RESTORE_CURSOR_POSITION   "\e[u"
+#define VT100_CURSOR_ON                 "\e[?25h"
 
 /*==============================================================================
   Local types, enums definitions
@@ -78,12 +79,14 @@ struct termHdl {
 
                 struct inputstream {            /* FIFO for keyboard read */
                         u16_t level;
-                        ch_t  buffer[TTY_OUT_BFR_SIZE];
+                        ch_t  buffer[TTY_STREAM_SIZE];
                         u16_t txidx;
                         u16_t rxidx;
                 } input;
 
-                ch_t   *inputLine;              /* input line */
+                ch_t   editLine[TTY_EDIT_LINE_LEN + 1]; /* input line */
+                uint_t editLineFill;            /* edit line fill level */
+                uint_t cursorPosition;          /* cursor position in line */
         } *tty[TTY_LAST];
 
         u8_t   currentTTY;      /* current terminal */
@@ -119,6 +122,7 @@ static void       refresh_tty(u8_t dev, FILE_t *file);
 static void       get_vt100_size(FILE_t *ttysfile);
 static void       put_into_input_stream(ch_t chr, u8_t dev);
 static stdRet_t   get_from_input_stream(ch_t *chr, u8_t dev);
+static void       move_line_to_stream(u8_t dev);
 
 /*==============================================================================
   Local object definitions
@@ -328,11 +332,11 @@ size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
                 ch_t *msg;
 
                 /* check if screen is cleared */
-                if (strncmp("\x1B[2J", src, 4) == 0) {
+                if (strncmp(VT100_CLEAR_SCREEN, src, 4) == 0) {
                         clear_tty(dev);
                 }
 
-                /* check that last message had no line end */
+                /* check if last message has not line ending */
                 ch_t   *lstmsg  = TTY(dev)->line[get_message_index(dev, 1)];
                 size_t  msgsize = strlen(lstmsg);
 
@@ -668,13 +672,31 @@ static void stdin_service(FILE_t *stream, u8_t dev)
 
         /* no Fn key was detected */
         if (keyfn == TTY_SEL_NONE) {
-                if (chr == '\r') {
+                if (chr == '\r' || chr == '\n') {
                         chr = '\n';
+                        move_line_to_stream(dev);
+                } else if (chr == '\b') {
+                        if (  TTY(dev)->editLineFill > 0
+                           && TTY(dev)->cursorPosition > 0) {
+                                TTY(dev)->editLine[--TTY(dev)->cursorPosition] = '\0';
+                                TTY(dev)->editLineFill--;
+                        } else {
+                                chr = '\0';
+                        }
+                } else {
+                        if (TTY(dev)->editLineFill < TTY_EDIT_LINE_LEN) {
+                                TTY(dev)->editLine[TTY(dev)->cursorPosition++] = chr;
+                                TTY(dev)->editLineFill++;
+                        }
                 }
 
-                put_into_input_stream(chr, dev);
+                if (TTY(dev)->echoOn == SET && chr != '\0') {
+                        if (chr == '\n') {
+                                chr = '\r';
+                                ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
+                                chr = '\n';
+                        }
 
-                if (TTY(dev)->echoOn == SET) {
                         ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
                 }
         } else if ( (keyfn <= TTY4_SELECTED) && (keyfn != term->currentTTY) ) { /* Fn key was hit */
@@ -809,7 +831,7 @@ static enum keyfn decode_fn_keys(ch_t character)
 {
         switch (term->decodeFnStep) {
         case 0:
-                if (character == 0x1B) {
+                if (character == '\e') {
                         term->decodeFnStep++;
                         return TTY_SEL_PEND;
                 } else {
@@ -827,6 +849,8 @@ static enum keyfn decode_fn_keys(ch_t character)
                 break;
 
         case 2:
+                term->decodeFnStep = 0;
+
                 if (character == 'P') {
                         return TTY1_SELECTED;
                 } else if (character == 'Q') {
@@ -837,7 +861,6 @@ static enum keyfn decode_fn_keys(ch_t character)
                         return TTY4_SELECTED;
                 }
 
-                term->decodeFnStep = 0;
                 break;
 
         default:
@@ -880,6 +903,9 @@ static void refresh_tty(u8_t dev, FILE_t *file)
                                 fwrite(msg, sizeof(ch_t), strlen(msg), file);
                         }
                 }
+
+                msg = TTY(dev)->editLine;
+                fwrite(msg, sizeof(ch_t), strlen(msg), file);
 
                 TTY(dev)->newMsgCnt = 0;
 
@@ -986,16 +1012,16 @@ static void put_into_input_stream(ch_t chr, u8_t dev)
         if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 TTY(dev)->input.buffer[TTY(dev)->input.txidx++] = chr;
 
-                if (TTY(dev)->input.txidx >= TTY_OUT_BFR_SIZE) {
+                if (TTY(dev)->input.txidx >= TTY_STREAM_SIZE) {
                         TTY(dev)->input.txidx = 0;
                 }
 
-                if (TTY(dev)->input.level < TTY_OUT_BFR_SIZE) {
+                if (TTY(dev)->input.level < TTY_STREAM_SIZE) {
                         TTY(dev)->input.level++;
                 } else {
                         TTY(dev)->input.rxidx++;
 
-                        if (TTY(dev)->input.rxidx >= TTY_OUT_BFR_SIZE) {
+                        if (TTY(dev)->input.rxidx >= TTY_STREAM_SIZE) {
                                 TTY(dev)->input.rxidx = 0;
                         }
                 }
@@ -1024,7 +1050,7 @@ static stdRet_t get_from_input_stream(ch_t *chr, u8_t dev)
         if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK) {
                 *chr = TTY(dev)->input.buffer[TTY(dev)->input.rxidx++];
 
-                if (TTY(dev)->input.rxidx >= TTY_OUT_BFR_SIZE) {
+                if (TTY(dev)->input.rxidx >= TTY_STREAM_SIZE) {
                         TTY(dev)->input.rxidx = 0;
                 }
 
@@ -1035,6 +1061,36 @@ static stdRet_t get_from_input_stream(ch_t *chr, u8_t dev)
         }
 
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function move edit line to stream
+ *
+ * @param [in]  dev             device
+ */
+//==============================================================================
+static void move_line_to_stream(u8_t dev)
+{
+        uint_t line_len = strlen(TTY(dev)->editLine);
+
+        for (uint_t i = 0; i < line_len; i++) {
+                put_into_input_stream(TTY(dev)->editLine[i], dev);
+        }
+
+        put_into_input_stream('\n', dev);
+
+        ch_t *msg = calloc(line_len + 2, sizeof(ch_t));
+
+        if (msg) {
+                strcpy(msg, TTY(dev)->editLine);
+                strcat(msg, "\r\n");
+                add_message(dev, msg, FALSE);
+        }
+
+        memset(TTY(dev)->editLine, '\0', TTY_EDIT_LINE_LEN);
+        TTY(dev)->editLineFill   = 0;
+        TTY(dev)->cursorPosition = 0;
 }
 
 #ifdef __cplusplus
