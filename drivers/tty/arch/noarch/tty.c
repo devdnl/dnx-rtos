@@ -112,17 +112,25 @@ enum keyfn {
   Local function prototypes
 ==============================================================================*/
 static void       task_tty(void *arg);
+static void       change_term_if_requested(FILE_t *stream);
 static void       stdout_service(FILE_t *stream, u8_t dev);
+static void       show_new_messages(u8_t dev, FILE_t *stream);
+static void       refresh_last_line(u8_t dev, FILE_t *stream);
 static void       stdin_service(FILE_t *stream, u8_t dev);
 static void       clear_tty(u8_t dev);
-static void       add_message(u8_t dev, ch_t *msg, bool_t incMsgCnt);
+static uint_t     add_message(u8_t dev, ch_t *msg, uint_t msgLen);
+static ch_t      *create_buffer_for_message(u8_t dev, ch_t *msg, uint_t msgLen);
+static u8_t       count_non_lf_ended_messages(u8_t dev);
+static void       free_non_lf_ended_messages(u8_t dev, u8_t mgscount);
+static void       link_message(ch_t *msg, u8_t dev);
+static void       inc_message_counter(u8_t dev);
 static enum keyfn decode_fn_keys(ch_t character);
 static u8_t       get_message_index(u8_t dev, u8_t back);
 static void       refresh_tty(u8_t dev, FILE_t *file);
 static void       get_vt100_size(FILE_t *ttysfile);
-static void       put_into_input_stream(ch_t chr, u8_t dev);
-static stdRet_t   get_from_input_stream(ch_t *chr, u8_t dev);
-static void       move_line_to_stream(u8_t dev);
+static void       write_input_stream(ch_t chr, u8_t dev);
+static stdRet_t   read_input_stream(ch_t *chr, u8_t dev);
+static void       move_editline_to_stream(u8_t dev);
 
 /*==============================================================================
   Local object definitions
@@ -156,27 +164,29 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                 return STD_RET_OK;
         }
 
-        if ((term = calloc(1, sizeof(struct termHdl))) != NULL) {
-                if ((term->semcnt = CreateSemCnt(10, 0)) != NULL) {
-                        if (TaskCreate(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
-                                       NULL, -1, &term->taskHdl) == OS_OK) {
-
-                                term->col = 80;
-                                term->row = 24;
-
-                                term->changeToTTY = -1;
-
-                                return STD_RET_OK;
-                        }
-                }
-
-                if (term->semcnt) {
-                        DeleteSemCnt(term->semcnt);
-                }
-
-                free(term);
-                term = NULL;
+        if ((term = calloc(1, sizeof(struct termHdl))) == NULL) {
+                return STD_RET_ERROR;
         }
+
+        if ((term->semcnt = CreateSemCnt(10, 0)) != NULL) {
+                if (TaskCreate(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
+                               NULL, -1, &term->taskHdl) == OS_OK) {
+
+                        term->col = 80;
+                        term->row = 24;
+
+                        term->changeToTTY = -1;
+
+                        return STD_RET_OK;
+                }
+        }
+
+        if (term->semcnt) {
+                DeleteSemCnt(term->semcnt);
+        }
+
+        free(term);
+        term = NULL;
 
         return STD_RET_ERROR;
 }
@@ -329,54 +339,12 @@ size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
 
         /* wait for secure access to data */
         if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
-                ch_t *msg;
-
                 /* check if screen is cleared */
                 if (strncmp(VT100_CLEAR_SCREEN, src, 4) == 0) {
                         clear_tty(dev);
                 }
 
-                /* check if last message has not line ending */
-                ch_t   *lstmsg  = TTY(dev)->line[get_message_index(dev, 1)];
-                size_t  msgsize = strlen(lstmsg);
-
-                if (lstmsg && (*(lstmsg + msgsize - 1) != '\n')) {
-                        msgsize += nitems + 1;
-
-                        /* create buffer for new msg */
-                        msg = malloc(msgsize);
-
-                        if (msg) {
-                                /* move message pointer back */
-                                TTY(dev)->wrIdx--;
-
-                                if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
-                                        TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
-                                }
-
-                                /* if no message to refresh setup refresh only one */
-                                if (TTY(dev)->newMsgCnt == 0) {
-                                        TTY(dev)->refLstLn = SET;
-                                }
-
-                                strcpy(msg, lstmsg);
-                                strncat(msg, src, nitems + 1);
-
-                                /* free last message and add new on the same place */
-                                add_message(dev, msg, FALSE);
-                        }
-                } else {
-                        /* add new message */
-                        msg = malloc(nitems);
-
-                        if (msg) {
-                                strncpy(msg, src, nitems);
-
-                                add_message(dev, msg, TRUE);
-                        }
-                }
-
-                n = nitems;
+                n = add_message(dev, src, nitems);
 
                 GiveRecMutex(TTY(dev)->mtx);
         }
@@ -412,7 +380,7 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
 
         if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK) {
                 while (nitems > 0) {
-                        if (get_from_input_stream(dst, dev) != STD_RET_OK) {
+                        if (read_input_stream(dst, dev) != STD_RET_OK) {
                                 break;
                         }
 
@@ -577,12 +545,7 @@ static void task_tty(void *arg)
 
                 stdin_service(ttys, term->currentTTY);
 
-                /* external trigger: terminal switch */
-                if (term->changeToTTY != -1) {
-                        term->currentTTY  = term->changeToTTY;
-                        term->changeToTTY = -1;
-                        refresh_tty(term->currentTTY, ttys);
-                }
+                change_term_if_requested(ttys);
 
                 /* check if task can go to short sleep */
                 if (TTY(term->currentTTY)->newMsgCnt == 0) {
@@ -596,6 +559,22 @@ static void task_tty(void *arg)
 
 //==============================================================================
 /**
+ * @brief Function change active terminal if requested
+ *
+ * @param *stream       required stream to refresh changed terminal
+ */
+//==============================================================================
+static void change_term_if_requested(FILE_t *stream)
+{
+        if (term->changeToTTY != -1) {
+                term->currentTTY  = term->changeToTTY;
+                term->changeToTTY = -1;
+                refresh_tty(term->currentTTY, stream);
+        }
+}
+
+//==============================================================================
+/**
  * @brief Function provide STDOUT service
  *
  * @param *stream       file
@@ -604,51 +583,75 @@ static void task_tty(void *arg)
 //==============================================================================
 static void stdout_service(FILE_t *stream, u8_t dev)
 {
-        ch_t *msg;
-
         if (TTY(dev)->newMsgCnt > 0) {
-                while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+                show_new_messages(dev, stream);
+        } else if (TTY(dev)->refLstLn == SET) {
+                refresh_last_line(dev, stream);
+        }
+}
 
-                while (TTY(dev)->newMsgCnt) {
-                        if (TTY(dev)->newMsgCnt > term->row) {
-                                TTY(dev)->newMsgCnt = term->row;
-                        }
+//==============================================================================
+/**
+ * @brief Function show new messages
+ *
+ * @param  dev          number of terminal
+ * @param *stream       required stream to refresh new messages
+ */
+//==============================================================================
+static void show_new_messages(u8_t dev, FILE_t *stream)
+{
+        while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
 
-                        msg = TTY(dev)->line[get_message_index(term->currentTTY,
-                                                       TTY(dev)->newMsgCnt)];
-
-                        TTY(dev)->newMsgCnt--;
-
-                        if (msg) {
-                                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
-                        }
+        while (TTY(dev)->newMsgCnt) {
+                if (TTY(dev)->newMsgCnt > term->row) {
+                        TTY(dev)->newMsgCnt = term->row;
                 }
 
-                TTY(dev)->refLstLn = RESET;
+                ch_t *msg = TTY(dev)->line[get_message_index(term->currentTTY,
+                                                             TTY(dev)->newMsgCnt)];
 
-                GiveRecMutex(TTY(dev)->mtx);
-        } else if (TTY(dev)->refLstLn == SET) {
-                while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+                TTY(dev)->newMsgCnt--;
 
-                msg = VT100_CURSOR_OFF
-                      VT100_CARRIAGE_RETURN
-                      VT100_LINE_ERASE_FROM_CUR
-                      VT100_RESET_ATTRIBUTES;
-
-                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
-
-                /* refresh line */
-                msg = TTY(dev)->line[get_message_index(term->currentTTY, 1)];
-                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
-
-                /* cursor on */
-                msg = VT100_CURSOR_ON;
-                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
-
-                TTY(dev)->refLstLn = RESET;
-
-                GiveRecMutex(TTY(dev)->mtx);
+                if (msg) {
+                        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+                }
         }
+
+        TTY(dev)->refLstLn = RESET;
+
+        GiveRecMutex(TTY(dev)->mtx);
+}
+
+//==============================================================================
+/**
+ * @brief Function refresh last line
+ *
+ * @param  dev          number of terminal
+ * @param *stream       required stream to refresh new messages
+ */
+//==============================================================================
+static void refresh_last_line(u8_t dev, FILE_t *stream)
+{
+        while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+
+        ch_t *msg = VT100_CURSOR_OFF
+                    VT100_CARRIAGE_RETURN
+                    VT100_LINE_ERASE_FROM_CUR
+                    VT100_RESET_ATTRIBUTES;
+
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+        /* refresh line */
+        msg = TTY(dev)->line[get_message_index(term->currentTTY, 1)];
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+        /* cursor on */
+        msg = VT100_CURSOR_ON;
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+        TTY(dev)->refLstLn = RESET;
+
+        GiveRecMutex(TTY(dev)->mtx);
 }
 
 //==============================================================================
@@ -674,7 +677,7 @@ static void stdin_service(FILE_t *stream, u8_t dev)
         if (keyfn == TTY_SEL_NONE) {
                 if (chr == '\r' || chr == '\n') {
                         chr = '\n';
-                        move_line_to_stream(dev);
+                        move_editline_to_stream(dev);
                 } else if (chr == '\b') {
                         if (  TTY(dev)->editLineFill > 0
                            && TTY(dev)->cursorPosition > 0) {
@@ -743,26 +746,108 @@ static void clear_tty(u8_t dev)
 /**
  * @brief Add new message or modify existing
  *
- * @param dev           number of terminal
+ * @param  dev          number of terminal
  * @param *msg          message
- * @param incMsgCnt     TRUE: increase msg counter; FALSE no increase
+ * @param  msgLen       message length
+ *
+ * @return msgLen if message created, otherwise 0
  */
 //==============================================================================
-static void add_message(u8_t dev, ch_t *msg, bool_t incMsgCnt)
+static uint_t add_message(u8_t dev, ch_t *msg, uint_t msgLen)
 {
-        u8_t wridx = term->tty[dev]->wrIdx;
+        u8_t  mgcnt;
+        ch_t *newMsg;
+
+        if (!msgLen || !msg) {
+                return 0;
+        }
+
+        mgcnt = count_non_lf_ended_messages(dev);
+        free_non_lf_ended_messages(dev, mgcnt);
+        newMsg = create_buffer_for_message(dev, msg, msgLen);
+        link_message(newMsg, dev);
+
+        GiveSemCnt(term->semcnt);
+
+        if (newMsg) {
+                return msgLen;
+        } else {
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function create new buffer for new message
+ * Function create new buffer for new message if lates message is LF ended,
+ * otherwise function merge latest message with new message. Function returns
+ * pointer to new buffer.
+ *
+ * @param [in]  dev             number of terminal
+ * @param [in] *msgSrc          message source pointer
+ * @param [in]  msgLen          message length
+ *
+ * @return pointer to new message buffer
+ */
+//==============================================================================
+static ch_t *create_buffer_for_message(u8_t dev, ch_t *msgSrc, uint_t msgLen)
+{
+        ch_t   *msg;
+        ch_t   *lstMsg     = TTY(dev)->line[get_message_index(dev, 1)];
+        size_t  lstMsgSize = strlen(lstMsg);
+
+        if (lstMsg && (*(lstMsg + lstMsgSize - 1) != '\n')) {
+                lstMsgSize += msgLen + 1;
+
+                msg = malloc(lstMsgSize);
+                if (msg) {
+                        TTY(dev)->wrIdx--;
+                        if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
+                                TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
+                        }
+
+                        /* if no message to refresh setup refresh only one */
+                        if (TTY(dev)->newMsgCnt == 0) {
+                                TTY(dev)->refLstLn = SET;
+                        }
+
+                        strcpy(msg, lstMsg);
+                        strncat(msg, msgSrc, msgLen + 1);
+                }
+        } else {
+                msg = malloc(msgLen);
+                if (msg) {
+                        strncpy(msg, msgSrc, msgLen);
+                        inc_message_counter(dev);
+                }
+        }
+
+        return msg;
+}
+
+//==============================================================================
+/**
+ * @brief Function find and count number of non-LF ended lines
+ * Function count the number of non-LF ended messages from current write index.
+ *
+ * @param  dev          number of terminal
+ */
+//==============================================================================
+static u8_t count_non_lf_ended_messages(u8_t dev)
+{
+        u8_t wridx = TTY(dev)->wrIdx;
         u8_t mgcnt = 1;
 
         /* find all messages which are not ended by LF (this is common line) */
         for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
                 ch_t *lastmsg = TTY(dev)->line[wridx++];
 
-                if (wridx >= TTY_MAX_LINES) {
-                        wridx = 0;
-                }
-
                 if (lastmsg == NULL) {
                         break;
+                }
+
+                if (wridx >= TTY_MAX_LINES) {
+                        wridx = 0;
                 }
 
                 if (*(lastmsg + strlen(lastmsg) - 1) != '\n') {
@@ -772,32 +857,66 @@ static void add_message(u8_t dev, ch_t *msg, bool_t incMsgCnt)
                 }
         }
 
-        /* free current line and group if exist */
-        wridx = TTY(dev)->wrIdx;
-        while (mgcnt--) {
-                free(TTY(dev)->line[wridx]);
-                TTY(dev)->line[wridx++] = NULL;
+        return mgcnt;
+}
+
+//==============================================================================
+/**
+ * @brief Function free all old non-LF ended messages
+ * Function does not change tty's wrIdx. Function free all non-LF ended messages
+ * from current write index -- function clear the latest messages.
+ *
+ * @param  dev          number of terminal
+ * @param  msgcnt       message count to free
+ */
+//==============================================================================
+static void free_non_lf_ended_messages(u8_t dev, u8_t mgscount)
+{
+        u8_t wridx = TTY(dev)->wrIdx;
+
+        while (mgscount--) {
+                if (TTY(dev)->line[wridx]) {
+                        free(TTY(dev)->line[wridx]);
+                        TTY(dev)->line[wridx] = NULL;
+                }
+
+                wridx++;
 
                 if (wridx >= TTY_MAX_LINES) {
                         wridx = 0;
                 }
         }
+}
 
-        /* add new message */
+//==============================================================================
+/**
+ * @brief Function link prepared message to TTY
+ *
+ * @param *msg          message
+ * @param  dev          number of terminal
+ */
+//==============================================================================
+static void link_message(ch_t *msg, u8_t dev)
+{
         TTY(dev)->line[TTY(dev)->wrIdx++] = msg;
 
         if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
                 TTY(dev)->wrIdx = 0;
         }
+}
 
-        /* increase new message counter */
-        if (incMsgCnt) {
-                if (TTY(dev)->newMsgCnt < TTY_MAX_LINES) {
-                        TTY(dev)->newMsgCnt++;
-                }
+//==============================================================================
+/**
+ * @brief Function increase message counter
+ *
+ * @param  dev          number of terminal
+ */
+//==============================================================================
+static void inc_message_counter(u8_t dev)
+{
+        if (TTY(dev)->newMsgCnt < TTY_MAX_LINES) {
+                TTY(dev)->newMsgCnt++;
         }
-
-        GiveSemCnt(term->semcnt);
 }
 
 //==============================================================================
@@ -1007,7 +1126,7 @@ static void get_vt100_size(FILE_t *ttysfile)
  * @param dev           device
  */
 //==============================================================================
-static void put_into_input_stream(ch_t chr, u8_t dev)
+static void write_input_stream(ch_t chr, u8_t dev)
 {
         if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 TTY(dev)->input.buffer[TTY(dev)->input.txidx++] = chr;
@@ -1041,7 +1160,7 @@ static void put_into_input_stream(ch_t chr, u8_t dev)
  * @retval STD_RET_ERROR        stream is empty
  */
 //==============================================================================
-static stdRet_t get_from_input_stream(ch_t *chr, u8_t dev)
+static stdRet_t read_input_stream(ch_t *chr, u8_t dev)
 {
         if (TTY(dev)->input.level == 0) {
                 return STD_RET_ERROR;
@@ -1070,23 +1189,17 @@ static stdRet_t get_from_input_stream(ch_t *chr, u8_t dev)
  * @param [in]  dev             device
  */
 //==============================================================================
-static void move_line_to_stream(u8_t dev)
+static void move_editline_to_stream(u8_t dev)
 {
         uint_t line_len = strlen(TTY(dev)->editLine);
 
         for (uint_t i = 0; i < line_len; i++) {
-                put_into_input_stream(TTY(dev)->editLine[i], dev);
+                write_input_stream(TTY(dev)->editLine[i], dev);
         }
 
-        put_into_input_stream('\n', dev);
+        write_input_stream('\n', dev);
 
-        ch_t *msg = calloc(line_len + 2, sizeof(ch_t));
-
-        if (msg) {
-                strcpy(msg, TTY(dev)->editLine);
-                strcat(msg, "\r\n");
-                add_message(dev, msg, FALSE);
-        }
+        add_message(dev, TTY(dev)->editLine, line_len);
 
         memset(TTY(dev)->editLine, '\0', TTY_EDIT_LINE_LEN);
         TTY(dev)->editLineFill   = 0;
