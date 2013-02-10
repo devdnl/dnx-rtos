@@ -97,6 +97,7 @@ struct termHdl {
         task_t taskHdl;         /* task handle */
         sem_t  semcnt_stdout;   /* semaphore used to trigger daemon operation */
         u8_t   captureKeyStep;  /* decode Fn key step */
+        ch_t   captureKeyTmp;   /* templorary value */
         uint_t taskDelay;       /* task delay depended by user activity */
 };
 
@@ -111,6 +112,7 @@ enum keycap {
         KEY_CAPTURE_PENDING,
         END_KEY,
         HOME_KEY,
+        DEL_KEY,
         NORMAL_KEY
 };
 
@@ -120,6 +122,8 @@ enum keycap {
 static void        task_tty(void *arg);
 static void        switch_tty_if_requested(FILE_t *stream);
 static void        stdout_service(FILE_t *stream, u8_t dev);
+static void        move_cursor_to_beginning_of_editline(u8_t dev, FILE_t *stream);
+static void        move_cursor_to_end_of_editline(u8_t dev, FILE_t *stream);
 static void        remove_character_from_editline(u8_t dev, FILE_t *stream);
 static void        add_charater_to_editline(u8_t dev, ch_t chr, FILE_t *stream);
 static void        show_new_messages(u8_t dev, FILE_t *stream);
@@ -647,9 +651,63 @@ static void stdin_service(FILE_t *stream, u8_t dev)
                 }
                 break;
 
+        case HOME_KEY:
+                move_cursor_to_beginning_of_editline(dev, stream);
+                break;
+
+        case END_KEY:
+                move_cursor_to_end_of_editline(dev, stream);
+                break;
+
+        case DEL_KEY:
+                break;
+
         default:
                 break;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function move the cursor to the beginning of edit line
+ *
+ * @param  dev                  number of terminal
+ * @param *stream               required stream to refresh changes
+ */
+//==============================================================================
+static void move_cursor_to_beginning_of_editline(u8_t dev, FILE_t *stream)
+{
+        ch_t *msg = VT100_CURSOR_OFF;
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+        while (TTY(dev)->cursorPosition > 0) {
+                ch_t chr = '\b';
+                ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
+                TTY(dev)->cursorPosition--;
+        }
+
+        msg = VT100_CURSOR_ON;
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+}
+
+//==============================================================================
+/**
+ * @brief Function move the cursor to the end of edit line
+ */
+//==============================================================================
+static void move_cursor_to_end_of_editline(u8_t dev, FILE_t *stream)
+{
+        ch_t *msg = VT100_CURSOR_OFF;
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+        while (TTY(dev)->cursorPosition < TTY(dev)->editLineLen) {
+                ch_t *msg = VT100_SHIFT_CURSOR_RIGHT(1);
+                fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+                TTY(dev)->cursorPosition++;
+        }
+
+        msg = VT100_CURSOR_ON;
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
 }
 
 //==============================================================================
@@ -1132,6 +1190,24 @@ static enum keycap capture_special_keys(ch_t character)
                 case 'D': return ARROW_LEFT_KEY;
                 case 'C': return ARROW_RIGHT_KEY;
                 case 'F': return END_KEY;
+                case '1': term->captureKeyTmp  = '1';
+                          term->captureKeyStep = 3;
+                          return KEY_CAPTURE_PENDING;
+                case '3': term->captureKeyTmp  = '3';
+                          term->captureKeyStep = 3;
+                          return KEY_CAPTURE_PENDING;
+                }
+
+                break;
+
+        case 3:
+                term->captureKeyStep = 0;
+
+                if (character == '~') {
+                        switch (term->captureKeyTmp) {
+                        case '1': return HOME_KEY;
+                        case '3': return DEL_KEY;
+                        }
                 }
 
                 break;
