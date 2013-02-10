@@ -79,20 +79,19 @@ static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, voi
  * @return application handler
  */
 //==============================================================================
+/* DNLFIXME: change name to: new_process() */
 static app_t *RunAsApp(task_t app, const ch_t *appName, uint_t stackSize, void *arg)
 {
-        app_t *appHandle = NULL;
+        app_t *appHandle;
 
-        /* check pointers values */
         if (!app || !appName || !stackSize) {
-                goto RunAsApp_end;
+                return NULL;
         }
 
         /* allocate memory for application handler */
         appHandle = calloc(1, sizeof(app_t));
 
         if (appHandle) {
-                /* initialize stdio data */
                 appHandle->arg              = arg;
                 appHandle->exitCode         = STD_RET_UNKNOWN;
                 appHandle->parentTaskHandle = TaskGetCurrentTaskHandle();
@@ -103,12 +102,12 @@ static app_t *RunAsApp(task_t app, const ch_t *appName, uint_t stackSize, void *
                 /* start application task */
                 if (TaskCreate(app, appName, stackSize, appHandle, 0,
                                &appHandle->taskHandle) != OS_OK) {
+
                         free(appHandle);
                         appHandle = NULL;
                 }
         }
 
-        RunAsApp_end:
         return appHandle;
 }
 
@@ -126,18 +125,16 @@ static app_t *RunAsApp(task_t app, const ch_t *appName, uint_t stackSize, void *
 //==============================================================================
 static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, void *arg)
 {
-        app_t *appHandle = NULL;
+        app_t *appHandle;
 
-        /* check pointers values */
         if (!app|| !appName  || !stackSize) {
-                goto RunAsDaemon_end;
+                return NULL;
         }
 
         /* allocate memory for application handler */
         appHandle = calloc(1, sizeof(app_t));
 
         if (appHandle) {
-                /* set default values */
                 appHandle->arg              = arg;
                 appHandle->exitCode         = STD_RET_UNKNOWN;
                 appHandle->stdin            = NULL;
@@ -148,12 +145,12 @@ static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, voi
                 /* start daemon task */
                 if (TaskCreate(app, appName, stackSize, appHandle, 0,
                                &appHandle->taskHandle) != OS_OK) {
+
                         free(appHandle);
                         appHandle = NULL;
                 }
         }
 
-        RunAsDaemon_end:
         return appHandle;
 }
 

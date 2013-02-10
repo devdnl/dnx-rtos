@@ -45,7 +45,6 @@ extern "C" {
 #include "cat.h"
 #include "lwipd.h"
 
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -53,16 +52,13 @@ extern "C" {
                                          .appPtr    = name,  \
                                          .stackSize = &name##_stack_size}
 
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 
-
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-
 
 /*==============================================================================
   Local object definitions
@@ -79,11 +75,9 @@ static const regAppData_t appList[] = {
         IMPORT_APPLICATION(lwipd),
 };
 
-
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-
 
 /*==============================================================================
   Function definitions
@@ -112,7 +106,6 @@ regAppData_t regapp_GetAppData(const ch_t *appName)
         return appNULL;
 }
 
-
 //==============================================================================
 /**
  * @brief Function returns pointer to application list
@@ -125,7 +118,6 @@ regAppData_t *regapp_GetAppListPtr(void)
         return (regAppData_t*)appList;
 }
 
-
 //==============================================================================
 /**
  * @brief Function returns application count
@@ -137,7 +129,6 @@ int_t regapp_GetAppCount(void)
 {
         return ARRAY_SIZE(appList);
 }
-
 
 #ifdef __cplusplus
 }
