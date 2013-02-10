@@ -40,11 +40,9 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 #define TTYD_NAME                       "ttyworker"
-#define TTYD_STACK_SIZE                 (3 * MINIMAL_STACK_SIZE)
+#define TTYD_STACK_SIZE                 ((2 * MINIMAL_STACK_SIZE) + 12)
 
 #define FILE                            "/dev/ttyS0"
-#define TTY_STREAM_SIZE                 80
-#define TTY_EDIT_LINE_LEN               80
 
 #define TTY(number)                     term->tty[number]
 #define BLOCK_TIME                      10000
@@ -86,7 +84,7 @@ struct termHdl {
                 } input;
 
                 ch_t   editLine[TTY_EDIT_LINE_LEN + 1]; /* input line */
-                uint_t editLineLen;            /* edit line fill level */
+                uint_t editLineLen;             /* edit line fill level */
                 uint_t cursorPosition;          /* cursor position in line */
         } *tty[TTY_LAST];
 
@@ -97,7 +95,7 @@ struct termHdl {
         task_t taskHdl;         /* task handle */
         sem_t  semcnt_stdout;   /* semaphore used to trigger daemon operation */
         u8_t   captureKeyStep;  /* decode Fn key step */
-        ch_t   captureKeyTmp;   /* templorary value */
+        ch_t   captureKeyTmp;   /* temporary value */
         uint_t taskDelay;       /* task delay depended by user activity */
 };
 
@@ -125,6 +123,7 @@ static void        stdout_service(FILE_t *stream, u8_t dev);
 static void        move_cursor_to_beginning_of_editline(u8_t dev, FILE_t *stream);
 static void        move_cursor_to_end_of_editline(u8_t dev, FILE_t *stream);
 static void        remove_character_from_editline(u8_t dev, FILE_t *stream);
+static void        delete_character_from_editline(u8_t dev, FILE_t *stream);
 static void        add_charater_to_editline(u8_t dev, ch_t chr, FILE_t *stream);
 static void        show_new_messages(u8_t dev, FILE_t *stream);
 static void        refresh_last_line(u8_t dev, FILE_t *stream);
@@ -546,7 +545,7 @@ static void task_tty(void *arg)
 
         get_vt100_size(ttys);
 
-        term->taskDelay = 20;
+        term->taskDelay = 10;
 
         for (;;) {
                 if (TTY(term->currentTTY) == NULL) {
@@ -554,10 +553,7 @@ static void task_tty(void *arg)
                         continue;
                 }
 
-                if (TakeSemCnt(term->semcnt_stdout, 0) == OS_OK) {
-                        stdout_service(ttys, term->currentTTY);
-                        term->taskDelay = 40;
-                }
+                stdout_service(ttys, term->currentTTY);
 
                 stdin_service(ttys, term->currentTTY);
 
@@ -580,10 +576,16 @@ static void task_tty(void *arg)
 //==============================================================================
 static void stdout_service(FILE_t *stream, u8_t dev)
 {
-        if (TTY(dev)->newMsgCnt > 0) {
-                show_new_messages(dev, stream);
-        } else if (TTY(dev)->refLstLn == SET) {
-                refresh_last_line(dev, stream);
+        if (TakeSemCnt(term->semcnt_stdout, 0) == OS_OK) {
+                if (TTY(dev)->newMsgCnt > 0) {
+                        show_new_messages(dev, stream);
+
+                        if (term->taskDelay > 40){
+                                term->taskDelay = 40;
+                        }
+                } else if (TTY(dev)->refLstLn == SET) {
+                        refresh_last_line(dev, stream);
+                }
         }
 }
 
@@ -608,7 +610,7 @@ static void stdin_service(FILE_t *stream, u8_t dev)
                 return;
         }
 
-        term->taskDelay = 20;
+        term->taskDelay = 10;
 
         switch ((keydec = capture_special_keys(chr))) {
         case F1_KEY:
@@ -660,6 +662,7 @@ static void stdin_service(FILE_t *stream, u8_t dev)
                 break;
 
         case DEL_KEY:
+                delete_character_from_editline(dev, stream);
                 break;
 
         default:
@@ -733,6 +736,41 @@ static void remove_character_from_editline(u8_t dev, FILE_t *stream)
         TTY(dev)->editLineLen--;
 
         ch_t *msg = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+
+        msg = &TTY(dev)->editLine[TTY(dev)->cursorPosition];
+        fwrite(msg, sizeof(ch_t),
+               TTY(dev)->editLineLen - TTY(dev)->cursorPosition, stream);
+
+        msg = VT100_RESTORE_CURSOR_POSITION;
+        fwrite(msg, sizeof(ch_t), strlen(msg), stream);
+}
+
+//==============================================================================
+/**
+ * @brief Function delete right character from edit line
+ *
+ * @param  dev                  number of terminal
+ * @param *stream               required stream to refresh changes
+ */
+//==============================================================================
+static void delete_character_from_editline(u8_t dev, FILE_t *stream)
+{
+        if (TTY(dev)->editLineLen == 0) {
+                return;
+        }
+
+        if (TTY(dev)->cursorPosition == TTY(dev)->editLineLen) {
+                return;
+        }
+
+        for (u8_t i = TTY(dev)->cursorPosition; i <= TTY(dev)->editLineLen; i++) {
+                TTY(dev)->editLine[i] = TTY(dev)->editLine[i + 1];
+        }
+
+        TTY(dev)->editLineLen--;
+
+        ch_t *msg = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
         fwrite(msg, sizeof(ch_t), strlen(msg), stream);
 
         msg = &TTY(dev)->editLine[TTY(dev)->cursorPosition];

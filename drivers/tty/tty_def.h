@@ -40,6 +40,12 @@ extern "C" {
 /** define TTY max supported lines */
 #define TTY_MAX_LINES               40
 
+/** define output stream size (from keyborad) */
+#define TTY_STREAM_SIZE             80
+
+/** define edit line length */
+#define TTY_EDIT_LINE_LEN           80
+
 /** define number of virtual terminals */
 #define TTY_NUMBER_OF_VT            4
 

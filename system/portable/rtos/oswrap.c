@@ -65,7 +65,7 @@ extern "C" {
  *
  * @param[in ]  taskCode      task code
  * @param[in ] *name          task name
- * @param[in ]  stack         stack deep
+ * @param[in ]  stackDeep     stack deep
  * @param[in ] *argv          argument pointer
  * @param[in ]  priority      task priority (calculated to FreeRTOS priority level)
  * @param[out] *taskHdl       task handle
@@ -74,8 +74,8 @@ extern "C" {
  * @retval OS_NOT_OK
  */
 //==============================================================================
-int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack, void *argv,
-                 i8_t priority, task_t *taskHdl)
+int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
+                 void *argv, i8_t priority, task_t *taskHdl)
 {
         TaskSuspendAll();
 
@@ -83,7 +83,7 @@ int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack, void *argv,
 
         int_t status = xTaskCreate(taskCode,
                                    (signed char *)name,
-                                   stack,
+                                   stackDeep,
                                    argv,
                                    Priority(priority),
                                    &task);
