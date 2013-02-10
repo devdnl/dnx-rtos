@@ -95,19 +95,20 @@ struct termHdl {
         u8_t   col;             /* terminal column count */
         u8_t   row;             /* terminal row count */
         task_t taskHdl;         /* task handle */
-        sem_t  semcnt;          /* semaphore used to trigger daemon operation */
-        u8_t   decodeKeyStep;   /* decode Fn key step */
+        sem_t  semcnt_stdout;   /* semaphore used to trigger daemon operation */
+        u8_t   captureKeyStep;  /* decode Fn key step */
+        uint_t taskDelay;       /* task delay depended by user activity */
 };
 
 /* key detector results */
-enum keydec {
+enum keycap {
         F1_KEY,
         F2_KEY,
         F3_KEY,
         F4_KEY,
         ARROW_LEFT_KEY,
         ARROW_RIGHT_KEY,
-        KEY_DECODE_PENDING,
+        KEY_CAPTURE_PENDING,
         END_KEY,
         HOME_KEY,
         NORMAL_KEY
@@ -133,7 +134,7 @@ static void        strncpy_LF2CRLF(ch_t *dst, ch_t *src, uint_t n);
 static void        free_non_lf_ended_messages(u8_t dev, u8_t mgscount);
 static void        link_message(ch_t *msg, u8_t dev);
 static void        inc_message_counter(u8_t dev);
-static enum keydec decode_special_keys(ch_t character);
+static enum keycap capture_special_keys(ch_t character);
 static u8_t        get_message_index(u8_t dev, u8_t back);
 static void        refresh_tty(u8_t dev, FILE_t *file);
 static void        get_vt100_size(FILE_t *ttysfile);
@@ -177,7 +178,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                 return STD_RET_ERROR;
         }
 
-        if ((term->semcnt = CreateSemCnt(10, 0)) != NULL) {
+        if ((term->semcnt_stdout = CreateSemCnt(10, 0)) != NULL) {
                 if (TaskCreate(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
                                NULL, -1, &term->taskHdl) == OS_OK) {
 
@@ -190,8 +191,8 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                 }
         }
 
-        if (term->semcnt) {
-                DeleteSemCnt(term->semcnt);
+        if (term->semcnt_stdout) {
+                DeleteSemCnt(term->semcnt_stdout);
         }
 
         free(term);
@@ -246,7 +247,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                         }
                 }
 
-                DeleteSemCnt(term->semcnt);
+                DeleteSemCnt(term->semcnt_stdout);
                 TaskDelete(term->taskHdl);
                 free(term);
                 term = NULL;
@@ -400,8 +401,6 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
 
                 n /= size;
 
-                GiveSemCnt(term->semcnt);
-
                 GiveRecMutex(TTY(dev)->mtx);
         }
 
@@ -444,7 +443,6 @@ stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                         return STD_RET_ERROR;
                 }
                 term->changeToTTY = *((u8_t*)data);
-                GiveSemCnt(term->semcnt);
                 break;
 
         /* clear terminal */
@@ -544,22 +542,24 @@ static void task_tty(void *arg)
 
         get_vt100_size(ttys);
 
+        term->taskDelay = 20;
+
         for (;;) {
                 if (TTY(term->currentTTY) == NULL) {
                         TaskDelay(100);
                         continue;
                 }
 
-                stdout_service(ttys, term->currentTTY);
+                if (TakeSemCnt(term->semcnt_stdout, 0) == OS_OK) {
+                        stdout_service(ttys, term->currentTTY);
+                        term->taskDelay = 40;
+                }
 
                 stdin_service(ttys, term->currentTTY);
 
                 switch_tty_if_requested(ttys);
 
-                /* check if task can go to short sleep */
-                if (TTY(term->currentTTY)->newMsgCnt == 0) {
-                        TakeSemCnt(term->semcnt, BLOCK_TIME);
-                }
+                TaskDelay(term->taskDelay);
         }
 
         /* this should never happen */
@@ -595,15 +595,18 @@ static void stdin_service(FILE_t *stream, u8_t dev)
 {
         ch_t  chr;
         ch_t *msg;
-        enum keydec keydec;
+        enum keycap keydec;
 
         if (ioctl(stream, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK) {
+                if (term->taskDelay < 200) {
+                        term->taskDelay += 10;
+                }
                 return;
         }
 
-        GiveSemCnt(term->semcnt);
+        term->taskDelay = 20;
 
-        switch ((keydec = decode_special_keys(chr))) {
+        switch ((keydec = capture_special_keys(chr))) {
         case F1_KEY:
         case F2_KEY:
         case F3_KEY:
@@ -846,7 +849,7 @@ static void clear_tty(u8_t dev)
                 TTY(dev)->wrIdx     = 0;
                 TTY(dev)->refLstLn  = RESET;
 
-                GiveSemCnt(term->semcnt);
+                GiveSemCnt(term->semcnt_stdout);
 
                 GiveRecMutex(TTY(dev)->mtx);
         }
@@ -880,7 +883,7 @@ static uint_t add_message(u8_t dev, ch_t *msg, uint_t msgLen)
 
         link_message(newMsg, dev);
 
-        GiveSemCnt(term->semcnt);
+        GiveSemCnt(term->semcnt_stdout);
 
         if (newMsg) {
                 return msgLen;
@@ -1092,34 +1095,34 @@ static u8_t get_message_index(u8_t dev, u8_t back)
 
 //==============================================================================
 /**
- * @brief Check if pushed button is F1-F4
+ * @brief Function capture special keys
  *
  * @param character     button part of code
  *
  * @return decoded key
  */
 //==============================================================================
-static enum keydec decode_special_keys(ch_t character)
+static enum keycap capture_special_keys(ch_t character)
 {
-        switch (term->decodeKeyStep) {
+        switch (term->captureKeyStep) {
         case 0:
                 if (character == '\e') {
-                        term->decodeKeyStep++;
-                        return KEY_DECODE_PENDING;
+                        term->captureKeyStep++;
+                        return KEY_CAPTURE_PENDING;
                 }
                 break;
 
         case 1:
                 if (character == 'O' || character == '[') {
-                        term->decodeKeyStep++;
-                        return KEY_DECODE_PENDING;
+                        term->captureKeyStep++;
+                        return KEY_CAPTURE_PENDING;
                 } else {
-                        term->decodeKeyStep = 0;
+                        term->captureKeyStep = 0;
                 }
                 break;
 
         case 2:
-                term->decodeKeyStep = 0;
+                term->captureKeyStep = 0;
 
                 switch (character) {
                 case 'P': return F1_KEY;
@@ -1134,7 +1137,7 @@ static enum keydec decode_special_keys(ch_t character)
                 break;
 
         default:
-                term->decodeKeyStep = 0;
+                term->captureKeyStep = 0;
                 break;
         }
 

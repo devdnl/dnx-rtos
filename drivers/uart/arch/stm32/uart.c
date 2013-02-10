@@ -935,7 +935,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                                    SetBaudRate(uart_p, UART_PCLK2_FREQ, *(u32_t*)data);
                              else
                                    SetBaudRate(uart_p, UART_PCLK1_FREQ, *(u32_t*)data);
-                              break;
+                             break;
                         }
 
                         default:

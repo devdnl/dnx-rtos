@@ -61,7 +61,7 @@ extern "C" {
 
 /** TASK LEVEL DEFINITIONS */
 #define TaskTerminate()                   TaskDelete(TaskGetCurrentTaskHandle())
-#define TaskDelay(delay)                  vTaskDelay(delay)
+#define TaskDelay(ms_delay)               vTaskDelay(ms_delay)
 #define TaskSuspend(taskID)               vTaskSuspend(taskID)
 #define TaskResume(taskID)                vTaskResume(taskID)
 #define TaskResumeFromISR(taskID)         xTaskResumeFromISR(taskID)
