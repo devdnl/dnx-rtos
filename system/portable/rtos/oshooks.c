@@ -77,7 +77,7 @@ void vApplicationIdleHook(void)
 //==============================================================================
 void vApplicationStackOverflowHook(task_t taskHdl, signed char *taskName)
 {
-        TaskDelete(taskHdl);
+        delete_task(taskHdl);
         kprint(FONT_COLOR_RED"Task %s stack overflow!"RESET_ATTRIBUTES"\n", taskName);
 }
 

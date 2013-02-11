@@ -135,7 +135,7 @@ static const regDrv_t drvList[] =
  * @return driver depending value, everything not equal to STD_RET_OK are errors
  */
 //==============================================================================
-stdRet_t InitDrv(const ch_t *drvName, const ch_t *nodeName)
+stdRet_t init_drv(const ch_t *drvName, const ch_t *nodeName)
 {
         if (drvName == NULL) {
                 return STD_RET_ERROR;

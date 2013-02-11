@@ -74,7 +74,7 @@ int main(void)
         memman_init();
 
         /* create initialize task */
-        TaskCreate(Initd, INITD_NAME, INITD_STACK_SIZE, NULL, -1, NULL);
+        new_task(task_initd, INITD_NAME, INITD_STACK_SIZE, NULL, -1, NULL);
 
         /* start OS */
         OSStartScheduler();

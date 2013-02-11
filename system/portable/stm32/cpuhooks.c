@@ -64,7 +64,7 @@ void HardFault_Handler(void)
 {
         ch_t *name = TaskGetName(THIS_TASK);
         kprint(FONT_COLOR_RED"Task %s generated Hard Fault!"RESET_ATTRIBUTES"\n", name);
-        TaskDelete(TaskGetCurrentTaskHandle());
+        delete_task(TaskGetCurrentTaskHandle());
 }
 
 //==============================================================================

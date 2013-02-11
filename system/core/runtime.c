@@ -54,7 +54,8 @@ extern "C" {
 ==============================================================================*/
 static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg);
 static uint_t  count_arguments(ch_t *arg);
-static ch_t   **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc);
+static ch_t  **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc);
+static void    delete_argument_table(ch_t **argv);
 
 /*==============================================================================
   Local object definitions
@@ -70,7 +71,7 @@ static ch_t   **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc);
 
 //==============================================================================
 /**
- * @brief Run task as application using only task name
+ * @brief Run task as program using only task name
  *
  * @param[in]  *name          task name
  * @param[in]  *argv          task arguments
@@ -100,7 +101,7 @@ prog_t *exec(const ch_t *name, ch_t *argv)
  * @return application handler
  */
 //==============================================================================
-stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
+stdRet_t start_daemon(const ch_t *name, ch_t *argv)
 {
         if (exec(name, argv) != NULL) {
                 kprint("%s daemon started\n", name);
@@ -113,25 +114,24 @@ stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
 
 //==============================================================================
 /**
- * @brief Function free application handler
+ * @brief Function free program handler
  *
- * @param *appArgs      pointer to the appArgs structure which contains
- *                      application handler
+ * @param *prog                 pointer to the program object
  *
- * @retval STD_STATUS_OK            freed success
- * @retval STD_STATUS_ERROR         freed error, bad pointer
+ * @retval STD_STATUS_OK        freed success
+ * @retval STD_STATUS_ERROR     freed error, bad pointer
  */
 //==============================================================================
-stdRet_t KillProg(prog_t *appArgs)
+stdRet_t kill_prog(prog_t *prog)
 {
         stdRet_t status = STD_RET_ERROR;
 
-        if (appArgs) {
-                if (appArgs->taskHandle) {
-                        TaskDelete(appArgs->taskHandle);
+        if (prog) {
+                if (prog->taskHandle) {
+                        delete_task(prog->taskHandle);
                 }
 
-                free(appArgs);
+                free(prog);
 
                 status = STD_RET_OK;
         }
@@ -141,15 +141,14 @@ stdRet_t KillProg(prog_t *appArgs)
 
 //==============================================================================
 /**
- * @brief Terminate application
+ * @brief Terminate program
  *
  * @param *appObj             application object
  * @param  exitCode           return value
  */
 //==============================================================================
-void CloseProg(prog_t *appObj, stdRet_t exitCode)
+void exit_prog(prog_t *appObj, stdRet_t exitCode)
 {
-        /* set exit code */
         appObj->exitCode = exitCode;
 
         TaskSuspend(appObj->parentTaskHandle);
@@ -158,7 +157,7 @@ void CloseProg(prog_t *appObj, stdRet_t exitCode)
         appObj->taskHandle       = NULL;
         appObj->parentTaskHandle = NULL;
 
-        TaskTerminate();
+        delete_task(TaskGetCurrentTaskHandle());
 }
 
 //==============================================================================
@@ -313,7 +312,7 @@ static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t 
         progHdl->stdout           = NULL;
 
         /* start application task */
-        if (TaskCreate(app, name, stackSize, progHdl, 0,
+        if (new_task(app, name, stackSize, progHdl, 0,
                        &progHdl->taskHandle) != OS_OK) {
 
                 free(progHdl->argv);
@@ -373,6 +372,8 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc)
 
         ch_t **argptr = calloc(argc + 1, sizeof(ch_t*));
 
+        /* DNLTODO program must allocate arg buffer and replace ' ' to \0 */
+
         if (argptr) {
                 argptr[0] = (ch_t*)name;
 
@@ -392,6 +393,17 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc)
 
         return argptr;
 }
+
+//==============================================================================
+/**
+ * @brief Function remove argument table
+ */
+//==============================================================================
+static void delete_argument_table(ch_t **argv)
+{
+        /* DNLTODO */
+}
+
 
 #ifdef __cplusplus
 }

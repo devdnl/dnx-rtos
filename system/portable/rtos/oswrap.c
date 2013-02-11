@@ -74,7 +74,7 @@ extern "C" {
  * @retval OS_NOT_OK
  */
 //==============================================================================
-int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
+int_t new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
                  void *argv, i8_t priority, task_t *taskHdl)
 {
         TaskSuspendAll();
@@ -108,9 +108,9 @@ int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
  * @param taskHdl       task handle
  */
 //==============================================================================
-void TaskDelete(task_t taskHdl)
+void delete_task(task_t taskHdl)
 {
-        moni_DelTask(taskHdl);
+        moni_delete_task(taskHdl);
         vTaskDelete(taskHdl);
 }
 

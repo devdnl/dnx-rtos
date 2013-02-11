@@ -84,7 +84,6 @@ extern "C" {
 #define SystemExitCritical()              TaskExitCritical()
 #define SystemDisableIRQ()                TaskDisableIRQ()
 #define SystemEnableIRQ()                 TaskEnableIRQ()
-#define SystemGetPID()                    TaskGetPID()
 #define SystemGetAppHandle()              TaskGetCurrentTaskHandle()
 #define SystemAppSuspend()                TaskSuspend(NULL)
 #define SystemGetFreeMemSize()            memman_GetFreeHeapSize()

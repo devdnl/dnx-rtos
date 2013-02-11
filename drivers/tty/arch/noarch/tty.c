@@ -182,7 +182,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
         }
 
         if ((term->semcnt_stdout = CreateSemCnt(10, 0)) != NULL) {
-                if (TaskCreate(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
+                if (new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
                                NULL, -1, &term->taskHdl) == OS_OK) {
 
                         term->col = 80;
@@ -251,7 +251,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                 }
 
                 DeleteSemCnt(term->semcnt_stdout);
-                TaskDelete(term->taskHdl);
+                delete_task(term->taskHdl);
                 free(term);
                 term = NULL;
 

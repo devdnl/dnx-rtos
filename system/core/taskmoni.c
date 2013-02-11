@@ -225,7 +225,7 @@ stdRet_t moni_AddTask(task_t taskHdl)
 #if (  (APP_MONITOR_MEMORY_USAGE > 0) \
     || (APP_MONITOR_FILE_USAGE > 0  ) \
     || (APP_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t moni_DelTask(task_t taskHdl)
+stdRet_t moni_delete_task(task_t taskHdl)
 {
         if (moni == NULL) {
                 return STD_RET_ERROR;

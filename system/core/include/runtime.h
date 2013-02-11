@@ -1,7 +1,7 @@
-#ifndef APPRUNTIME_H_
-#define APPRUNTIME_H_
+#ifndef RUNTIME_H_
+#define RUNTIME_H_
 /*=========================================================================*//**
-@file    appruntime.h
+@file    runtime.h
 
 @author  Daniel Zorychta
 
@@ -60,7 +60,7 @@ extern "C" {
 #define PROG_SEC_END                    exit(appmain(argv, argc));}
 
 /** simpler definition of terminating application */
-#define exit(exitCode)                  CloseProg(_progarg_, exitCode)
+#define exit(exitCode)                  exit_prog(_progarg_, exitCode)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -85,16 +85,16 @@ typedef enum parseType_enum {
   Exported function prototypes
 ==============================================================================*/
 extern prog_t    *exec(const ch_t *name, ch_t *argv);
-extern stdRet_t   StartDaemon(const ch_t *name, ch_t *argv);
-extern stdRet_t   KillProg(prog_t *appArgs);
-extern void       CloseProg(prog_t *appObj, stdRet_t exitCode);
+extern stdRet_t   start_daemon(const ch_t *name, ch_t *argv);
+extern stdRet_t   kill_prog(prog_t *appArgs);
+extern void       exit_prog(prog_t *appObj, stdRet_t exitCode);
 extern stdRet_t   ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* APPRUNTIME_H_ */
+#endif /* RUNTIME_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

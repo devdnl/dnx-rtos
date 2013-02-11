@@ -60,7 +60,7 @@ extern "C" {
 #define OSStartScheduler()                vTaskStartScheduler()
 
 /** TASK LEVEL DEFINITIONS */
-#define TaskTerminate()                   TaskDelete(TaskGetCurrentTaskHandle())
+#define TaskTerminate()                   delete_task(TaskGetCurrentTaskHandle())
 #define TaskDelay(ms_delay)               vTaskDelay(ms_delay)
 #define TaskSuspend(taskID)               vTaskSuspend(taskID)
 #define TaskResume(taskID)                vTaskResume(taskID)
@@ -114,9 +114,9 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int_t TaskCreate(taskCode_t taskCode, const ch_t *name, u16_t stack,
+extern int_t new_task(taskCode_t taskCode, const ch_t *name, u16_t stack,
                         void *argv, i8_t priority, task_t *taskHdl);
-extern void  TaskDelete(task_t taskHdl);
+extern void  delete_task(task_t taskHdl);
 extern sem_t CreateSemBin(void);
 
 #ifdef __cplusplus
