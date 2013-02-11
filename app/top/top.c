@@ -32,8 +32,8 @@
 #include <string.h>
 
 /* Begin of application section declaration */
-APPLICATION(top, 3)
-APP_SEC_BEGIN
+PROGRAM(top, 3)
+PROG_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -59,7 +59,7 @@ APP_SEC_BEGIN
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+stdRet_t appmain(ch_t *argv[], int_t argc)
 {
         (void) argv;
 
@@ -118,7 +118,7 @@ stdRet_t appmain(ch_t *argv)
 }
 
 /* End of application section declaration */
-APP_SEC_END
+PROG_SEC_END
 
 /*==================================================================================================
                                             End of file

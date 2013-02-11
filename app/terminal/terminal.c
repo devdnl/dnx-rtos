@@ -33,8 +33,8 @@
 #include "ds1307_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(term, 5)
-APP_SEC_BEGIN
+PROGRAM(term, 5)
+PROG_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -665,7 +665,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
       TaskSuspendAll();
 
-      app_t *appHdl = Exec(cmd, arg);
+      prog_t *appHdl = exec(cmd, arg);
 
       if (appHdl)
       {
@@ -685,7 +685,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
                   sleep(1);
             }
 
-            KillApp(appHdl);
+            KillProg(appHdl);
 
             status = CMD_EXECUTED;
       } else {
@@ -713,7 +713,7 @@ void PrintPrompt(void)
  * @brief terminal main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution mode */
+stdRet_t appmain(ch_t *argv[], int_t argc) /* DNLTODO terminal with -e mode: script execution mode */
 {
       stdRet_t    termStatus = STD_RET_OK;
       cmdStatus_t cmdStatus;
@@ -842,7 +842,7 @@ stdRet_t appmain(ch_t *argv) /* DNLTODO terminal with -e mode: script execution 
 }
 
 /* End of application section declaration */
-APP_SEC_END
+PROG_SEC_END
 
 
 /*==================================================================================================

@@ -36,8 +36,8 @@ extern "C" {
 #include <string.h>
 
 /* Begin of application section declaration */
-APPLICATION(cat, 3)
-APP_SEC_BEGIN
+PROGRAM(cat, 3)
+PROG_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -64,8 +64,18 @@ APP_SEC_BEGIN
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+stdRet_t appmain(ch_t *argv[], int_t argc)
 {
+        printf("Argument count: %d\n", argc);
+
+        for (int_t i = 0; i < argc; i++) {
+                printf("%s ", argv[i]);
+        }
+        putchar('\n');
+
+        return 0;
+
+
       stdRet_t status = STD_RET_OK;
 
       u32_t col = 80;
@@ -137,7 +147,7 @@ stdRet_t appmain(ch_t *argv)
 }
 
 /* End of application section declaration */
-APP_SEC_END
+PROG_SEC_END
 
 #ifdef __cplusplus
 }

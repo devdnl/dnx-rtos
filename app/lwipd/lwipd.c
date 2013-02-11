@@ -43,8 +43,8 @@ extern "C" {
 #include "ether_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(lwipd, 6)
-APP_SEC_BEGIN
+PROGRAM(lwipd, 6)
+PROG_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -528,7 +528,7 @@ void propel_timers(u32_t localtime)
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+stdRet_t appmain(ch_t *argv[], int_t argc)
 {
       stdRet_t      status = STD_RET_ERROR;
       struct netif *netif  = malloc(sizeof(struct netif));
@@ -628,7 +628,7 @@ stdRet_t appmain(ch_t *argv)
 }
 
 /* End of application section declaration */
-APP_SEC_END
+PROG_SEC_END
 
 #ifdef __cplusplus
 }

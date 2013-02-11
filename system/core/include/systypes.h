@@ -73,26 +73,20 @@ typedef enum
 /** universal status type */
 typedef signed char stdRet_t;
 
-
 /** device number type */
 typedef uint_t devx_t;
-
 
 /** task/application ID */
 typedef uint_t PID_t;
 
-
 /** IO request type */
 typedef u8_t IORq_t;
-
 
 /** file descriptor */
 typedef uint_t fd_t;
 
-
 /** file system descriptor */
 typedef uint_t fsd_t;
-
 
 /** file type */
 typedef struct
@@ -107,7 +101,6 @@ typedef struct
         size_t   f_seek;
 } FILE_t;
 
-
 /** directory entry */
 typedef struct
 {
@@ -115,7 +108,6 @@ typedef struct
         size_t  size;
         tfile_t filetype;
 } dirent_t;
-
 
 /** directory type */
 typedef struct dir_s
@@ -128,19 +120,18 @@ typedef struct dir_s
         fsd_t     fsd;
 } DIR_t;
 
-
-/** application standard arguments type */
+/** program standard arguments type */
 typedef struct appArgs_struct
 {
-        void    *arg;                /* pointer to the argument */
+        ch_t    **argv;              /* pointer to the argument list */
+        int_t    argc;               /* argument count */
         FILE_t  *stdin;              /* file used only to read keyboard */
         FILE_t  *stdout;             /* file used only to write to terminal */
         task_t   taskHandle;         /* task handling for children */
         task_t   parentTaskHandle;   /* task handling for parent */
         ch_t    *cwd;                /* current working path */
         stdRet_t exitCode;           /* exit code */
-} app_t;
-
+} prog_t;
 
 /** time structure */
 typedef struct time_struct
@@ -149,7 +140,6 @@ typedef struct time_struct
         u8_t minutes;     /**< [BCD] */
         u8_t hours;       /**< [BCD] */
 } bcdTime_t;
-
 
 /** date structure */
 typedef struct date_struct

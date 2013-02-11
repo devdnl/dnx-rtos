@@ -37,8 +37,8 @@ extern "C" {
 #include "ds1307_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(date, 4)
-APP_SEC_BEGIN
+PROGRAM(date, 4)
+PROG_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -65,7 +65,7 @@ APP_SEC_BEGIN
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+stdRet_t appmain(ch_t *argv[], int_t argc)
 {
       const ch_t *weekDayNames[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
       const ch_t *monthsNames[]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -193,7 +193,7 @@ stdRet_t appmain(ch_t *argv)
 }
 
 /* End of application section declaration */
-APP_SEC_END
+PROG_SEC_END
 
 #ifdef __cplusplus
 }

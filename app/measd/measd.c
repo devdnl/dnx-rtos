@@ -32,8 +32,8 @@
 #include "mpl115a2_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(measd, 10 + 4)
-APP_SEC_BEGIN
+PROGRAM(measd, 10 + 4)
+PROG_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -111,7 +111,7 @@ struct meas readData(u8_t idx)
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+stdRet_t appmain(ch_t *argv[], int_t argc)
 {
       (void)argv;
 
@@ -238,7 +238,7 @@ stdRet_t appmain(ch_t *argv)
 }
 
 /* End of application section declaration */
-APP_SEC_END
+PROG_SEC_END
 
 /*==================================================================================================
                                             End of file

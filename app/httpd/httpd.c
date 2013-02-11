@@ -76,8 +76,8 @@
 #include "ds1307_def.h"
 
 /* Begin of application section declaration */
-APPLICATION(httpd, 10 + 2)
-APP_SEC_BEGIN
+PROGRAM(httpd, 10 + 2)
+PROG_SEC_BEGIN
 
 /*==================================================================================================
                                   Local symbolic constants/macros
@@ -429,7 +429,7 @@ err_t http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv)
+stdRet_t appmain(ch_t *argv[], int_t argc)
 {
       (void)argv;
 
@@ -462,7 +462,7 @@ stdRet_t appmain(ch_t *argv)
 }
 
 /* End of application section declaration */
-APP_SEC_END
+PROG_SEC_END
 
 /*==================================================================================================
                                             End of file

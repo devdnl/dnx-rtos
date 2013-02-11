@@ -193,7 +193,7 @@ void Initd(void *arg)
 #else
       u8_t    ctty = 0;
 #endif
-      app_t  *apphdl[TTY_LAST] = {NULL};
+      prog_t  *apphdl[TTY_LAST] = {NULL};
       FILE_t *ttyx[TTY_LAST]   = {NULL};
 
 #if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
@@ -219,7 +219,7 @@ void Initd(void *arg)
                         kprint("Starting application on new terminal: TTY%d\n", ctty);
 
                         TaskSuspendAll();
-                        apphdl[ctty] = Exec("term", NULL);
+                        apphdl[ctty] = exec("term", "");
 
                         if (apphdl[ctty] == NULL) {
                               TaskResumeAll();
@@ -240,7 +240,7 @@ void Initd(void *arg)
                         if (apphdl[i]->exitCode != STD_RET_UNKNOWN) {
                               kprint("Application closed on TTY%d\n", ctty);
 
-                              KillApp(apphdl[i]);
+                              KillProg(apphdl[i]);
                               apphdl[i] = NULL;
 
                               ioctl(ttyx[i], TTY_IORQ_CLEARTTY, NULL);

@@ -52,8 +52,9 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static app_t *RunAsApp(task_t app, const ch_t *appName, uint_t stackSize, void *arg);
-static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, void *arg);
+static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg);
+static uint_t  count_arguments(ch_t *arg);
+static ch_t   **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc);
 
 /*==============================================================================
   Local object definitions
@@ -69,93 +70,6 @@ static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, voi
 
 //==============================================================================
 /**
- * @brief This function start task as application
- *
- * @param[in]  app                  application function
- * @param[in]  *appName             application name
- * @param[in]  stackSize            application stack size
- * @param[in]  *arg                 application arguments
- *
- * @return application handler
- */
-//==============================================================================
-/* DNLFIXME: change name to: new_process() */
-static app_t *RunAsApp(task_t app, const ch_t *appName, uint_t stackSize, void *arg)
-{
-        app_t *appHandle;
-
-        if (!app || !appName || !stackSize) {
-                return NULL;
-        }
-
-        /* allocate memory for application handler */
-        appHandle = calloc(1, sizeof(app_t));
-
-        if (appHandle) {
-                appHandle->arg              = arg;
-                appHandle->exitCode         = STD_RET_UNKNOWN;
-                appHandle->parentTaskHandle = TaskGetCurrentTaskHandle();
-                appHandle->taskHandle       = NULL;
-                appHandle->stdin            = NULL;
-                appHandle->stdout           = NULL;
-
-                /* start application task */
-                if (TaskCreate(app, appName, stackSize, appHandle, 0,
-                               &appHandle->taskHandle) != OS_OK) {
-
-                        free(appHandle);
-                        appHandle = NULL;
-                }
-        }
-
-        return appHandle;
-}
-
-//==============================================================================
-/**
- * @brief This function start task as daemon
- *
- * @param[in]  app                   application function
- * @param[in]  *appName              application name
- * @param[in]  stackSize             application stack size
- * @param[in]  *arg                  application arguments
- *
- * @return application handler
- */
-//==============================================================================
-static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, void *arg)
-{
-        app_t *appHandle;
-
-        if (!app|| !appName  || !stackSize) {
-                return NULL;
-        }
-
-        /* allocate memory for application handler */
-        appHandle = calloc(1, sizeof(app_t));
-
-        if (appHandle) {
-                appHandle->arg              = arg;
-                appHandle->exitCode         = STD_RET_UNKNOWN;
-                appHandle->stdin            = NULL;
-                appHandle->stdout           = NULL;
-                appHandle->parentTaskHandle = TaskGetCurrentTaskHandle();
-                appHandle->taskHandle       = NULL;
-
-                /* start daemon task */
-                if (TaskCreate(app, appName, stackSize, appHandle, 0,
-                               &appHandle->taskHandle) != OS_OK) {
-
-                        free(appHandle);
-                        appHandle = NULL;
-                }
-        }
-
-        return appHandle;
-}
-
-//==============================================================================
-/**
  * @brief Run task as application using only task name
  *
  * @param[in]  *name          task name
@@ -164,7 +78,7 @@ static app_t *RunAsDaemon(task_t app, const ch_t *appName, uint_t stackSize, voi
  * @return application handler
  */
 //==============================================================================
-app_t *Exec(const ch_t *name, ch_t *argv)
+prog_t *exec(const ch_t *name, ch_t *argv)
 {
         regAppData_t appData = regapp_GetAppData(name);
 
@@ -172,28 +86,7 @@ app_t *Exec(const ch_t *name, ch_t *argv)
                 return NULL;
         }
 
-        return RunAsApp(appData.appPtr, appData.appName, *appData.stackSize, argv);
-}
-
-//==============================================================================
-/**
- * @brief Run task as daemon using only task name
- *
- * @param[in]  *name          task name
- * @param[in]  *argv          task arguments
- *
- * @return application handler
- */
-//==============================================================================
-app_t *Execd(const ch_t *name, ch_t *argv)
-{
-        regAppData_t appData = regapp_GetAppData(name);
-
-        if (appData.appPtr == NULL) {
-                return NULL;
-        }
-
-        return RunAsDaemon(appData.appPtr, appData.appName, *appData.stackSize, argv);
+        return new_program(appData.appPtr, appData.appName, *appData.stackSize, argv);
 }
 
 //==============================================================================
@@ -209,7 +102,7 @@ app_t *Execd(const ch_t *name, ch_t *argv)
 //==============================================================================
 stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
 {
-        if (Execd(name, argv) != NULL) {
+        if (exec(name, argv) != NULL) {
                 kprint("%s daemon started\n", name);
                 return STD_RET_OK;
         } else {
@@ -229,7 +122,7 @@ stdRet_t StartDaemon(const ch_t *name, ch_t *argv)
  * @retval STD_STATUS_ERROR         freed error, bad pointer
  */
 //==============================================================================
-stdRet_t KillApp(app_t *appArgs)
+stdRet_t KillProg(prog_t *appArgs)
 {
         stdRet_t status = STD_RET_ERROR;
 
@@ -254,7 +147,7 @@ stdRet_t KillApp(app_t *appArgs)
  * @param  exitCode           return value
  */
 //==============================================================================
-void CloseApp(app_t *appObj, stdRet_t exitCode)
+void CloseProg(prog_t *appObj, stdRet_t exitCode)
 {
         /* set exit code */
         appObj->exitCode = exitCode;
@@ -378,6 +271,126 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
 
         ParseArg_end:
         return status;
+}
+
+//==============================================================================
+/**
+ * @brief This function start task as application
+ *
+ * @param[in]   app                 program function
+ * @param[in]  *name                program name
+ * @param[in]   stackSize           program stack size
+ * @param[in]  *arg                 program arguments
+ *
+ * @return program handler pointer if success, otherwise NULL
+ */
+//==============================================================================
+static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg)
+{
+        prog_t *progHdl;
+
+        if (!app || !name || !stackSize || !arg) {
+                return NULL;
+        }
+
+        progHdl = calloc(1, sizeof(prog_t));
+        if (progHdl == NULL) {
+                return NULL;
+        }
+
+        progHdl->argc = count_arguments(arg);
+        progHdl->argv = new_argument_table(arg, name, progHdl->argc);
+        if (progHdl->argv == NULL) {
+                free(progHdl);
+                return NULL;
+        }
+
+        progHdl->argc++;        /* + program name */
+        progHdl->exitCode         = STD_RET_UNKNOWN;
+        progHdl->parentTaskHandle = TaskGetCurrentTaskHandle();
+        progHdl->taskHandle       = NULL;
+        progHdl->stdin            = NULL;
+        progHdl->stdout           = NULL;
+
+        /* start application task */
+        if (TaskCreate(app, name, stackSize, progHdl, 0,
+                       &progHdl->taskHandle) != OS_OK) {
+
+                free(progHdl->argv);
+                free(progHdl);
+                progHdl = NULL;
+        }
+
+        return progHdl;
+}
+
+//==============================================================================
+/**
+ * @brief Function count the number of arguments in string
+ *
+ * @param *arg          argument string
+ *
+ * @return the number of arguments
+ */
+//==============================================================================
+static uint_t count_arguments(ch_t *arg)
+{
+        if (arg == NULL) {
+                return 0;
+        }
+
+        if (arg[0] == '\0') {
+                return 0;
+        }
+
+        uint_t argc = 0;
+
+        for (uint_t i = 0; i < strlen(arg); i++) {
+                if (arg[i] == ' ') {
+                        argc++;
+                }
+        }
+
+        return argc;
+}
+
+//==============================================================================
+/**
+ * @brief Function create new table with argument pointers
+ *
+ * @param *arg          argument string
+ * @param *name         program name (argument argv[0])
+ * @param  argc         argument number
+ *
+ * @return argument table pointer if success, otherwise NULL
+ */
+//==============================================================================
+static ch_t **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc)
+{
+        if (arg == NULL || name == NULL) {
+                return NULL;
+        }
+
+        ch_t **argptr = calloc(argc + 1, sizeof(ch_t*));
+
+        if (argptr) {
+                argptr[0] = (ch_t*)name;
+
+                if (arg[0] != '\0') {
+                        argptr[1] = arg;
+                }
+
+                for (uint_t i = 2; i <= argc; i++) {
+                        for (uint_t j = 0; j < strlen(arg); j++) {
+                                if (arg[j] == ' ') {
+                                        argptr[i] = &arg[j + 1];
+                                        break;
+                                }
+                        }
+                }
+        }
+
+        return argptr;
 }
 
 #ifdef __cplusplus

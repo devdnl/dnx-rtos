@@ -39,26 +39,28 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** application section */
-#define APPLICATION(name, stackMultiple)  const uint_t name##_stack_size =    \
-                                          stackMultiple * MINIMAL_STACK_SIZE; \
-                                          void name(void *appArgument)
+/** program section */
+#define PROGRAM(name, stackMultiple)    const uint_t name##_stack_size =    \
+                                        stackMultiple * MINIMAL_STACK_SIZE; \
+                                        void name(void *_progarg_)
 
-#define EXTERN_APPLICATION(name)   extern const uint_t name##_stack_size; \
-                                   extern void name(void *appArgument)
+#define EXTERN_PROGRAM(name)            extern const uint_t name##_stack_size; \
+                                        extern void name(void *_progarg_)
 
 
 
-#define APP_SEC_BEGIN              {FILE_t *stdin  = ((app_t*)appArgument)->stdin; \
-                                   FILE_t *stdout = ((app_t*)appArgument)->stdout; \
-                                   ch_t   *argv   = ((app_t*)appArgument)->arg;    \
-                                   ch_t   *cwd    = ((app_t*)appArgument)->cwd;    \
-                                   (void)stdin; (void)stdout; (void)argv; (void)cwd;
+#define PROG_SEC_BEGIN                  {FILE_t *stdin  = ((prog_t*)_progarg_)->stdin; \
+                                         FILE_t *stdout = ((prog_t*)_progarg_)->stdout;\
+                                         ch_t   **argv  = ((prog_t*)_progarg_)->argv;  \
+                                         int_t   argc   = ((prog_t*)_progarg_)->argc;  \
+                                         ch_t   *cwd    = ((prog_t*)_progarg_)->cwd;   \
+                                         (void)stdin; (void)stdout; (void)argv;        \
+                                         (void)argc;  (void)cwd;
 
-#define APP_SEC_END                Exit(appmain(argv));}
+#define PROG_SEC_END                    exit(appmain(argv, argc));}
 
 /** simpler definition of terminating application */
-#define Exit(exitCode)             CloseApp(appArgument, exitCode)
+#define exit(exitCode)                  CloseProg(_progarg_, exitCode)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -82,12 +84,11 @@ typedef enum parseType_enum {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern app_t    *Exec(const ch_t *name, ch_t *argv);
-extern app_t    *Execd(const ch_t *name, ch_t *argv);
-extern stdRet_t  StartDaemon(const ch_t *name, ch_t *argv);
-extern stdRet_t  KillApp(app_t *appArgs);
-extern void      CloseApp(app_t *appObj, stdRet_t exitCode);
-extern stdRet_t  ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
+extern prog_t    *exec(const ch_t *name, ch_t *argv);
+extern stdRet_t   StartDaemon(const ch_t *name, ch_t *argv);
+extern stdRet_t   KillProg(prog_t *appArgs);
+extern void       CloseProg(prog_t *appObj, stdRet_t exitCode);
+extern stdRet_t   ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 
 #ifdef __cplusplus
 }

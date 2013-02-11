@@ -462,7 +462,7 @@ void *moni_malloc(u32_t size)
         uint_t  block = 0;
         struct taskData *taskInfo;
 
-        if (!moni) {
+        if (!moni || size == 0) {
                 return NULL;
         }
 
