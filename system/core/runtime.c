@@ -54,7 +54,7 @@ extern "C" {
 ==============================================================================*/
 static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg);
 static uint_t  count_arguments(ch_t *arg);
-static ch_t  **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc);
+static ch_t  **new_argument_table(ch_t *arg, const ch_t *name);
 static void    delete_argument_table(ch_t **argv);
 
 /*==============================================================================
@@ -114,7 +114,7 @@ stdRet_t start_daemon(const ch_t *name, ch_t *argv)
 
 //==============================================================================
 /**
- * @brief Function free program handler
+ * @brief Function terminate program freeing program's object
  *
  * @param *prog                 pointer to the program object
  *
@@ -124,38 +124,40 @@ stdRet_t start_daemon(const ch_t *name, ch_t *argv)
 //==============================================================================
 stdRet_t kill_prog(prog_t *prog)
 {
-        stdRet_t status = STD_RET_ERROR;
-
         if (prog) {
                 if (prog->taskHandle) {
                         delete_task(prog->taskHandle);
                 }
 
+                delete_argument_table(prog->argv);
+
                 free(prog);
 
-                status = STD_RET_OK;
+                return STD_RET_OK;
         }
 
-        return status;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
- * @brief Terminate program
+ * @brief Self terminate program
  *
  * @param *appObj             application object
  * @param  exitCode           return value
  */
 //==============================================================================
-void exit_prog(prog_t *appObj, stdRet_t exitCode)
+void exit_prog(prog_t *prog, stdRet_t exitCode)
 {
-        appObj->exitCode = exitCode;
+        prog->exitCode = exitCode;
 
-        TaskSuspend(appObj->parentTaskHandle);
-        TaskResume(appObj->parentTaskHandle);
+        TaskSuspend(prog->parentTaskHandle);
+        TaskResume(prog->parentTaskHandle);
 
-        appObj->taskHandle       = NULL;
-        appObj->parentTaskHandle = NULL;
+        prog->taskHandle       = NULL;
+        prog->parentTaskHandle = NULL;
+
+        delete_argument_table(prog->argv);
 
         delete_task(TaskGetCurrentTaskHandle());
 }
@@ -297,14 +299,13 @@ static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t 
                 return NULL;
         }
 
-        progHdl->argc = count_arguments(arg);
-        progHdl->argv = new_argument_table(arg, name, progHdl->argc);
+        progHdl->argc = count_arguments(arg) + 1; /* + program name */
+        progHdl->argv = new_argument_table(arg, name);
         if (progHdl->argv == NULL) {
                 free(progHdl);
                 return NULL;
         }
 
-        progHdl->argc++;        /* + program name */
         progHdl->exitCode         = STD_RET_UNKNOWN;
         progHdl->parentTaskHandle = TaskGetCurrentTaskHandle();
         progHdl->taskHandle       = NULL;
@@ -344,9 +345,15 @@ static uint_t count_arguments(ch_t *arg)
 
         uint_t argc = 0;
 
-        for (uint_t i = 0; i < strlen(arg); i++) {
-                if (arg[i] == ' ') {
+        while (*arg != '\0') {
+                if (*arg != ' ') {
                         argc++;
+
+                        while (*arg != ' ' && *arg != '\0') {
+                                arg++;
+                        }
+                } else {
+                        arg++;
                 }
         }
 
@@ -359,35 +366,48 @@ static uint_t count_arguments(ch_t *arg)
  *
  * @param *arg          argument string
  * @param *name         program name (argument argv[0])
- * @param  argc         argument number
  *
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static ch_t **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc)
+static ch_t **new_argument_table(ch_t *arg, const ch_t *name)
 {
         if (arg == NULL || name == NULL) {
                 return NULL;
         }
 
+        uint_t argc   = count_arguments(arg);
         ch_t **argptr = calloc(argc + 1, sizeof(ch_t*));
+        if (argptr == NULL) {
+                return NULL;
+        }
 
-        /* DNLTODO program must allocate arg buffer and replace ' ' to \0 */
+        ch_t *args = calloc(strlen(arg) + 1, sizeof(ch_t));
+        if (args == NULL) {
+                free(argptr);
+                return NULL;
+        }
 
-        if (argptr) {
-                argptr[0] = (ch_t*)name;
+        strcpy(args, arg);
 
-                if (arg[0] != '\0') {
-                        argptr[1] = arg;
-                }
+        argptr[0] = (ch_t*)name;
 
-                for (uint_t i = 2; i <= argc; i++) {
-                        for (uint_t j = 0; j < strlen(arg); j++) {
-                                if (arg[j] == ' ') {
-                                        argptr[i] = &arg[j + 1];
-                                        break;
-                                }
+        uint_t arg_n = 1;
+        while (*args != '\0') {
+                if (*args != ' ') {
+                        argptr[arg_n++] = args;
+
+                        while (*args != ' ' && *args != '\0') {
+                                args++;
                         }
+
+                        if (*args == '\0') {
+                                break;
+                        } else {
+                                *args++ = '\0';
+                        }
+                } else {
+                        args++;
                 }
         }
 
@@ -397,11 +417,21 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, uint_t argc)
 //==============================================================================
 /**
  * @brief Function remove argument table
+ *
+ * @param **argv        pointer to argument table
  */
 //==============================================================================
 static void delete_argument_table(ch_t **argv)
 {
-        /* DNLTODO */
+        if (argv == NULL) {
+                return;
+        }
+
+        if (argv[1] == NULL) {
+                return;
+        }
+
+        free(argv[1]);
 }
 
 
