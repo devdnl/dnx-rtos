@@ -342,15 +342,15 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
         ch_t   *arg_string = NULL;
 
         if (arg == NULL || name == NULL || argc == NULL) {
-                goto error_free_resources;
+                goto exit_error;
         }
 
         if ((arg_list = ListCreate()) == NULL) {
-                goto error_free_resources;
+                goto exit_error;
         }
 
         if (ListAddItem(arg_list, ++arg_count, (ch_t*)name) < 0) {
-                goto error_free_resources;
+                goto exit_error;
         }
 
         if (arg[0] == '\0') {
@@ -358,7 +358,7 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
         }
 
         if ((arg_string = calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
-                goto error_free_resources;
+                goto exit_error;
         }
 
         strcpy(arg_string, arg);
@@ -380,7 +380,7 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
                         }
 
                         if (*arg_string == '\0') {
-                                goto error_free_resources;
+                                goto exit_error;
                         }
 
                 } else if (*arg_string == '"') {
@@ -397,7 +397,7 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
                         }
 
                         if (*arg_string == '\0') {
-                                goto error_free_resources;
+                                goto exit_error;
                         }
 
                 } else if (*arg_string != ' ') {
@@ -412,10 +412,12 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
                 }
 
                 /* add argument to list */
-                if (arg_to_add) {
-                        if (ListAddItem(arg_list, ++arg_count, arg_to_add) < 0) {
-                                goto error_free_resources;
-                        }
+                if (arg_to_add == NULL) {
+                        goto exit_error;
+                }
+
+                if (ListAddItem(arg_list, ++arg_count, arg_to_add) < 0) {
+                        goto exit_error;
                 }
 
                 /* terminate argument */
@@ -428,14 +430,14 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
 
 add_args_to_table:
         if ((arg_table = calloc(arg_count, sizeof(ch_t*))) == NULL) {
-                goto error_free_resources;
+                goto exit_error;
         }
 
         for (int_t i = 0; i < arg_count; i++) {
                 arg_table[i] = ListGetItemDataByNo(arg_list, 0);
 
                 if (arg_table[i] == NULL) {
-                        goto error_free_resources;
+                        goto exit_error;
                 }
 
                 ListUnlinkItemDataByNo(arg_list, 0);
@@ -449,7 +451,7 @@ add_args_to_table:
 
 
         /* error occurred - memory/object deallocation */
-error_free_resources:
+exit_error:
         if (arg_table) {
                 free(arg_table);
         }
@@ -477,7 +479,7 @@ error_free_resources:
  * @brief Function remove argument table
  *
  * @param **argv        pointer to argument table
- * @param   argc        argument coun
+ * @param   argc        argument count
  */
 //==============================================================================
 static void delete_argument_table(ch_t **argv, int argc)
