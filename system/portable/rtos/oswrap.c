@@ -121,7 +121,7 @@ void delete_task(task_t taskHdl)
  * @return binary semaphore object
  */
 //==============================================================================
-sem_t CreateSemBin(void)
+sem_t create_semaphore(void)
 {
         sem_t sem = NULL;
 

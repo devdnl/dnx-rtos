@@ -144,14 +144,14 @@ static stdRet_t tskm_init(void)
 
                 if (tskm) {
                         tskm->tasks = new_list();
-                        tskm->mtx = CreateRecMutex();
+                        tskm->mtx = new_recursive_mutex();
 
                         if (!tskm->tasks || !tskm->mtx) {
                                 if (tskm->tasks)
                                         delete_list(tskm->tasks);
 
                                 if (tskm->mtx)
-                                        DeleteRecMutex(tskm->mtx);
+                                        delete_mutex_recursive(tskm->mtx);
 
                                 free(tskm);
                                 tskm = NULL;
@@ -189,7 +189,7 @@ stdRet_t tskm_add_task(task_t taskHdl)
         }
 
         if (tskm) {
-                while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+                while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
                 struct taskData *task = list_get_iditem_data(tskm->tasks,
                                                             (u32_t) taskHdl);
@@ -208,7 +208,7 @@ stdRet_t tskm_add_task(task_t taskHdl)
                         }
                 }
 
-                GiveRecMutex(tskm->mtx);
+                mutex_recursive_unlock(tskm->mtx);
         }
 
         return status;
@@ -231,7 +231,7 @@ stdRet_t tskm_remove_task(task_t taskHdl)
                 return STD_RET_ERROR;
         }
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         struct taskData *taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskHdl);
 
@@ -297,7 +297,7 @@ stdRet_t tskm_remove_task(task_t taskHdl)
 
         list_rm_iditem(tskm->tasks, (u32_t) taskHdl);
 
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 
         return STD_RET_OK;
 }
@@ -326,7 +326,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         stat->memory_usage = 0;
         stat->opened_files = 0;
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         struct taskData *taskdata = list_get_nitem_data(tskm->tasks, item);
         if (taskdata == NULL) {
@@ -373,7 +373,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         }
 #endif
 
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 
         task_t taskHdl = 0;
         list_get_nitem_ID(tskm->tasks, item, (task_t) &taskHdl);
@@ -466,7 +466,7 @@ void *tskm_malloc(u32_t size)
                 return NULL;
         }
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
@@ -512,7 +512,7 @@ void *tskm_malloc(u32_t size)
         }
 
         moni_malloc_end:
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 
         return mem;
 }
@@ -557,7 +557,7 @@ void tskm_free(void *mem)
                 return;
         }
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
@@ -609,7 +609,7 @@ void tskm_free(void *mem)
         /* signal code can be added here */
 
         moni_free_end:
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 }
 #endif
 
@@ -634,7 +634,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
                 return NULL;
         }
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
@@ -679,7 +679,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
         }
 
         moni_fopen_end:
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 
         return file;
 }
@@ -705,7 +705,7 @@ stdRet_t tskm_fclose(FILE_t *file)
                 return STD_RET_ERROR;
         }
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
@@ -753,7 +753,7 @@ stdRet_t tskm_fclose(FILE_t *file)
         }
 
         moni_fclose_end:
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 
         return status;
 }
@@ -779,7 +779,7 @@ DIR_t *tskm_opendir(const ch_t *path)
                 return NULL;
         }
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
@@ -824,7 +824,7 @@ DIR_t *tskm_opendir(const ch_t *path)
         }
 
         moni_opendir_end:
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 
         return dir;
 }
@@ -850,7 +850,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
                 return STD_RET_ERROR;
         }
 
-        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
@@ -898,7 +898,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
         }
 
         moni_closedir_end:
-        GiveRecMutex(tskm->mtx);
+        mutex_recursive_unlock(tskm->mtx);
 
         return status;
 }

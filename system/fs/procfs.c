@@ -136,7 +136,7 @@ stdRet_t procfs_init(const ch_t *srcPath, fsd_t *fsd)
                         }
 
                         if (procmem->mtx) {
-                                DeleteMutex(procmem->mtx);
+                                delete_mutex(procmem->mtx);
                         }
 
                         free(procmem);
@@ -165,10 +165,10 @@ stdRet_t procfs_release(fsd_t fsd)
       (void)fsd;
 
       if (procmem) {
-            while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
             TaskSuspendAll();
-            GiveMutex(procmem->mtx);
-            DeleteMutex(procmem->mtx);
+            mutex_unlock(procmem->mtx);
+            delete_mutex(procmem->mtx);
             delete_list(procmem->flist);
             free(procmem);
             procmem = NULL;
@@ -258,17 +258,17 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                         return STD_RET_ERROR;
                 }
 
-                while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+                while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
 
                 if (list_add_item(procmem->flist, procmem->idcnt, fileInf) == 0) {
                         *fd   = procmem->idcnt++;
                         *seek = 0;
 
-                        GiveMutex(procmem->mtx);
+                        mutex_unlock(procmem->mtx);
                         return STD_RET_OK;
                 }
 
-                GiveMutex(procmem->mtx);
+                mutex_unlock(procmem->mtx);
                 free(fileInf);
                 return STD_RET_ERROR;
 
@@ -299,7 +299,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                         fileInf->taskHdl  = taskdata.task_handle;
                         fileInf->taskFile = TASK_FILE_NONE;
 
-                        while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
 
                         if (list_add_item(procmem->flist,
                                         procmem->idcnt, fileInf) == 0) {
@@ -307,11 +307,11 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                                 *fd = procmem->idcnt++;
                                 *seek = 0;
 
-                                GiveMutex(procmem->mtx);
+                                mutex_unlock(procmem->mtx);
                                 return STD_RET_OK;
                         }
 
-                        GiveMutex(procmem->mtx);
+                        mutex_unlock(procmem->mtx);
                         free(fileInf);
                         return STD_RET_ERROR;
                 }
@@ -336,15 +336,15 @@ stdRet_t procfs_close(fsd_t fsd, fd_t fd)
         (void) fsd;
 
         if (procmem) {
-                while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK)
+                while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK)
                         ;
 
                 if (list_rm_iditem(procmem->flist, fd) == STD_RET_OK) {
-                        GiveMutex(procmem->mtx);
+                        mutex_unlock(procmem->mtx);
                         return STD_RET_OK;
                 }
 
-                GiveMutex(procmem->mtx);
+                mutex_unlock(procmem->mtx);
         }
 
         return STD_RET_ERROR;
@@ -402,9 +402,9 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
                 return 0;
         }
 
-        while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
         fileInf = list_get_iditem_data(procmem->flist, fd);
-        GiveMutex(procmem->mtx);
+        mutex_unlock(procmem->mtx);
 
         if (fileInf == NULL) {
                 return 0;
@@ -529,9 +529,9 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
                 return STD_RET_ERROR;
         }
 
-        while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
         fileInf = list_get_iditem_data(procmem->flist, fd);
-        GiveMutex(procmem->mtx);
+        mutex_unlock(procmem->mtx);
 
         if (fileInf == NULL) {
                 return STD_RET_ERROR;

@@ -178,7 +178,7 @@ stdRet_t MPL115A2_Init(devx_t dev, fd_t part)
 
                   if (status == STD_RET_ERROR) {
                         if (mplmem->mtx) {
-                              DeleteMutex(mplmem->mtx);
+                                delete_mutex(mplmem->mtx);
                         }
 
                         free(mplmem);
@@ -211,9 +211,9 @@ stdRet_t MPL115A2_Release(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(mplmem->mtx, RELEASE_BLOCK_TIME) == OS_OK) {
-            GiveMutex(mplmem->mtx);
-            DeleteMutex(mplmem->mtx);
+      if (mutex_lock(mplmem->mtx, RELEASE_BLOCK_TIME) == OS_OK) {
+            mutex_unlock(mplmem->mtx);
+            delete_mutex(mplmem->mtx);
             free(mplmem);
             mplmem = NULL;
 
@@ -380,7 +380,7 @@ static stdRet_t GetTemperature(i8_t *temperature)
       u16_t     temp;
       FILE_t   *fi2c;
 
-      if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
+      if (mutex_lock(mplmem->mtx, BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
                   u32_t freq = MPL115A2_SCL_FREQUENCY;
 
@@ -419,7 +419,7 @@ static stdRet_t GetTemperature(i8_t *temperature)
                   fclose(fi2c);
             }
 
-            GiveMutex(mplmem->mtx);
+            mutex_unlock(mplmem->mtx);
       }
 
       *temperature = mplmem->temp;
@@ -444,7 +444,7 @@ static stdRet_t GetPressure(u16_t *pressure)
       u8_t      tmp[4];
       FILE_t   *fi2c;
 
-      if (TakeMutex(mplmem->mtx, BLOCK_TIME) == OS_OK) {
+      if (mutex_lock(mplmem->mtx, BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r+")) != NULL) {
                   u32_t freq = MPL115A2_SCL_FREQUENCY;
 
@@ -495,7 +495,7 @@ static stdRet_t GetPressure(u16_t *pressure)
                   fclose(fi2c);
             }
 
-            GiveMutex(mplmem->mtx);
+            mutex_unlock(mplmem->mtx);
       }
 
       *pressure = mplmem->pres;

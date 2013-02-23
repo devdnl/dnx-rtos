@@ -134,7 +134,7 @@ stdRet_t I2C_Init(devx_t dev, fd_t part)
 
                   if (I2CP(dev) != NULL)
                   {
-                        I2CP(dev)->mtx = CreateRecMutex();
+                        I2CP(dev)->mtx = new_recursive_mutex();
 
                         if (I2CP(dev)->mtx)
                         {
@@ -177,7 +177,7 @@ stdRet_t I2C_Release(devx_t dev, fd_t part)
             /* free i2c device data */
             if (I2CP(dev))
             {
-                  DeleteRecMutex(I2CP(dev)->mtx);
+                  delete_mutex_recursive(I2CP(dev)->mtx);
                   free(I2CP(dev));
                   I2CP(dev) = NULL;
                   status = STD_RET_OK;
@@ -221,7 +221,7 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is free */
-            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* set task handle for IRQs */
                   i2c->port[dev]->TaskHandle = TaskGetCurrentTaskHandle();
@@ -288,7 +288,7 @@ stdRet_t I2C_Close(devx_t dev, fd_t part)
 
       if ((unsigned)dev < I2C_DEV_LAST)
       {
-            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* set port address */
                   I2C_t *i2cPtr = I2CP(dev)->Address;
@@ -325,10 +325,10 @@ stdRet_t I2C_Close(devx_t dev, fd_t part)
                   i2c->port[dev]->TaskHandle = NULL;
 
                   /* give this mutex */
-                  GiveRecMutex(I2CP(dev)->mtx);
+                  mutex_recursive_unlock(I2CP(dev)->mtx);
 
                   /* give mutex from open */
-                  GiveRecMutex(I2CP(dev)->mtx);
+                  mutex_recursive_unlock(I2CP(dev)->mtx);
 
                   status = STD_RET_OK;
             }
@@ -362,7 +362,7 @@ size_t I2C_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, s
       if ((unsigned)dev < I2C_DEV_LAST)
       {
               /* check that port is reserved for this task */
-            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   I2C_t *i2cPtr     = I2CP(dev)->Address;
                   u8_t  *data       = (u8_t*)src;
@@ -407,7 +407,7 @@ size_t I2C_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, s
                   I2C_Write_end:
                   StopCondition(i2cPtr);
 
-                  GiveRecMutex(I2CP(dev)->mtx);
+                  mutex_recursive_unlock(I2CP(dev)->mtx);
             }
       }
 
@@ -438,7 +438,7 @@ size_t I2C_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   I2C_t    *i2cPtr  = I2CP(dev)->Address;
                   stdRet_t *i2cstat = &I2CP(dev)->status;
@@ -496,7 +496,7 @@ size_t I2C_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
                   /* stop condition */
                   StopCondition(i2cPtr);
 
-                  GiveRecMutex(I2CP(dev)->mtx);
+                  mutex_recursive_unlock(I2CP(dev)->mtx);
             }
       }
 
@@ -533,7 +533,7 @@ stdRet_t I2C_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
       if ((unsigned)dev < I2C_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (TakeRecMutex(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   I2C_t *i2cPtr = I2CP(dev)->Address;
 
@@ -572,7 +572,7 @@ stdRet_t I2C_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                         }
                   }
 
-                  GiveRecMutex(I2CP(dev)->mtx);
+                  mutex_recursive_unlock(I2CP(dev)->mtx);
             }
             else
             {

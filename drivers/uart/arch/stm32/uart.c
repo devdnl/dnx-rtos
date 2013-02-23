@@ -289,21 +289,21 @@ stdRet_t UART_Init(devx_t dev, fd_t part)
 
                   if (UARTP(dev) != NULL)
                   {
-                        UARTP(dev)->mtx = CreateRecMutex();
-                        UARTP(dev)->sem = CreateSemBin();
+                        UARTP(dev)->mtx = new_recursive_mutex();
+                        UARTP(dev)->sem = new_semaphore();
 
                         if (UARTP(dev)->mtx && UARTP(dev)->sem)
                         {
-                              TakeSemBin(UARTP(dev)->sem, 1);
+                              semaphore_take(UARTP(dev)->sem, 1);
                               status = STD_RET_OK;
                         }
                         else
                         {
                               if (UARTP(dev)->mtx)
-                                    DeleteRecMutex(UARTP(dev)->mtx);
+                                    delete_mutex_recursive(UARTP(dev)->mtx);
 
                               if (UARTP(dev)->sem)
-                                    DeleteSemBin(UARTP(dev)->sem);
+                                    delete_semaphore(UARTP(dev)->sem);
 
                               free(UARTP(dev));
                         }
@@ -338,8 +338,8 @@ stdRet_t UART_Release(devx_t dev, fd_t part)
             /* free i2c device data */
             if (UARTP(dev))
             {
-                  DeleteSemBin(UARTP(dev)->sem);
-                  DeleteRecMutex(UARTP(dev)->mtx);
+                  delete_semaphore(UARTP(dev)->sem);
+                  delete_mutex_recursive(UARTP(dev)->mtx);
                   free(UARTP(dev));
 
                   UARTP(dev) = NULL;
@@ -386,7 +386,7 @@ stdRet_t UART_Open(devx_t dev, fd_t part)
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is free */
-            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   UARTP(dev)->TaskHandle = TaskGetCurrentTaskHandle();
 
@@ -550,7 +550,7 @@ stdRet_t UART_Close(devx_t dev, fd_t part)
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* turn off device */
                   switch (dev)
@@ -617,10 +617,10 @@ stdRet_t UART_Close(devx_t dev, fd_t part)
                   status = STD_RET_OK;
 
                   /* give this mutex */
-                  GiveRecMutex(UARTP(dev)->mtx);
+                  mutex_recursive_unlock(UARTP(dev)->mtx);
 
                   /* give mutex from open */
-                  GiveRecMutex(UARTP(dev)->mtx);
+                  mutex_recursive_unlock(UARTP(dev)->mtx);
             }
             else
             {
@@ -657,7 +657,7 @@ size_t UART_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, 
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* load data from FIFO */
                   if (nitems && size)
@@ -666,12 +666,12 @@ size_t UART_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, 
                         UARTP(dev)->TxBuffer.Size     = size * nitems;
 
                         EnableTXEIRQ(UARTA(dev));
-                        TakeSemBin(UARTP(dev)->sem, TXC_WAIT_TIME);
+                        semaphore_take(UARTP(dev)->sem, TXC_WAIT_TIME);
 
                         n = nitems;
                   }
 
-                  GiveRecMutex(UARTP(dev)->mtx);
+                  mutex_recursive_unlock(UARTP(dev)->mtx);
             }
       }
 
@@ -704,7 +704,7 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* load data from FIFO */
                   if (nitems && size)
@@ -743,7 +743,7 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
                         n /= size;
                   }
 
-                  GiveRecMutex(UARTP(dev)->mtx);
+                  mutex_recursive_unlock(UARTP(dev)->mtx);
             }
       }
 
@@ -777,7 +777,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
       if ((unsigned)dev < UART_DEV_LAST)
       {
             /* check that port is reserved for this task */
-            if (TakeRecMutex(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
+            if (mutex_recursive_lock(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   USART_t *uart_p = UARTA(dev);
 
@@ -944,7 +944,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
                   }
 
-                  GiveRecMutex(UARTP(dev)->mtx);
+                  mutex_recursive_unlock(UARTP(dev)->mtx);
             }
             else
             {
@@ -980,7 +980,7 @@ static void IRQCode(USART_t *usart, devx_t dev)
 
                         i32_t woke;
                         DisableTXEIRQ(UARTA(dev));
-                        GiveSemBinFromISR(UARTP(dev)->sem, &woke);
+                        semaphore_give_from_ISR(UARTP(dev)->sem, &woke);
                   }
             }
       }

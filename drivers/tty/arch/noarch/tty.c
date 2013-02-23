@@ -181,9 +181,9 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
                 return STD_RET_ERROR;
         }
 
-        if ((term->semcnt_stdout = CreateSemCnt(10, 0)) != NULL) {
+        if ((term->semcnt_stdout = new_semaphore_counting(10, 0)) != NULL) {
                 if (new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
-                               NULL, -1, &term->taskHdl) == OS_OK) {
+                             NULL, -1, &term->taskHdl) == OS_OK) {
 
                         term->col = 80;
                         term->row = 24;
@@ -195,7 +195,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
         }
 
         if (term->semcnt_stdout) {
-                DeleteSemCnt(term->semcnt_stdout);
+                delete_semaphore_counting(term->semcnt_stdout);
         }
 
         free(term);
@@ -227,7 +227,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                 return STD_RET_OK;
         }
 
-        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        if (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 mutex_t mtx = TTY(dev)->mtx;
 
                 /* free unused terminal */
@@ -240,8 +240,8 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                 free(TTY(dev));
                 TTY(dev) = NULL;
 
-                GiveRecMutex(mtx);
-                DeleteRecMutex(mtx);
+                mutex_recursive_unlock(mtx);
+                delete_mutex_recursive(mtx);
 
                 /* if all terminal are unused free terminal handler */
                 for (u8_t i = 0; i < TTY_LAST; i++) {
@@ -250,7 +250,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                         }
                 }
 
-                DeleteSemCnt(term->semcnt_stdout);
+                delete_semaphore_counting(term->semcnt_stdout);
                 delete_task(term->taskHdl);
                 free(term);
                 term = NULL;
@@ -285,7 +285,7 @@ stdRet_t TTY_Open(devx_t dev, fd_t part)
       }
 
       if ((TTY(dev) = calloc(1, sizeof(struct ttyEntry))) != NULL) {
-              if ((TTY(dev)->mtx = CreateRecMutex()) != NULL) {
+              if ((TTY(dev)->mtx = new_recursive_mutex()) != NULL) {
                       TTY(dev)->echoOn = SET;
                       return STD_RET_OK;
               }
@@ -351,7 +351,7 @@ size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
         }
 
         /* wait for secure access to data */
-        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        if (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 /* check if screen is cleared */
                 if (strncmp(VT100_CLEAR_SCREEN, src, 4) == 0) {
                         clear_tty(dev);
@@ -359,7 +359,7 @@ size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
 
                 n = add_message(dev, src, nitems);
 
-                GiveRecMutex(TTY(dev)->mtx);
+                mutex_recursive_unlock(TTY(dev)->mtx);
         }
 
         return n;
@@ -391,7 +391,7 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
                 return 0;
         }
 
-        if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK) {
+        if (mutex_recursive_lock(TTY(dev)->mtx, 0) == OS_OK) {
                 while (nitems > 0) {
                         if (read_input_stream(dst, dev) != STD_RET_OK) {
                                 break;
@@ -404,7 +404,7 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
 
                 n /= size;
 
-                GiveRecMutex(TTY(dev)->mtx);
+                mutex_recursive_unlock(TTY(dev)->mtx);
         }
 
         return n;
@@ -477,7 +477,7 @@ stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
         /* clear last line */
         case TTY_IORQ_CLEARLASTLINE:
-                if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+                if (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                         ch_t *msg = malloc(2);
 
                         if (msg) {
@@ -499,7 +499,7 @@ stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                                 add_message(dev, msg, FALSE);
                         }
 
-                        GiveRecMutex(TTY(dev)->mtx);
+                        mutex_recursive_unlock(TTY(dev)->mtx);
                 }
 
                 break;
@@ -576,7 +576,7 @@ static void task_tty(void *arg)
 //==============================================================================
 static void stdout_service(FILE_t *stream, u8_t dev)
 {
-        if (TakeSemCnt(term->semcnt_stdout, 0) == OS_OK) {
+        if (semaphore_counting_take(term->semcnt_stdout, 0) == OS_OK) {
                 if (TTY(dev)->newMsgCnt > 0) {
                         show_new_messages(dev, stream);
 
@@ -870,7 +870,7 @@ static void switch_tty_immediately(u8_t dev, FILE_t *stream)
 //==============================================================================
 static void show_new_messages(u8_t dev, FILE_t *stream)
 {
-        while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
 
         while (TTY(dev)->newMsgCnt) {
                 if (TTY(dev)->newMsgCnt > term->row) {
@@ -889,7 +889,7 @@ static void show_new_messages(u8_t dev, FILE_t *stream)
 
         TTY(dev)->refLstLn = RESET;
 
-        GiveRecMutex(TTY(dev)->mtx);
+        mutex_recursive_unlock(TTY(dev)->mtx);
 }
 
 //==============================================================================
@@ -902,7 +902,7 @@ static void show_new_messages(u8_t dev, FILE_t *stream)
 //==============================================================================
 static void refresh_last_line(u8_t dev, FILE_t *stream)
 {
-        while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
 
         ch_t *msg = VT100_CURSOR_OFF
                     VT100_CARRIAGE_RETURN
@@ -921,7 +921,7 @@ static void refresh_last_line(u8_t dev, FILE_t *stream)
 
         TTY(dev)->refLstLn = RESET;
 
-        GiveRecMutex(TTY(dev)->mtx);
+        mutex_recursive_unlock(TTY(dev)->mtx);
 }
 
 //==============================================================================
@@ -933,7 +933,7 @@ static void refresh_last_line(u8_t dev, FILE_t *stream)
 //==============================================================================
 static void clear_tty(u8_t dev)
 {
-        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        if (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
                         if (TTY(dev)->line[i]) {
                                 free(TTY(dev)->line[i]);
@@ -945,9 +945,9 @@ static void clear_tty(u8_t dev)
                 TTY(dev)->wrIdx     = 0;
                 TTY(dev)->refLstLn  = RESET;
 
-                GiveSemCnt(term->semcnt_stdout);
+                semaphore_counting_give(term->semcnt_stdout);
 
-                GiveRecMutex(TTY(dev)->mtx);
+                mutex_recursive_unlock(TTY(dev)->mtx);
         }
 }
 
@@ -979,7 +979,7 @@ static uint_t add_message(u8_t dev, ch_t *msg, uint_t msgLen)
 
         link_message(newMsg, dev);
 
-        GiveSemCnt(term->semcnt_stdout);
+        semaphore_counting_give(term->semcnt_stdout);
 
         if (newMsg) {
                 return msgLen;
@@ -1274,7 +1274,7 @@ static void refresh_tty(u8_t dev, FILE_t *file)
 
         fwrite(msg, sizeof(ch_t), strlen(msg), file);
 
-        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        if (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 i8_t rows;
 
                 if (term->row < TTY_MAX_LINES) {
@@ -1296,7 +1296,7 @@ static void refresh_tty(u8_t dev, FILE_t *file)
 
                 TTY(dev)->newMsgCnt = 0;
 
-                GiveRecMutex(TTY(dev)->mtx);
+                mutex_recursive_unlock(TTY(dev)->mtx);
         }
 }
 
@@ -1396,7 +1396,7 @@ static void get_vt100_size(FILE_t *ttysfile)
 //==============================================================================
 static void write_input_stream(ch_t chr, u8_t dev)
 {
-        if (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        if (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 TTY(dev)->input.buffer[TTY(dev)->input.txidx++] = chr;
 
                 if (TTY(dev)->input.txidx >= TTY_STREAM_SIZE) {
@@ -1413,7 +1413,7 @@ static void write_input_stream(ch_t chr, u8_t dev)
                         }
                 }
 
-                GiveRecMutex(TTY(dev)->mtx);
+                mutex_recursive_unlock(TTY(dev)->mtx);
         }
 }
 
@@ -1434,7 +1434,7 @@ static stdRet_t read_input_stream(ch_t *chr, u8_t dev)
                 return STD_RET_ERROR;
         }
 
-        if (TakeRecMutex(TTY(dev)->mtx, 0) == OS_OK) {
+        if (mutex_recursive_lock(TTY(dev)->mtx, 0) == OS_OK) {
                 *chr = TTY(dev)->input.buffer[TTY(dev)->input.rxidx++];
 
                 if (TTY(dev)->input.rxidx >= TTY_STREAM_SIZE) {
@@ -1443,7 +1443,7 @@ static stdRet_t read_input_stream(ch_t *chr, u8_t dev)
 
                 TTY(dev)->input.level--;
 
-                GiveRecMutex(TTY(dev)->mtx);
+                mutex_recursive_unlock(TTY(dev)->mtx);
                 return STD_RET_OK;
         }
 
@@ -1468,10 +1468,10 @@ static void move_editline_to_stream(u8_t dev, FILE_t *stream)
                 write_input_stream(TTY(dev)->editLine[i], dev);
         }
 
-        while (TakeRecMutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+        while (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
         add_message(dev, TTY(dev)->editLine, line_len);
         TTY(dev)->refLstLn = RESET;
-        GiveRecMutex(TTY(dev)->mtx);
+        mutex_recursive_unlock(TTY(dev)->mtx);
 
         memset(TTY(dev)->editLine, '\0', TTY_EDIT_LINE_LEN);
         TTY(dev)->editLineLen    = 0;

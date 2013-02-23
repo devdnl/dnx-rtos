@@ -101,7 +101,7 @@ stdRet_t ETHER_Init(devx_t dev, fd_t part)
             eth_mem = calloc(1, sizeof(struct eth_mem));
 
             if (eth_mem) {
-                  eth_mem->mtx = CreateRecMutex();
+                  eth_mem->mtx = new_recursive_mutex();
 
                   if (!eth_mem->mtx) {
                         free(eth_mem);
@@ -203,10 +203,10 @@ stdRet_t ETHER_Release(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeRecMutex(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_recursive_lock(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
             TaskSuspendAll();
-            GiveRecMutex(eth_mem->mtx);
-            DeleteMutex(eth_mem->mtx);
+            mutex_recursive_unlock(eth_mem->mtx);
+            delete_mutex(eth_mem->mtx);
             free(eth_mem);
             eth_mem = NULL;
             TaskResumeAll();
@@ -236,7 +236,7 @@ stdRet_t ETHER_Open(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeRecMutex(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_recursive_lock(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
             /* port reserved for this application, not release mutex at exit */
 
             status = STD_RET_OK;
@@ -263,12 +263,12 @@ stdRet_t ETHER_Close(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeRecMutex(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_recursive_lock(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
             /* mutex from open() */
-            GiveRecMutex(eth_mem->mtx);
+            mutex_recursive_unlock(eth_mem->mtx);
 
             /* this mutex */
-            GiveRecMutex(eth_mem->mtx);
+            mutex_recursive_unlock(eth_mem->mtx);
 
             status = STD_RET_OK;
       }
@@ -348,7 +348,7 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeRecMutex(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_recursive_lock(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if (eth_mem) {
                   status = ETHER_STD_RET_NULL_DATA;
 
@@ -583,7 +583,7 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
                   }
             }
 
-            GiveRecMutex(eth_mem->mtx);
+            mutex_recursive_unlock(eth_mem->mtx);
       }
 
       return status;

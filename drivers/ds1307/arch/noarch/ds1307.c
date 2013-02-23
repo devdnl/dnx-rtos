@@ -201,7 +201,7 @@ stdRet_t DS1307_Init(devx_t dev, fd_t part)
 
                   if (status == STD_RET_ERROR) {
                         if (rtc->mtx)
-                              DeleteMutex(rtc->mtx);
+                              delete_mutex(rtc->mtx);
 
                         free(rtc);
                         rtc = NULL;
@@ -232,9 +232,9 @@ stdRet_t DS1307_Release(devx_t dev, fd_t part)
 
       stdRet_t status = STD_RET_ERROR;
 
-      if (TakeMutex(rtc->mtx, RELEASE_BLOCK_TIME) == OS_OK) {
-            GiveMutex(rtc->mtx);
-            DeleteMutex(rtc->mtx);
+      if (mutex_lock(rtc->mtx, RELEASE_BLOCK_TIME) == OS_OK) {
+            mutex_unlock(rtc->mtx);
+            delete_mutex(rtc->mtx);
             free(rtc);
             rtc = NULL;
 
@@ -456,7 +456,7 @@ static bcdTime_t GetTime(void)
       u8_t    tmp[3];
       FILE_t *fi2c;
 
-      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_lock(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
                   u32_t freq = DS1307_SCL_FREQUENCY;
 
@@ -480,7 +480,7 @@ static bcdTime_t GetTime(void)
                   fclose(fi2c);
             }
 
-            GiveMutex(rtc->mtx);
+            mutex_unlock(rtc->mtx);
       }
 
       return rtc->time;
@@ -503,7 +503,7 @@ static stdRet_t SetTime(bcdTime_t *time)
       u8_t      tmp[3];
       FILE_t   *fi2c;
 
-      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_lock(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
                   u32_t freq = DS1307_SCL_FREQUENCY;
 
@@ -531,7 +531,7 @@ static stdRet_t SetTime(bcdTime_t *time)
                   fclose(fi2c);
             }
 
-            GiveMutex(rtc->mtx);
+            mutex_unlock(rtc->mtx);
       }
 
       return status;
@@ -552,7 +552,7 @@ static bcdDate_t GetDate(void)
       u8_t    tmp[4];
       FILE_t *fi2c;
 
-      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_lock(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "r")) != NULL) {
                   u32_t freq = DS1307_SCL_FREQUENCY;
 
@@ -577,7 +577,7 @@ static bcdDate_t GetDate(void)
                   fclose(fi2c);
             }
 
-            GiveMutex(rtc->mtx);
+            mutex_unlock(rtc->mtx);
       }
 
       return rtc->date;
@@ -600,7 +600,7 @@ static stdRet_t SetDate(bcdDate_t *date)
       u8_t      tmp[4];
       FILE_t   *fi2c;
 
-      if (TakeMutex(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
+      if (mutex_lock(rtc->mtx, MTX_BLOCK_TIME) == OS_OK) {
             if ((fi2c = fopen(I2CFILE, "w")) != NULL) {
                   u32_t freq = DS1307_SCL_FREQUENCY;
 
@@ -630,7 +630,7 @@ static stdRet_t SetDate(bcdDate_t *date)
                   fclose(fi2c);
             }
 
-            GiveMutex(rtc->mtx);
+            mutex_unlock(rtc->mtx);
       }
 
       return status;
