@@ -85,10 +85,8 @@ typedef enum parseType_enum {
   Exported function prototypes
 ==============================================================================*/
 extern prog_t    *exec(const ch_t *name, ch_t *argv);
-extern stdRet_t   start_daemon(const ch_t *name, ch_t *argv);
 extern stdRet_t   kill_prog(prog_t *appArgs);
 extern void       exit_prog(prog_t *appObj, stdRet_t exitCode);
-extern stdRet_t   ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result);
 
 #ifdef __cplusplus
 }

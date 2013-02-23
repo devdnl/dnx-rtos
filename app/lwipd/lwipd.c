@@ -78,7 +78,7 @@ PROG_SEC_BEGIN
 /* number of Tx buffers */
 #define ETH_TXBUFNB                 2
 
-
+#define ParseArg(a, b, c, d)    STD_RET_ERROR /* DNLFIXME new argument parse needed */
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
@@ -243,7 +243,7 @@ err_t ethernetif_init(struct netif *netif)
       }
 
 #if LWIP_NETIF_HOSTNAME
-      netif->hostname = SystemGetHostname();
+      netif->hostname = get_host_name();
 #endif
 
       /*
@@ -376,7 +376,7 @@ void print_daemon_status(const ch_t *statusStr)
                              "  Net Mask  : %d.%d.%d.%d\n"
                              "  Gateway   : %d.%d.%d.%d\n",
                     statusStr,
-                    SystemGetHostname(),
+                    get_host_name(),
                     MACADDR0, MACADDR1, MACADDR2, MACADDR3, MACADDR4, MACADDR5,
                     ip4_addr1(&ipaddr),  ip4_addr2(&ipaddr),
                     ip4_addr3(&ipaddr),  ip4_addr4(&ipaddr),
@@ -606,7 +606,7 @@ stdRet_t appmain(ch_t *argv[], int argc)
 #endif
 
       while (TRUE) {
-            u32_t localtime = SystemGetOSTickCnt();
+            u32_t localtime = get_tick_counter();
 
             dhcp_conn_wait(dhcp, netif);
             receive_packet(netif);

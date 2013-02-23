@@ -52,37 +52,38 @@ extern "C" {
 /** OS BASIC DEFINITIONS */
 #define MINIMAL_STACK_SIZE                      CONFIG_RTOS_TASK_MIN_STACK_SIZE
 #define THIS_TASK                               NULL
-#define EMPTY_TASK                              UINT32_MAX
 #define OS_OK                                   pdTRUE
 #define OS_NOT_OK                               pdFALSE
 
 /** OS kernel control functions */
-#define OS_start_scheduler()                    vTaskStartScheduler()
+#define start_task_scheduler()                  vTaskStartScheduler()
 
 /** TASK LEVEL DEFINITIONS */
-#define TaskTerminate()                         delete_task(TaskGetCurrentTaskHandle())
-#define TaskDelay(ms_delay)                     vTaskDelay(ms_delay)
-#define TaskSuspend(taskID)                     vTaskSuspend(taskID)
-#define TaskResume(taskID)                      vTaskResume(taskID)
-#define TaskResumeFromISR(taskID)               xTaskResumeFromISR(taskID)
-#define TaskYield()                             taskYIELD()
-#define TaskEnterCritical()                     taskENTER_CRITICAL()
-#define TaskExitCritical()                      taskEXIT_CRITICAL()
-#define TaskDisableIRQ()                        taskDISABLE_INTERRUPTS()
-#define TaskEnableIRQ()                         taskENABLE_INTERRUPTS()
-#define TaskSuspendAll()                        vTaskSuspendAll()
-#define TaskResumeAll()                         xTaskResumeAll()
-#define TaskGetTickCount()                      xTaskGetTickCount()
-#define TaskGetName(taskhdl)                    (ch_t*)pcTaskGetTaskName(taskhdl)
-#define TaskGetCurrentTaskHandle()              xTaskGetCurrentTaskHandle()
-#define TaskGetIdleTaskHandle()                 xTaskGetIdleTaskHandle()
-#define TaskGetPriority(taskhdl)                (i16_t)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
-#define TaskGetStackFreeSpace(taskhdl)          uxTaskGetStackHighWaterMark(taskhdl)
-#define TaskGetNumberOfTasks()                  uxTaskGetNumberOfTasks()
-#define TaskGetRunTimeStats(dst)                vTaskGetRunTimeStats((signed char*)dst)
-#define TaskDelayUntil(lastTime, delay)         vTaskDelayUntil((portTickType*)lastTime, delay)
-#define TaskSetTag(taskhdl, tag)                vTaskSetApplicationTaskTag(taskhdl, tag)
-#define TaskGetTag(taskhdl)                     xTaskGetApplicationTaskTag(taskhdl)
+#define terminate_task()                        delete_task(xTaskGetCurrentTaskHandle())
+#define milisleep(msdelay)                      vTaskDelay(msdelay)
+#define sleep(seconds)                          vTaskDelay((seconds) * 1000UL)
+#define prepare_sleep_until()                   long int __last_wake_time__ = get_tick_counter();
+#define sleep_until(seconds)                    vTaskDelayUntil(&__last_wake_time__, (seconds) * 1000UL)
+#define milisleep_until(msdelay)                vTaskDelayUntil(&__last_wake_time__, msdelay)
+#define suspend_task(taskhdl)                   vTaskSuspend(taskhdl)
+#define resume_task(taskhdl)                    vTaskResume(taskhdl)
+#define resume_task_from_ISR(taskhdl)           xTaskResumeFromISR(taskhdl)
+#define suspend_all_tasks()                     vTaskSuspendAll()
+#define resume_all_tasks()                      xTaskResumeAll()
+#define yield_task()                            taskYIELD()
+#define enter_critical()                        taskENTER_CRITICAL()
+#define exit_critical()                         taskEXIT_CRITICAL()
+#define disable_ISR()                           taskDISABLE_INTERRUPTS()
+#define enable_ISR()                            taskENABLE_INTERRUPTS()
+#define get_tick_counter()                      xTaskGetTickCount()
+#define get_task_name(taskhdl)                  (ch_t*)pcTaskGetTaskName(taskhdl)
+#define get_task_handle()                       xTaskGetCurrentTaskHandle()
+#define get_task_priority(taskhdl)              (i16_t)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
+#define get_free_stack()                        uxTaskGetStackHighWaterMark(THIS_TASK)
+#define get_task_free_stack(taskhdl)            uxTaskGetStackHighWaterMark(taskhdl)
+#define get_number_of_task()                    uxTaskGetNumberOfTasks()
+#define set_task_tag(taskhdl, tag)              vTaskSetApplicationTaskTag(taskhdl, tag)
+#define get_task_tag(taskhdl)                   xTaskGetApplicationTaskTag(taskhdl)
 
 /** SEMAPHORES AND MUTEXES */
 #define new_semaphore()                         create_semaphore()
@@ -118,7 +119,7 @@ extern "C" {
   Exported function prototypes
 ==============================================================================*/
 extern int   new_task(taskCode_t taskCode, const ch_t *name, u16_t stack,
-                        void *argv, i8_t priority, task_t *taskHdl);
+                      void *argv, i8_t priority, task_t *taskHdl);
 extern void  delete_task(task_t taskHdl);
 extern sem_t create_semaphore(void);
 

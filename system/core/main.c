@@ -77,7 +77,7 @@ int main(void)
         new_task(task_initd, INITD_NAME, INITD_STACK_SIZE, INITD_ARGS, INITD_PRIORITY, NULL);
 
         /* start OS */
-        OS_start_scheduler();
+        start_task_scheduler();
 
         return 0;
 }

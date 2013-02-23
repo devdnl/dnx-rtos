@@ -402,7 +402,7 @@ static stdRet_t GetTemperature(i8_t *temperature)
                         goto MPL115A2_GetTemperature_ClosePort;
                   }
 
-                  TaskDelay(5);
+                  milisleep(5);
 
                   /* load temperature */
                   fseek(fi2c, REG_TADC_MSB, SEEK_SET);
@@ -465,7 +465,7 @@ static stdRet_t GetPressure(u16_t *pressure)
                   if (fwrite(&tmp, sizeof(u8_t), 1, fi2c) != 1)
                         goto MPL115A2_GetPressure_ClosePort;
 
-                  TaskDelay(5);
+                  milisleep(5);
 
                   /* load temperature */
                   fseek(fi2c, REG_PADC_MSB, 0);

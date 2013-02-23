@@ -204,12 +204,12 @@ stdRet_t ETHER_Release(devx_t dev, fd_t part)
       stdRet_t status = STD_RET_ERROR;
 
       if (mutex_recursive_lock(eth_mem->mtx, MTX_BLOCK_TIME) == OS_OK) {
-            TaskSuspendAll();
+            suspend_all_tasks();
             mutex_recursive_unlock(eth_mem->mtx);
             delete_mutex(eth_mem->mtx);
             free(eth_mem);
             eth_mem = NULL;
-            TaskResumeAll();
+            resume_all_tasks();
             ETH_DeInit();
 
             status = STD_RET_OK;

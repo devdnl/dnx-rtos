@@ -69,7 +69,7 @@ void cpuctl_init(void)
  * @brief Restart CPU
  */
 //==============================================================================
-void cpuctl_system_restart(void)
+void cpuctl_restart_system(void)
 {
 }
 

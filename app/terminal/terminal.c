@@ -43,7 +43,7 @@ PROG_SEC_BEGIN
 #define PROMPT_LINE_SIZE            100
 
 #define CD_PATH_SIZE                128
-
+#define ParseArg(a, b, c, d)    STD_RET_ERROR /* DNLFIXME new argument parse needed */
 /*==================================================================================================
                                    Local types, enums definitions
 ==================================================================================================*/
@@ -109,7 +109,7 @@ cmdStatus_t cmdSTACK(ch_t *arg)
 {
       (void)arg;
 
-      printf("Free stack: %d\n", SystemGetStackFreeSpace());
+      printf("Free stack: %d\n", get_free_stack());
 
       return CMD_EXECUTED;
 }
@@ -142,7 +142,7 @@ cmdStatus_t cmdREBOOT(ch_t *arg)
       printf("Rebooting...\n");
       milisleep(500);
 
-      SystemReboot();
+      reboot();
 
       return CMD_EXECUTED;
 }
@@ -426,13 +426,13 @@ cmdStatus_t cmdFREE(ch_t *arg)
 {
       (void)arg;
 
-      u32_t free = SystemGetFreeMemSize();
-      u32_t used = SystemGetUsedMemSize();
+      u32_t free = get_free_memory();
+      u32_t used = get_used_memory();
 
-      printf("Total: %d\n", SystemGetMemSize());
+      printf("Total: %d\n", get_memory_size());
       printf("Free : %d\n", free);
       printf("Used : %d\n", used);
-      printf("Memory usage: %d%%\n", (used * 100)/SystemGetMemSize());
+      printf("Memory usage: %d%%\n", (used * 100)/get_memory_size());
 
       return CMD_EXECUTED;
 }
@@ -458,7 +458,7 @@ cmdStatus_t cmdUPTIME(ch_t *arg)
             printf("Unable to open \"/dev/rtc\" file!\n");
       }
 
-      u32_t uptime = SystemGetUptime();
+      u32_t uptime = get_uptime();
       u32_t udays  = (uptime / (3600 * 24));
       u32_t uhrs   = (uptime / 3600) % 24;
       u32_t umins  = (uptime / 60) % 60;
@@ -663,7 +663,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 {
       cmdStatus_t status = CMD_NOT_EXIST;
 
-      TaskSuspendAll();
+      suspend_all_tasks();
 
       prog_t *appHdl = exec(cmd, arg);
 
@@ -672,13 +672,13 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
             appHdl->stdin  = stdin;
             appHdl->stdout = stdout;
             appHdl->cwd    = cdpath;
-            TaskResumeAll();
+            resume_all_tasks();
 
             /* waiting for application exit */
             while (appHdl->exitCode == STD_RET_UNKNOWN)
             {
                   /* check if application exist */
-                  if (TaskGetName(appHdl->taskHandle) == NULL) {
+                  if (get_task_name(appHdl->taskHandle) == NULL) {
                         break;
                   }
 
@@ -689,7 +689,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 
             status = CMD_EXECUTED;
       } else {
-            TaskResumeAll();
+            resume_all_tasks();
       }
 
       return status;
@@ -703,7 +703,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
 //================================================================================================//
 void PrintPrompt(void)
 {
-      printf(FONT_COLOR_GREEN"root@%s:%s"RESET_ATTRIBUTES"\n", SystemGetHostname(), cdpath);
+      printf(FONT_COLOR_GREEN"root@%s:%s"RESET_ATTRIBUTES"\n", get_host_name(), cdpath);
       printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
 }
 
@@ -748,7 +748,7 @@ stdRet_t appmain(ch_t *argv[], int argc) /* DNLTODO terminal with -e mode: scrip
       u32_t tty = 0;
       ioctl(stdin, TTY_IORQ_GETCURRENTTTY, &tty);
 
-      printf("Welcome to %s/%s (tty%u)\n", SystemGetOSName(), SystemGetKernelName(), tty);
+      printf("Welcome to %s/%s (tty%u)\n", get_OS_name(), get_kernel_name(), tty);
 
       /* main loop ------------------------------------------------------------------------------ */
       for (;;)
@@ -834,7 +834,7 @@ stdRet_t appmain(ch_t *argv[], int argc) /* DNLTODO terminal with -e mode: scrip
       /* if stack size is debugging */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
       {
-            printf("Free stack: %d levels\n", SystemGetStackFreeSpace());
+            printf("Free stack: %d levels\n", get_free_stack());
       }
 
       Terminal_Exit:

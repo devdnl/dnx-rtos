@@ -388,7 +388,7 @@ stdRet_t UART_Open(devx_t dev, fd_t part)
             /* check that port is free */
             if (mutex_recursive_lock(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  UARTP(dev)->TaskHandle = TaskGetCurrentTaskHandle();
+                  UARTP(dev)->TaskHandle = get_task_handle();
 
                   /* enable UART clock */
                   switch (dev)
@@ -715,7 +715,7 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
 
                         do
                         {
-                              TaskEnterCritical();
+                              enter_critical();
 
                               if (RxFIFO->Level > 0)
                               {
@@ -730,12 +730,12 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
 
                                     n++;
 
-                                    TaskExitCritical();
+                                    exit_critical();
                               }
                               else
                               {
-                                    TaskExitCritical();
-                                    TaskSuspend(THIS_TASK);
+                                    exit_critical();
+                                    suspend_task(THIS_TASK);
                               }
                         }
                         while (dataSize);
@@ -865,7 +865,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                         {
                               struct sRxFIFO *RxFIFO = &UARTP(dev)->RxFIFO;
 
-                              TaskEnterCritical();
+                              enter_critical();
 
                               if (RxFIFO->Level > 0)
                               {
@@ -881,7 +881,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                                     status = UART_STATUS_BUFFEREMPTY;
                               }
 
-                              TaskExitCritical();
+                              exit_critical();
                               break;
                         }
 
@@ -892,7 +892,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
                                 while (TRUE)
                                 {
-                                      TaskEnterCritical();
+                                      enter_critical();
 
                                       if (RxFIFO->Level > 0)
                                       {
@@ -903,13 +903,13 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
 
                                             RxFIFO->Level--;
 
-                                            TaskExitCritical();
+                                            exit_critical();
                                             break;
                                       }
                                       else
                                       {
-                                            TaskExitCritical();
-                                            TaskSuspend(THIS_TASK);
+                                            exit_critical();
+                                            suspend_task(THIS_TASK);
                                       }
                                 }
                                 break;
@@ -920,7 +920,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                               uart_p = UARTA(dev);
 
                               while (!(uart_p->SR & USART_SR_TXE))
-                                    TaskDelay(1);
+                                    milisleep(1);
 
                               uart_p->DR = *(u8_t*)data;
 
@@ -1005,8 +1005,8 @@ static void IRQCode(USART_t *usart, devx_t dev)
 
                   if (UARTP(dev)->TaskHandle)
                   {
-                        if (TaskResumeFromISR(UARTP(dev)->TaskHandle) == pdTRUE)
-                              TaskYield();
+                        if (resume_task_from_ISR(UARTP(dev)->TaskHandle) == pdTRUE)
+                                yield_task();
                   }
             }
       }

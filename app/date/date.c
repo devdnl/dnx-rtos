@@ -43,7 +43,7 @@ PROG_SEC_BEGIN
 /*==================================================================================================
                                   Local symbolic constants/macros
 ==================================================================================================*/
-
+#define ParseArg(a, b, c, d)    STD_RET_ERROR /* DNLFIXME new argument parse needed */
 
 /*==================================================================================================
                                    Local types, enums definitions
@@ -186,7 +186,7 @@ stdRet_t appmain(ch_t *argv[], int argc)
       /* show stack free space if requested */
       if (ParseArg(argv, "stack", PARSE_AS_EXIST, NULL) == STD_RET_OK)
       {
-            printf("Free stack: %d levels\n", SystemGetStackFreeSpace());
+            printf("Free stack: %d levels\n", get_free_stack());
       }
 
       return status;

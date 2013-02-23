@@ -51,7 +51,7 @@ extern "C" {
   Exported function prototypes
 ==============================================================================*/
 extern void  cpuctl_init(void);
-extern void  cpuctl_system_restart(void);
+extern void  cpuctl_restart_system(void);
 extern void  cpuctl_init_CPU_load_timer(void);
 extern u32_t cpuctl_get_CPU_load_timer(void);
 extern void  cpuctl_clear_CPU_load_timer(void);

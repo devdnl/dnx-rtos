@@ -379,14 +379,14 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         list_get_nitem_ID(tskm->tasks, item, (task_t) &taskHdl);
 
         stat->task_handle     = taskHdl;
-        stat->task_name       = TaskGetName(taskHdl);
-        stat->free_stack      = TaskGetStackFreeSpace(taskHdl);
-        TaskSuspendAll();
-        stat->cpu_usage       = (u32_t)TaskGetTag(taskHdl);
-        TaskSetTag(taskHdl, (void*)0);
-        TaskResumeAll();
+        stat->task_name       = get_task_name(taskHdl);
+        stat->free_stack      = get_task_free_stack(taskHdl);
+        suspend_all_tasks();
+        stat->cpu_usage       = (u32_t)get_task_tag(taskHdl);
+        set_task_tag(taskHdl, (void*)0);
+        resume_all_tasks();
         stat->cpu_usage_total = cpuctl_get_CPU_total_time();
-        stat->priority        = TaskGetPriority(taskHdl);
+        stat->priority        = get_task_priority(taskHdl);
 
         if (item == list_get_item_count(tskm->tasks) - 1) {
                 cpuctl_clear_CPU_total_time();
@@ -468,7 +468,7 @@ void *tskm_malloc(u32_t size)
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -559,7 +559,7 @@ void tskm_free(void *mem)
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
                 return;
         }
@@ -636,7 +636,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -707,7 +707,7 @@ stdRet_t tskm_fclose(FILE_t *file)
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
         }
@@ -781,7 +781,7 @@ DIR_t *tskm_opendir(const ch_t *path)
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -852,7 +852,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
         }
@@ -925,9 +925,9 @@ void tskm_task_switched_in(void)
 void tskm_task_switched_out(void)
 {
         u16_t  cnt     = cpuctl_get_CPU_load_timer();
-        task_t taskhdl = TaskGetCurrentTaskHandle();
-        u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
-        TaskSetTag(taskhdl, (void*)tmp);
+        task_t taskhdl = get_task_handle();
+        u32_t  tmp     = (u32_t)get_task_tag(taskhdl) + cnt;
+        set_task_tag(taskhdl, (void*)tmp);
 }
 #endif
 

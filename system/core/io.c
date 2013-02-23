@@ -401,13 +401,13 @@ int io_getc(FILE_t *stream)
 
         while (fread(&chr, sizeof(ch_t), 1, stream) < 1) {
                 if (dcnt >= 60000) {
-                        TaskDelay(200);
+                        milisleep(200);
                 } else if (dcnt >= 5000) {
                         dcnt += 100;
-                        TaskDelay(100);
+                        milisleep(100);
                 } else {
                         dcnt += 20;
-                        TaskDelay(20);
+                        milisleep(20);
                 }
         }
 

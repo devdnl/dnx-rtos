@@ -80,23 +80,23 @@ stdRet_t appmain(ch_t *argv[], int argc)
                         continue;
                 }
 
-                u8_t n = SystemGetMoniTaskCount();
+                u8_t n = get_number_of_monitored_tasks();
 
                 printf("\x1B[2J\x1B[HPress q to quit\n");
 
                 printf("Total tasks: %u\n", n);
 
                 printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                       SystemGetMemSize(),
-                       SystemGetUsedMemSize(),
-                       SystemGetFreeMemSize());
+                       get_memory_size(),
+                       get_used_memory(),
+                       get_free_memory());
 
                 printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
                 for (int i = 0; i < n; i++) {
                         struct taskstat taskinfo;
 
-                        if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
+                        if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
                                 printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                 taskinfo.task_handle,
                                 taskinfo.priority,

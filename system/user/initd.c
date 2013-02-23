@@ -46,6 +46,7 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static stdRet_t start_daemon(const ch_t *name, ch_t *argv);
 
 /*==============================================================================
   Local object definitions
@@ -110,7 +111,7 @@ void task_initd(void *arg)
       kprint(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
              FONT_COLOR_CYAN "Daniel Zorychta "
              FONT_COLOR_YELLOW "<daniel.zorychta@gmail.com>" RESET_ATTRIBUTES "\n\n",
-             SystemGetOSName(), SystemGetKernelName());
+             get_OS_name(), get_kernel_name());
 
       /* driver initialization */
       init_driver("tty1", "/dev/tty1");
@@ -178,7 +179,7 @@ void task_initd(void *arg)
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n",
-             TaskGetTickCount(), TaskGetStackFreeSpace(THIS_TASK));
+             get_tick_counter(), get_free_stack());
 
       /* change TTY for kprint to last TTY */
 #if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
@@ -218,17 +219,17 @@ void task_initd(void *arg)
 
                         kprint("Starting application on new terminal: TTY%d\n", ctty);
 
-                        TaskSuspendAll();
+                        suspend_all_tasks();
                         apphdl[ctty] = exec("term", "");
 
                         if (apphdl[ctty] == NULL) {
-                              TaskResumeAll();
+                              resume_all_tasks();
                               kprint("Not enough free memory to start application\n");
                         } else {
                               apphdl[ctty]->stdin  = ttyx[ctty];
                               apphdl[ctty]->stdout = ttyx[ctty];
 
-                              TaskResumeAll();
+                              resume_all_tasks();
                               kprint("Application started on TTY%d\n", ctty);
                         }
                   }
@@ -253,14 +254,34 @@ void task_initd(void *arg)
                   }
             }
 
-            TaskDelay(500);
+            milisleep(500);
       }
 
       /* this should never happen */
-      TaskTerminate();
+      terminate_task();
 }
 
-
+//==============================================================================
+/**
+* @brief Run task daemon as service. Function used on low level of system
+*        startup
+*
+* @param[in]  *name          task name
+* @param[in]  *argv          task arguments
+*
+* @return application handler
+*/
+//==============================================================================
+static stdRet_t start_daemon(const ch_t *name, ch_t *argv)
+{
+      if (exec(name, argv) != NULL) {
+              kprint("%s daemon started\n", name);
+              return STD_RET_OK;
+      } else {
+              kprint("\x1B[31m%s start failed\x1B[0m\n", name);
+              return STD_RET_ERROR;
+      }
+}
 
 #ifdef __cplusplus
 }

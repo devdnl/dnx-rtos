@@ -75,32 +75,19 @@ extern "C" {
 #define ioctl(file, rq, data)             tskm_ioctl(file, rq, data)
 #define fstat(file, statPtr)              tskm_fstat(file, stat)
 
-/** PROGRAM LEVEL DEFINITIONS */
-#define milisleep(msdelay)                TaskDelay(msdelay)
-#define sleep(seconds)                    TaskDelay((seconds) * 1000)
-#define SleepUntil(lastTime, sleepTime)   TaskDelayUntil(lastTime, sleepTime)
-#define SystemGetStackFreeSpace()         TaskGetStackFreeSpace(THIS_TASK)
-#define SystemEnterCritical()             TaskEnterCritical()
-#define SystemExitCritical()              TaskExitCritical()
-#define SystemDisableIRQ()                TaskDisableIRQ()
-#define SystemEnableIRQ()                 TaskEnableIRQ()
-#define SystemGetAppHandle()              TaskGetCurrentTaskHandle()
-#define SystemAppSuspend()                TaskSuspend(NULL)
-#define SystemGetFreeMemSize()            memman_get_free_heap()
-#define SystemGetUsedMemSize()            memman_get_used_heap()
-#define SystemGetMemSize()                MEMMAN_HEAP_SIZE
-#define SystemGetUptime()                 GetUptimeCnt()
-#define SystemGetTaskCount()              TaskGetNumberOfTasks()
-#define SystemGetOSTickCnt()              TaskGetTickCount()
-#define SystemGetAppName()                TaskGetName(NULL)
-#define SystemGetTaskStat(item, statPtr)  tskm_get_ntask_stat(item, statPtr)
-#define SystemGetMoniTaskCount()          tskm_get_task_count()
-#define SystemReboot()                    cpuctl_system_restart()
-#define SystemGetOSName()                 "dnx"
-#define SystemGetKernelName()             "FreeRTOS"
-#define SystemGetOSVersion()              "0.6.1"
-#define SystemGetKernelVersion()          "7.3.0"
-#define SystemGetHostname()               CONFIG_HOSTNAME
+/** ENVIRONMENT DEFINITIONS */
+#define get_free_memory()                 memman_get_free_heap()
+#define get_used_memory()                 memman_get_used_heap()
+#define get_memory_size()                 MEMMAN_HEAP_SIZE
+#define get_uptime()                      get_uptime_counter()
+#define get_task_stat(ntask, statPtr)     tskm_get_ntask_stat(ntask, statPtr)
+#define get_number_of_monitored_tasks()   tskm_get_task_count()
+#define reboot()                          cpuctl_restart_system()
+#define get_OS_name()                     "dnx"
+#define get_kernel_name()                 "FreeRTOS"
+#define get_OS_version()                  "0.7.0"
+#define get_kernel_version()              "7.3.0"
+#define get_host_name()                   CONFIG_HOSTNAME
 #define getcwd(buf, size)                 strncpy(buf, cwd, size)
 
 /*==============================================================================

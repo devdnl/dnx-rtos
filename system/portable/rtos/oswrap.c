@@ -77,7 +77,7 @@ extern "C" {
 int new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
              void *argv, i8_t priority, task_t *taskHdl)
 {
-        TaskSuspendAll();
+        suspend_all_tasks();
 
         task_t task;
 
@@ -96,7 +96,7 @@ int new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
                 tskm_add_task(task);
         }
 
-        TaskResumeAll();
+        resume_all_tasks();
 
         return status;
 }

@@ -41,7 +41,7 @@ PROG_SEC_BEGIN
 #define DATA_COUNT                  51
 #define FILE_BUFFER_SIZE            4096
 #define GRAPH_X_POINT               (300/(DATA_COUNT - 1))
-#define SLEEP_TIME                  5000UL /* = 15 min */
+#define SLEEP_TIME                  5UL
 #define SENSOR_FILE                 "/dev/sensor"
 #define OUTPUT_FILE                 "/srv/www/graph.svg"
 
@@ -128,8 +128,7 @@ stdRet_t appmain(ch_t *argv[], int argc)
             dataList[i] = def;
       }
 
-      /* prepare reference timer */
-      size_t LastWakeTime = SystemGetOSTickCnt();
+      prepare_sleep_until();
 
       for (;;)
       {
@@ -230,7 +229,7 @@ stdRet_t appmain(ch_t *argv[], int argc)
             }
 
             /* sleep in equal periods */
-            SleepUntil(&LastWakeTime, SLEEP_TIME);
+            sleep_until(SLEEP_TIME);
       }
 
       measd_exit:

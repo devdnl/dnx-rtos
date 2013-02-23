@@ -92,28 +92,6 @@ prog_t *exec(const ch_t *name, ch_t *argv)
 
 //==============================================================================
 /**
- * @brief Run task daemon as service. Function used on low level of system
- *        startup
- *
- * @param[in]  *name          task name
- * @param[in]  *argv          task arguments
- *
- * @return application handler
- */
-//==============================================================================
-stdRet_t start_daemon(const ch_t *name, ch_t *argv)
-{
-        if (exec(name, argv) != NULL) {
-                kprint("%s daemon started\n", name);
-                return STD_RET_OK;
-        } else {
-                kprint("\x1B[31m%s start failed\x1B[0m\n", name);
-                return STD_RET_ERROR;
-        }
-}
-
-//==============================================================================
-/**
  * @brief Function terminate program freeing program's object
  *
  * @param *prog                 pointer to the program object
@@ -151,127 +129,15 @@ void exit_prog(prog_t *prog, stdRet_t exitCode)
 {
         prog->exitCode = exitCode;
 
-        TaskSuspend(prog->parentTaskHandle);
-        TaskResume(prog->parentTaskHandle);
+        suspend_task(prog->parentTaskHandle);
+        resume_task(prog->parentTaskHandle);
 
         prog->taskHandle       = NULL;
         prog->parentTaskHandle = NULL;
 
         delete_argument_table(prog->argv, prog->argc);
 
-        delete_task(TaskGetCurrentTaskHandle());
-}
-
-//==============================================================================
-/**
- * @brief Function parse application arguments
- *
- * @param *argv         argument string
- * @param *findArg      argument to find
- * @param parseAs       type of result
- * @param *result       result buffer (depending of parse type)
- *
- * @retval STD_RET_OK         value of argument was finded and converted
- * @retval STD_RET_ERROR      cannot find argument specified
- */
-//==============================================================================
-stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
-{
-        u8_t base;
-        stdRet_t status = STD_RET_ERROR;
-
-        /* check argument correctness */
-        if (  !argv || parseAs >= PARSE_AS_UNKNOWN
-           || (parseAs == PARSE_AS_EXIST ? 0 : !result)) {
-
-                return STD_RET_ERROR;
-        }
-
-        u32_t findArgSize = strlen(findArg);
-
-        /* scan argv line */
-        while (*argv != '\0') {
-                /* if find character which open string, parser must find end of a string */
-                if (*argv == '"') {
-                        ch_t *stringEnd;
-
-                        argv++;
-
-                        if ((stringEnd = strchr(argv, '"')) == NULL) {
-                                argv++;
-                        } else {
-                                argv = stringEnd + 1;
-                        }
-                }
-
-                /* check that argument is short or long */
-                if (*argv == '-' && *(argv + 1) == '-') {
-                        argv += 2;
-
-                        if (findArgSize == 1) {
-                                argv++;
-                        }
-                } else if (*argv == '-' && findArgSize == 1) {
-                        argv++;
-                }
-
-                /* check if current argument is found */
-                if (strncmp(argv, findArg, findArgSize) == 0) {
-                        argv += findArgSize;
-
-                        if (parseAs == PARSE_AS_STRING) {
-                                ch_t character = *argv++;
-
-                                if (character == '"') {
-                                        /* try to find closed " */
-                                        if (strchr(argv, '"') == NULL) {
-                                                goto ParseArg_end;
-                                        }
-
-                                        ch_t *string = result;
-
-                                        while ((character = *(argv++)) != '"') {
-                                                *(string++) = character;
-                                        }
-
-                                        *(string++) = '\0';
-
-                                        status = STD_RET_OK;
-                                }
-                        } else if (parseAs == PARSE_AS_CHAR) {
-                                ch_t *character = result;
-
-                                *character = *argv;
-
-                                status = STD_RET_OK;
-
-                        } else if (parseAs == PARSE_AS_EXIST) {
-                                status = STD_RET_OK;
-
-                        } else {
-                                i32_t *value = (i32_t*)result;
-
-                                switch (parseAs) {
-                                case PARSE_AS_BIN: base = 2;  break;
-                                case PARSE_AS_OCT: base = 8;  break;
-                                case PARSE_AS_DEC: base = 10; break;
-                                case PARSE_AS_HEX: base = 16; break;
-                                default: goto ParseArg_end;
-                                }
-
-                                atoi(argv, base, value);
-
-                                status = STD_RET_OK;
-                        }
-
-                        goto ParseArg_end;
-                }
-
-                argv++;
-        }
-
-        ParseArg_end:
-        return status;
+        delete_task(get_task_handle());
 }
 
 //==============================================================================
@@ -306,7 +172,7 @@ static prog_t *new_program(task_t app, const ch_t *name, uint stackSize, ch_t *a
         }
 
         progHdl->exitCode         = STD_RET_UNKNOWN;
-        progHdl->parentTaskHandle = TaskGetCurrentTaskHandle();
+        progHdl->parentTaskHandle = get_task_handle();
         progHdl->taskHandle       = NULL;
         progHdl->stdin            = NULL;
         progHdl->stdout           = NULL;

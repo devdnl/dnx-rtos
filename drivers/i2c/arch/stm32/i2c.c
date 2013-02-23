@@ -224,7 +224,7 @@ stdRet_t I2C_Open(devx_t dev, fd_t part)
             if (mutex_recursive_lock(I2CP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
                   /* set task handle for IRQs */
-                  i2c->port[dev]->TaskHandle = TaskGetCurrentTaskHandle();
+                  i2c->port[dev]->TaskHandle = get_task_handle();
 
                   /* enable I2C clock */
                   switch (dev)
@@ -399,7 +399,7 @@ size_t I2C_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, s
                   /* stop condition */
                   while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
                   {
-                        TaskDelay(1);
+                        milisleep(1);
                   }
 
                   n = nitems;
@@ -468,7 +468,7 @@ size_t I2C_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
                   /* waiting for data sending was finished */
                   while (!(i2cPtr->SR1 & I2C_SR1_BTF) || !(i2cPtr->SR1 & I2C_SR1_TXE))
                   {
-                        TaskDelay(1);
+                        milisleep(1);
                   }
 
                   /* check if is only 1 byte to send */
@@ -609,7 +609,7 @@ static stdRet_t StartCondition(I2C_t *i2c, u8_t slaveaddr)
             if (i2c->SR1 & I2C_SR1_SB)
                   break;
             else
-                  TaskDelay(1);
+                  milisleep(1);
       }
 
       /* check errors */
@@ -625,7 +625,7 @@ static stdRet_t StartCondition(I2C_t *i2c, u8_t slaveaddr)
             if (i2c->SR1 & I2C_SR1_ADDR)
                   break;
             else
-                  TaskDelay(10);
+                  milisleep(10);
       }
 
       /* check errors */
@@ -679,7 +679,7 @@ static stdRet_t SendData(I2C_t *i2c, u8_t *src, size_t size)
                   }
                   else
                   {
-                        TaskDelay(10);
+                        milisleep(10);
                   }
             }
       }
@@ -734,7 +734,7 @@ static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size)
                   }
                   else
                   {
-                        TaskDelay(10);
+                        milisleep(10);
                   }
             }
 
@@ -758,7 +758,7 @@ static stdRet_t ReadData(I2C_t *i2c, u8_t *dst, size_t size)
             }
             else
             {
-                  TaskDelay(10);
+                  milisleep(10);
             }
       }
 
