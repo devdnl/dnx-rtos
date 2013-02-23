@@ -57,7 +57,7 @@ extern "C" {
 #define OS_NOT_OK                               pdFALSE
 
 /** OS kernel control functions */
-#define OSStartScheduler()                      vTaskStartScheduler()
+#define OS_start_scheduler()                    vTaskStartScheduler()
 
 /** TASK LEVEL DEFINITIONS */
 #define TaskTerminate()                         delete_task(TaskGetCurrentTaskHandle())
@@ -117,7 +117,7 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int_t new_task(taskCode_t taskCode, const ch_t *name, u16_t stack,
+extern int   new_task(taskCode_t taskCode, const ch_t *name, u16_t stack,
                         void *argv, i8_t priority, task_t *taskHdl);
 extern void  delete_task(task_t taskHdl);
 extern sem_t create_semaphore(void);

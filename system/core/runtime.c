@@ -53,8 +53,8 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg);
-static ch_t  **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc);
+static prog_t *new_program(task_t app, const ch_t *name, uint stackSize, ch_t *arg);
+static ch_t  **new_argument_table(ch_t *arg, const ch_t *name, int *argc);
 static void    delete_argument_table(ch_t **argv, int argc);
 
 /*==============================================================================
@@ -286,7 +286,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
  * @return program handler pointer if success, otherwise NULL
  */
 //==============================================================================
-static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg)
+static prog_t *new_program(task_t app, const ch_t *name, uint stackSize, ch_t *arg)
 {
         prog_t *progHdl;
 
@@ -334,9 +334,9 @@ static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t 
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
+static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int *argc)
 {
-        int_t   arg_count  = 0;
+        int   arg_count  = 0;
         ch_t  **arg_table  = NULL;
         list_t *arg_list   = NULL;
         ch_t   *arg_string = NULL;
@@ -433,7 +433,7 @@ add_args_to_table:
                 goto exit_error;
         }
 
-        for (int_t i = 0; i < arg_count; i++) {
+        for (int i = 0; i < arg_count; i++) {
                 arg_table[i] = list_get_nitem_data(arg_list, 0);
 
                 if (arg_table[i] == NULL) {

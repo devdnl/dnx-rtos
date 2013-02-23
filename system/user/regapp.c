@@ -96,7 +96,7 @@ regAppData_t regapp_get_program_data(const ch_t *appName)
 {
         regAppData_t appNULL = {NULL, NULL, 0};
 
-        for (uint_t i = 0; i < ARRAY_SIZE(appList); i++) {
+        for (uint i = 0; i < ARRAY_SIZE(appList); i++) {
                 if (strcmp(appList[i].appName, appName) == 0) {
                         appNULL = appList[i];
                         break;
@@ -125,7 +125,7 @@ regAppData_t *regapp_get_pointer_to_program_list(void)
  * @return application count
  */
 //==============================================================================
-int_t regapp_get_program_count(void)
+int regapp_get_program_count(void)
 {
         return ARRAY_SIZE(appList);
 }

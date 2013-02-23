@@ -113,7 +113,7 @@ stdRet_t mount(const ch_t *fsname, const ch_t *srcpath, const ch_t *mountpoint)
         stdRet_t status = STD_RET_ERROR;
 
         if (fsname && mountpoint) {
-                for (uint_t i = 0; i < ARRAY_SIZE(fsList); i++) {
+                for (uint i = 0; i < ARRAY_SIZE(fsList); i++) {
                         if (strcmp(fsList[i].fsName, fsname) == 0) {
                                 status = vfs_mount(srcpath,
                                                    mountpoint,

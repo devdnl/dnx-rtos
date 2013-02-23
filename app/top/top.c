@@ -59,7 +59,7 @@ PROG_SEC_BEGIN
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv[], int_t argc)
+stdRet_t appmain(ch_t *argv[], int argc)
 {
         (void) argv;
 
@@ -93,7 +93,7 @@ stdRet_t appmain(ch_t *argv[], int_t argc)
 
                 printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
-                for (int_t i = 0; i < n; i++) {
+                for (int i = 0; i < n; i++) {
                         struct taskstat taskinfo;
 
                         if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {

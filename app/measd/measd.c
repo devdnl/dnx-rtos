@@ -111,7 +111,7 @@ struct meas readData(u8_t idx)
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv[], int_t argc)
+stdRet_t appmain(ch_t *argv[], int argc)
 {
       (void)argv;
 

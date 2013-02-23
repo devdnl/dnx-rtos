@@ -64,11 +64,11 @@ PROG_SEC_BEGIN
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv[], int_t argc)
+stdRet_t appmain(ch_t *argv[], int argc)
 {
         printf("Argument count: %d\n", argc);
 
-        for (int_t i = 0; i < argc; i++) {
+        for (int i = 0; i < argc; i++) {
                 printf("%d: %s\n", i + 1, argv[i]);
         }
 

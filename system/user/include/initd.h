@@ -39,10 +39,16 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** initd stack size */
-#define INITD_STACK_SIZE                  (3 * MINIMAL_STACK_SIZE + 20)
+#define INITD_STACK_SIZE                (3 * MINIMAL_STACK_SIZE + 20)
 
 /** initd name */
-#define INITD_NAME                        "initd"
+#define INITD_NAME                      "initd"
+
+/** priority */
+#define INITD_PRIORITY                  -1
+
+/** arguments */
+#define INITD_ARGS                      NULL
 
 /*==============================================================================
   Exported types, enums definitions

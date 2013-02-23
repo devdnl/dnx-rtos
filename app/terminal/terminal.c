@@ -713,7 +713,7 @@ void PrintPrompt(void)
  * @brief terminal main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv[], int_t argc) /* DNLTODO terminal with -e mode: script execution mode */
+stdRet_t appmain(ch_t *argv[], int argc) /* DNLTODO terminal with -e mode: script execution mode */
 {
       stdRet_t    termStatus = STD_RET_OK;
       cmdStatus_t cmdStatus;

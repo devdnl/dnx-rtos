@@ -45,7 +45,7 @@ extern "C" {
 typedef struct {
       const ch_t   *appName;
       void         (*appPtr)(void *argv);
-      const uint_t *stackSize;
+      const uint   *stackSize;
 } regAppData_t;
 
 /*==============================================================================
@@ -57,7 +57,7 @@ typedef struct {
 ==============================================================================*/
 extern regAppData_t  regapp_get_program_data(const ch_t *appName);
 extern regAppData_t *regapp_get_pointer_to_program_list(void);
-extern int_t         regapp_get_program_count(void);
+extern int           regapp_get_program_count(void);
 
 #ifdef __cplusplus
 }

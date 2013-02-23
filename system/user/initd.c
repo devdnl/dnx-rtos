@@ -127,8 +127,8 @@ void task_initd(void *arg)
 #if !defined(ARCH_posix)
       if (start_daemon("lwipd", "--dhcp") == STD_RET_OK) {
             FILE_t *netinf;
-            uint_t  i = 0;
-            uint_t  t = 20;
+            uint  i = 0;
+            uint  t = 20;
 
             kprint("Configuring network.");
 
@@ -150,7 +150,7 @@ void task_initd(void *arg)
 
             if (t != 0) {
                   fseek(netinf, 0, SEEK_END);
-                  uint_t size = ftell(netinf) + 1;
+                  uint size = ftell(netinf) + 1;
                   fseek(netinf, 0, SEEK_SET);
 
                   ch_t *bfr = calloc(size, sizeof(ch_t));

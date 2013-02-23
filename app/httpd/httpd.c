@@ -429,7 +429,7 @@ err_t http_accept(void *arg, struct tcp_pcb *pcb, err_t err)
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv[], int_t argc)
+stdRet_t appmain(ch_t *argv[], int argc)
 {
       (void)argv;
 

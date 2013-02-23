@@ -74,19 +74,19 @@ extern "C" {
  * @retval OS_NOT_OK
  */
 //==============================================================================
-int_t new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
-                 void *argv, i8_t priority, task_t *taskHdl)
+int new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
+             void *argv, i8_t priority, task_t *taskHdl)
 {
         TaskSuspendAll();
 
         task_t task;
 
-        int_t status = xTaskCreate(taskCode,
-                                   (signed char *)name,
-                                   stackDeep,
-                                   argv,
-                                   Priority(priority),
-                                   &task);
+        int status = xTaskCreate(taskCode,
+                                 (signed char *)name,
+                                 stackDeep,
+                                 argv,
+                                 Priority(priority),
+                                 &task);
 
         if (taskHdl) {
                 *taskHdl = task;

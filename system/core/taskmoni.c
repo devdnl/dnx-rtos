@@ -47,11 +47,11 @@ extern "C" {
 #define MEM_BLOCK_COUNT             4
 #define MEM_ADR_IN_BLOCK            7
 
-#define FLE_BLOCK_COUNT             3
-#define FLE_OPN_IN_BLOCK            7
+#define FILE_BLOCK_COUNT            3
+#define FILES_OPENED_IN_BLOCK       7
 
 #define DIR_BLOCK_COUNT             1
-#define DIR_OPN_IN_BLOCK            3
+#define DIRS_OPENED_IN_BLOCK        3
 
 #define MTX_BLOCK_TIME              10
 
@@ -78,16 +78,16 @@ struct taskData {
 
                 struct fileSlot {
                         FILE_t *file;
-                } fslot[FLE_OPN_IN_BLOCK];
+                } fslot[FILES_OPENED_IN_BLOCK];
 
-        }*fblock[FLE_BLOCK_COUNT];
+        }*fblock[FILE_BLOCK_COUNT];
 
         struct dirBlock {
                 bool_t full;
 
                 struct dirSlot {
                         DIR_t *dir;
-                } dslot[DIR_OPN_IN_BLOCK];
+                } dslot[DIRS_OPENED_IN_BLOCK];
         }*dblock[DIR_BLOCK_COUNT];
 #endif
 };
@@ -260,12 +260,12 @@ stdRet_t tskm_remove_task(task_t taskHdl)
 #endif
 
 #if (TSK_MONITOR_FILE_USAGE > 0)
-        for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
+        for (u32_t block = 0; block < FILE_BLOCK_COUNT; block++) {
                 if (taskInfo->fblock[block] == NULL) {
                         continue;
                 }
 
-                for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                for (u32_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
                         struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
 
                         if (fslot->file) {
@@ -282,7 +282,7 @@ stdRet_t tskm_remove_task(task_t taskHdl)
                         continue;
                 }
 
-                for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                for (u32_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
                         struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
 
                         if (dslot->dir) {
@@ -348,12 +348,12 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 #endif
 
 #if (TSK_MONITOR_FILE_USAGE > 0)
-        for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
+        for (u32_t block = 0; block < FILE_BLOCK_COUNT; block++) {
                 if (taskdata->fblock[block] == NULL) {
                         continue;
                 }
 
-                for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                for (u32_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
                         if (taskdata->fblock[block]->fslot[slot].file) {
                                 stat->opened_files++;
                         }
@@ -365,7 +365,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
                         continue;
                 }
 
-                for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                for (u32_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
                         if (taskdata->dblock[block]->dslot[slot].dir) {
                                 stat->opened_files++;
                         }
@@ -459,7 +459,7 @@ u16_t tskm_get_task_count(void)
 void *tskm_malloc(u32_t size)
 {
         void   *mem   = NULL;
-        uint_t  block = 0;
+        uint    block = 0;
         struct taskData *taskInfo;
 
         if (!tskm || size == 0) {
@@ -627,7 +627,7 @@ void tskm_free(void *mem)
 FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 {
         FILE_t *file  = NULL;
-        uint_t  block = 0;
+        uint    block = 0;
         struct taskData *taskInfo;
 
         if (tskm == NULL) {
@@ -642,7 +642,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
         }
 
         /* find empty file slot */
-        while (block < FLE_BLOCK_COUNT) {
+        while (block < FILE_BLOCK_COUNT) {
                 if (taskInfo->fblock[block] == NULL) {
                         taskInfo->fblock[block] = calloc(1, sizeof(struct fileBlock));
 
@@ -653,7 +653,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
                 }
 
                 /* find empty file slot in block */
-                for (u8_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                for (u8_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
                         if (taskInfo->fblock[block]->full == TRUE) {
                                 break;
                         }
@@ -667,7 +667,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
                                         file = fslot->file;
                                 }
 
-                                if (slot == FLE_OPN_IN_BLOCK - 1) {
+                                if (slot == FILES_OPENED_IN_BLOCK - 1) {
                                         taskInfo->fblock[block]->full = TRUE;
                                 }
 
@@ -713,13 +713,13 @@ stdRet_t tskm_fclose(FILE_t *file)
         }
 
         /* find empty file slot */
-        for (u8_t block = 0; block < FLE_BLOCK_COUNT; block++) {
+        for (u8_t block = 0; block < FILE_BLOCK_COUNT; block++) {
                 if (taskInfo->fblock[block] == NULL) {
                         continue;
                 }
 
                 /* find opened file */
-                for (u8_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
+                for (u8_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
                         struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
 
                         if (fslot->file != file) {
@@ -798,7 +798,7 @@ DIR_t *tskm_opendir(const ch_t *path)
                 }
 
                 /* find empty dir slot in block */
-                for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                for (u8_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
                         if (taskInfo->dblock[block]->full == TRUE) {
                                 break;
                         }
@@ -812,7 +812,7 @@ DIR_t *tskm_opendir(const ch_t *path)
                                         dir = dslot->dir;
                                 }
 
-                                if (slot == DIR_OPN_IN_BLOCK - 1) {
+                                if (slot == DIRS_OPENED_IN_BLOCK - 1) {
                                         taskInfo->dblock[block]->full = TRUE;
                                 }
 
@@ -864,7 +864,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
                 }
 
                 /* find opened file */
-                for (u8_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
+                for (u8_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
                         struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
 
                         if (dslot->dir != dir) {

@@ -990,7 +990,7 @@ static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir)
         if (dir->dd && dir->seek < tskm_get_task_count()) {
                 if (tskm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
                         snprintf(dir->dd, TASK_ID_STR_LEN,
-                                 "%x", (int_t)taskdata.task_handle);
+                                 "%x", (int)taskdata.task_handle);
 
                         dirent.filetype = FILE_TYPE_DIR;
                         dirent.name     = dir->dd;

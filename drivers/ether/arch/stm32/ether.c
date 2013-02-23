@@ -547,7 +547,7 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 
                   case ETHER_IORQ_ENABLE_RX_IRQ:
                         if (eth_mem->DMARxDscrTab != NULL) {
-                              for (uint_t i = 0; i < eth_mem->RxBfrCount; i++) {
+                              for (uint i = 0; i < eth_mem->RxBfrCount; i++) {
                                     ETH_DMARxDescReceiveITConfig(&eth_mem->DMARxDscrTab[i], ENABLE);
                               }
 
@@ -560,7 +560,7 @@ stdRet_t ETHER_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
 
                   case ETHER_IORQ_ENABLE_TX_HARDWARE_CHECKSUM:
                         if (eth_mem->DMATxDscrTab != NULL) {
-                              for (uint_t i = 0; i < eth_mem->TxBfrCount; i++) {
+                              for (uint i = 0; i < eth_mem->TxBfrCount; i++) {
                                     ETH_DMATxDescChecksumInsertionConfig(&eth_mem->DMATxDscrTab[i],
                                                                          ETH_DMATxDesc_ChecksumTCPUDPICMPFull);
                               }

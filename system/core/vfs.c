@@ -623,7 +623,7 @@ stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group)
  * @brief Function returns file/dir status
  *
  * @param *path           file/dir path
- * @param *stat           pointer to stat structure
+ * @param *stat           pointer to structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -640,8 +640,7 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
 
                 if (fs) {
                         if (fs->fs.f_stat) {
-                                return fs->fs.f_stat(fs->fs.f_fsd, extPath,
-                                                     stat);
+                                return fs->fs.f_stat(fs->fs.f_fsd, extPath, stat);
                         }
                 }
         }
@@ -654,7 +653,7 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
  * @brief Function returns file system status
  *
  * @param *path           fs path
- * @param *statfs         pointer to fs status structure
+ * @param *statfs         pointer to FS status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -672,8 +671,7 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
 
                         if (fs) {
                                 if (fs->fs.f_statfs) {
-                                        return fs->fs.f_statfs(fs->fs.f_fsd,
-                                                               statfs);
+                                        return fs->fs.f_statfs(fs->fs.f_fsd, statfs);
                                 }
                         }
                 }
@@ -945,9 +943,9 @@ static struct fsinfo *find_mounted_FS(const ch_t *path, u16_t len, u32_t *itemid
 {
         struct fsinfo *fsinfo = NULL;
 
-        int_t icount = list_get_item_count(vfs->mntList);
+        int icount = list_get_item_count(vfs->mntList);
 
-        for (int_t i = 0; i < icount; i++) {
+        for (int i = 0; i < icount; i++) {
 
                 struct fsinfo *data = list_get_nitem_data(vfs->mntList, i);
 
@@ -1019,8 +1017,8 @@ static struct fsinfo *find_base_FS(const ch_t *path, ch_t **extPath)
 //==============================================================================
 static ch_t *new_corrected_path(const ch_t *path, enum pathCorrection corr)
 {
-        ch_t   *new_path;
-        uint_t  new_path_len = strlen(path);
+        ch_t *new_path;
+        uint  new_path_len = strlen(path);
 
         if (corr == SUB_SLASH) {
                 if (path[new_path_len - 1] == '/') {

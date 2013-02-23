@@ -40,11 +40,11 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** program section */
-#define PROGRAM(name, stackMultiple)    const uint_t name##_stack_size =    \
+#define PROGRAM(name, stackMultiple)    const uint name##_stack_size =      \
                                         stackMultiple * MINIMAL_STACK_SIZE; \
                                         void name(void *_progarg_)
 
-#define EXTERN_PROGRAM(name)            extern const uint_t name##_stack_size; \
+#define EXTERN_PROGRAM(name)            extern const uint name##_stack_size; \
                                         extern void name(void *_progarg_)
 
 
@@ -52,7 +52,7 @@ extern "C" {
 #define PROG_SEC_BEGIN                  {FILE_t *stdin  = ((prog_t*)_progarg_)->stdin; \
                                          FILE_t *stdout = ((prog_t*)_progarg_)->stdout;\
                                          ch_t   **argv  = ((prog_t*)_progarg_)->argv;  \
-                                         int_t   argc   = ((prog_t*)_progarg_)->argc;  \
+                                         int     argc   = ((prog_t*)_progarg_)->argc;  \
                                          ch_t   *cwd    = ((prog_t*)_progarg_)->cwd;   \
                                          (void)stdin; (void)stdout; (void)argv;        \
                                          (void)argc;  (void)cwd;

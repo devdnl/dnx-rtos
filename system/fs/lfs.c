@@ -88,7 +88,7 @@ struct fshdl_s {
 static node_t   *new_node(node_t *nodebase, ch_t *filename, i32_t *item);
 static stdRet_t  delete_node(node_t *base, node_t *target, u32_t baseitemid);
 static node_t   *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
-static uint_t    get_path_deep(const ch_t *path);
+static uint    get_path_deep(const ch_t *path);
 static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item);
@@ -178,7 +178,7 @@ stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
         node_t *dirfile;
         ch_t   *drvname;
         ch_t   *filename;
-        uint_t  drvnamelen;
+        uint  drvnamelen;
         struct vfs_drvcfg *dcfg;
 
         if (!path || !drvcfg || !lfs) {
@@ -266,7 +266,7 @@ stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
         node_t *dir;
         ch_t   *dirname;
         ch_t   *name;
-        uint_t  dirnamelen;
+        uint  dirnamelen;
 
         if (!path || !lfs) {
                 return STD_RET_ERROR;
@@ -469,7 +469,7 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
         if (nodeobj->type != NODE_TYPE_DIR) {
                 i32_t n = list_get_item_count(lfs->openFile);
 
-                for (int_t i = 0; i < n; i++) {
+                for (int i = 0; i < n; i++) {
                         fopenInfo_t *olfoi = list_get_nitem_data(lfs->openFile, i);
 
                         if (olfoi->node == nodeobj) {
@@ -974,7 +974,7 @@ stdRet_t lfs_close(fsd_t fsd, fd_t fd)
         if (finf.removeAtClose == TRUE) {
                 i32_t n = list_get_item_count(lfs->openFile);
 
-                for (int_t i = 0; i < n; i++) {
+                for (int i = 0; i < n; i++) {
                         foi = list_get_nitem_data(lfs->openFile, i);
 
                         if (foi->node == node) {
@@ -1258,9 +1258,9 @@ static stdRet_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
  * @return path deep
  */
 //==============================================================================
-static uint_t get_path_deep(const ch_t *path)
+static uint get_path_deep(const ch_t *path)
 {
-        uint_t      deep     = 0;
+        uint      deep     = 0;
         const ch_t *lastpath = NULL;
 
         if (path[0] == '/') {
@@ -1298,9 +1298,9 @@ static node_t *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *
         node_t *curnode;
         node_t *node;
         ch_t   *pathend;
-        int_t   dirdeep;
-        uint_t  pathlen;
-        int_t   listsize;
+        int   dirdeep;
+        uint  pathlen;
+        int   listsize;
 
 
         if (!path || !startnode) {
@@ -1333,7 +1333,7 @@ static node_t *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *
                 listsize = list_get_item_count(curnode->data);
 
                 /* find that object exist ------------------------------------*/
-                int_t i = 0;
+                int i = 0;
                 while (listsize > 0) {
                         node = list_get_nitem_data(curnode->data, i++);
 

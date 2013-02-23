@@ -74,30 +74,30 @@ typedef enum
 typedef signed char stdRet_t;
 
 /** device number type */
-typedef uint_t devx_t;
+typedef uint devx_t;
 
 /** task/application ID */
-typedef uint_t PID_t;
+typedef uint PID_t;
 
 /** IO request type */
 typedef u8_t IORq_t;
 
 /** file descriptor */
-typedef uint_t fd_t;
+typedef uint fd_t;
 
 /** file system descriptor */
-typedef uint_t fsd_t;
+typedef uint fsd_t;
 
 /** file type */
 typedef struct
 {
-        uint_t   dev;
-        uint_t   fd;
-        stdRet_t (*f_close)(uint_t dev, uint_t fd);
-        size_t   (*f_write)(uint_t dev, uint_t fd, void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*f_read )(uint_t dev, uint_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
-        stdRet_t (*f_ioctl)(uint_t dev, uint_t fd, IORq_t iorq, void *data);
-        stdRet_t (*f_stat )(uint_t dev, uint_t fd, void *stat);
+        uint     dev;
+        uint     fd;
+        stdRet_t (*f_close)(uint dev, uint fd);
+        size_t   (*f_write)(uint dev, uint fd, void *src, size_t size, size_t nitems, size_t seek);
+        size_t   (*f_read )(uint dev, uint fd, void *dst, size_t size, size_t nitmes, size_t seek);
+        stdRet_t (*f_ioctl)(uint dev, uint fd, IORq_t iorq, void *data);
+        stdRet_t (*f_stat )(uint dev, uint fd, void *stat);
         size_t   f_seek;
 } FILE_t;
 
@@ -112,25 +112,25 @@ typedef struct
 /** directory type */
 typedef struct dir_s
 {
-        dirent_t  (*rddir)(fsd_t fsd, struct dir_s *dir);
-        stdRet_t  (*cldir)(fsd_t fsd, struct dir_s *dir);
-        size_t    items;
-        size_t    seek;
-        void     *dd;
-        fsd_t     fsd;
+        dirent_t (*rddir)(fsd_t fsd, struct dir_s *dir);
+        stdRet_t (*cldir)(fsd_t fsd, struct dir_s *dir);
+        size_t     items;
+        size_t     seek;
+        void      *dd;
+        fsd_t      fsd;
 } DIR_t;
 
 /** program standard arguments type */
 typedef struct appArgs_struct
 {
-        ch_t    **argv;              /* pointer to the argument list */
-        int_t    argc;               /* argument count */
-        FILE_t  *stdin;              /* file used only to read keyboard */
-        FILE_t  *stdout;             /* file used only to write to terminal */
-        task_t   taskHandle;         /* task handling for children */
-        task_t   parentTaskHandle;   /* task handling for parent */
-        ch_t    *cwd;                /* current working path */
-        stdRet_t exitCode;           /* exit code */
+        ch_t   **argv;              /* pointer to the argument list */
+        int      argc;              /* argument count */
+        FILE_t  *stdin;             /* file used only to read keyboard */
+        FILE_t  *stdout;            /* file used only to write to terminal */
+        task_t   taskHandle;        /* task handling for children */
+        task_t   parentTaskHandle;  /* task handling for parent */
+        ch_t    *cwd;               /* current working path */
+        stdRet_t exitCode;          /* exit code */
 } prog_t;
 
 /** time structure */

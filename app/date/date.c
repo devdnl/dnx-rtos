@@ -65,7 +65,7 @@ PROG_SEC_BEGIN
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv[], int_t argc)
+stdRet_t appmain(ch_t *argv[], int argc)
 {
       const ch_t *weekDayNames[] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
       const ch_t *monthsNames[]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",

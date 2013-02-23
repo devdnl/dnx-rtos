@@ -84,8 +84,8 @@ struct termHdl {
                 } input;
 
                 ch_t   editLine[TTY_EDIT_LINE_LEN + 1]; /* input line */
-                uint_t editLineLen;             /* edit line fill level */
-                uint_t cursorPosition;          /* cursor position in line */
+                uint editLineLen;             /* edit line fill level */
+                uint cursorPosition;          /* cursor position in line */
         } *tty[TTY_LAST];
 
         u8_t   currentTTY;      /* current terminal */
@@ -96,7 +96,7 @@ struct termHdl {
         sem_t  semcnt_stdout;   /* semaphore used to trigger daemon operation */
         u8_t   captureKeyStep;  /* decode Fn key step */
         ch_t   captureKeyTmp;   /* temporary value */
-        uint_t taskDelay;       /* task delay depended by user activity */
+        uint taskDelay;       /* task delay depended by user activity */
 };
 
 /* key detector results */
@@ -130,10 +130,10 @@ static void        refresh_last_line(u8_t dev, FILE_t *stream);
 static void        stdin_service(FILE_t *stream, u8_t dev);
 static void        switch_tty_immediately(u8_t dev, FILE_t *stream);
 static void        clear_tty(u8_t dev);
-static uint_t      add_message(u8_t dev, ch_t *msg, uint_t msgLen);
-static ch_t       *create_buffer_for_message(u8_t dev, ch_t *msg, uint_t msgLen);
+static uint      add_message(u8_t dev, ch_t *msg, uint msgLen);
+static ch_t       *create_buffer_for_message(u8_t dev, ch_t *msg, uint msgLen);
 static u8_t        count_non_lf_ended_messages(u8_t dev);
-static void        strncpy_LF2CRLF(ch_t *dst, ch_t *src, uint_t n);
+static void        strncpy_LF2CRLF(ch_t *dst, ch_t *src, uint n);
 static void        free_non_lf_ended_messages(u8_t dev, u8_t mgscount);
 static void        link_message(ch_t *msg, u8_t dev);
 static void        inc_message_counter(u8_t dev);
@@ -962,7 +962,7 @@ static void clear_tty(u8_t dev)
  * @return msgLen if message created, otherwise 0
  */
 //==============================================================================
-static uint_t add_message(u8_t dev, ch_t *msg, uint_t msgLen)
+static uint add_message(u8_t dev, ch_t *msg, uint msgLen)
 {
         u8_t  mgcnt;
         ch_t *newMsg;
@@ -1002,15 +1002,15 @@ static uint_t add_message(u8_t dev, ch_t *msg, uint_t msgLen)
  * @return pointer to new message buffer
  */
 //==============================================================================
-static ch_t *create_buffer_for_message(u8_t dev, ch_t *msgSrc, uint_t msgLen)
+static ch_t *create_buffer_for_message(u8_t dev, ch_t *msgSrc, uint msgLen)
 {
         ch_t   *msg;
         ch_t   *lstMsg     = TTY(dev)->line[get_message_index(dev, 1)];
         size_t  lstMsgSize = strlen(lstMsg);
-        uint_t  LF_count   = 0;
+        uint  LF_count   = 0;
 
         /* calculate how many '\n' exist in string */
-        for (uint_t i = 0; i < msgLen; i++) {
+        for (uint i = 0; i < msgLen; i++) {
                 if (msgSrc[i] == '\n') {
                         LF_count++;
                 }
@@ -1054,13 +1054,13 @@ static ch_t *create_buffer_for_message(u8_t dev, ch_t *msgSrc, uint_t msgLen)
  * @param  n            destination length
  */
 //==============================================================================
-static void strncpy_LF2CRLF(ch_t *dst, ch_t *src, uint_t n)
+static void strncpy_LF2CRLF(ch_t *dst, ch_t *src, uint n)
 {
         if (!dst || !src || !n) {
                 return;
         }
 
-        for (uint_t i = 0; i < (n - 1); i++) {
+        for (uint i = 0; i < (n - 1); i++) {
                 if (*src == '\n') {
                         *(dst++) = '\r';
                         *(dst++) = *(src++);
@@ -1462,9 +1462,9 @@ static void move_editline_to_stream(u8_t dev, FILE_t *stream)
 {
         TTY(dev)->editLine[TTY(dev)->editLineLen++] = '\n';
 
-        uint_t line_len = TTY(dev)->editLineLen;
+        uint line_len = TTY(dev)->editLineLen;
 
-        for (uint_t i = 0; i < line_len; i++) {
+        for (uint i = 0; i < line_len; i++) {
                 write_input_stream(TTY(dev)->editLine[i], dev);
         }
 

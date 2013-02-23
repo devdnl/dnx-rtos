@@ -147,7 +147,7 @@ struct pbuf *low_level_input(struct netif *netif)
 
       struct pbuf *p = NULL;
       struct pbuf *q = NULL;
-      uint_t       l = 0;
+      uint         l = 0;
 
       struct ether_frame frame = {0, 0};
 
@@ -528,7 +528,7 @@ void propel_timers(u32_t localtime)
  * @brief clear main function
  */
 //================================================================================================//
-stdRet_t appmain(ch_t *argv[], int_t argc)
+stdRet_t appmain(ch_t *argv[], int argc)
 {
       stdRet_t      status = STD_RET_ERROR;
       struct netif *netif  = malloc(sizeof(struct netif));
