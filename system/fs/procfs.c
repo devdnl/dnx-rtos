@@ -127,12 +127,12 @@ stdRet_t procfs_init(const ch_t *srcPath, fsd_t *fsd)
         }
 
         if ((procmem = calloc(1, sizeof(struct procmem))) != NULL) {
-                procmem->flist = ListCreate();
+                procmem->flist = new_list();
                 procmem->mtx   = CreateMutex();
 
                 if (!procmem->flist || !procmem->mtx) {
                         if (procmem->flist) {
-                                ListDelete(procmem->flist);
+                                delete_list(procmem->flist);
                         }
 
                         if (procmem->mtx) {
@@ -169,7 +169,7 @@ stdRet_t procfs_release(fsd_t fsd)
             TaskSuspendAll();
             GiveMutex(procmem->mtx);
             DeleteMutex(procmem->mtx);
-            ListDelete(procmem->flist);
+            delete_list(procmem->flist);
             free(procmem);
             procmem = NULL;
             TaskResumeAll();
@@ -260,7 +260,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
 
                 while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                if (ListAddItem(procmem->flist, procmem->idcnt, fileInf) == 0) {
+                if (list_add_item(procmem->flist, procmem->idcnt, fileInf) == 0) {
                         *fd   = procmem->idcnt++;
                         *seek = 0;
 
@@ -301,7 +301,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
 
                         while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                        if (ListAddItem(procmem->flist,
+                        if (list_add_item(procmem->flist,
                                         procmem->idcnt, fileInf) == 0) {
 
                                 *fd = procmem->idcnt++;
@@ -339,7 +339,7 @@ stdRet_t procfs_close(fsd_t fsd, fd_t fd)
                 while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK)
                         ;
 
-                if (ListRmItemByID(procmem->flist, fd) == STD_RET_OK) {
+                if (list_rm_iditem(procmem->flist, fd) == STD_RET_OK) {
                         GiveMutex(procmem->mtx);
                         return STD_RET_OK;
                 }
@@ -403,7 +403,7 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
         }
 
         while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
-        fileInf = ListGetItemDataByID(procmem->flist, fd);
+        fileInf = list_get_iditem_data(procmem->flist, fd);
         GiveMutex(procmem->mtx);
 
         if (fileInf == NULL) {
@@ -530,7 +530,7 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
         }
 
         while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
-        fileInf = ListGetItemDataByID(procmem->flist, fd);
+        fileInf = list_get_iditem_data(procmem->flist, fd);
         GiveMutex(procmem->mtx);
 
         if (fileInf == NULL) {

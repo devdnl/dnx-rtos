@@ -85,13 +85,13 @@ struct fshdl_s {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdRet_t  rmNode(node_t *base, node_t *target, u32_t baseitemid);
-static node_t   *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
-static uint_t    GetPathDeep(const ch_t *path);
+static node_t   *new_node(node_t *nodebase, ch_t *filename, i32_t *item);
+static stdRet_t  delete_node(node_t *base, node_t *target, u32_t baseitemid);
+static node_t   *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
+static uint_t    get_path_deep(const ch_t *path);
 static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
-static node_t   *CreateNode(node_t *nodebase, ch_t *filename, i32_t *item);
-static stdRet_t  AddNodeToListOfOpenFiles(node_t *nodebase, node_t *node, i32_t *item);
+static stdRet_t  add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item);
 
 /*==============================================================================
   Local object definitions
@@ -125,8 +125,8 @@ stdRet_t lfs_init(const ch_t *srcPath, fsd_t *fsd)
         lfs = calloc(1, sizeof(struct fshdl_s));
         if (lfs) {
                 lfs->mtx = CreateMutex();
-                lfs->root.data = ListCreate();
-                lfs->openFile = ListCreate();
+                lfs->root.data = new_list();
+                lfs->openFile  = new_list();
 
                 if (!lfs->mtx || !lfs->root.data || !lfs->openFile) {
                         if (lfs->mtx) {
@@ -134,11 +134,11 @@ stdRet_t lfs_init(const ch_t *srcPath, fsd_t *fsd)
                         }
 
                         if (lfs->root.data) {
-                                ListDelete(lfs->root.data);
+                                delete_list(lfs->root.data);
                         }
 
                         if (lfs->openFile) {
-                                ListDelete(lfs->openFile);
+                                delete_list(lfs->openFile);
                         }
 
                         free(lfs);
@@ -190,8 +190,8 @@ stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
         }
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
-        node   = GetNode(path, &lfs->root, -1, NULL);
-        ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
+        node   = get_node(path, &lfs->root, -1, NULL);
+        ifnode = get_node(strrchr(path, '/'), node, 0, NULL);
 
         /* directory must exist and created node not */
         if (node == NULL || ifnode != NULL) {
@@ -223,7 +223,7 @@ stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
                         dirfile->part = dcfg->part;
 
                         /* add new driver to this folder */
-                        if (ListAddItem(node->data, lfs->idcnt++, dirfile) >= 0) {
+                        if (list_add_item(node->data, lfs->idcnt++, dirfile) >= 0) {
                                 GiveMutex(lfs->mtx);
                                 return STD_RET_OK;
                         }
@@ -277,8 +277,8 @@ stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
         }
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
-        node   = GetNode(path, &lfs->root, -1, NULL);
-        ifnode = GetNode(strrchr(path, '/'), node, 0, NULL);
+        node   = get_node(path, &lfs->root, -1, NULL);
+        ifnode = get_node(strrchr(path, '/'), node, 0, NULL);
 
         /* check if target node not exist or the same name exist */
         if (node == NULL || ifnode != NULL) {
@@ -301,19 +301,19 @@ stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
                         goto lfs_mkdir_error;
                 }
 
-                dir->data = ListCreate();
+                dir->data = new_list();
                 if (dir->data) {
                         dir->name = (ch_t*)name;
                         dir->size = sizeof(node_t) + strlen(name);
                         dir->type = NODE_TYPE_DIR;
 
                         /* add new folder to this folder */
-                        if (ListAddItem(node->data, lfs->idcnt++, dir) >= 0) {
+                        if (list_add_item(node->data, lfs->idcnt++, dir) >= 0) {
                                 GiveMutex(lfs->mtx);
                                 return STD_RET_OK;
                         }
 
-                        ListDelete(dir->data);
+                        delete_list(dir->data);
                 }
 
                 /* free memory when error */
@@ -346,12 +346,12 @@ stdRet_t lfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
                 while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
                 /* go to target dir */
-                node_t *node = GetNode(path, &lfs->root, 0, NULL);
+                node_t *node = get_node(path, &lfs->root, 0, NULL);
 
                 if (node) {
                         if (node->type == NODE_TYPE_DIR) {
                                 if (dir) {
-                                        dir->items = ListGetItemCount(node->data);
+                                        dir->items = list_get_item_count(node->data);
                                         dir->rddir = lfs_readdir;
                                         dir->cldir = lfs_closedir;
                                         dir->seek  = 0;
@@ -409,7 +409,7 @@ static dirent_t lfs_readdir(fsd_t fsd, DIR_t *dir)
                 while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
                 node_t *from = dir->dd;
-                node_t *node = ListGetItemDataByNo(from->data, dir->seek++);
+                node_t *node = list_get_nitem_data(from->data, dir->seek++);
 
                 if (node) {
                         dirent.filetype = node->type;
@@ -451,8 +451,8 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
         dorm     = TRUE;
-        nodebase = GetNode(path, &lfs->root, -1, NULL);
-        nodeobj  = GetNode(path, &lfs->root, 0, &item);
+        nodebase = get_node(path, &lfs->root, -1, NULL);
+        nodeobj  = get_node(path, &lfs->root, 0, &item);
 
         if (!nodebase || !nodeobj || nodeobj == &lfs->root) {
                 goto lfs_remove_error;
@@ -467,10 +467,10 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
 
         /* check if file is opened */
         if (nodeobj->type != NODE_TYPE_DIR) {
-                i32_t n = ListGetItemCount(lfs->openFile);
+                i32_t n = list_get_item_count(lfs->openFile);
 
                 for (int_t i = 0; i < n; i++) {
-                        fopenInfo_t *olfoi = ListGetItemDataByNo(lfs->openFile, i);
+                        fopenInfo_t *olfoi = list_get_nitem_data(lfs->openFile, i);
 
                         if (olfoi->node == nodeobj) {
                                 olfoi->removeAtClose = TRUE;
@@ -481,9 +481,9 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
 
         /* remove node if possible */
         if (dorm == TRUE) {
-                if (ListGetItemID(nodebase->data, item, &itemid) == STD_RET_OK) {
+                if (list_get_nitem_ID(nodebase->data, item, &itemid) == STD_RET_OK) {
                         GiveMutex(lfs->mtx);
-                        return rmNode(nodebase, nodeobj, itemid);
+                        return delete_node(nodebase, nodeobj, itemid);
                 }
         } else {
                 GiveMutex(lfs->mtx);
@@ -523,8 +523,8 @@ stdRet_t lfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
         }
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
-        oldNodeBase = GetNode(oldName, &lfs->root, -1, NULL);
-        newNodeBase = GetNode(newName, &lfs->root, -1, NULL);
+        oldNodeBase = get_node(oldName, &lfs->root, -1, NULL);
+        newNodeBase = get_node(newName, &lfs->root, -1, NULL);
 
         if (!oldNodeBase || !newNodeBase) {
                 goto lfs_rename_error;
@@ -544,7 +544,7 @@ stdRet_t lfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
         }
 
         name = calloc(1, strlen(strrchr(newName, '/') + 1));
-        node = GetNode(oldName, &lfs->root, 0, NULL);
+        node = get_node(oldName, &lfs->root, 0, NULL);
 
         if (name && node) {
                 strcpy(name, strrchr(newName, '/') + 1);
@@ -598,7 +598,7 @@ stdRet_t lfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
         if (path && lfs) {
                 while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                node_t *node = GetNode(path, &lfs->root, 0, NULL);
+                node_t *node = get_node(path, &lfs->root, 0, NULL);
 
                 if (node) {
                         node->mode = mode;
@@ -632,7 +632,7 @@ stdRet_t lfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
         if (path && lfs) {
                 while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                node_t *node = GetNode(path, &lfs->root, 0, NULL);
+                node_t *node = get_node(path, &lfs->root, 0, NULL);
 
                 if (node) {
                         node->uid = owner;
@@ -670,7 +670,7 @@ stdRet_t lfs_stat(fsd_t fsd, const ch_t *path, struct vfs_stat *stat)
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        node_t *node = GetNode(path, &lfs->root, 0, NULL);
+        node_t *node = get_node(path, &lfs->root, 0, NULL);
         if (node) {
                 if ( (path[strlen(path) - 1] == '/' && node->type == NODE_TYPE_DIR)
                    || path[strlen(path) - 1] != '/') {
@@ -712,7 +712,7 @@ stdRet_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
         if (stat && lfs) {
                 while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                fopenInfo_t *foi = ListGetItemDataByID(lfs->openFile, fd);
+                fopenInfo_t *foi = list_get_iditem_data(lfs->openFile, fd);
 
                 if (foi) {
                         if (foi->node) {
@@ -812,8 +812,8 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        node     = GetNode(path, &lfs->root, 0, &item);
-        nodebase = GetNode(path, &lfs->root, -1, NULL);
+        node     = get_node(path, &lfs->root, 0, &item);
+        nodebase = get_node(path, &lfs->root, -1, NULL);
 
         /* create new file when necessary */
         if (nodebase && node == NULL) {
@@ -830,7 +830,7 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_
                 }
 
                 strcpy(filename, strrchr(path, '/') + 1);
-                node = CreateNode(nodebase, filename, &item);
+                node = new_node(nodebase, filename, &item);
 
                 if (node == NULL) {
                         free(filename);
@@ -849,8 +849,7 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_
         }
 
         /* add file to list of open files */
-        if (AddNodeToListOfOpenFiles(nodebase, node,
-                                     &item) == STD_RET_ERROR) {
+        if (add_node_to_list_of_open_files(nodebase, node, &item) == STD_RET_ERROR) {
                 goto lfs_open_error;
         }
 
@@ -891,13 +890,13 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_
                 if (drv->f_open(drv->dev, drv->part) == STD_RET_OK) {
                         *seek = 0;
                 } else {
-                        ListRmItemByNo(lfs->openFile, item);
+                        list_rm_nitem(lfs->openFile, item);
                         goto lfs_open_error;
                 }
         }
 
         /* everything success - load FD */
-        ListGetItemID(lfs->openFile, item, &cfd);
+        list_get_nitem_ID(lfs->openFile, item, &cfd);
         *fd = (fd_t)cfd;
         GiveMutex(lfs->mtx);
         return STD_RET_OK;
@@ -935,7 +934,7 @@ stdRet_t lfs_close(fsd_t fsd, fd_t fd)
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        foi = ListGetItemDataByID(lfs->openFile, fd);
+        foi = list_get_iditem_data(lfs->openFile, fd);
         if (foi == NULL) {
                 goto lfs_close_end;
         }
@@ -964,7 +963,7 @@ stdRet_t lfs_close(fsd_t fsd, fd_t fd)
         /* delete file from open list */
         finf = *foi;
 
-        if (ListRmItemByID(lfs->openFile, fd) != STD_RET_OK) {
+        if (list_rm_iditem(lfs->openFile, fd) != STD_RET_OK) {
                 /* critical error! */
                 goto lfs_close_end;
         }
@@ -973,10 +972,10 @@ stdRet_t lfs_close(fsd_t fsd, fd_t fd)
         status = STD_RET_OK;
 
         if (finf.removeAtClose == TRUE) {
-                i32_t n = ListGetItemCount(lfs->openFile);
+                i32_t n = list_get_item_count(lfs->openFile);
 
                 for (int_t i = 0; i < n; i++) {
-                        foi = ListGetItemDataByNo(lfs->openFile, i);
+                        foi = list_get_nitem_data(lfs->openFile, i);
 
                         if (foi->node == node) {
                                 goto lfs_close_end;
@@ -984,7 +983,7 @@ stdRet_t lfs_close(fsd_t fsd, fd_t fd)
                 }
 
                 /* file can be removed */
-                status = rmNode(finf.nodebase, finf.node, finf.itemID);
+                status = delete_node(finf.nodebase, finf.node, finf.itemID);
         }
 
         lfs_close_end:
@@ -1024,7 +1023,7 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
         }
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
-        foi = ListGetItemDataByID(lfs->openFile, fd);
+        foi = list_get_iditem_data(lfs->openFile, fd);
 
         if (foi == NULL) {
                 goto lfs_write_end;
@@ -1112,7 +1111,7 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        foi = ListGetItemDataByID(lfs->openFile, fd);
+        foi = list_get_iditem_data(lfs->openFile, fd);
         if (foi == NULL) {
                 goto lfs_read_end;
         }
@@ -1186,7 +1185,7 @@ stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
 
         while (TakeMutex(lfs->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        foi = ListGetItemDataByID(lfs->openFile, fd);
+        foi = list_get_iditem_data(lfs->openFile, fd);
         if (foi == NULL) {
                 goto lfs_ioctl_end;
         }
@@ -1222,15 +1221,15 @@ stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdRet_t rmNode(node_t *base, node_t *target, u32_t baseitemid)
+static stdRet_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
 {
         /* if DIR check if is empty */
         if (target->type == NODE_TYPE_DIR) {
 
-                if (ListGetItemCount(target->data) > 0) {
+                if (list_get_item_count(target->data) > 0) {
                         return STD_RET_ERROR;
                 } else {
-                        ListDelete(target->data);
+                        delete_list(target->data);
                         target->data = NULL;
                 }
         }
@@ -1243,7 +1242,7 @@ static stdRet_t rmNode(node_t *base, node_t *target, u32_t baseitemid)
                 free(target->data);
         }
 
-        if (ListRmItemByID(base->data, baseitemid) == STD_RET_OK) {
+        if (list_rm_iditem(base->data, baseitemid) == STD_RET_OK) {
                 return STD_RET_OK;
         }
 
@@ -1259,7 +1258,7 @@ static stdRet_t rmNode(node_t *base, node_t *target, u32_t baseitemid)
  * @return path deep
  */
 //==============================================================================
-static uint_t GetPathDeep(const ch_t *path)
+static uint_t get_path_deep(const ch_t *path)
 {
         uint_t      deep     = 0;
         const ch_t *lastpath = NULL;
@@ -1294,7 +1293,7 @@ static uint_t GetPathDeep(const ch_t *path)
  * @return node
  */
 //==============================================================================
-static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item)
+static node_t *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item)
 {
         node_t *curnode;
         node_t *node;
@@ -1313,7 +1312,7 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
         }
 
         curnode = startnode;
-        dirdeep = GetPathDeep(path);
+        dirdeep = get_path_deep(path);
 
         /* go to selected node -----------------------------------------------*/
         while (dirdeep + deep > 0) {
@@ -1331,12 +1330,12 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
                 }
 
                 /* get number of list items */
-                listsize = ListGetItemCount(curnode->data);
+                listsize = list_get_item_count(curnode->data);
 
                 /* find that object exist ------------------------------------*/
                 int_t i = 0;
                 while (listsize > 0) {
-                        node = ListGetItemDataByNo(curnode->data, i++);
+                        node = list_get_nitem_data(curnode->data, i++);
 
                         if (node == NULL) {
                                 dirdeep = 1 - deep;
@@ -1383,7 +1382,7 @@ static node_t *GetNode(const ch_t *path, node_t *startnode, i32_t deep, i32_t *i
  * @return NULL if error, otherwise new node address
  */
 //==============================================================================
-static node_t *CreateNode(node_t *nodebase, ch_t *filename, i32_t *item)
+static node_t *new_node(node_t *nodebase, ch_t *filename, i32_t *item)
 {
         node_t *fnode;
         i32_t   nitem;
@@ -1411,7 +1410,7 @@ static node_t *CreateNode(node_t *nodebase, ch_t *filename, i32_t *item)
         fnode->type  = NODE_TYPE_FILE;
         fnode->uid   = 0;
 
-        if ((nitem = ListAddItem(nodebase->data, lfs->idcnt++, fnode)) < 0) {
+        if ((nitem = list_add_item(nodebase->data, lfs->idcnt++, fnode)) < 0) {
                 free(fnode);
                 return NULL;
         }
@@ -1433,7 +1432,7 @@ static node_t *CreateNode(node_t *nodebase, ch_t *filename, i32_t *item)
  * @retval STD_RET_ERROR        file not registered
  */
 //==============================================================================
-static stdRet_t AddNodeToListOfOpenFiles(node_t *nodebase, node_t *node, i32_t *item)
+static stdRet_t add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item)
 {
         fopenInfo_t *openFileInfo;
         fopenInfo_t *openedFile;
@@ -1448,16 +1447,16 @@ static stdRet_t AddNodeToListOfOpenFiles(node_t *nodebase, node_t *node, i32_t *
         openFileInfo->node          = node;
         openFileInfo->nodebase      = nodebase;
 
-        if (ListGetItemID(nodebase->data, *item,
+        if (list_get_nitem_ID(nodebase->data, *item,
                         &openFileInfo->itemID) != STD_RET_OK) {
                 goto AddFileToListOfOpenFiles_Error;
         }
 
         /* find if file shall be removed */
-        openFileCount = ListGetItemCount(lfs->openFile);
+        openFileCount = list_get_item_count(lfs->openFile);
 
         for (i32_t i = 0; i < openFileCount; i++) {
-                openedFile = ListGetItemDataByNo(lfs->openFile, i);
+                openedFile = list_get_nitem_data(lfs->openFile, i);
 
                 if (openedFile->node != node) {
                         continue;
@@ -1470,7 +1469,7 @@ static stdRet_t AddNodeToListOfOpenFiles(node_t *nodebase, node_t *node, i32_t *
         }
 
         /* add open file info to list */
-        openFileListPos = ListAddItem(lfs->openFile,
+        openFileListPos = list_add_item(lfs->openFile,
                                       lfs->idcnt++,
                                       openFileInfo);
 

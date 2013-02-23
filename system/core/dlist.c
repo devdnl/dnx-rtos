@@ -58,9 +58,9 @@ typedef struct list {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void  GetItemAddrByNo(list_t *list, i32_t nitem, struct listitem **previtem,
+static void  get_iaddr_by_No(list_t *list, i32_t nitem, struct listitem **previtem,
                              struct listitem **thisitem);
-static i32_t GetItemAddrByID(list_t *list, u32_t id, struct listitem **previtem,
+static i32_t get_iaddr_by_ID(list_t *list, u32_t id, struct listitem **previtem,
                              struct listitem **thisitem);
 
 /*==============================================================================
@@ -77,14 +77,14 @@ static i32_t GetItemAddrByID(list_t *list, u32_t id, struct listitem **previtem,
  * @return pointer to new list object
  */
 //==============================================================================
-list_t *ListCreate(void)
+list_t *new_list(void)
 {
       return calloc(1, sizeof(list_t));
 }
 
 //==============================================================================
 /**
- * @brief Free list object
+ * @brief Delete list object
  *
  * Function free list object and all data inserted in data pointer. If data
  * inserted in data pointer is not dynamically allocated, please set this value
@@ -96,7 +96,7 @@ list_t *ListCreate(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListDelete(list_t *list)
+stdRet_t delete_list(list_t *list)
 {
         if (list) {
                 struct listitem *item     = list->head;
@@ -133,7 +133,7 @@ stdRet_t ListDelete(list_t *list)
  * @return number of item in list, if failure function return -1
  */
 //==============================================================================
-i32_t ListAddItem(list_t *list, u32_t id, void *data)
+i32_t list_add_item(list_t *list, u32_t id, void *data)
 {
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
@@ -171,7 +171,7 @@ i32_t ListAddItem(list_t *list, u32_t id, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
+stdRet_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *data)
 {
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
@@ -179,7 +179,7 @@ stdRet_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
                 if (newitem) {
                         struct listitem *item;
                         struct listitem *previtem;
-                        GetItemAddrByNo(list, nitem, &previtem, &item);
+                        get_iaddr_by_No(list, nitem, &previtem, &item);
 
                         if (item) {
                                 /* check head pointer */
@@ -221,7 +221,7 @@ stdRet_t ListInsItemBeforeNo(list_t *list, i32_t nitem, u32_t id,  void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
+stdRet_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *data)
 {
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
@@ -229,7 +229,7 @@ stdRet_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
                 if (newitem) {
                         struct listitem *item;
                         struct listitem *previtem;
-                        GetItemAddrByNo(list, nitem, &previtem, &item);
+                        get_iaddr_by_No(list, nitem, &previtem, &item);
 
                         if (item) {
                                 newitem->next = item->next;
@@ -264,13 +264,13 @@ stdRet_t ListInsItemAfterNo(list_t *list, i32_t nitem, u32_t id, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListRmItemByNo(list_t *list, i32_t nitem)
+stdRet_t list_rm_nitem(list_t *list, i32_t nitem)
 {
         if (list) {
                 if ((nitem >= 0) && (list->itemcount - 1 >= nitem)) {
                         struct listitem *item;
                         struct listitem *previtem;
-                        GetItemAddrByNo(list, nitem, &previtem, &item);
+                        get_iaddr_by_No(list, nitem, &previtem, &item);
 
                         if (item) {
                                 /* check head pointer */
@@ -315,12 +315,12 @@ stdRet_t ListRmItemByNo(list_t *list, i32_t nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListRmItemByID(list_t *list, u32_t id)
+stdRet_t list_rm_iditem(list_t *list, u32_t id)
 {
         if (list) {
                 struct listitem *item;
                 struct listitem *previtem;
-                i32_t nitem = GetItemAddrByID(list, id, &previtem, &item);
+                i32_t nitem = get_iaddr_by_ID(list, id, &previtem, &item);
 
                 if (item) {
                         /* check head pointer */
@@ -355,48 +355,6 @@ stdRet_t ListRmItemByID(list_t *list, u32_t id)
 
 //==============================================================================
 /**
- * @brief Clear list
- *
- * Function free all data inserted in items. If data inserted in data pointer is
- * not dynamically allocated, please set this value to NULL before use this
- * function.
- *
- * @param *list         pointer to list
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-stdRet_t ListClear(list_t *list)
-{
-        if (list) {
-                struct listitem *item     = list->head;
-                struct listitem *nextitem = NULL;
-
-                while (item) {
-                        nextitem = item->next;
-
-                        if (item->data) {
-                                free(item->data);
-                        }
-
-                        free(item);
-
-                        item = nextitem;
-                }
-
-                list->head = NULL;
-                list->tail = NULL;
-                list->itemcount = 0;
-
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
-}
-
-//==============================================================================
-/**
  * @brief Function set item data pointer
  * Function automatically free last data before use new data
  *
@@ -408,12 +366,12 @@ stdRet_t ListClear(list_t *list)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data)
+stdRet_t list_set_nitem_data(list_t *list, i32_t nitem, void *data)
 {
         if (list && (nitem >= 0)) {
 
                 struct listitem *item;
-                GetItemAddrByNo(list, nitem, NULL, &item);
+                get_iaddr_by_No(list, nitem, NULL, &item);
 
                 if (item) {
                         if (item->data) {
@@ -439,11 +397,11 @@ stdRet_t ListSetItemDataByNo(list_t *list, i32_t nitem, void *data)
  * @return pointer to item user data
  */
 //==============================================================================
-void *ListGetItemDataByNo(list_t *list, i32_t nitem)
+void *list_get_nitem_data(list_t *list, i32_t nitem)
 {
         if (list && (nitem >= 0)) {
                 struct listitem *item;
-                GetItemAddrByNo(list, nitem, NULL, &item);
+                get_iaddr_by_No(list, nitem, NULL, &item);
 
                 if (item) {
                         return item->data;
@@ -466,11 +424,11 @@ void *ListGetItemDataByNo(list_t *list, i32_t nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
+stdRet_t list_set_iditem_data(list_t *list, u32_t id, void *data)
 {
         if (list) {
                 struct listitem *item;
-                GetItemAddrByID(list, id, NULL, &item);
+                get_iaddr_by_ID(list, id, NULL, &item);
 
                 if (item) {
                         if (item->data) {
@@ -496,11 +454,11 @@ stdRet_t ListSetItemDataByID(list_t *list, u32_t id, void *data)
  * @return pointer to item user data
  */
 //==============================================================================
-void *ListGetItemDataByID(list_t *list, u32_t id)
+void *list_get_iditem_data(list_t *list, u32_t id)
 {
         if (list) {
                 struct listitem *item;
-                GetItemAddrByID(list, id, NULL, &item);
+                get_iaddr_by_ID(list, id, NULL, &item);
 
                 if (item) {
                         return item->data;
@@ -522,11 +480,11 @@ void *ListGetItemDataByID(list_t *list, u32_t id)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid)
+stdRet_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
 {
         if (list && nitem >= 0 && itemid) {
                 struct listitem *item;
-                GetItemAddrByNo(list, nitem, NULL, &item);
+                get_iaddr_by_No(list, nitem, NULL, &item);
 
                 if (item) {
                         *itemid = item->id;
@@ -549,11 +507,11 @@ stdRet_t ListGetItemID(list_t *list, i32_t nitem, u32_t *itemid)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListGetItemNo(list_t *list, u32_t id, i32_t *nitem)
+stdRet_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 {
         if (list && nitem) {
                 struct listitem *item;
-                i32_t itemno = GetItemAddrByID(list, id, NULL, &item);
+                i32_t itemno = get_iaddr_by_ID(list, id, NULL, &item);
 
                 if (item) {
                         *nitem = itemno;
@@ -577,11 +535,11 @@ stdRet_t ListGetItemNo(list_t *list, u32_t id, i32_t *nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem)
+stdRet_t list_unlink_nitem_data(list_t *list, i32_t nitem)
 {
         if (list) {
                 struct listitem *item;
-                GetItemAddrByNo(list, nitem, NULL, &item);
+                get_iaddr_by_No(list, nitem, NULL, &item);
 
                 if (item) {
                         item->data = NULL;
@@ -606,11 +564,11 @@ stdRet_t ListUnlinkItemDataByNo(list_t *list, i32_t nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t ListUnlinkItemDataByID(list_t *list, u32_t id)
+stdRet_t list_unlink_iditem_data(list_t *list, u32_t id)
 {
         if (list) {
                 struct listitem *item;
-                GetItemAddrByID(list, id, NULL, &item);
+                get_iaddr_by_ID(list, id, NULL, &item);
 
                 if (item) {
                         item->data = NULL;
@@ -631,7 +589,7 @@ stdRet_t ListUnlinkItemDataByID(list_t *list, u32_t id)
  * @return number of list's item, if error -1 is returned
  */
 //==============================================================================
-i32_t ListGetItemCount(list_t *list)
+i32_t list_get_item_count(list_t *list)
 {
         if (list) {
                 return list->itemcount;
@@ -650,7 +608,7 @@ i32_t ListGetItemCount(list_t *list)
  * @param  nitem        item number
  */
 //==============================================================================
-static void GetItemAddrByNo(list_t *list, i32_t nitem, struct listitem **previtem,
+static void get_iaddr_by_No(list_t *list, i32_t nitem, struct listitem **previtem,
                             struct listitem **thisitem)
 {
         struct listitem *titem = list->head;
@@ -685,7 +643,7 @@ static void GetItemAddrByNo(list_t *list, i32_t nitem, struct listitem **previte
  * @return item number
  */
 //==============================================================================
-static i32_t GetItemAddrByID(list_t *list, u32_t id, struct listitem **previtem,
+static i32_t get_iaddr_by_ID(list_t *list, u32_t id, struct listitem **previtem,
                              struct listitem **thisitem)
 {
         struct listitem *titem = list->head;

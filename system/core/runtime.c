@@ -345,11 +345,11 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
                 goto exit_error;
         }
 
-        if ((arg_list = ListCreate()) == NULL) {
+        if ((arg_list = new_list()) == NULL) {
                 goto exit_error;
         }
 
-        if (ListAddItem(arg_list, ++arg_count, (ch_t*)name) < 0) {
+        if (list_add_item(arg_list, ++arg_count, (ch_t*)name) < 0) {
                 goto exit_error;
         }
 
@@ -416,7 +416,7 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
                         goto exit_error;
                 }
 
-                if (ListAddItem(arg_list, ++arg_count, arg_to_add) < 0) {
+                if (list_add_item(arg_list, ++arg_count, arg_to_add) < 0) {
                         goto exit_error;
                 }
 
@@ -434,17 +434,17 @@ add_args_to_table:
         }
 
         for (int_t i = 0; i < arg_count; i++) {
-                arg_table[i] = ListGetItemDataByNo(arg_list, 0);
+                arg_table[i] = list_get_nitem_data(arg_list, 0);
 
                 if (arg_table[i] == NULL) {
                         goto exit_error;
                 }
 
-                ListUnlinkItemDataByNo(arg_list, 0);
-                ListRmItemByNo(arg_list, 0);
+                list_unlink_nitem_data(arg_list, 0);
+                list_rm_nitem(arg_list, 0);
         }
 
-        ListDelete(arg_list);
+        delete_list(arg_list);
 
         *argc = arg_count;
         return arg_table;
@@ -457,13 +457,13 @@ exit_error:
         }
 
         if (arg_list) {
-                i32_t items_in_list = ListGetItemCount(arg_list);
+                i32_t items_in_list = list_get_item_count(arg_list);
                 while (items_in_list-- > 0) {
-                        ListUnlinkItemDataByNo(arg_list, 0);
-                        ListRmItemByNo(arg_list, 0);
+                        list_unlink_nitem_data(arg_list, 0);
+                        list_rm_nitem(arg_list, 0);
                 }
 
-                ListDelete(arg_list);
+                delete_list(arg_list);
         }
 
         if (arg_string) {

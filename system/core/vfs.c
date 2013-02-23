@@ -102,7 +102,7 @@ stdRet_t vfs_init(void)
 
         if (vfs) {
                 vfs->mtx     = CreateMutex();
-                vfs->mntList = ListCreate();
+                vfs->mntList = new_list();
 
                 if (!vfs->mtx || !vfs->mntList) {
                         if (vfs->mtx) {
@@ -110,7 +110,7 @@ stdRet_t vfs_init(void)
                         }
 
                         if (vfs->mntList) {
-                                ListDelete(vfs->mntList);
+                                delete_list(vfs->mntList);
                         }
 
                         free(vfs);
@@ -173,7 +173,7 @@ stdRet_t vfs_mount(const ch_t *srcPath, const ch_t *mntPoint, struct vfs_fscfg *
                                 basefs->mntFSCnt++;
                         }
                 }
-        } else if (  ListGetItemCount(vfs->mntList) == 0
+        } else if (  list_get_item_count(vfs->mntList) == 0
                   && strlen(newpath) == 1
                   && newpath[0] == '/' ) {
 
@@ -191,7 +191,7 @@ stdRet_t vfs_mount(const ch_t *srcPath, const ch_t *mntPoint, struct vfs_fscfg *
                         newfs->basefs   = basefs;
                         newfs->mntFSCnt = 0;
 
-                        if (ListAddItem(vfs->mntList, vfs->idcnt++, newfs) >= 0) {
+                        if (list_add_item(vfs->mntList, vfs->idcnt++, newfs) >= 0) {
                                 GiveMutex(vfs->mtx);
                                 return STD_RET_OK;
                         }
@@ -258,7 +258,7 @@ stdRet_t vfs_umount(const ch_t *path)
                         free(mountfs->mntpoint);
                 }
 
-                if (ListRmItemByID(vfs->mntList, itemid) == STD_RET_OK) {
+                if (list_rm_iditem(vfs->mntList, itemid) == STD_RET_OK) {
                         GiveMutex(vfs->mtx);
                         return STD_RET_OK;
                 }
@@ -283,7 +283,7 @@ stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 struct fsinfo *fs = NULL;
 
                 while (TakeMutex(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
-                fs = ListGetItemDataByNo(vfs->mntList, item);
+                fs = list_get_nitem_data(vfs->mntList, item);
                 GiveMutex(vfs->mtx);
 
                 if (fs) {
@@ -945,11 +945,11 @@ static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid)
 {
         struct fsinfo *fsinfo = NULL;
 
-        int_t icount = ListGetItemCount(vfs->mntList);
+        int_t icount = list_get_item_count(vfs->mntList);
 
         for (int_t i = 0; i < icount; i++) {
 
-                struct fsinfo *data = ListGetItemDataByNo(vfs->mntList, i);
+                struct fsinfo *data = list_get_nitem_data(vfs->mntList, i);
 
                 if (strncmp(path, data->mntpoint, len) != 0) {
                         continue;
@@ -958,7 +958,7 @@ static struct fsinfo *FindMountedFS(const ch_t *path, u16_t len, u32_t *itemid)
                 fsinfo = data;
 
                 if (itemid) {
-                        if (ListGetItemID(vfs->mntList, i, itemid) != STD_RET_OK) {
+                        if (list_get_nitem_ID(vfs->mntList, i, itemid) != STD_RET_OK) {
                                 fsinfo = NULL;
                         }
                 }

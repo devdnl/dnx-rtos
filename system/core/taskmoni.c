@@ -143,12 +143,12 @@ static stdRet_t tskm_init(void)
                 tskm = calloc(1, sizeof(struct tskm));
 
                 if (tskm) {
-                        tskm->tasks = ListCreate();
+                        tskm->tasks = new_list();
                         tskm->mtx = CreateRecMutex();
 
                         if (!tskm->tasks || !tskm->mtx) {
                                 if (tskm->tasks)
-                                        ListDelete(tskm->tasks);
+                                        delete_list(tskm->tasks);
 
                                 if (tskm->mtx)
                                         DeleteRecMutex(tskm->mtx);
@@ -191,7 +191,7 @@ stdRet_t tskm_add_task(task_t taskHdl)
         if (tskm) {
                 while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                struct taskData *task = ListGetItemDataByID(tskm->tasks,
+                struct taskData *task = list_get_iditem_data(tskm->tasks,
                                                             (u32_t) taskHdl);
 
                 /* task does not exist */
@@ -199,7 +199,7 @@ stdRet_t tskm_add_task(task_t taskHdl)
                         task = calloc(1, sizeof(struct taskData));
 
                         if (task) {
-                                if (ListAddItem(tskm->tasks, (u32_t) taskHdl,
+                                if (list_add_item(tskm->tasks, (u32_t) taskHdl,
                                                 task) >= 0) {
                                         status = STD_RET_OK;
                                 } else {
@@ -233,7 +233,7 @@ stdRet_t tskm_delete_task(task_t taskHdl)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        struct taskData *taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)taskHdl);
+        struct taskData *taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskHdl);
 
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
@@ -295,7 +295,7 @@ stdRet_t tskm_delete_task(task_t taskHdl)
         }
 #endif
 
-        ListRmItemByID(tskm->tasks, (u32_t) taskHdl);
+        list_rm_iditem(tskm->tasks, (u32_t) taskHdl);
 
         GiveRecMutex(tskm->mtx);
 
@@ -328,7 +328,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        struct taskData *taskdata = ListGetItemDataByNo(tskm->tasks, item);
+        struct taskData *taskdata = list_get_nitem_data(tskm->tasks, item);
         if (taskdata == NULL) {
                 return STD_RET_ERROR;
         }
@@ -376,7 +376,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         GiveRecMutex(tskm->mtx);
 
         task_t taskHdl = 0;
-        ListGetItemID(tskm->tasks, item, (task_t) &taskHdl);
+        list_get_nitem_ID(tskm->tasks, item, (task_t) &taskHdl);
 
         stat->task_handle     = taskHdl;
         stat->task_name       = TaskGetName(taskHdl);
@@ -388,7 +388,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         stat->cpu_usage_total = cpuctl_GetCPUTotalTime();
         stat->priority        = TaskGetPriority(taskHdl);
 
-        if (item == ListGetItemCount(tskm->tasks) - 1) {
+        if (item == list_get_item_count(tskm->tasks) - 1) {
                 cpuctl_ClearCPUTotalTime();
         }
 
@@ -418,7 +418,7 @@ stdRet_t tskm_get_task_stat(task_t taskHdl, struct taskstat *stat)
 
         i32_t item = -1;
 
-        if (ListGetItemNo(tskm->tasks, (u32_t) taskHdl, &item) == STD_RET_OK) {
+        if (list_get_iditem_No(tskm->tasks, (u32_t) taskHdl, &item) == STD_RET_OK) {
                 return tskm_get_ntask_stat(item, stat);
         }
 
@@ -442,7 +442,7 @@ u16_t tskm_get_task_count(void)
                 return -1;
         }
 
-        return ListGetItemCount(tskm->tasks);
+        return list_get_item_count(tskm->tasks);
 }
 #endif
 
@@ -468,7 +468,7 @@ void *tskm_malloc(u32_t size)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -559,7 +559,7 @@ void tskm_free(void *mem)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return;
         }
@@ -636,7 +636,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -707,7 +707,7 @@ stdRet_t tskm_fclose(FILE_t *file)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
         }
@@ -781,7 +781,7 @@ DIR_t *tskm_opendir(const ch_t *path)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -852,7 +852,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
 
         while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
         }
