@@ -221,7 +221,7 @@ xThreadState *pxThreadState;
 
 	/* Create the events and mutexes that are used to synchronise all the
 	threads. */
-	pvInterruptEventMutex = CreateMutex( NULL, FALSE, NULL );
+	pvInterruptEventMutex = new_mutex( NULL, FALSE, NULL );
 	pvInterruptEvent = CreateEvent( NULL, FALSE, FALSE, NULL );
 
 	if( ( pvInterruptEventMutex == NULL ) || ( pvInterruptEvent == NULL ) )

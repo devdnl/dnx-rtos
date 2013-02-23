@@ -158,7 +158,7 @@ static stdRet_t tskm_init(void)
 
                                 status = STD_RET_ERROR;
                         } else {
-                                cpuctl_InitTimeStatCnt();
+                                cpuctl_init_CPU_load_timer();
                         }
                 }
         }
@@ -225,7 +225,7 @@ stdRet_t tskm_add_task(task_t taskHdl)
 #if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_delete_task(task_t taskHdl)
+stdRet_t tskm_remove_task(task_t taskHdl)
 {
         if (tskm == NULL) {
                 return STD_RET_ERROR;
@@ -385,11 +385,11 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         stat->cpu_usage       = (u32_t)TaskGetTag(taskHdl);
         TaskSetTag(taskHdl, (void*)0);
         TaskResumeAll();
-        stat->cpu_usage_total = cpuctl_GetCPUTotalTime();
+        stat->cpu_usage_total = cpuctl_get_CPU_total_time();
         stat->priority        = TaskGetPriority(taskHdl);
 
         if (item == list_get_item_count(tskm->tasks) - 1) {
-                cpuctl_ClearCPUTotalTime();
+                cpuctl_clear_CPU_total_time();
         }
 
         return STD_RET_OK;
@@ -912,7 +912,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
 #if (TSK_MONITOR_CPU_LOAD > 0)
 void tskm_task_switched_in(void)
 {
-        cpuctl_ClearTimeStatCnt();
+        cpuctl_clear_CPU_load_timer();
 }
 #endif
 
@@ -924,7 +924,7 @@ void tskm_task_switched_in(void)
 #if (TSK_MONITOR_CPU_LOAD > 0)
 void tskm_task_switched_out(void)
 {
-        u16_t  cnt     = cpuctl_GetTimeStatCnt();
+        u16_t  cnt     = cpuctl_get_CPU_load_timer();
         task_t taskhdl = TaskGetCurrentTaskHandle();
         u32_t  tmp     = (u32_t)TaskGetTag(taskhdl) + cnt;
         TaskSetTag(taskhdl, (void*)tmp);

@@ -128,7 +128,7 @@ stdRet_t procfs_init(const ch_t *srcPath, fsd_t *fsd)
 
         if ((procmem = calloc(1, sizeof(struct procmem))) != NULL) {
                 procmem->flist = new_list();
-                procmem->mtx   = CreateMutex();
+                procmem->mtx   = new_mutex();
 
                 if (!procmem->flist || !procmem->mtx) {
                         if (procmem->flist) {
@@ -439,7 +439,7 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
                                       taskInfo.cpu_usage_total,
                                     ((taskInfo.cpu_usage * 1000) /
                                       taskInfo.cpu_usage_total) % 10);
-                cpuctl_ClearCPUTotalTime();
+                cpuctl_clear_CPU_total_time();
                 break;
 
         case TASK_FILE_FREESTACK:

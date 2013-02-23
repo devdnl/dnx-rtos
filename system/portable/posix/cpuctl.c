@@ -60,7 +60,7 @@ static u32_t TotalCPUTime;
  * @brief Basic (first) CPU/microcontroller configuration
  */
 //==============================================================================
-void cpuctl_BasicConfig(void)
+void cpuctl_init(void)
 {
 }
 
@@ -69,7 +69,7 @@ void cpuctl_BasicConfig(void)
  * @brief Restart CPU
  */
 //==============================================================================
-void cpuctl_SystemReboot(void)
+void cpuctl_system_restart(void)
 {
 }
 
@@ -78,7 +78,7 @@ void cpuctl_SystemReboot(void)
  * @brief Start counter used in CPU load measurement
  */
 //==============================================================================
-void cpuctl_InitTimeStatCnt(void)
+void cpuctl_init_CPU_load_timer(void)
 {
 }
 
@@ -87,7 +87,7 @@ void cpuctl_InitTimeStatCnt(void)
  * @brief Function called after task go to ready state
  */
 //==============================================================================
-void cpuctl_ClearTimeStatCnt(void)
+void cpuctl_clear_CPU_load_timer(void)
 {
 }
 
@@ -96,7 +96,7 @@ void cpuctl_ClearTimeStatCnt(void)
  * @brief Function called when task go out ready state
  */
 //==============================================================================
-u32_t cpuctl_GetTimeStatCnt(void)
+u32_t cpuctl_get_CPU_load_timer(void)
 {
         return 0;
 }
@@ -108,7 +108,7 @@ u32_t cpuctl_GetTimeStatCnt(void)
  * @return CPU total time
  */
 //==============================================================================
-u32_t cpuctl_GetCPUTotalTime(void)
+u32_t cpuctl_get_CPU_total_time(void)
 {
         return TotalCPUTime;
 }
@@ -118,7 +118,7 @@ u32_t cpuctl_GetCPUTotalTime(void)
  * @brief Function clear CPU total time
  */
 //==============================================================================
-void cpuctl_ClearCPUTotalTime(void)
+void cpuctl_clear_CPU_total_time(void)
 {
         TotalCPUTime = 0;
 }

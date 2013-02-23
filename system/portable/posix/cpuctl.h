@@ -50,13 +50,13 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void  cpuctl_BasicConfig(void);
-extern void  cpuctl_SystemReboot(void);
-extern void  cpuctl_InitTimeStatCnt(void);
-extern u32_t cpuctl_GetTimeStatCnt(void);
-extern void  cpuctl_ClearTimeStatCnt(void);
-extern u32_t cpuctl_GetCPUTotalTime(void);
-extern void  cpuctl_ClearCPUTotalTime(void);
+extern void  cpuctl_init(void);
+extern void  cpuctl_system_restart(void);
+extern void  cpuctl_init_CPU_load_timer(void);
+extern u32_t cpuctl_get_CPU_load_timer(void);
+extern void  cpuctl_clear_CPU_load_timer(void);
+extern u32_t cpuctl_get_CPU_total_time(void);
+extern void  cpuctl_clear_CPU_total_time(void);
 
 #ifdef __cplusplus
 }

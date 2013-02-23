@@ -124,7 +124,7 @@ stdRet_t lfs_init(const ch_t *srcPath, fsd_t *fsd)
 
         lfs = calloc(1, sizeof(struct fshdl_s));
         if (lfs) {
-                lfs->mtx = CreateMutex();
+                lfs->mtx = new_mutex();
                 lfs->root.data = new_list();
                 lfs->openFile  = new_list();
 
@@ -751,8 +751,8 @@ stdRet_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
         (void) fsd;
 
         if (statfs) {
-                statfs->f_bfree  = memman_GetFreeHeapSize();
-                statfs->f_blocks = memman_GetHeapSize();
+                statfs->f_bfree  = memman_get_free_heap();
+                statfs->f_blocks = memman_get_heap_size();
                 statfs->f_ffree  = 0;
                 statfs->f_files  = 0;
                 statfs->f_type   = 0x01;

@@ -86,7 +86,7 @@ extern "C" {
 
 /** SEMAPHORES AND MUTEXES */
 #define CreateSemCnt(maxCnt, intCnt)      xSemaphoreCreateCounting(maxCnt, intCnt)
-#define CreateMutex()                     xSemaphoreCreateMutex()
+#define new_mutex()                       xSemaphoreCreateMutex()
 #define CreateRecMutex()                  xSemaphoreCreateRecursiveMutex()
 #define DeleteSemBin(sem)                 vSemaphoreDelete(sem)
 #define DeleteSemCnt(sem)                 vSemaphoreDelete(sem)

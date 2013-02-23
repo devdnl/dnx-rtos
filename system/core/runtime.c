@@ -81,7 +81,7 @@ static void    delete_argument_table(ch_t **argv, int argc);
 //==============================================================================
 prog_t *exec(const ch_t *name, ch_t *argv)
 {
-        regAppData_t appData = regapp_GetAppData(name);
+        regAppData_t appData = regapp_get_program_data(name);
 
         if (appData.appPtr == NULL || *appData.stackSize < MINIMAL_STACK_SIZE) {
                 return NULL;

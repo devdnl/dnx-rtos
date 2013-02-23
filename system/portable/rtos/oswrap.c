@@ -110,7 +110,7 @@ int_t new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
 //==============================================================================
 void delete_task(task_t taskHdl)
 {
-        tskm_delete_task(taskHdl);
+        tskm_remove_task(taskHdl);
         vTaskDelete(taskHdl);
 }
 

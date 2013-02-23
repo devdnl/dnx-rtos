@@ -155,7 +155,7 @@ stdRet_t DS1307_Init(devx_t dev, fd_t part)
             rtc = calloc(1, sizeof(struct rtc_struct));
 
             if (rtc) {
-                  rtc->mtx = CreateMutex();
+                  rtc->mtx = new_mutex();
 
                   if (rtc->mtx) {
                         FILE_t *fi2c;

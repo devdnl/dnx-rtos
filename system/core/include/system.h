@@ -86,8 +86,8 @@ extern "C" {
 #define SystemEnableIRQ()                 TaskEnableIRQ()
 #define SystemGetAppHandle()              TaskGetCurrentTaskHandle()
 #define SystemAppSuspend()                TaskSuspend(NULL)
-#define SystemGetFreeMemSize()            memman_GetFreeHeapSize()
-#define SystemGetUsedMemSize()            memman_GetUsedHeapSize()
+#define SystemGetFreeMemSize()            memman_get_free_heap()
+#define SystemGetUsedMemSize()            memman_get_used_heap()
 #define SystemGetMemSize()                MEMMAN_HEAP_SIZE
 #define SystemGetUptime()                 GetUptimeCnt()
 #define SystemGetTaskCount()              TaskGetNumberOfTasks()
@@ -95,7 +95,7 @@ extern "C" {
 #define SystemGetAppName()                TaskGetName(NULL)
 #define SystemGetTaskStat(item, statPtr)  tskm_get_ntask_stat(item, statPtr)
 #define SystemGetMoniTaskCount()          tskm_get_task_count()
-#define SystemReboot()                    cpuctl_SystemReboot()
+#define SystemReboot()                    cpuctl_system_restart()
 #define SystemGetOSName()                 "dnx"
 #define SystemGetKernelName()             "FreeRTOS"
 #define SystemGetOSVersion()              "0.6.1"

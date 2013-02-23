@@ -55,9 +55,9 @@ typedef struct {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern regAppData_t  regapp_GetAppData   (const ch_t *appName);
-extern regAppData_t *regapp_GetAppListPtr(void);
-extern int_t         regapp_GetAppCount  (void);
+extern regAppData_t  regapp_get_program_data(const ch_t *appName);
+extern regAppData_t *regapp_get_pointer_to_program_list(void);
+extern int_t         regapp_get_program_count(void);
 
 #ifdef __cplusplus
 }

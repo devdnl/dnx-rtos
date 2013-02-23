@@ -91,15 +91,15 @@ void task_initd(void *arg)
       mount("procfs", NULL, "/proc");
 
       /* early initialization - basic drivers start */
-      if (init_drv("pll", NULL) != STD_RET_OK) {
+      if (init_driver("pll", NULL) != STD_RET_OK) {
             while (TRUE);
       }
 
-      init_drv("gpio", NULL);
+      init_driver("gpio", NULL);
 
       /* early initialization - terminal support */
-      init_drv("uart1", "/dev/ttyS0");
-      init_drv("tty0", "/dev/tty0");
+      init_driver("uart1", "/dev/ttyS0");
+      init_driver("tty0", "/dev/tty0");
       kprintEnable("/dev/tty0");
 
 #if defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
@@ -113,16 +113,16 @@ void task_initd(void *arg)
              SystemGetOSName(), SystemGetKernelName());
 
       /* driver initialization */
-      init_drv("tty1", "/dev/tty1");
-      init_drv("tty2", "/dev/tty2");
+      init_driver("tty1", "/dev/tty1");
+      init_driver("tty2", "/dev/tty2");
 #if !defined(ARCH_posix) /* DNLTEST posix bug: kprint works only on /dev/ttyS0 */
-      init_drv("tty3", "/dev/tty3");
+      init_driver("tty3", "/dev/tty3");
 #endif
-      init_drv("i2c1", "/dev/i2c");
-      init_drv("ds1307rtc", "/dev/rtc");
-      init_drv("ds1307nvm", "/dev/nvm");
-      init_drv("eth0", "/dev/eth0");
-      init_drv("mpl115a2", "/dev/sensor");
+      init_driver("i2c1", "/dev/i2c");
+      init_driver("ds1307rtc", "/dev/rtc");
+      init_driver("ds1307nvm", "/dev/nvm");
+      init_driver("eth0", "/dev/eth0");
+      init_driver("mpl115a2", "/dev/sensor");
 
 #if !defined(ARCH_posix)
       if (start_daemon("lwipd", "--dhcp") == STD_RET_OK) {

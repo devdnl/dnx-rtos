@@ -68,7 +68,7 @@ extern "C" {
 int main(void)
 {
         /* basic configuration depending on architecture */
-        cpuctl_BasicConfig();
+        cpuctl_init();
 
         /* dynamic memory management initialization */
         memman_init();

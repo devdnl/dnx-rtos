@@ -128,7 +128,7 @@ struct taskstat {
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
 extern stdRet_t  tskm_add_task         (task_t taskHdl);
-extern stdRet_t  tskm_delete_task      (task_t taskHdl);
+extern stdRet_t  tskm_remove_task      (task_t taskHdl);
 extern stdRet_t  tskm_get_ntask_stat   (i32_t item, struct taskstat *stat);
 extern stdRet_t  tskm_get_task_stat    (task_t taskHdl, struct taskstat *stat);
 extern u16_t     tskm_get_task_count   (void);

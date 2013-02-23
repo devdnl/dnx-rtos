@@ -440,7 +440,7 @@ void *memman_calloc(size_t count, size_t size)
  * @return free memory
  */
 //==============================================================================
-u32_t memman_GetFreeHeapSize(void)
+u32_t memman_get_free_heap(void)
 {
         return (MEMMAN_HEAP_SIZE - used_mem);
 }
@@ -452,7 +452,7 @@ u32_t memman_GetFreeHeapSize(void)
  * @return used memory
  */
 //==============================================================================
-u32_t memman_GetUsedHeapSize(void)
+u32_t memman_get_used_heap(void)
 {
         return used_mem;
 }
@@ -464,7 +464,7 @@ u32_t memman_GetUsedHeapSize(void)
  * @return memory size
  */
 //==============================================================================
-u32_t memman_GetHeapSize(void)
+u32_t memman_get_heap_size(void)
 {
         return MEMMAN_HEAP_SIZE;
 }

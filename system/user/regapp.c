@@ -92,7 +92,7 @@ static const regAppData_t appList[] = {
  * @return application informations needed to run
  */
 //==============================================================================
-regAppData_t regapp_GetAppData(const ch_t *appName)
+regAppData_t regapp_get_program_data(const ch_t *appName)
 {
         regAppData_t appNULL = {NULL, NULL, 0};
 
@@ -113,7 +113,7 @@ regAppData_t regapp_GetAppData(const ch_t *appName)
  * @return pointer to application list
  */
 //==============================================================================
-regAppData_t *regapp_GetAppListPtr(void)
+regAppData_t *regapp_get_pointer_to_program_list(void)
 {
         return (regAppData_t*)appList;
 }
@@ -125,7 +125,7 @@ regAppData_t *regapp_GetAppListPtr(void)
  * @return application count
  */
 //==============================================================================
-int_t regapp_GetAppCount(void)
+int_t regapp_get_program_count(void)
 {
         return ARRAY_SIZE(appList);
 }

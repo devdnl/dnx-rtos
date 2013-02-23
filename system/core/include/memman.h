@@ -97,9 +97,9 @@ extern void   memman_init(void);
 extern void  *memman_malloc(size_t size);
 extern void  *memman_calloc(size_t count, size_t size);
 extern void   memman_free(void *mem);
-extern u32_t  memman_GetFreeHeapSize(void);
-extern u32_t  memman_GetUsedHeapSize(void);
-extern u32_t  memman_GetHeapSize(void);
+extern u32_t  memman_get_free_heap(void);
+extern u32_t  memman_get_used_heap(void);
+extern u32_t  memman_get_heap_size(void);
 
 #ifdef __cplusplus
 }
