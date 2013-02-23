@@ -36,6 +36,7 @@ extern "C" {
 #include "oswrap.h"
 #include "taskmoni.h"
 #include "io.h"
+#include "dlist.h"
 #include <string.h>
 
 /*==============================================================================
@@ -53,8 +54,7 @@ extern "C" {
   Local function prototypes
 ==============================================================================*/
 static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg);
-static uint_t  count_arguments(ch_t *arg);
-static ch_t  **new_argument_table(ch_t *arg, const ch_t *name);
+static ch_t  **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc);
 static void    delete_argument_table(ch_t **argv);
 
 /*==============================================================================
@@ -276,7 +276,7 @@ stdRet_t ParseArg(ch_t *argv, ch_t *findArg, parseType_t parseAs, void *result)
 
 //==============================================================================
 /**
- * @brief This function start task as application
+ * @brief This function start task as program
  *
  * @param[in]   app                 program function
  * @param[in]  *name                program name
@@ -299,8 +299,7 @@ static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t 
                 return NULL;
         }
 
-        progHdl->argc = count_arguments(arg) + 1; /* + program name */
-        progHdl->argv = new_argument_table(arg, name);
+        progHdl->argv = new_argument_table(arg, name, &progHdl->argc);
         if (progHdl->argv == NULL) {
                 free(progHdl);
                 return NULL;
@@ -326,92 +325,103 @@ static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t 
 
 //==============================================================================
 /**
- * @brief Function count the number of arguments in string
- *
- * @param *arg          argument string
- *
- * @return the number of arguments
- */
-//==============================================================================
-static uint_t count_arguments(ch_t *arg)
-{
-        if (arg == NULL) {
-                return 0;
-        }
-
-        if (arg[0] == '\0') {
-                return 0;
-        }
-
-        uint_t argc = 0;
-
-        while (*arg != '\0') {
-                if (*arg != ' ') {
-                        argc++;
-
-                        while (*arg != ' ' && *arg != '\0') {
-                                arg++;
-                        }
-                } else {
-                        arg++;
-                }
-        }
-
-        return argc;
-}
-
-//==============================================================================
-/**
  * @brief Function create new table with argument pointers
  *
- * @param *arg          argument string
- * @param *name         program name (argument argv[0])
+ * @param[in]  *arg             argument string
+ * @param[in]  *name            program name (argument argv[0])
+ * @param[out] *arg_count       number of argument
  *
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static ch_t **new_argument_table(ch_t *arg, const ch_t *name)
+static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
 {
-        if (arg == NULL || name == NULL) {
-                return NULL;
+        int_t   arg_count  = 0;
+        ch_t  **arg_table  = NULL;
+        list_t *arg_list   = NULL;
+        ch_t   *arg_string = NULL;
+
+        if (arg == NULL || name == NULL || argc == NULL) {
+                goto new_argument_table_error;
         }
 
-        uint_t argc   = count_arguments(arg);
-        ch_t **argptr = calloc(argc + 1, sizeof(ch_t*));
-        if (argptr == NULL) {
-                return NULL;
+        if ((arg_list = ListCreate()) == NULL) {
+                goto new_argument_table_error;
         }
 
-        ch_t *args = calloc(strlen(arg) + 1, sizeof(ch_t));
-        if (args == NULL) {
-                free(argptr);
-                return NULL;
+        if (ListAddItem(arg_list, ++arg_count, (ch_t*)name) < 0) {
+                goto new_argument_table_error;
         }
 
-        strcpy(args, arg);
+        if ((arg_string = calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
+                goto new_argument_table_error;
+        }
 
-        argptr[0] = (ch_t*)name;
+        strcpy(arg_string, arg);
 
-        uint_t arg_n = 1;
-        while (*args != '\0') {
-                if (*args != ' ') {
-                        argptr[arg_n++] = args;
-
-                        while (*args != ' ' && *args != '\0') {
-                                args++;
+        while (*arg_string != '\0') { /* DNLTODO string recognize */
+                if (*arg_string != ' ') {
+                        if (ListAddItem(arg_list, ++arg_count, arg_string) < 0) {
+                                goto new_argument_table_error;
                         }
 
-                        if (*args == '\0') {
+                        while (*arg_string != ' ' && *arg_string != '\0') {
+                                arg_string++;
+                        }
+
+                        if (*arg_string == '\0') {
                                 break;
                         } else {
-                                *args++ = '\0';
+                                *arg_string++ = '\0';
                         }
                 } else {
-                        args++;
+                        arg_string++;
                 }
         }
 
-        return argptr;
+        if ((arg_table = calloc(arg_count, sizeof(ch_t*))) == NULL) {
+                goto new_argument_table_error;
+        }
+
+        for (int_t i = 0; i < arg_count; i++) {
+                arg_table[i] = ListGetItemDataByNo(arg_list, 0);
+
+                if (arg_table[i] == NULL) {
+                        goto new_argument_table_error;
+                }
+
+                ListUnlinkItemDataByNo(arg_list, 0);
+                ListRmItemByNo(arg_list, 0);
+        }
+
+        ListDelete(arg_list);
+
+        *argc = arg_count;
+        return arg_table;
+
+
+        /* error occurred - memory/object deallocation */
+new_argument_table_error:
+        if (arg_table) {
+                free(arg_table);
+        }
+
+        if (arg_list) {
+                i32_t items_in_list = ListGetItemCount(arg_list);
+                while (items_in_list-- > 0) {
+                        ListUnlinkItemDataByNo(arg_list, 0);
+                        ListRmItemByNo(arg_list, 0);
+                }
+
+                ListDelete(arg_list);
+        }
+
+        if (arg_string) {
+                free(arg_string);
+        }
+
+        *argc = 0;
+        return NULL;
 }
 
 //==============================================================================
@@ -432,8 +442,8 @@ static void delete_argument_table(ch_t **argv)
         }
 
         free(argv[1]);
+        free(argv);
 }
-
 
 #ifdef __cplusplus
 }
