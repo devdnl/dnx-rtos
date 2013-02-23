@@ -55,7 +55,7 @@ extern "C" {
 ==============================================================================*/
 static prog_t *new_program(task_t app, const ch_t *name, uint_t stackSize, ch_t *arg);
 static ch_t  **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc);
-static void    delete_argument_table(ch_t **argv);
+static void    delete_argument_table(ch_t **argv, int argc);
 
 /*==============================================================================
   Local object definitions
@@ -129,7 +129,7 @@ stdRet_t kill_prog(prog_t *prog)
                         delete_task(prog->taskHandle);
                 }
 
-                delete_argument_table(prog->argv);
+                delete_argument_table(prog->argv, prog->argc);
 
                 free(prog);
 
@@ -157,7 +157,7 @@ void exit_prog(prog_t *prog, stdRet_t exitCode)
         prog->taskHandle       = NULL;
         prog->parentTaskHandle = NULL;
 
-        delete_argument_table(prog->argv);
+        delete_argument_table(prog->argv, prog->argc);
 
         delete_task(TaskGetCurrentTaskHandle());
 }
@@ -342,52 +342,100 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
         ch_t   *arg_string = NULL;
 
         if (arg == NULL || name == NULL || argc == NULL) {
-                goto new_argument_table_error;
+                goto error_free_resources;
         }
 
         if ((arg_list = ListCreate()) == NULL) {
-                goto new_argument_table_error;
+                goto error_free_resources;
         }
 
         if (ListAddItem(arg_list, ++arg_count, (ch_t*)name) < 0) {
-                goto new_argument_table_error;
+                goto error_free_resources;
+        }
+
+        if (arg[0] == '\0') {
+                goto add_args_to_table;
         }
 
         if ((arg_string = calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
-                goto new_argument_table_error;
+                goto error_free_resources;
         }
 
         strcpy(arg_string, arg);
 
-        while (*arg_string != '\0') { /* DNLTODO string recognize */
-                if (*arg_string != ' ') {
-                        if (ListAddItem(arg_list, ++arg_count, arg_string) < 0) {
-                                goto new_argument_table_error;
-                        }
+        while (*arg_string != '\0') {
+                ch_t *arg_to_add = NULL;
 
-                        while (*arg_string != ' ' && *arg_string != '\0') {
+                if (*arg_string == '\'') {
+                        arg_to_add = ++arg_string;
+
+                        while (*arg_string != '\0') {
+                                if ( *arg_string == '\''
+                                   && (  *(arg_string + 1) == ' '
+                                      || *(arg_string + 1) == '\0') ) {
+                                        break;
+                                }
+
                                 arg_string++;
                         }
 
                         if (*arg_string == '\0') {
-                                break;
-                        } else {
-                                *arg_string++ = '\0';
+                                goto error_free_resources;
+                        }
+
+                } else if (*arg_string == '"') {
+                        arg_to_add = ++arg_string;
+
+                        while (*arg_string != '\0') {
+                                if ( *arg_string == '"'
+                                   && (  *(arg_string + 1) == ' '
+                                      || *(arg_string + 1) == '\0') ) {
+                                        break;
+                                }
+
+                                arg_string++;
+                        }
+
+                        if (*arg_string == '\0') {
+                                goto error_free_resources;
+                        }
+
+                } else if (*arg_string != ' ') {
+                        arg_to_add = arg_string;
+
+                        while (*arg_string != ' ' && *arg_string != '\0') {
+                                arg_string++;
                         }
                 } else {
                         arg_string++;
+                        continue;
+                }
+
+                /* add argument to list */
+                if (arg_to_add) {
+                        if (ListAddItem(arg_list, ++arg_count, arg_to_add) < 0) {
+                                goto error_free_resources;
+                        }
+                }
+
+                /* terminate argument */
+                if (*arg_string == '\0') {
+                        break;
+                } else {
+                        *arg_string++ = '\0';
                 }
         }
 
+add_args_to_table:
         if ((arg_table = calloc(arg_count, sizeof(ch_t*))) == NULL) {
-                goto new_argument_table_error;
+                goto error_free_resources;
         }
 
         for (int_t i = 0; i < arg_count; i++) {
                 arg_table[i] = ListGetItemDataByNo(arg_list, 0);
 
                 if (arg_table[i] == NULL) {
-                        goto new_argument_table_error;
+                        goto error_free_resources;
                 }
 
                 ListUnlinkItemDataByNo(arg_list, 0);
@@ -401,7 +449,7 @@ static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int_t *argc)
 
 
         /* error occurred - memory/object deallocation */
-new_argument_table_error:
+error_free_resources:
         if (arg_table) {
                 free(arg_table);
         }
@@ -429,19 +477,21 @@ new_argument_table_error:
  * @brief Function remove argument table
  *
  * @param **argv        pointer to argument table
+ * @param   argc        argument coun
  */
 //==============================================================================
-static void delete_argument_table(ch_t **argv)
+static void delete_argument_table(ch_t **argv, int argc)
 {
         if (argv == NULL) {
                 return;
         }
 
-        if (argv[1] == NULL) {
-                return;
+        if (argc > 1) {
+                if (argv[1]) {
+                        free(argv[1]);
+                }
         }
 
-        free(argv[1]);
         free(argv);
 }
 

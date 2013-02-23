@@ -575,11 +575,8 @@ int_t io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
                                         format--;
                                 }
 
-                                u8_t base = (
-                                (chr == 'd') || (chr == 'u') ? 10 : 16);
-
-                                bool_t uint = (
-                                (chr == 'x') || (chr == 'u') ? TRUE : FALSE);
+                                u8_t   base = (chr == 'd' || chr == 'u' ? 10 : 16);
+                                bool_t uint = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
 
                                 resultPtr = itoa(va_arg(arg, int_t), result,
                                                  base, uint, zeros);

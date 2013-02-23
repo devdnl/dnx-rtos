@@ -69,9 +69,8 @@ stdRet_t appmain(ch_t *argv[], int_t argc)
         printf("Argument count: %d\n", argc);
 
         for (int_t i = 0; i < argc; i++) {
-                printf("%s ", argv[i]);
+                printf("%d: %s\n", i + 1, argv[i]);
         }
-        putchar('\n');
 
         return 0;
 
