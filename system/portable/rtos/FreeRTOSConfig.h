@@ -73,10 +73,10 @@
 /*-------------------------------------------------------------
  * Used prototypes from external modules
  *-----------------------------------------------------------*/
-extern void *memman_malloc       (size_t size);
-extern void  memman_free         (void *mem);
-extern void  moni_TaskSwitchedIn (void);
-extern void  moni_TaskSwitchedOut(void);
+extern void *memman_malloc(size_t size);
+extern void  memman_free(void *mem);
+extern void  tskm_task_switched_in(void);
+extern void  tskm_task_switched_out(void);
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -142,8 +142,8 @@ NVIC value of 255. */
 
 /* required functions in cpu load stats */
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-#define traceTASK_SWITCHED_OUT()                moni_TaskSwitchedIn()
-#define traceTASK_SWITCHED_IN()                 moni_TaskSwitchedOut()
+#define traceTASK_SWITCHED_OUT()                tskm_task_switched_in()
+#define traceTASK_SWITCHED_IN()                 tskm_task_switched_out()
 #endif
 
 #endif /* FREERTOS_CONFIG_H */

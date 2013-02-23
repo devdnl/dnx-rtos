@@ -42,9 +42,9 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)              moni_calloc(nmemb, msize)
-#define malloc(size)                      moni_malloc(size)
-#define free(mem)                         moni_free(mem)
+#define calloc(nmemb, msize)              tskm_calloc(nmemb, msize)
+#define malloc(size)                      tskm_malloc(size)
+#define free(mem)                         tskm_free(mem)
 
 /*==============================================================================
   Local types, enums definitions

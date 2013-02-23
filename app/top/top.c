@@ -98,14 +98,14 @@ stdRet_t appmain(ch_t *argv[], int_t argc)
 
                         if (SystemGetTaskStat(i, &taskinfo) == STD_RET_OK) {
                                 printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
-                                taskinfo.handle,
+                                taskinfo.task_handle,
                                 taskinfo.priority,
-                                taskinfo.freeStack,
-                                taskinfo.memUsage,
-                                taskinfo.openFiles,
-                                ( taskinfo.cpuUsage * 100)  / taskinfo.cpuUsageTotal,
-                                ((taskinfo.cpuUsage * 1000) / taskinfo.cpuUsageTotal) % 10,
-                                taskinfo.name);
+                                taskinfo.free_stack,
+                                taskinfo.memory_usage,
+                                taskinfo.opened_files,
+                                ( taskinfo.cpu_usage * 100)  / taskinfo.cpu_usage_total,
+                                ((taskinfo.cpu_usage * 1000) / taskinfo.cpu_usage_total) % 10,
+                                taskinfo.task_name);
                         } else {
                                 break;
                         }

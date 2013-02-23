@@ -219,7 +219,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                 task_t taskHdl = 0;
                 path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
 
-                if (moni_GetTaskHdlStat((task_t)taskHdl, &taskdata) != STD_RET_OK) {
+                if (tskm_get_task_stat((task_t)taskHdl, &taskdata) != STD_RET_OK) {
                         return STD_RET_ERROR;
                 }
 
@@ -283,11 +283,11 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                         path++;
                 }
 
-                u16_t n = moni_GetTaskCount();
+                u16_t n = tskm_get_task_count();
                 u16_t i = 0;
 
-                while (n-- && moni_GetTaskStat(i++, &taskdata) == STD_RET_OK) {
-                        if (strcmp(path, taskdata.name) != 0) {
+                while (n-- && tskm_get_ntask_stat(i++, &taskdata) == STD_RET_OK) {
+                        if (strcmp(path, taskdata.task_name) != 0) {
                                 continue;
                         }
 
@@ -296,7 +296,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                                 return STD_RET_ERROR;
                         }
 
-                        fileInf->taskHdl  = taskdata.handle;
+                        fileInf->taskHdl  = taskdata.task_handle;
                         fileInf->taskFile = TASK_FILE_NONE;
 
                         while (TakeMutex(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
@@ -414,13 +414,13 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
                 return 0;
         }
 
-        taskInfo.cpuUsage      = 1000;
-        taskInfo.cpuUsageTotal = 0;
-        taskInfo.freeStack     = 0;
-        taskInfo.handle        = 0;
-        taskInfo.memUsage      = 0;
-        taskInfo.name          = NULL;
-        taskInfo.openFiles     = 0;
+        taskInfo.cpu_usage      = 1000;
+        taskInfo.cpu_usage_total = 0;
+        taskInfo.free_stack     = 0;
+        taskInfo.task_handle        = 0;
+        taskInfo.memory_usage      = 0;
+        taskInfo.task_name          = NULL;
+        taskInfo.opened_files     = 0;
         taskInfo.priority      = 0;
 
         ch_t  data[12] = {0};
@@ -428,33 +428,33 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
         u8_t  dataSize = 0;
 
         /* DNLFIXME here is bug, cpuUsage always is 0 (why?) */
-        if (moni_GetTaskHdlStat(fileInf->taskHdl, &taskInfo) != STD_RET_OK) {
+        if (tskm_get_task_stat(fileInf->taskHdl, &taskInfo) != STD_RET_OK) {
                 return 0;
         }
 
         switch (fileInf->taskFile) {
         case TASK_FILE_CPULOAD:
                 dataSize = snprintf(data, ARRAY_SIZE(data), "%u.%u",
-                                    ( taskInfo.cpuUsage *  100) /
-                                      taskInfo.cpuUsageTotal,
-                                    ((taskInfo.cpuUsage * 1000) /
-                                      taskInfo.cpuUsageTotal) % 10);
+                                    ( taskInfo.cpu_usage *  100) /
+                                      taskInfo.cpu_usage_total,
+                                    ((taskInfo.cpu_usage * 1000) /
+                                      taskInfo.cpu_usage_total) % 10);
                 cpuctl_ClearCPUTotalTime();
                 break;
 
         case TASK_FILE_FREESTACK:
                 dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.freeStack);
+                                    taskInfo.free_stack);
                 break;
 
         case TASK_FILE_NAME:
-                dataSize = strlen(taskInfo.name);
-                dataPtr  = taskInfo.name;
+                dataSize = strlen(taskInfo.task_name);
+                dataPtr  = taskInfo.task_name;
                 break;
 
         case TASK_FILE_OPENFILES:
                 dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.openFiles);
+                                    taskInfo.opened_files);
                 break;
 
         case TASK_FILE_PRIO:
@@ -464,7 +464,7 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
 
         case TASK_FILE_USEDMEM:
                 dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.memUsage);
+                                    taskInfo.memory_usage);
                 break;
         }
 
@@ -541,7 +541,7 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
                 return STD_RET_ERROR;
         }
 
-        if (moni_GetTaskHdlStat(fileInf->taskHdl, &taskInfo) != STD_RET_OK) {
+        if (tskm_get_task_stat(fileInf->taskHdl, &taskInfo) != STD_RET_OK) {
                 return STD_RET_ERROR;
         }
 
@@ -558,24 +558,24 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
         switch (fileInf->taskFile) {
         case TASK_FILE_CPULOAD:
                 stat->st_size = snprintf(data, sizeof(data), "%u.%u",
-                                         ( taskInfo.cpuUsage *  100) /
-                                           taskInfo.cpuUsageTotal,
-                                         ((taskInfo.cpuUsage * 1000) /
-                                           taskInfo.cpuUsageTotal) % 10);
+                                         ( taskInfo.cpu_usage *  100) /
+                                           taskInfo.cpu_usage_total,
+                                         ((taskInfo.cpu_usage * 1000) /
+                                           taskInfo.cpu_usage_total) % 10);
                 break;
 
         case TASK_FILE_FREESTACK:
                 stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.freeStack);
+                                         taskInfo.free_stack);
                 break;
 
         case TASK_FILE_NAME:
-                stat->st_size = strlen(taskInfo.name);
+                stat->st_size = strlen(taskInfo.task_name);
                 break;
 
         case TASK_FILE_OPENFILES:
                 stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.openFiles);
+                                         taskInfo.opened_files);
                 break;
 
         case TASK_FILE_PRIO:
@@ -585,7 +585,7 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 
         case TASK_FILE_USEDMEM:
                 stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.memUsage);
+                                         taskInfo.memory_usage);
                 break;
         }
 
@@ -662,13 +662,13 @@ stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
                 dir->dd    = NULL;
-                dir->items = moni_GetTaskCount();
+                dir->items = tskm_get_task_count();
                 dir->rddir = procfs_readdir_taskname;
                 dir->cldir = procfs_closedir_noop;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
                 dir->dd    = calloc(TASK_ID_STR_LEN, sizeof(ch_t));
-                dir->items = moni_GetTaskCount();
+                dir->items = tskm_get_task_count();
                 dir->rddir = procfs_readdir_taskid;
                 dir->cldir = procfs_closedir_freedd;
                 return STD_RET_OK;
@@ -690,7 +690,7 @@ stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
 
                 struct taskstat taskdata;
 
-                if (moni_GetTaskHdlStat(taskHdl, &taskdata) == STD_RET_OK) {
+                if (tskm_get_task_stat(taskHdl, &taskdata) == STD_RET_OK) {
                         dir->dd    = (void*)taskHdl;
                         dir->items = COUNT_OF_TASK_FILE;
                         dir->rddir = procfs_readdir_taskid_n;
@@ -951,9 +951,9 @@ static dirent_t procfs_readdir_taskname(fsd_t fsd, DIR_t *dir)
         struct taskstat taskdata;
 
         if (dir) {
-                if (moni_GetTaskStat(dir->seek, &taskdata) == STD_RET_OK) {
+                if (tskm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
                         dirent.filetype = FILE_TYPE_REGULAR;
-                        dirent.name     = taskdata.name;
+                        dirent.name     = taskdata.task_name;
                         dirent.size     = 0;
 
                         dir->seek++;
@@ -987,10 +987,10 @@ static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir)
                 return dirent;
         }
 
-        if (dir->dd && dir->seek < moni_GetTaskCount()) {
-                if (moni_GetTaskStat(dir->seek, &taskdata) == STD_RET_OK) {
+        if (dir->dd && dir->seek < tskm_get_task_count()) {
+                if (tskm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
                         snprintf(dir->dd, TASK_ID_STR_LEN,
-                                 "%x", (int_t)taskdata.handle);
+                                 "%x", (int_t)taskdata.task_handle);
 
                         dirent.filetype = FILE_TYPE_DIR;
                         dirent.name     = dir->dd;
@@ -1031,7 +1031,7 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
                 return dirent;
         }
 
-        if (moni_GetTaskHdlStat((task_t) dir->dd, &taskdata) != STD_RET_OK) {
+        if (tskm_get_task_stat((task_t) dir->dd, &taskdata) != STD_RET_OK) {
                 return dirent;
         }
 
@@ -1041,7 +1041,7 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
         switch (dir->seek) {
         case TASK_FILE_NAME:
                 dirent.name = TASK_FILE_NAME_STR;
-                dirent.size = strlen(taskdata.name);
+                dirent.size = strlen(taskdata.task_name);
                 break;
 
         case TASK_FILE_PRIO:
@@ -1053,28 +1053,28 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
         case TASK_FILE_FREESTACK:
                 dirent.name = TASK_FILE_FREESTACK_STR;
                 dirent.size = snprintf(data, ARRAY_SIZE(data), "%u",
-                                       taskdata.freeStack);
+                                       taskdata.free_stack);
                 break;
 
         case TASK_FILE_USEDMEM:
                 dirent.name = TASK_FILE_USEDMEM_STR;
                 dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.memUsage);
+                                       taskdata.memory_usage);
                 break;
 
         case TASK_FILE_OPENFILES:
                 dirent.name = TASK_FILE_OPENFILES_STR;
                 dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.openFiles);
+                                       taskdata.opened_files);
                 break;
 
         case TASK_FILE_CPULOAD:
                 dirent.name = TASK_FILE_CPULOAD_STR;
                 dirent.size = snprintf(data, ARRAY_SIZE(data), "%u.%u",
-                                       ( taskdata.cpuUsage *  100) /
-                                         taskdata.cpuUsageTotal,
-                                       ((taskdata.cpuUsage * 1000) /
-                                         taskdata.cpuUsageTotal) % 10);
+                                       ( taskdata.cpu_usage *  100) /
+                                         taskdata.cpu_usage_total,
+                                       ((taskdata.cpu_usage * 1000) /
+                                         taskdata.cpu_usage_total) % 10);
                 break;
         }
 

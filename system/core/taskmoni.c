@@ -60,7 +60,7 @@ extern "C" {
 ==============================================================================*/
 /* task information */
 struct taskData {
-#if (APP_MONITOR_MEMORY_USAGE > 0)
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
         struct memBlock {
                 bool_t full;
 
@@ -72,7 +72,7 @@ struct taskData {
         }*mblock[MEM_BLOCK_COUNT];
 #endif
 
-#if (APP_MONITOR_FILE_USAGE > 0)
+#if (TSK_MONITOR_FILE_USAGE > 0)
         struct fileBlock {
                 bool_t full;
 
@@ -93,7 +93,7 @@ struct taskData {
 };
 
 /* main structure */
-struct moni {
+struct tskm {
         list_t *tasks;  /* list with task informations */
         mutex_t mtx;    /* mutex */
 };
@@ -101,19 +101,19 @@ struct moni {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-static stdRet_t moni_Init(void);
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+static stdRet_t tskm_init(void);
 #endif
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-static struct moni *moni;
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+static struct tskm *tskm;
 #endif
 
 /*==============================================================================
@@ -132,29 +132,29 @@ static struct moni *moni;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-static stdRet_t moni_Init(void)
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+static stdRet_t tskm_init(void)
 {
         stdRet_t status = STD_RET_OK;
 
-        if (moni == NULL) {
-                moni = calloc(1, sizeof(struct moni));
+        if (tskm == NULL) {
+                tskm = calloc(1, sizeof(struct tskm));
 
-                if (moni) {
-                        moni->tasks = ListCreate();
-                        moni->mtx = CreateRecMutex();
+                if (tskm) {
+                        tskm->tasks = ListCreate();
+                        tskm->mtx = CreateRecMutex();
 
-                        if (!moni->tasks || !moni->mtx) {
-                                if (moni->tasks)
-                                        ListDelete(moni->tasks);
+                        if (!tskm->tasks || !tskm->mtx) {
+                                if (tskm->tasks)
+                                        ListDelete(tskm->tasks);
 
-                                if (moni->mtx)
-                                        DeleteRecMutex(moni->mtx);
+                                if (tskm->mtx)
+                                        DeleteRecMutex(tskm->mtx);
 
-                                free(moni);
-                                moni = NULL;
+                                free(tskm);
+                                tskm = NULL;
 
                                 status = STD_RET_ERROR;
                         } else {
@@ -177,21 +177,21 @@ static stdRet_t moni_Init(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t moni_AddTask(task_t taskHdl)
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+stdRet_t tskm_add_task(task_t taskHdl)
 {
         stdRet_t status = STD_RET_ERROR;
 
-        if (moni == NULL) {
-                moni_Init();
+        if (tskm == NULL) {
+                tskm_init();
         }
 
-        if (moni) {
-                while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (tskm) {
+                while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                struct taskData *task = ListGetItemDataByID(moni->tasks,
+                struct taskData *task = ListGetItemDataByID(tskm->tasks,
                                                             (u32_t) taskHdl);
 
                 /* task does not exist */
@@ -199,7 +199,7 @@ stdRet_t moni_AddTask(task_t taskHdl)
                         task = calloc(1, sizeof(struct taskData));
 
                         if (task) {
-                                if (ListAddItem(moni->tasks, (u32_t) taskHdl,
+                                if (ListAddItem(tskm->tasks, (u32_t) taskHdl,
                                                 task) >= 0) {
                                         status = STD_RET_OK;
                                 } else {
@@ -208,7 +208,7 @@ stdRet_t moni_AddTask(task_t taskHdl)
                         }
                 }
 
-                GiveRecMutex(moni->mtx);
+                GiveRecMutex(tskm->mtx);
         }
 
         return status;
@@ -222,24 +222,24 @@ stdRet_t moni_AddTask(task_t taskHdl)
  * @param pid     task ID
  */
 //==============================================================================
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t moni_delete_task(task_t taskHdl)
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+stdRet_t tskm_delete_task(task_t taskHdl)
 {
-        if (moni == NULL) {
+        if (tskm == NULL) {
                 return STD_RET_ERROR;
         }
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        struct taskData *taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)taskHdl);
+        struct taskData *taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)taskHdl);
 
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
         }
 
-#if (APP_MONITOR_MEMORY_USAGE > 0)
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
         for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
                 if (taskInfo->mblock[block] == NULL) {
                         continue;
@@ -259,7 +259,7 @@ stdRet_t moni_delete_task(task_t taskHdl)
         }
 #endif
 
-#if (APP_MONITOR_FILE_USAGE > 0)
+#if (TSK_MONITOR_FILE_USAGE > 0)
         for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
                 if (taskInfo->fblock[block] == NULL) {
                         continue;
@@ -295,9 +295,9 @@ stdRet_t moni_delete_task(task_t taskHdl)
         }
 #endif
 
-        ListRmItemByID(moni->tasks, (u32_t) taskHdl);
+        ListRmItemByID(tskm->tasks, (u32_t) taskHdl);
 
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 
         return STD_RET_OK;
 }
@@ -314,26 +314,26 @@ stdRet_t moni_delete_task(task_t taskHdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 {
-        if (!moni || !stat) {
+        if (!tskm || !stat) {
                 return STD_RET_ERROR;
         }
 
-        stat->memUsage  = 0;
-        stat->openFiles = 0;
+        stat->memory_usage = 0;
+        stat->opened_files = 0;
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        struct taskData *taskdata = ListGetItemDataByNo(moni->tasks, item);
+        struct taskData *taskdata = ListGetItemDataByNo(tskm->tasks, item);
         if (taskdata == NULL) {
                 return STD_RET_ERROR;
         }
 
-#if (APP_MONITOR_MEMORY_USAGE > 0)
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
         for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
                 if (taskdata->mblock[block] == NULL) {
                         continue;
@@ -341,13 +341,13 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 
                 for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
                         if (taskdata->mblock[block]->mslot[slot].addr) {
-                                stat->memUsage += taskdata->mblock[block]->mslot[slot].size;
+                                stat->memory_usage += taskdata->mblock[block]->mslot[slot].size;
                         }
                 }
         }
 #endif
 
-#if (APP_MONITOR_FILE_USAGE > 0)
+#if (TSK_MONITOR_FILE_USAGE > 0)
         for (u32_t block = 0; block < FLE_BLOCK_COUNT; block++) {
                 if (taskdata->fblock[block] == NULL) {
                         continue;
@@ -355,7 +355,7 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 
                 for (u32_t slot = 0; slot < FLE_OPN_IN_BLOCK; slot++) {
                         if (taskdata->fblock[block]->fslot[slot].file) {
-                                stat->openFiles++;
+                                stat->opened_files++;
                         }
                 }
         }
@@ -367,28 +367,28 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
 
                 for (u32_t slot = 0; slot < DIR_OPN_IN_BLOCK; slot++) {
                         if (taskdata->dblock[block]->dslot[slot].dir) {
-                                stat->openFiles++;
+                                stat->opened_files++;
                         }
                 }
         }
 #endif
 
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 
         task_t taskHdl = 0;
-        ListGetItemID(moni->tasks, item, (task_t) &taskHdl);
+        ListGetItemID(tskm->tasks, item, (task_t) &taskHdl);
 
-        stat->handle        = taskHdl;
-        stat->name          = TaskGetName(taskHdl);
-        stat->freeStack     = TaskGetStackFreeSpace(taskHdl);
+        stat->task_handle     = taskHdl;
+        stat->task_name       = TaskGetName(taskHdl);
+        stat->free_stack      = TaskGetStackFreeSpace(taskHdl);
         TaskSuspendAll();
-        stat->cpuUsage      = (u32_t)TaskGetTag(taskHdl);
+        stat->cpu_usage       = (u32_t)TaskGetTag(taskHdl);
         TaskSetTag(taskHdl, (void*)0);
         TaskResumeAll();
-        stat->cpuUsageTotal = cpuctl_GetCPUTotalTime();
-        stat->priority      = TaskGetPriority(taskHdl);
+        stat->cpu_usage_total = cpuctl_GetCPUTotalTime();
+        stat->priority        = TaskGetPriority(taskHdl);
 
-        if (item == ListGetItemCount(moni->tasks) - 1) {
+        if (item == ListGetItemCount(tskm->tasks) - 1) {
                 cpuctl_ClearCPUTotalTime();
         }
 
@@ -407,19 +407,19 @@ stdRet_t moni_GetTaskStat(i32_t item, struct taskstat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t moni_GetTaskHdlStat(task_t taskHdl, struct taskstat *stat)
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+stdRet_t tskm_get_task_stat(task_t taskHdl, struct taskstat *stat)
 {
-        if (!taskHdl || !moni) {
+        if (!taskHdl || !tskm) {
                 return STD_RET_ERROR;
         }
 
         i32_t item = -1;
 
-        if (ListGetItemNo(moni->tasks, (u32_t) taskHdl, &item) == STD_RET_OK) {
-                return moni_GetTaskStat(item, stat);
+        if (ListGetItemNo(tskm->tasks, (u32_t) taskHdl, &item) == STD_RET_OK) {
+                return tskm_get_ntask_stat(item, stat);
         }
 
         return STD_RET_ERROR;
@@ -433,16 +433,16 @@ stdRet_t moni_GetTaskHdlStat(task_t taskHdl, struct taskstat *stat)
  * @return number of monitor tasks
  */
 //==============================================================================
-#if (  (APP_MONITOR_MEMORY_USAGE > 0) \
-    || (APP_MONITOR_FILE_USAGE > 0  ) \
-    || (APP_MONITOR_CPU_LOAD > 0    ) )
-u16_t moni_GetTaskCount(void)
+#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
+    || (TSK_MONITOR_FILE_USAGE > 0  ) \
+    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+u16_t tskm_get_task_count(void)
 {
-        if (!moni) {
+        if (!tskm) {
                 return -1;
         }
 
-        return ListGetItemCount(moni->tasks);
+        return ListGetItemCount(tskm->tasks);
 }
 #endif
 
@@ -455,20 +455,20 @@ u16_t moni_GetTaskCount(void)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (APP_MONITOR_MEMORY_USAGE > 0)
-void *moni_malloc(u32_t size)
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
+void *tskm_malloc(u32_t size)
 {
         void   *mem   = NULL;
         uint_t  block = 0;
         struct taskData *taskInfo;
 
-        if (!moni || size == 0) {
+        if (!tskm || size == 0) {
                 return NULL;
         }
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -512,7 +512,7 @@ void *moni_malloc(u32_t size)
         }
 
         moni_malloc_end:
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 
         return mem;
 }
@@ -528,10 +528,10 @@ void *moni_malloc(u32_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (APP_MONITOR_MEMORY_USAGE > 0)
-void *moni_calloc(u32_t nmemb, u32_t msize)
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
+void *tskm_calloc(u32_t nmemb, u32_t msize)
 {
-        void *ptr = moni_malloc(nmemb * msize);
+        void *ptr = tskm_malloc(nmemb * msize);
 
         if (ptr) {
                 memset(ptr, 0, nmemb * msize);
@@ -548,18 +548,18 @@ void *moni_calloc(u32_t nmemb, u32_t msize)
  * @param *mem          block to free
  */
 //==============================================================================
-#if (APP_MONITOR_MEMORY_USAGE > 0)
-void moni_free(void *mem)
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
+void tskm_free(void *mem)
 {
         struct taskData *taskInfo;
 
-        if (moni == NULL) {
+        if (tskm == NULL) {
                 return;
         }
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return;
         }
@@ -609,7 +609,7 @@ void moni_free(void *mem)
         /* signal code can be added here */
 
         moni_free_end:
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 }
 #endif
 
@@ -623,20 +623,20 @@ void moni_free(void *mem)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-#if (APP_MONITOR_FILE_USAGE > 0)
-FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
+#if (TSK_MONITOR_FILE_USAGE > 0)
+FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 {
         FILE_t *file  = NULL;
         uint_t  block = 0;
         struct taskData *taskInfo;
 
-        if (moni == NULL) {
+        if (tskm == NULL) {
                 return NULL;
         }
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -679,7 +679,7 @@ FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
         }
 
         moni_fopen_end:
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 
         return file;
 }
@@ -695,19 +695,19 @@ FILE_t *moni_fopen(const ch_t *path, const ch_t *mode)
  * @retval STD_RET_ERROR      file not closed
  */
 //==============================================================================
-#if (APP_MONITOR_FILE_USAGE > 0)
-stdRet_t moni_fclose(FILE_t *file)
+#if (TSK_MONITOR_FILE_USAGE > 0)
+stdRet_t tskm_fclose(FILE_t *file)
 {
         stdRet_t status = STD_RET_ERROR;
         struct taskData *taskInfo;
 
-        if (moni == NULL) {
+        if (tskm == NULL) {
                 return STD_RET_ERROR;
         }
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
         }
@@ -753,7 +753,7 @@ stdRet_t moni_fclose(FILE_t *file)
         }
 
         moni_fclose_end:
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 
         return status;
 }
@@ -768,20 +768,20 @@ stdRet_t moni_fclose(FILE_t *file)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-#if (APP_MONITOR_FILE_USAGE > 0)
-DIR_t *moni_opendir(const ch_t *path)
+#if (TSK_MONITOR_FILE_USAGE > 0)
+DIR_t *tskm_opendir(const ch_t *path)
 {
         DIR_t *dir   = NULL;
         u32_t  block = 0;
         struct taskData *taskInfo;
 
-        if (moni == NULL) {
+        if (tskm == NULL) {
                 return NULL;
         }
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return NULL;
         }
@@ -824,7 +824,7 @@ DIR_t *moni_opendir(const ch_t *path)
         }
 
         moni_opendir_end:
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 
         return dir;
 }
@@ -840,19 +840,19 @@ DIR_t *moni_opendir(const ch_t *path)
  * @retval STD_RET_ERROR      file not closed
  */
 //==============================================================================
-#if (APP_MONITOR_FILE_USAGE > 0)
-extern stdRet_t moni_closedir(DIR_t *dir)
+#if (TSK_MONITOR_FILE_USAGE > 0)
+extern stdRet_t tskm_closedir(DIR_t *dir)
 {
         stdRet_t status = STD_RET_ERROR;
         struct taskData *taskInfo;
 
-        if (moni == NULL) {
+        if (tskm == NULL) {
                 return STD_RET_ERROR;
         }
 
-        while (TakeRecMutex(moni->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (TakeRecMutex(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = ListGetItemDataByID(moni->tasks, (u32_t)TaskGetCurrentTaskHandle());
+        taskInfo = ListGetItemDataByID(tskm->tasks, (u32_t)TaskGetCurrentTaskHandle());
         if (taskInfo == NULL) {
                 return STD_RET_ERROR;
         }
@@ -898,7 +898,7 @@ extern stdRet_t moni_closedir(DIR_t *dir)
         }
 
         moni_closedir_end:
-        GiveRecMutex(moni->mtx);
+        GiveRecMutex(tskm->mtx);
 
         return status;
 }
@@ -909,8 +909,8 @@ extern stdRet_t moni_closedir(DIR_t *dir)
  * @brief Function called after task go to ready state
  */
 //==============================================================================
-#if (APP_MONITOR_CPU_LOAD > 0)
-void moni_TaskSwitchedIn(void)
+#if (TSK_MONITOR_CPU_LOAD > 0)
+void tskm_task_switched_in(void)
 {
         cpuctl_ClearTimeStatCnt();
 }
@@ -921,8 +921,8 @@ void moni_TaskSwitchedIn(void)
  * @brief Function called when task go out ready state
  */
 //==============================================================================
-#if (APP_MONITOR_CPU_LOAD > 0)
-void moni_TaskSwitchedOut(void)
+#if (TSK_MONITOR_CPU_LOAD > 0)
+void tskm_task_switched_out(void)
 {
         u16_t  cnt     = cpuctl_GetTimeStatCnt();
         task_t taskhdl = TaskGetCurrentTaskHandle();

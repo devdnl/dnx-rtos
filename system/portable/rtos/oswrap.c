@@ -93,7 +93,7 @@ int_t new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
         }
 
         if (status == OS_OK) {
-                moni_AddTask(task);
+                tskm_add_task(task);
         }
 
         TaskResumeAll();
@@ -110,7 +110,7 @@ int_t new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
 //==============================================================================
 void delete_task(task_t taskHdl)
 {
-        moni_delete_task(taskHdl);
+        tskm_delete_task(taskHdl);
         vTaskDelete(taskHdl);
 }
 
