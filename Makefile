@@ -31,12 +31,7 @@
 # INSERT HERE C SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC = $(sort \
-   app/cat/cat.c \
-   app/date/date.c \
-   app/measd/measd.c \
-   app/terminal/terminal.c \
-   app/top/top.c \
-   app/lwipd/lwipd.c \
+   prog/test/test.c \
    drivers/ds1307/arch/noarch/ds1307.c \
    drivers/tty/arch/noarch/tty.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \
@@ -55,12 +50,11 @@ CSRC = $(sort \
    system/core/io.c \
    system/core/vfs.c \
    system/user/initd.c \
-   system/user/regapp.c \
    system/user/regdrv.c \
    system/user/regfs.c \
+   system/user/regprg.c \
    system/fs/procfs.c \
    system/fs/lfs.c \
-   system/fs/appfs.c \
    system/portable/rtos/oshooks.c \
    system/portable/rtos/oswrap.c \
    )
@@ -69,7 +63,6 @@ CSRC = $(sort \
 # INSERT HERE C SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC_stm32 = $(sort \
-   app/httpd/httpd.c \
    lib/lwip/api/tcpip.c \
    lib/lwip/api/api_lib.c \
    lib/lwip/api/netbuf.c \

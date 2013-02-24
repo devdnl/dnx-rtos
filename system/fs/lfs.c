@@ -88,7 +88,7 @@ struct fshdl_s {
 static node_t   *new_node(node_t *nodebase, ch_t *filename, i32_t *item);
 static stdRet_t  delete_node(node_t *base, node_t *target, u32_t baseitemid);
 static node_t   *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
-static uint    get_path_deep(const ch_t *path);
+static uint      get_path_deep(const ch_t *path);
 static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item);

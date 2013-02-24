@@ -685,7 +685,7 @@ cmdStatus_t FindExternalCmd(ch_t *cmd, ch_t *arg)
                   sleep(1);
             }
 
-            kill_prog(appHdl);
+            kill_program(appHdl);
 
             status = CMD_EXECUTED;
       } else {

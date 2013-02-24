@@ -83,7 +83,7 @@ typedef struct {
 static const regFS_t fsList[] =
 {
         IMPORT_FILE_SYSTEM_INTERFACE(lfs   , "lfs"   ),
-        IMPORT_FILE_SYSTEM_INTERFACE(appfs , "appfs" ),
+//        IMPORT_FILE_SYSTEM_INTERFACE(appfs , "appfs" ),
         IMPORT_FILE_SYSTEM_INTERFACE(procfs, "procfs"),
 };
 

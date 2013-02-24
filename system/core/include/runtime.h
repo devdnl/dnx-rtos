@@ -39,54 +39,38 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** program section */
-#define PROGRAM(name, stackMultiple)    const uint name##_stack_size =      \
-                                        stackMultiple * MINIMAL_STACK_SIZE; \
-                                        void name(void *_progarg_)
-
-#define EXTERN_PROGRAM(name)            extern const uint name##_stack_size; \
-                                        extern void name(void *_progarg_)
-
-
-
-#define PROG_SEC_BEGIN                  {FILE_t *stdin  = ((prog_t*)_progarg_)->stdin; \
-                                         FILE_t *stdout = ((prog_t*)_progarg_)->stdout;\
-                                         ch_t   **argv  = ((prog_t*)_progarg_)->argv;  \
-                                         int     argc   = ((prog_t*)_progarg_)->argc;  \
-                                         ch_t   *cwd    = ((prog_t*)_progarg_)->cwd;   \
-                                         (void)stdin; (void)stdout; (void)argv;        \
-                                         (void)argc;  (void)cwd;
-
-#define PROG_SEC_END                    exit(appmain(argv, argc));}
-
-/** simpler definition of terminating application */
-#define exit(exitCode)                  exit_prog(_progarg_, exitCode)
+#define GLOBAL_VARIABLES        struct __global_vars__
+#define stdin                   get_program_stdin()
+#define stdout                  get_program_stdout()
+#define global                  ((struct __global_vars__*)get_program_globals())
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** type which define parse possibilities */
-typedef enum parseType_enum {
-        PARSE_AS_BIN,
-        PARSE_AS_OCT,
-        PARSE_AS_DEC,
-        PARSE_AS_HEX,
-        PARSE_AS_STRING,
-        PARSE_AS_CHAR,
-        PARSE_AS_EXIST,
-        PARSE_AS_UNKNOWN
-} parseType_t;
 
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
+enum prg_status {
+        PROGRAM_INITING,
+        PROGRAM_RUNNING,
+        PROGRAM_ENDED,
+        PROGRAM_NEVER_EXISTED,
+        PROGRAM_NOT_ENOUGH_FREE_MEMORY,
+        PROGRAM_ARGUMENTS_PARSE_ERROR,
+};
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern prog_t    *exec(const ch_t *name, ch_t *argv);
-extern stdRet_t   kill_prog(prog_t *appArgs);
-extern void       exit_prog(prog_t *appObj, stdRet_t exitCode);
+extern task_t          run_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_t *cwd);
+extern enum prg_status get_program_status(task_t taskhdl);
+extern FILE_t         *get_program_stdin(void);
+extern FILE_t         *get_program_stdout(void);
+extern void           *get_program_globals(void);
+extern ch_t           *get_program_cwd(void);
+//extern stdRet_t kill_program(prog_t *appArgs);
+//extern void     exit_program(prog_t *appObj, stdRet_t exitCode);
 
 #ifdef __cplusplus
 }

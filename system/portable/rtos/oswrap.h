@@ -77,11 +77,12 @@ extern "C" {
 #define enable_ISR()                            taskENABLE_INTERRUPTS()
 #define get_tick_counter()                      xTaskGetTickCount()
 #define get_task_name(taskhdl)                  (ch_t*)pcTaskGetTaskName(taskhdl)
+#define get_name_of_task()                      (ch_t*)pcTaskGetTaskName(THIS_TASK)
 #define get_task_handle()                       xTaskGetCurrentTaskHandle()
 #define get_task_priority(taskhdl)              (i16_t)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
 #define get_free_stack()                        uxTaskGetStackHighWaterMark(THIS_TASK)
 #define get_task_free_stack(taskhdl)            uxTaskGetStackHighWaterMark(taskhdl)
-#define get_number_of_task()                    uxTaskGetNumberOfTasks()
+#define get_number_of_tasks()                   uxTaskGetNumberOfTasks()
 #define set_task_tag(taskhdl, tag)              vTaskSetApplicationTaskTag(taskhdl, tag)
 #define get_task_tag(taskhdl)                   xTaskGetApplicationTaskTag(taskhdl)
 

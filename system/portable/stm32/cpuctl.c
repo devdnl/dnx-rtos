@@ -145,6 +145,19 @@ void cpuctl_clear_CPU_total_time(void)
         TotalCPUTime = 0;
 }
 
+//==============================================================================
+/**
+ * @brief Function returns RAM size
+ */
+//==============================================================================
+uint cpuctl_get_RAM_size(void) /* DNLTEST RAM size */
+{
+        extern uint __ram_size;
+
+        return __ram_size;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

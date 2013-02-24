@@ -1,13 +1,13 @@
-#ifndef CPUCTL_H_
-#define CPUCTL_H_
+#ifndef REGPRG_H_
+#define REGPRG_H_
 /*=========================================================================*//**
-@file    cpuctl.h
+@file    regprg.h
 
 @author  Daniel Zorychta
 
-@brief   This file support CPU control
+@brief
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,37 +33,36 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "basic_types.h"
+#include "systypes.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* interrupt rename */
-#define xPortPendSVHandler                      PendSV_Handler
-#define xPortSysTickHandler                     SysTick_Handler
-#define vPortSVCHandler                         SVC_Handler
 
 /*==============================================================================
   Exported types, enums definitions
+==============================================================================*/
+struct regprg_pdata {
+        ch_t  *name;
+        int  (*main_function)(ch_t**, int);
+        uint   globals_size;
+        u16_t  stack_deep;
+};
+
+/*==============================================================================
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void  cpuctl_init(void);
-extern void  cpuctl_restart_system(void);
-extern void  cpuctl_init_CPU_load_timer(void);
-extern u32_t cpuctl_get_CPU_load_timer(void);
-extern void  cpuctl_clear_CPU_load_timer(void);
-extern u32_t cpuctl_get_CPU_total_time(void);
-extern void  cpuctl_clear_CPU_total_time(void);
-extern uint  cpuctl_get_RAM_size(void); /* DNLTEST RAM size */
+extern stdRet_t regprg_get_program_data(ch_t *name, const struct regprg_pdata *prg_data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CPUCTL_H_ */
+#endif /* REGPRG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

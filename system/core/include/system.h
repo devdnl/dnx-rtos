@@ -76,9 +76,9 @@ extern "C" {
 #define fstat(file, statPtr)              tskm_fstat(file, stat)
 
 /** ENVIRONMENT DEFINITIONS */
-#define get_free_memory()                 memman_get_free_heap()
-#define get_used_memory()                 memman_get_used_heap()
-#define get_memory_size()                 MEMMAN_HEAP_SIZE
+#define get_free_memory()                 (cpuctl_get_RAM_size() - memman_get_used_heap())
+#define get_used_memory()                 (cpuctl_get_RAM_size() - memman_get_free_heap())
+#define get_memory_size()                 cpuctl_get_RAM_size()
 #define get_uptime()                      get_uptime_counter()
 #define get_task_stat(ntask, statPtr)     tskm_get_ntask_stat(ntask, statPtr)
 #define get_number_of_monitored_tasks()   tskm_get_task_count()
@@ -88,7 +88,7 @@ extern "C" {
 #define get_OS_version()                  "0.7.0"
 #define get_kernel_version()              "7.3.0"
 #define get_host_name()                   CONFIG_HOSTNAME
-#define getcwd(buf, size)                 strncpy(buf, cwd, size)
+#define getcwd(buf, size)                 strncpy(buf, get_program_cwd(), size)
 
 /*==============================================================================
   Exported types, enums definitions
