@@ -55,7 +55,7 @@ extern "C" {
 static const struct regprg_pdata pdata[] = {
         {.name          = "test",
          .main_function = prog_test_main,
-         .globals_size  = prog_test_gs,
+         .globals_size  = &prog_test_gs,
          .stack_deep    = PROG_TEST_STACK_DEEP},
 };
 
@@ -78,7 +78,7 @@ static const struct regprg_pdata pdata[] = {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t regprg_get_program_data(ch_t *name, const struct regprg_pdata *prg_data)
+stdRet_t regprg_get_program_data(ch_t *name, struct regprg_pdata *prg_data)
 {
         if (!prg_data || !name) {
                 return STD_RET_ERROR;
@@ -86,7 +86,7 @@ stdRet_t regprg_get_program_data(ch_t *name, const struct regprg_pdata *prg_data
 
         for (uint i = 0; i < ARRAY_SIZE(pdata); i++) {
                 if (strcmp(name, pdata[i].name) == 0) {
-                        prg_data = &pdata[i];
+                        *prg_data = pdata[i];
                         return STD_RET_OK;
                 }
         }

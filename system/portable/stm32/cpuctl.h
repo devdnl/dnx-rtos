@@ -57,7 +57,6 @@ extern u32_t cpuctl_get_CPU_load_timer(void);
 extern void  cpuctl_clear_CPU_load_timer(void);
 extern u32_t cpuctl_get_CPU_total_time(void);
 extern void  cpuctl_clear_CPU_total_time(void);
-extern uint  cpuctl_get_RAM_size(void); /* DNLTEST RAM size */
 
 #ifdef __cplusplus
 }

@@ -38,7 +38,7 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define PROG_TEST_STACK_DEEP            (MINIMAL_STACK_SIZE * 2)
+#define PROG_TEST_STACK_DEEP            (MINIMAL_STACK_SIZE * 10)
 
 /*==============================================================================
   Exported types, enums definitions

@@ -37,16 +37,15 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 
-
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-
+static void f1(void);
+static void f2(void);
 
 /*==============================================================================
   Local object definitions
@@ -55,10 +54,11 @@ GLOBAL_VARIABLES {
         int test;
 };
 
+const uint prog_test_gs = sizeof(struct __global_vars__);
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-const uint prog_test_gs = sizeof(struct __global_vars__);
 
 /*==============================================================================
   Function definitions
@@ -71,13 +71,55 @@ const uint prog_test_gs = sizeof(struct __global_vars__);
 //=============================================================================
 int prog_test_main(ch_t *argv[], int argc)
 {
-        printf("test\n");
+        printf("\n---------------------\n");
+        printf("Free stack: %d\n", get_free_stack());
+        printf("Static memory usage: %d\n", get_used_static_memory());
+        printf("Memory size: %d\n", get_memory_size());
+        printf("Free memory: %d\n", get_free_memory());
+
+        printf("Program arguments:\n");
+        for (int i = 0; i < argc; i++) {
+                printf("%d: %s\n", i + 1, argv[i]);
+        }
 
         global->test = 0;
+        printf("main\n");
+        printf("global->test = %d\n", global->test);
+
+        printf("Free stack: %d\n", get_free_stack());
+
+        f1();
+        printf("global->test = %d\n", global->test);
+        f2();
+        printf("global->test = %d\n", global->test);
+        printf("exiting...\n");
 
         return 0;
 }
 
+//==============================================================================
+/**
+ * @brief
+ */
+//==============================================================================
+static void f1(void)
+{
+        sleep(1);
+        printf("f1\n");
+        global->test = 1;
+}
+
+//==============================================================================
+/**
+ * @brief
+ */
+//==============================================================================
+static void f2(void)
+{
+        sleep(1);
+        printf("f2: global->test = %d\n", global->test);
+        global->test = -global->test;
+}
 
 #ifdef __cplusplus
 }

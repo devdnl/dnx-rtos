@@ -76,9 +76,10 @@ extern "C" {
 #define fstat(file, statPtr)              tskm_fstat(file, stat)
 
 /** ENVIRONMENT DEFINITIONS */
-#define get_free_memory()                 (cpuctl_get_RAM_size() - memman_get_used_heap())
-#define get_used_memory()                 (cpuctl_get_RAM_size() - memman_get_free_heap())
-#define get_memory_size()                 cpuctl_get_RAM_size()
+#define get_used_static_memory()          (CONFIG_RAM_SIZE - MEMMAN_HEAP_SIZE)
+#define get_free_memory()                 (CONFIG_RAM_SIZE - get_used_static_memory() - memman_get_used_heap())
+#define get_used_memory()                 (get_used_static_memory() + memman_get_used_heap())
+#define get_memory_size()                 CONFIG_RAM_SIZE
 #define get_uptime()                      get_uptime_counter()
 #define get_task_stat(ntask, statPtr)     tskm_get_ntask_stat(ntask, statPtr)
 #define get_number_of_monitored_tasks()   tskm_get_task_count()

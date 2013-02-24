@@ -134,7 +134,22 @@ void task_initd(void *arg)
 
       for (;;) {
               task_t p1 = run_program("test", "jeden dwa trzy", ttyx[0], ttyx[0], "/");
-              get_program_status(p1);
+
+              for (int i = 0; i < 10; i++) {
+                      enum prg_status ps = get_program_status(p1);
+
+                      switch (ps) {
+                      case PROGRAM_INITING: kprint("initing...\n"); break;
+                      case PROGRAM_RUNNING: kprint("running...\n"); break;
+                      case PROGRAM_ENDED:   kprint("ended...\n"); break;
+                      case PROGRAM_NEVER_EXISTED:  kprint("doesn't exist...\n"); break;
+                      case PROGRAM_ARGUMENTS_PARSE_ERROR:  kprint("parse error...\n"); break;
+                      case PROGRAM_NOT_ENOUGH_FREE_MEMORY: kprint("EFM...\n"); break;
+                      }
+
+                      milisleep(250);
+              }
+
               sleep(5);
       }
 

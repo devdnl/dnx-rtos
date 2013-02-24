@@ -45,7 +45,7 @@ extern "C" {
 struct regprg_pdata {
         ch_t  *name;
         int  (*main_function)(ch_t**, int);
-        uint   globals_size;
+        const uint *globals_size;
         u16_t  stack_deep;
 };
 
@@ -56,7 +56,7 @@ struct regprg_pdata {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdRet_t regprg_get_program_data(ch_t *name, const struct regprg_pdata *prg_data);
+extern stdRet_t regprg_get_program_data(ch_t *name, struct regprg_pdata *prg_data);
 
 #ifdef __cplusplus
 }

@@ -37,7 +37,12 @@ extern "C" {
 #define CONFIG_CPU_TARGET_FREQ                        (72000000UL)
 
 
-/**=== HEAP CONFIGURATION ====================================================*/
+/**=== MEMORY CONFIGURATION ==================================================*/
+/**
+ * SIZE OF RAM MEMORY
+ */
+#define CONFIG_RAM_SIZE                               (64 * 1024)
+
 /**
  * SIZE OF DYNAMIC ALLOCATED MEMORY (HEAP) [bytes]
  */

@@ -39,10 +39,11 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GLOBAL_VARIABLES        struct __global_vars__
-#define stdin                   get_program_stdin()
-#define stdout                  get_program_stdout()
-#define global                  ((struct __global_vars__*)get_program_globals())
+#define GLOBAL_VARIABLES                struct __global_vars__
+#define stdin                           get_program_stdin()
+#define stdout                          get_program_stdout()
+#define global                          ((struct __global_vars__ *)get_program_globals())
+#define create_fast_global(name)        struct __global_vars__ *name = get_program_globals()
 
 /*==============================================================================
   Exported types, enums definitions
@@ -64,13 +65,12 @@ enum prg_status {
   Exported function prototypes
 ==============================================================================*/
 extern task_t          run_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_t *cwd);
+extern stdRet_t        kill_program(task_t taskhdl);
 extern enum prg_status get_program_status(task_t taskhdl);
 extern FILE_t         *get_program_stdin(void);
 extern FILE_t         *get_program_stdout(void);
 extern void           *get_program_globals(void);
 extern ch_t           *get_program_cwd(void);
-//extern stdRet_t kill_program(prog_t *appArgs);
-//extern void     exit_program(prog_t *appObj, stdRet_t exitCode);
 
 #ifdef __cplusplus
 }

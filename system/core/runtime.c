@@ -42,18 +42,21 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#undef stdin
+#undef stdout
+
 #define calloc(nmemb, msize)            tskm_calloc(nmemb, msize)
 #define malloc(size)                    tskm_malloc(size)
 #define free(mem)                       tskm_free(mem)
 
-#define MTX_BTIME_FOR_PLIST             5
+#define MTX_BTIME_FOR_PLIST             1
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 struct program_data {
-        FILE_t *f_stdin;
-        FILE_t *f_stdout;
+        FILE_t *stdin;
+        FILE_t *stdout;
         ch_t   *cwd;
         void   *global_vars;
         int     exit_code;
@@ -62,7 +65,23 @@ struct program_data {
 
 struct program_mangement {
         list_t  *program_list;
-        mutex_t  mtx_program_list;
+
+        struct {
+                struct {
+                        task_t taskhdl;
+                        void  *address;
+                } globals;
+
+                struct {
+                        task_t  taskhdl;
+                        FILE_t *file;
+                } stdin;
+
+                struct {
+                        task_t  taskhdl;
+                        FILE_t *file;
+                } stdout;
+        } cache;
 };
 
 struct program_args {
@@ -130,22 +149,20 @@ task_t run_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_t
         }
 
         pargs->args          = args;
-        pargs->globals_size  = regpdata.globals_size;
+        pargs->globals_size  = *regpdata.globals_size;
         pargs->main_function = regpdata.main_function;
         pargs->name          = regpdata.name;
 
         if (new_task(task_program_startup, regpdata.name, regpdata.stack_deep,
                      pargs, 0, &taskhdl) == OS_OK) {
 
-                suspend_task(taskhdl);
-
                 pdata->cwd      = cwd;
-                pdata->f_stdin  = fstdin;
-                pdata->f_stdout = fstdout;
+                pdata->stdin  = fstdin;
+                pdata->stdout = fstdout;
 
-                while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
+                suspend_all_tasks();
                 i32_t item = list_add_item(pman.program_list, (u32_t)taskhdl, pdata);
-                mutex_unlock(pman.mtx_program_list);
+                resume_all_tasks();
 
                 if (item < 0) {
                         goto error;
@@ -175,6 +192,22 @@ error:
 
 //==============================================================================
 /**
+ * @brief Function kill running program
+ *
+ * @param taskhdl       task handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdRet_t kill_program(task_t taskhdl)
+{
+        /* DNLTODO remove program from list */
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
  * @brief Function returns program status
  *
  * @param taskhdl       task handle
@@ -185,16 +218,17 @@ error:
 enum prg_status get_program_status(task_t taskhdl)
 {
         struct program_data *pdata;
+        enum prg_status      status = PROGRAM_NEVER_EXISTED;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl);
-        mutex_unlock(pman.mtx_program_list);
+        suspend_all_tasks();
 
-        if (pdata) {
-                return pdata->status;
+        if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl))) {
+                status = pdata->status;
         }
 
-        return PROGRAM_NEVER_EXISTED;
+        resume_all_tasks();
+
+        return status;
 }
 
 //==============================================================================
@@ -207,16 +241,24 @@ enum prg_status get_program_status(task_t taskhdl)
 FILE_t *get_program_stdin(void)
 {
         struct program_data *pdata;
+        task_t  taskhdl = get_task_handle();
+        FILE_t *fstdin  = NULL;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)get_task_handle());
-        mutex_unlock(pman.mtx_program_list);
+        suspend_all_tasks();
 
-        if (pdata) {
-                return pdata->f_stdin;
+        if (pman.cache.stdin.taskhdl == taskhdl) {
+                fstdin = pman.cache.stdin.file;
+        } else {
+                if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl))) {
+                        pman.cache.stdin.taskhdl = taskhdl;
+                        pman.cache.stdin.file    = pdata->stdin;
+                        fstdin = pdata->stdin;
+                }
         }
 
-        return NULL;
+        resume_all_tasks();
+
+        return fstdin;
 }
 
 //==============================================================================
@@ -231,16 +273,24 @@ FILE_t *get_program_stdin(void)
 FILE_t *get_program_stdout(void)
 {
         struct program_data *pdata;
+        task_t  taskhdl = get_task_handle();
+        FILE_t *fstdout = NULL;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)get_task_handle());
-        mutex_unlock(pman.mtx_program_list);
+        suspend_all_tasks();
 
-        if (pdata) {
-                return pdata->f_stdout;
+        if (pman.cache.stdout.taskhdl == taskhdl) {
+                fstdout = pman.cache.stdout.file;
+        } else {
+                if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl))) {
+                        pman.cache.stdout.taskhdl = taskhdl;
+                        pman.cache.stdout.file    = pdata->stdout;
+                        fstdout = pdata->stdout;
+                }
         }
 
-        return NULL;
+        resume_all_tasks();
+
+        return fstdout;
 }
 
 //==============================================================================
@@ -255,16 +305,24 @@ FILE_t *get_program_stdout(void)
 void *get_program_globals(void)
 {
         struct program_data *pdata;
+        task_t taskhdl = get_task_handle();
+        void  *globals = NULL;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)get_task_handle());
-        mutex_unlock(pman.mtx_program_list);
+        suspend_all_tasks();
 
-        if (pdata) {
-                return pdata->global_vars;
+        if (pman.cache.globals.taskhdl == taskhdl) {
+                globals = pman.cache.globals.address;
+        } else {
+                if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl))) {
+                        pman.cache.globals.taskhdl = taskhdl;
+                        pman.cache.globals.address = pdata->global_vars;
+                        globals = pdata->global_vars;
+                }
         }
 
-        return NULL;
+        resume_all_tasks();
+
+        return globals;
 }
 
 //==============================================================================
@@ -279,16 +337,17 @@ void *get_program_globals(void)
 ch_t *get_program_cwd(void)
 {
         struct program_data *pdata;
+        ch_t *cwd = NULL;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)get_task_handle());
-        mutex_unlock(pman.mtx_program_list);
+        suspend_all_tasks();
 
-        if (pdata) {
-                return pdata->cwd;
+        if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)get_task_handle()))) {
+                cwd = pdata->cwd;
         }
 
-        return NULL;
+        resume_all_tasks();
+
+        return cwd;
 }
 
 //==============================================================================
@@ -304,6 +363,9 @@ static void task_program_startup(void *argv)
         int    pargc   = 0;
         void  *globals = NULL;
         ch_t **pargv   = NULL;
+
+        /* suspend this task to finalize program start in parent function */
+        suspend_task(get_task_handle());
 
         if (set_program_status(get_task_handle(), PROGRAM_INITING) != STD_RET_OK) {
                 goto task_exit;
@@ -344,28 +406,15 @@ static void task_program_startup(void *argv)
 //==============================================================================
 static stdRet_t init_program_management(void)
 {
-        if (pman.program_list != NULL && pman.mtx_program_list != NULL) {
+        if (pman.program_list != NULL) {
                 return STD_RET_OK;
         }
 
-        pman.program_list = new_list();
-        pman.mtx_program_list          = new_mutex();
-
-        if (pman.program_list == NULL || pman.mtx_program_list == NULL) {
-                if (pman.program_list == NULL) {
-                        delete_list(pman.program_list);
-                        pman.program_list = NULL;
-                }
-
-                if (pman.mtx_program_list == NULL) {
-                        delete_mutex(pman.mtx_program_list);
-                        pman.mtx_program_list = NULL;
-                }
-
-                return STD_RET_ERROR;
+        if ((pman.program_list = new_list()) != NULL) {
+                return STD_RET_OK;
         }
 
-        return STD_RET_OK;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -556,17 +605,18 @@ static void delete_argument_table(ch_t **argv, int argc)
 static stdRet_t set_program_exit_code(task_t taskhdl, int exit_code)
 {
         struct program_data *pdata;
+        stdRet_t status = STD_RET_ERROR;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl);
-        if (pdata) {
+        suspend_all_tasks();
+
+        if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl))) {
                 pdata->exit_code = exit_code;
-                mutex_unlock(pman.mtx_program_list);
-                return STD_RET_OK;
+                status = STD_RET_OK;
         }
-        mutex_unlock(pman.mtx_program_list);
 
-        return STD_RET_ERROR;
+        resume_all_tasks();
+
+        return status;
 }
 
 //==============================================================================
@@ -583,17 +633,18 @@ static stdRet_t set_program_exit_code(task_t taskhdl, int exit_code)
 static stdRet_t set_program_globals(task_t taskhdl, void *globals)
 {
         struct program_data *pdata;
+        stdRet_t status = STD_RET_ERROR;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl);
-        if (pdata) {
+        suspend_all_tasks();
+
+        if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl))) {
                 pdata->global_vars = globals;
-                mutex_unlock(pman.mtx_program_list);
-                return STD_RET_OK;
+                status = STD_RET_OK;
         }
-        mutex_unlock(pman.mtx_program_list);
 
-        return STD_RET_ERROR;
+        resume_all_tasks();
+
+        return status;
 }
 
 //==============================================================================
@@ -610,17 +661,18 @@ static stdRet_t set_program_globals(task_t taskhdl, void *globals)
 static stdRet_t set_program_status(task_t taskhdl, enum prg_status pstatus)
 {
         struct program_data *pdata;
+        stdRet_t status = STD_RET_ERROR;
 
-        while (mutex_lock(pman.mtx_program_list, MTX_BTIME_FOR_PLIST) != OS_OK);
-        pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl);
-        if (pdata) {
+        suspend_all_tasks();
+
+        if ((pdata = list_get_iditem_data(pman.program_list, (u32_t)taskhdl))) {
                 pdata->status = pstatus;
-                mutex_unlock(pman.mtx_program_list);
-                return STD_RET_OK;
+                status = STD_RET_OK;
         }
-        mutex_unlock(pman.mtx_program_list);
 
-        return STD_RET_ERROR;
+        resume_all_tasks();
+
+        return status;
 }
 
 #ifdef __cplusplus
