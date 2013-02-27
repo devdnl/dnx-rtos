@@ -45,9 +45,12 @@ extern "C" {
 #undef stdin
 #undef stdout
 
-#define calloc(nmemb, msize)            tskm_calloc(nmemb, msize)
-#define malloc(size)                    tskm_malloc(size)
-#define free(mem)                       tskm_free(mem)
+#define m_calloc(nmemb, msize)          tskm_calloc(nmemb, msize)
+#define m_malloc(size)                  tskm_malloc(size)
+#define m_free(mem)                     tskm_free(mem)
+#define calloc(nmemb, msize)            memman_calloc(nmemb, msize)
+#define malloc(size)                    memman_malloc(size)
+#define free(mem)                       memman_free(mem)
 
 #define MTX_BTIME_FOR_PLIST             1
 #define PROGRAM_DEFAULT_PRIORITY        0
@@ -56,11 +59,8 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct program_object {
-        int    exit_code;
-        sem_t  wait_sem;
+struct pid {
         task_t taskhdl;
-        enum   prg_status status;
 };
 
 struct data_of_running_program {
@@ -68,13 +68,14 @@ struct data_of_running_program {
         FILE_t *stdout;                         /* stdout file                  */
         char   *cwd;                            /* current working path         */
         void   *global_vars;                    /* address to global variables  */
-        prog_t *proghdl;                        /* pointer to program handler   */
         int   (*main_function)(int, char**);    /* program's main function      */
         char   *name;                           /* program's name               */
         char   *args;                           /* not formated argument string */
         char  **argv;                           /* table with arguments         */
         int     argc;                           /* argument table               */
         uint    globals_size;                   /* size of global variables     */
+        int     exit_code;
+        enum    prg_status status;
 };
 
 struct program_mangement {

@@ -48,7 +48,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef struct program_object prog_t;
+typedef struct pid pid_t;
 
 /*==============================================================================
   Exported object declarations
@@ -65,7 +65,7 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern prog_t         *new_program(char *name, char *args, FILE_t *fstdin, FILE_t *fstdout, char *cwd);
+extern pid_t          *new_program(char *name, char *args, FILE_t *fstdin, FILE_t *fstdout, char *cwd);
 extern stdRet_t        delete_program(prog_t *proghdl);
 extern enum prg_status get_program_status(prog_t *proghdl);
 extern void            wait_for_program_end(prog_t *proghdl);
