@@ -54,8 +54,6 @@ GLOBAL_VARIABLES {
         int test;
 };
 
-const uint prog_test_gs = sizeof(struct __global_vars__);
-
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -64,12 +62,13 @@ const uint prog_test_gs = sizeof(struct __global_vars__);
   Function definitions
 ==============================================================================*/
 
-//=============================================================================
+//==============================================================================
 /**
  * @brief
  */
-//=============================================================================
-int prog_test_main(ch_t *argv[], int argc)
+//==============================================================================
+const uint prog_test_gs = sizeof(struct __global_vars__);
+int prog_test_main(int argc, ch_t *argv[])
 {
         printf("\n---------------------\n");
         printf("Free stack: %d\n", get_free_stack());
@@ -116,7 +115,7 @@ static void f1(void)
 //==============================================================================
 static void f2(void)
 {
-        sleep(1);
+//        sleep(1);
         printf("f2: global->test = %d\n", global->test);
         global->test = -global->test;
 }

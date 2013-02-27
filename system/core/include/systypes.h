@@ -76,9 +76,6 @@ typedef signed char stdRet_t;
 /** device number type */
 typedef uint devx_t;
 
-/** task/application ID */
-typedef uint PID_t;
-
 /** IO request type */
 typedef u8_t IORq_t;
 
@@ -119,19 +116,6 @@ typedef struct dir_s
         void      *dd;
         fsd_t      fsd;
 } DIR_t;
-
-/** program standard arguments type */
-typedef struct appArgs_struct
-{
-        ch_t   **argv;              /* pointer to the argument list */
-        int      argc;              /* argument count */
-        FILE_t  *stdin;             /* file used only to read keyboard */
-        FILE_t  *stdout;            /* file used only to write to terminal */
-        task_t   taskHandle;        /* task handling for children */
-        task_t   parentTaskHandle;  /* task handling for parent */
-        ch_t    *cwd;               /* current working path */
-        stdRet_t exitCode;          /* exit code */
-} prog_t;
 
 /** time structure */
 typedef struct time_struct

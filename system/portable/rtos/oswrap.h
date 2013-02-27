@@ -66,6 +66,7 @@ extern "C" {
 #define sleep_until(seconds)                    vTaskDelayUntil(&__last_wake_time__, (seconds) * 1000UL)
 #define milisleep_until(msdelay)                vTaskDelayUntil(&__last_wake_time__, msdelay)
 #define suspend_task(taskhdl)                   vTaskSuspend(taskhdl)
+#define suspend_this_task()                     vTaskSuspend(THIS_TASK)
 #define resume_task(taskhdl)                    vTaskResume(taskhdl)
 #define resume_task_from_ISR(taskhdl)           xTaskResumeFromISR(taskhdl)
 #define suspend_all_tasks()                     vTaskSuspendAll()
@@ -77,7 +78,7 @@ extern "C" {
 #define enable_ISR()                            taskENABLE_INTERRUPTS()
 #define get_tick_counter()                      xTaskGetTickCount()
 #define get_task_name(taskhdl)                  (ch_t*)pcTaskGetTaskName(taskhdl)
-#define get_name_of_task()                      (ch_t*)pcTaskGetTaskName(THIS_TASK)
+#define get_this_task_name()                    (ch_t*)pcTaskGetTaskName(THIS_TASK)
 #define get_task_handle()                       xTaskGetCurrentTaskHandle()
 #define get_task_priority(taskhdl)              (i16_t)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
 #define get_free_stack()                        uxTaskGetStackHighWaterMark(THIS_TASK)
@@ -87,7 +88,7 @@ extern "C" {
 #define get_task_tag(taskhdl)                   xTaskGetApplicationTaskTag(taskhdl)
 
 /** SEMAPHORES AND MUTEXES */
-#define new_semaphore()                         create_semaphore()
+#define new_semaphore()                         create_bin_semaphore()
 #define new_semaphore_counting(maxCnt, intCnt)  xSemaphoreCreateCounting(maxCnt, intCnt)
 #define new_mutex()                             xSemaphoreCreateMutex()
 #define new_recursive_mutex()                   xSemaphoreCreateRecursiveMutex()
@@ -122,7 +123,7 @@ extern "C" {
 extern int   new_task(taskCode_t taskCode, const ch_t *name, u16_t stack,
                       void *argv, i8_t priority, task_t *taskHdl);
 extern void  delete_task(task_t taskHdl);
-extern sem_t create_semaphore(void);
+extern sem_t create_bin_semaphore(void);
 
 #ifdef __cplusplus
 }

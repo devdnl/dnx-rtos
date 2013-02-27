@@ -132,25 +132,25 @@ void task_initd(void *arg)
             milisleep(200);
       }
 
+      uint pno = 0;
+
       for (;;) {
-              task_t p1 = run_program("test", "jeden dwa trzy", ttyx[0], ttyx[0], "/");
+              pno++;
 
-              for (int i = 0; i < 10; i++) {
-                      enum prg_status ps = get_program_status(p1);
+              prog_t *p1 = new_program("test", "jeden dwa trzy", ttyx[0], ttyx[0], "/");
 
-                      switch (ps) {
-                      case PROGRAM_INITING: kprint("initing...\n"); break;
-                      case PROGRAM_RUNNING: kprint("running...\n"); break;
-                      case PROGRAM_ENDED:   kprint("ended...\n"); break;
-                      case PROGRAM_NEVER_EXISTED:  kprint("doesn't exist...\n"); break;
-                      case PROGRAM_ARGUMENTS_PARSE_ERROR:  kprint("parse error...\n"); break;
-                      case PROGRAM_NOT_ENOUGH_FREE_MEMORY: kprint("EFM...\n"); break;
-                      }
-
-                      milisleep(250);
+              switch (get_program_status(p1)) {
+              case PROGRAM_INITING: kprint("%d: initing...\n", pno); break;
+              case PROGRAM_RUNNING: kprint("%d: running...\n", pno); break;
+              case PROGRAM_ENDED:   kprint("%d: ended...\n", pno); break;
+              case PROGRAM_ARGUMENTS_PARSE_ERROR:  kprint("%d: parse error...\n", pno); break;
+              case PROGRAM_NOT_ENOUGH_FREE_MEMORY: kprint("%d: EFM...\n", pno); break;
+              case PROGRAM_HANDLE_ERROR: kprint("%d: NULL handle!\n", pno); break;
               }
 
-              sleep(5);
+              wait_for_program_end(p1);
+              delete_program(p1);
+              sleep(1);
       }
 
       /* this should never happen */

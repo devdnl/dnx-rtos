@@ -35,6 +35,7 @@ extern "C" {
 #include "dlist.h"
 #include "cpuctl.h"
 #include "oswrap.h"
+#include "io.h"
 #include <string.h>
 
 /*==============================================================================
@@ -511,6 +512,11 @@ void *tskm_malloc(u32_t size)
                 block++;
         }
 
+        /*
+         * Not enough free slot to allocate memory!
+         */
+        kprint("%s: Not enough free slots to allocate memory!\n", get_this_task_name());
+
         moni_malloc_end:
         mutex_recursive_unlock(tskm->mtx);
 
@@ -605,8 +611,10 @@ void tskm_free(void *mem)
                 }
         }
 
-        /* error: application try to free freed memory */
-        /* signal code can be added here */
+        /*
+         * Memory is already freed!
+         */
+        kprint("%s: Memory was freed in the past!\n", get_this_task_name());
 
         moni_free_end:
         mutex_recursive_unlock(tskm->mtx);
@@ -677,6 +685,11 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 
                 block++;
         }
+
+        /*
+         * error: no empty slots
+         */
+        kprint("%s: Not enough free slots to open file!\n", get_this_task_name());
 
         moni_fopen_end:
         mutex_recursive_unlock(tskm->mtx);
@@ -752,6 +765,11 @@ stdRet_t tskm_fclose(FILE_t *file)
                 }
         }
 
+        /*
+         * error: file does not exist or closed in the past
+         */
+        kprint("%s: File does not exist or closed in the past!\n", get_this_task_name());
+
         moni_fclose_end:
         mutex_recursive_unlock(tskm->mtx);
 
@@ -822,6 +840,11 @@ DIR_t *tskm_opendir(const ch_t *path)
 
                 block++;
         }
+
+        /*
+         * error: no empty slots
+         */
+        kprint("%s: Not enough free slots to open directory!\n", get_this_task_name());
 
         moni_opendir_end:
         mutex_recursive_unlock(tskm->mtx);
@@ -896,6 +919,11 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
                         goto moni_closedir_end;
                 }
         }
+
+        /*
+         * error: dir does not exist or closed in the past
+         */
+        kprint("%s: Dir does not exist or closed in the past!\n", get_this_task_name());
 
         moni_closedir_end:
         mutex_recursive_unlock(tskm->mtx);

@@ -53,7 +53,7 @@ extern const uint prog_test_gs;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int prog_test_main(ch_t *argv[], int argc);
+extern int prog_test_main(int argc, ch_t *argv[]);
 
 #ifdef __cplusplus
 }

@@ -48,6 +48,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef struct program_object prog_t;
 
 /*==============================================================================
   Exported object declarations
@@ -56,17 +57,18 @@ enum prg_status {
         PROGRAM_INITING,
         PROGRAM_RUNNING,
         PROGRAM_ENDED,
-        PROGRAM_NEVER_EXISTED,
         PROGRAM_NOT_ENOUGH_FREE_MEMORY,
         PROGRAM_ARGUMENTS_PARSE_ERROR,
+        PROGRAM_HANDLE_ERROR,
 };
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t          run_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_t *cwd);
-extern stdRet_t        kill_program(task_t taskhdl);
-extern enum prg_status get_program_status(task_t taskhdl);
+extern prog_t         *new_program(char *name, char *args, FILE_t *fstdin, FILE_t *fstdout, char *cwd);
+extern stdRet_t        delete_program(prog_t *proghdl);
+extern enum prg_status get_program_status(prog_t *proghdl);
+extern void            wait_for_program_end(prog_t *proghdl);
 extern FILE_t         *get_program_stdin(void);
 extern FILE_t         *get_program_stdout(void);
 extern void           *get_program_globals(void);

@@ -44,7 +44,7 @@ extern "C" {
 ==============================================================================*/
 struct regprg_pdata {
         ch_t  *name;
-        int  (*main_function)(ch_t**, int);
+        int  (*main_function)(int, char**);
         const uint *globals_size;
         u16_t  stack_deep;
 };
