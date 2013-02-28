@@ -48,9 +48,9 @@ extern "C" {
 #define m_calloc(nmemb, msize)          tskm_calloc(nmemb, msize)
 #define m_malloc(size)                  tskm_malloc(size)
 #define m_free(mem)                     tskm_free(mem)
-#define calloc(nmemb, msize)            memman_calloc(nmemb, msize)
-#define malloc(size)                    memman_malloc(size)
-#define free(mem)                       memman_free(mem)
+#define calloc(nmemb, msize)            m_calloc(nmemb, msize)//memman_calloc(nmemb, msize)
+#define malloc(size)                    m_malloc(size)//memman_malloc(size)
+#define free(mem)                       m_free(mem)//memman_free(mem)
 
 #define MTX_BTIME_FOR_PLIST             1
 #define PROGRAM_DEFAULT_PRIORITY        0
@@ -59,10 +59,6 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct pid {
-        task_t taskhdl;
-};
-
 struct data_of_running_program {
         FILE_t *stdin;                          /* stdin file                   */
         FILE_t *stdout;                         /* stdout file                  */
@@ -72,10 +68,10 @@ struct data_of_running_program {
         char   *name;                           /* program's name               */
         char   *args;                           /* not formated argument string */
         char  **argv;                           /* table with arguments         */
+        int    *exit_code;                      /* program's exit code          */
         int     argc;                           /* argument table               */
         uint    globals_size;                   /* size of global variables     */
-        int     exit_code;
-        enum    prg_status status;
+        enum    prg_status *status;             /* pointer to task status       */
 };
 
 struct program_mangement {
@@ -103,8 +99,9 @@ struct program_mangement {
   Local function prototypes
 ==============================================================================*/
 static stdRet_t init_program_management(void);
-static ch_t   **new_argument_table(ch_t *arg, const ch_t *name, int *argc);
-static void     delete_argument_table(ch_t **argv, int argc);
+static void     set_status(enum prg_status *status_ptr, enum prg_status status);
+static char   **new_argument_table(char *arg, const char *name, int *argc);
+static void     delete_argument_table(char **argv, int argc);
 static void     task_program_startup(void *argv);
 
 /*==============================================================================
@@ -130,14 +127,19 @@ static struct program_mangement pman;
  * @param *fstdout      stdout file
  * @oaram *cwd          current working path
  *
- * @return NULL if error, otherwise program handler
+ * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-prog_t *new_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_t *cwd)
+task_t new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
+                   FILE_t *fstdout, enum prg_status *status, int *exit_code)
 {
         struct data_of_running_program *progdata = NULL;
-        struct program_object          *proghdl  = NULL;
         struct regprg_pdata             regpdata;
+        task_t                          taskhdl;
+
+        if (!name || !args || !cwd) {
+                return NULL;
+        }
 
         if (init_program_management() != STD_RET_OK) {
                 return NULL;
@@ -147,21 +149,9 @@ prog_t *new_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_
                 return NULL;
         }
 
-        if ((proghdl = calloc(1, sizeof(struct program_object))) == NULL) {
-                goto error;
-        }
-
         if ((progdata = calloc(1, sizeof(struct data_of_running_program))) == NULL) {
                 goto error;
         }
-
-        if ((proghdl->wait_sem = new_semaphore()) == NULL) {
-                goto error;
-        }
-
-        semaphore_take(proghdl->wait_sem, 0);
-        proghdl->exit_code      = STD_RET_UNKNOWN;
-        proghdl->status         = PROGRAM_INITING;
 
         progdata->args          = args;
         progdata->globals_size  = *regpdata.globals_size;
@@ -170,38 +160,35 @@ prog_t *new_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_
         progdata->cwd           = cwd;
         progdata->stdin         = fstdin;
         progdata->stdout        = fstdout;
-        progdata->proghdl       = proghdl;
+        progdata->status        = status;
+        progdata->exit_code     = exit_code;
 
         if (new_task(task_program_startup, regpdata.name, regpdata.stack_deep,
-                     progdata, PROGRAM_DEFAULT_PRIORITY, &proghdl->taskhdl) == OS_OK) {
+                     progdata, PROGRAM_DEFAULT_PRIORITY, &taskhdl) == OS_OK) {
 
                 suspend_all_tasks();
 
                 i32_t item = list_add_item(pman.list_of_running_programs,
-                                           (u32_t)proghdl->taskhdl, progdata);
+                                           (u32_t)taskhdl, progdata);
                 resume_all_tasks();
 
                 if (item < 0) {
                         goto error;
                 }
 
-                resume_task(proghdl->taskhdl);
+                if (status) {
+                        *status = PROGRAM_RUNNING;
+                }
 
-                return proghdl;
+                resume_task(taskhdl);
+
+                return taskhdl;
         }
 
         /* an error occurred */
         error:
-        if (proghdl) {
-                if (proghdl->taskhdl) {
-                        delete_task(proghdl->taskhdl);
-                }
-
-                if (proghdl->wait_sem) {
-                        delete_semaphore(proghdl->wait_sem);
-                }
-
-                free(proghdl);
+        if (taskhdl) {
+                delete_task(taskhdl);
         }
 
         if (progdata) {
@@ -209,75 +196,6 @@ prog_t *new_program(ch_t *name, ch_t *args, FILE_t *fstdin, FILE_t *fstdout, ch_
         }
 
         return NULL;
-}
-
-//==============================================================================
-/**
- * @brief Function kill running program
- *
- * @param *proghdl      program handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-stdRet_t delete_program(prog_t *proghdl)
-{
-        if (proghdl) {
-                suspend_all_tasks();
-                if (proghdl->taskhdl) {
-                        delete_task(proghdl->taskhdl);
-
-                        list_rm_iditem(pman.list_of_running_programs,
-                                       (u32_t)proghdl->taskhdl);
-                }
-                resume_all_tasks();
-
-                delete_semaphore(proghdl->wait_sem);
-                free(proghdl);
-        }
-
-        return STD_RET_ERROR;
-}
-
-//==============================================================================
-/**
- * @brief Function returns program status
- *
- * @param *proghdl      program handle
- *
- * @return status
- */
-//==============================================================================
-enum prg_status get_program_status(prog_t *proghdl)
-{
-        enum prg_status status = PROGRAM_HANDLE_ERROR;
-
-        if (proghdl) {
-                suspend_all_tasks();
-                status = proghdl->status;
-                resume_all_tasks();
-        }
-
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief Function wait to program end
- *
- * @param *proghdl      program handle
- */
-//==============================================================================
-void wait_for_program_end(prog_t *proghdl)
-{
-        if (proghdl) {
-                if (  proghdl->status == PROGRAM_RUNNING
-                   || proghdl->status == PROGRAM_INITING ) {
-
-                        semaphore_take(proghdl->wait_sem, SEM_PROGRAM_BLOCK_TIME);
-                }
-        }
 }
 
 //==============================================================================
@@ -417,32 +335,30 @@ ch_t *get_program_cwd(void)
 static void task_program_startup(void *argv)
 {
         struct data_of_running_program *progdata = argv;
+        int exit_code = STD_RET_UNKNOWN;
 
         /* suspend this task to finalize parent function */
         suspend_this_task();
 
-        progdata->proghdl->status = PROGRAM_INITING;
-
         if ((progdata->global_vars = calloc(1, progdata->globals_size)) == NULL) {
-                progdata->proghdl->status = PROGRAM_NOT_ENOUGH_FREE_MEMORY;
+                set_status(progdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                 goto task_exit;
         }
 
         if ((progdata->argv = new_argument_table(progdata->args, progdata->name,
                                                  &progdata->argc)) == NULL) {
 
-                progdata->proghdl->status = PROGRAM_ARGUMENTS_PARSE_ERROR;
+                set_status(progdata->status, PROGRAM_ARGUMENTS_PARSE_ERROR);
                 goto task_exit;
         }
 
-        progdata->proghdl->status    = PROGRAM_RUNNING;
-        progdata->proghdl->exit_code = progdata->main_function(progdata->argc,
-                                                               progdata->argv);
-        progdata->proghdl->status    = PROGRAM_ENDED;
+        exit_code = progdata->main_function(progdata->argc, progdata->argv);
+        set_status(progdata->status, PROGRAM_ENDED);
 
         task_exit:
-        semaphore_give(progdata->proghdl->wait_sem);
-        progdata->proghdl->taskhdl = NULL;
+        if (progdata->exit_code) {
+                *progdata->exit_code = exit_code;
+        }
 
         if (progdata->global_vars) {
                 free(progdata->global_vars);
@@ -461,6 +377,24 @@ static void task_program_startup(void *argv)
         pman.cache.stdout.taskhdl  = NULL;
 
         terminate_task();
+}
+
+//==============================================================================
+/**
+ * @brief Function set program status
+ *
+ * @param *status_ptr           pointer to status
+ * @param  status               status
+ *
+ * @retval STD_RET_OK           manager variables initialized successfully
+ * @retval STD_RET_ERROR        variables not initialized
+ */
+//==============================================================================
+static void set_status(enum prg_status *status_ptr, enum prg_status status)
+{
+        if (status_ptr) {
+                *status_ptr = status;
+        }
 }
 
 //==============================================================================
@@ -495,12 +429,12 @@ static stdRet_t init_program_management(void)
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static ch_t **new_argument_table(ch_t *arg, const ch_t *name, int *argc)
+static char **new_argument_table(char *arg, const ch_t *name, int *argc)
 {
         int     arg_count  = 0;
-        ch_t  **arg_table  = NULL;
+        char  **arg_table  = NULL;
         list_t *arg_list   = NULL;
-        ch_t   *arg_string = NULL;
+        char   *arg_string = NULL;
 
         if (arg == NULL || name == NULL || argc == NULL) {
                 goto exit_error;
@@ -643,7 +577,7 @@ exit_error:
  * @param   argc        argument count
  */
 //==============================================================================
-static void delete_argument_table(ch_t **argv, int argc)
+static void delete_argument_table(char **argv, int argc)
 {
         if (argv == NULL) {
                 return;

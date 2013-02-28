@@ -48,13 +48,11 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef struct pid pid_t;
 
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
 enum prg_status {
-        PROGRAM_INITING,
         PROGRAM_RUNNING,
         PROGRAM_ENDED,
         PROGRAM_NOT_ENOUGH_FREE_MEMORY,
@@ -65,14 +63,11 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern pid_t          *new_program(char *name, char *args, FILE_t *fstdin, FILE_t *fstdout, char *cwd);
-extern stdRet_t        delete_program(prog_t *proghdl);
-extern enum prg_status get_program_status(prog_t *proghdl);
-extern void            wait_for_program_end(prog_t *proghdl);
-extern FILE_t         *get_program_stdin(void);
-extern FILE_t         *get_program_stdout(void);
-extern void           *get_program_globals(void);
-extern ch_t           *get_program_cwd(void);
+extern task_t  new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
+extern FILE_t *get_program_stdin(void);
+extern FILE_t *get_program_stdout(void);
+extern void   *get_program_globals(void);
+extern ch_t   *get_program_cwd(void);
 
 #ifdef __cplusplus
 }

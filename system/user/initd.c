@@ -136,20 +136,14 @@ void task_initd(void *arg)
 
       for (;;) {
               pno++;
+              enum prg_status status;
 
-              prog_t *p1 = new_program("test", "jeden dwa trzy", ttyx[0], ttyx[0], "/");
+              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
 
-              switch (get_program_status(p1)) {
-              case PROGRAM_INITING: kprint("%d: initing...\n", pno); break;
-              case PROGRAM_RUNNING: kprint("%d: running...\n", pno); break;
-              case PROGRAM_ENDED:   kprint("%d: ended...\n", pno); break;
-              case PROGRAM_ARGUMENTS_PARSE_ERROR:  kprint("%d: parse error...\n", pno); break;
-              case PROGRAM_NOT_ENOUGH_FREE_MEMORY: kprint("%d: EFM...\n", pno); break;
-              case PROGRAM_HANDLE_ERROR: kprint("%d: NULL handle!\n", pno); break;
+              while (status == PROGRAM_RUNNING) {
+                    milisleep(100);
               }
 
-              wait_for_program_end(p1);
-              delete_program(p1);
               sleep(1);
       }
 
