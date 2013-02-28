@@ -35,7 +35,6 @@ extern "C" {
 #include "regprg.h"
 #include "oswrap.h"
 #include "taskmoni.h"
-#include "io.h"
 #include "dlist.h"
 #include <string.h>
 
@@ -344,13 +343,15 @@ static void task_program_startup(void *argv)
                 set_status(progdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                 goto task_exit;
         }
-
-        if ((progdata->argv = new_argument_table(progdata->args, progdata->name,
-                                                 &progdata->argc)) == NULL) {
-
-                set_status(progdata->status, PROGRAM_ARGUMENTS_PARSE_ERROR);
-                goto task_exit;
-        }
+        /* DNLTEST without argument table */
+//        if ((progdata->argv = new_argument_table(progdata->args, progdata->name,
+//                                                 &progdata->argc)) == NULL) {
+//
+//                set_status(progdata->status, PROGRAM_ARGUMENTS_PARSE_ERROR);
+//                goto task_exit;
+//        }
+        progdata->argc = 0;             /* DNLTEST without argument table */
+        progdata->argv = NULL;          /* DNLTEST without argument table */
 
         exit_code = progdata->main_function(progdata->argc, progdata->argv);
         set_status(progdata->status, PROGRAM_ENDED);
@@ -364,9 +365,9 @@ static void task_program_startup(void *argv)
                 free(progdata->global_vars);
         }
 
-        if (progdata->argv) {
-                delete_argument_table(progdata->argv, progdata->argc);
-        }
+//        if (progdata->argv) {        /* DNLTEST without argument table */
+//                delete_argument_table(progdata->argv, progdata->argc);
+//        }
 
         suspend_all_tasks();
         list_rm_iditem(pman.list_of_running_programs, (u32_t)get_task_handle());

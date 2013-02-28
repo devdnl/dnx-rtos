@@ -135,16 +135,19 @@ void task_initd(void *arg)
       uint pno = 0;
 
       for (;;) {
-              pno++;
-              enum prg_status status;
+//              pno++;
+//              enum prg_status status;
+//
+//              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
+//
+//              while (status == PROGRAM_RUNNING) {
+//                    milisleep(100);
+//              }
+//
+//              sleep(1);
 
-              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
-
-              while (status == PROGRAM_RUNNING) {
-                    milisleep(100);
-              }
-
-              sleep(1);
+              fprintf(ttyx[0], "Free memory: %d\n", get_free_memory());
+              milisleep(500);
       }
 
       /* this should never happen */
