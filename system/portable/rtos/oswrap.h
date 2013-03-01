@@ -90,7 +90,7 @@ extern "C" {
 #define delete_task(taskhdl)                            osw_delete_task(taskhdl)
 
 /** SEMAPHORES AND MUTEXES */
-#define new_semaphore()                                 create_bin_semaphore()
+#define new_semaphore()                                 osw_create_binary_semaphore()
 #define new_semaphore_counting(maxCnt, intCnt)          xSemaphoreCreateCounting(maxCnt, intCnt)
 #define new_mutex()                                     xSemaphoreCreateMutex()
 #define new_recursive_mutex()                           xSemaphoreCreateRecursiveMutex()
@@ -124,7 +124,7 @@ extern "C" {
 ==============================================================================*/
 extern task_t *osw_new_task(taskCode_t, const char*, u16_t, void*, i8_t);
 extern void    osw_delete_task(task_t *taskHdl);
-extern sem_t   create_bin_semaphore(void);
+extern sem_t  *osw_create_binary_semaphore(void);
 
 #ifdef __cplusplus
 }

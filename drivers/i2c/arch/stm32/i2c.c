@@ -57,7 +57,7 @@ struct i2cCtrl
 {
       I2C_t    *Address;            /* peripheral address */
       task_t   *TaskHandle;         /* task handle variable for IRQ */
-      mutex_t   mtx;                /* port reservation */
+      mutex_t  *mtx;                /* port reservation */
       u8_t      SlaveAddress;       /* slave address */
       stdRet_t  status;             /* last operation status */
 };

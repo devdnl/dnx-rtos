@@ -95,8 +95,8 @@ struct taskData {
 
 /* main structure */
 struct tskm {
-        list_t *tasks;  /* list with task informations */
-        mutex_t mtx;    /* mutex */
+        list_t  *tasks;  /* list with task informations */
+        mutex_t *mtx;    /* mutex */
 };
 
 /*==============================================================================

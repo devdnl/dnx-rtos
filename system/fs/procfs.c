@@ -70,9 +70,9 @@ enum taskInfFile {
 };
 
 struct procmem {
-      list_t *flist;
-      u32_t   idcnt;
-      mutex_t mtx;
+      list_t  *flist;
+      u32_t    idcnt;
+      mutex_t *mtx;
 };
 
 struct fileinfo {

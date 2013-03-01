@@ -202,9 +202,9 @@ struct uartCtrl
             size_t Size;
       } TxBuffer;
 
-      sem_t   sem;                  /* semaphore for sync between IRQ and task */
-      mutex_t mtx;                  /* mutex for secure resources */
-      task_t *TaskHandle;           /* task handler in IRQ */
+      sem_t   *sem;                  /* semaphore for sync between IRQ and task */
+      mutex_t *mtx;                  /* mutex for secure resources */
+      task_t  *TaskHandle;           /* task handler in IRQ */
 };
 
 

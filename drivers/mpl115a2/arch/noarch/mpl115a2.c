@@ -89,13 +89,13 @@ enum registers_enum
 /** data store structure */
 struct mplst
 {
-      mutex_t mtx;
-      i16_t   a0;
-      i16_t   b1;
-      i16_t   b2;
-      i16_t   c12;
-      i8_t    temp;
-      u16_t   pres;
+      mutex_t *mtx;
+      i16_t    a0;
+      i16_t    b1;
+      i16_t    b2;
+      i16_t    c12;
+      i8_t     temp;
+      u16_t    pres;
 };
 
 

@@ -51,10 +51,10 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef void             task_t;
-typedef pdTASK_CODE      taskCode_t;
-typedef xSemaphoreHandle sem_t;
-typedef xSemaphoreHandle mutex_t;
+typedef void        task_t;
+typedef pdTASK_CODE taskCode_t;
+typedef void        sem_t;
+typedef void        mutex_t;
 
 /*==============================================================================
    Exported object declarations

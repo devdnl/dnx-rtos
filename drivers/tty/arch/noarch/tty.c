@@ -73,7 +73,7 @@ struct termHdl {
                 u8_t     wrIdx;                 /* write index */
                 u8_t     newMsgCnt;             /* new message counter */
                 flag_t   refLstLn;              /* request to refresh last line */
-                mutex_t  mtx;                   /* resources security */
+                mutex_t *mtx;                   /* resources security */
                 flag_t   echoOn;                /* echo indicator */
 
                 struct inputstream {            /* FIFO for keyboard read */
@@ -93,7 +93,7 @@ struct termHdl {
         u8_t    col;            /* terminal column count */
         u8_t    row;            /* terminal row count */
         task_t *taskHdl;        /* task handle */
-        sem_t   semcnt_stdout;  /* semaphore used to trigger daemon operation */
+        sem_t  *semcnt_stdout;  /* semaphore used to trigger daemon operation */
         u8_t    captureKeyStep; /* decode Fn key step */
         ch_t    captureKeyTmp;  /* temporary value */
         uint    taskDelay;      /* task delay depended by user activity */
@@ -229,7 +229,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
         }
 
         if (mutex_recursive_lock(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
-                mutex_t mtx = TTY(dev)->mtx;
+                mutex_t *mtx = TTY(dev)->mtx;
 
                 /* free unused terminal */
                 for (u8_t i = 0; i < TTY_MAX_LINES; i++) {

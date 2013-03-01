@@ -37,7 +37,7 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define Priority(prio)                    (prio + (configMAX_PRIORITIES / 2))
+#define PRIORITY(prio)                    (prio + (configMAX_PRIORITIES / 2))
 
 /*==============================================================================
   Local types, enums definitions
@@ -81,7 +81,7 @@ task_t *osw_new_task(taskCode_t taskCode, const char *name, u16_t stackDeep,
         task_t *task = NULL;
 
         if (xTaskCreate(taskCode, (signed char *)name, stackDeep, argv,
-                        Priority(priority), &task) == OS_OK) {
+                        PRIORITY(priority), &task) == OS_OK) {
 
                 tskm_add_task(task);
         }
@@ -111,9 +111,9 @@ void osw_delete_task(task_t *taskHdl)
  * @return binary semaphore object
  */
 //==============================================================================
-sem_t create_bin_semaphore(void)
+sem_t *osw_create_binary_semaphore(void)
 {
-        sem_t sem = NULL;
+        sem_t *sem = NULL;
 
         vSemaphoreCreateBinary(sem);
 

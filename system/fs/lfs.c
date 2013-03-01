@@ -77,7 +77,7 @@ typedef struct openInfo {
 /** main memory structure */
 struct fshdl_s {
         node_t   root;          /* root dir '/' */
-        mutex_t  mtx;           /* lock mutex */
+        mutex_t *mtx;           /* lock mutex */
         list_t  *openFile;      /* list with opened files */
         u32_t    idcnt;         /* list ID counter */
 };

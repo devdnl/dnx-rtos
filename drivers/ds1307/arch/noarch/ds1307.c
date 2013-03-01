@@ -117,7 +117,7 @@ static stdRet_t  SetDate(bcdDate_t *date);
 ==================================================================================================*/
 /* structure used to control RTC and NVM */
 static struct rtc_struct {
-      mutex_t   mtx;
+      mutex_t  *mtx;
       bcdTime_t time;
       bcdDate_t date;
 } *rtc;

@@ -53,7 +53,7 @@ struct eth_mem {
       u8_t                TxBfrCount;
       ETH_DMADESCTypeDef *DMARxDscrTab;
       u8_t                RxBfrCount;
-      mutex_t             mtx;
+      mutex_t            *mtx;
 };
 
 /*==================================================================================================

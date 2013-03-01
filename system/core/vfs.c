@@ -59,7 +59,7 @@ struct fsinfo {
 
 struct vfshdl {
           list_t  *mntList;
-          mutex_t  mtx;
+          mutex_t *mtx;
           u32_t    idcnt;
 };
 
