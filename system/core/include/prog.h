@@ -73,7 +73,7 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t  prog_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
+extern task_t *prog_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
 extern FILE_t *prog_get_program_stdin(void);
 extern FILE_t *prog_get_program_stdout(void);
 extern void   *prog_get_program_globals(void);

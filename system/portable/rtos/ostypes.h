@@ -51,7 +51,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef xTaskHandle      task_t;
+typedef void             task_t;
 typedef pdTASK_CODE      taskCode_t;
 typedef xSemaphoreHandle sem_t;
 typedef xSemaphoreHandle mutex_t;

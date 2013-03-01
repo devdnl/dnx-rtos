@@ -204,7 +204,7 @@ struct uartCtrl
 
       sem_t   sem;                  /* semaphore for sync between IRQ and task */
       mutex_t mtx;                  /* mutex for secure resources */
-      task_t  TaskHandle;           /* task handler in IRQ */
+      task_t *TaskHandle;           /* task handler in IRQ */
 };
 
 

@@ -70,45 +70,35 @@ extern "C" {
  * @param[in ]  priority      task priority (calculated to FreeRTOS priority level)
  * @param[out] *taskHdl       task handle
  *
- * @retval OS_OK
- * @retval OS_NOT_OK
+ * @return task object pointer or NULL if error
  */
 //==============================================================================
-int new_task(taskCode_t taskCode, const ch_t *name, u16_t stackDeep,
-             void *argv, i8_t priority, task_t *taskHdl)
+task_t *osw_new_task(taskCode_t taskCode, const char *name, u16_t stackDeep,
+                     void *argv, i8_t priority)
 {
         suspend_all_tasks();
 
-        task_t task;
+        task_t *task = NULL;
 
-        int status = xTaskCreate(taskCode,
-                                 (signed char *)name,
-                                 stackDeep,
-                                 argv,
-                                 Priority(priority),
-                                 &task);
+        if (xTaskCreate(taskCode, (signed char *)name, stackDeep, argv,
+                        Priority(priority), &task) == OS_OK) {
 
-        if (taskHdl) {
-                *taskHdl = task;
-        }
-
-        if (status == OS_OK) {
                 tskm_add_task(task);
         }
 
         resume_all_tasks();
 
-        return status;
+        return task;
 }
 
 //==============================================================================
 /**
  * @brief Function delete task and if enabled remove from monitor list
  *
- * @param taskHdl       task handle
+ * @param *taskHdl       task handle
  */
 //==============================================================================
-void delete_task(task_t taskHdl)
+void osw_delete_task(task_t *taskHdl)
 {
         tskm_remove_task(taskHdl);
         vTaskDelete(taskHdl);

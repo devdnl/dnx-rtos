@@ -107,14 +107,14 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct taskstat {
-        u32_t  memory_usage;
-        u32_t  opened_files;
-        u32_t  cpu_usage;
-        u32_t  cpu_usage_total;
-        ch_t  *task_name;
-        task_t task_handle;
-        u32_t  free_stack;
-        i16_t  priority;
+        u32_t   memory_usage;
+        u32_t   opened_files;
+        u32_t   cpu_usage;
+        u32_t   cpu_usage_total;
+        ch_t   *task_name;
+        task_t *task_handle;
+        u32_t   free_stack;
+        i16_t   priority;
 };
 
 /*==============================================================================
@@ -127,10 +127,10 @@ struct taskstat {
 #if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
-extern stdRet_t  tskm_add_task         (task_t taskHdl);
-extern stdRet_t  tskm_remove_task      (task_t taskHdl);
+extern stdRet_t  tskm_add_task         (task_t *taskHdl);
+extern stdRet_t  tskm_remove_task      (task_t *taskHdl);
 extern stdRet_t  tskm_get_ntask_stat   (i32_t item, struct taskstat *stat);
-extern stdRet_t  tskm_get_task_stat    (task_t taskHdl, struct taskstat *stat);
+extern stdRet_t  tskm_get_task_stat    (task_t *taskHdl, struct taskstat *stat);
 extern u16_t     tskm_get_task_count   (void);
 #endif
 #if (TSK_MONITOR_MEMORY_USAGE > 0)

@@ -83,20 +83,20 @@ struct termHdl {
                         u16_t rxidx;
                 } input;
 
-                ch_t   editLine[TTY_EDIT_LINE_LEN + 1]; /* input line */
+                char editLine[TTY_EDIT_LINE_LEN + 1]; /* input line */
                 uint editLineLen;             /* edit line fill level */
                 uint cursorPosition;          /* cursor position in line */
         } *tty[TTY_LAST];
 
-        u8_t   currentTTY;      /* current terminal */
-        i8_t   changeToTTY;     /* terminal to change */
-        u8_t   col;             /* terminal column count */
-        u8_t   row;             /* terminal row count */
-        task_t taskHdl;         /* task handle */
-        sem_t  semcnt_stdout;   /* semaphore used to trigger daemon operation */
-        u8_t   captureKeyStep;  /* decode Fn key step */
-        ch_t   captureKeyTmp;   /* temporary value */
-        uint taskDelay;       /* task delay depended by user activity */
+        u8_t    currentTTY;     /* current terminal */
+        i8_t    changeToTTY;    /* terminal to change */
+        u8_t    col;            /* terminal column count */
+        u8_t    row;            /* terminal row count */
+        task_t *taskHdl;        /* task handle */
+        sem_t   semcnt_stdout;  /* semaphore used to trigger daemon operation */
+        u8_t    captureKeyStep; /* decode Fn key step */
+        ch_t    captureKeyTmp;  /* temporary value */
+        uint    taskDelay;      /* task delay depended by user activity */
 };
 
 /* key detector results */
@@ -130,7 +130,7 @@ static void        refresh_last_line(u8_t dev, FILE_t *stream);
 static void        stdin_service(FILE_t *stream, u8_t dev);
 static void        switch_tty_immediately(u8_t dev, FILE_t *stream);
 static void        clear_tty(u8_t dev);
-static uint      add_message(u8_t dev, ch_t *msg, uint msgLen);
+static uint        add_message(u8_t dev, ch_t *msg, uint msgLen);
 static ch_t       *create_buffer_for_message(u8_t dev, ch_t *msg, uint msgLen);
 static u8_t        count_non_lf_ended_messages(u8_t dev);
 static void        strncpy_LF2CRLF(ch_t *dst, ch_t *src, uint n);
@@ -182,8 +182,9 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
         }
 
         if ((term->semcnt_stdout = new_semaphore_counting(10, 0)) != NULL) {
-                if (new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
-                             NULL, -1, &term->taskHdl) == OS_OK) {
+
+                if ((term->taskHdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
+                                              NULL, -1)) != NULL) {
 
                         term->col = 80;
                         term->row = 24;

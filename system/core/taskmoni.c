@@ -181,30 +181,29 @@ static stdRet_t tskm_init(void)
 #if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_add_task(task_t taskHdl)
+stdRet_t tskm_add_task(task_t *taskHdl)
 {
         stdRet_t status = STD_RET_ERROR;
+        struct taskData *task_data;
 
         if (tskm == NULL) {
                 tskm_init();
         }
 
-        if (tskm) {
+        if (tskm && taskHdl) {
                 while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-                struct taskData *task = list_get_iditem_data(tskm->tasks,
-                                                            (u32_t) taskHdl);
+                task_data = list_get_iditem_data(tskm->tasks, (u32_t)taskHdl);
+                if (task_data == NULL) {
+                        task_data = calloc(1, sizeof(struct taskData));
 
-                /* task does not exist */
-                if (task == NULL) {
-                        task = calloc(1, sizeof(struct taskData));
-
-                        if (task) {
+                        if (task_data) {
                                 if (list_add_item(tskm->tasks, (u32_t) taskHdl,
-                                                task) >= 0) {
+                                                  task_data) >= 0) {
+
                                         status = STD_RET_OK;
                                 } else {
-                                        free(task);
+                                        free(task_data);
                                 }
                         }
                 }
@@ -226,9 +225,9 @@ stdRet_t tskm_add_task(task_t taskHdl)
 #if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_remove_task(task_t taskHdl)
+stdRet_t tskm_remove_task(task_t *taskHdl)
 {
-        if (tskm == NULL) {
+        if (!tskm || !taskHdl) {
                 return STD_RET_ERROR;
         }
 
@@ -376,8 +375,8 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 
         mutex_recursive_unlock(tskm->mtx);
 
-        task_t taskHdl = 0;
-        list_get_nitem_ID(tskm->tasks, item, (task_t) &taskHdl);
+        task_t *taskHdl = NULL;
+        list_get_nitem_ID(tskm->tasks, item, (task_t*)&taskHdl);
 
         stat->task_handle     = taskHdl;
         stat->task_name       = get_task_name(taskHdl);
@@ -411,7 +410,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 #if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_get_task_stat(task_t taskHdl, struct taskstat *stat)
+stdRet_t tskm_get_task_stat(task_t *taskHdl, struct taskstat *stat)
 {
         if (!taskHdl || !tskm) {
                 return STD_RET_ERROR;
@@ -419,7 +418,7 @@ stdRet_t tskm_get_task_stat(task_t taskHdl, struct taskstat *stat)
 
         i32_t item = -1;
 
-        if (list_get_iditem_No(tskm->tasks, (u32_t) taskHdl, &item) == STD_RET_OK) {
+        if (list_get_iditem_No(tskm->tasks, (u32_t)taskHdl, &item) == STD_RET_OK) {
                 return tskm_get_ntask_stat(item, stat);
         }
 
@@ -952,9 +951,9 @@ void tskm_task_switched_in(void)
 #if (TSK_MONITOR_CPU_LOAD > 0)
 void tskm_task_switched_out(void)
 {
-        u16_t  cnt     = cpuctl_get_CPU_load_timer();
-        task_t taskhdl = get_task_handle();
-        u32_t  tmp     = (u32_t)get_task_tag(taskhdl) + cnt;
+        u16_t   cnt     = cpuctl_get_CPU_load_timer();
+        task_t *taskhdl = get_task_handle();
+        u32_t   tmp     = (u32_t)get_task_tag(taskhdl) + cnt;
         set_task_tag(taskhdl, (void*)tmp);
 }
 #endif

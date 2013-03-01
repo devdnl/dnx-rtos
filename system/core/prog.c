@@ -80,17 +80,17 @@ struct program_mangement {
 
         struct {
                 struct {
-                        task_t taskhdl;
-                        void  *address;
+                        task_t *taskhdl;
+                        void   *address;
                 } globals;
 
                 struct {
-                        task_t  taskhdl;
+                        task_t *taskhdl;
                         FILE_t *file;
                 } stdin;
 
                 struct {
-                        task_t  taskhdl;
+                        task_t *taskhdl;
                         FILE_t *file;
                 } stdout;
         } cache;
@@ -131,12 +131,12 @@ static struct program_mangement pman;
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
-                        FILE_t *fstdout, enum prg_status *status, int *exit_code)
+task_t *prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
+                         FILE_t *fstdout, enum prg_status *status, int *exit_code)
 {
         struct data_of_running_program *progdata = NULL;
         struct regprg_pdata             regpdata;
-        task_t                          taskhdl = NULL;
+        task_t                         *taskhdl  = NULL;
 
         if (!name || !args || !cwd) {
                 return NULL;
@@ -164,8 +164,10 @@ task_t prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
         progdata->status        = status;
         progdata->exit_code     = exit_code;
 
-        if (new_task(task_program_startup, regpdata.program_name, *regpdata.stack_deep,
-                     progdata, PROGRAM_DEFAULT_PRIORITY, &taskhdl) == OS_OK) {
+        taskhdl = new_task(task_program_startup, regpdata.program_name, *regpdata.stack_deep,
+                           progdata, PROGRAM_DEFAULT_PRIORITY);
+
+        if (taskhdl != NULL) {
 
                 suspend_all_tasks();
 
@@ -209,7 +211,7 @@ task_t prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
 FILE_t *prog_get_program_stdin(void)
 {
         struct data_of_running_program *pdata;
-        task_t  taskhdl = get_task_handle();
+        task_t *taskhdl = get_task_handle();
         FILE_t *fstdin  = NULL;
 
         suspend_all_tasks();
@@ -245,7 +247,7 @@ FILE_t *prog_get_program_stdin(void)
 FILE_t *prog_get_program_stdout(void)
 {
         struct data_of_running_program *pdata;
-        task_t  taskhdl = get_task_handle();
+        task_t *taskhdl = get_task_handle();
         FILE_t *fstdout = NULL;
 
         suspend_all_tasks();
@@ -281,8 +283,8 @@ FILE_t *prog_get_program_stdout(void)
 void *prog_get_program_globals(void)
 {
         struct data_of_running_program *pdata;
-        task_t taskhdl = get_task_handle();
-        void  *globals = NULL;
+        task_t *taskhdl = get_task_handle();
+        void   *globals = NULL;
 
         suspend_all_tasks();
 

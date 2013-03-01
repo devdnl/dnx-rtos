@@ -76,8 +76,8 @@ struct procmem {
 };
 
 struct fileinfo {
-      task_t taskHdl;         /* task handle */
-      u8_t   taskFile;        /* task info file */
+      task_t *taskHdl;         /* task handle */
+      u8_t    taskFile;        /* task info file */
 };
 
 /*==============================================================================
@@ -216,10 +216,10 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                         return STD_RET_ERROR;
                 }
 
-                task_t taskHdl = 0;
+                task_t *taskHdl = NULL;
                 path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
 
-                if (tskm_get_task_stat((task_t)taskHdl, &taskdata) != STD_RET_OK) {
+                if (tskm_get_task_stat(taskHdl, &taskdata) != STD_RET_OK) {
                         return STD_RET_ERROR;
                 }
 
@@ -681,7 +681,7 @@ stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
                         return STD_RET_ERROR;
                 }
 
-                task_t taskHdl = 0;
+                task_t *taskHdl = NULL;
                 path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
 
                 if (!((*path == '/' && *(path + 1) == '\0') || *path == '\0')) {
@@ -1031,7 +1031,7 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
                 return dirent;
         }
 
-        if (tskm_get_task_stat((task_t) dir->dd, &taskdata) != STD_RET_OK) {
+        if (tskm_get_task_stat((task_t*)dir->dd, &taskdata) != STD_RET_OK) {
                 return dirent;
         }
 

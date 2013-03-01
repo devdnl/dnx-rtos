@@ -50,64 +50,66 @@ extern "C" {
 #undef malloc
 
 /** OS BASIC DEFINITIONS */
-#define MINIMAL_STACK_SIZE                      CONFIG_RTOS_TASK_MIN_STACK_SIZE
-#define THIS_TASK                               NULL
-#define OS_OK                                   pdTRUE
-#define OS_NOT_OK                               pdFALSE
+#define MINIMAL_STACK_SIZE                              CONFIG_RTOS_TASK_MIN_STACK_SIZE
+#define THIS_TASK                                       NULL
+#define OS_OK                                           pdTRUE
+#define OS_NOT_OK                                       pdFALSE
 
 /** OS kernel control functions */
-#define start_task_scheduler()                  vTaskStartScheduler()
+#define start_task_scheduler()                          vTaskStartScheduler()
 
 /** TASK LEVEL DEFINITIONS */
-#define terminate_task()                        delete_task(xTaskGetCurrentTaskHandle())
-#define milisleep(msdelay)                      vTaskDelay(msdelay)
-#define sleep(seconds)                          vTaskDelay((seconds) * 1000UL)
-#define prepare_sleep_until()                   long int __last_wake_time__ = get_tick_counter();
-#define sleep_until(seconds)                    vTaskDelayUntil(&__last_wake_time__, (seconds) * 1000UL)
-#define milisleep_until(msdelay)                vTaskDelayUntil(&__last_wake_time__, msdelay)
-#define suspend_task(taskhdl)                   vTaskSuspend(taskhdl)
-#define suspend_this_task()                     vTaskSuspend(THIS_TASK)
-#define resume_task(taskhdl)                    vTaskResume(taskhdl)
-#define resume_task_from_ISR(taskhdl)           xTaskResumeFromISR(taskhdl)
-#define suspend_all_tasks()                     vTaskSuspendAll()
-#define resume_all_tasks()                      xTaskResumeAll()
-#define yield_task()                            taskYIELD()
-#define enter_critical()                        taskENTER_CRITICAL()
-#define exit_critical()                         taskEXIT_CRITICAL()
-#define disable_ISR()                           taskDISABLE_INTERRUPTS()
-#define enable_ISR()                            taskENABLE_INTERRUPTS()
-#define get_tick_counter()                      xTaskGetTickCount()
-#define get_task_name(taskhdl)                  (ch_t*)pcTaskGetTaskName(taskhdl)
-#define get_this_task_name()                    (ch_t*)pcTaskGetTaskName(THIS_TASK)
-#define get_task_handle()                       xTaskGetCurrentTaskHandle()
-#define get_task_priority(taskhdl)              (i16_t)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
-#define get_free_stack()                        uxTaskGetStackHighWaterMark(THIS_TASK)
-#define get_task_free_stack(taskhdl)            uxTaskGetStackHighWaterMark(taskhdl)
-#define get_number_of_tasks()                   uxTaskGetNumberOfTasks()
-#define set_task_tag(taskhdl, tag)              vTaskSetApplicationTaskTag(taskhdl, tag)
-#define get_task_tag(taskhdl)                   xTaskGetApplicationTaskTag(taskhdl)
+#define terminate_task()                                delete_task(xTaskGetCurrentTaskHandle())
+#define milisleep(msdelay)                              vTaskDelay(msdelay)
+#define sleep(seconds)                                  vTaskDelay((seconds) * 1000UL)
+#define prepare_sleep_until()                           long int __last_wake_time__ = get_tick_counter();
+#define sleep_until(seconds)                            vTaskDelayUntil(&__last_wake_time__, (seconds) * 1000UL)
+#define milisleep_until(msdelay)                        vTaskDelayUntil(&__last_wake_time__, msdelay)
+#define suspend_task(taskhdl)                           vTaskSuspend(taskhdl)
+#define suspend_this_task()                             vTaskSuspend(THIS_TASK)
+#define resume_task(taskhdl)                            vTaskResume(taskhdl)
+#define resume_task_from_ISR(taskhdl)                   xTaskResumeFromISR(taskhdl)
+#define suspend_all_tasks()                             vTaskSuspendAll()
+#define resume_all_tasks()                              xTaskResumeAll()
+#define yield_task()                                    taskYIELD()
+#define enter_critical()                                taskENTER_CRITICAL()
+#define exit_critical()                                 taskEXIT_CRITICAL()
+#define disable_ISR()                                   taskDISABLE_INTERRUPTS()
+#define enable_ISR()                                    taskENABLE_INTERRUPTS()
+#define get_tick_counter()                              xTaskGetTickCount()
+#define get_task_name(taskhdl)                          (ch_t*)pcTaskGetTaskName(taskhdl)
+#define get_this_task_name()                            (ch_t*)pcTaskGetTaskName(THIS_TASK)
+#define get_task_handle()                               xTaskGetCurrentTaskHandle()
+#define get_task_priority(taskhdl)                      (i16_t)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
+#define get_free_stack()                                uxTaskGetStackHighWaterMark(THIS_TASK)
+#define get_task_free_stack(taskhdl)                    uxTaskGetStackHighWaterMark(taskhdl)
+#define get_number_of_tasks()                           uxTaskGetNumberOfTasks()
+#define set_task_tag(taskhdl, tag)                      vTaskSetApplicationTaskTag(taskhdl, tag)
+#define get_task_tag(taskhdl)                           xTaskGetApplicationTaskTag(taskhdl)
+#define new_task(func, name, stack, argv, priority)     osw_new_task(func, name, stack, argv, priority)
+#define delete_task(taskhdl)                            osw_delete_task(taskhdl)
 
 /** SEMAPHORES AND MUTEXES */
-#define new_semaphore()                         create_bin_semaphore()
-#define new_semaphore_counting(maxCnt, intCnt)  xSemaphoreCreateCounting(maxCnt, intCnt)
-#define new_mutex()                             xSemaphoreCreateMutex()
-#define new_recursive_mutex()                   xSemaphoreCreateRecursiveMutex()
-#define delete_semaphore(sem)                   vSemaphoreDelete(sem)
-#define delete_semaphore_counting(sem)          vSemaphoreDelete(sem)
-#define delete_mutex(mutex)                     vSemaphoreDelete(mutex)
-#define delete_mutex_recursive(mutex)           vSemaphoreDelete(mutex)
-#define semaphore_take(sem, blocktime)          xSemaphoreTake(sem, (portTickType) blocktime)
-#define semaphore_counting_take(sem, blocktime) xSemaphoreTake(sem, (portTickType) blocktime)
-#define semaphore_give(sem)                     xSemaphoreGive(sem)
-#define semaphore_counting_give(sem)            xSemaphoreGive(sem)
-#define semaphore_take_from_ISR(sem, woke)      xSemaphoreTakeFromISR(sem, woke)
-#define semaphore_counting_take_from_ISR(sem, woke) xSemaphoreTakeFromISR(sem, woke)
-#define semaphore_give_from_ISR(sem, woke)      xSemaphoreGiveFromISR(sem, woke)
-#define semaphore_counting_give_from_ISR(sem, woke) xSemaphoreGiveFromISR(sem, woke)
-#define mutex_lock(mutex, blocktime)            xSemaphoreTake(mutex, (portTickType) blocktime)
-#define mutex_recursive_lock(mutex, blocktime)  xSemaphoreTakeRecursive(mutex, (portTickType) blocktime)
-#define mutex_unlock(mutex)                     xSemaphoreGive(mutex)
-#define mutex_recursive_unlock(mutex)           xSemaphoreGiveRecursive(mutex)
+#define new_semaphore()                                 create_bin_semaphore()
+#define new_semaphore_counting(maxCnt, intCnt)          xSemaphoreCreateCounting(maxCnt, intCnt)
+#define new_mutex()                                     xSemaphoreCreateMutex()
+#define new_recursive_mutex()                           xSemaphoreCreateRecursiveMutex()
+#define delete_semaphore(sem)                           vSemaphoreDelete(sem)
+#define delete_semaphore_counting(sem)                  vSemaphoreDelete(sem)
+#define delete_mutex(mutex)                             vSemaphoreDelete(mutex)
+#define delete_mutex_recursive(mutex)                   vSemaphoreDelete(mutex)
+#define semaphore_take(sem, blocktime)                  xSemaphoreTake(sem, (portTickType) blocktime)
+#define semaphore_counting_take(sem, blocktime)         xSemaphoreTake(sem, (portTickType) blocktime)
+#define semaphore_give(sem)                             xSemaphoreGive(sem)
+#define semaphore_counting_give(sem)                    xSemaphoreGive(sem)
+#define semaphore_take_from_ISR(sem, woke)              xSemaphoreTakeFromISR(sem, woke)
+#define semaphore_counting_take_from_ISR(sem, woke)     xSemaphoreTakeFromISR(sem, woke)
+#define semaphore_give_from_ISR(sem, woke)              xSemaphoreGiveFromISR(sem, woke)
+#define semaphore_counting_give_from_ISR(sem, woke)     xSemaphoreGiveFromISR(sem, woke)
+#define mutex_lock(mutex, blocktime)                    xSemaphoreTake(mutex, (portTickType) blocktime)
+#define mutex_recursive_lock(mutex, blocktime)          xSemaphoreTakeRecursive(mutex, (portTickType) blocktime)
+#define mutex_unlock(mutex)                             xSemaphoreGive(mutex)
+#define mutex_recursive_unlock(mutex)                   xSemaphoreGiveRecursive(mutex)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -120,10 +122,9 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int   new_task(taskCode_t taskCode, const ch_t *name, u16_t stack,
-                      void *argv, i8_t priority, task_t *taskHdl);
-extern void  delete_task(task_t taskHdl);
-extern sem_t create_bin_semaphore(void);
+extern task_t *osw_new_task(taskCode_t, const char*, u16_t, void*, i8_t);
+extern void    osw_delete_task(task_t *taskHdl);
+extern sem_t   create_bin_semaphore(void);
 
 #ifdef __cplusplus
 }
