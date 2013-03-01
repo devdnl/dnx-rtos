@@ -47,13 +47,15 @@ extern "C" {
 #define m_calloc(nmemb, msize)          tskm_calloc(nmemb, msize)
 #define m_malloc(size)                  tskm_malloc(size)
 #define m_free(mem)                     tskm_free(mem)
-#define calloc(nmemb, msize)            m_calloc(nmemb, msize)//memman_calloc(nmemb, msize)
-#define malloc(size)                    m_malloc(size)//memman_malloc(size)
-#define free(mem)                       m_free(mem)//memman_free(mem)
+#define calloc(nmemb, msize)            memman_calloc(nmemb, msize)
+#define malloc(size)                    memman_malloc(size)
+#define free(mem)                       memman_free(mem)
 
 #define MTX_BTIME_FOR_PLIST             1
 #define PROGRAM_DEFAULT_PRIORITY        0
 #define SEM_PROGRAM_BLOCK_TIME          250
+
+#define break_if_out_of_ram(ptr)        while ((u32_t)ptr < 0x20000000 || (u32_t)ptr > 0x2000FFFF);
 
 /*==============================================================================
   Local types, enums definitions
@@ -134,7 +136,7 @@ task_t new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
 {
         struct data_of_running_program *progdata = NULL;
         struct regprg_pdata             regpdata;
-        task_t                          taskhdl;
+        task_t                          taskhdl = NULL;
 
         if (!name || !args || !cwd) {
                 return NULL;
@@ -226,6 +228,8 @@ FILE_t *get_program_stdin(void)
 
         resume_all_tasks();
 
+        break_if_out_of_ram(fstdin); /* DNLTEST NULL assert */
+
         return fstdin;
 }
 
@@ -259,6 +263,8 @@ FILE_t *get_program_stdout(void)
         }
 
         resume_all_tasks();
+
+        break_if_out_of_ram(fstdout); /* DNLTEST NULL assert */
 
         return fstdout;
 }
@@ -294,6 +300,8 @@ void *get_program_globals(void)
 
         resume_all_tasks();
 
+        break_if_out_of_ram(globals); /* DNLTEST NULL assert */
+
         return globals;
 }
 
@@ -321,6 +329,8 @@ ch_t *get_program_cwd(void)
 
         resume_all_tasks();
 
+        break_if_out_of_ram(cwd); /* DNLTEST NULL assert */
+
         return cwd;
 }
 
@@ -339,19 +349,17 @@ static void task_program_startup(void *argv)
         /* suspend this task to finalize parent function */
         suspend_this_task();
 
-        if ((progdata->global_vars = calloc(1, progdata->globals_size)) == NULL) {
+        if ((progdata->global_vars = m_calloc(1, progdata->globals_size)) == NULL) {
                 set_status(progdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                 goto task_exit;
         }
-        /* DNLTEST without argument table */
-//        if ((progdata->argv = new_argument_table(progdata->args, progdata->name,
-//                                                 &progdata->argc)) == NULL) {
-//
-//                set_status(progdata->status, PROGRAM_ARGUMENTS_PARSE_ERROR);
-//                goto task_exit;
-//        }
-        progdata->argc = 0;             /* DNLTEST without argument table */
-        progdata->argv = NULL;          /* DNLTEST without argument table */
+
+        if ((progdata->argv = new_argument_table(progdata->args, progdata->name,
+                                                 &progdata->argc)) == NULL) {
+
+                set_status(progdata->status, PROGRAM_ARGUMENTS_PARSE_ERROR);
+                goto task_exit;
+        }
 
         exit_code = progdata->main_function(progdata->argc, progdata->argv);
         set_status(progdata->status, PROGRAM_ENDED);
@@ -362,12 +370,12 @@ static void task_program_startup(void *argv)
         }
 
         if (progdata->global_vars) {
-                free(progdata->global_vars);
+                m_free(progdata->global_vars);
         }
 
-//        if (progdata->argv) {        /* DNLTEST without argument table */
-//                delete_argument_table(progdata->argv, progdata->argc);
-//        }
+        if (progdata->argv) {
+                delete_argument_table(progdata->argv, progdata->argc);
+        }
 
         suspend_all_tasks();
         list_rm_iditem(pman.list_of_running_programs, (u32_t)get_task_handle());
@@ -453,7 +461,7 @@ static char **new_argument_table(char *arg, const ch_t *name, int *argc)
                 goto add_args_to_table;
         }
 
-        if ((arg_string = calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
+        if ((arg_string = m_calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
                 goto exit_error;
         }
 
@@ -525,7 +533,7 @@ static char **new_argument_table(char *arg, const ch_t *name, int *argc)
         }
 
 add_args_to_table:
-        if ((arg_table = calloc(arg_count, sizeof(ch_t*))) == NULL) {
+        if ((arg_table = m_calloc(arg_count, sizeof(ch_t*))) == NULL) {
                 goto exit_error;
         }
 
@@ -549,7 +557,7 @@ add_args_to_table:
         /* error occurred - memory/object deallocation */
 exit_error:
         if (arg_table) {
-                free(arg_table);
+                m_free(arg_table);
         }
 
         if (arg_list) {
@@ -563,7 +571,7 @@ exit_error:
         }
 
         if (arg_string) {
-                free(arg_string);
+                m_free(arg_string);
         }
 
         *argc = 0;
@@ -586,11 +594,11 @@ static void delete_argument_table(char **argv, int argc)
 
         if (argc > 1) {
                 if (argv[1]) {
-                        free(argv[1]);
+                        m_free(argv[1]);
                 }
         }
 
-        free(argv);
+        m_free(argv);
 }
 
 #ifdef __cplusplus

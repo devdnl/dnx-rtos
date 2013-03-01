@@ -89,8 +89,18 @@ int prog_test_main(int argc, ch_t *argv[])
 
         f1();
         printf("global->test = %d\n", global->test);
+        if (global->test != 1) {
+                printf(FONT_COLOR_RED"global->test != 1!"RESET_ATTRIBUTES"\n");
+                sleep(5);
+        }
+
         f2();
         printf("global->test = %d\n", global->test);
+        if (global->test != -1) {
+                printf(FONT_COLOR_RED"global->test != -1!"RESET_ATTRIBUTES"\n");
+                sleep(5);
+        }
+
         printf("exiting...\n");
 
         return 0;

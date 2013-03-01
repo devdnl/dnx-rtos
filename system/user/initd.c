@@ -135,19 +135,20 @@ void task_initd(void *arg)
       uint pno = 0;
 
       for (;;) {
-//              pno++;
-//              enum prg_status status;
-//
-//              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
-//
-//              while (status == PROGRAM_RUNNING) {
-//                    milisleep(100);
-//              }
-//
-//              sleep(1);
+              pno++;
+              enum prg_status status;
 
-              fprintf(ttyx[0], "Free memory: %d\n", get_free_memory());
-              milisleep(500);
+              fprintf(ttyx[0], "\nStarting program: "FONT_COLOR_GREEN"%d"
+                               RESET_ATTRIBUTES"\n", pno);
+
+              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
+
+              while (p1 != NULL && status == PROGRAM_RUNNING) {
+                    milisleep(100);
+              }
+
+              fprintf(ttyx[0], "Free memory: "FONT_COLOR_CYAN"%d"RESET_ATTRIBUTES"\n", get_free_memory());
+              sleep(1);
       }
 
       /* this should never happen */
