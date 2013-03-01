@@ -43,7 +43,7 @@ CSRC = $(sort \
    system/kernel/FreeRTOS/Source/timers.c \
    system/kernel/FreeRTOS/Source/portable/MemMang/heap_3.c \
    system/core/taskmoni.c \
-   system/core/runtime.c \
+   system/core/prog.c \
    system/core/dlist.c \
    system/core/main.c \
    system/core/memman.c \

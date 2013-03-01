@@ -1,11 +1,11 @@
-#ifndef RUNTIME_H_
-#define RUNTIME_H_
+#ifndef PROG_H_
+#define PROG_H_
 /*=========================================================================*//**
-@file    runtime.h
+@file    prog.h
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief   This file support programs layer
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -39,11 +39,21 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GLOBAL_VARIABLES                struct __global_vars__
-#define stdin                           get_program_stdin()
-#define stdout                          get_program_stdout()
-#define global                          ((struct __global_vars__ *)get_program_globals())
-#define create_fast_global(name)        struct __global_vars__ *name = get_program_globals()
+#define GLOBAL_VARIABLES                        struct __global_vars__
+
+#define PROGRAM_PARAMS(name, stack)\
+        const uint prog_##name##_gs = sizeof(struct __global_vars__);\
+        const uint prog_##name##_stack = (stack)
+
+#define EXPORT_PROGRAM_PARAMS(name)\
+        extern const uint prog_##name##_gs;\
+        extern const uint prog_##name##_stack
+
+#define PROGRAM_MAIN(name)                      program_##name##_main
+#define stdin                                   prog_get_program_stdin()
+#define stdout                                  prog_get_program_stdout()
+#define global                                  ((struct __global_vars__ *)prog_get_program_globals())
+#define create_fast_global(name)                struct __global_vars__ *name = prog_get_program_globals()
 
 /*==============================================================================
   Exported types, enums definitions
@@ -63,17 +73,17 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t  new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
-extern FILE_t *get_program_stdin(void);
-extern FILE_t *get_program_stdout(void);
-extern void   *get_program_globals(void);
-extern ch_t   *get_program_cwd(void);
+extern task_t  prog_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
+extern FILE_t *prog_get_program_stdin(void);
+extern FILE_t *prog_get_program_stdout(void);
+extern void   *prog_get_program_globals(void);
+extern ch_t   *prog_get_program_cwd(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* RUNTIME_H_ */
+#endif /* PROG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

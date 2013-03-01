@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    appruntime.c
+@file    prog.c
 
 @author  Daniel Zorychta
 
-@brief   This file support runtime environment for applications
+@brief   This file support programs layer
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,7 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "runtime.h"
+#include "prog.h"
 #include "regprg.h"
 #include "oswrap.h"
 #include "taskmoni.h"
@@ -131,8 +131,8 @@ static struct program_mangement pman;
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
-                   FILE_t *fstdout, enum prg_status *status, int *exit_code)
+task_t prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
+                        FILE_t *fstdout, enum prg_status *status, int *exit_code)
 {
         struct data_of_running_program *progdata = NULL;
         struct regprg_pdata             regpdata;
@@ -157,14 +157,14 @@ task_t new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
         progdata->args          = args;
         progdata->globals_size  = *regpdata.globals_size;
         progdata->main_function = regpdata.main_function;
-        progdata->name          = regpdata.name;
+        progdata->name          = regpdata.program_name;
         progdata->cwd           = cwd;
         progdata->stdin         = fstdin;
         progdata->stdout        = fstdout;
         progdata->status        = status;
         progdata->exit_code     = exit_code;
 
-        if (new_task(task_program_startup, regpdata.name, regpdata.stack_deep,
+        if (new_task(task_program_startup, regpdata.program_name, *regpdata.stack_deep,
                      progdata, PROGRAM_DEFAULT_PRIORITY, &taskhdl) == OS_OK) {
 
                 suspend_all_tasks();
@@ -206,7 +206,7 @@ task_t new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
  * @return stdin file or NULL if doesn't exist
  */
 //==============================================================================
-FILE_t *get_program_stdin(void)
+FILE_t *prog_get_program_stdin(void)
 {
         struct data_of_running_program *pdata;
         task_t  taskhdl = get_task_handle();
@@ -242,7 +242,7 @@ FILE_t *get_program_stdin(void)
  * @return stdout file or NULL if doesn't exist
  */
 //==============================================================================
-FILE_t *get_program_stdout(void)
+FILE_t *prog_get_program_stdout(void)
 {
         struct data_of_running_program *pdata;
         task_t  taskhdl = get_task_handle();
@@ -278,7 +278,7 @@ FILE_t *get_program_stdout(void)
  * @return pointer to globals or NULL
  */
 //==============================================================================
-void *get_program_globals(void)
+void *prog_get_program_globals(void)
 {
         struct data_of_running_program *pdata;
         task_t taskhdl = get_task_handle();
@@ -314,7 +314,7 @@ void *get_program_globals(void)
  * @return current working path pointer or NULL if error
  */
 //==============================================================================
-ch_t *get_program_cwd(void)
+ch_t *prog_get_program_cwd(void)
 {
         struct data_of_running_program *pdata;
         ch_t *cwd = NULL;

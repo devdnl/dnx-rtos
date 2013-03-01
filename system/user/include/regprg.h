@@ -43,10 +43,10 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct regprg_pdata {
-        ch_t  *name;
+        ch_t  *program_name;
         int  (*main_function)(int, char**);
         const uint *globals_size;
-        u16_t  stack_deep;
+        const uint *stack_deep;
 };
 
 /*==============================================================================

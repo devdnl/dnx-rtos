@@ -39,6 +39,11 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define IMPORT_PROGRAM(name) \
+        {.program_name  = #name,\
+         .main_function = program_##name##_main,\
+         .globals_size  = &prog_##name##_gs,\
+         .stack_deep    = &prog_##name##_stack}
 
 /*==============================================================================
   Local types, enums definitions
@@ -53,10 +58,7 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 static const struct regprg_pdata pdata[] = {
-        {.name          = "test",
-         .main_function = prog_test_main,
-         .globals_size  = &prog_test_gs,
-         .stack_deep    = PROG_TEST_STACK_DEEP},
+        IMPORT_PROGRAM(test)
 };
 
 /*==============================================================================
@@ -85,7 +87,7 @@ stdRet_t regprg_get_program_data(ch_t *name, struct regprg_pdata *prg_data)
         }
 
         for (uint i = 0; i < ARRAY_SIZE(pdata); i++) {
-                if (strcmp(name, pdata[i].name) == 0) {
+                if (strcmp(name, pdata[i].program_name) == 0) {
                         *prg_data = pdata[i];
                         return STD_RET_OK;
                 }

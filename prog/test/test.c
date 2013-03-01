@@ -57,6 +57,7 @@ GLOBAL_VARIABLES {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(test, 3*MINIMAL_STACK_SIZE);
 
 /*==============================================================================
   Function definitions
@@ -67,8 +68,7 @@ GLOBAL_VARIABLES {
  * @brief
  */
 //==============================================================================
-const uint prog_test_gs = sizeof(struct __global_vars__);
-int prog_test_main(int argc, ch_t *argv[])
+int PROGRAM_MAIN(test)(int argc, ch_t *argv[])
 {
         printf("\n---------------------\n");
         printf("Free stack: %d\n", get_free_stack());
