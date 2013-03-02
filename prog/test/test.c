@@ -113,7 +113,7 @@ int PROGRAM_MAIN(test)(int argc, ch_t *argv[])
 //==============================================================================
 static void f1(void)
 {
-        sleep(1);
+//        sleep(1);
         printf("f1\n");
         global->test = 1;
 }

@@ -70,6 +70,7 @@ struct data_of_running_program {
         char   *args;                           /* not formated argument string */
         char  **argv;                           /* table with arguments         */
         int    *exit_code;                      /* program's exit code          */
+        task_t *parent_task;                    /* program's parent task        */
         int     argc;                           /* argument table               */
         uint    globals_size;                   /* size of global variables     */
         enum    prg_status *status;             /* pointer to task status       */
@@ -163,6 +164,7 @@ task_t *prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
         progdata->stdout        = fstdout;
         progdata->status        = status;
         progdata->exit_code     = exit_code;
+        progdata->parent_task   = get_task_handle();
 
         taskhdl = new_task(task_program_startup, regpdata.program_name, *regpdata.stack_deep,
                            progdata, PROGRAM_DEFAULT_PRIORITY);
@@ -199,6 +201,25 @@ task_t *prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
         }
 
         return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief Function wait to program end
+ *
+ * @param *taskhdl              task handle
+ * @param *status               program status
+ */
+//==============================================================================
+void prog_wait_for_program_end(task_t *taskhdl, enum prg_status *status)
+{
+        if (!taskhdl || !status) {
+                return;
+        }
+
+        while (*status == PROGRAM_RUNNING) {
+                sleep(1);
+        }
 }
 
 //==============================================================================
@@ -367,6 +388,11 @@ static void task_program_startup(void *argv)
         set_status(progdata->status, PROGRAM_ENDED);
 
         task_exit:
+        if (progdata->parent_task) {
+                suspend_task(progdata->parent_task);
+                resume_task(progdata->parent_task);
+        }
+
         if (progdata->exit_code) {
                 *progdata->exit_code = exit_code;
         }

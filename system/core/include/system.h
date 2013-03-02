@@ -91,7 +91,10 @@ extern "C" {
 #define get_host_name()                   CONFIG_HOSTNAME
 #define getcwd(buf, size)                 strncpy(buf, get_program_cwd(), size)
 #define new_program(name, args, cwd, fstdin, fstdout, status, exit_code) \
-                    prog_new_program(name, args, cwd, fstdin, fstdout, status, exit_code)
+        prog_new_program(name, args, cwd, fstdin, fstdout, status, exit_code)
+#define wait_for_program_end(taskhdl, statusPtr) \
+        prog_wait_for_program_end(taskhdl, statusPtr)
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

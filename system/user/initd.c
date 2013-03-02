@@ -142,10 +142,7 @@ void task_initd(void *arg)
                                RESET_ATTRIBUTES"\n", pno);
 
               task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
-
-              while (p1 != NULL && status == PROGRAM_RUNNING) {
-                    milisleep(100);
-              }
+              wait_for_program_end(p1, &status);
 
               fprintf(ttyx[0], "Free memory: "FONT_COLOR_CYAN"%d"RESET_ATTRIBUTES"\n", get_free_memory());
               sleep(1);
