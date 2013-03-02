@@ -31,7 +31,7 @@
 # INSERT HERE C SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC = $(sort \
-   prog/test/test.c \
+   programs/test/test.c \
    drivers/ds1307/arch/noarch/ds1307.c \
    drivers/tty/arch/noarch/tty.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \
@@ -43,7 +43,7 @@ CSRC = $(sort \
    system/kernel/FreeRTOS/Source/timers.c \
    system/kernel/FreeRTOS/Source/portable/MemMang/heap_3.c \
    system/core/taskmoni.c \
-   system/core/prog.c \
+   system/core/progman.c \
    system/core/dlist.c \
    system/core/main.c \
    system/core/memman.c \

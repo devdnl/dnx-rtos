@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    prog.c
+@file    progman.c
 
 @author  Daniel Zorychta
 
@@ -31,7 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "prog.h"
+#include "progman.h"
 #include "regprg.h"
 #include "oswrap.h"
 #include "taskmoni.h"
@@ -132,7 +132,7 @@ static struct program_mangement pman;
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
+task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
                          FILE_t *fstdout, enum prg_status *status, int *exit_code)
 {
         struct data_of_running_program *progdata = NULL;
@@ -211,7 +211,7 @@ task_t *prog_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
  * @param *status               program status
  */
 //==============================================================================
-void prog_wait_for_program_end(task_t *taskhdl, enum prg_status *status)
+void prgm_wait_for_program_end(task_t *taskhdl, enum prg_status *status)
 {
         if (!taskhdl || !status) {
                 return;
@@ -229,7 +229,7 @@ void prog_wait_for_program_end(task_t *taskhdl, enum prg_status *status)
  * @return stdin file or NULL if doesn't exist
  */
 //==============================================================================
-FILE_t *prog_get_program_stdin(void)
+FILE_t *prgm_get_program_stdin(void)
 {
         struct data_of_running_program *pdata;
         task_t *taskhdl = get_task_handle();
@@ -265,7 +265,7 @@ FILE_t *prog_get_program_stdin(void)
  * @return stdout file or NULL if doesn't exist
  */
 //==============================================================================
-FILE_t *prog_get_program_stdout(void)
+FILE_t *prgm_get_program_stdout(void)
 {
         struct data_of_running_program *pdata;
         task_t *taskhdl = get_task_handle();
@@ -301,7 +301,7 @@ FILE_t *prog_get_program_stdout(void)
  * @return pointer to globals or NULL
  */
 //==============================================================================
-void *prog_get_program_globals(void)
+void *prgm_get_program_globals(void)
 {
         struct data_of_running_program *pdata;
         task_t *taskhdl = get_task_handle();
@@ -337,7 +337,7 @@ void *prog_get_program_globals(void)
  * @return current working path pointer or NULL if error
  */
 //==============================================================================
-ch_t *prog_get_program_cwd(void)
+ch_t *prgm_get_program_cwd(void)
 {
         struct data_of_running_program *pdata;
         ch_t *cwd = NULL;
