@@ -1,13 +1,13 @@
-#ifndef INITD_H_
-#define INITD_H_
+#ifndef TOP_H_
+#define TOP_H_
 /*=========================================================================*//**
-@file    initd.h
+@file    top.h
 
 @author  Daniel Zorychta
 
-@brief   This file contain initialize and runtime daemon
+@brief   Application show CPU load
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -38,17 +38,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** initd stack size */
-#define INITD_STACK_SIZE                STACK_LOW_SIZE
-
-/** initd name */
-#define INITD_NAME                      "initd"
-
-/** priority */
-#define INITD_PRIORITY                  -1
-
-/** arguments */
-#define INITD_ARGS                      NULL
 
 /*==============================================================================
   Exported types, enums definitions
@@ -57,17 +46,18 @@ extern "C" {
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
+EXPORT_PROGRAM_PARAMS(top);
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void task_initd(void *arg);
+extern int PROGRAM_MAIN(top)(int argc, char *argv[]);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* INITD_H_ */
+#endif /* TOP_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

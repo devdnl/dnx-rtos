@@ -32,6 +32,7 @@
 ####################################################################################################
 CSRC = $(sort \
    programs/test/test.c \
+   programs/top/top.c \
    drivers/ds1307/arch/noarch/ds1307.c \
    drivers/tty/arch/noarch/tty.c \
    drivers/mpl115a2/arch/noarch/mpl115a2.c \

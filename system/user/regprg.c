@@ -35,6 +35,7 @@ extern "C" {
 #include <string.h>
 
 #include "test.h"
+#include "top.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -58,7 +59,8 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 static const struct regprg_pdata pdata[] = {
-        IMPORT_PROGRAM(test)
+        IMPORT_PROGRAM(test),
+        IMPORT_PROGRAM(top),
 };
 
 /*==============================================================================

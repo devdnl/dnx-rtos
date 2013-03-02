@@ -134,7 +134,12 @@ void task_initd(void *arg)
 
       uint pno = 0;
 
+      ttyx[1] = fopen("/dev/tty1", "r+");
+      new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
+
       for (;;) {
+              fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());
+
               pno++;
               enum prg_status status;
 

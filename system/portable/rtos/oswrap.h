@@ -49,8 +49,15 @@ extern "C" {
 #undef free
 #undef malloc
 
+/** STANDART STACK SIZES */
+#define STACK_MINIMAL_SIZE                              (1  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
+#define STACK_LOW_SIZE                                  (2  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
+#define STACK_MEDIUM_SIZE                               (4  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
+#define STACK_LARGE_SIZE                                (8  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
+#define STACK_HUGE_SIZE                                 (16 * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
+
+
 /** OS BASIC DEFINITIONS */
-#define MINIMAL_STACK_SIZE                              CONFIG_RTOS_TASK_MIN_STACK_SIZE
 #define THIS_TASK                                       NULL
 #define OS_OK                                           pdTRUE
 #define OS_NOT_OK                                       pdFALSE

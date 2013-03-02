@@ -157,6 +157,7 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
 
         progdata->args          = args;
         progdata->globals_size  = *regpdata.globals_size;
+        progdata->global_vars   = NULL;
         progdata->main_function = regpdata.main_function;
         progdata->name          = regpdata.program_name;
         progdata->cwd           = cwd;
@@ -249,10 +250,20 @@ FILE_t *prgm_get_program_stdin(void)
                 }
         }
 
-        resume_all_tasks();
 
+
+
+
+
+        if ((pdata = list_get_iditem_data(pman.list_of_running_programs, (u32_t)taskhdl))) {
+                while (fstdin != pdata->stdin);
+        }
         break_if_out_of_ram(fstdin); /* DNLTEST NULL assert */
 
+
+
+
+        resume_all_tasks();
         return fstdin;
 }
 
@@ -285,10 +296,19 @@ FILE_t *prgm_get_program_stdout(void)
                 }
         }
 
-        resume_all_tasks();
 
+
+
+        if ((pdata = list_get_iditem_data(pman.list_of_running_programs, (u32_t)taskhdl))) {
+                while (fstdout != pdata->stdout);
+        }
         break_if_out_of_ram(fstdout); /* DNLTEST NULL assert */
 
+
+
+
+
+        resume_all_tasks();
         return fstdout;
 }
 
@@ -321,10 +341,20 @@ void *prgm_get_program_globals(void)
                 }
         }
 
-        resume_all_tasks();
 
+
+
+
+        if ((pdata = list_get_iditem_data(pman.list_of_running_programs, (u32_t)taskhdl))) {
+                while (globals != pdata->global_vars);
+        }
         break_if_out_of_ram(globals); /* DNLTEST NULL assert */
 
+
+
+
+
+        resume_all_tasks();
         return globals;
 }
 
@@ -350,10 +380,13 @@ ch_t *prgm_get_program_cwd(void)
                 cwd = pdata->cwd;
         }
 
-        resume_all_tasks();
+
 
         break_if_out_of_ram(cwd); /* DNLTEST NULL assert */
 
+
+
+        resume_all_tasks();
         return cwd;
 }
 
@@ -372,9 +405,12 @@ static void task_program_startup(void *argv)
         /* suspend this task to finalize parent function */
         suspend_this_task();
 
-        if ((progdata->global_vars = m_calloc(1, progdata->globals_size)) == NULL) {
-                set_status(progdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
-                goto task_exit;
+        if (progdata->globals_size) {
+                progdata->global_vars = m_calloc(1, progdata->globals_size);
+                if (progdata == NULL) {
+                        set_status(progdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
+                        goto task_exit;
+                }
         }
 
         if ((progdata->argv = new_argument_table(progdata->args, progdata->name,
