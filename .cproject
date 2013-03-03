@@ -279,7 +279,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.2068779240.702284461.224052021" name="icmp.h" rcbsApplicability="disable" resourcePath="lib/lwip/include/ipv4/lwip/icmp.h" toolsToInvoke=""/>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
 					</sourceEntries>

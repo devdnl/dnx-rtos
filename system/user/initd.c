@@ -111,11 +111,6 @@ void task_initd(void *arg)
       init_driver("tty1", "/dev/tty1");
       init_driver("tty2", "/dev/tty2");
       init_driver("tty3", "/dev/tty3");
-      init_driver("i2c1", "/dev/i2c");
-      init_driver("ds1307rtc", "/dev/rtc");
-      init_driver("ds1307nvm", "/dev/nvm");
-      init_driver("eth0", "/dev/eth0");
-      init_driver("mpl115a2", "/dev/sensor");
 
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());

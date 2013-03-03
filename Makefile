@@ -28,15 +28,9 @@
 
 
 ####################################################################################################
-# INSERT HERE C SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+# INSERT HERE C CORE SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
-CSRC = $(sort \
-   programs/test/test.c \
-   programs/top/top.c \
-   drivers/ds1307/arch/noarch/ds1307.c \
-   drivers/tty/arch/noarch/tty.c \
-   drivers/mpl115a2/arch/noarch/mpl115a2.c \
-   lib/utils/utils.c \
+CSRC_CORE = $(sort \
    system/kernel/FreeRTOS/Source/croutine.c \
    system/kernel/FreeRTOS/Source/list.c \
    system/kernel/FreeRTOS/Source/queue.c \
@@ -61,54 +55,34 @@ CSRC = $(sort \
    )
    
 ####################################################################################################
+# INSERT HERE C PROGRAMS SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+####################################################################################################
+CSRC_PROGRAMS = $(sort \
+   programs/test/test.c \
+   programs/top/top.c \
+   )
+   
+####################################################################################################
+# INSERT HERE C SOURCES ARCHITECTURE NOT DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+####################################################################################################
+CSRC_noarch = $(sort \
+   drivers/tty/arch/noarch/tty.c \
+   )
+
+####################################################################################################
 # INSERT HERE C SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC_stm32 = $(sort \
-   lib/lwip/api/tcpip.c \
-   lib/lwip/api/api_lib.c \
-   lib/lwip/api/netbuf.c \
-   lib/lwip/api/netifapi.c \
-   lib/lwip/api/netdb.c \
-   lib/lwip/api/api_msg.c \
-   lib/lwip/api/err.c \
-   lib/lwip/core/stats.c \
-   lib/lwip/core/sys.c \
-   lib/lwip/core/tcp.c \
-   lib/lwip/core/tcp_in.c \
-   lib/lwip/core/tcp_out.c \
-   lib/lwip/core/udp.c \
-   lib/lwip/core/dhcp.c \
-   lib/lwip/core/init.c \
-   lib/lwip/core/mem.c \
-   lib/lwip/core/memp.c \
-   lib/lwip/core/netif.c \
-   lib/lwip/core/pbuf.c \
-   lib/lwip/core/raw.c \
-   lib/lwip/core/def.c \
-   lib/lwip/core/timers.c \
-   lib/lwip/core/ipv4/autoip.c \
-   lib/lwip/core/ipv4/icmp.c \
-   lib/lwip/core/ipv4/igmp.c \
-   lib/lwip/core/ipv4/inet.c \
-   lib/lwip/core/ipv4/inet_chksum.c \
-   lib/lwip/core/ipv4/ip.c \
-   lib/lwip/core/ipv4/ip_addr.c \
-   lib/lwip/core/ipv4/ip_frag.c \
-   lib/lwip/netif/etharp.c \
-   drivers/ether/arch/stm32/ether.c \
-   drivers/ether/arch/stm32/STM32_ETH_Driver/stm32_eth.c \
    drivers/gpio/arch/stm32/gpio.c \
-   drivers/i2c/arch/stm32/i2c.c \
    drivers/uart/arch/stm32/uart.c \
    drivers/pll/arch/stm32/pll.c \
    system/kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c \
    system/portable/stm32/cpuctl.c \
    system/portable/stm32/cpuhooks.c \
    system/portable/stm32/stm32f10x_vectors.c \
-   system/portable/stm32/STM32F10x_StdPeriph_Driver/stm32f10x_rcc.c \
    system/portable/stm32/STM32F10x_StdPeriph_Driver/misc.c \
    )
-   
+
 CSRC_posix = $(sort \
    drivers/i2c/arch/posix/i2c.c \
    drivers/uart/arch/posix/uart.c \
@@ -151,26 +125,21 @@ ASCR_posix = $(sort \
 ####################################################################################################
 # INSERT HERE PATHS WITH HEADER FILES ONLY
 ####################################################################################################
-HDRLOC = $(sort $(dir $(CSRC)) $(dir $(CXXSRC)) \
-   drivers/ds1307 \
+HDRLOC = $(sort $(dir $(CSRC_CORE)) $(dir $(CSRC_PROGRAMS)) $(dir $(CSRC_noarch)) $(dir $(CXXSRC)) \
    drivers/tty \
-   drivers/mpl115a2 \
    system/kernel/FreeRTOS/Source/include \
    system/config \
    system/core/include \
    system/fs/include \
    system/user/include \
    system/portable \
-   lib/lwip/port \
    )
    
 ####################################################################################################
 # INSERT HERE PATHS WITH HEADER FILES ONLY WHICH ARE DEPENDING ON ARCHITECTURE
 ####################################################################################################
 HDRLOC_stm32 = $(sort $(dir $(CSRC_stm32)) $(dir $(CXXSRC_stm32)) \
-   drivers/ether \
    drivers/gpio \
-   drivers/i2c \
    drivers/pll \
    drivers/uart \
    system/portable/lib/CMSIS \
@@ -311,7 +280,9 @@ OBJ_PATH = $(BIN_LOC)/$(TARGET)/$(OBJ_LOC)
 # defines objects names (do not edit)
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) \
           $(ASRC_$(TARGET):.$(AS_EXT)=.$(OBJ_EXT)) \
-          $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_CORE:.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_PROGRAMS:.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_noarch:.$(C_EXT)=.$(OBJ_EXT)) \
           $(CSRC_$(TARGET):.$(C_EXT)=.$(OBJ_EXT)) \
           $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT)) \
           $(CXXSRC_$(TARGET):.$(CXX_EXT)=.$(OBJ_EXT))

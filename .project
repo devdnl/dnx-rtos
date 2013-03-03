@@ -79,15 +79,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<filteredResources>
-		<filter>
-			<id>1358524367537</id>
-			<name>lib/lwip/include/ipv4</name>
-			<type>26</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-lib/lwip/include/ipv6</arguments>
-			</matcher>
-		</filter>
-	</filteredResources>
 </projectDescription>

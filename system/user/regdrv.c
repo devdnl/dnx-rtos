@@ -41,11 +41,7 @@ extern "C" {
 #include "uart.h"
 #include "gpio.h"
 #include "pll.h"
-#include "i2c.h"
-#include "ether.h"
-#include "ds1307.h"
 #include "tty.h"
-#include "mpl115a2.h"
 #elif defined(ARCH_posix)
 #include "uart.h"
 #include "tty.h"
@@ -91,10 +87,6 @@ static const regDrv_t drvList[] =
         IMPORT_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1, UART_PART_NONE),
         IMPORT_DRIVER_INTERFACE(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
         IMPORT_DRIVER_INTERFACE(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
-        IMPORT_DRIVER_INTERFACE(I2C, "i2c1", I2C_DEV_1, I2C_PART_NONE),
-        IMPORT_DRIVER_INTERFACE(ETHER, "eth0", ETH_DEV_1, ETH_PART_NONE),
-        IMPORT_DRIVER_INTERFACE(DS1307, "ds1307nvm", DS1307_DEV_NVM, DS1307_PART_NONE),
-        IMPORT_DRIVER_INTERFACE(DS1307, "ds1307rtc", DS1307_DEV_RTC, DS1307_PART_NONE),
 
         #if (TTY_NUMBER_OF_VT > 0)
         IMPORT_DRIVER_INTERFACE(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
@@ -110,10 +102,6 @@ static const regDrv_t drvList[] =
 
         #if (TTY_NUMBER_OF_VT > 3)
         IMPORT_DRIVER_INTERFACE(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
-        #endif
-
-        #ifdef MPL115A2_H_
-        IMPORT_DRIVER_INTERFACE(MPL115A2, "mpl115a2", MPL115A2_DEV_NONE, MPL115A2_PART_NONE),
         #endif
 };
 

@@ -46,7 +46,7 @@ extern "C" {
 /**
  * SIZE OF DYNAMIC ALLOCATED MEMORY (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                              (41 * 1024)
+#define CONFIG_HEAP_SIZE                              (63 * 1024)
 
 /**
  * HEAP MEMORY ALINGMENT

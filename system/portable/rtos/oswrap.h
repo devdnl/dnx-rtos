@@ -56,7 +56,6 @@ extern "C" {
 #define STACK_LARGE_SIZE                                (8  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
 #define STACK_HUGE_SIZE                                 (16 * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
 
-
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                                       NULL
 #define OS_OK                                           pdTRUE
