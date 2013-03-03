@@ -37,7 +37,6 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PRIORITY(prio)                    (prio + (configMAX_PRIORITIES / 2))
 
 /*==============================================================================
   Local types, enums definitions
@@ -75,7 +74,7 @@ extern "C" {
 task_t *osw_new_task(taskCode_t taskCode, const char *name, u16_t stackDeep,
                      void *argv, i8_t priority)
 {
-        suspend_all_tasks();
+        vTaskSuspendAll();
 
         task_t *task = NULL;
 
@@ -85,7 +84,7 @@ task_t *osw_new_task(taskCode_t taskCode, const char *name, u16_t stackDeep,
                 tskm_add_task(task);
         }
 
-        resume_all_tasks();
+        xTaskResumeAll();
 
         return task;
 }

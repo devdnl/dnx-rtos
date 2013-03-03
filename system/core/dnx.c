@@ -68,6 +68,10 @@ void dnx_init(void)
 
         memman_init();
 
+        if (proc_init() != STD_RET_OK) {
+                for (;;);
+        }
+
         if (vfs_init() != STD_RET_OK) {
                 for (;;);
         }

@@ -40,6 +40,7 @@ CSRC_CORE = $(sort \
    system/core/dnx.c \
    system/core/taskmoni.c \
    system/core/progman.c \
+   system/core/process.c \
    system/core/dlist.c \
    system/core/main.c \
    system/core/memman.c \

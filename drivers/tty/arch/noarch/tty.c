@@ -92,7 +92,7 @@ struct termHdl {
         i8_t    changeToTTY;    /* terminal to change */
         u8_t    col;            /* terminal column count */
         u8_t    row;            /* terminal row count */
-        task_t *taskHdl;        /* task handle */
+        pid_t   process;        /* TTY worker pid */
         sem_t  *semcnt_stdout;  /* semaphore used to trigger daemon operation */
         u8_t    captureKeyStep; /* decode Fn key step */
         ch_t    captureKeyTmp;  /* temporary value */
@@ -183,8 +183,8 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
 
         if ((term->semcnt_stdout = new_semaphore_counting(10, 0)) != NULL) {
 
-                if ((term->taskHdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE,
-                                              NULL, -1)) != NULL) {
+                term->process = new_process(task_tty, TTYD_NAME, TTYD_STACK_SIZE, NULL);
+                if (term->process >= 0) {
 
                         term->col = 80;
                         term->row = 24;
@@ -252,7 +252,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                 }
 
                 delete_semaphore_counting(term->semcnt_stdout);
-                delete_task(term->taskHdl);
+                kill_process(term->process);
                 free(term);
                 term = NULL;
 

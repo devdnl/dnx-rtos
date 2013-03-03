@@ -62,8 +62,10 @@ extern "C" {
 
 void process_test(void *argv)
 {
+        sleep(1); /* DNLFIXME problem z natychmiastowym odczytem PID, program nie znajduje się na liście! */
+        kprint("I am %d\n", getpid());
         sleep(5);
-        terminate_process();
+        process_exit();
 }
 
 
@@ -78,7 +80,7 @@ void process_initd(void *arg)
 {
       (void) arg;
 
-      set_process_priority(INITD_PRIORITY);
+      set_priority(INITD_PRIORITY);
 
       mount("lfs", NULL, "/");
 
@@ -144,7 +146,7 @@ void process_initd(void *arg)
 
 
       for (int i = 0; i < 10; i++) {
-              pid_t pid = new_process(process_test, "test_process", STACK_MINIMAL_SIZE, NULL);
+              pid_t pid = new_process(process_test, "test_process", STACK_LOW_SIZE, NULL);
 
               fprintf(ttyx[0], "PID: %d\n", pid);
               sleep(2);
@@ -154,22 +156,22 @@ void process_initd(void *arg)
 
       for (;;) {
               fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());
-
-              pno++;
-              enum prg_status status;
-
-              fprintf(ttyx[0], "\nStarting program: "FONT_COLOR_GREEN"%d"
-                               RESET_ATTRIBUTES"\n", pno);
-
-              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
-              wait_for_program_end(p1, &status);
-
-              fprintf(ttyx[0], "Free memory: "FONT_COLOR_CYAN"%d"RESET_ATTRIBUTES"\n", get_free_memory());
+//
+//              pno++;
+//              enum prg_status status;
+//
+//              fprintf(ttyx[0], "\nStarting program: "FONT_COLOR_GREEN"%d"
+//                               RESET_ATTRIBUTES"\n", pno);
+//
+//              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
+//              wait_for_program_end(p1, &status);
+//
+//              fprintf(ttyx[0], "Free memory: "FONT_COLOR_CYAN"%d"RESET_ATTRIBUTES"\n", get_free_memory());
               sleep(1);
       }
 
       /* this should never happen */
-      terminate_task();
+      process_exit();
 }
 
 #ifdef __cplusplus
