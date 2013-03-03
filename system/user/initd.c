@@ -70,9 +70,6 @@ void task_initd(void *arg)
 {
       (void) arg;
 
-      /* early initialization */
-      vfs_init();
-
       mount("lfs", NULL, "/");
 
       /* create basic directories */

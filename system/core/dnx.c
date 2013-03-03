@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    mian.c
+@file    dnx.c
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "dnx.h"
-#include "initd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -60,20 +59,26 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief Main function
+ * @brief Initialize dnx system
  */
 //==============================================================================
-int main(void)
+void dnx_init(void)
 {
-        dnx_init();
+        cpuctl_init();
 
-        /* create initialize task */
-        new_task(task_initd, INITD_NAME, INITD_STACK_SIZE, INITD_ARGS, INITD_PRIORITY);
+        memman_init();
 
-        /* start OS */
-        start_task_scheduler();
+        if (vfs_init() != STD_RET_OK) {
+                for (;;);
+        }
 
-        return 0;
+        if (prgm_init() != STD_RET_OK) {
+                for (;;);
+        }
+
+        if (tskm_init() != STD_RET_OK) {
+                for (;;);
+        }
 }
 
 #ifdef __cplusplus

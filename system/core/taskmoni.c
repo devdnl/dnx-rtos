@@ -102,11 +102,6 @@ struct tskm {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
-static stdRet_t tskm_init(void);
-#endif
 
 /*==============================================================================
   Local object definitions
@@ -136,7 +131,7 @@ static struct tskm *tskm;
 #if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
-static stdRet_t tskm_init(void)
+stdRet_t tskm_init(void)
 {
         stdRet_t status = STD_RET_OK;
 
@@ -185,10 +180,6 @@ stdRet_t tskm_add_task(task_t *taskHdl)
 {
         stdRet_t status = STD_RET_ERROR;
         struct taskData *task_data;
-
-        if (tskm == NULL) {
-                tskm_init();
-        }
 
         if (tskm && taskHdl) {
                 while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);

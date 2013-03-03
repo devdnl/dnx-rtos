@@ -1,11 +1,11 @@
-#ifndef SYSTEM_H_
-#define SYSTEM_H_
+#ifndef DNX_H_
+#define DNX_H_
 /*=========================================================================*//**
-@file    oswrap.h
+@file    dnx.h
 
 @author  Daniel Zorychta
 
-@brief   System main header
+@brief   dnx system main header
 
 @note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -106,12 +106,13 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+extern void dnx_init(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SYSTEM_H_ */
+#endif /* DNX_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

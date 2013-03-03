@@ -37,6 +37,7 @@ CSRC_CORE = $(sort \
    system/kernel/FreeRTOS/Source/tasks.c \
    system/kernel/FreeRTOS/Source/timers.c \
    system/kernel/FreeRTOS/Source/portable/MemMang/heap_3.c \
+   system/core/dnx.c \
    system/core/taskmoni.c \
    system/core/progman.c \
    system/core/dlist.c \

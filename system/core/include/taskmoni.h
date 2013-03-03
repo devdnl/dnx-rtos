@@ -68,8 +68,8 @@ extern "C" {
 
 /* DIRECT FUNCTIONS IF MONITORING DISABLED */
 #if (TSK_MONITOR_CPU_LOAD == 0)
-#define tskm_TaskSwitchedIn()
-#define tskm_TaskSwitchedOut()
+#define tskm_task_switched_in()
+#define tskm_task_switched_out()
 #endif
 
 /* DIRECT FUNCTION BECAUSE MONITORING IS NOT NECESSARY */
@@ -95,12 +95,12 @@ extern "C" {
 #if (  (TSK_MONITOR_MEMORY_USAGE == 0) \
     && (TSK_MONITOR_FILE_USAGE == 0  ) \
     && (TSK_MONITOR_CPU_LOAD == 0    ) )
-#define tskm_Init()
-#define tskm_AddTask(pid)
-#define tskm_DelTask(pid)
-#define tskm_GetTaskStat(item, statPtr)         !memset(statPtr, 0, sizeof(struct taskstat))
-#define tskm_GetTaskHdlStat(hdl, statPtr)       !memset(statPtr, 0, sizeof(struct taskstat))
-#define tskm_GetTaskCount()                     0
+#define tskm_init()
+#define tskm_add_task(pid)
+#define tskm_remove_task(pid)
+#define tskm_get_ntask_stat(item, statPtr)      !memset(statPtr, 0, sizeof(struct taskstat))
+#define tskm_get_task_stat(hdl, statPtr)        !memset(statPtr, 0, sizeof(struct taskstat))
+#define tskm_get_task_count()                   0
 #endif
 
 /*==============================================================================
@@ -127,6 +127,7 @@ struct taskstat {
 #if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
     || (TSK_MONITOR_FILE_USAGE > 0  ) \
     || (TSK_MONITOR_CPU_LOAD > 0    ) )
+extern stdRet_t  tskm_init             (void);
 extern stdRet_t  tskm_add_task         (task_t *taskHdl);
 extern stdRet_t  tskm_remove_task      (task_t *taskHdl);
 extern stdRet_t  tskm_get_ntask_stat   (i32_t item, struct taskstat *stat);

@@ -73,12 +73,13 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
-extern void    prgm_wait_for_program_end(task_t*, enum prg_status*);
-extern FILE_t *prgm_get_program_stdin(void);
-extern FILE_t *prgm_get_program_stdout(void);
-extern void   *prgm_get_program_globals(void);
-extern ch_t   *prgm_get_program_cwd(void);
+extern stdRet_t  prgm_init(void);
+extern task_t   *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
+extern void      prgm_wait_for_program_end(task_t*, enum prg_status*);
+extern FILE_t   *prgm_get_program_stdin(void);
+extern FILE_t   *prgm_get_program_stdout(void);
+extern void     *prgm_get_program_globals(void);
+extern ch_t     *prgm_get_program_cwd(void);
 
 #ifdef __cplusplus
 }

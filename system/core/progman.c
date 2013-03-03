@@ -100,7 +100,6 @@ struct program_mangement {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdRet_t init_program_management(void);
 static void     set_status(enum prg_status *status_ptr, enum prg_status status);
 static char   **new_argument_table(char *arg, const char *name, int *argc);
 static void     delete_argument_table(char **argv, int argc);
@@ -118,6 +117,28 @@ static struct program_mangement pman;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief Function initialize program manager
+ *
+ * @retval STD_RET_OK           manager variables initialized successfully
+ * @retval STD_RET_ERROR        variables not initialized
+ */
+//==============================================================================
+stdRet_t prgm_init(void)
+{
+        if (pman.list_of_running_programs != NULL) {
+                return STD_RET_OK;
+        }
+
+        if ((pman.list_of_running_programs = new_list()) != NULL) {
+                return STD_RET_OK;
+        }
+
+        return STD_RET_ERROR;
+}
+
 
 //==============================================================================
 /**
@@ -140,10 +161,6 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
         task_t                         *taskhdl  = NULL;
 
         if (!name || !args || !cwd) {
-                return NULL;
-        }
-
-        if (init_program_management() != STD_RET_OK) {
                 return NULL;
         }
 
@@ -468,27 +485,6 @@ static void set_status(enum prg_status *status_ptr, enum prg_status status)
         if (status_ptr) {
                 *status_ptr = status;
         }
-}
-
-//==============================================================================
-/**
- * @brief Function initialize program manager
- *
- * @retval STD_RET_OK           manager variables initialized successfully
- * @retval STD_RET_ERROR        variables not initialized
- */
-//==============================================================================
-static stdRet_t init_program_management(void)
-{
-        if (pman.list_of_running_programs != NULL) {
-                return STD_RET_OK;
-        }
-
-        if ((pman.list_of_running_programs = new_list()) != NULL) {
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================
