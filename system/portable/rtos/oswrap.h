@@ -61,6 +61,10 @@ extern "C" {
 #define OS_OK                                           pdTRUE
 #define OS_NOT_OK                                       pdFALSE
 
+/** MUTEX AND SEMAPHORES DEFINITIONS */
+#define MUTEX_LOCKED                                    OS_OK
+#define SEMAPHORE_TAKEN                                 OS_OK
+
 /** OS kernel control functions */
 #define start_task_scheduler()                          vTaskStartScheduler()
 

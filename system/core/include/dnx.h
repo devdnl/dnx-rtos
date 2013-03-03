@@ -36,7 +36,7 @@ extern "C" {
 #include "basic_types.h"
 #include "systypes.h"
 #include "memman.h"
-//#include "oswrap.h"
+#include "oswrap.h"
 #include "io.h"
 #include "progman.h"
 //#include "oshooks.h"
@@ -76,6 +76,12 @@ extern "C" {
 #define fstat(file, statPtr)              tskm_fstat(file, stat)
 
 /** ENVIRONMENT DEFINITIONS */
+#define new_process(func, name, stack, argv)    prgm_new_process(func, name, stack, argv)
+#define getpid()                                prgm_get_pid()
+#define terminate_process()                     prgm_process_terminate();
+
+#define set_process_priority(priority)
+
 #define get_used_static_memory()          (CONFIG_RAM_SIZE - MEMMAN_HEAP_SIZE)
 #define get_free_memory()                 (CONFIG_RAM_SIZE - get_used_static_memory() - memman_get_used_heap())
 #define get_used_memory()                 (get_used_static_memory() + memman_get_used_heap())

@@ -59,6 +59,14 @@ extern "C" {
   Function definitions
 ==============================================================================*/
 
+
+void process_test(void *argv)
+{
+        sleep(5);
+        terminate_process();
+}
+
+
 //==============================================================================
 /**
  * @brief Task which initialise high-level devices/applications etc
@@ -66,9 +74,11 @@ extern "C" {
  * Task connect applications' stdios with hardware layer.
  */
 //==============================================================================
-void task_initd(void *arg)
+void process_initd(void *arg)
 {
       (void) arg;
+
+      set_process_priority(INITD_PRIORITY);
 
       mount("lfs", NULL, "/");
 
@@ -109,6 +119,8 @@ void task_initd(void *arg)
       init_driver("tty2", "/dev/tty2");
       init_driver("tty3", "/dev/tty3");
 
+      kprint("initd: PID: %d\n", getpid());
+
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
@@ -124,10 +136,21 @@ void task_initd(void *arg)
             milisleep(200);
       }
 
+
       uint pno = 0;
 
       ttyx[1] = fopen("/dev/tty1", "r+");
       new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
+
+
+      for (int i = 0; i < 10; i++) {
+              pid_t pid = new_process(process_test, "test_process", STACK_MINIMAL_SIZE, NULL);
+
+              fprintf(ttyx[0], "PID: %d\n", pid);
+              sleep(2);
+      }
+
+      sleep(2);
 
       for (;;) {
               fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());

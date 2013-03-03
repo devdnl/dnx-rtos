@@ -34,7 +34,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "systypes.h"
-#include "oswrap.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -58,6 +57,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef i32_t pid_t;
 
 /*==============================================================================
   Exported object declarations
@@ -74,6 +74,11 @@ enum prg_status {
   Exported function prototypes
 ==============================================================================*/
 extern stdRet_t  prgm_init(void);
+extern pid_t     prgm_new_process(void(*)(void*), char*, uint, void*);
+extern task_t   *prgm_get_process_task_handle(pid_t pid);
+extern pid_t     prgm_get_pid(void);
+extern void      prgm_process_terminate(void);
+
 extern task_t   *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
 extern void      prgm_wait_for_program_end(task_t*, enum prg_status*);
 extern FILE_t   *prgm_get_program_stdin(void);

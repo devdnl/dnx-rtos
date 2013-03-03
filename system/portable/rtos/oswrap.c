@@ -68,7 +68,6 @@ extern "C" {
  * @param[in ]  stackDeep     stack deep
  * @param[in ] *argv          argument pointer
  * @param[in ]  priority      task priority (calculated to FreeRTOS priority level)
- * @param[out] *taskHdl       task handle
  *
  * @return task object pointer or NULL if error
  */
