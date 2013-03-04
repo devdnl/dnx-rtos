@@ -71,10 +71,10 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 /** USER CFG: heap protection */
-#define MEMMAM_FREE_PROTECT()             suspend_all_process()
-#define MEMMAM_FREE_UNPROTECT()           resume_all_process()
-#define MEMMAM_ALLOC_PROTECT()            suspend_all_process()
-#define MEMMAM_ALLOC_UNPROTECT()          resume_all_process()
+#define MEMMAM_FREE_PROTECT()             suspend_all_tasks()
+#define MEMMAM_FREE_UNPROTECT()           resume_all_tasks()
+#define MEMMAM_ALLOC_PROTECT()            suspend_all_tasks()
+#define MEMMAM_ALLOC_UNPROTECT()          resume_all_tasks()
 
 /** MEM_ALIGNMENT: should be set to the alignment of the CPU for which
    program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2

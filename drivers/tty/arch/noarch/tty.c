@@ -41,6 +41,7 @@ extern "C" {
 ==============================================================================*/
 #define TTYD_NAME                       "ttyworker"
 #define TTYD_STACK_SIZE                 STACK_LOW_SIZE
+#define TTYD_PRIORITY                   0
 
 #define FILE                            "/dev/ttyS0"
 
@@ -92,7 +93,7 @@ struct termHdl {
         i8_t    changeToTTY;    /* terminal to change */
         u8_t    col;            /* terminal column count */
         u8_t    row;            /* terminal row count */
-        pid_t   process;        /* TTY worker pid */
+        task_t *taskhdl;        /* TTY worker */
         sem_t  *semcnt_stdout;  /* semaphore used to trigger daemon operation */
         u8_t    captureKeyStep; /* decode Fn key step */
         ch_t    captureKeyTmp;  /* temporary value */
@@ -183,9 +184,8 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
 
         if ((term->semcnt_stdout = new_semaphore_counting(10, 0)) != NULL) {
 
-                term->process = new_process(task_tty, TTYD_NAME, TTYD_STACK_SIZE, NULL);
-                if (term->process >= 0) {
-
+                term->taskhdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE, NULL, TTYD_PRIORITY);
+                if (term->taskhdl) {
                         term->col = 80;
                         term->row = 24;
 
@@ -252,7 +252,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
                 }
 
                 delete_semaphore_counting(term->semcnt_stdout);
-                kill_process(term->process);
+                delete_task(term->taskhdl);
                 free(term);
                 term = NULL;
 
@@ -564,7 +564,7 @@ static void task_tty(void *arg)
         }
 
         /* this should never happen */
-        terminate_task();
+        task_exit();
 }
 
 //==============================================================================

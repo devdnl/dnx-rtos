@@ -62,7 +62,7 @@
 //==============================================================================
 void HardFault_Handler(void)
 {
-        char *name = osw_get_task_name(THIS_TASK);
+        char *name = get_task_name(THIS_TASK);
         kprint(FONT_COLOR_RED"Task %s generated Hard Fault!"RESET_ATTRIBUTES"\n", name);
 //        delete_task(THIS_TASK);
         for (;;);

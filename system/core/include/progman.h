@@ -72,6 +72,7 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+extern stdRet_t  prgm_init(void);
 extern task_t   *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
 extern void      prgm_wait_for_program_end(task_t*, enum prg_status*);
 extern FILE_t   *prgm_get_program_stdin(void);

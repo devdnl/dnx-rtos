@@ -39,9 +39,6 @@ extern "C" {
 #include "oswrap.h"
 #include "io.h"
 #include "progman.h"
-#include "process.h"
-//#include "oshooks.h"
-//#include "dlist.h"
 #include "taskmoni.h"
 #include "regfs.h"
 #include "regdrv.h"
@@ -77,12 +74,6 @@ extern "C" {
 #define fstat(file, statPtr)              tskm_fstat(file, stat)
 
 /** ENVIRONMENT DEFINITIONS */
-#define new_process(func, name, stack, argv)    proc_new_process(func, name, stack, argv)
-#define kill_process(pid)                       proc_kill_process(pid)
-#define getpid()                                proc_get_pid()
-#define process_exit()                          proc_process_terminate()
-#define set_priority(priority)                  vTaskPrioritySet(THIS_TASK, PRIORITY(priority))
-
 #define get_used_static_memory()          (CONFIG_RAM_SIZE - MEMMAN_HEAP_SIZE)
 #define get_free_memory()                 (CONFIG_RAM_SIZE - get_used_static_memory() - memman_get_used_heap())
 #define get_used_memory()                 (get_used_static_memory() + memman_get_used_heap())

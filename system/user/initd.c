@@ -59,16 +59,6 @@ extern "C" {
   Function definitions
 ==============================================================================*/
 
-
-void process_test(void *argv)
-{
-        sleep(1); /* DNLFIXME problem z natychmiastowym odczytem PID, program nie znajduje się na liście! */
-        kprint("I am %d\n", getpid());
-        sleep(5);
-        process_exit();
-}
-
-
 //==============================================================================
 /**
  * @brief Task which initialise high-level devices/applications etc
@@ -79,8 +69,6 @@ void process_test(void *argv)
 void process_initd(void *arg)
 {
       (void) arg;
-
-      set_priority(INITD_PRIORITY);
 
       mount("lfs", NULL, "/");
 
@@ -121,8 +109,6 @@ void process_initd(void *arg)
       init_driver("tty2", "/dev/tty2");
       init_driver("tty3", "/dev/tty3");
 
-      kprint("initd: PID: %d\n", getpid());
-
       /* initd info about stack usage */
       kprint("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
@@ -144,14 +130,6 @@ void process_initd(void *arg)
       ttyx[1] = fopen("/dev/tty1", "r+");
       new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
 
-
-      for (int i = 0; i < 10; i++) {
-              pid_t pid = new_process(process_test, "test_process", STACK_LOW_SIZE, NULL);
-
-              fprintf(ttyx[0], "PID: %d\n", pid);
-              sleep(2);
-      }
-
       sleep(2);
 
       for (;;) {
@@ -171,7 +149,7 @@ void process_initd(void *arg)
       }
 
       /* this should never happen */
-      process_exit();
+      task_exit();
 }
 
 #ifdef __cplusplus

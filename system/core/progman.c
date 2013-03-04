@@ -33,7 +33,6 @@ extern "C" {
 ==============================================================================*/
 #include "progman.h"
 #include "regprg.h"
-#include "process.h"
 #include "taskmoni.h"
 #include "dlist.h"
 #include <string.h>
@@ -76,27 +75,9 @@ struct data_of_running_program {
         enum    prg_status *status;             /* pointer to task status       */
 };
 
-struct program_cache {
-        struct {
-                task_t *taskhdl;
-                void   *address;
-        } globals;
-
-        struct {
-                task_t *taskhdl;
-                FILE_t *file;
-        } stdin;
-
-        struct {
-                task_t *taskhdl;
-                FILE_t *file;
-        } stdout;
-};
-
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void     set_status(enum prg_status *status_ptr, enum prg_status status);
 static char   **new_argument_table(char *arg, const char *name, int *argc);
 static void     delete_argument_table(char **argv, int argc);
 static void     task_program_startup(void *argv);
@@ -105,8 +86,6 @@ static void     task_program_startup(void *argv);
   Local object definitions
 ==============================================================================*/
 static list_t  *program_list;
-static struct program_cache cache;
-
 
 /*==============================================================================
   Exported object definitions

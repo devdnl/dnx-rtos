@@ -166,13 +166,13 @@ stdRet_t procfs_release(fsd_t fsd)
 
       if (procmem) {
             while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
-            suspend_all_process();
+            suspend_all_tasks();
             mutex_unlock(procmem->mtx);
             delete_mutex(procmem->mtx);
             delete_list(procmem->flist);
             free(procmem);
             procmem = NULL;
-            resume_all_process();
+            resume_all_tasks();
 
             return STD_RET_OK;
       }

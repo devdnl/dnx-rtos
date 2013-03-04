@@ -388,7 +388,7 @@ stdRet_t UART_Open(devx_t dev, fd_t part)
             /* check that port is free */
             if (mutex_recursive_lock(UARTP(dev)->mtx, BLOCK_TIME) == OS_OK)
             {
-                  UARTP(dev)->TaskHandle = osw_get_task_handle();
+                  UARTP(dev)->TaskHandle = get_task_handle();
 
                   /* enable UART clock */
                   switch (dev)
@@ -735,7 +735,7 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
                               else
                               {
                                     exit_critical();
-                                    osw_suspend_task(THIS_TASK);
+                                    suspend_task(THIS_TASK);
                               }
                         }
                         while (dataSize);
@@ -909,7 +909,7 @@ stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
                                       else
                                       {
                                             exit_critical();
-                                            osw_suspend_task(THIS_TASK);
+                                            suspend_task(THIS_TASK);
                                       }
                                 }
                                 break;
@@ -1005,8 +1005,8 @@ static void IRQCode(USART_t *usart, devx_t dev)
 
                   if (UARTP(dev)->TaskHandle)
                   {
-                        if (osw_resume_task_from_ISR(UARTP(dev)->TaskHandle) == pdTRUE)
-                                yield_process();
+                        if (resume_task_from_ISR(UARTP(dev)->TaskHandle) == pdTRUE)
+                                yield_task();
                   }
             }
       }
