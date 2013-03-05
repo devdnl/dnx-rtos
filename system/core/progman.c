@@ -50,29 +50,18 @@ extern "C" {
 #define malloc(size)                    memman_malloc(size)
 #define free(mem)                       memman_free(mem)
 
-#define MTX_BTIME_FOR_PLIST             1
-#define PROGRAM_DEFAULT_PRIORITY        0
-#define SEM_PROGRAM_BLOCK_TIME          250
-
-#define break_if_out_of_ram(ptr)        while ((u32_t)ptr < 0x20000000 || (u32_t)ptr > 0x2000FFFF);
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct data_of_running_program {
-        FILE_t *stdin;                          /* stdin file                   */
-        FILE_t *stdout;                         /* stdout file                  */
-        char   *cwd;                            /* current working path         */
-        void   *global_vars;                    /* address to global variables  */
-        int   (*main_function)(int, char**);    /* program's main function      */
-        char   *name;                           /* program's name               */
-        char   *args;                           /* not formated argument string */
-        char  **argv;                           /* table with arguments         */
-        int    *exit_code;                      /* program's exit code          */
-        task_t *parent_task;                    /* program's parent task        */
-        int     argc;                           /* argument table               */
-        uint    globals_size;                   /* size of global variables     */
-        enum    prg_status *status;             /* pointer to task status       */
+struct program_startup {
+        char            *args;
+        char            *cwd;
+        enum prg_status *status;
+        int             *exit_code;
+        FILE_t          *fstdin;
+        FILE_t          *fstdout;
+        char           **argv;
+        int              argc;
 };
 
 /*==============================================================================
@@ -85,7 +74,6 @@ static void     task_program_startup(void *argv);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static list_t  *program_list;
 
 /*==============================================================================
   Exported object definitions
@@ -105,12 +93,6 @@ static list_t  *program_list;
 //==============================================================================
 stdRet_t prgm_init(void)
 {
-        program_list = new_list();
-
-        if (!program_list) {
-                return STD_RET_ERROR;
-        }
-
         return STD_RET_OK;
 }
 

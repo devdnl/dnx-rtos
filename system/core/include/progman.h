@@ -49,10 +49,10 @@ extern "C" {
         extern const uint prog_##name##_stack
 
 #define PROGRAM_MAIN(name)                      program_##name##_main
-#define stdin                                   prgm_get_program_stdin()
-#define stdout                                  prgm_get_program_stdout()
-#define global                                  ((struct __global_vars__ *)prgm_get_program_globals())
-#define create_fast_global(name)                struct __global_vars__ *name = prgm_get_program_globals()
+#define stdin                                   get_task_data()->stdin
+#define stdout                                  get_task_data()->stdout
+#define global                                  ((struct __global_vars__*)get_task_data()->global_vars)
+#define create_fast_global(name)                struct __global_vars__*name = global
 
 /*==============================================================================
   Exported types, enums definitions
@@ -72,13 +72,8 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdRet_t  prgm_init(void);
 extern task_t   *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
 extern void      prgm_wait_for_program_end(task_t*, enum prg_status*);
-extern FILE_t   *prgm_get_program_stdin(void);
-extern FILE_t   *prgm_get_program_stdout(void);
-extern void     *prgm_get_program_globals(void);
-extern ch_t     *prgm_get_program_cwd(void);
 
 #ifdef __cplusplus
 }

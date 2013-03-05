@@ -369,15 +369,19 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         task_t *taskHdl = NULL;
         list_get_nitem_ID(tskm->tasks, item, (task_t*)&taskHdl);
 
-        stat->task_handle     = taskHdl;
-        stat->task_name       = get_task_name(taskHdl);
-        stat->free_stack      = get_task_free_stack(taskHdl);
+        stat->task_handle       = taskHdl;
+        stat->task_name         = get_task_name(taskHdl);
+        stat->free_stack        = get_task_free_stack(taskHdl);
+
         suspend_all_tasks();
-        stat->cpu_usage       = (u32_t)get_task_tag(taskHdl);
-        set_task_tag(taskHdl, (void*)0);
+        struct task_data *tdata = get_task_tag(taskHdl);
+        if (tdata) {
+                stat->cpu_usage = tdata->cpu_usage;
+        }
         resume_all_tasks();
-        stat->cpu_usage_total = cpuctl_get_CPU_total_time();
-        stat->priority        = get_task_priority(taskHdl);
+
+        stat->cpu_usage_total   = cpuctl_get_CPU_total_time();
+        stat->priority          = get_task_priority(taskHdl);
 
         if (item == list_get_item_count(tskm->tasks) - 1) {
                 cpuctl_clear_CPU_total_time();
@@ -942,10 +946,11 @@ void tskm_task_switched_in(void)
 #if (TSK_MONITOR_CPU_LOAD > 0)
 void tskm_task_switched_out(void)
 {
-        u16_t   cnt     = cpuctl_get_CPU_load_timer();
-        task_t *taskhdl = get_task_handle();
-        u32_t   tmp     = (u32_t)get_task_tag(taskhdl) + cnt;
-        set_task_tag(taskhdl, (void*)tmp);
+        struct task_data *tdata = get_task_tag(get_task_handle());
+
+        if (tdata) {
+             tdata->cpu_usage += cpuctl_get_CPU_load_timer();
+        }
 }
 #endif
 

@@ -33,10 +33,13 @@ extern "C" {
 ==============================================================================*/
 #include "oswrap.h"
 #include "taskmoni.h"
+#include "memman.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define calloc(nitems, itemsize)        memman_calloc(nitems, itemsize)
+#define free(mem)                       memman_free(mem)
 
 /*==============================================================================
   Local types, enums definitions
@@ -62,28 +65,37 @@ extern "C" {
 /**
  * @brief Function create new task and if enabled add to monitor list
  *
- * @param[in ]  taskCode      task code
- * @param[in ] *name          task name
- * @param[in ]  stackDeep     stack deep
- * @param[in ] *argv          argument pointer
- * @param[in ]  priority      task priority (calculated to FreeRTOS priority level)
+ * @param[in ]  func            task code
+ * @param[in ] *name            task name
+ * @param[in ]  stack           stack deep
+ * @param[in ] *argv            argument pointer
+ * @param[in ] *data            task data
  *
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *osw_new_task(taskCode_t taskCode, const char *name, u16_t stackDeep,
-                     void *argv, i8_t priority)
+task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack, void *argv, struct task_data *data)
 {
         vTaskSuspendAll();
 
         task_t *task = NULL;
 
-        if (xTaskCreate(taskCode, (signed char *)name, stackDeep, argv,
-                        PRIORITY(priority), &task) == OS_OK) {
+        if (data == NULL) {
+                data = calloc(1, sizeof(struct task_data));
+                if (data == NULL) {
+                        goto error;
+                }
+        }
 
+        data->parent_task = get_task_handle();
+
+        if (xTaskCreate(func, (signed char*)name, stack, argv, PRIORITY(0), &task) == OS_OK) {
+
+                set_task_tag(task, (void*)data);
                 tskm_add_task(task);
         }
 
+        error:
         xTaskResumeAll();
 
         return task;
@@ -98,6 +110,11 @@ task_t *osw_new_task(taskCode_t taskCode, const char *name, u16_t stackDeep,
 //==============================================================================
 void osw_delete_task(task_t *taskHdl)
 {
+        struct task_data *tdata = get_task_tag(taskHdl);
+        if (tdata) {
+                free(tdata);
+        }
+
         tskm_remove_task(taskHdl);
         vTaskDelete(taskHdl);
 }

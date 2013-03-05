@@ -72,9 +72,10 @@ extern "C" {
 #define PRIORITY(prio)                                  (prio + (configMAX_PRIORITIES / 2))
 
 /** TASK LEVEL DEFINITIONS */
-#define new_task(func, name, stack, args, priority)     osw_new_task(func, name, stack, args, priority)
-#define delete_task(taskhdl)                            vTaskDelete(taskhdl)
-#define task_exit()                                     delete_task(THIS_TASK)
+#define new_task(func, name, stack, args)               osw_new_task(func, name, stack, args, NULL)
+#define new_task_excended(func, name, stack, args, data)osw_new_task(func, name, stack, args, data)
+#define delete_task(taskhdl)                            osw_delete_task(taskhdl)
+#define task_exit()                                     delete_task(get_task_handle())
 #define milisleep(msdelay)                              vTaskDelay(msdelay)
 #define sleep(seconds)                                  vTaskDelay((seconds) * 1000UL)
 #define prepare_sleep_until()                           long int __last_wake_time__ = get_tick_counter();
@@ -100,7 +101,9 @@ extern "C" {
 #define get_task_free_stack(taskhdl)                    uxTaskGetStackHighWaterMark(taskhdl)
 #define get_number_of_tasks()                           uxTaskGetNumberOfTasks()
 #define set_task_tag(taskhdl, tag)                      vTaskSetApplicationTaskTag(taskhdl, tag)
-#define get_task_tag(taskhdl)                           xTaskGetApplicationTaskTag(taskhdl)
+#define get_task_tag(taskhdl)                           (void*)xTaskGetApplicationTaskTag(taskhdl)
+#define get_task_data()                                 ((struct task_data*)get_task_tag(THIS_TASK))
+#define get_parent_handle()                             get_task_data()->parent_task
 
 /** SEMAPHORES AND MUTEXES */
 #define new_semaphore()                                 osw_create_binary_semaphore()
@@ -127,6 +130,14 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+struct task_data {
+        FILE_t *stdin;          /* stdin file                         */
+        FILE_t *stdout;         /* stdout file                        */
+        char   *cwd;            /* current working path               */
+        void   *global_vars;    /* address to global variables        */
+        task_t *parent_task;    /* program's parent task              */
+        u32_t   cpu_usage;      /* counter used to calculate CPU load */
+};
 
 /*==============================================================================
   Exported object declarations
@@ -135,7 +146,7 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *osw_new_task(taskCode_t, const char*, u16_t, void*, i8_t);
+extern task_t *osw_new_task(taskCode_t, const char*, u16_t, void*, struct task_data*);
 extern void    osw_delete_task(task_t *taskHdl);
 extern sem_t  *osw_create_binary_semaphore(void);
 

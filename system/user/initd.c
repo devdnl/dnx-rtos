@@ -59,6 +59,18 @@ extern "C" {
   Function definitions
 ==============================================================================*/
 
+void task_test(void *argv)
+{
+        kprint("stdin  : 0x%x\n", stdin);
+        kprint("stdout : 0x%x\n", stdout);
+        kprint("cwd    : 0x%x\n", get_task_data()->cwd);
+        kprint("global : 0x%x\n", global);
+        kprint("parent : 0x%x\n", get_parent_handle());
+        kprint("cpuload: 0x%x\n", get_task_data()->cpu_usage);
+
+        task_exit();
+}
+
 //==============================================================================
 /**
  * @brief Task which initialise high-level devices/applications etc
@@ -113,7 +125,7 @@ void process_initd(void *arg)
       kprint("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
       /* change TTY for kprint to last TTY */
-      kprintEnable("/dev/tty3");
+//      kprintEnable("/dev/tty3");
 
       /*------------------------------------------------------------------------
        * main loop which read stdios from applications
@@ -125,10 +137,20 @@ void process_initd(void *arg)
       }
 
 
-      uint pno = 0;
+      while (TRUE) {
+              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_SIZE, NULL);
 
-      ttyx[1] = fopen("/dev/tty1", "r+");
-      new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
+              if (t1) {
+                      kprint("Task started\n");
+              }
+
+              sleep(2);
+      }
+
+//      uint pno = 0;
+
+//      ttyx[1] = fopen("/dev/tty1", "r+");
+//      new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
 
       sleep(2);
 
