@@ -72,8 +72,8 @@ enum prg_status {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t   *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
-extern void      prgm_wait_for_program_end(task_t*, enum prg_status*);
+extern task_t *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
+extern void    prgm_wait_for_program_end(task_t*, enum prg_status*);
 
 #ifdef __cplusplus
 }

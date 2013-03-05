@@ -31,9 +31,11 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "oswrap.h"
 #include "progman.h"
 #include "regprg.h"
 #include "taskmoni.h"
+#include "memman.h"
 #include "dlist.h"
 #include <string.h>
 
@@ -53,8 +55,8 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct program_startup {
-        char            *args;
+struct program_data {
+        int (*main)(int, char**);
         char            *cwd;
         enum prg_status *status;
         int             *exit_code;
@@ -62,14 +64,16 @@ struct program_startup {
         FILE_t          *fstdout;
         char           **argv;
         int              argc;
+        uint             globals_size;
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static char   **new_argument_table(char *arg, const char *name, int *argc);
-static void     delete_argument_table(char **argv, int argc);
-static void     task_program_startup(void *argv);
+static void   set_status(enum prg_status *status_ptr, enum prg_status status);
+static char **new_argument_table(char *arg, const char *name, int *argc);
+static void   delete_argument_table(char **argv, int argc);
+static void   task_program_startup(void *argv);
 
 /*==============================================================================
   Local object definitions
@@ -82,19 +86,6 @@ static void     task_program_startup(void *argv);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Function initialize program manager
- *
- * @retval STD_RET_OK           manager variables initialized successfully
- * @retval STD_RET_ERROR        variables not initialized
- */
-//==============================================================================
-stdRet_t prgm_init(void)
-{
-        return STD_RET_OK;
-}
 
 //==============================================================================
 /**
@@ -112,71 +103,51 @@ stdRet_t prgm_init(void)
 task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
                          FILE_t *fstdout, enum prg_status *status, int *exit_code)
 {
-//        struct data_of_running_program *progdata = NULL;
-//        struct regprg_pdata             regpdata;
-//        task_t                         *taskhdl  = NULL;
-//
-//        if (!name || !args || !cwd) {
-//                return NULL;
-//        }
-//
-//        if (regprg_get_program_data(name, &regpdata) != STD_RET_OK) {
-//                return NULL;
-//        }
-//
-//        if ((progdata = calloc(1, sizeof(struct data_of_running_program))) == NULL) {
-//                goto error;
-//        }
-//
-//        progdata->args          = args;
-//        progdata->globals_size  = *regpdata.globals_size;
-//        progdata->global_vars   = NULL;
-//        progdata->main_function = regpdata.main_function;
-//        progdata->name          = regpdata.program_name;
-//        progdata->cwd           = cwd;
-//        progdata->stdin         = fstdin;
-//        progdata->stdout        = fstdout;
-//        progdata->status        = status;
-//        progdata->exit_code     = exit_code;
-//        progdata->parent_task   = get_task_handle();
-//
-//        taskhdl = new_task(task_program_startup, regpdata.program_name, *regpdata.stack_deep,
-//                           progdata, PROGRAM_DEFAULT_PRIORITY);
-//
-//        if (taskhdl != NULL) {
-//
-//                suspend_all_tasks();
-//
-//                i32_t item = list_add_item(program_list,
-//                                           (u32_t)taskhdl, progdata);
-//                resume_all_tasks();
-//
-//                if (item < 0) {
-//                        goto error;
-//                }
-//
-//                if (status) {
-//                        *status = PROGRAM_RUNNING;
-//                }
-//
-//                /* DNLFIXME: wziac pod uwage ze task moze roznie wystartowac a rodzic moze byc przelaczony */
-//
-//                resume_task(taskhdl);
-//
-//                return taskhdl;
-//        }
-//
-//        /* an error occurred */
-//        error:
-//        if (taskhdl) {
-//                delete_task(taskhdl);
-//        }
-//
-//        if (progdata) {
-//                free(progdata);
-//        }
+        struct program_data *pdata   = NULL;
+        task_t              *taskhdl = NULL;
+        struct regprg_pdata  regpdata;
 
-        return NULL;
+        if (!name || !args || !cwd) {
+                return NULL;
+        }
+
+        if (regprg_get_program_data(name, &regpdata) != STD_RET_OK) {
+                return NULL;
+        }
+
+        if ((pdata = calloc(1, sizeof(struct program_data))) == NULL) {
+                return NULL;
+        }
+
+        if ((pdata->argv = new_argument_table(args, name, &pdata->argc)) == NULL) {
+                free(pdata);
+                return NULL;
+        }
+
+        pdata->main         = regpdata.main_function;
+        pdata->cwd          = cwd;
+        pdata->fstdin       = fstdin;
+        pdata->fstdout      = fstdout;
+        pdata->globals_size = *regpdata.globals_size;
+        pdata->status       = status;
+        pdata->exit_code    = exit_code;
+
+        if (status)
+                *status = PROGRAM_RUNNING;
+
+        if (exit_code)
+                *exit_code = STD_RET_UNKNOWN;
+
+        taskhdl = new_task(task_program_startup, regpdata.program_name,
+                           *regpdata.stack_deep, pdata);
+
+        if (taskhdl == NULL) {
+                delete_argument_table(pdata->argv, pdata->argc);
+                free(pdata);
+                return NULL;
+        }
+
+        return taskhdl;
 }
 
 //==============================================================================
@@ -200,173 +171,6 @@ void prgm_wait_for_program_end(task_t *taskhdl, enum prg_status *status)
 
 //==============================================================================
 /**
- * @brief Function returns stdin file
- *
- * @return stdin file or NULL if doesn't exist
- */
-//==============================================================================
-FILE_t *prgm_get_program_stdin(void)
-{
-//        struct data_of_running_program *pdata;
-//        task_t *taskhdl = get_task_handle();
-        FILE_t *fstdin  = NULL;
-
-//        suspend_all_tasks();
-//
-//        if (cache.stdin.taskhdl == taskhdl) {
-//                fstdin = cache.stdin.file;
-//        } else {
-//                if ((pdata = list_get_iditem_data(program_list,
-//                                                  (u32_t)taskhdl))) {
-//
-//                        cache.stdin.taskhdl = taskhdl;
-//                        cache.stdin.file    = pdata->stdin;
-//                        fstdin = pdata->stdin;
-//                }
-//        }
-//
-//
-//
-//
-//
-//
-//        if ((pdata = list_get_iditem_data(program_list, (u32_t)taskhdl))) {
-//                while (fstdin != pdata->stdin);
-//        }
-//        break_if_out_of_ram(fstdin); /* DNLTEST NULL assert */
-//
-//
-//
-//
-//        resume_all_tasks();
-        return fstdin;
-}
-
-//==============================================================================
-/**
- * @brief Function returns stdout file
- *
- * @param taskhdl       task handle
- *
- * @return stdout file or NULL if doesn't exist
- */
-//==============================================================================
-FILE_t *prgm_get_program_stdout(void)
-{
-//        struct data_of_running_program *pdata;
-//        task_t *taskhdl = get_task_handle();
-        FILE_t *fstdout = NULL;
-//
-//        suspend_all_tasks();
-//
-//        if (cache.stdout.taskhdl == taskhdl) {
-//                fstdout = cache.stdout.file;
-//        } else {
-//                if ((pdata = list_get_iditem_data(program_list,
-//                                                  (u32_t)taskhdl))) {
-//
-//                        cache.stdout.taskhdl = taskhdl;
-//                        cache.stdout.file    = pdata->stdout;
-//                        fstdout = pdata->stdout;
-//                }
-//        }
-//
-//
-//
-//
-//        if ((pdata = list_get_iditem_data(program_list, (u32_t)taskhdl))) {
-//                while (fstdout != pdata->stdout);
-//        }
-//        break_if_out_of_ram(fstdout); /* DNLTEST NULL assert */
-//
-//
-//
-//
-//
-//        resume_all_tasks();
-        return fstdout;
-}
-
-//==============================================================================
-/**
- * @brief Function returns global variable address
- *
- * @param taskhdl       task handle
- *
- * @return pointer to globals or NULL
- */
-//==============================================================================
-void *prgm_get_program_globals(void)
-{
-//        struct data_of_running_program *pdata;
-//        task_t *taskhdl = get_task_handle();
-        void   *globals = NULL;
-//
-//        suspend_all_tasks();
-//
-//        if (cache.globals.taskhdl == taskhdl) {
-//                globals = cache.globals.address;
-//        } else {
-//                if ((pdata = list_get_iditem_data(program_list,
-//                                                  (u32_t)taskhdl))) {
-//
-//                        cache.globals.taskhdl = taskhdl;
-//                        cache.globals.address = pdata->global_vars;
-//                        globals = pdata->global_vars;
-//                }
-//        }
-//
-//
-//
-//
-//
-//        if ((pdata = list_get_iditem_data(program_list, (u32_t)taskhdl))) {
-//                while (globals != pdata->global_vars);
-//        }
-//        break_if_out_of_ram(globals); /* DNLTEST NULL assert */
-//
-//
-//
-//
-//
-//        resume_all_tasks();
-        return globals;
-}
-
-//==============================================================================
-/**
- * @brief Function returns current working path
- *
- * @param taskhdl       task handle
- *
- * @return current working path pointer or NULL if error
- */
-//==============================================================================
-ch_t *prgm_get_program_cwd(void)
-{
-//        struct data_of_running_program *pdata;
-        ch_t *cwd = NULL;
-//
-//        suspend_all_tasks();
-//
-//        if ((pdata = list_get_iditem_data(program_list,
-//                                          (u32_t)get_task_handle()))) {
-//
-//                cwd = pdata->cwd;
-//        }
-//
-//
-//
-//        break_if_out_of_ram(cwd); /* DNLTEST NULL assert */
-//
-//
-//
-//        resume_all_tasks();
-        return cwd;
-}
-
-//==============================================================================
-/**
  * @brief Program startup
  *
  * @param *argv         pointer to program's informations
@@ -374,57 +178,36 @@ ch_t *prgm_get_program_cwd(void)
 //==============================================================================
 static void task_program_startup(void *argv)
 {
-//        struct data_of_running_program *progdata = argv;
-//        int exit_code = STD_RET_UNKNOWN;
-//
-//        /* suspend this task to finalize parent function */
-////        suspend_this_task();
-//
-//        if (progdata->globals_size) {
-//                progdata->global_vars = m_calloc(1, progdata->globals_size);
-//                if (progdata == NULL) {
-//                        set_status(progdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
-//                        goto task_exit;
-//                }
-//        }
-//
-//        if ((progdata->argv = new_argument_table(progdata->args, progdata->name,
-//                                                 &progdata->argc)) == NULL) {
-//
-//                set_status(progdata->status, PROGRAM_ARGUMENTS_PARSE_ERROR);
-//                goto task_exit;
-//        }
-//
-//        exit_code = progdata->main_function(progdata->argc, progdata->argv);
-//        set_status(progdata->status, PROGRAM_ENDED);
-//
-//        task_exit:
-//        if (progdata->parent_task) {
-//                suspend_task(progdata->parent_task);
-//                resume_task(progdata->parent_task);
-//        }
-//
-//        if (progdata->exit_code) {
-//                *progdata->exit_code = exit_code;
-//        }
-//
-//        if (progdata->global_vars) {
-//                m_free(progdata->global_vars);
-//        }
-//
-//        if (progdata->argv) {
-//                delete_argument_table(progdata->argv, progdata->argc);
-//        }
-//
-//        suspend_all_tasks();
-//        list_rm_iditem(program_list, (u32_t)get_task_handle());
-//        resume_all_tasks();
-//
-//        cache.globals.taskhdl = NULL;
-//        cache.stdin.taskhdl   = NULL;
-//        cache.stdout.taskhdl  = NULL;
-//
-//        terminate_task();
+        struct program_data *pdata     = argv;
+        void                *taskmem   = NULL;
+        int                  exit_code = STD_RET_UNKNOWN;
+
+        if (pdata->globals_size) {
+                if ((taskmem = m_calloc(1, pdata->globals_size)) == NULL) {
+                        set_status(pdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
+                        goto task_exit;
+                }
+
+                set_task_global_variables(taskmem);
+        }
+
+        exit_code = pdata->main(pdata->argc, pdata->argv);
+        set_status(pdata->status, PROGRAM_ENDED);
+
+        task_exit:
+        if (pdata->exit_code) {
+                *pdata->exit_code = exit_code;
+        }
+
+        if (global) {
+                m_free(global);
+        }
+
+        if (pdata->argv) {
+                delete_argument_table(pdata->argv, pdata->argc);
+        }
+
+        task_exit();
 }
 
 //==============================================================================

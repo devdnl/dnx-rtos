@@ -72,8 +72,7 @@ extern "C" {
 #define PRIORITY(prio)                                  (prio + (configMAX_PRIORITIES / 2))
 
 /** TASK LEVEL DEFINITIONS */
-#define new_task(func, name, stack, args)               osw_new_task(func, name, stack, args, NULL)
-#define new_task_excended(func, name, stack, args, data)osw_new_task(func, name, stack, args, data)
+#define new_task(func, name, stack, args)               osw_new_task(func, name, stack, args)
 #define delete_task(taskhdl)                            osw_delete_task(taskhdl)
 #define task_exit()                                     delete_task(get_task_handle())
 #define milisleep(msdelay)                              vTaskDelay(msdelay)
@@ -104,6 +103,7 @@ extern "C" {
 #define get_task_tag(taskhdl)                           (void*)xTaskGetApplicationTaskTag(taskhdl)
 #define get_task_data()                                 ((struct task_data*)get_task_tag(THIS_TASK))
 #define get_parent_handle()                             get_task_data()->parent_task
+#define set_task_global_variables(ptr)                  get_task_data()->global_vars = ptr
 
 /** SEMAPHORES AND MUTEXES */
 #define new_semaphore()                                 osw_create_binary_semaphore()
@@ -146,7 +146,7 @@ struct task_data {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *osw_new_task(taskCode_t, const char*, u16_t, void*, struct task_data*);
+extern task_t *osw_new_task(taskCode_t, const char*, u16_t, void*);
 extern void    osw_delete_task(task_t *taskHdl);
 extern sem_t  *osw_create_binary_semaphore(void);
 

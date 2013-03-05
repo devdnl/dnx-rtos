@@ -136,26 +136,20 @@ void process_initd(void *arg)
             milisleep(200);
       }
 
-
-      while (TRUE) {
-              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_SIZE, NULL);
-
-              if (t1) {
-                      kprint("Task started\n");
-              }
-
-              sleep(2);
-      }
-
 //      uint pno = 0;
 
-//      ttyx[1] = fopen("/dev/tty1", "r+");
-//      new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
+      ttyx[1] = fopen("/dev/tty1", "r+");
+      new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
 
       sleep(2);
 
       for (;;) {
               fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());
+
+              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_SIZE, NULL);
+              if (t1) {
+                      kprint("Task started\n");
+              }
 //
 //              pno++;
 //              enum prg_status status;

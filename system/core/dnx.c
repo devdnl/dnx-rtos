@@ -72,10 +72,6 @@ void dnx_init(void)
                 for (;;);
         }
 
-        if (prgm_init() != STD_RET_OK) {
-                for (;;);
-        }
-
         if (tskm_init() != STD_RET_OK) {
                 for (;;);
         }

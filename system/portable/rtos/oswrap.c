@@ -65,26 +65,27 @@ extern "C" {
 /**
  * @brief Function create new task and if enabled add to monitor list
  *
+ * Function by default allocate memory for task data (localized in task tag)
+ * which is used to cpu load calculation and standard IO and etc.
+ *
  * @param[in ]  func            task code
  * @param[in ] *name            task name
  * @param[in ]  stack           stack deep
  * @param[in ] *argv            argument pointer
- * @param[in ] *data            task data
  *
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack, void *argv, struct task_data *data)
+task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack, void *argv)
 {
         vTaskSuspendAll();
 
-        task_t *task = NULL;
+        task_t           *task = NULL;
+        struct task_data *data;
 
+        data = calloc(1, sizeof(struct task_data));
         if (data == NULL) {
-                data = calloc(1, sizeof(struct task_data));
-                if (data == NULL) {
-                        goto error;
-                }
+                goto error;
         }
 
         data->parent_task = get_task_handle();
@@ -112,6 +113,10 @@ void osw_delete_task(task_t *taskHdl)
 {
         struct task_data *tdata = get_task_tag(taskHdl);
         if (tdata) {
+                if (tdata->global_vars) {
+                        free(tdata->global_vars);
+                }
+
                 free(tdata);
         }
 
