@@ -103,7 +103,9 @@ int PROGRAM_MAIN(test)(int argc, char *argv[])
 
         printf("exiting...\n");
 
-//        for (;;);
+        for (;;) {
+                milisleep(1);
+        }
 
         return 0;
 }

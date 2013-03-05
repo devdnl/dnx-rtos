@@ -45,12 +45,12 @@ extern "C" {
 #undef stdin
 #undef stdout
 
-#define m_calloc(nmemb, msize)          tskm_calloc(nmemb, msize)
-#define m_malloc(size)                  tskm_malloc(size)
-#define m_free(mem)                     tskm_free(mem)
-#define calloc(nmemb, msize)            memman_calloc(nmemb, msize)
-#define malloc(size)                    memman_malloc(size)
-#define free(mem)                       memman_free(mem)
+#define monitored_calloc(nmemb, msize)          tskm_calloc(nmemb, msize)
+#define monitored_malloc(size)                  tskm_malloc(size)
+#define monitored_free(mem)                     tskm_free(mem)
+#define calloc(nmemb, msize)                    memman_calloc(nmemb, msize)
+#define malloc(size)                            memman_malloc(size)
+#define free(mem)                               memman_free(mem)
 
 /*==============================================================================
   Local types, enums definitions
@@ -187,7 +187,7 @@ static void task_program_startup(void *argv)
         get_task_data()->cwd    = pdata->cwd;
 
         if (pdata->globals_size) {
-                if ((taskmem = m_calloc(1, pdata->globals_size)) == NULL) {
+                if ((taskmem = monitored_calloc(1, pdata->globals_size)) == NULL) {
                         set_status(pdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                         goto task_exit;
                 }
@@ -205,7 +205,7 @@ static void task_program_startup(void *argv)
         }
 
         if (global) {
-                m_free(global);
+                monitored_free(global);
         }
 
         if (pdata->argv) {
