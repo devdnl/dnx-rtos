@@ -376,7 +376,8 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
         suspend_all_tasks();
         struct task_data *tdata = get_task_tag(taskHdl);
         if (tdata) {
-                stat->cpu_usage = tdata->cpu_usage;
+                stat->cpu_usage  = tdata->cpu_usage;
+                tdata->cpu_usage = 0;
         }
         resume_all_tasks();
 
@@ -947,9 +948,10 @@ void tskm_task_switched_in(void)
 void tskm_task_switched_out(void)
 {
         struct task_data *tdata = get_task_tag(get_task_handle());
+        u32_t             cnt   = cpuctl_get_CPU_load_timer();
 
         if (tdata) {
-             tdata->cpu_usage += cpuctl_get_CPU_load_timer();
+                tdata->cpu_usage += cnt;
         }
 }
 #endif

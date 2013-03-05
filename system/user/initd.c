@@ -141,6 +141,9 @@ void process_initd(void *arg)
       ttyx[1] = fopen("/dev/tty1", "r+");
       new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
 
+      ttyx[2] = fopen("/dev/tty2", "r+");
+      new_program("test", "", "/", ttyx[2], ttyx[2], NULL, NULL);
+
       sleep(2);
 
       for (;;) {

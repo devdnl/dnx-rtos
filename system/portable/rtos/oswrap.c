@@ -113,10 +113,6 @@ void osw_delete_task(task_t *taskHdl)
 {
         struct task_data *tdata = get_task_tag(taskHdl);
         if (tdata) {
-                if (tdata->global_vars) {
-                        free(tdata->global_vars);
-                }
-
                 free(tdata);
         }
 

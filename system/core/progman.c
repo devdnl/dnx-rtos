@@ -60,8 +60,8 @@ struct program_data {
         char            *cwd;
         enum prg_status *status;
         int             *exit_code;
-        FILE_t          *fstdin;
-        FILE_t          *fstdout;
+        FILE_t          *stdin;
+        FILE_t          *stdout;
         char           **argv;
         int              argc;
         uint             globals_size;
@@ -100,8 +100,8 @@ static void   task_program_startup(void *argv);
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
-                         FILE_t *fstdout, enum prg_status *status, int *exit_code)
+task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *stdin,
+                         FILE_t *stdout, enum prg_status *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
         task_t              *taskhdl = NULL;
@@ -126,8 +126,8 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *fstdin,
 
         pdata->main         = regpdata.main_function;
         pdata->cwd          = cwd;
-        pdata->fstdin       = fstdin;
-        pdata->fstdout      = fstdout;
+        pdata->stdin        = stdin;
+        pdata->stdout       = stdout;
         pdata->globals_size = *regpdata.globals_size;
         pdata->status       = status;
         pdata->exit_code    = exit_code;
@@ -182,16 +182,21 @@ static void task_program_startup(void *argv)
         void                *taskmem   = NULL;
         int                  exit_code = STD_RET_UNKNOWN;
 
+        get_task_data()->stdin  = pdata->stdin;
+        get_task_data()->stdout = pdata->stdout;
+        get_task_data()->cwd    = pdata->cwd;
+
         if (pdata->globals_size) {
                 if ((taskmem = m_calloc(1, pdata->globals_size)) == NULL) {
                         set_status(pdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                         goto task_exit;
                 }
 
-                set_task_global_variables(taskmem);
+                get_task_data()->global_vars = taskmem;
         }
 
         exit_code = pdata->main(pdata->argc, pdata->argv);
+
         set_status(pdata->status, PROGRAM_ENDED);
 
         task_exit:
@@ -206,6 +211,8 @@ static void task_program_startup(void *argv)
         if (pdata->argv) {
                 delete_argument_table(pdata->argv, pdata->argc);
         }
+
+        free(pdata);
 
         task_exit();
 }
@@ -262,7 +269,7 @@ static char **new_argument_table(char *arg, const ch_t *name, int *argc)
                 goto add_args_to_table;
         }
 
-        if ((arg_string = m_calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
+        if ((arg_string = calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
                 goto exit_error;
         }
 
@@ -334,7 +341,7 @@ static char **new_argument_table(char *arg, const ch_t *name, int *argc)
         }
 
 add_args_to_table:
-        if ((arg_table = m_calloc(arg_count, sizeof(ch_t*))) == NULL) {
+        if ((arg_table = calloc(arg_count, sizeof(ch_t*))) == NULL) {
                 goto exit_error;
         }
 
@@ -358,7 +365,7 @@ add_args_to_table:
         /* error occurred - memory/object deallocation */
 exit_error:
         if (arg_table) {
-                m_free(arg_table);
+                free(arg_table);
         }
 
         if (arg_list) {
@@ -372,7 +379,7 @@ exit_error:
         }
 
         if (arg_string) {
-                m_free(arg_string);
+                free(arg_string);
         }
 
         *argc = 0;
@@ -395,11 +402,11 @@ static void delete_argument_table(char **argv, int argc)
 
         if (argc > 1) {
                 if (argv[1]) {
-                        m_free(argv[1]);
+                        free(argv[1]);
                 }
         }
 
-        m_free(argv);
+        free(argv);
 }
 
 #ifdef __cplusplus
