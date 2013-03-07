@@ -61,12 +61,12 @@ extern "C" {
 
 void task_test(void *argv)
 {
-        printk("stdin  : 0x%x\n", stdin);
-        printk("stdout : 0x%x\n", stdout);
-        printk("cwd    : 0x%x\n", get_task_data()->f_cwd);
-        printk("global : 0x%x\n", global);
-        printk("parent : 0x%x\n", get_parent_handle());
-        printk("cpuload: 0x%x\n", get_task_data()->f_cpu_usage);
+//        printk("stdin  : 0x%x\n", stdin);
+//        printk("stdout : 0x%x\n", stdout);
+//        printk("cwd    : 0x%x\n", get_task_data()->f_cwd);
+//        printk("global : 0x%x\n", global);
+//        printk("parent : 0x%x\n", get_parent_handle());
+//        printk("cpuload: 0x%x\n", get_task_data()->f_cpu_usage);
 
 //        for(;;){
 //        }
@@ -88,6 +88,8 @@ void process_initd(void *arg)
 //      set_priority(INITD_PRIORITY);
 
       mount("lfs", NULL, "/");
+
+      uint mem = get_used_memory();
 
       /* create basic directories */
       mkdir("/bin");
@@ -129,6 +131,7 @@ void process_initd(void *arg)
       /* initd info about stack usage */
       printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
+      printk("Used memory after startup: %d\n", mem);
       /* change TTY for printk to last TTY */
 //      printkEnable("/dev/tty3");
 
@@ -152,11 +155,11 @@ void process_initd(void *arg)
       sleep(2);
 
       for (;;) {
-              fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());
+//              fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());
 
-              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_SIZE, NULL);
+              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_DEPTH, NULL);
               if (t1) {
-                      printk("Task started\n");
+//                      printk("Task started\n");
               }
 //
 //              pno++;
@@ -169,7 +172,7 @@ void process_initd(void *arg)
 //              wait_for_program_end(p1, &status);
 //
 //              fprintf(ttyx[0], "Free memory: "FONT_COLOR_CYAN"%d"RESET_ATTRIBUTES"\n", get_free_memory());
-              sleep(1);
+              sleep(2);
       }
 
       /* this should never happen */

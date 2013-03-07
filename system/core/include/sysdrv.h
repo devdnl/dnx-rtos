@@ -36,7 +36,6 @@ extern "C" {
 #include "systypes.h"
 #include "memman.h"
 #include "oswrap.h"
-#include "process.h"
 #include "vfs.h"
 #include "taskmoni.h"
 
@@ -58,9 +57,6 @@ extern "C" {
 #ifndef free
 #define free(mem)                         memman_free(mem)
 #endif
-
-#define new_process(func, name, stack, argv)    proc_new_process(func, name, stack, argv)
-#define kill_process(pid)                       proc_kill_process(pid)
 
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
 #define umount(path)                      vfs_umount(path)

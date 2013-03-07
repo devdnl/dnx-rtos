@@ -57,7 +57,7 @@ GLOBAL_VARIABLES {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(test, STACK_MEDIUM_SIZE);
+PROGRAM_PARAMS(test, STACK_MEDIUM_DEPTH);
 
 /*==============================================================================
   Function definitions
@@ -68,7 +68,7 @@ PROGRAM_PARAMS(test, STACK_MEDIUM_SIZE);
  * @brief
  */
 //==============================================================================
-int PROGRAM_MAIN(test)(int argc, char *argv[])
+int PROGRAM_MAIN(test, int argc, char *argv[])
 {
         printf("\n---------------------\n");
         printf("Free stack: %d\n", get_free_stack());
@@ -103,8 +103,15 @@ int PROGRAM_MAIN(test)(int argc, char *argv[])
 
         printf("exiting...\n");
 
+        u32_t x = 0;
         for (;;) {
-//                milisleep(1);
+                if (x == 0) {
+                        milisleep(1);
+                        x = 100000000;
+                } else {
+                        asm("nop");
+                        x--;
+                }
         }
 
         return 0;

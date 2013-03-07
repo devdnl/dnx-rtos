@@ -139,7 +139,7 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *stdin,
                 *exit_code = STD_RET_UNKNOWN;
 
         taskhdl = new_task(task_program_startup, regpdata.program_name,
-                           *regpdata.stack_deep, pdata);
+                           *regpdata.stack_depth, pdata);
 
         if (taskhdl == NULL) {
                 delete_argument_table(pdata->argv, pdata->argc);

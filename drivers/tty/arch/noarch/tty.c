@@ -40,7 +40,7 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 #define TTYD_NAME                       "ttyworker"
-#define TTYD_STACK_SIZE                 STACK_LOW_SIZE
+#define TTYD_STACK_DEPTH                STACK_LOW_DEPTH
 #define TTYD_PRIORITY                   0
 
 #define FILE                            "/dev/ttyS0"
@@ -184,7 +184,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
 
         if ((term->semcnt_stdout = new_semaphore_counting(10, 0)) != NULL) {
 
-                term->taskhdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE, NULL);
+                term->taskhdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_DEPTH, NULL);
                 if (term->taskhdl) {
                         term->col = 80;
                         term->row = 24;
@@ -1010,7 +1010,7 @@ static ch_t *create_buffer_for_message(u8_t dev, ch_t *msgSrc, uint msgLen)
         ch_t   *msg;
         ch_t   *lstMsg     = TTY(dev)->line[get_message_index(dev, 1)];
         size_t  lstMsgSize = strlen(lstMsg);
-        uint  LF_count   = 0;
+        uint    LF_count   = 0;
 
         /* calculate how many '\n' exist in string */
         for (uint i = 0; i < msgLen; i++) {

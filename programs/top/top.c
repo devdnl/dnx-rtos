@@ -54,7 +54,7 @@ GLOBAL_VARIABLES {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(top, STACK_LARGE_SIZE);
+PROGRAM_PARAMS(top, STACK_LARGE_DEPTH);
 
 /*==============================================================================
   Function definitions
@@ -65,7 +65,7 @@ PROGRAM_PARAMS(top, STACK_LARGE_SIZE);
  * @brief Main function
  */
 //==============================================================================
-int PROGRAM_MAIN(top)(int argc, char *argv[])
+int PROGRAM_MAIN(top, int argc, char *argv[])
 {
         (void)argc;
         (void)argv;
@@ -98,7 +98,7 @@ int PROGRAM_MAIN(top)(int argc, char *argv[])
                        get_used_memory(),
                        get_free_memory());
 
-                printf("\x1B[30;47m TSKHDL   PR    FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
+                printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
                 for (int i = 0; i < n; i++) {
                         struct taskstat taskinfo;

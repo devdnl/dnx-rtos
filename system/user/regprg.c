@@ -44,7 +44,7 @@ extern "C" {
         {.program_name  = #name,\
          .main_function = program_##name##_main,\
          .globals_size  = &prog_##name##_gs,\
-         .stack_deep    = &prog_##name##_stack}
+         .stack_depth   = &prog_##name##_stack}
 
 /*==============================================================================
   Local types, enums definitions

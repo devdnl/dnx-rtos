@@ -48,7 +48,7 @@ extern "C" {
         extern const uint prog_##name##_gs;\
         extern const uint prog_##name##_stack
 
-#define PROGRAM_MAIN(name)                      program_##name##_main
+#define PROGRAM_MAIN(name, argc, argv)          program_##name##_main(argc, argv)
 #define stdin                                   get_task_data()->f_stdin
 #define stdout                                  get_task_data()->f_stdout
 #define global                                  ((struct __global_vars__*)get_task_data()->f_global_vars)

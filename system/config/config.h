@@ -68,7 +68,7 @@ extern "C" {
 /**
  * Task minimal stack size
  */
-#define CONFIG_RTOS_TASK_MIN_STACK_SIZE               (64)
+#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH              (64)
 
 /**
  * Task name length

@@ -70,33 +70,32 @@ extern "C" {
  *
  * @param[in ]  func            task code
  * @param[in ] *name            task name
- * @param[in ]  stack           stack deep
+ * @param[in ]  stack_depth     stack deep
  * @param[in ] *argv            argument pointer
  *
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack, void *argv)
+task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void *argv)
 {
-        vTaskSuspendAll();
-
         task_t           *task = NULL;
         struct task_data *data;
 
         data = calloc(1, sizeof(struct task_data));
         if (data == NULL) {
-                goto error;
+                return NULL;
         }
 
         data->f_parent_task = get_task_handle();
 
-        if (xTaskCreate(func, (signed char*)name, stack, argv, PRIORITY(0), &task) == OS_OK) {
+        vTaskSuspendAll();
+        if (xTaskCreate(func, (signed char*)name, stack_depth, argv, PRIORITY(0), &task) == OS_OK) {
 
                 set_task_tag(task, (void*)data);
                 tskm_add_task(task);
+        } else {
+                free(data);
         }
-
-        error:
         xTaskResumeAll();
 
         return task;
@@ -111,13 +110,13 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack, void *argv)
 //==============================================================================
 void osw_delete_task(task_t *taskHdl)
 {
-        struct task_data *tdata = get_task_tag(taskHdl);
-        if (tdata) {
-                free(tdata);
+        struct task_data *data = get_task_tag(taskHdl);
+        if (data) {
+                free(data);
         }
 
         tskm_remove_task(taskHdl);
-        vTaskDelete(taskHdl);
+        vTaskDelete(THIS_TASK);
 }
 
 //==============================================================================

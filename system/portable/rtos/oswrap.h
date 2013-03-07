@@ -50,11 +50,11 @@ extern "C" {
 #undef malloc
 
 /** STANDART STACK SIZES */
-#define STACK_MINIMAL_SIZE                              (1  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
-#define STACK_LOW_SIZE                                  (2  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
-#define STACK_MEDIUM_SIZE                               (4  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
-#define STACK_LARGE_SIZE                                (8  * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
-#define STACK_HUGE_SIZE                                 (16 * (CONFIG_RTOS_TASK_MIN_STACK_SIZE))
+#define STACK_MINIMAL_DEPTH                             (1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_LOW_DEPTH                                 (2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_MEDIUM_DEPTH                              (4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_LARGE_DEPTH                               (8  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_HUGE_DEPTH                                (16 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                                       NULL
@@ -72,7 +72,7 @@ extern "C" {
 #define PRIORITY(prio)                                  (prio + (configMAX_PRIORITIES / 2))
 
 /** TASK LEVEL DEFINITIONS */
-#define new_task(func, name, stack, args)               osw_new_task(func, name, stack, args)
+#define new_task(func, name, stack_depth, args)         osw_new_task(func, name, stack_depth, args)
 #define delete_task(taskhdl)                            osw_delete_task(taskhdl)
 #define task_exit()                                     delete_task(get_task_handle())
 #define milisleep(msdelay)                              vTaskDelay(msdelay)

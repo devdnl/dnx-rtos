@@ -90,12 +90,13 @@ extern void  tskm_task_switched_out(void);
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 #define configUSE_PREEMPTION                    1
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_IDLE_HOOK                     1
 #define configUSE_TICK_HOOK                     1
 #define configCPU_CLOCK_HZ                      CONFIG_CPU_TARGET_FREQ
 #define configTICK_RATE_HZ                      ((portTickType) 1000)
 #define configMAX_PRIORITIES                    ((unsigned portBASE_TYPE) CONFIG_RTOS_TASK_MAX_PRIORITIES)
-#define configMINIMAL_STACK_SIZE                ((unsigned short) CONFIG_RTOS_TASK_MIN_STACK_SIZE)
+#define configMINIMAL_STACK_SIZE                ((unsigned short) CONFIG_RTOS_TASK_MIN_STACK_DEPTH)
 #define configMAX_TASK_NAME_LEN                 (CONFIG_RTOS_TASK_NAME_LEN)
 #define configUSE_TRACE_FACILITY                1
 #define configUSE_16_BIT_TICKS                  0
@@ -122,7 +123,7 @@ to exclude the API function. */
 #define INCLUDE_uxTaskGetStackHighWaterMark     1
 #define INCLUDE_pcTaskGetTaskName               1
 #define INCLUDE_xTaskGetCurrentTaskHandle       1
-#define INCLUDE_xTaskGetIdleTaskHandle          0
+#define INCLUDE_xTaskGetIdleTaskHandle          1
 #define INCLUDE_vTaskCleanUpResources           0
 
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255

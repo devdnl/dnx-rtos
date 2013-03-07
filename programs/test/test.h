@@ -51,7 +51,7 @@ EXPORT_PROGRAM_PARAMS(test);
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern int PROGRAM_MAIN(test)(int argc, char *argv[]);
+extern int PROGRAM_MAIN(test, int, char**);
 
 #ifdef __cplusplus
 }
