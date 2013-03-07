@@ -61,12 +61,15 @@ extern "C" {
 
 void task_test(void *argv)
 {
-        kprint("stdin  : 0x%x\n", stdin);
-        kprint("stdout : 0x%x\n", stdout);
-        kprint("cwd    : 0x%x\n", get_task_data()->f_cwd);
-        kprint("global : 0x%x\n", global);
-        kprint("parent : 0x%x\n", get_parent_handle());
-        kprint("cpuload: 0x%x\n", get_task_data()->f_cpu_usage);
+        printk("stdin  : 0x%x\n", stdin);
+        printk("stdout : 0x%x\n", stdout);
+        printk("cwd    : 0x%x\n", get_task_data()->f_cwd);
+        printk("global : 0x%x\n", global);
+        printk("parent : 0x%x\n", get_parent_handle());
+        printk("cpuload: 0x%x\n", get_task_data()->f_cpu_usage);
+
+//        for(;;){
+//        }
 
         task_exit();
 }
@@ -81,6 +84,8 @@ void task_test(void *argv)
 void process_initd(void *arg)
 {
       (void) arg;
+
+//      set_priority(INITD_PRIORITY);
 
       mount("lfs", NULL, "/");
 
@@ -108,10 +113,10 @@ void process_initd(void *arg)
       /* early initialization - terminal support */
       init_driver("uart1", "/dev/ttyS0");
       init_driver("tty0", "/dev/tty0");
-      kprintEnable("/dev/tty0");
+      enable_printk("/dev/tty0");
 
       /* something about board and system */
-      kprint(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
+      printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
              FONT_COLOR_CYAN "Daniel Zorychta "
              FONT_COLOR_YELLOW "<daniel.zorychta@gmail.com>" RESET_ATTRIBUTES "\n\n",
              get_OS_name(), get_kernel_name());
@@ -122,10 +127,10 @@ void process_initd(void *arg)
       init_driver("tty3", "/dev/tty3");
 
       /* initd info about stack usage */
-      kprint("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
+      printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
-      /* change TTY for kprint to last TTY */
-//      kprintEnable("/dev/tty3");
+      /* change TTY for printk to last TTY */
+//      printkEnable("/dev/tty3");
 
       /*------------------------------------------------------------------------
        * main loop which read stdios from applications
@@ -151,7 +156,7 @@ void process_initd(void *arg)
 
               task_t *t1 = new_task(task_test, "task_test", STACK_LOW_SIZE, NULL);
               if (t1) {
-                      kprint("Task started\n");
+                      printk("Task started\n");
               }
 //
 //              pno++;

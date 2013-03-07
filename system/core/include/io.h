@@ -52,9 +52,9 @@ extern "C" {
 #define fprintf(...)                            io_fprintf(__VA_ARGS__)
 #define snprintf(bfr, size, ...)                io_snprintf(bfr, size, __VA_ARGS__)
 #define vsnprintf(bfr, size, args)              io_vsnprintf(bfr, size, args)
-#define kprint(...)                             io_kprint(__VA_ARGS__)
-#define kprintEnable(path)                      io_kprintEnable(path)
-#define kprintDisable()                         io_kprintDisable()
+#define printk(...)                             io_printk(__VA_ARGS__)
+#define enable_printk(path)                     io_enable_printk(path)
+#define disable_printk()                        io_disable_printk()
 #define scanf(format, ...)                      io_fscanf(stdin, format, __VA_ARGS__)
 #define fscanf(stream, format, ...)             io_fscanf(stream, format, __VA_ARGS__)
 #define sscanf(str, format, ...)                io_sscanf(str, format, __VA_ARGS__)
@@ -122,9 +122,9 @@ extern "C" {
 #endif
 
 #if ((CONFIG_SYSTEM_MSG_ENABLE == 0) || (CONFIG_PRINTF_ENABLE == 0))
-#define io_kprint(...)
-#define io_kprintEnable(...)
-#define io_kprintDisable(...)
+#define io_printk(...)
+#define io_enable_printk(...)
+#define io_disable_printk(...)
 #endif
 #if (CONFIG_PRINTF_ENABLE == 0)
 #define io_snprintf(...)                        0
@@ -149,9 +149,9 @@ extern "C" {
   Exported function prototypes
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-extern void  io_kprint(const ch_t *format, ...);
-extern void  io_kprintEnable(ch_t *filename);
-extern void  io_kprintDisable(void);
+extern void  io_printk(const ch_t *format, ...);
+extern void  io_enable_printk(ch_t *filename);
+extern void  io_disable_printk(void);
 #endif
 #if (CONFIG_PRINTF_ENABLE > 0)
 extern int   io_snprintf(ch_t *buf, u32_t size, const ch_t *format, ...);

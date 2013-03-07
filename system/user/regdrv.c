@@ -140,7 +140,7 @@ stdRet_t init_driver(const ch_t *drvName, const ch_t *nodeName)
                 fd_t   part = drvList[i].drvCfg.part;
 
                 if (drvList[i].drvInit(dev, part) != STD_RET_OK) {
-                        kprint(FONT_COLOR_RED"Driver %s initialization error!"
+                        printk(FONT_COLOR_RED"Driver %s initialization error!"
                                RESET_ATTRIBUTES"\n", drvName);
 
                         return STD_RET_ERROR;
@@ -150,22 +150,22 @@ stdRet_t init_driver(const ch_t *drvName, const ch_t *nodeName)
                         if (vfs_mknod(nodeName, (struct vfs_drvcfg*)
                                       &drvList[i].drvCfg) == STD_RET_OK) {
 
-                                kprint("Created node %s\n", nodeName);
+                                printk("Created node %s\n", nodeName);
                                 return STD_RET_OK;
                         } else {
                                 drvList[i].drvRelease(dev, part);
-                                kprint(FONT_COLOR_RED"Create node %s failed"
+                                printk(FONT_COLOR_RED"Create node %s failed"
                                        RESET_ATTRIBUTES"\n", nodeName);
                                 return STD_RET_ERROR;
                         }
 
                 } else {
-                        kprint("Driver %s initialized\n", drvName);
+                        printk("Driver %s initialized\n", drvName);
                         return STD_RET_OK;
                 }
         }
 
-        kprint(FONT_COLOR_RED"Driver %s does not exist!"
+        printk(FONT_COLOR_RED"Driver %s does not exist!"
                RESET_ATTRIBUTES"\n", drvName);
 
         return STD_RET_ERROR;

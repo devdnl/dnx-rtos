@@ -531,6 +531,8 @@ static void task_tty(void *arg)
 {
         (void) arg;
 
+        set_priority(TTYD_PRIORITY);
+
         ch_t   *msg;
         FILE_t *ttys;
 

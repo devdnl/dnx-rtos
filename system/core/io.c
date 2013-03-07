@@ -292,7 +292,7 @@ ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-void io_kprintEnable(ch_t *filename)
+void io_enable_printk(ch_t *filename)
 {
         /* close file if opened */
         if (kprintFile) {
@@ -313,7 +313,7 @@ void io_kprintEnable(ch_t *filename)
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-void io_kprintDisable(void)
+void io_disable_printk(void)
 {
         if (kprintFile) {
                 fclose(kprintFile);
@@ -333,7 +333,7 @@ void io_kprintDisable(void)
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-void io_kprint(const ch_t *format, ...)
+void io_printk(const ch_t *format, ...)
 {
         va_list args;
 
