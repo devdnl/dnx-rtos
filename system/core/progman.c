@@ -182,9 +182,9 @@ static void task_program_startup(void *argv)
         void                *taskmem   = NULL;
         int                  exit_code = STD_RET_UNKNOWN;
 
-        get_task_data()->stdin  = pdata->stdin;
-        get_task_data()->stdout = pdata->stdout;
-        get_task_data()->cwd    = pdata->cwd;
+        get_task_data()->f_stdin  = pdata->stdin;
+        get_task_data()->f_stdout = pdata->stdout;
+        get_task_data()->f_cwd    = pdata->cwd;
 
         if (pdata->globals_size) {
                 if ((taskmem = monitored_calloc(1, pdata->globals_size)) == NULL) {
@@ -192,7 +192,7 @@ static void task_program_startup(void *argv)
                         goto task_exit;
                 }
 
-                get_task_data()->global_vars = taskmem;
+                get_task_data()->f_global_vars = taskmem;
         }
 
         exit_code = pdata->main(pdata->argc, pdata->argv);

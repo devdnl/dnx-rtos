@@ -63,10 +63,10 @@ void task_test(void *argv)
 {
         kprint("stdin  : 0x%x\n", stdin);
         kprint("stdout : 0x%x\n", stdout);
-        kprint("cwd    : 0x%x\n", get_task_data()->cwd);
+        kprint("cwd    : 0x%x\n", get_task_data()->f_cwd);
         kprint("global : 0x%x\n", global);
         kprint("parent : 0x%x\n", get_parent_handle());
-        kprint("cpuload: 0x%x\n", get_task_data()->cpu_usage);
+        kprint("cpuload: 0x%x\n", get_task_data()->f_cpu_usage);
 
         task_exit();
 }

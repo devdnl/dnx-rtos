@@ -49,9 +49,9 @@ extern "C" {
         extern const uint prog_##name##_stack
 
 #define PROGRAM_MAIN(name)                      program_##name##_main
-#define stdin                                   get_task_data()->stdin
-#define stdout                                  get_task_data()->stdout
-#define global                                  ((struct __global_vars__*)get_task_data()->global_vars)
+#define stdin                                   get_task_data()->f_stdin
+#define stdout                                  get_task_data()->f_stdout
+#define global                                  ((struct __global_vars__*)get_task_data()->f_global_vars)
 #define create_fast_global(name)                struct __global_vars__*name = global
 
 /*==============================================================================

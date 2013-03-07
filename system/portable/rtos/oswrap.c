@@ -88,7 +88,7 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack, void *argv)
                 goto error;
         }
 
-        data->parent_task = get_task_handle();
+        data->f_parent_task = get_task_handle();
 
         if (xTaskCreate(func, (signed char*)name, stack, argv, PRIORITY(0), &task) == OS_OK) {
 

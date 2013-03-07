@@ -184,7 +184,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
 
         if ((term->semcnt_stdout = new_semaphore_counting(10, 0)) != NULL) {
 
-                term->taskhdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE, NULL, TTYD_PRIORITY);
+                term->taskhdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_SIZE, NULL);
                 if (term->taskhdl) {
                         term->col = 80;
                         term->row = 24;

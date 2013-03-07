@@ -91,6 +91,7 @@ extern "C" {
 #define exit_critical()                                 taskEXIT_CRITICAL()
 #define disable_ISR()                                   taskDISABLE_INTERRUPTS()
 #define enable_ISR()                                    taskENABLE_INTERRUPTS()
+#define set_priority(priority)                          vTaskPrioritySet(THIS_TASK, PRIORITY(priority))
 #define get_tick_counter()                              xTaskGetTickCount()
 #define get_task_name(taskhdl)                          (char*)pcTaskGetTaskName(taskhdl)
 #define get_this_task_name()                            (char*)pcTaskGetTaskName(THIS_TASK)
@@ -102,8 +103,12 @@ extern "C" {
 #define set_task_tag(taskhdl, tag)                      vTaskSetApplicationTaskTag(taskhdl, tag)
 #define get_task_tag(taskhdl)                           (void*)xTaskGetApplicationTaskTag(taskhdl)
 #define get_task_data()                                 ((struct task_data*)get_task_tag(THIS_TASK))
-#define get_parent_handle()                             get_task_data()->parent_task
-#define set_task_global_variables(ptr)                  get_task_data()->global_vars = ptr
+#define get_parent_handle()                             get_task_data()->f_parent_task
+#define set_global_variables(ptr)                       get_task_data()->f_global_vars = ptr
+#define set_stdin(file)                                 get_task_data()->f_stdin = file
+#define set_stdout(file)                                get_task_data()->f_stdout = file
+#define set_user_data(ptr)                              get_task_data()->f_user = ptr
+#define get_user_data()                                 get_task_data()->f_user
 
 /** SEMAPHORES AND MUTEXES */
 #define new_semaphore()                                 osw_create_binary_semaphore()
@@ -131,12 +136,13 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        FILE_t *stdin;          /* stdin file                         */
-        FILE_t *stdout;         /* stdout file                        */
-        char   *cwd;            /* current working path               */
-        void   *global_vars;    /* address to global variables        */
-        task_t *parent_task;    /* program's parent task              */
-        u32_t   cpu_usage;      /* counter used to calculate CPU load */
+        FILE_t *f_stdin;          /* stdin file                         */
+        FILE_t *f_stdout;         /* stdout file                        */
+        char   *f_cwd;            /* current working path               */
+        void   *f_global_vars;    /* address to global variables        */
+        void   *f_user;           /* pointer to user data               */
+        task_t *f_parent_task;    /* program's parent task              */
+        u32_t   f_cpu_usage;      /* counter used to calculate CPU load */
 };
 
 /*==============================================================================
