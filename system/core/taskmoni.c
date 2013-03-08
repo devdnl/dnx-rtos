@@ -446,27 +446,28 @@ u16_t tskm_get_task_count(void)
 
 //==============================================================================
 /**
- * @brief Monitor memory allocation
+ * @brief Monitor memory allocation for specified task
  *
- * @param size          block size
+ * @param *taskhdl      task handle
+ * @param  size         block size
  *
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
 #if (TSK_MONITOR_MEMORY_USAGE > 0)
-void *tskm_malloc(u32_t size)
+void *tskm_malloc_as(task_t *taskhdl, u32_t size)
 {
         void   *mem   = NULL;
         uint    block = 0;
         struct taskData *taskInfo;
 
-        if (!tskm || size == 0) {
+        if (!tskm || !taskhdl || size == 0) {
                 return NULL;
         }
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskhdl);
         if (taskInfo == NULL) {
                 mutex_recursive_unlock(tskm->mtx);
                 return NULL;
@@ -526,16 +527,33 @@ void *tskm_malloc(u32_t size)
 /**
  * @brief Monitor memory allocation
  *
- * @param nmemb         n members
- * @param msize         member size
+ * @param size          block size
  *
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
 #if (TSK_MONITOR_MEMORY_USAGE > 0)
-void *tskm_calloc(u32_t nmemb, u32_t msize)
+void *tskm_malloc(u32_t size)
 {
-        void *ptr = tskm_malloc(nmemb * msize);
+        return tskm_malloc_as(get_task_handle(), size);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory allocation for specified task
+ *
+ * @param *taskhdl      task handle
+ * @param  nmemb        n members
+ * @param  msize        member size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
+void *tskm_calloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
+{
+        void *ptr = tskm_malloc_as(taskhdl, nmemb * msize);
 
         if (ptr) {
                 memset(ptr, 0, nmemb * msize);
@@ -547,23 +565,47 @@ void *tskm_calloc(u32_t nmemb, u32_t msize)
 
 //==============================================================================
 /**
- * @brief Monitor memory freeing
+ * @brief Monitor memory allocation
  *
+ * @param nmemb         n members
+ * @param msize         member size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
+void *tskm_calloc(u32_t nmemb, u32_t msize)
+{
+        void *ptr = tskm_malloc_as(get_task_handle(), nmemb * msize);
+
+        if (ptr) {
+                memset(ptr, 0, nmemb * msize);
+        }
+
+        return ptr;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing for specified task
+ *
+ * @param *taskhdl      task handle
  * @param *mem          block to free
  */
 //==============================================================================
 #if (TSK_MONITOR_MEMORY_USAGE > 0)
-void tskm_free(void *mem)
+void tskm_free_as(task_t *taskhdl, void *mem)
 {
         struct taskData *taskInfo;
 
-        if (tskm == NULL) {
+        if (!tskm || !taskhdl) {
                 return;
         }
 
         while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
+        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskhdl);
         if (taskInfo == NULL) {
                 mutex_recursive_unlock(tskm->mtx);
                 return;
@@ -617,6 +659,20 @@ void tskm_free(void *mem)
 
         moni_free_end:
         mutex_recursive_unlock(tskm->mtx);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing
+ *
+ * @param *mem          block to free
+ */
+//==============================================================================
+#if (TSK_MONITOR_MEMORY_USAGE > 0)
+void tskm_free(void *mem)
+{
+        tskm_free_as(get_task_handle(), mem);
 }
 #endif
 

@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "test.h"
+#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -70,6 +71,15 @@ PROGRAM_PARAMS(test, STACK_MEDIUM_DEPTH);
 //==============================================================================
 int PROGRAM_MAIN(test, int argc, char *argv[])
 {
+        if (strcmp(argv[1], "exit") == 0) {
+                return 0;
+        }
+
+        if (strcmp(argv[1], "wait") == 0) {
+                sleep(10);
+                return 0;
+        }
+
         printf("\n---------------------\n");
         printf("Free stack: %d\n", get_free_stack());
         printf("Static memory usage: %d\n", get_used_static_memory());
@@ -103,14 +113,16 @@ int PROGRAM_MAIN(test, int argc, char *argv[])
 
         printf("exiting...\n");
 
-        u32_t x = 0;
-        for (;;) {
-                if (x == 0) {
-                        milisleep(1);
-                        x = 100000000;
-                } else {
-                        asm("nop");
-                        x--;
+        if (strcmp(argv[1], "inf") == 0) {
+                u32_t x = 0;
+                for (;;) {
+                        if (x == 0) {
+                                milisleep(1);
+                                x = 100000000;
+                        } else {
+                                asm("nop");
+                                x--;
+                        }
                 }
         }
 

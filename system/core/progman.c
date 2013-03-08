@@ -45,6 +45,9 @@ extern "C" {
 #undef stdin
 #undef stdout
 
+#define monitored_calloc_as(task, nmemb, msize) tskm_calloc_as(task, nmemb, msize)
+#define monitored_malloc_as(task, size)         tskm_malloc_as(task, size)
+#define monitored_free_as(task, mem)            tskm_free_as(task, mem)
 #define monitored_calloc(nmemb, msize)          tskm_calloc(nmemb, msize)
 #define monitored_malloc(size)                  tskm_malloc(size)
 #define monitored_free(mem)                     tskm_free(mem)
@@ -168,7 +171,7 @@ void prgm_delete_program(task_t *taskhdl)
         tdata = get_task_data(taskhdl);
         if (tdata) {
                 if (tdata->f_global_vars) {
-                        monitored_free(tdata->f_global_vars);
+                        monitored_free_as(taskhdl, tdata->f_global_vars);
                         tdata->f_global_vars = NULL;
                 }
 

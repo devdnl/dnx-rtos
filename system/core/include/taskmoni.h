@@ -53,6 +53,9 @@ extern "C" {
 /* ---------------------------------------------------------------------------*/
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
 #if (TSK_MONITOR_MEMORY_USAGE == 0)
+#define tskm_malloc_as(taskhdl, size)           memman_malloc(size)
+#define tskm_calloc_as(taskhdl, nmemb, msize)   memman_calloc(nmemb, msize)
+#define tskm_free_as(taskhdl, mem)              memman_free(mem)
 #define tskm_malloc(size)                       memman_malloc(size)
 #define tskm_calloc(nmemb, msize)               memman_calloc(nmemb, msize)
 #define tskm_free(mem)                          memman_free(mem)
@@ -135,8 +138,11 @@ extern stdRet_t  tskm_get_task_stat    (task_t *taskHdl, struct taskstat *stat);
 extern u16_t     tskm_get_task_count   (void);
 #endif
 #if (TSK_MONITOR_MEMORY_USAGE > 0)
+extern void     *tskm_malloc_as        (task_t *taskhdl, u32_t size);
 extern void     *tskm_malloc           (u32_t size);
+extern void     *tskm_calloc_as        (task_t *taskhdl, u32_t nmemb, u32_t msize);
 extern void     *tskm_calloc           (u32_t nmemb, u32_t msize);
+extern void      tskm_free_as          (task_t *taskhdl, void *mem);
 extern void      tskm_free             (void *mem);
 #endif
 #if (TSK_MONITOR_FILE_USAGE > 0)

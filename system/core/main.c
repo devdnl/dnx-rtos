@@ -66,7 +66,7 @@ extern "C" {
 int main(void)
 {
         dnx_init();
-        new_task(process_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+        new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
         start_task_scheduler();
 
         return 0;

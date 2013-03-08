@@ -61,7 +61,7 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void process_initd(void *arg);
+extern void task_initd(void *arg);
 
 #ifdef __cplusplus
 }

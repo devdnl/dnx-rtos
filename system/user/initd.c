@@ -81,7 +81,7 @@ void task_test(void *argv)
  * Task connect applications' stdios with hardware layer.
  */
 //==============================================================================
-void process_initd(void *arg)
+void task_initd(void *arg)
 {
       (void) arg;
 
@@ -149,18 +149,18 @@ void process_initd(void *arg)
       ttyx[1] = fopen("/dev/tty1", "r+");
       new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
 
-      ttyx[2] = fopen("/dev/tty2", "r+");
-      new_program("test", "", "/", ttyx[2], ttyx[2], NULL, NULL);
+//      ttyx[2] = fopen("/dev/tty2", "r+");
+//      new_program("test", "inf", "/", ttyx[2], ttyx[2], NULL, NULL);
 
       sleep(2);
 
       for (;;) {
 //              fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());
 
-              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_DEPTH, NULL);
-              if (t1) {
+//              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_DEPTH, NULL);
+//              if (t1) {
 //                      printk("Task started\n");
-              }
+//              }
 //
 //              pno++;
 //              enum prg_status status;
@@ -172,7 +172,12 @@ void process_initd(void *arg)
 //              wait_for_program_end(p1, &status);
 //
 //              fprintf(ttyx[0], "Free memory: "FONT_COLOR_CYAN"%d"RESET_ATTRIBUTES"\n", get_free_memory());
-              sleep(2);
+
+              task_t *p1 = new_program("test", "wait", "/", ttyx[1], ttyx[1], NULL, NULL);
+              sleep(1);
+              delete_program(p1);
+
+              sleep(1);
       }
 
       /* this should never happen */
