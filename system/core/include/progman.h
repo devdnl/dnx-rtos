@@ -38,6 +38,11 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#define new_program(name, args, cwd, fstdin, fstdout, status, exit_code) \
+        prgm_new_program(name, args, cwd, fstdin, fstdout, status, exit_code)
+
+#define delete_program(taskhdl)                 prgm_delete_program(taskhdl)
+
 #define GLOBAL_VARIABLES                        struct __global_vars__
 
 #define PROGRAM_PARAMS(name, stack)\
@@ -74,7 +79,6 @@ enum prg_status {
 ==============================================================================*/
 extern task_t *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
 extern void    prgm_delete_program(task_t*);
-extern void    prgm_wait_for_program_end(task_t*, enum prg_status*);
 
 #ifdef __cplusplus
 }

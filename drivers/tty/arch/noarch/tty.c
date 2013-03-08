@@ -40,7 +40,7 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 #define TTYD_NAME                       "ttyworker"
-#define TTYD_STACK_DEPTH                STACK_LOW_DEPTH
+#define TTYD_STACK_DEPTH                STACK_DEPTH_LOW
 #define TTYD_PRIORITY                   0
 
 #define FILE                            "/dev/ttyS0"

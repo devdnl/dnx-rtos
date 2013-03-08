@@ -50,11 +50,11 @@ extern "C" {
 #undef malloc
 
 /** STANDART STACK SIZES */
-#define STACK_MINIMAL_DEPTH                             (1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_LOW_DEPTH                                 (2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_MEDIUM_DEPTH                              (4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_LARGE_DEPTH                               (8  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_HUGE_DEPTH                                (16 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_MINIMAL                             (1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_LOW                                 (2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_MEDIUM                              (4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_LARGE                               (8  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_HUGE                                (16 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                                       NULL
