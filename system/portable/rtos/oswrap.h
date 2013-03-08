@@ -102,7 +102,8 @@ extern "C" {
 #define get_number_of_tasks()                           uxTaskGetNumberOfTasks()
 #define set_task_tag(taskhdl, tag)                      vTaskSetApplicationTaskTag(taskhdl, tag)
 #define get_task_tag(taskhdl)                           (void*)xTaskGetApplicationTaskTag(taskhdl)
-#define get_task_data()                                 ((struct task_data*)get_task_tag(THIS_TASK))
+#define get_this_task_data()                            ((struct task_data*)get_task_tag(THIS_TASK))
+#define get_task_data(taskhdl)                          ((struct task_data*)get_task_tag(taskhdl))
 #define get_parent_handle()                             get_task_data()->f_parent_task
 #define set_global_variables(ptr)                       get_task_data()->f_global_vars = ptr
 #define set_stdin(file)                                 get_task_data()->f_stdin = file

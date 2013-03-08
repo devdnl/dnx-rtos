@@ -90,8 +90,7 @@ extern "C" {
 #define getcwd(buf, size)                 strncpy(buf, get_task_data()->cwd, size)
 #define new_program(name, args, cwd, fstdin, fstdout, status, exit_code) \
         prgm_new_program(name, args, cwd, fstdin, fstdout, status, exit_code)
-#define wait_for_program_end(taskhdl, statusPtr) \
-        prgm_wait_for_program_end(taskhdl, statusPtr)
+#define delete_program(taskhdl)           prgm_delete_program(taskhdl)
 
 /*==============================================================================
   Exported types, enums definitions

@@ -88,15 +88,18 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void 
 
         data->f_parent_task = get_task_handle();
 
-        vTaskSuspendAll();
-        if (xTaskCreate(func, (signed char*)name, stack_depth, argv, PRIORITY(0), &task) == OS_OK) {
+        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+                vTaskDelay(1);
+        }
 
-                set_task_tag(task, (void*)data);
+        if (xTaskCreate(func, (signed char*)name, stack_depth,
+                        argv, PRIORITY(0), &task) == OS_OK) {
+
+                vTaskSetApplicationTaskTag(task, (void*)data);
                 tskm_add_task(task);
         } else {
                 free(data);
         }
-        xTaskResumeAll();
 
         return task;
 }
@@ -116,7 +119,7 @@ void osw_delete_task(task_t *taskHdl)
         }
 
         tskm_remove_task(taskHdl);
-        vTaskDelete(THIS_TASK);
+        vTaskDelete(taskHdl);
 }
 
 //==============================================================================

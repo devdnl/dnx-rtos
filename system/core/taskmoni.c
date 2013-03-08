@@ -227,6 +227,7 @@ stdRet_t tskm_remove_task(task_t *taskHdl)
         struct taskData *taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskHdl);
 
         if (taskInfo == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return STD_RET_ERROR;
         }
 
@@ -321,6 +322,7 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 
         struct taskData *taskdata = list_get_nitem_data(tskm->tasks, item);
         if (taskdata == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return STD_RET_ERROR;
         }
 
@@ -466,6 +468,7 @@ void *tskm_malloc(u32_t size)
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return NULL;
         }
 
@@ -562,6 +565,7 @@ void tskm_free(void *mem)
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return;
         }
 
@@ -641,6 +645,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return NULL;
         }
 
@@ -717,6 +722,7 @@ stdRet_t tskm_fclose(FILE_t *file)
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return STD_RET_ERROR;
         }
 
@@ -796,6 +802,7 @@ DIR_t *tskm_opendir(const ch_t *path)
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return NULL;
         }
 
@@ -872,6 +879,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
 
         taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
         if (taskInfo == NULL) {
+                mutex_recursive_unlock(tskm->mtx);
                 return STD_RET_ERROR;
         }
 
@@ -947,7 +955,7 @@ void tskm_task_switched_in(void)
 #if (TSK_MONITOR_CPU_LOAD > 0)
 void tskm_task_switched_out(void)
 {
-        struct task_data *tdata = get_task_tag(get_task_handle());
+        struct task_data *tdata = get_this_task_data();
         u32_t             cnt   = cpuctl_get_CPU_load_timer();
 
         if (tdata) {

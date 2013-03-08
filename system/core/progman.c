@@ -152,21 +152,46 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *stdin,
 
 //==============================================================================
 /**
- * @brief Function wait to program end
+ * @brief Function delete running program
  *
  * @param *taskhdl              task handle
- * @param *status               program status
  */
 //==============================================================================
-void prgm_wait_for_program_end(task_t *taskhdl, enum prg_status *status)
+void prgm_delete_program(task_t *taskhdl)
 {
-//        if (!taskhdl || !status) {
-//                return;
-//        }
-//
-//        while (*status == PROGRAM_RUNNING) {
-//                sleep(1);
-//        }
+        struct task_data    *tdata;
+        struct program_data *pdata;
+
+        if (taskhdl == NULL)
+                return;
+
+        tdata = get_task_data(taskhdl);
+        if (tdata) {
+                if (tdata->f_global_vars) {
+                        monitored_free(tdata->f_global_vars);
+                        tdata->f_global_vars = NULL;
+                }
+
+                pdata = tdata->f_user;
+                if (pdata) {
+                        if (pdata->argv) {
+                                delete_argument_table(pdata->argv, pdata->argc);
+                        }
+
+                        if (pdata->exit_code) {
+                                *pdata->exit_code = STD_RET_OK;
+                        }
+
+                        if (pdata->status) {
+                                *pdata->status = PROGRAM_ENDED;
+                        }
+
+                        free(pdata);
+                        tdata->f_user = NULL;
+                }
+        }
+
+        delete_task(taskhdl);
 }
 
 //==============================================================================
@@ -179,12 +204,14 @@ void prgm_wait_for_program_end(task_t *taskhdl, enum prg_status *status)
 static void task_program_startup(void *argv)
 {
         struct program_data *pdata     = argv;
+        struct task_data    *tdata     = get_this_task_data();
         void                *taskmem   = NULL;
         int                  exit_code = STD_RET_UNKNOWN;
 
-        get_task_data()->f_stdin  = pdata->stdin;
-        get_task_data()->f_stdout = pdata->stdout;
-        get_task_data()->f_cwd    = pdata->cwd;
+        tdata->f_user   = pdata;
+        tdata->f_stdin  = pdata->stdin;
+        tdata->f_stdout = pdata->stdout;
+        tdata->f_cwd    = pdata->cwd;
 
         if (pdata->globals_size) {
                 if ((taskmem = monitored_calloc(1, pdata->globals_size)) == NULL) {
@@ -192,7 +219,7 @@ static void task_program_startup(void *argv)
                         goto task_exit;
                 }
 
-                get_task_data()->f_global_vars = taskmem;
+                tdata->f_global_vars = taskmem;
         }
 
         exit_code = pdata->main(pdata->argc, pdata->argv);
@@ -204,8 +231,9 @@ static void task_program_startup(void *argv)
                 *pdata->exit_code = exit_code;
         }
 
-        if (global) {
-                monitored_free(global);
+        if (tdata->f_global_vars) {
+                monitored_free(tdata->f_global_vars);
+                tdata->f_global_vars = NULL;
         }
 
         if (pdata->argv) {
@@ -213,6 +241,7 @@ static void task_program_startup(void *argv)
         }
 
         free(pdata);
+        tdata->f_user = NULL;
 
         task_exit();
 }

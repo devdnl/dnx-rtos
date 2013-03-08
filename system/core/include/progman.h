@@ -49,9 +49,9 @@ extern "C" {
         extern const uint prog_##name##_stack
 
 #define PROGRAM_MAIN(name, argc, argv)          program_##name##_main(argc, argv)
-#define stdin                                   get_task_data()->f_stdin
-#define stdout                                  get_task_data()->f_stdout
-#define global                                  ((struct __global_vars__*)get_task_data()->f_global_vars)
+#define stdin                                   get_this_task_data()->f_stdin
+#define stdout                                  get_this_task_data()->f_stdout
+#define global                                  ((struct __global_vars__*)get_this_task_data()->f_global_vars)
 #define create_fast_global(name)                struct __global_vars__*name = global
 
 /*==============================================================================
@@ -73,6 +73,7 @@ enum prg_status {
   Exported function prototypes
 ==============================================================================*/
 extern task_t *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
+extern void    prgm_delete_program(task_t*);
 extern void    prgm_wait_for_program_end(task_t*, enum prg_status*);
 
 #ifdef __cplusplus
