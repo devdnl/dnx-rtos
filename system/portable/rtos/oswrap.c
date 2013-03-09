@@ -95,8 +95,10 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void 
         if (xTaskCreate(func, (signed char*)name, stack_depth,
                         argv, PRIORITY(0), &task) == OS_OK) {
 
+                vTaskSuspend(task);
                 vTaskSetApplicationTaskTag(task, (void*)data);
                 tskm_add_task(task);
+                vTaskResume(task);
         } else {
                 free(data);
         }
