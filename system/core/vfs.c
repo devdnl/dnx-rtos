@@ -42,6 +42,7 @@ extern "C" {
 ==============================================================================*/
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                        10
+#define force_lock_mutex(mtx, blocktime)      while (lock_mutex(mtx, blocktime) != MUTEX_LOCKED)
 
 #define calloc(nmemb, msize)                  memman_calloc(nmemb, msize)
 #define malloc(size)                          memman_malloc(size)
@@ -155,7 +156,7 @@ stdRet_t vfs_mount(const ch_t *srcPath, const ch_t *mntPoint, struct vfs_fscfg *
                 return STD_RET_ERROR;
         }
 
-        while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+        force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
         mountfs = find_mounted_FS(newpath, -1, NULL);
         basefs  = find_base_FS(newpath, &extPath);
 
@@ -192,7 +193,7 @@ stdRet_t vfs_mount(const ch_t *srcPath, const ch_t *mntPoint, struct vfs_fscfg *
                         newfs->mntFSCnt = 0;
 
                         if (list_add_item(vfs->mntList, vfs->idcnt++, newfs) >= 0) {
-                                mutex_unlock(vfs->mtx);
+                                unlock_mutex(vfs->mtx);
                                 return STD_RET_OK;
                         }
                 }
@@ -201,7 +202,7 @@ stdRet_t vfs_mount(const ch_t *srcPath, const ch_t *mntPoint, struct vfs_fscfg *
                 free(newpath);
         }
 
-        mutex_unlock(vfs->mtx);
+        unlock_mutex(vfs->mtx);
         return STD_RET_ERROR;
 }
 
@@ -234,7 +235,7 @@ stdRet_t vfs_umount(const ch_t *path)
                 return STD_RET_ERROR;
         }
 
-        while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+        force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
         mountfs = find_mounted_FS(newpath, -1, &itemid);
         free(newpath);
 
@@ -259,13 +260,13 @@ stdRet_t vfs_umount(const ch_t *path)
                 }
 
                 if (list_rm_iditem(vfs->mntList, itemid) == STD_RET_OK) {
-                        mutex_unlock(vfs->mtx);
+                        unlock_mutex(vfs->mtx);
                         return STD_RET_OK;
                 }
         }
 
         vfs_umount_error:
-        mutex_unlock(vfs->mtx);
+        unlock_mutex(vfs->mtx);
         return STD_RET_ERROR;
 }
 
@@ -282,9 +283,9 @@ stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
         if (mntent) {
                 struct fsinfo *fs = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 fs = list_get_nitem_data(vfs->mntList, item);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fs) {
                         struct vfs_statfs statfs;
@@ -330,9 +331,9 @@ stdRet_t vfs_mknod(const ch_t *path, struct vfs_drvcfg *drvcfg)
         if (path && drvcfg && vfs) {
                 ch_t *extPath = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 struct fsinfo *fs = find_base_FS(path, &extPath);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fs) {
                         if (fs->fs.f_mknod) {
@@ -367,9 +368,9 @@ stdRet_t vfs_mkdir(const ch_t *path)
 
                 ch_t *extPath = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 struct fsinfo *fs = find_base_FS(newpath, &extPath);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fs) {
                         if (fs->fs.f_mkdir) {
@@ -408,9 +409,9 @@ DIR_t *vfs_opendir(const ch_t *path)
                 if (newpath) {
                         ch_t *extPath = NULL;
 
-                        while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                         struct fsinfo *fs = find_base_FS(newpath, &extPath);
-                        mutex_unlock(vfs->mtx);
+                        unlock_mutex(vfs->mtx);
 
                         if (fs) {
                                 dir->fsd = fs->fs.f_fsd;
@@ -500,10 +501,10 @@ stdRet_t vfs_remove(const ch_t *path)
                 if (newpath) {
                         ch_t *extPath = NULL;
 
-                        while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                         struct fsinfo *mntfs  = find_mounted_FS(newpath, -1, NULL);
                         struct fsinfo *basefs = find_base_FS(path, &extPath);
-                        mutex_unlock(vfs->mtx);
+                        unlock_mutex(vfs->mtx);
 
                         if (basefs && mntfs == NULL) {
                                 if (basefs->fs.f_remove) {
@@ -538,10 +539,10 @@ stdRet_t vfs_rename(const ch_t *oldName, const ch_t *newName)
                 ch_t *extPathOld = NULL;
                 ch_t *extPathNew = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 struct fsinfo *fsOld = find_base_FS(oldName, &extPathOld);
                 struct fsinfo *fsNew = find_base_FS(newName, &extPathNew);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fsOld && fsNew && fsOld == fsNew) {
                         if (fsOld->fs.f_rename) {
@@ -571,9 +572,9 @@ stdRet_t vfs_chmod(const ch_t *path, u16_t mode)
         if (path && vfs) {
                 ch_t *extPath = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 struct fsinfo *fs = find_base_FS(path, &extPath);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fs) {
                         if (fs->fs.f_chmod) {
@@ -603,9 +604,9 @@ stdRet_t vfs_chown(const ch_t *path, u16_t owner, u16_t group)
         if (path && vfs) {
                 ch_t *extPath = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 struct fsinfo *fs = find_base_FS(path, &extPath);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fs) {
                         if (fs->fs.f_chown) {
@@ -634,9 +635,9 @@ stdRet_t vfs_stat(const ch_t *path, struct vfs_stat *stat)
         if (path && stat && vfs) {
                 ch_t *extPath = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 struct fsinfo *fs = find_base_FS(path, &extPath);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fs) {
                         if (fs->fs.f_stat) {
@@ -664,9 +665,9 @@ stdRet_t vfs_statfs(const ch_t *path, struct vfs_statfs *statfs)
         if (path && statfs && vfs) {
                 ch_t *newpath = new_corrected_path(path, ADD_SLASH);
                 if (newpath) {
-                        while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                         struct fsinfo *fs = find_mounted_FS(newpath, -1, NULL);
-                        mutex_unlock(vfs->mtx);
+                        unlock_mutex(vfs->mtx);
                         free(newpath);
 
                         if (fs) {
@@ -711,9 +712,9 @@ FILE_t *vfs_fopen(const ch_t *path, const ch_t *mode)
         if (file) {
                 ch_t *extPath = NULL;
 
-                while (mutex_lock(vfs->mtx, MTX_BLOCK_TIME) != OS_OK);
+                force_lock_mutex(vfs->mtx, MTX_BLOCK_TIME);
                 struct fsinfo *fs = find_base_FS(path, &extPath);
-                mutex_unlock(vfs->mtx);
+                unlock_mutex(vfs->mtx);
 
                 if (fs == NULL) {
                         goto vfs_open_error;

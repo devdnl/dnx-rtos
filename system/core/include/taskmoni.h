@@ -42,17 +42,17 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* USER CFG: enable (1) or disable (0) task memory usage monitoring */
-#define TSK_MONITOR_MEMORY_USAGE                CONFIG_MONITOR_MEMORY_USAGE
+#define TSKM_MONITOR_MEMORY_USAGE                CONFIG_MONITOR_MEMORY_USAGE
 
 /* USER CFG: enable (1) or disable (0) task opened file monitoring */
-#define TSK_MONITOR_FILE_USAGE                  CONFIG_MONITOR_FILE_USAGE
+#define TSKM_MONITOR_FILE_USAGE                  CONFIG_MONITOR_FILE_USAGE
 
 /* USER CFG: enable (1) or disable (0) task CPU load monitoring */
-#define TSK_MONITOR_CPU_LOAD                    CONFIG_MONITOR_CPU_LOAD
+#define TSKM_MONITOR_CPU_LOAD                    CONFIG_MONITOR_CPU_LOAD
 
 /* ---------------------------------------------------------------------------*/
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
-#if (TSK_MONITOR_MEMORY_USAGE == 0)
+#if (TSKM_MONITOR_MEMORY_USAGE == 0)
 #define tskm_malloc_as(taskhdl, size)           memman_malloc(size)
 #define tskm_calloc_as(taskhdl, nmemb, msize)   memman_calloc(nmemb, msize)
 #define tskm_free_as(taskhdl, mem)              memman_free(mem)
@@ -62,7 +62,7 @@ extern "C" {
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
-#if (TSK_MONITOR_FILE_USAGE == 0)
+#if (TSKM_MONITOR_FILE_USAGE == 0)
 #define tskm_fopen(path, mode)                  vfs_fopen(path, mode)
 #define tskm_fclose(file)                       vfs_fclose(file)
 #define tskm_opendir(path)                      vfs_opendir(path)
@@ -70,7 +70,7 @@ extern "C" {
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING DISABLED */
-#if (TSK_MONITOR_CPU_LOAD == 0)
+#if (TSKM_MONITOR_CPU_LOAD == 0)
 #define tskm_task_switched_in()
 #define tskm_task_switched_out()
 #endif
@@ -95,9 +95,9 @@ extern "C" {
 #define tskm_fstat(file, statPtr)               vfs_fstat(file, stat)
 
 /* IF MONITOR MODULE IS NOT USED DISABLE INITIALIZATION */
-#if (  (TSK_MONITOR_MEMORY_USAGE == 0) \
-    && (TSK_MONITOR_FILE_USAGE == 0  ) \
-    && (TSK_MONITOR_CPU_LOAD == 0    ) )
+#if (  (TSKM_MONITOR_MEMORY_USAGE == 0) \
+    && (TSKM_MONITOR_FILE_USAGE == 0  ) \
+    && (TSKM_MONITOR_CPU_LOAD == 0    ) )
 #define tskm_init()
 #define tskm_add_task(pid)
 #define tskm_remove_task(pid)
@@ -113,7 +113,6 @@ struct taskstat {
         u32_t   memory_usage;
         u32_t   opened_files;
         u32_t   cpu_usage;
-        u32_t   cpu_usage_total;
         ch_t   *task_name;
         task_t *task_handle;
         u32_t   free_stack;
@@ -127,31 +126,37 @@ struct taskstat {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
-extern stdRet_t  tskm_init             (void);
-extern stdRet_t  tskm_add_task         (task_t *taskHdl);
-extern stdRet_t  tskm_remove_task      (task_t *taskHdl);
-extern stdRet_t  tskm_get_ntask_stat   (i32_t item, struct taskstat *stat);
-extern stdRet_t  tskm_get_task_stat    (task_t *taskHdl, struct taskstat *stat);
-extern u16_t     tskm_get_task_count   (void);
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+extern stdRet_t tskm_init(void);
+extern bool_t   tskm_is_task_exist(task_t*);
+extern stdRet_t tskm_start_task_monitoring(task_t*);
+extern stdRet_t tskm_stop_task_monitoring(task_t*);
+extern u32_t    tskm_get_total_CPU_usage(void);
+extern void     tskm_clear_total_CPU_usage(void);
+extern stdRet_t tskm_get_task_stat(task_t*, struct taskstat*);
+extern stdRet_t tskm_get_ntask_stat(i32_t, struct taskstat*);
+extern int      tskm_get_number_of_monitored_tasks(void);
 #endif
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
-extern void     *tskm_malloc_as        (task_t *taskhdl, u32_t size);
-extern void     *tskm_malloc           (u32_t size);
-extern void     *tskm_calloc_as        (task_t *taskhdl, u32_t nmemb, u32_t msize);
-extern void     *tskm_calloc           (u32_t nmemb, u32_t msize);
-extern void      tskm_free_as          (task_t *taskhdl, void *mem);
-extern void      tskm_free             (void *mem);
+
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
+extern void *tskm_malloc_as(task_t*, u32_t);
+extern void *tskm_malloc(u32_t);
+extern void *tskm_calloc_as(task_t*, u32_t, u32_t);
+extern void *tskm_calloc(u32_t, u32_t);
+extern void  tskm_free_as(task_t*, void*);
+extern void  tskm_free(void*);
 #endif
-#if (TSK_MONITOR_FILE_USAGE > 0)
-extern FILE_t   *tskm_fopen            (const ch_t *path, const ch_t *mode);
-extern stdRet_t  tskm_fclose           (FILE_t *file);
-extern DIR_t    *tskm_opendir          (const ch_t *path);
-extern stdRet_t  tskm_closedir         (DIR_t *dir);
+
+#if (TSKM_MONITOR_FILE_USAGE > 0)
+extern FILE_t  *tskm_fopen(const ch_t*, const ch_t*);
+extern stdRet_t tskm_fclose(FILE_t*);
+extern DIR_t   *tskm_opendir(const ch_t*);
+extern stdRet_t tskm_closedir(DIR_t*);
 #endif
-#if (TSK_MONITOR_CPU_LOAD > 0)
+
+#if (TSKM_MONITOR_CPU_LOAD > 0)
 extern void      tskm_task_switched_in (void);
 extern void      tskm_task_switched_out(void);
 #endif

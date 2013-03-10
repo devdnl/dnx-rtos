@@ -102,6 +102,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                 for (int i = 0; i < n; i++) {
                         struct taskstat taskinfo;
+                        u32_t total_cpu_load = get_total_CPU_usage();
 
                         if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
                                 printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
@@ -110,13 +111,15 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                                 taskinfo.free_stack,
                                 taskinfo.memory_usage,
                                 taskinfo.opened_files,
-                                ( taskinfo.cpu_usage * 100)  / taskinfo.cpu_usage_total,
-                                ((taskinfo.cpu_usage * 1000) / taskinfo.cpu_usage_total) % 10,
+                                ( taskinfo.cpu_usage * 100)  / total_cpu_load,
+                                ((taskinfo.cpu_usage * 1000) / total_cpu_load) % 10,
                                 taskinfo.task_name);
                         } else {
                                 break;
                         }
                 }
+
+                clear_total_CPU_usage();
 
                 divcnt = 0;
         }

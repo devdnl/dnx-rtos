@@ -88,10 +88,6 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void 
 
         data->f_parent_task = get_task_handle();
 
-//        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
-//                vTaskDelay(1);
-//        }
-
         if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
                 child_priority = uxTaskPriorityGet(THIS_TASK);
         }
@@ -99,14 +95,18 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void 
         enter_critical();
         if (xTaskCreate(func, (signed char *)name, stack_depth,
                         argv, child_priority, &task) == OS_OK) {
+
                 vTaskSuspend(task);
                 exit_critical();
                 vTaskSetApplicationTaskTag(task, (void *)data);
-                tskm_start_task_monitoring(task);
-                vTaskResume(task);
 
-//                tskm_add_task(task);
-//                exit_critical();
+                if (tskm_start_task_monitoring(task) == STD_RET_OK) {
+                        vTaskResume(task);
+                } else {
+                        vTaskDelete(task);
+                        free(data);
+                        task = NULL;
+                }
         } else {
                 exit_critical();
                 free(data);
@@ -126,7 +126,7 @@ void osw_delete_task(task_t *taskHdl)
 {
         struct task_data *data;
 
-        if (tskm_is_task_existing(taskHdl)) {
+        if (tskm_is_task_exist(taskHdl)) {
                 tskm_stop_task_monitoring(taskHdl);
 
                 if ((data = get_task_tag(taskHdl))) {

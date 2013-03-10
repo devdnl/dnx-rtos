@@ -104,34 +104,36 @@ extern "C" {
 #define get_task_tag(taskhdl)                           (void*)xTaskGetApplicationTaskTag(taskhdl)
 #define get_this_task_data()                            ((struct task_data*)get_task_tag(THIS_TASK))
 #define get_task_data(taskhdl)                          ((struct task_data*)get_task_tag(taskhdl))
-#define get_parent_handle()                             get_task_data()->f_parent_task
-#define set_global_variables(ptr)                       get_task_data()->f_global_vars = ptr
-#define set_stdin(file)                                 get_task_data()->f_stdin = file
-#define set_stdout(file)                                get_task_data()->f_stdout = file
-#define set_user_data(ptr)                              get_task_data()->f_user = ptr
-#define get_user_data()                                 get_task_data()->f_user
+#define get_parent_handle()                             get_task_data(THIS_TASK)->f_parent_task
+#define set_global_variables(ptr)                       get_task_data(THIS_TASK)->f_global_vars = ptr
+#define set_stdin(file)                                 get_task_data(THIS_TASK)->f_stdin = file
+#define set_stdout(file)                                get_task_data(THIS_TASK)->f_stdout = file
+#define set_user_data(ptr)                              get_task_data(THIS_TASK)->f_user = ptr
+#define get_user_data()                                 get_task_data(THIS_TASK)->f_user
+#define set_task_monitor_data(taskhdl, ptr)             get_task_data(taskhdl)->f_monitor = ptr
+#define get_task_monitor_data(taskhdl)                  get_task_data(taskhdl)->f_monitor
 
 /** SEMAPHORES AND MUTEXES */
 #define new_semaphore()                                 osw_create_binary_semaphore()
-#define new_semaphore_counting(maxCnt, intCnt)          xSemaphoreCreateCounting(maxCnt, intCnt)
+#define new_counting_semaphore(maxCnt, intCnt)          xSemaphoreCreateCounting(maxCnt, intCnt)
 #define new_mutex()                                     xSemaphoreCreateMutex()
 #define new_recursive_mutex()                           xSemaphoreCreateRecursiveMutex()
 #define delete_semaphore(sem)                           vSemaphoreDelete(sem)
-#define delete_semaphore_counting(sem)                  vSemaphoreDelete(sem)
+#define delete_counting_semaphore(sem)                  vSemaphoreDelete(sem)
 #define delete_mutex(mutex)                             vSemaphoreDelete(mutex)
-#define delete_mutex_recursive(mutex)                   vSemaphoreDelete(mutex)
-#define semaphore_take(sem, blocktime)                  xSemaphoreTake(sem, (portTickType) blocktime)
-#define semaphore_counting_take(sem, blocktime)         xSemaphoreTake(sem, (portTickType) blocktime)
-#define semaphore_give(sem)                             xSemaphoreGive(sem)
-#define semaphore_counting_give(sem)                    xSemaphoreGive(sem)
-#define semaphore_take_from_ISR(sem, woke)              xSemaphoreTakeFromISR(sem, woke)
-#define semaphore_counting_take_from_ISR(sem, woke)     xSemaphoreTakeFromISR(sem, woke)
-#define semaphore_give_from_ISR(sem, woke)              xSemaphoreGiveFromISR(sem, woke)
-#define semaphore_counting_give_from_ISR(sem, woke)     xSemaphoreGiveFromISR(sem, woke)
-#define mutex_lock(mutex, blocktime)                    xSemaphoreTake(mutex, (portTickType) blocktime)
-#define mutex_recursive_lock(mutex, blocktime)          xSemaphoreTakeRecursive(mutex, (portTickType) blocktime)
-#define mutex_unlock(mutex)                             xSemaphoreGive(mutex)
-#define mutex_recursive_unlock(mutex)                   xSemaphoreGiveRecursive(mutex)
+#define delete_recursive_mutex(mutex)                   vSemaphoreDelete(mutex)
+#define take_semaphore(sem, blocktime)                  xSemaphoreTake(sem, (portTickType) blocktime)
+#define give_semaphore(sem)                             xSemaphoreGive(sem)
+#define take_semaphore_from_ISR(sem, woke)              xSemaphoreTakeFromISR(sem, woke)
+#define give_semaphore_from_ISR(sem, woke)              xSemaphoreGiveFromISR(sem, woke)
+#define take_counting_semaphore(sem, blocktime)         xSemaphoreTake(sem, (portTickType) blocktime)
+#define give_counting_semaphore(sem)                    xSemaphoreGive(sem)
+#define take_counting_semaphore_from_ISR(sem, woke)     xSemaphoreTakeFromISR(sem, woke)
+#define give_counting_semaphore_from_ISR(sem, woke)     xSemaphoreGiveFromISR(sem, woke)
+#define lock_mutex(mutex, blocktime)                    xSemaphoreTake(mutex, (portTickType) blocktime)
+#define unlock_mutex(mutex)                             xSemaphoreGive(mutex)
+#define lock_recursive_mutex(mutex, blocktime)          xSemaphoreTakeRecursive(mutex, (portTickType) blocktime)
+#define unlock_recursive_mutex(mutex)                   xSemaphoreGiveRecursive(mutex)
 
 /*==============================================================================
   Exported types, enums definitions

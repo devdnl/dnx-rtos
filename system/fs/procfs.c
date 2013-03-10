@@ -165,9 +165,9 @@ stdRet_t procfs_release(fsd_t fsd)
       (void)fsd;
 
       if (procmem) {
-            while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+            while (lock_mutex(procmem->mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
             suspend_all_tasks();
-            mutex_unlock(procmem->mtx);
+            unlock_mutex(procmem->mtx);
             delete_mutex(procmem->mtx);
             delete_list(procmem->flist);
             free(procmem);
@@ -258,17 +258,17 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                         return STD_RET_ERROR;
                 }
 
-                while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+                while (lock_mutex(procmem->mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
                 if (list_add_item(procmem->flist, procmem->idcnt, fileInf) == 0) {
                         *fd   = procmem->idcnt++;
                         *seek = 0;
 
-                        mutex_unlock(procmem->mtx);
+                        unlock_mutex(procmem->mtx);
                         return STD_RET_OK;
                 }
 
-                mutex_unlock(procmem->mtx);
+                unlock_mutex(procmem->mtx);
                 free(fileInf);
                 return STD_RET_ERROR;
 
@@ -283,7 +283,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                         path++;
                 }
 
-                u16_t n = tskm_get_task_count();
+                u16_t n = tskm_get_number_of_monitored_tasks();
                 u16_t i = 0;
 
                 while (n-- && tskm_get_ntask_stat(i++, &taskdata) == STD_RET_OK) {
@@ -299,7 +299,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                         fileInf->taskHdl  = taskdata.task_handle;
                         fileInf->taskFile = TASK_FILE_NONE;
 
-                        while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+                        while (lock_mutex(procmem->mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
                         if (list_add_item(procmem->flist,
                                         procmem->idcnt, fileInf) == 0) {
@@ -307,11 +307,11 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                                 *fd = procmem->idcnt++;
                                 *seek = 0;
 
-                                mutex_unlock(procmem->mtx);
+                                unlock_mutex(procmem->mtx);
                                 return STD_RET_OK;
                         }
 
-                        mutex_unlock(procmem->mtx);
+                        unlock_mutex(procmem->mtx);
                         free(fileInf);
                         return STD_RET_ERROR;
                 }
@@ -336,15 +336,15 @@ stdRet_t procfs_close(fsd_t fsd, fd_t fd)
         (void) fsd;
 
         if (procmem) {
-                while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK)
+                while (lock_mutex(procmem->mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED)
                         ;
 
                 if (list_rm_iditem(procmem->flist, fd) == STD_RET_OK) {
-                        mutex_unlock(procmem->mtx);
+                        unlock_mutex(procmem->mtx);
                         return STD_RET_OK;
                 }
 
-                mutex_unlock(procmem->mtx);
+                unlock_mutex(procmem->mtx);
         }
 
         return STD_RET_ERROR;
@@ -397,14 +397,15 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
         struct fileinfo *fileInf;
         struct taskstat  taskInfo;
         size_t           n = 0;
+        u32_t            total_cpu_usage;
 
         if (!dst || !procmem) {
                 return 0;
         }
 
-        while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (lock_mutex(procmem->mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
         fileInf = list_get_iditem_data(procmem->flist, fd);
-        mutex_unlock(procmem->mtx);
+        unlock_mutex(procmem->mtx);
 
         if (fileInf == NULL) {
                 return 0;
@@ -414,14 +415,13 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
                 return 0;
         }
 
-        taskInfo.cpu_usage      = 1000;
-        taskInfo.cpu_usage_total = 0;
-        taskInfo.free_stack     = 0;
-        taskInfo.task_handle        = 0;
-        taskInfo.memory_usage      = 0;
-        taskInfo.task_name          = NULL;
-        taskInfo.opened_files     = 0;
-        taskInfo.priority      = 0;
+        taskInfo.cpu_usage    = 1000;
+        taskInfo.free_stack   = 0;
+        taskInfo.task_handle  = 0;
+        taskInfo.memory_usage = 0;
+        taskInfo.task_name    = NULL;
+        taskInfo.opened_files = 0;
+        taskInfo.priority     = 0;
 
         ch_t  data[12] = {0};
         ch_t *dataPtr  = data;
@@ -434,11 +434,10 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
 
         switch (fileInf->taskFile) {
         case TASK_FILE_CPULOAD:
+                total_cpu_usage = tskm_get_total_CPU_usage();
                 dataSize = snprintf(data, ARRAY_SIZE(data), "%u.%u",
-                                    ( taskInfo.cpu_usage *  100) /
-                                      taskInfo.cpu_usage_total,
-                                    ((taskInfo.cpu_usage * 1000) /
-                                      taskInfo.cpu_usage_total) % 10);
+                                    ( taskInfo.cpu_usage *  100) / total_cpu_usage,
+                                    ((taskInfo.cpu_usage * 1000) / total_cpu_usage) % 10);
                 cpuctl_clear_CPU_total_time();
                 break;
 
@@ -524,14 +523,15 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 
         struct fileinfo *fileInf;
         struct taskstat  taskInfo;
+        u32_t total_cpu_usage;
 
         if (!stat || !procmem) {
                 return STD_RET_ERROR;
         }
 
-        while (mutex_lock(procmem->mtx, MTX_BLOCK_TIME) != OS_OK);
+        while (lock_mutex(procmem->mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
         fileInf = list_get_iditem_data(procmem->flist, fd);
-        mutex_unlock(procmem->mtx);
+        unlock_mutex(procmem->mtx);
 
         if (fileInf == NULL) {
                 return STD_RET_ERROR;
@@ -557,11 +557,10 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 
         switch (fileInf->taskFile) {
         case TASK_FILE_CPULOAD:
+                total_cpu_usage = tskm_get_total_CPU_usage();
                 stat->st_size = snprintf(data, sizeof(data), "%u.%u",
-                                         ( taskInfo.cpu_usage *  100) /
-                                           taskInfo.cpu_usage_total,
-                                         ((taskInfo.cpu_usage * 1000) /
-                                           taskInfo.cpu_usage_total) % 10);
+                                         ( taskInfo.cpu_usage *  100) / total_cpu_usage,
+                                         ((taskInfo.cpu_usage * 1000) / total_cpu_usage) % 10);
                 break;
 
         case TASK_FILE_FREESTACK:
@@ -662,13 +661,13 @@ stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
                 dir->dd    = NULL;
-                dir->items = tskm_get_task_count();
+                dir->items = tskm_get_number_of_monitored_tasks();
                 dir->rddir = procfs_readdir_taskname;
                 dir->cldir = procfs_closedir_noop;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
                 dir->dd    = calloc(TASK_ID_STR_LEN, sizeof(ch_t));
-                dir->items = tskm_get_task_count();
+                dir->items = tskm_get_number_of_monitored_tasks();
                 dir->rddir = procfs_readdir_taskid;
                 dir->cldir = procfs_closedir_freedd;
                 return STD_RET_OK;
@@ -987,7 +986,7 @@ static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir)
                 return dirent;
         }
 
-        if (dir->dd && dir->seek < tskm_get_task_count()) {
+        if (dir->dd && dir->seek < (size_t)tskm_get_number_of_monitored_tasks()) {
                 if (tskm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
                         snprintf(dir->dd, TASK_ID_STR_LEN,
                                  "%x", (int)taskdata.task_handle);
@@ -1018,6 +1017,7 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
         (void) fsd;
 
         struct taskstat taskdata;
+        u32_t total_cpu_usage;
 
         dirent_t dirent;
         dirent.name = NULL;
@@ -1069,12 +1069,11 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
                 break;
 
         case TASK_FILE_CPULOAD:
+                total_cpu_usage = tskm_get_total_CPU_usage();
                 dirent.name = TASK_FILE_CPULOAD_STR;
                 dirent.size = snprintf(data, ARRAY_SIZE(data), "%u.%u",
-                                       ( taskdata.cpu_usage *  100) /
-                                         taskdata.cpu_usage_total,
-                                       ((taskdata.cpu_usage * 1000) /
-                                         taskdata.cpu_usage_total) % 10);
+                                       ( taskdata.cpu_usage *  100) / total_cpu_usage,
+                                       ((taskdata.cpu_usage * 1000) / total_cpu_usage) % 10);
                 break;
         }
 

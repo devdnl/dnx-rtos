@@ -499,6 +499,8 @@ stdRet_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
 /**
  * @brief Function return item number
  *
+ * Function returns -1 in nitem pointer if item does not exist.
+ *
  * @param *list         pointer to list
  * @param  id           item ID
  * @param *nitem        item number
@@ -515,6 +517,9 @@ stdRet_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 
                 if (item) {
                         *nitem = itemno;
+                        return STD_RET_OK;
+                } else {
+                        *nitem = -1;
                         return STD_RET_OK;
                 }
         }

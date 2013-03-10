@@ -41,37 +41,34 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)        memman_calloc(nmemb, msize)
-#define malloc(size)                memman_malloc(size)
-#define free(mem)                   memman_free(mem)
+#define calloc(nmemb, msize)            memman_calloc(nmemb, msize)
+#define malloc(size)                    memman_malloc(size)
+#define free(mem)                       memman_free(mem)
 
-#define MEM_BLOCK_COUNT             4
-#define MEM_ADR_IN_BLOCK            7
+#define MEM_BLOCK_COUNT                 4
+#define MEM_ADR_IN_BLOCK                7
 
-#define FILE_BLOCK_COUNT            3
-#define FILES_OPENED_IN_BLOCK       7
+#define FILE_BLOCK_COUNT                3
+#define FILES_OPENED_IN_BLOCK           7
 
-#define DIR_BLOCK_COUNT             1
-#define DIRS_OPENED_IN_BLOCK        3
+#define DIR_BLOCK_COUNT                 1
+#define DIRS_OPENED_IN_BLOCK            3
 
-#define MTX_BLOCK_TIME              10
+#define MTX_BLOCK_TIME                  10
+
+#define force_lock_recursive_mutex(mtx) while (lock_recursive_mutex(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED)
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct monitored_tasks {
-        task_t *task[7];
-        struct monitored_tasks *next;
-};
-
 /* task information */
-struct taskData {
-#if (TSK_MONITOR_MEMORY_USAGE > 0) || (TSK_MONITOR_FILE_USAGE > 0)
+struct task_monitor_data {
+    #if (TSKM_MONITOR_MEMORY_USAGE > 0) || (TSKM_MONITOR_FILE_USAGE > 0)
         bool_t fast_monitoring;
-#endif
+    #endif
 
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
-        u32_t memory_used;
+    #if (TSKM_MONITOR_MEMORY_USAGE > 0)
+        u32_t used_memory;
 
         struct memBlock {
                 bool_t full;
@@ -82,9 +79,9 @@ struct taskData {
                 } mslot[MEM_ADR_IN_BLOCK];
 
         }*mblock[MEM_BLOCK_COUNT];
-#endif
+    #endif
 
-#if (TSK_MONITOR_FILE_USAGE > 0)
+    #if (TSKM_MONITOR_FILE_USAGE > 0)
         uint opened_files;
 
         struct fileBlock {
@@ -103,13 +100,7 @@ struct taskData {
                         DIR_t *dir;
                 } dslot[DIRS_OPENED_IN_BLOCK];
         }*dblock[DIR_BLOCK_COUNT];
-#endif
-};
-
-/* main structure */
-struct tskm {
-        list_t  *tasks;  /* list with task informations */
-        mutex_t *mtx;    /* mutex */
+    #endif
 };
 
 /*==============================================================================
@@ -119,10 +110,11 @@ struct tskm {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
-static struct tskm *tskm;
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+static list_t  *task_list;
+static mutex_t *resource_mtx;
 #endif
 
 /*==============================================================================
@@ -141,117 +133,133 @@ static struct tskm *tskm;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
 stdRet_t tskm_init(void)
 {
-        stdRet_t status = STD_RET_OK;
+        cpuctl_init_CPU_load_timer();
 
-        if (tskm == NULL) {
-                tskm = calloc(1, sizeof(struct tskm));
+        task_list    = new_list();
+        resource_mtx = new_recursive_mutex();
 
-                if (tskm) {
-                        tskm->tasks = new_list();
-                        tskm->mtx = new_recursive_mutex();
-
-                        if (!tskm->tasks || !tskm->mtx) {
-                                if (tskm->tasks)
-                                        delete_list(tskm->tasks);
-
-                                if (tskm->mtx)
-                                        delete_mutex_recursive(tskm->mtx);
-
-                                free(tskm);
-                                tskm = NULL;
-
-                                status = STD_RET_ERROR;
-                        } else {
-                                cpuctl_init_CPU_load_timer();
-                        }
-                }
-        }
-
-        return status;
+        if (!task_list || !resource_mtx)
+                return STD_RET_ERROR;
+        else
+                return STD_RET_OK;
 }
 #endif
 
 //==============================================================================
 /**
- * @brief Function adds task to monitoring
+ * @brief Function check if task is already in the monitor list
  *
- * @param pid     task ID
+ * @param *taskhdl      task handle
+ *
+ * @retval TRUE         task exist
+ * @retval FALSE        task does not exist
+ */
+//==============================================================================
+bool_t tskm_is_task_exist(task_t *taskhdl)
+{
+        i32_t  item  = -1;
+        bool_t exist = FALSE;
+
+        force_lock_recursive_mutex(resource_mtx);
+
+        if (taskhdl) {
+                if (list_get_iditem_No(task_list, (u32_t)taskhdl, &item) == STD_RET_OK) {
+                        if (item >= 0) {
+                                exist = TRUE;
+                        }
+                }
+        }
+
+        unlock_recursive_mutex(resource_mtx);
+
+        return exist;
+}
+
+//==============================================================================
+/**
+ * @brief Function start task monitoring
+ *
+ * @param *taskhdl      task handle
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_add_task(task_t *taskHdl)
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+stdRet_t tskm_start_task_monitoring(task_t *taskhdl)
 {
-        stdRet_t status = STD_RET_ERROR;
-        struct taskData *task_data;
+        struct task_monitor_data *tmdata;
 
-        if (tskm && taskHdl) {
-                while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        force_lock_recursive_mutex(resource_mtx);
 
-                task_data = list_get_iditem_data(tskm->tasks, (u32_t)taskHdl);
-                if (task_data == NULL) {
-                        task_data = calloc(1, sizeof(struct taskData));
-
-                        if (task_data) {
-                                if (list_add_item(tskm->tasks, (u32_t) taskHdl,
-                                                  task_data) >= 0) {
-
-                                        status = STD_RET_OK;
-                                } else {
-                                        free(task_data);
-                                }
-                        }
-                }
-
-                mutex_recursive_unlock(tskm->mtx);
+        if (tskm_is_task_exist(taskhdl) == TRUE) {
+                goto exit_error;
         }
 
-        return status;
+        if (!(tmdata = calloc(1, sizeof(struct task_monitor_data)))) {
+
+                if (list_add_item(task_list, (u32_t)taskhdl, NULL) < 0) {
+                        free(tmdata);
+                        set_task_monitor_data(taskhdl, NULL);
+                        goto exit_error;
+                } else {
+                        set_task_monitor_data(taskhdl, tmdata);
+                        unlock_recursive_mutex(resource_mtx);
+                        return STD_RET_OK;
+                }
+        }
+
+        exit_error:
+        unlock_recursive_mutex(resource_mtx);
+        return STD_RET_ERROR;
 }
 #endif
 
 //==============================================================================
 /**
- * @brief Function delete task monitoring
+ * @brief Function stops task monitoring
  *
- * @param pid     task ID
+ * @param *taskhdl      task handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_remove_task(task_t *taskHdl)
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+stdRet_t tskm_stop_task_monitoring(task_t *taskhdl)
 {
-        if (!tskm || !taskHdl) {
-                return STD_RET_ERROR;
+        struct task_monitor_data *task_monitor_data;
+        struct memSlot           *mslot;
+        struct fileSlot          *fslot;
+        struct dirSlot           *dslot;
+
+        force_lock_recursive_mutex(resource_mtx);
+
+        if (tskm_is_task_exist(taskhdl) == FALSE) {
+                goto exit_error;
         }
 
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
-
-        struct taskData *taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskHdl);
-
-        if (taskInfo == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return STD_RET_ERROR;
+        if (!(task_monitor_data = get_task_monitor_data(taskhdl))) {
+                goto exit_error;
         }
 
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
+    #if (TSKM_MONITOR_MEMORY_USAGE > 0)
         for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
-                if (taskInfo->mblock[block] == NULL) {
+                if (task_monitor_data->mblock[block] == NULL) {
                         continue;
                 }
 
                 for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                        struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
+                        mslot = &task_monitor_data->mblock[block]->mslot[slot];
 
                         if (mslot->addr) {
                                 free(mslot->addr);
@@ -259,52 +267,139 @@ stdRet_t tskm_remove_task(task_t *taskHdl)
                         }
                 }
 
-                free(taskInfo->mblock[block]);
-                taskInfo->mblock[block] = NULL;
+                free(task_monitor_data->mblock[block]);
+                task_monitor_data->mblock[block] = NULL;
         }
-#endif
+    #endif
 
-#if (TSK_MONITOR_FILE_USAGE > 0)
+    #if (TSKM_MONITOR_FILE_USAGE > 0)
         for (u32_t block = 0; block < FILE_BLOCK_COUNT; block++) {
-                if (taskInfo->fblock[block] == NULL) {
+                if (task_monitor_data->fblock[block] == NULL) {
                         continue;
                 }
 
                 for (u32_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
-                        struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
+                        fslot = &task_monitor_data->fblock[block]->fslot[slot];
 
                         if (fslot->file) {
                                 vfs_fclose(fslot->file);
                         }
                 }
 
-                free(taskInfo->fblock[block]);
-                taskInfo->fblock[block] = NULL;
+                free(task_monitor_data->fblock[block]);
+                task_monitor_data->fblock[block] = NULL;
         }
 
         for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
-                if (taskInfo->dblock[block] == NULL) {
+                if (task_monitor_data->dblock[block] == NULL) {
                         continue;
                 }
 
                 for (u32_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
-                        struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
+                        dslot = &task_monitor_data->dblock[block]->dslot[slot];
 
                         if (dslot->dir) {
                                 vfs_closedir(dslot->dir);
                         }
                 }
 
-                free(taskInfo->fblock[block]);
-                taskInfo->fblock[block] = NULL;
+                free(task_monitor_data->fblock[block]);
+                task_monitor_data->fblock[block] = NULL;
         }
+   #endif
+
+        free(task_monitor_data);
+        set_task_monitor_data(taskhdl, NULL);
+        list_rm_iditem(task_list, (u32_t)taskhdl);
+        unlock_recursive_mutex(resource_mtx);
+        return STD_RET_OK;
+
+        exit_error:
+        unlock_recursive_mutex(resource_mtx);
+        return STD_RET_ERROR;
+}
 #endif
 
-        list_rm_iditem(tskm->tasks, (u32_t) taskHdl);
+//==============================================================================
+/**
+ * @brief Function returns the CPU total time (used to calculate CPU load)
+ *
+ * @return CPU total time
+ */
+//==============================================================================
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+u32_t tskm_get_total_CPU_usage(void)
+{
+        return cpuctl_get_CPU_total_time();
+}
+#endif
 
-        mutex_recursive_unlock(tskm->mtx);
+//==============================================================================
+/**
+ * @brief Function clears the CPU total time
+ */
+//==============================================================================
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+void tskm_clear_total_CPU_usage(void)
+{
+        cpuctl_clear_CPU_total_time();
+}
+#endif
 
+//==============================================================================
+/**
+ * @brief Function gets task status
+ *
+ * @param *taskHdl      task handle
+ * @param *stat         status result
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+stdRet_t tskm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
+{
+        struct task_monitor_data *tmdata;
+
+        force_lock_recursive_mutex(resource_mtx);
+
+        if (!stat) {
+                goto exit_error;
+        }
+
+        if (tskm_is_task_exist(taskhdl) == FALSE) {
+                goto exit_error;
+        }
+
+        if (!(tmdata = get_task_monitor_data(taskhdl))) {
+                goto exit_error;
+        }
+
+        enter_critical();
+        stat->cpu_usage = get_task_data(taskhdl)->f_cpu_usage;
+        get_task_data(taskhdl)->f_cpu_usage = 0;
+        exit_critical();
+
+        stat->free_stack   = get_task_free_stack(taskhdl);
+        stat->memory_usage = tmdata->used_memory;
+        stat->opened_files = tmdata->opened_files;
+        stat->priority     = get_task_priority(taskhdl);
+        stat->task_handle  = taskhdl;
+        stat->task_name    = get_task_name(taskhdl);
+
+        unlock_recursive_mutex(resource_mtx);
         return STD_RET_OK;
+
+        exit_error:
+        unlock_recursive_mutex(resource_mtx);
+        return STD_RET_ERROR;
 }
 #endif
 
@@ -319,120 +414,28 @@ stdRet_t tskm_remove_task(task_t *taskHdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
 stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 {
-        if (!tskm || !stat) {
-                return STD_RET_ERROR;
+        task_t *task;
+
+        force_lock_recursive_mutex(resource_mtx);
+
+        if (list_get_nitem_ID(task_list, item, (u32_t *)&task) != STD_RET_OK) {
+                goto exit_error;
         }
 
-        stat->memory_usage = 0;
-        stat->opened_files = 0;
-
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
-
-        struct taskData *taskdata = list_get_nitem_data(tskm->tasks, item);
-        if (taskdata == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return STD_RET_ERROR;
+        if (tskm_get_task_stat(task, stat) != STD_RET_OK) {
+                goto exit_error;
         }
 
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
-        for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
-                if (taskdata->mblock[block] == NULL) {
-                        continue;
-                }
-
-                for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                        if (taskdata->mblock[block]->mslot[slot].addr) {
-                                stat->memory_usage += taskdata->mblock[block]->mslot[slot].size;
-                        }
-                }
-        }
-#endif
-
-#if (TSK_MONITOR_FILE_USAGE > 0)
-        for (u32_t block = 0; block < FILE_BLOCK_COUNT; block++) {
-                if (taskdata->fblock[block] == NULL) {
-                        continue;
-                }
-
-                for (u32_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
-                        if (taskdata->fblock[block]->fslot[slot].file) {
-                                stat->opened_files++;
-                        }
-                }
-        }
-
-        for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
-                if (taskdata->dblock[block] == NULL) {
-                        continue;
-                }
-
-                for (u32_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
-                        if (taskdata->dblock[block]->dslot[slot].dir) {
-                                stat->opened_files++;
-                        }
-                }
-        }
-#endif
-
-        mutex_recursive_unlock(tskm->mtx);
-
-        task_t *taskHdl = NULL;
-        list_get_nitem_ID(tskm->tasks, item, (task_t*)&taskHdl);
-
-        stat->task_handle       = taskHdl;
-        stat->task_name         = get_task_name(taskHdl);
-        stat->free_stack        = get_task_free_stack(taskHdl);
-
-        suspend_all_tasks();
-        struct task_data *tdata = get_task_tag(taskHdl);
-        if (tdata) {
-                stat->cpu_usage    = tdata->f_cpu_usage;
-                tdata->f_cpu_usage = 0;
-        }
-        resume_all_tasks();
-
-        stat->cpu_usage_total   = cpuctl_get_CPU_total_time();
-        stat->priority          = get_task_priority(taskHdl);
-
-        if (item == list_get_item_count(tskm->tasks) - 1) {
-                cpuctl_clear_CPU_total_time();
-        }
-
+        unlock_recursive_mutex(resource_mtx);
         return STD_RET_OK;
-}
-#endif
 
-//==============================================================================
-/**
- * @brief Function gets task status
- *
- * @param  taskHdl      task handle
- * @param *stat         status result
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_get_task_stat(task_t *taskHdl, struct taskstat *stat)
-{
-        if (!taskHdl || !tskm) {
-                return STD_RET_ERROR;
-        }
-
-        i32_t item = -1;
-
-        if (list_get_iditem_No(tskm->tasks, (u32_t)taskHdl, &item) == STD_RET_OK) {
-                return tskm_get_ntask_stat(item, stat);
-        }
-
+        exit_error:
+        unlock_recursive_mutex(resource_mtx);
         return STD_RET_ERROR;
 }
 #endif
@@ -444,16 +447,18 @@ stdRet_t tskm_get_task_stat(task_t *taskHdl, struct taskstat *stat)
  * @return number of monitor tasks
  */
 //==============================================================================
-#if (  (TSK_MONITOR_MEMORY_USAGE > 0) \
-    || (TSK_MONITOR_FILE_USAGE > 0  ) \
-    || (TSK_MONITOR_CPU_LOAD > 0    ) )
-u16_t tskm_get_task_count(void)
+#if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
+    || (TSKM_MONITOR_FILE_USAGE > 0  ) \
+    || (TSKM_MONITOR_CPU_LOAD > 0    ) )
+int tskm_get_number_of_monitored_tasks(void)
 {
-        if (!tskm) {
-                return -1;
-        }
+        int task_count;
 
-        return list_get_item_count(tskm->tasks);
+        force_lock_recursive_mutex(resource_mtx);
+        task_count = list_get_item_count(task_list);
+        unlock_recursive_mutex(resource_mtx);
+
+        return task_count;
 }
 #endif
 
@@ -467,31 +472,34 @@ u16_t tskm_get_task_count(void)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
 void *tskm_malloc_as(task_t *taskhdl, u32_t size)
 {
         void   *mem   = NULL;
         uint    block = 0;
-        struct taskData *taskInfo;
+        struct task_monitor_data *task_monitor_data;
+        struct memSlot           *mslot;
 
-        if (!tskm || !taskhdl || size == 0) {
-                return NULL;
+        force_lock_recursive_mutex(resource_mtx);
+
+        if (size == 0) {
+                goto exit;
         }
 
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (tskm_is_task_exist(taskhdl) == FALSE) {
+                goto exit;
+        }
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskhdl);
-        if (taskInfo == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return NULL;
+        if (!(task_monitor_data = get_task_monitor_data(taskhdl))) {
+                goto exit;
         }
 
         /* find empty address slot */
         while (block < MEM_BLOCK_COUNT) {
-                if (taskInfo->mblock[block] == NULL) {
-                        taskInfo->mblock[block] = calloc(1, sizeof(struct memBlock));
+                if (task_monitor_data->mblock[block] == NULL) {
+                        task_monitor_data->mblock[block] = calloc(1, sizeof(struct memBlock));
 
-                        if (taskInfo->mblock[block] == NULL) {
+                        if (task_monitor_data->mblock[block] == NULL) {
                                 block++;
                                 continue;
                         }
@@ -499,39 +507,34 @@ void *tskm_malloc_as(task_t *taskhdl, u32_t size)
 
                 /* find empty address slot in block */
                 for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                        if (taskInfo->mblock[block]->full == TRUE) {
+                        if (task_monitor_data->mblock[block]->full == TRUE) {
                                 break;
                         }
 
-                        struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
+                        mslot = &task_monitor_data->mblock[block]->mslot[slot];
 
                         if (mslot->addr == NULL) {
-                                mslot->addr = malloc(size);
-
-                                if (mslot->addr) {
+                                if ((mslot->addr = malloc(size))) {
                                         mem = mslot->addr;
                                         mslot->size = size;
+                                        task_monitor_data->used_memory += size;
                                 }
 
                                 if (slot == MEM_ADR_IN_BLOCK - 1) {
-                                        taskInfo->mblock[block]->full = TRUE;
+                                        task_monitor_data->mblock[block]->full = TRUE;
                                 }
 
-                                goto moni_malloc_end;
+                                goto exit;
                         }
                 }
 
                 block++;
         }
 
-        /*
-         * Not enough free slot to allocate memory!
-         */
         printk("%s: Not enough free slots to allocate memory!\n", get_this_task_name());
 
-        moni_malloc_end:
-        mutex_recursive_unlock(tskm->mtx);
-
+        exit:
+        unlock_recursive_mutex(resource_mtx);
         return mem;
 }
 #endif
@@ -545,7 +548,7 @@ void *tskm_malloc_as(task_t *taskhdl, u32_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
 void *tskm_malloc(u32_t size)
 {
         return tskm_malloc_as(get_task_handle(), size);
@@ -563,7 +566,7 @@ void *tskm_malloc(u32_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
 void *tskm_calloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
 {
         void *ptr = tskm_malloc_as(taskhdl, nmemb * msize);
@@ -586,7 +589,7 @@ void *tskm_calloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
 void *tskm_calloc(u32_t nmemb, u32_t msize)
 {
         void *ptr = tskm_malloc_as(get_task_handle(), nmemb * msize);
@@ -607,33 +610,36 @@ void *tskm_calloc(u32_t nmemb, u32_t msize)
  * @param *mem          block to free
  */
 //==============================================================================
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
 void tskm_free_as(task_t *taskhdl, void *mem)
 {
-        struct taskData *taskInfo;
+        struct task_monitor_data *task_monitor_data;
+        struct memSlot           *mslot;
 
-        if (!tskm || !taskhdl) {
-                return;
+        force_lock_recursive_mutex(resource_mtx);
+
+        if (!mem) {
+                goto exit;
         }
 
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
+        if (tskm_is_task_exist(taskhdl) == FALSE) {
+                goto exit;
+        }
 
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)taskhdl);
-        if (taskInfo == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return;
+        if (!(task_monitor_data = get_task_monitor_data(taskhdl))) {
+                goto exit;
         }
 
         /* find address slot */
         for (u8_t block = 0; block < MEM_BLOCK_COUNT; block++) {
-                if (taskInfo->mblock[block] == NULL) {
+                if (task_monitor_data->mblock[block] == NULL) {
                         continue;
                 }
 
                 /* find empty address slot in block */
                 for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK;slot++) {
 
-                        struct memSlot *mslot = &taskInfo->mblock[block]->mslot[slot];
+                        mslot = &task_monitor_data->mblock[block]->mslot[slot];
 
                         if (mslot->addr != mem) {
                                 continue;
@@ -641,37 +647,36 @@ void tskm_free_as(task_t *taskhdl, void *mem)
 
                         free(mslot->addr);
                         mslot->addr = NULL;
+
+                        task_monitor_data->used_memory -= mslot->size;
                         mslot->size = 0;
 
-                        taskInfo->mblock[block]->full = FALSE;
+                        task_monitor_data->mblock[block]->full = FALSE;
 
                         /* first block cannot be freed */
                         if (block == 0) {
-                                goto moni_free_end;
+                                goto exit;
                         }
 
                         /* check if block is empty */
                         for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                if (taskInfo->mblock[block]->mslot[i].addr != NULL) {
-                                        goto moni_free_end;
+                                if (task_monitor_data->mblock[block]->mslot[i].addr != NULL) {
+                                        goto exit;
                                 }
                         }
 
                         /* block is empty - freeing whole block */
-                        free(taskInfo->mblock[block]);
-                        taskInfo->mblock[block] = NULL;
+                        free(task_monitor_data->mblock[block]);
+                        task_monitor_data->mblock[block] = NULL;
 
-                        goto moni_free_end;
+                        goto exit;
                 }
         }
 
-        /*
-         * Memory is already freed!
-         */
-        printk("%s: Memory was freed in the past!\n", get_this_task_name());
+        printk("%s: Address to free does not exist!\n", get_this_task_name());
 
-        moni_free_end:
-        mutex_recursive_unlock(tskm->mtx);
+        exit:
+        unlock_recursive_mutex(resource_mtx);
 }
 #endif
 
@@ -682,7 +687,7 @@ void tskm_free_as(task_t *taskhdl, void *mem)
  * @param *mem          block to free
  */
 //==============================================================================
-#if (TSK_MONITOR_MEMORY_USAGE > 0)
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
 void tskm_free(void *mem)
 {
         tskm_free_as(get_task_handle(), mem);
@@ -699,31 +704,33 @@ void tskm_free(void *mem)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-#if (TSK_MONITOR_FILE_USAGE > 0)
+#if (TSKM_MONITOR_FILE_USAGE > 0)
 FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 {
         FILE_t *file  = NULL;
         uint    block = 0;
-        struct taskData *taskInfo;
+        task_t *task;
+        struct task_monitor_data *task_monitor_data;
+        struct fileSlot          *fslot;
 
-        if (tskm == NULL) {
-                return NULL;
+        force_lock_recursive_mutex(resource_mtx);
+
+        task = get_task_handle();
+
+        if (tskm_is_task_exist(task) == FALSE) {
+                goto exit;
         }
 
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
-
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
-        if (taskInfo == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return NULL;
+        if (!(task_monitor_data = get_task_monitor_data(task))) {
+                goto exit;
         }
 
         /* find empty file slot */
         while (block < FILE_BLOCK_COUNT) {
-                if (taskInfo->fblock[block] == NULL) {
-                        taskInfo->fblock[block] = calloc(1, sizeof(struct fileBlock));
+                if (task_monitor_data->fblock[block] == NULL) {
+                        task_monitor_data->fblock[block] = calloc(1, sizeof(struct fileBlock));
 
-                        if (taskInfo->fblock[block] == NULL) {
+                        if (task_monitor_data->fblock[block] == NULL) {
                                 block++;
                                 continue;
                         }
@@ -731,38 +738,35 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
 
                 /* find empty file slot in block */
                 for (u8_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
-                        if (taskInfo->fblock[block]->full == TRUE) {
+                        if (task_monitor_data->fblock[block]->full == TRUE) {
                                 break;
                         }
 
-                        struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
+                        fslot = &task_monitor_data->fblock[block]->fslot[slot];
 
                         if (fslot->file == NULL) {
                                 fslot->file = vfs_fopen(path, mode);
 
                                 if (fslot->file) {
                                         file = fslot->file;
+                                        task_monitor_data->opened_files++;
                                 }
 
                                 if (slot == FILES_OPENED_IN_BLOCK - 1) {
-                                        taskInfo->fblock[block]->full = TRUE;
+                                        task_monitor_data->fblock[block]->full = TRUE;
                                 }
 
-                                goto moni_fopen_end;
+                                goto exit;
                         }
                 }
 
                 block++;
         }
 
-        /*
-         * error: no empty slots
-         */
         printk("%s: Not enough free slots to open file!\n", get_this_task_name());
 
-        moni_fopen_end:
-        mutex_recursive_unlock(tskm->mtx);
-
+        exit:
+        unlock_recursive_mutex(resource_mtx);
         return file;
 }
 #endif
@@ -777,72 +781,71 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
  * @retval STD_RET_ERROR      file not closed
  */
 //==============================================================================
-#if (TSK_MONITOR_FILE_USAGE > 0)
+#if (TSKM_MONITOR_FILE_USAGE > 0)
 stdRet_t tskm_fclose(FILE_t *file)
 {
         stdRet_t status = STD_RET_ERROR;
-        struct taskData *taskInfo;
+        task_t  *task;
+        struct task_monitor_data *task_monitor_data;
+        struct fileSlot          *fslot;
 
-        if (tskm == NULL) {
-                return STD_RET_ERROR;
+        force_lock_recursive_mutex(resource_mtx);
+
+        task = get_task_handle();
+
+        if (tskm_is_task_exist(task) == FALSE) {
+                goto exit;
         }
 
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
-
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
-        if (taskInfo == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return STD_RET_ERROR;
+        if (!(task_monitor_data = get_task_monitor_data(task))) {
+                goto exit;
         }
 
         /* find empty file slot */
         for (u8_t block = 0; block < FILE_BLOCK_COUNT; block++) {
-                if (taskInfo->fblock[block] == NULL) {
+                if (task_monitor_data->fblock[block] == NULL) {
                         continue;
                 }
 
                 /* find opened file */
                 for (u8_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
-                        struct fileSlot *fslot = &taskInfo->fblock[block]->fslot[slot];
+                        fslot = &task_monitor_data->fblock[block]->fslot[slot];
 
                         if (fslot->file != file) {
                                 continue;
                         }
 
                         if ((status = vfs_fclose(file)) != STD_RET_OK) {
-                                goto moni_fclose_end;
+                                goto exit;
                         }
 
                         fslot->file = NULL;
-                        taskInfo->fblock[block]->full = FALSE;
+                        task_monitor_data->opened_files--;
+                        task_monitor_data->fblock[block]->full = FALSE;
 
                         if (block == 0) {
-                                goto moni_fclose_end;
+                                goto exit;
                         }
 
                         /* check if block is empty */
                         for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                if (taskInfo->fblock[block]->fslot[i].file != NULL) {
-                                        goto moni_fclose_end;
+                                if (task_monitor_data->fblock[block]->fslot[i].file != NULL) {
+                                        goto exit;
                                 }
                         }
 
                         /* block is empty - freeing memory */
-                        free(taskInfo->fblock[block]);
-                        taskInfo->fblock[block] = NULL;
+                        free(task_monitor_data->fblock[block]);
+                        task_monitor_data->fblock[block] = NULL;
 
-                        goto moni_fclose_end;
+                        goto exit;
                 }
         }
 
-        /*
-         * error: file does not exist or closed in the past
-         */
-        printk("%s: File does not exist or closed in the past!\n", get_this_task_name());
+        printk("%s: File does not exist or closed!\n", get_this_task_name());
 
-        moni_fclose_end:
-        mutex_recursive_unlock(tskm->mtx);
-
+        exit:
+        unlock_recursive_mutex(resource_mtx);
         return status;
 }
 #endif
@@ -856,31 +859,33 @@ stdRet_t tskm_fclose(FILE_t *file)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-#if (TSK_MONITOR_FILE_USAGE > 0)
+#if (TSKM_MONITOR_FILE_USAGE > 0)
 DIR_t *tskm_opendir(const ch_t *path)
 {
-        DIR_t *dir   = NULL;
-        u32_t  block = 0;
-        struct taskData *taskInfo;
+        DIR_t  *dir   = NULL;
+        u32_t   block = 0;
+        task_t *task;
+        struct task_monitor_data *task_monitor_data;
+        struct dirSlot           *dslot;
 
-        if (tskm == NULL) {
-                return NULL;
+        force_lock_recursive_mutex(resource_mtx);
+
+        task = get_task_handle();
+
+        if (tskm_is_task_exist(task) == FALSE) {
+                goto exit;
         }
 
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
-
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
-        if (taskInfo == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return NULL;
+        if (!(task_monitor_data = get_task_monitor_data(task))) {
+                goto exit;
         }
 
         /* find empty file slot */
         while (block < DIR_BLOCK_COUNT) {
-                if (taskInfo->dblock[block] == NULL) {
-                        taskInfo->dblock[block] = calloc(1, sizeof(struct dirBlock));
+                if (task_monitor_data->dblock[block] == NULL) {
+                        task_monitor_data->dblock[block] = calloc(1, sizeof(struct dirBlock));
 
-                        if (taskInfo->dblock[block] == NULL) {
+                        if (task_monitor_data->dblock[block] == NULL) {
                                 block++;
                                 continue;
                         }
@@ -888,38 +893,35 @@ DIR_t *tskm_opendir(const ch_t *path)
 
                 /* find empty dir slot in block */
                 for (u8_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
-                        if (taskInfo->dblock[block]->full == TRUE) {
+                        if (task_monitor_data->dblock[block]->full == TRUE) {
                                 break;
                         }
 
-                        struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
+                        dslot = &task_monitor_data->dblock[block]->dslot[slot];
 
                         if (dslot->dir == NULL) {
                                 dslot->dir = vfs_opendir(path);
 
                                 if (dslot->dir) {
                                         dir = dslot->dir;
+                                        task_monitor_data->opened_files++;
                                 }
 
                                 if (slot == DIRS_OPENED_IN_BLOCK - 1) {
-                                        taskInfo->dblock[block]->full = TRUE;
+                                        task_monitor_data->dblock[block]->full = TRUE;
                                 }
 
-                                goto moni_opendir_end;
+                                goto exit;
                         }
                 }
 
                 block++;
         }
 
-        /*
-         * error: no empty slots
-         */
         printk("%s: Not enough free slots to open directory!\n", get_this_task_name());
 
-        moni_opendir_end:
-        mutex_recursive_unlock(tskm->mtx);
-
+        exit:
+        unlock_recursive_mutex(resource_mtx);
         return dir;
 }
 #endif
@@ -934,72 +936,71 @@ DIR_t *tskm_opendir(const ch_t *path)
  * @retval STD_RET_ERROR      file not closed
  */
 //==============================================================================
-#if (TSK_MONITOR_FILE_USAGE > 0)
+#if (TSKM_MONITOR_FILE_USAGE > 0)
 extern stdRet_t tskm_closedir(DIR_t *dir)
 {
         stdRet_t status = STD_RET_ERROR;
-        struct taskData *taskInfo;
+        task_t *task;
+        struct task_monitor_data *task_monitor_data;
+        struct dirSlot           *dslot;
 
-        if (tskm == NULL) {
-                return STD_RET_ERROR;
+        force_lock_recursive_mutex(resource_mtx);
+
+        task = get_task_handle();
+
+        if (tskm_is_task_exist(task) == FALSE) {
+                goto exit;
         }
 
-        while (mutex_recursive_lock(tskm->mtx, MTX_BLOCK_TIME) != OS_OK);
-
-        taskInfo = list_get_iditem_data(tskm->tasks, (u32_t)get_task_handle());
-        if (taskInfo == NULL) {
-                mutex_recursive_unlock(tskm->mtx);
-                return STD_RET_ERROR;
+        if (!(task_monitor_data = get_task_monitor_data(task))) {
+                goto exit;
         }
 
         /* find empty file slot */
         for (u8_t block = 0; block < DIR_BLOCK_COUNT; block++) {
-                if (taskInfo->dblock[block] == NULL) {
+                if (task_monitor_data->dblock[block] == NULL) {
                         continue;
                 }
 
                 /* find opened file */
                 for (u8_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
-                        struct dirSlot *dslot = &taskInfo->dblock[block]->dslot[slot];
+                        dslot = &task_monitor_data->dblock[block]->dslot[slot];
 
                         if (dslot->dir != dir) {
                                 continue;
                         }
 
                         if ((status = vfs_closedir(dir)) != STD_RET_OK) {
-                                goto moni_closedir_end;
+                                goto exit;
                         }
 
                         dslot->dir = NULL;
-                        taskInfo->dblock[block]->full = FALSE;
+                        task_monitor_data->opened_files--;
+                        task_monitor_data->dblock[block]->full = FALSE;
 
                         if (block == 0) {
-                                goto moni_closedir_end;
+                                goto exit;
                         }
 
                         /* check if block is empty */
                         for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                if (taskInfo->dblock[block]->dslot[i].dir != NULL) {
-                                        goto moni_closedir_end;
+                                if (task_monitor_data->dblock[block]->dslot[i].dir != NULL) {
+                                        goto exit;
                                 }
                         }
 
                         /* block is empty - freeing memory */
-                        free(taskInfo->dblock[block]);
-                        taskInfo->dblock[block] = NULL;
+                        free(task_monitor_data->dblock[block]);
+                        task_monitor_data->dblock[block] = NULL;
 
-                        goto moni_closedir_end;
+                        goto exit;
                 }
         }
 
-        /*
-         * error: dir does not exist or closed in the past
-         */
-        printk("%s: Dir does not exist or closed in the past!\n", get_this_task_name());
+        printk("%s: Dir does not exist or closed!\n", get_this_task_name());
 
-        moni_closedir_end:
-        mutex_recursive_unlock(tskm->mtx);
-
+        exit:
+        unlock_recursive_mutex(resource_mtx);
         return status;
 }
 #endif
@@ -1009,7 +1010,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
  * @brief Function called after task go to ready state
  */
 //==============================================================================
-#if (TSK_MONITOR_CPU_LOAD > 0)
+#if (TSKM_MONITOR_CPU_LOAD > 0)
 void tskm_task_switched_in(void)
 {
         cpuctl_clear_CPU_load_timer();
@@ -1021,7 +1022,7 @@ void tskm_task_switched_in(void)
  * @brief Function called when task go out ready state
  */
 //==============================================================================
-#if (TSK_MONITOR_CPU_LOAD > 0)
+#if (TSKM_MONITOR_CPU_LOAD > 0)
 void tskm_task_switched_out(void)
 {
         struct task_data *tdata = get_this_task_data();

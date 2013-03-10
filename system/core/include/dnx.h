@@ -80,7 +80,9 @@ extern "C" {
 #define get_memory_size()                 CONFIG_RAM_SIZE
 #define get_uptime()                      get_uptime_counter()
 #define get_task_stat(ntask, statPtr)     tskm_get_ntask_stat(ntask, statPtr)
-#define get_number_of_monitored_tasks()   tskm_get_task_count()
+#define get_number_of_monitored_tasks()   tskm_get_number_of_monitored_tasks()
+#define get_total_CPU_usage()             tskm_get_total_CPU_usage()
+#define clear_total_CPU_usage()           tskm_clear_total_CPU_usage()
 #define reboot()                          cpuctl_restart_system()
 #define get_OS_name()                     "dnx"
 #define get_kernel_name()                 "FreeRTOS"
