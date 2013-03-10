@@ -203,7 +203,7 @@ stdRet_t tskm_start_task_monitoring(task_t *taskhdl)
                 goto exit_error;
         }
 
-        if (!(tmdata = calloc(1, sizeof(struct task_monitor_data)))) {
+        if ((tmdata = calloc(1, sizeof(struct task_monitor_data)))) {
 
                 if (list_add_item(task_list, (u32_t)taskhdl, NULL) < 0) {
                         free(tmdata);

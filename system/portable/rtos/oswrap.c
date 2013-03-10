@@ -131,13 +131,11 @@ void osw_delete_task(task_t *taskHdl)
 
                 if ((data = get_task_tag(taskHdl))) {
                         free(data);
+                        set_task_tag(taskHdl, NULL);
                 }
 
                 vTaskDelete(taskHdl);
         }
-
-//        tskm_remove_task(taskHdl);
-//        vTaskDelete(taskHdl);
 }
 
 //==============================================================================
