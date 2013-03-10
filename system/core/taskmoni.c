@@ -59,9 +59,20 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+struct monitored_tasks {
+        task_t *task[7];
+        struct monitored_tasks *next;
+};
+
 /* task information */
 struct taskData {
+#if (TSK_MONITOR_MEMORY_USAGE > 0) || (TSK_MONITOR_FILE_USAGE > 0)
+        bool_t fast_monitoring;
+#endif
+
 #if (TSK_MONITOR_MEMORY_USAGE > 0)
+        u32_t memory_used;
+
         struct memBlock {
                 bool_t full;
 
@@ -74,6 +85,8 @@ struct taskData {
 #endif
 
 #if (TSK_MONITOR_FILE_USAGE > 0)
+        uint opened_files;
+
         struct fileBlock {
                 bool_t full;
 

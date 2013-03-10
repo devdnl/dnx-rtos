@@ -137,13 +137,14 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        FILE_t *f_stdin;          /* stdin file                         */
-        FILE_t *f_stdout;         /* stdout file                        */
-        char   *f_cwd;            /* current working path               */
-        void   *f_global_vars;    /* address to global variables        */
-        void   *f_user;           /* pointer to user data               */
-        task_t *f_parent_task;    /* program's parent task              */
-        u32_t   f_cpu_usage;      /* counter used to calculate CPU load */
+        FILE_t *f_stdin;        /* stdin file                         */
+        FILE_t *f_stdout;       /* stdout file                        */
+        char   *f_cwd;          /* current working path               */
+        void   *f_global_vars;  /* address to global variables        */
+        void   *f_user;         /* pointer to user data               */
+        void   *f_monitor;      /* pointer to task monitor data       */
+        task_t *f_parent_task;  /* program's parent task              */
+        u32_t   f_cpu_usage;    /* counter used to calculate CPU load */
 };
 
 /*==============================================================================

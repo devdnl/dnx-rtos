@@ -207,9 +207,15 @@ void prgm_delete_program(task_t *taskhdl)
 static void task_program_startup(void *argv)
 {
         struct program_data *pdata     = argv;
-        struct task_data    *tdata     = get_this_task_data();
+        struct task_data    *tdata     = NULL;
         void                *taskmem   = NULL;
         int                  exit_code = STD_RET_UNKNOWN;
+
+        if (!(tdata = get_this_task_data())) {
+                free(pdata);
+                set_status(pdata->status, PROGRAM_HANDLE_ERROR);
+                task_exit();
+        }
 
         tdata->f_user   = pdata;
         tdata->f_stdin  = pdata->stdin;
@@ -217,7 +223,7 @@ static void task_program_startup(void *argv)
         tdata->f_cwd    = pdata->cwd;
 
         if (pdata->globals_size) {
-                if ((taskmem = monitored_calloc(1, pdata->globals_size)) == NULL) {
+                if (!(taskmem = monitored_calloc(1, pdata->globals_size))) {
                         set_status(pdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                         goto task_exit;
                 }

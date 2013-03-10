@@ -59,37 +59,21 @@ extern "C" {
   Function definitions
 ==============================================================================*/
 
-void task_test(void *argv)
-{
-//        printk("stdin  : 0x%x\n", stdin);
-//        printk("stdout : 0x%x\n", stdout);
-//        printk("cwd    : 0x%x\n", get_task_data()->f_cwd);
-//        printk("global : 0x%x\n", global);
-//        printk("parent : 0x%x\n", get_parent_handle());
-//        printk("cpuload: 0x%x\n", get_task_data()->f_cpu_usage);
-
-//        for(;;){
-//        }
-
-        task_exit();
-}
-
 //==============================================================================
 /**
  * @brief Task which initialise high-level devices/applications etc
- * Task is responsible for low-level application runtime environment (stdio).
- * Task connect applications' stdios with hardware layer.
+ * Task is responsible for low-level program runtime environment (stdio).
+ * Task connect programs' stdio with hardware layer.
  */
 //==============================================================================
 void task_initd(void *arg)
 {
       (void) arg;
 
-//      set_priority(INITD_PRIORITY);
+      set_priority(INITD_PRIORITY);
 
+      /* mount main file system */
       mount("lfs", NULL, "/");
-
-      uint mem = get_used_memory();
 
       /* create basic directories */
       mkdir("/bin");
@@ -131,12 +115,11 @@ void task_initd(void *arg)
       /* initd info about stack usage */
       printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
-      printk("Used memory after startup: %d\n", mem);
       /* change TTY for printk to last TTY */
-//      printkEnable("/dev/tty3");
+      enable_printk("/dev/tty3");
 
       /*------------------------------------------------------------------------
-       * main loop which read stdios from applications
+       * main loop which read stdio from programs
        *----------------------------------------------------------------------*/
       FILE_t *ttyx[TTY_LAST] = {NULL};
 
@@ -144,38 +127,13 @@ void task_initd(void *arg)
             milisleep(200);
       }
 
-//      uint pno = 0;
-
       ttyx[1] = fopen("/dev/tty1", "r+");
       new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
 
-//      ttyx[2] = fopen("/dev/tty2", "r+");
-//      new_program("test", "inf", "/", ttyx[2], ttyx[2], NULL, NULL);
-
-      sleep(2);
+//      new_program("term", "", "/", ttyx[0], ttyx[0], NULL, NULL);
 
       for (;;) {
-//              fprintf(ttyx[0], FONT_COLOR_MAGENTA"initd: free stack: %d"RESET_ATTRIBUTES"\n\n", get_free_stack());
-
-//              task_t *t1 = new_task(task_test, "task_test", STACK_LOW_DEPTH, NULL);
-//              if (t1) {
-//                      printk("Task started\n");
-//              }
-//
-//              pno++;
-//              enum prg_status status;
-//
-//              fprintf(ttyx[0], "\nStarting program: "FONT_COLOR_GREEN"%d"
-//                               RESET_ATTRIBUTES"\n", pno);
-//
-//              task_t *p1 = new_program("test", "jeden dwa trzy", "/", ttyx[0], ttyx[0], &status, NULL);
-//              wait_for_program_end(p1, &status);
-//
-//              fprintf(ttyx[0], "Free memory: "FONT_COLOR_CYAN"%d"RESET_ATTRIBUTES"\n", get_free_memory());
-
-              task_t *p1 = new_program("test", "wait", "/", ttyx[1], ttyx[1], NULL, NULL);
-              sleep(1);
-              delete_program(p1);
+              task_t *p1 = new_program("helloworld", "", "/", ttyx[0], ttyx[0], NULL, NULL);
 
               sleep(1);
       }

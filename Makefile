@@ -50,6 +50,7 @@ CSRC_CORE = $(sort \
    system/user/regfs.c \
    system/user/regprg.c \
    system/fs/procfs.c \
+   system/fs/appfs.c \
    system/fs/lfs.c \
    system/portable/rtos/oshooks.c \
    system/portable/rtos/oswrap.c \
@@ -59,7 +60,7 @@ CSRC_CORE = $(sort \
 # INSERT HERE C PROGRAMS SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC_PROGRAMS = $(sort \
-   programs/test/test.c \
+   programs/helloworld/helloworld.c \
    programs/top/top.c \
    )
    

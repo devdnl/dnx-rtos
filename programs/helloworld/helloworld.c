@@ -1,11 +1,9 @@
-#ifndef TEST_H_
-#define TEST_H_
 /*=========================================================================*//**
-@file    test.h
+@file    helloworld.c
 
 @author  Daniel Zorychta
 
-@brief
+@brief   The simple example program
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,31 +31,68 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "dnx.h"
+#include "helloworld.h"
+#include <string.h>
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Local symbolic constants/macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Local types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Local function prototypes
 ==============================================================================*/
-EXPORT_PROGRAM_PARAMS(test);
 
 /*==============================================================================
-  Exported function prototypes
+  Local object definitions
 ==============================================================================*/
-extern int PROGRAM_MAIN(test, int, char**);
+/* put here global variables */
+GLOBAL_VARIABLES {
+};
+
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
+/* export program parameters */
+PROGRAM_PARAMS(helloworld, STACK_DEPTH_MEDIUM);
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief Program main function
+ *
+ * @param  argc         count of arguments
+ * @param *argv[]       argument table
+ *
+ * @return program status
+ */
+//==============================================================================
+int PROGRAM_MAIN(helloworld, int argc, char *argv[])
+{
+        printf("Hello world!\n");
+        printf("Free stack: %d\n", get_free_stack());
+        printf("Static memory usage: %d\n", get_used_static_memory());
+        printf("Memory size: %d\n", get_memory_size());
+        printf("Free memory: %d\n", get_free_memory());
+
+        printf("Program arguments:\n");
+        for (int i = 0; i < argc; i++) {
+                printf("%d: %s\n", i + 1, argv[i]);
+        }
+
+        return 0;
+}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TEST_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

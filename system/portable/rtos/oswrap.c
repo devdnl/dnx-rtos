@@ -80,26 +80,35 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void 
 {
         task_t           *task = NULL;
         struct task_data *data;
+        uint              child_priority = PRIORITY(0);
 
-        data = calloc(1, sizeof(struct task_data));
-        if (data == NULL) {
+        if (!(data = calloc(1, sizeof(struct task_data)))) {
                 return NULL;
         }
 
         data->f_parent_task = get_task_handle();
 
+//        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+//                vTaskDelay(1);
+//        }
+
         if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
-                vTaskDelay(1);
+                child_priority = uxTaskPriorityGet(THIS_TASK);
         }
 
-        if (xTaskCreate(func, (signed char*)name, stack_depth,
-                        argv, PRIORITY(0), &task) == OS_OK) {
-
+        enter_critical();
+        if (xTaskCreate(func, (signed char *)name, stack_depth,
+                        argv, child_priority, &task) == OS_OK) {
                 vTaskSuspend(task);
-                vTaskSetApplicationTaskTag(task, (void*)data);
-                tskm_add_task(task);
+                exit_critical();
+                vTaskSetApplicationTaskTag(task, (void *)data);
+                tskm_start_task_monitoring(task);
                 vTaskResume(task);
+
+//                tskm_add_task(task);
+//                exit_critical();
         } else {
+                exit_critical();
                 free(data);
         }
 
@@ -115,13 +124,20 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void 
 //==============================================================================
 void osw_delete_task(task_t *taskHdl)
 {
-        struct task_data *data = get_task_tag(taskHdl);
-        if (data) {
-                free(data);
+        struct task_data *data;
+
+        if (tskm_is_task_existing(taskHdl)) {
+                tskm_stop_task_monitoring(taskHdl);
+
+                if ((data = get_task_tag(taskHdl))) {
+                        free(data);
+                }
+
+                vTaskDelete(taskHdl);
         }
 
-        tskm_remove_task(taskHdl);
-        vTaskDelete(taskHdl);
+//        tskm_remove_task(taskHdl);
+//        vTaskDelete(taskHdl);
 }
 
 //==============================================================================

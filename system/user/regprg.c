@@ -34,7 +34,7 @@ extern "C" {
 #include "regprg.h"
 #include <string.h>
 
-#include "test.h"
+#include "helloworld.h"
 #include "top.h"
 
 /*==============================================================================
@@ -59,7 +59,7 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 static const struct regprg_pdata pdata[] = {
-        IMPORT_PROGRAM(test),
+        IMPORT_PROGRAM(helloworld),
         IMPORT_PROGRAM(top),
 };
 
@@ -96,6 +96,26 @@ stdRet_t regprg_get_program_data(ch_t *name, struct regprg_pdata *prg_data)
         }
 
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns number of programs
+ */
+//==============================================================================
+int regprg_get_program_count(void)
+{
+        return ARRAY_SIZE(pdata);
+}
+
+//==============================================================================
+/**
+ * @brief Function returns pointer to the program table
+ */
+//==============================================================================
+struct regprg_pdata *regprg_get_pointer_to_program_list(void)
+{
+        return (struct regprg_pdata*)&pdata;
 }
 
 #ifdef __cplusplus

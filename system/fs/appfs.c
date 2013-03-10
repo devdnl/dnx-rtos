@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "appfs.h"
-#include "regapp.h"
+#include "regprg.h"
 #include <string.h>
 
 /*==============================================================================
@@ -279,7 +279,7 @@ stdRet_t appfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
         if (path && dir) {
                 if (path[0] == '/' && strlen(path) == 1) {
                         dir->dd    = 0;
-                        dir->items = regapp_get_program_count();
+                        dir->items = regprg_get_program_count();
                         dir->rddir = appfs_readrootdir;
                         dir->cldir = appfs_closedir;
                         dir->seek  = 0;
@@ -490,9 +490,9 @@ static dirent_t appfs_readrootdir(fsd_t fsd, DIR_t *dir)
         dirent.size = 0;
 
         if (dir) {
-                if (dir->seek < (size_t)regapp_get_program_count()) {
+                if (dir->seek < (size_t)regprg_get_program_count()) {
                         dirent.filetype = FILE_TYPE_REGULAR;
-                        dirent.name     = (ch_t*)regapp_get_pointer_to_program_list()[dir->seek].appName;
+                        dirent.name     = (ch_t*)regprg_get_pointer_to_program_list()[dir->seek].program_name;
                         dirent.size     = 0;
                         dir->seek++;
                 }
