@@ -130,8 +130,6 @@ void task_initd(void *arg)
       ttyx[1] = fopen("/dev/tty1", "r+");
       new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
 
-//      new_program("term", "", "/", ttyx[0], ttyx[0], NULL, NULL);
-
       for (;;) {
               task_t *p1 = new_program("helloworld", "", "/", ttyx[0], ttyx[0], NULL, NULL);
 
