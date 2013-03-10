@@ -61,7 +61,7 @@ extern "C" {
 struct program_data {
         int (*main)(int, char**);
         char            *cwd;
-        enum prg_status *status;
+        enum prog_state *status;
         int             *exit_code;
         FILE_t          *stdin;
         FILE_t          *stdout;
@@ -73,7 +73,7 @@ struct program_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void   set_status(enum prg_status *status_ptr, enum prg_status status);
+static void   set_status(enum prog_state *status_ptr, enum prog_state status);
 static char **new_argument_table(char *arg, const char *name, int *argc);
 static void   delete_argument_table(char **argv, int argc);
 static void   task_program_startup(void *argv);
@@ -104,26 +104,30 @@ static void   task_program_startup(void *argv);
  */
 //==============================================================================
 task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *stdin,
-                         FILE_t *stdout, enum prg_status *status, int *exit_code)
+                         FILE_t *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
         task_t              *taskhdl = NULL;
         struct regprg_pdata  regpdata;
 
         if (!name || !args || !cwd) {
+                set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
                 return NULL;
         }
 
         if (regprg_get_program_data(name, &regpdata) != STD_RET_OK) {
+                set_status(status, PROGRAM_DOES_NOT_EXIST);
                 return NULL;
         }
 
         if ((pdata = calloc(1, sizeof(struct program_data))) == NULL) {
+                set_status(status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                 return NULL;
         }
 
         if ((pdata->argv = new_argument_table(args, name, &pdata->argc)) == NULL) {
                 free(pdata);
+                set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
                 return NULL;
         }
 
@@ -135,16 +139,17 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *stdin,
         pdata->status       = status;
         pdata->exit_code    = exit_code;
 
-        if (status)
-                *status = PROGRAM_RUNNING;
+        set_status(status, PROGRAM_RUNNING);
 
-        if (exit_code)
+        if (exit_code) {
                 *exit_code = STD_RET_UNKNOWN;
+        }
 
         taskhdl = new_task(task_program_startup, regpdata.program_name,
                            *regpdata.stack_depth, pdata);
 
         if (taskhdl == NULL) {
+                set_status(status, PROGRAM_HANDLE_ERROR);
                 delete_argument_table(pdata->argv, pdata->argc);
                 free(pdata);
                 return NULL;
@@ -165,18 +170,17 @@ void prgm_delete_program(task_t *taskhdl)
         struct task_data    *tdata;
         struct program_data *pdata;
 
-        if (taskhdl == NULL)
+        if (taskhdl == NULL) {
                 return;
+        }
 
-        tdata = get_task_data(taskhdl);
-        if (tdata) {
+        if ((tdata = get_task_data(taskhdl))) {
                 if (tdata->f_global_vars) {
                         monitored_free_as(taskhdl, tdata->f_global_vars);
                         tdata->f_global_vars = NULL;
                 }
 
-                pdata = tdata->f_user;
-                if (pdata) {
+                if ((pdata = tdata->f_user)) {
                         if (pdata->argv) {
                                 delete_argument_table(pdata->argv, pdata->argc);
                         }
@@ -266,7 +270,7 @@ static void task_program_startup(void *argv)
  * @retval STD_RET_ERROR        variables not initialized
  */
 //==============================================================================
-static void set_status(enum prg_status *status_ptr, enum prg_status status)
+static void set_status(enum prog_state *status_ptr, enum prog_state status)
 {
         if (status_ptr) {
                 *status_ptr = status;

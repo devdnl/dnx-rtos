@@ -66,18 +66,20 @@ extern "C" {
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
-enum prg_status {
+enum prog_state {
+        PROGRAM_UNKNOWN_STATE,
         PROGRAM_RUNNING,
         PROGRAM_ENDED,
         PROGRAM_NOT_ENOUGH_FREE_MEMORY,
         PROGRAM_ARGUMENTS_PARSE_ERROR,
+        PROGRAM_DOES_NOT_EXIST,
         PROGRAM_HANDLE_ERROR,
 };
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prg_status*, int*);
+extern task_t *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prog_state*, int*);
 extern void    prgm_delete_program(task_t*);
 
 #ifdef __cplusplus

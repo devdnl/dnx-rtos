@@ -68,76 +68,121 @@ extern "C" {
 //==============================================================================
 void task_initd(void *arg)
 {
-      (void) arg;
+        (void) arg;
 
-      set_priority(INITD_PRIORITY);
+        set_priority(INITD_PRIORITY);
 
-      /* mount main file system */
-      mount("lfs", NULL, "/");
+        /* mount main file system */
+        mount("lfs", NULL, "/");
 
-      /* create basic directories */
-      mkdir("/bin");
-      mkdir("/dev");
-      mkdir("/etc");
-      mkdir("/fbin");
-      mkdir("/home");
-      mkdir("/mnt");
-      mkdir("/proc");
-      mkdir("/srv");
-      mkdir("/srv/www");
-      mkdir("/tmp");
+        /* create basic directories */
+        mkdir("/bin");
+        mkdir("/dev");
+        mkdir("/etc");
+        mkdir("/fbin");
+        mkdir("/home");
+        mkdir("/mnt");
+        mkdir("/proc");
+        mkdir("/srv");
+        mkdir("/srv/www");
+        mkdir("/tmp");
 
-      mount("procfs", NULL, "/proc");
+        mount("procfs", NULL, "/proc");
 
-      /* early initialization - basic drivers start */
-      if (init_driver("pll", NULL) != STD_RET_OK) {
-            while (TRUE);
-      }
+        /* early initialization - basic drivers start */
+        if (init_driver("pll", NULL) != STD_RET_OK) {
+                while (TRUE);
+        }
 
-      init_driver("gpio", NULL);
+        init_driver("gpio", NULL);
 
-      /* early initialization - terminal support */
-      init_driver("uart1", "/dev/ttyS0");
-      init_driver("tty0", "/dev/tty0");
-      enable_printk("/dev/tty0");
+        /* early initialization - terminal support */
+        init_driver("uart1", "/dev/ttyS0");
+        init_driver("tty0", "/dev/tty0");
+        enable_printk("/dev/tty0");
 
-      /* something about board and system */
-      printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
-             FONT_COLOR_CYAN "Daniel Zorychta "
-             FONT_COLOR_YELLOW "<daniel.zorychta@gmail.com>" RESET_ATTRIBUTES "\n\n",
-             get_OS_name(), get_kernel_name());
+        /* something about board and system */
+        printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
+               FONT_COLOR_CYAN "Daniel Zorychta "
+               FONT_COLOR_YELLOW "<daniel.zorychta@gmail.com>" RESET_ATTRIBUTES "\n\n",
+               get_OS_name(), get_kernel_name());
 
-      /* driver initialization */
-      init_driver("tty1", "/dev/tty1");
-      init_driver("tty2", "/dev/tty2");
-      init_driver("tty3", "/dev/tty3");
+        /* driver initialization */
+        init_driver("tty1", "/dev/tty1");
+        init_driver("tty2", "/dev/tty2");
+        init_driver("tty3", "/dev/tty3");
 
-      /* initd info about stack usage */
-      printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
+        /* initd info about stack usage */
+        printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
-      /* change TTY for printk to last TTY */
-      enable_printk("/dev/tty3");
+        /* change TTY for printk to last TTY */
+        enable_printk("/dev/tty3");
 
-      /*------------------------------------------------------------------------
-       * main loop which read stdio from programs
-       *----------------------------------------------------------------------*/
-      FILE_t *ttyx[TTY_LAST] = {NULL};
+        /* stdio program control */
+        FILE_t *tty[TTY_LAST]               = {NULL};
+        task_t *program[TTY_LAST - 1]       = {NULL};
+        enum prog_state state[TTY_LAST - 1] = {PROGRAM_UNKNOWN_STATE};
+        i8_t current_tty                    = -1;
 
-      while ((ttyx[0] = fopen("/dev/tty0", "r+")) == NULL) {
-            milisleep(200);
-      }
+        while ((tty[0] = fopen("/dev/tty0", "r+")) == NULL) {
+                milisleep(200);
+        }
 
-      ttyx[1] = fopen("/dev/tty1", "r+");
-      new_program("top", "", "/", ttyx[1], ttyx[1], NULL, NULL);
+        for (;;) {
+                ioctl(tty[0], TTY_IORQ_GETCURRENTTTY, &current_tty);
 
-      for (;;) {
-              task_t *p1 = new_program("helloworld", "", "/", ttyx[0], ttyx[0], NULL, NULL);
+                if (current_tty >= 0 && current_tty < TTY_LAST - 1) {
+                        if (!program[current_tty]) {
+                                if (tty[current_tty] == NULL) {
+                                        ch_t path[16];
+                                        snprintf(path, sizeof(path), "/dev/tty%c",
+                                                 '0' + current_tty);
+                                        tty[current_tty] = fopen(path, "r+");
+                                }
 
-              sleep(1);
-      }
+                                program[current_tty] = new_program("top", "", "/",
+                                                                   tty[current_tty],
+                                                                   tty[current_tty],
+                                                                   &state[current_tty],
+                                                                   NULL);
 
-      /* this should never happen */
-      task_exit();
+                                switch (state[current_tty]) {
+                                case PROGRAM_UNKNOWN_STATE: printk("Program does not start!\n"); break;
+                                case PROGRAM_RUNNING: printk("Program started.\n"); break;
+                                case PROGRAM_ENDED: printk("Program finished.\n"); break;
+                                case PROGRAM_NOT_ENOUGH_FREE_MEMORY: printk("No enough free memory!\n"); break;
+                                case PROGRAM_ARGUMENTS_PARSE_ERROR: printk("Bad arguments!\n"); break;
+                                case PROGRAM_DOES_NOT_EXIST: printk("Program does not exist!\n"); break;
+                                case PROGRAM_HANDLE_ERROR: printk("Handle error!\n"); break;
+                                }
+                        }
+                }
+
+                for (u8_t i = 0; i < TTY_LAST - 1; i++) {
+                        if (program[i] == NULL) {
+                                continue;
+                        }
+
+                        if (state[i] != PROGRAM_RUNNING) {
+                                printk("Program closed.\n");
+
+                                program[i] = NULL;
+                                state[i]   = PROGRAM_UNKNOWN_STATE;
+
+                                ioctl(tty[i], TTY_IORQ_CLEARTTY, NULL);
+                                fclose(tty[i]);
+                                tty[i] = NULL;
+
+                                current_tty = 0;
+                                ioctl(tty[0], TTY_IORQ_SETACTIVETTY, &current_tty);
+                        }
+                }
+
+                milisleep(500);
+        }
+
+        /* this should never happen */
+        task_exit();
 }
 
 #ifdef __cplusplus
