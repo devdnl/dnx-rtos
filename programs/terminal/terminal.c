@@ -213,39 +213,36 @@ static enum cmd_status find_internal_command(char *cmd, char *arg)
 //==============================================================================
 static enum cmd_status find_external_command(ch_t *cmd, ch_t *arg)
 {
-//      cmdStatus_t status = CMD_NOT_EXIST;
-//
-//      suspend_all_tasks();
-//
-//      prog_t *appHdl = exec(cmd, arg);
-//
-//      if (appHdl)
-//      {
-//            appHdl->stdin  = stdin;
-//            appHdl->stdout = stdout;
-//            appHdl->cwd    = cdpath;
-//            resume_all_tasks();
-//
-//            /* waiting for application exit */
-//            while (appHdl->exitCode == STD_RET_UNKNOWN)
-//            {
-//                  /* check if application exist */
-//                  if (get_task_name(appHdl->taskHandle) == NULL) {
-//                        break;
-//                  }
-//
-//                  sleep(1);
-//            }
-//
-//            delete_program(appHdl);
-//
-//            status = CMD_EXECUTED;
-//      } else {
-//            resume_all_tasks();
-//      }
-//
-//      return status;
-        return CMD_NOT_EXIST;
+        enum prog_state state;
+        enum cmd_status status;
+
+        new_program(cmd, arg, global->cwd, stdin, stdout, &state, NULL);
+
+        while (state == PROGRAM_RUNNING) {
+                milisleep(250);
+        }
+
+        switch (state) {
+        case PROGRAM_UNKNOWN_STATE:
+        case PROGRAM_RUNNING:
+                break;
+
+        case PROGRAM_ENDED:
+                status = CMD_EXECUTED;
+                break;
+
+        case PROGRAM_HANDLE_ERROR:
+        case PROGRAM_ARGUMENTS_PARSE_ERROR:
+        case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
+                status = CMD_NOT_ENOUGH_FREE_MEMORY;
+                break;
+
+        case PROGRAM_DOES_NOT_EXIST:
+                status = CMD_NOT_EXIST;
+                break;
+        }
+
+        return status;
 }
 
 //==============================================================================
