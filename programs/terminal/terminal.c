@@ -683,7 +683,8 @@ static enum cmd_status cmd_mount(char *arg)
         len  = stre - strb;
 
         if (arg[0] == '\0') {
-                goto exit;
+                printf("Usage: mount [file system name] [source path|-] [mount point]\n");
+                return CMD_EXECUTED;
         }
 
         if ((fstype = calloc(len + 1, sizeof(char))) != NULL) {
@@ -752,8 +753,8 @@ static enum cmd_status cmd_mount(char *arg)
 //==============================================================================
 static enum cmd_status cmd_umount(char *arg)
 {
-        if (!arg) {
-                printf("Bad arguments!\n");
+        if (arg[0] == '\0') {
+                printf("Usage: umount [mount point]\n");
         } else {
                 if (umount(arg) != STD_RET_OK) {
                         printf("File error while unmounting file system!\n");
