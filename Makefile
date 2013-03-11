@@ -60,6 +60,7 @@ CSRC_CORE = $(sort \
 # INSERT HERE C PROGRAMS SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC_PROGRAMS = $(sort \
+   programs/cat/cat.c \
    programs/helloworld/helloworld.c \
    programs/top/top.c \
    programs/terminal/terminal.c \

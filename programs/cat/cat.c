@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    top.c
+@file    cat.c
 
 @author  Daniel Zorychta
 
-@brief   Application show CPU load
+@brief
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,11 +31,14 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "top.h"
+#include "cat.h"
+#include "tty_def.h"
+#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define FILE_PATH_LEN           128
 
 /*==============================================================================
   Local types, enums definitions
@@ -49,12 +52,13 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES {
+        char filepath[FILE_PATH_LEN];
 };
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(top, STACK_DEPTH_LOW);
+PROGRAM_PARAMS(cat, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -62,76 +66,77 @@ PROGRAM_PARAMS(top, STACK_DEPTH_LOW);
 
 //==============================================================================
 /**
- * @brief Main function
+ * @brief Cat main function
  */
 //==============================================================================
-int PROGRAM_MAIN(top, int argc, char *argv[])
+int PROGRAM_MAIN(cat, int argc, char *argv[])
 {
-        (void)argc;
-        (void)argv;
+        (void) argc;
+        (void) argv;
 
-        u8_t divcnt = 10;
+        stdRet_t status = STD_RET_OK;
 
-        while (TRUE) {
-                char chr = EOF;
-                fread(&chr, sizeof(ch_t), 1, stdin);
+        u32_t col = 80;
+        ioctl(stdin, TTY_IORQ_GETCOL, &col);
 
-                if (chr == 'q') {
-                        break;
-                }
+        char *data = calloc(col + 1, sizeof(char));
 
-                milisleep(100);
+        if (data) {
+                if (argv[1][0] == '/') {
+                        strcpy(global->filepath, argv[1]);
+                } else {
+                        getcwd(global->filepath, 128);
 
-                if (divcnt < 10) {
-                        divcnt++;
-                        continue;
-                }
-
-                u8_t n = get_number_of_monitored_tasks();
-
-                printf("\x1B[2J\x1B[HPress q to quit\n");
-
-                printf("Total tasks: %u\n", n);
-
-                u32_t uptime = get_uptime();
-                u32_t udays  = (uptime / (3600 * 24));
-                u32_t uhrs   = (uptime / 3600) % 24;
-                u32_t umins  = (uptime / 60) % 60;
-
-                printf("Up time: %ud %u2:%u2\n", udays, uhrs, umins);
-
-                printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
-                       get_memory_size(),
-                       get_used_memory(),
-                       get_free_memory());
-
-                printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
-
-                for (int i = 0; i < n; i++) {
-                        struct taskstat taskinfo;
-                        u32_t total_cpu_load = get_total_CPU_usage();
-
-                        if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
-                                printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
-                                taskinfo.task_handle,
-                                taskinfo.priority,
-                                taskinfo.free_stack,
-                                taskinfo.memory_usage,
-                                taskinfo.opened_files,
-                                ( taskinfo.cpu_usage * 100)  / total_cpu_load,
-                                ((taskinfo.cpu_usage * 1000) / total_cpu_load) % 10,
-                                taskinfo.task_name);
-                        } else {
-                                break;
+                        if (global->filepath[strlen(global->filepath) - 1] != '/') {
+                                strcat(global->filepath, "/");
                         }
+
+                        strcat(global->filepath, argv[1]);
                 }
 
-                clear_total_CPU_usage();
+                FILE_t *file = fopen(global->filepath, "r");
 
-                divcnt = 0;
+                if (file) {
+                        fseek(file, 0, SEEK_END);
+                        i32_t filesize = ftell(file);
+                        fseek(file, 0, SEEK_SET);
+
+                        while (filesize > 0) {
+                                i32_t n = fread(data, sizeof(char), col, file);
+
+                                if (n == 0) {
+                                        break;
+                                }
+
+                                if (strchr(data, '\n') != NULL) {
+                                        printf("%s", data);
+                                } else {
+                                        printf("%s\n", data);
+                                }
+
+                                memset(data, 0, col + 1);
+
+                                filesize -= n;
+                        }
+
+                        fclose(file);
+                } else {
+                        printf("No such file\n");
+
+                        status = STD_RET_ERROR;
+                }
+
+        } else {
+                printf("Enough free memory\n");
+
+                status = STD_RET_ERROR;
         }
 
-        return STD_RET_OK;
+        if (data) {
+                free(data);
+        }
+
+        return status;
 }
 
 #ifdef __cplusplus
