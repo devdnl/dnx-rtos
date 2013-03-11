@@ -211,7 +211,7 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
         new_program(cmd, arg, global->cwd, stdin, stdout, &state, NULL);
 
         while (state == PROGRAM_RUNNING) {
-                milisleep(250);
+                suspend_this_task();
         }
 
         switch (state) {

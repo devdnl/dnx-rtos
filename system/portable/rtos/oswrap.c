@@ -117,7 +117,9 @@ task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void 
 
 //==============================================================================
 /**
- * @brief Function delete task and if enabled remove from monitor list
+ * @brief Function delete task
+ * Function remove task from monitoring list, and next delete the task from OS
+ * list. Function resume the parent task before delete.
  *
  * @param *taskHdl       task handle
  */
@@ -130,6 +132,11 @@ void osw_delete_task(task_t *taskHdl)
                 tskm_stop_task_monitoring(taskHdl);
 
                 if ((data = get_task_tag(taskHdl))) {
+
+                        if (data->f_parent_task) {
+                                vTaskResume(data->f_parent_task);
+                        }
+
                         free(data);
                         set_task_tag(taskHdl, NULL);
                 }
