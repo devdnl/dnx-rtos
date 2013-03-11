@@ -36,6 +36,7 @@ extern "C" {
 
 #include "helloworld.h"
 #include "top.h"
+#include "terminal.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -54,13 +55,13 @@ extern "C" {
   Local function prototypes
 ==============================================================================*/
 
-
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 static const struct regprg_pdata pdata[] = {
         IMPORT_PROGRAM(helloworld),
         IMPORT_PROGRAM(top),
+        IMPORT_PROGRAM(terminal),
 };
 
 /*==============================================================================

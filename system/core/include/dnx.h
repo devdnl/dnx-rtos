@@ -42,6 +42,7 @@ extern "C" {
 #include "taskmoni.h"
 #include "regfs.h"
 #include "regdrv.h"
+#include "oshooks.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

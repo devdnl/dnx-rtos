@@ -140,11 +140,15 @@ void task_initd(void *arg)
                                         tty[current_tty] = fopen(path, "r+");
                                 }
 
-                                program[current_tty] = new_program("top", "", "/",
+                                program[current_tty] = new_program("terminal", "", "/",
                                                                    tty[current_tty],
                                                                    tty[current_tty],
                                                                    &state[current_tty],
                                                                    NULL);
+
+                                if (program[current_tty]) {
+                                        set_task_priority(program[current_tty], 0);
+                                }
 
                                 switch (state[current_tty]) {
                                 case PROGRAM_UNKNOWN_STATE: printk("Program does not start!\n"); break;

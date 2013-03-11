@@ -62,6 +62,7 @@ CSRC_CORE = $(sort \
 CSRC_PROGRAMS = $(sort \
    programs/helloworld/helloworld.c \
    programs/top/top.c \
+   programs/terminal/terminal.c \
    )
    
 ####################################################################################################
