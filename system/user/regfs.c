@@ -87,7 +87,6 @@ static const regFS_t fsList[] =
         IMPORT_FILE_SYSTEM_INTERFACE(procfs, "procfs"),
 };
 
-
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -148,7 +147,6 @@ stdRet_t umount(const ch_t *mountpoint)
 
         return status;
 }
-
 
 #ifdef __cplusplus
 }
