@@ -464,6 +464,35 @@ int tskm_get_number_of_monitored_tasks(void)
 
 //==============================================================================
 /**
+ * @brief Function enable fast memory monitoring (not remember allocation addresses)
+ *
+ * @param *taskhdl      task handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
+stdRet_t tskm_enable_fast_memory_monitoring(task_t *taskhdl)
+{
+        stdRet_t status = STD_RET_ERROR;
+        struct task_monitor_data *task_monitor_data;
+
+        force_lock_recursive_mutex(resource_mtx);
+
+        if ((task_monitor_data = get_task_monitor_data(taskhdl))) {
+                task_monitor_data->fast_monitoring = TRUE;
+                status = STD_RET_OK;
+        }
+
+        unlock_recursive_mutex(resource_mtx);
+
+        return status;
+}
+#endif
+
+//==============================================================================
+/**
  * @brief Monitor memory allocation for specified task
  *
  * @param *taskhdl      task handle
@@ -491,6 +520,15 @@ void *tskm_malloc_as(task_t *taskhdl, u32_t size)
         }
 
         if (!(task_monitor_data = get_task_monitor_data(taskhdl))) {
+                goto exit;
+        }
+
+        if (task_monitor_data->fast_monitoring) {
+                mem = malloc(size);
+                if (mem) {
+                        task_monitor_data->used_memory += size;
+                }
+
                 goto exit;
         }
 
@@ -630,6 +668,11 @@ void tskm_free_as(task_t *taskhdl, void *mem)
                 goto exit;
         }
 
+        if (task_monitor_data->fast_monitoring) {
+                free(mem);
+                goto exit;
+        }
+
         /* find address slot */
         for (u8_t block = 0; block < MEM_BLOCK_COUNT; block++) {
                 if (task_monitor_data->mblock[block] == NULL) {
@@ -677,6 +720,38 @@ void tskm_free_as(task_t *taskhdl, void *mem)
 
         exit:
         unlock_recursive_mutex(resource_mtx);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing for specified task
+ *
+ * @param *taskhdl      task handle
+ * @param *mem          block to free
+ * @param  size         freed block size
+ */
+//==============================================================================
+#if (TSKM_MONITOR_MEMORY_USAGE > 0)
+void tskm_freemem_as(task_t *taskhdl, void *mem, u32_t size)
+{
+        struct task_monitor_data *task_monitor_data;
+
+        if (size && mem && taskhdl) {
+                force_lock_recursive_mutex(resource_mtx);
+
+                if (tskm_is_task_exist(taskhdl)) {
+                        if ((task_monitor_data = get_task_monitor_data(taskhdl))) {
+                                if (task_monitor_data->fast_monitoring) {
+                                        task_monitor_data->used_memory -= size;
+                                }
+
+                                tskm_free_as(taskhdl, mem);
+                        }
+                }
+
+                unlock_recursive_mutex(resource_mtx);
+        }
 }
 #endif
 

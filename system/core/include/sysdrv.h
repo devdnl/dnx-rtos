@@ -58,6 +58,32 @@ extern "C" {
 #define free(mem)                         memman_free(mem)
 #endif
 
+#ifndef mcalloc
+#define mcalloc(nmemb, msize)             tskm_calloc(nmemb, msize)
+#endif
+
+#ifndef mmalloc
+#define mmalloc(size)                     tskm_malloc(size)
+#endif
+
+#ifndef mfree
+#define mfree(mem, size)                  tskm_freemem_as(get_task_handle(), mem, size)
+#endif
+
+#ifndef mcalloc_as
+#define mcalloc_as(taskhdl, nmemb, msize) tskm_calloc_as(taskhdl, nmemb, msize)
+#endif
+
+#ifndef mmalloc_as
+#define mmalloc_as(taskhdl, size)         tskm_malloc_as(taskhdl, size)
+#endif
+
+#ifndef mfree_as
+#define mfree_as(taskhdl, mem, size)      tskm_freemem_as(taskhdl, mem, size)
+#endif
+
+#define enable_fast_memory_monitoring()   tskm_enable_fast_memory_monitoring(get_task_handle())
+
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
 #define umount(path)                      vfs_umount(path)
 #define getmntentry(item, mntentPtr)      vfs_getmntentry(item, mntentPtr)

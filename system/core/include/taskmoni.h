@@ -58,6 +58,7 @@ extern "C" {
 #define tskm_free_as(taskhdl, mem)              memman_free(mem)
 #define tskm_malloc(size)                       memman_malloc(size)
 #define tskm_calloc(nmemb, msize)               memman_calloc(nmemb, msize)
+#define tskm_freemem_as(taskhdl, mem, size)     memman_free(mem)
 #define tskm_free(mem)                          memman_free(mem)
 #endif
 
@@ -99,11 +100,14 @@ extern "C" {
     && (TSKM_MONITOR_FILE_USAGE == 0  ) \
     && (TSKM_MONITOR_CPU_LOAD == 0    ) )
 #define tskm_init()
-#define tskm_add_task(pid)
-#define tskm_remove_task(pid)
+#define tskm_is_task_exist(taskhdl)             TRUE
+#define tskm_start_task_monitoring(taskhdl)     STD_RET_OK
+#define tskm_stop_task_monitoring(taskhdl)      STD_RET_OK
+#define tskm_get_total_CPU_usage()              0
+#define tskm_clear_total_CPU_usage()            NULL()
+#define tskm_get_task_stat(taskhdl, statPtr)    !memset(statPtr, 0, sizeof(struct taskstat))
 #define tskm_get_ntask_stat(item, statPtr)      !memset(statPtr, 0, sizeof(struct taskstat))
-#define tskm_get_task_stat(hdl, statPtr)        !memset(statPtr, 0, sizeof(struct taskstat))
-#define tskm_get_task_count()                   0
+#define tskm_get_number_of_monitored_tasks()    0
 #endif
 
 /*==============================================================================
@@ -141,12 +145,14 @@ extern int      tskm_get_number_of_monitored_tasks(void);
 #endif
 
 #if (TSKM_MONITOR_MEMORY_USAGE > 0)
-extern void *tskm_malloc_as(task_t*, u32_t);
-extern void *tskm_malloc(u32_t);
-extern void *tskm_calloc_as(task_t*, u32_t, u32_t);
-extern void *tskm_calloc(u32_t, u32_t);
-extern void  tskm_free_as(task_t*, void*);
-extern void  tskm_free(void*);
+extern stdRet_t tskm_enable_fast_memory_monitoring(task_t*);
+extern void    *tskm_malloc_as(task_t*, u32_t);
+extern void    *tskm_malloc(u32_t);
+extern void    *tskm_calloc_as(task_t*, u32_t, u32_t);
+extern void    *tskm_calloc(u32_t, u32_t);
+extern void     tskm_free_as(task_t*, void*);
+extern void     tskm_freemem_as(task_t*, void*, u32_t);
+extern void     tskm_free(void*);
 #endif
 
 #if (TSKM_MONITOR_FILE_USAGE > 0)
@@ -157,8 +163,8 @@ extern stdRet_t tskm_closedir(DIR_t*);
 #endif
 
 #if (TSKM_MONITOR_CPU_LOAD > 0)
-extern void      tskm_task_switched_in (void);
-extern void      tskm_task_switched_out(void);
+extern void tskm_task_switched_in (void);
+extern void tskm_task_switched_out(void);
 #endif
 
 #ifdef __cplusplus
