@@ -66,21 +66,10 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "basic_types.h"
-#include "config.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** USER CFG: HEAP size */
-#define MEMMAN_HEAP_SIZE                  (size_t)CONFIG_HEAP_SIZE
-
-/** USER CFG: aligment */
-#define MEMMAM_ALIGNMENT                  CONFIG_HEAP_ALIGN
-
-/** USER CFG: All allocated blocks will be BLOCK_MIN_SIZE bytes big, at least!
- * BLOCK_MIN_SIZE can be overridden to suit your needs. Smaller values save space,
- * larger values could prevent too small blocks to fragment the RAM too much. */
-#define BLOCK_MIN_SIZE                    CONFIG_HEAP_BLOCK_SIZE
 
 /*==============================================================================
   Exported types, enums definitions
@@ -98,8 +87,6 @@ extern void  *memman_malloc(size_t size);
 extern void  *memman_calloc(size_t count, size_t size);
 extern void   memman_free(void *mem);
 extern u32_t  memman_get_free_heap(void);
-extern u32_t  memman_get_used_heap(void);
-extern u32_t  memman_get_heap_size(void);
 
 #ifdef __cplusplus
 }

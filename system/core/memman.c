@@ -65,7 +65,8 @@ extern "C" {
 ==============================================================================*/
 #include "memman.h"
 #include <string.h>
-#include "oswrap.h"     /* this include must be here because is big problem when is in header */
+#include "config.h"
+#include "oswrap.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -79,7 +80,7 @@ extern "C" {
 /** MEM_ALIGNMENT: should be set to the alignment of the CPU for which
    program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
    byte alignment -> define MEM_ALIGNMENT to 2. */
-#define MEM_ALIGNMENT                     MEMMAM_ALIGNMENT
+#define MEM_ALIGNMENT                     CONFIG_HEAP_ALIGN
 
 /** Calculate memory size for an aligned buffer - returns the next highest
  * multiple of MEM_ALIGNMENT (e.g. MEM_ALIGN_SIZE(3) and
@@ -99,9 +100,9 @@ extern "C" {
 #define MEM_ALIGN(addr) ((void *)(((ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(ptr_t)(MEM_ALIGNMENT-1)))
 
 /** some alignment macros: we define them here for better source code layout */
-#define BLOCK_MIN_SIZE_ALIGNED            MEM_ALIGN_SIZE(BLOCK_MIN_SIZE)
+#define BLOCK_MIN_SIZE_ALIGNED            MEM_ALIGN_SIZE(CONFIG_HEAP_BLOCK_SIZE)
 #define SIZEOF_STRUCT_MEM                 MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED                  MEM_ALIGN_SIZE(MEMMAN_HEAP_SIZE)
+#define MEM_SIZE_ALIGNED                  MEM_ALIGN_SIZE((size_t)CONFIG_HEAP_SIZE)
 
 /** heap protection */
 #define MEM_FREE_PROTECT()                MEMMAM_FREE_PROTECT()
@@ -442,31 +443,7 @@ void *memman_calloc(size_t count, size_t size)
 //==============================================================================
 u32_t memman_get_free_heap(void)
 {
-        return (MEMMAN_HEAP_SIZE - used_mem);
-}
-
-//==============================================================================
-/**
- * @brief Function return used memory
- *
- * @return used memory
- */
-//==============================================================================
-u32_t memman_get_used_heap(void)
-{
-        return used_mem;
-}
-
-//==============================================================================
-/**
- * @brief Function returns size of heap
- *
- * @return memory size
- */
-//==============================================================================
-u32_t memman_get_heap_size(void)
-{
-        return MEMMAN_HEAP_SIZE;
+        return ((size_t)CONFIG_HEAP_SIZE - used_mem);
 }
 
 #ifdef __cplusplus

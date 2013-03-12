@@ -35,6 +35,7 @@ extern "C" {
 ==============================================================================*/
 #include "basic_types.h"
 #include "systypes.h"
+#include "config.h"
 #include "memman.h"
 #include "oswrap.h"
 #include "io.h"
@@ -75,9 +76,9 @@ extern "C" {
 #define fstat(file, statPtr)              tskm_fstat(file, stat)
 
 /** ENVIRONMENT DEFINITIONS */
-#define get_used_static_memory()          (CONFIG_RAM_SIZE - MEMMAN_HEAP_SIZE)
-#define get_free_memory()                 (CONFIG_RAM_SIZE - get_used_static_memory() - memman_get_used_heap())
-#define get_used_memory()                 (get_used_static_memory() + memman_get_used_heap())
+#define get_used_static_memory()          (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE)
+#define get_free_memory()                 (memman_get_free_heap())
+#define get_used_memory()                 (get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()))
 #define get_memory_size()                 CONFIG_RAM_SIZE
 #define get_uptime()                      get_uptime_counter()
 #define get_task_stat(ntask, statPtr)     tskm_get_ntask_stat(ntask, statPtr)

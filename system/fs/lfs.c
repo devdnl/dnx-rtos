@@ -753,8 +753,8 @@ stdRet_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
         (void) fsd;
 
         if (statfs) {
-                statfs->f_bfree  = memman_get_free_heap();
-                statfs->f_blocks = memman_get_heap_size();
+                statfs->f_bfree  = 0;
+                statfs->f_blocks = 0;
                 statfs->f_ffree  = 0;
                 statfs->f_files  = 0;
                 statfs->f_type   = 0x01;
