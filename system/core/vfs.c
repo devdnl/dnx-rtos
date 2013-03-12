@@ -93,7 +93,7 @@ static struct vfshdl *vfs;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_init(void)
+stdRet_t vfs_init(void) /* DNLFIXME use static memory */
 {
         if (vfs != NULL) {
                 return STD_RET_OK;
