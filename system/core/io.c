@@ -68,7 +68,7 @@ static int   calc_format_size(const ch_t *format, va_list arg);
  Local object definitions
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-static FILE_t *kprintFile;
+static FILE_t *printk_file;
 #endif
 
 /*==============================================================================
@@ -286,7 +286,7 @@ ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
 
 //==============================================================================
 /**
- * @brief Enable kprint functionality
+ * @brief Enable printk functionality
  *
  * @param filename      path to file used to write kernel log
  */
@@ -295,29 +295,29 @@ ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
 void io_enable_printk(ch_t *filename)
 {
         /* close file if opened */
-        if (kprintFile) {
-                fclose(kprintFile);
-                kprintFile = NULL;
+        if (printk_file) {
+                fclose(printk_file);
+                printk_file = NULL;
         }
 
         /* open new file */
-        if (kprintFile == NULL) {
-                kprintFile = fopen(filename, "w");
+        if (printk_file == NULL) {
+                printk_file = fopen(filename, "w");
         }
 }
 #endif
 
 //==============================================================================
 /**
- * @brief Disable kprint functionality
+ * @brief Disable printk functionality
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 void io_disable_printk(void)
 {
-        if (kprintFile) {
-                fclose(kprintFile);
-                kprintFile = NULL;
+        if (printk_file) {
+                fclose(printk_file);
+                printk_file = NULL;
         }
 }
 #endif
@@ -337,7 +337,7 @@ void io_printk(const ch_t *format, ...)
 {
         va_list args;
 
-        if (kprintFile) {
+        if (printk_file) {
                 va_start(args, format);
                 int size = calc_format_size(format, args);
                 va_end(args);
@@ -349,7 +349,7 @@ void io_printk(const ch_t *format, ...)
                         io_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        fwrite(buffer, sizeof(ch_t), size, kprintFile);
+                        fwrite(buffer, sizeof(ch_t), size, printk_file);
 
                         free(buffer);
                 }

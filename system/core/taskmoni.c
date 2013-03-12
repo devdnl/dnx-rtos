@@ -113,8 +113,8 @@ struct task_monitor_data {
 #if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
     || (TSKM_MONITOR_FILE_USAGE > 0  ) \
     || (TSKM_MONITOR_CPU_LOAD > 0    ) )
-static list_t  *task_list;
-static mutex_t *resource_mtx;
+static list_t  *tskm_task_list;
+static mutex_t *tskm_resource_mtx;
 #endif
 
 /*==============================================================================
@@ -140,10 +140,10 @@ stdRet_t tskm_init(void)
 {
         cpuctl_init_CPU_load_timer();
 
-        task_list    = new_list();
-        resource_mtx = new_recursive_mutex();
+        tskm_task_list    = new_list();
+        tskm_resource_mtx = new_recursive_mutex();
 
-        if (!task_list || !resource_mtx)
+        if (!tskm_task_list || !tskm_resource_mtx)
                 return STD_RET_ERROR;
         else
                 return STD_RET_OK;
@@ -165,17 +165,17 @@ bool_t tskm_is_task_exist(task_t *taskhdl)
         i32_t  item  = -1;
         bool_t exist = FALSE;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         if (taskhdl) {
-                if (list_get_iditem_No(task_list, (u32_t)taskhdl, &item) == STD_RET_OK) {
+                if (list_get_iditem_No(tskm_task_list, (u32_t)taskhdl, &item) == STD_RET_OK) {
                         if (item >= 0) {
                                 exist = TRUE;
                         }
                 }
         }
 
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
 
         return exist;
 }
@@ -197,7 +197,7 @@ stdRet_t tskm_start_task_monitoring(task_t *taskhdl)
 {
         struct task_monitor_data *tmdata;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         if (tskm_is_task_exist(taskhdl) == TRUE) {
                 goto exit_error;
@@ -205,19 +205,19 @@ stdRet_t tskm_start_task_monitoring(task_t *taskhdl)
 
         if ((tmdata = calloc(1, sizeof(struct task_monitor_data)))) {
 
-                if (list_add_item(task_list, (u32_t)taskhdl, NULL) < 0) {
+                if (list_add_item(tskm_task_list, (u32_t)taskhdl, NULL) < 0) {
                         free(tmdata);
                         set_task_monitor_data(taskhdl, NULL);
                         goto exit_error;
                 } else {
                         set_task_monitor_data(taskhdl, tmdata);
-                        unlock_recursive_mutex(resource_mtx);
+                        unlock_recursive_mutex(tskm_resource_mtx);
                         return STD_RET_OK;
                 }
         }
 
         exit_error:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return STD_RET_ERROR;
 }
 #endif
@@ -242,7 +242,7 @@ stdRet_t tskm_stop_task_monitoring(task_t *taskhdl)
         struct fileSlot          *fslot;
         struct dirSlot           *dslot;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         if (tskm_is_task_exist(taskhdl) == FALSE) {
                 goto exit_error;
@@ -310,12 +310,12 @@ stdRet_t tskm_stop_task_monitoring(task_t *taskhdl)
 
         free(task_monitor_data);
         set_task_monitor_data(taskhdl, NULL);
-        list_rm_iditem(task_list, (u32_t)taskhdl);
-        unlock_recursive_mutex(resource_mtx);
+        list_rm_iditem(tskm_task_list, (u32_t)taskhdl);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return STD_RET_OK;
 
         exit_error:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return STD_RET_ERROR;
 }
 #endif
@@ -368,7 +368,7 @@ stdRet_t tskm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
 {
         struct task_monitor_data *tmdata;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         if (!stat) {
                 goto exit_error;
@@ -394,11 +394,11 @@ stdRet_t tskm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
         stat->task_handle  = taskhdl;
         stat->task_name    = get_task_name(taskhdl);
 
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return STD_RET_OK;
 
         exit_error:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return STD_RET_ERROR;
 }
 #endif
@@ -421,9 +421,9 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 {
         task_t *task;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
-        if (list_get_nitem_ID(task_list, item, (u32_t *)&task) != STD_RET_OK) {
+        if (list_get_nitem_ID(tskm_task_list, item, (u32_t *)&task) != STD_RET_OK) {
                 goto exit_error;
         }
 
@@ -431,11 +431,11 @@ stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
                 goto exit_error;
         }
 
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return STD_RET_OK;
 
         exit_error:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return STD_RET_ERROR;
 }
 #endif
@@ -454,9 +454,9 @@ int tskm_get_number_of_monitored_tasks(void)
 {
         int task_count;
 
-        force_lock_recursive_mutex(resource_mtx);
-        task_count = list_get_item_count(task_list);
-        unlock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
+        task_count = list_get_item_count(tskm_task_list);
+        unlock_recursive_mutex(tskm_resource_mtx);
 
         return task_count;
 }
@@ -478,14 +478,14 @@ stdRet_t tskm_enable_fast_memory_monitoring(task_t *taskhdl)
         stdRet_t status = STD_RET_ERROR;
         struct task_monitor_data *task_monitor_data;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         if ((task_monitor_data = get_task_monitor_data(taskhdl))) {
                 task_monitor_data->fast_monitoring = TRUE;
                 status = STD_RET_OK;
         }
 
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
 
         return status;
 }
@@ -509,7 +509,7 @@ void *tskm_malloc_as(task_t *taskhdl, u32_t size)
         struct task_monitor_data *task_monitor_data;
         struct memSlot           *mslot;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         if (size == 0) {
                 goto exit;
@@ -572,7 +572,7 @@ void *tskm_malloc_as(task_t *taskhdl, u32_t size)
         printk("%s: Not enough free slots to allocate memory!\n", get_this_task_name());
 
         exit:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return mem;
 }
 #endif
@@ -654,7 +654,7 @@ void tskm_free_as(task_t *taskhdl, void *mem)
         struct task_monitor_data *task_monitor_data;
         struct memSlot           *mslot;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         if (!mem) {
                 goto exit;
@@ -719,7 +719,7 @@ void tskm_free_as(task_t *taskhdl, void *mem)
         printk("%s: Address to free does not exist!\n", get_this_task_name());
 
         exit:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
 }
 #endif
 
@@ -738,7 +738,7 @@ void tskm_freemem_as(task_t *taskhdl, void *mem, u32_t size)
         struct task_monitor_data *task_monitor_data;
 
         if (size && mem && taskhdl) {
-                force_lock_recursive_mutex(resource_mtx);
+                force_lock_recursive_mutex(tskm_resource_mtx);
 
                 if (tskm_is_task_exist(taskhdl)) {
                         if ((task_monitor_data = get_task_monitor_data(taskhdl))) {
@@ -750,7 +750,7 @@ void tskm_freemem_as(task_t *taskhdl, void *mem, u32_t size)
                         }
                 }
 
-                unlock_recursive_mutex(resource_mtx);
+                unlock_recursive_mutex(tskm_resource_mtx);
         }
 }
 #endif
@@ -788,7 +788,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
         struct task_monitor_data *task_monitor_data;
         struct fileSlot          *fslot;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         task = get_task_handle();
 
@@ -841,7 +841,7 @@ FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
         printk("%s: Not enough free slots to open file!\n", get_this_task_name());
 
         exit:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return file;
 }
 #endif
@@ -864,7 +864,7 @@ stdRet_t tskm_fclose(FILE_t *file)
         struct task_monitor_data *task_monitor_data;
         struct fileSlot          *fslot;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         task = get_task_handle();
 
@@ -920,7 +920,7 @@ stdRet_t tskm_fclose(FILE_t *file)
         printk("%s: File does not exist or closed!\n", get_this_task_name());
 
         exit:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return status;
 }
 #endif
@@ -943,7 +943,7 @@ DIR_t *tskm_opendir(const ch_t *path)
         struct task_monitor_data *task_monitor_data;
         struct dirSlot           *dslot;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         task = get_task_handle();
 
@@ -996,7 +996,7 @@ DIR_t *tskm_opendir(const ch_t *path)
         printk("%s: Not enough free slots to open directory!\n", get_this_task_name());
 
         exit:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return dir;
 }
 #endif
@@ -1019,7 +1019,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
         struct task_monitor_data *task_monitor_data;
         struct dirSlot           *dslot;
 
-        force_lock_recursive_mutex(resource_mtx);
+        force_lock_recursive_mutex(tskm_resource_mtx);
 
         task = get_task_handle();
 
@@ -1075,7 +1075,7 @@ extern stdRet_t tskm_closedir(DIR_t *dir)
         printk("%s: Dir does not exist or closed!\n", get_this_task_name());
 
         exit:
-        unlock_recursive_mutex(resource_mtx);
+        unlock_recursive_mutex(tskm_resource_mtx);
         return status;
 }
 #endif
