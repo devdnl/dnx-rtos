@@ -71,50 +71,37 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-/** USER CFG: heap protection */
-#define MEMMAM_FREE_PROTECT()             suspend_all_tasks()
-#define MEMMAM_FREE_UNPROTECT()           resume_all_tasks()
-#define MEMMAM_ALLOC_PROTECT()            suspend_all_tasks()
-#define MEMMAM_ALLOC_UNPROTECT()          resume_all_tasks()
+/**
+ * MEM_ALIGNMENT: should be set to the alignment of the CPU for which
+ * program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
+ * byte alignment -> define MEM_ALIGNMENT to 2.
+ */
+#define MEM_ALIGNMENT                   CONFIG_HEAP_ALIGN
 
-/** MEM_ALIGNMENT: should be set to the alignment of the CPU for which
-   program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
-   byte alignment -> define MEM_ALIGNMENT to 2. */
-#define MEM_ALIGNMENT                     CONFIG_HEAP_ALIGN
-
-/** Calculate memory size for an aligned buffer - returns the next highest
+/**
+ * Calculate memory size for an aligned buffer - returns the next highest
  * multiple of MEM_ALIGNMENT (e.g. MEM_ALIGN_SIZE(3) and
  * MEM_ALIGN_SIZE(4) will both yield 4 for MEM_ALIGNMENT == 4).
  */
-#define MEM_ALIGN_SIZE(size)              (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
+#define MEM_ALIGN_SIZE(size)            (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
 
-/** Calculate safe memory size for an aligned buffer when using an unaligned
+/**
+ * Calculate safe memory size for an aligned buffer when using an unaligned
  * type as storage. This includes a safety-margin on (MEM_ALIGNMENT - 1) at the
  * start (e.g. if buffer is u8_t[] and actual data will be u32_t*)
  */
-#define MEM_ALIGN_BUFFER(size)            (((size) + MEM_ALIGNMENT - 1))
+#define MEM_ALIGN_BUFFER(size)          (((size) + MEM_ALIGNMENT - 1))
 
-/** Align a memory pointer to the alignment defined by MEM_ALIGNMENT
+/**
+ * Align a memory pointer to the alignment defined by MEM_ALIGNMENT
  * so that ADDR % MEM_ALIGNMENT == 0
  */
-#define MEM_ALIGN(addr) ((void *)(((ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(ptr_t)(MEM_ALIGNMENT-1)))
+#define MEM_ALIGN(addr)                 ((void *)(((ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(ptr_t)(MEM_ALIGNMENT-1)))
 
 /** some alignment macros: we define them here for better source code layout */
-#define BLOCK_MIN_SIZE_ALIGNED            MEM_ALIGN_SIZE(CONFIG_HEAP_BLOCK_SIZE)
-#define SIZEOF_STRUCT_MEM                 MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED                  MEM_ALIGN_SIZE((size_t)CONFIG_HEAP_SIZE)
-
-/** heap protection */
-#define MEM_FREE_PROTECT()                MEMMAM_FREE_PROTECT()
-#define MEM_FREE_UNPROTECT()              MEMMAM_FREE_UNPROTECT()
-
-/** heap protection */
-#define MEM_ALLOC_PROTECT()               MEMMAM_ALLOC_PROTECT()
-#define MEM_ALLOC_UNPROTECT()             MEMMAM_ALLOC_UNPROTECT()
-
-/** RAM usage modifications */
-#define MEM_STATS_INC_USED(size)          used_mem += size
-#define MEM_STATS_DEC_USED(size)          used_mem -= size
+#define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(CONFIG_HEAP_BLOCK_SIZE)
+#define SIZEOF_STRUCT_MEM               MEM_ALIGN_SIZE(sizeof(struct mem))
+#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE((size_t)CONFIG_HEAP_SIZE)
 
 /*==============================================================================
   Local types, enums definitions
@@ -128,12 +115,9 @@ typedef u32_t ptr_t;
  * we only use the macro SIZEOF_STRUCT_MEM, which automatically alignes.
  */
 struct mem {
-        /** index (-> ram[next]) of the next struct */
-        size_t next;
-        /** index (-> ram[prev]) of the previous struct */
-        size_t prev;
-        /** 1: this area is used; 0: this area is unused */
-        u8_t used;
+        size_t next;    /** index (-> ram[next]) of the next struct */
+        size_t prev;    /** index (-> ram[prev]) of the previous struct */
+        u8_t   used;    /** 1: this area is used; 0: this area is unused */
 };
 
 /*==============================================================================
@@ -144,10 +128,13 @@ static void plug_holes(struct mem *mem);
 /*==============================================================================
                                       Local object definitions
 ==============================================================================*/
-/** If you want to relocate the heap to external memory, simply define
+/**
+ * If you want to relocate the heap to external memory, simply define
  * ram_heap as a void-pointer to that location.
  * If so, make sure the memory at that location is big enough (see below on
- * how that space is calculated). */
+ * how that space is calculated).
+ */
+
 /** the heap. we need one struct mem at the end and some room for alignment */
 static u8_t ram_heap[MEM_SIZE_ALIGNED + (2*SIZEOF_STRUCT_MEM) + MEM_ALIGNMENT];
 
@@ -221,6 +208,9 @@ static void plug_holes(struct mem *mem)
 //==============================================================================
 /**
 * @brief Zero the heap and initialize start, end and lowest-free
+*
+* @retval STD_RET_OK            initialization success
+* @retval STD_RET_ERROR         initialization error
 */
 //==============================================================================
 void memman_init(void)
@@ -244,9 +234,6 @@ void memman_init(void)
 
         /* initialize the lowest-free pointer to the start of the heap */
         lfree = (struct mem *)(void *)ram;
-
-        //  if(sys_mutex_new(&mem_mutex) != ERR_OK) {
-        //  }
 }
 
 //==============================================================================
@@ -270,7 +257,7 @@ void memman_free(void *rmem)
         }
 
         /* protect the heap from concurrent access */
-        MEM_FREE_PROTECT();
+        suspend_all_tasks();
 
         /* Get the corresponding struct mem ... */
         mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
@@ -283,12 +270,12 @@ void memman_free(void *rmem)
                 lfree = mem;
         }
 
-        MEM_STATS_DEC_USED(mem->next - (size_t)(((u8_t *)mem - ram)));
+        used_mem -= (mem->next - (size_t)(((u8_t *)mem - ram)));
 
         /* finally, see if prev or next are free also */
         plug_holes(mem);
 
-        MEM_FREE_UNPROTECT();
+        resume_all_tasks();
 }
 
 //==============================================================================
@@ -324,12 +311,12 @@ void *memman_malloc(size_t size)
         }
 
         /* protect the heap from concurrent access */
-        //  sys_mutex_lock(&mem_mutex);
-        MEM_ALLOC_PROTECT();
+        suspend_all_tasks();
 
-        /* Scan through the heap searching for a free block that is big enough,
-        * beginning with the lowest free block.
-        */
+        /*
+         * Scan through the heap searching for a free block that is big enough,
+         * beginning with the lowest free block.
+         */
         for (ptr = (size_t)((u8_t *)lfree - ram);
              ptr < MEM_SIZE_ALIGNED - size;
              ptr = ((struct mem *)(void *)&ram[ptr])->next) {
@@ -337,8 +324,10 @@ void *memman_malloc(size_t size)
                 mem = (struct mem *)(void *)&ram[ptr];
 
                 if ((!mem->used) && (mem->next - (ptr + SIZEOF_STRUCT_MEM)) >= size) {
-                        /* mem is not used and at least perfect fit is possible:
-                        * mem->next - (ptr + SIZEOF_STRUCT_MEM) gives us the 'user data size' of mem */
+                        /*
+                         * mem is not used and at least perfect fit is possible:
+                         * mem->next - (ptr + SIZEOF_STRUCT_MEM) gives us the 'user data size' of mem
+                         */
 
                         if (mem->next - (ptr + SIZEOF_STRUCT_MEM)
                            >= (size + SIZEOF_STRUCT_MEM + BLOCK_MIN_SIZE_ALIGNED)) {
@@ -370,7 +359,7 @@ void *memman_malloc(size_t size)
                                         ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
                                 }
 
-                                MEM_STATS_INC_USED(size + SIZEOF_STRUCT_MEM);
+                                used_mem += (size + SIZEOF_STRUCT_MEM);
                         } else {
                                 /* (a mem2 struct does no fit into the user data space of
                                  *  mem and mem->next will always
@@ -383,31 +372,23 @@ void *memman_malloc(size_t size)
                                  */
                                 mem->used = 1;
 
-                                MEM_STATS_INC_USED(mem->next - (size_t)((u8_t *)mem - ram));
+                                used_mem += (mem->next - (size_t)((u8_t *)mem - ram));
                         }
 
                         if (mem == lfree) {
                                 /* Find next free block after mem and update lowest free pointer */
                                 while (lfree->used && lfree != ram_end) {
-                                        MEM_ALLOC_UNPROTECT();
-
-                                        /* prevent high interrupt latency... */
-                                        MEM_ALLOC_PROTECT();
                                         lfree = (struct mem *)(void *)&ram[lfree->next];
                                 }
                         }
 
-                        MEM_ALLOC_UNPROTECT();
 
-                        //        sys_mutex_unlock(&mem_mutex);
-
+                        resume_all_tasks();
                         return (u8_t *)mem + SIZEOF_STRUCT_MEM;
                 }
         }
 
-        MEM_ALLOC_UNPROTECT();
-        //  sys_mutex_unlock(&mem_mutex);
-
+        resume_all_tasks();
         return NULL;
 }
 
