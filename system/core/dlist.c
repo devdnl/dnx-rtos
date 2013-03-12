@@ -32,13 +32,14 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "dlist.h"
+#include "memman.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)              DLIST_CALLOC(nmemb, msize)
-#define malloc(size)                      DLIST_MALLOC(size)
-#define free(mem)                         DLIST_FREE(mem)
+#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
+#define malloc(size)                      memman_malloc(size)
+#define free(mem)                         memman_free(mem)
 
 /*==============================================================================
   Local types, enums definitions
@@ -49,11 +50,11 @@ struct listitem {
         struct listitem *next;
 };
 
-typedef struct list {
+struct list {
         struct listitem *head;
         struct listitem *tail;
         i32_t  itemcount;
-} list_t;
+};
 
 /*==============================================================================
   Local function prototypes

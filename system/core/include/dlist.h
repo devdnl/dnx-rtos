@@ -34,15 +34,10 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "systypes.h"
-#include "memman.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* USER CFG: memory management */
-#define DLIST_CALLOC(nmemb, msize)        memman_calloc(nmemb, msize)
-#define DLIST_MALLOC(size)                memman_malloc(size)
-#define DLIST_FREE(mem)                   memman_free(mem)
 
 /*==============================================================================
   Exported types, enums definitions
