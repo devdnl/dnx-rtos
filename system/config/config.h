@@ -39,22 +39,22 @@ extern "C" {
 
 /**=== MEMORY CONFIGURATION ==================================================*/
 /**
- * SIZE OF RAM MEMORY
+ * Size of RAM memory [bytes]
  */
 #define CONFIG_RAM_SIZE                               (64 * 1024)
 
 /**
- * SIZE OF DYNAMIC ALLOCATED MEMORY (HEAP) [bytes]
+ * Size of dynamic allocated memory (HEAP) [bytes]
  */
 #define CONFIG_HEAP_SIZE                              (63 * 1024)
 
 /**
- * HEAP MEMORY ALINGMENT
+ * Heap memory alignment
  */
 #define CONFIG_HEAP_ALIGN                             (4)
 
 /**
- * HEAP BLOCK SIZE
+ * Heap block size
  */
 #define CONFIG_HEAP_BLOCK_SIZE                        (16)
 
@@ -66,7 +66,7 @@ extern "C" {
 #define CONFIG_RTOS_TASK_MAX_PRIORITIES               (7)
 
 /**
- * Task minimal stack size
+ * Task minimal stack depth
  */
 #define CONFIG_RTOS_TASK_MIN_STACK_DEPTH              (64)
 
@@ -103,7 +103,7 @@ extern "C" {
 #define CONFIG_SCANF_ENABLE                           (1)
 
 /**
- * Enable (1) or disable (0) system messages (required printf() enabled)
+ * Enable (1) or disable (0) system messages
  */
 #define CONFIG_SYSTEM_MSG_ENABLE                      (1)
 
@@ -133,10 +133,11 @@ extern "C" {
  */
 #define CONFIG_MONITOR_CPU_LOAD                       (1)
 
-
 /**=== SYSTEM ENVIRONMENT CONFIGURATION ======================================*/
-#define CONFIG_HOSTNAME                               "watherst"
-
+/**
+ * Define the host name
+ */
+#define CONFIG_HOSTNAME                               "localhost"
 
 #ifdef __cplusplus
 }
