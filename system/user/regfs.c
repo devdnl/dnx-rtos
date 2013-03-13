@@ -68,7 +68,7 @@ extern "C" {
   Local types, enums definitions
 ==============================================================================*/
 typedef struct {
-      ch_t             *fsName;
+      char             *fsName;
       struct vfs_fscfg  mntcfg;
 } regFS_t;
 
@@ -107,7 +107,7 @@ static const regFS_t fsList[] =
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t mount(const ch_t *fsname, const ch_t *srcpath, const ch_t *mountpoint)
+stdRet_t mount(const char *fsname, const char *srcpath, const char *mountpoint)
 {
         stdRet_t status = STD_RET_ERROR;
 
@@ -137,7 +137,7 @@ stdRet_t mount(const ch_t *fsname, const ch_t *srcpath, const ch_t *mountpoint)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t umount(const ch_t *mountpoint)
+stdRet_t umount(const char *mountpoint)
 {
         stdRet_t status = STD_RET_ERROR;
 

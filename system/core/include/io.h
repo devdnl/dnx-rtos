@@ -149,24 +149,24 @@ extern "C" {
   Exported function prototypes
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-extern void  io_printk(const ch_t *format, ...);
-extern void  io_enable_printk(ch_t *filename);
+extern void  io_printk(const char *format, ...);
+extern void  io_enable_printk(char *filename);
 extern void  io_disable_printk(void);
 #endif
 #if (CONFIG_PRINTF_ENABLE > 0)
-extern int   io_snprintf(ch_t *buf, u32_t size, const ch_t *format, ...);
-extern int   io_fprintf(FILE_t *file, const ch_t *format, ...);
-extern int   io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg);
+extern int   io_snprintf(char *buf, u32_t size, const char *format, ...);
+extern int   io_fprintf(FILE_t *file, const char *format, ...);
+extern int   io_vsnprintf(char *buf, size_t size, const char *format, va_list arg);
 #endif
 #if (CONFIG_SCANF_ENABLE > 0)
-extern int   io_fscanf(FILE_t *buf, const ch_t *format, ...);
-extern int   io_sscanf(const ch_t *str, const ch_t *format, ...);
-extern int   io_vsscanf(const ch_t *str, const ch_t *format, va_list args);
+extern int   io_fscanf(FILE_t *buf, const char *format, ...);
+extern int   io_sscanf(const char *str, const char *format, ...);
+extern int   io_vsscanf(const char *str, const char *format, va_list args);
 #endif
-extern ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value);
+extern char *io_atoi(char *string, u8_t base, i32_t *value);
 extern int   io_fputc(int c, FILE_t *buf);
 extern int   io_getc(FILE_t *buf);
-extern ch_t *io_fgets(ch_t *str, int size, FILE_t *stream);
+extern char *io_fgets(char *str, int size, FILE_t *stream);
 
 #ifdef __cplusplus
 }

@@ -68,7 +68,7 @@ extern "C" {
   Local types, enums definitions
 ==============================================================================*/
 typedef struct {
-        ch_t  *drvName;
+        char  *drvName;
         stdRet_t (*drvInit   )(devx_t dev, fd_t part);
         stdRet_t (*drvRelease)(devx_t dev, fd_t part);
         struct vfs_drvcfg drvCfg;
@@ -123,7 +123,7 @@ static const regDrv_t drvList[] =
  * @return driver depending value, everything not equal to STD_RET_OK are errors
  */
 //==============================================================================
-stdRet_t init_driver(const ch_t *drvName, const ch_t *nodeName)
+stdRet_t init_driver(const char *drvName, const char *nodeName)
 {
         if (drvName == NULL) {
                 return STD_RET_ERROR;
@@ -180,7 +180,7 @@ stdRet_t init_driver(const ch_t *drvName, const ch_t *nodeName)
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //==============================================================================
-stdRet_t release_driver(const ch_t *drvName)
+stdRet_t release_driver(const char *drvName)
 {
       stdRet_t status = STD_RET_ERROR;
 

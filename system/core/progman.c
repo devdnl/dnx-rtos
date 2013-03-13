@@ -288,7 +288,7 @@ static void set_status(enum prog_state *status_ptr, enum prog_state status)
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static char **new_argument_table(char *arg, const ch_t *name, int *argc)
+static char **new_argument_table(char *arg, const char *name, int *argc)
 {
         int     arg_count  = 0;
         char  **arg_table  = NULL;
@@ -303,7 +303,7 @@ static char **new_argument_table(char *arg, const ch_t *name, int *argc)
                 goto exit_error;
         }
 
-        if (list_add_item(arg_list, ++arg_count, (ch_t*)name) < 0) {
+        if (list_add_item(arg_list, ++arg_count, (char*)name) < 0) {
                 goto exit_error;
         }
 
@@ -311,14 +311,14 @@ static char **new_argument_table(char *arg, const ch_t *name, int *argc)
                 goto add_args_to_table;
         }
 
-        if ((arg_string = calloc(strlen(arg) + 1, sizeof(ch_t))) == NULL) {
+        if ((arg_string = calloc(strlen(arg) + 1, sizeof(char))) == NULL) {
                 goto exit_error;
         }
 
         strcpy(arg_string, arg);
 
         while (*arg_string != '\0') {
-                ch_t *arg_to_add = NULL;
+                char *arg_to_add = NULL;
 
                 if (*arg_string == '\'') {
                         arg_to_add = ++arg_string;
@@ -383,7 +383,7 @@ static char **new_argument_table(char *arg, const ch_t *name, int *argc)
         }
 
 add_args_to_table:
-        if ((arg_table = calloc(arg_count, sizeof(ch_t*))) == NULL) {
+        if ((arg_table = calloc(arg_count, sizeof(char*))) == NULL) {
                 goto exit_error;
         }
 

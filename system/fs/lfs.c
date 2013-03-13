@@ -56,7 +56,7 @@ typedef enum {
 
 /** node structure */
 typedef struct node {
-        ch_t       *name;       /* file name */
+        char       *name;       /* file name */
         nodeType_t  type;       /* file type */
         u32_t       dev;        /* major device number */
         u32_t       part;       /* minor device number */
@@ -87,10 +87,10 @@ struct fshdl_s {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static node_t   *new_node(node_t *nodebase, ch_t *filename, i32_t *item);
+static node_t   *new_node(node_t *nodebase, char *filename, i32_t *item);
 static stdRet_t  delete_node(node_t *base, node_t *target, u32_t baseitemid);
-static node_t   *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item);
-static uint      get_path_deep(const ch_t *path);
+static node_t   *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item);
+static uint      get_path_deep(const char *path);
 static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
 static stdRet_t  add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item);
@@ -115,7 +115,7 @@ static struct fshdl_s *lfs;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_init(const ch_t *srcPath, fsd_t *fsd)
+stdRet_t lfs_init(const char *srcPath, fsd_t *fsd)
 {
         (void) fsd;
         (void) srcPath;
@@ -171,15 +171,15 @@ stdRet_t lfs_init(const ch_t *srcPath, fsd_t *fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
+stdRet_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
 {
         (void) fsd;
 
         node_t *node;
         node_t *ifnode;
         node_t *dirfile;
-        ch_t   *drvname;
-        ch_t   *filename;
+        char   *drvname;
+        char   *filename;
         uint  drvnamelen;
         struct vfs_drvcfg *dcfg;
 
@@ -207,7 +207,7 @@ stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
         drvname    = strrchr(path, '/') + 1;
         drvnamelen = strlen(drvname);
 
-        filename = calloc(drvnamelen + 1, sizeof(ch_t));
+        filename = calloc(drvnamelen + 1, sizeof(char));
         if (filename) {
                 strcpy(filename, drvname);
 
@@ -259,15 +259,15 @@ stdRet_t lfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *drvcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
+stdRet_t lfs_mkdir(fsd_t fsd, const char *path)
 {
         (void) fsd;
 
         node_t *node;
         node_t *ifnode;
         node_t *dir;
-        ch_t   *dirname;
-        ch_t   *name;
+        char   *dirname;
+        char   *name;
         uint  dirnamelen;
 
         if (!path || !lfs) {
@@ -294,7 +294,7 @@ stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
         dirname    = strrchr(path, '/') + 1;
         dirnamelen = strlen(dirname);
 
-        name = calloc(dirnamelen + 1, sizeof(ch_t));
+        name = calloc(dirnamelen + 1, sizeof(char));
         if (name) {
                 strcpy(name, dirname);
 
@@ -305,7 +305,7 @@ stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
 
                 dir->data = new_list();
                 if (dir->data) {
-                        dir->name = (ch_t*)name;
+                        dir->name = (char*)name;
                         dir->size = sizeof(node_t) + strlen(name);
                         dir->type = NODE_TYPE_DIR;
 
@@ -340,7 +340,7 @@ stdRet_t lfs_mkdir(fsd_t fsd, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
+stdRet_t lfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
 {
         (void) fsd;
 
@@ -436,7 +436,7 @@ static dirent_t lfs_readdir(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
+stdRet_t lfs_remove(fsd_t fsd, const char *path)
 {
         (void) fsd;
 
@@ -511,14 +511,14 @@ stdRet_t lfs_remove(fsd_t fsd, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
+stdRet_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 {
         (void) fsd;
 
         node_t *oldNodeBase;
         node_t *newNodeBase;
         node_t *node;
-        ch_t   *name;
+        char   *name;
 
         if (!oldName || !newName || !lfs) {
                 return STD_RET_ERROR;
@@ -593,7 +593,7 @@ stdRet_t lfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
+stdRet_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 {
         (void) fsd;
 
@@ -627,7 +627,7 @@ stdRet_t lfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
+stdRet_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 {
         (void) fsd;
 
@@ -662,7 +662,7 @@ stdRet_t lfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_stat(fsd_t fsd, const ch_t *path, struct vfs_stat *stat)
+stdRet_t lfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
 {
         (void) fsd;
 
@@ -797,13 +797,13 @@ stdRet_t lfs_release(fsd_t fsd)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
+stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
 {
         (void) fsd;
 
         node_t *node;
         node_t *nodebase;
-        ch_t   *filename;
+        char   *filename;
         i32_t   item;
         u32_t   cfd;
 
@@ -1014,7 +1014,7 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
         node_t            *node;
         fopenInfo_t       *foi;
         struct vfs_drvcfg *drv;
-        ch_t              *newdata;
+        char              *newdata;
         size_t             wrsize;
         size_t             filelen;
         size_t             n = 0;
@@ -1260,10 +1260,10 @@ static stdRet_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
  * @return path deep
  */
 //==============================================================================
-static uint get_path_deep(const ch_t *path)
+static uint get_path_deep(const char *path)
 {
         uint      deep     = 0;
-        const ch_t *lastpath = NULL;
+        const char *lastpath = NULL;
 
         if (path[0] == '/') {
                 lastpath = path++;
@@ -1295,11 +1295,11 @@ static uint get_path_deep(const ch_t *path)
  * @return node
  */
 //==============================================================================
-static node_t *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *item)
+static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item)
 {
         node_t *curnode;
         node_t *node;
-        ch_t   *pathend;
+        char   *pathend;
         int   dirdeep;
         uint  pathlen;
         int   listsize;
@@ -1384,7 +1384,7 @@ static node_t *get_node(const ch_t *path, node_t *startnode, i32_t deep, i32_t *
  * @return NULL if error, otherwise new node address
  */
 //==============================================================================
-static node_t *new_node(node_t *nodebase, ch_t *filename, i32_t *item)
+static node_t *new_node(node_t *nodebase, char *filename, i32_t *item)
 {
         node_t *fnode;
         i32_t   nitem;

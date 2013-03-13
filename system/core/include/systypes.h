@@ -101,7 +101,7 @@ typedef struct
 /** directory entry */
 typedef struct
 {
-        ch_t   *name;
+        char   *name;
         size_t  size;
         tfile_t filetype;
 } dirent_t;

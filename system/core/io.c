@@ -60,8 +60,8 @@ extern "C" {
  Local function prototypes
 ==============================================================================*/
 #if (CONFIG_PRINTF_ENABLE > 0)
-static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_req);
-static int   calc_format_size(const ch_t *format, va_list arg);
+static char *itoa(i32_t val, char *buf, u8_t base, bool_t usign_val, u8_t zeros_req);
+static int   calc_format_size(const char *format, va_list arg);
 #endif
 
 /*==============================================================================
@@ -93,11 +93,11 @@ static FILE_t *printk_file;
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_req)
+static char *itoa(i32_t val, char *buf, u8_t base, bool_t usign_val, u8_t zeros_req)
 {
-        static const ch_t digits[] = "0123456789ABCDEF";
+        static const char digits[] = "0123456789ABCDEF";
 
-        ch_t  *bufferCopy = buf;
+        char  *bufferCopy = buf;
         i32_t  sign    = 0;
         u8_t   zeroCnt = 0;
         i32_t  quot;
@@ -137,9 +137,9 @@ static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_
         }
 
         /* reverse buffer */
-        ch_t  temp;
-        ch_t *begin = bufferCopy;
-        ch_t *end   = (buf - 1);
+        char  temp;
+        char *begin = bufferCopy;
+        char *end   = (buf - 1);
 
         while (end > begin) {
                 temp     = *end;
@@ -164,9 +164,9 @@ static ch_t *itoa(i32_t val, ch_t *buf, u8_t base, bool_t usign_val, u8_t zeros_
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-static int calc_format_size(const ch_t *format, va_list arg)
+static int calc_format_size(const char *format, va_list arg)
 {
-        ch_t chr;
+        char chr;
         int size = 1;
 
         while ((chr = *format++) != '\0') {
@@ -189,7 +189,7 @@ static int calc_format_size(const ch_t *format, va_list arg)
                         }
 
                         if (chr == 's') {
-                                size += strlen(va_arg(arg, ch_t*));
+                                size += strlen(va_arg(arg, char*));
                                 continue;
                         }
 
@@ -219,9 +219,9 @@ static int calc_format_size(const ch_t *format, va_list arg)
  * @return pointer in string when operation was finished
  */
 //==============================================================================
-ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
+char *io_atoi(char *string, u8_t base, i32_t *value)
 {
-        ch_t character;
+        char character;
         i32_t sign = 1;
         bool_t charFound = FALSE;
 
@@ -292,7 +292,7 @@ ch_t *io_atoi(ch_t *string, u8_t base, i32_t *value)
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-void io_enable_printk(ch_t *filename)
+void io_enable_printk(char *filename)
 {
         /* close file if opened */
         if (printk_file) {
@@ -333,7 +333,7 @@ void io_disable_printk(void)
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-void io_printk(const ch_t *format, ...)
+void io_printk(const char *format, ...)
 {
         va_list args;
 
@@ -342,14 +342,14 @@ void io_printk(const ch_t *format, ...)
                 int size = calc_format_size(format, args);
                 va_end(args);
 
-                ch_t *buffer = calloc(size, sizeof(ch_t));
+                char *buffer = calloc(size, sizeof(char));
 
                 if (buffer) {
                         va_start(args, format);
                         io_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        fwrite(buffer, sizeof(ch_t), size, printk_file);
+                        fwrite(buffer, sizeof(char), size, printk_file);
 
                         free(buffer);
                 }
@@ -370,8 +370,8 @@ void io_printk(const ch_t *format, ...)
 int io_fputc(int c, FILE_t *stream)
 {
         if (stream) {
-                ch_t ch = (ch_t)c;
-                if (fwrite(&ch, sizeof(ch_t), 1, stream) < 1) {
+                char ch = (char)c;
+                if (fwrite(&ch, sizeof(char), 1, stream) < 1) {
                         return EOF;
                 } else {
                         return c;
@@ -399,7 +399,7 @@ int io_getc(FILE_t *stream)
                 return EOF;
         }
 
-        while (fread(&chr, sizeof(ch_t), 1, stream) < 1) {
+        while (fread(&chr, sizeof(char), 1, stream) < 1) {
                 if (dcnt >= 60000) {
                         milisleep(200);
                 } else if (dcnt >= 5000) {
@@ -425,7 +425,7 @@ int io_getc(FILE_t *stream)
  * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-ch_t *io_fgets(ch_t *str, int size, FILE_t *stream)
+char *io_fgets(char *str, int size, FILE_t *stream)
 {
         if (!str || !size || !stream) {
                 return NULL;
@@ -434,9 +434,9 @@ ch_t *io_fgets(ch_t *str, int size, FILE_t *stream)
         for (int i = 0; i < size - 1; i++) {
                 str[i] = io_getc(stream);
 
-                if (str[i] == (ch_t)EOF && i == 0) {
+                if (str[i] == (char)EOF && i == 0) {
                         return NULL;
-                } else if (str[i] == '\n' || str[i] == (ch_t)EOF) {
+                } else if (str[i] == '\n' || str[i] == (char)EOF) {
                         str[i + 1] = '\0';
                         break;
                 }
@@ -460,7 +460,7 @@ ch_t *io_fgets(ch_t *str, int size, FILE_t *stream)
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-int io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
+int io_snprintf(char *bfr, u32_t size, const char *format, ...)
 {
         va_list args;
         int n = 0;
@@ -487,7 +487,7 @@ int io_snprintf(ch_t *bfr, u32_t size, const ch_t *format, ...)
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-int io_fprintf(FILE_t *file, const ch_t *format, ...)
+int io_fprintf(FILE_t *file, const char *format, ...)
 {
         va_list args;
         int n = 0;
@@ -497,14 +497,14 @@ int io_fprintf(FILE_t *file, const ch_t *format, ...)
                 u32_t size = calc_format_size(format, args);
                 va_end(args);
 
-                ch_t *str = calloc(1, size);
+                char *str = calloc(1, size);
 
                 if (str) {
                         va_start(args, format);
                         n = io_vsnprintf(str, size, format, args);
                         va_end(args);
 
-                        fwrite(str, sizeof(ch_t), size, file);
+                        fwrite(str, sizeof(char), size, file);
 
                         free(str);
                 }
@@ -527,7 +527,7 @@ int io_fprintf(FILE_t *file, const ch_t *format, ...)
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-int io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
+int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #define putCharacter(character)                 \
         {                                       \
@@ -539,7 +539,7 @@ int io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
                 }                               \
         }
 
-        ch_t  chr;
+        char  chr;
         int slen = 1;
 
         while ((chr = *format++) != '\0') {
@@ -560,11 +560,11 @@ int io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
                 }
 
                 if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u') {
-                        ch_t result[11];
-                        ch_t *resultPtr;
+                        char result[11];
+                        char *resultPtr;
 
                         if (chr == 's') {
-                                resultPtr = va_arg(arg, ch_t*);
+                                resultPtr = va_arg(arg, char*);
                         } else {
                                 u8_t zeros = *format++;
 
@@ -610,12 +610,12 @@ int io_vsnprintf(ch_t *buf, size_t size, const ch_t *format, va_list arg)
  */
 //==============================================================================
 #if (CONFIG_SCANF_ENABLE > 0)
-int io_fscanf(FILE_t *stream, const ch_t *format, ...)
+int io_fscanf(FILE_t *stream, const char *format, ...)
 {
         int n = 0;
         va_list args;
 
-        ch_t *str = calloc(BUFSIZ, sizeof(ch_t));
+        char *str = calloc(BUFSIZ, sizeof(char));
 
         if (str == NULL) {
                 return 0;
@@ -651,7 +651,7 @@ int io_fscanf(FILE_t *stream, const ch_t *format, ...)
  */
 //==============================================================================
 #if (CONFIG_SCANF_ENABLE > 0)
-int io_sscanf(const ch_t *str, const ch_t *format, ...)
+int io_sscanf(const char *str, const char *format, ...)
 {
         va_list args;
         va_start(args, format);
@@ -673,14 +673,14 @@ int io_sscanf(const ch_t *str, const ch_t *format, ...)
  */
 //============================================================================//
 #if (CONFIG_SCANF_ENABLE > 0)
-int io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
+int io_vsscanf(const char *str, const char *format, va_list args)
 {
         int   read_fields = 0;
-        ch_t    chr;
+        char    chr;
         int   value;
-        ch_t   *strs;
+        char   *strs;
         int   sign;
-        ch_t   *string;
+        char   *string;
         uint  bfr_size;
 
         if (!str || !format) {
@@ -722,7 +722,7 @@ int io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
                                         str++;
                                 }
 
-                                strs  = (ch_t*)str;
+                                strs  = (char*)str;
 
                                 while (*str >= '0' && *str <= '9') {
                                         value *= 10;
@@ -750,7 +750,7 @@ int io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
                                         str++;
                                 }
 
-                                strs  = (ch_t*)str;
+                                strs  = (char*)str;
 
                                 while (  (*str >= '0' && *str <= '9')
                                       || (*str >= 'a' && *str <= 'f')
@@ -792,7 +792,7 @@ int io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
                                         str++;
                                 }
 
-                                strs  = (ch_t*)str;
+                                strs  = (char*)str;
 
                                 while (*str >= '0' && *str <= '7') {
                                         value *= 8;
@@ -812,7 +812,7 @@ int io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
 
                         case 'c':
                                 if (*str >= ' ') {
-                                        ch_t *var = va_arg(args, ch_t*);
+                                        char *var = va_arg(args, char*);
 
                                         if (var) {
                                                 *var = *str;
@@ -823,7 +823,7 @@ int io_vsscanf(const ch_t *str, const ch_t *format, va_list args)
                                 break;
 
                         case 's':
-                                string = va_arg(args, ch_t*);
+                                string = va_arg(args, char*);
                                 if (string) {
                                         strcpy(string, str);
                                         read_fields++;

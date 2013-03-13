@@ -74,7 +74,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
         while (TRUE) {
                 char chr = EOF;
-                fread(&chr, sizeof(ch_t), 1, stdin);
+                fread(&chr, sizeof(char), 1, stdin);
 
                 if (chr == 'q') {
                         break;

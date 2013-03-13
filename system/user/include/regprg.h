@@ -43,7 +43,7 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct regprg_pdata {
-        ch_t  *program_name;
+        char  *program_name;
         int  (*main_function)(int, char**);
         const uint *globals_size;
         const uint *stack_depth;
@@ -56,7 +56,7 @@ struct regprg_pdata {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdRet_t regprg_get_program_data(ch_t*, struct regprg_pdata*);
+extern stdRet_t regprg_get_program_data(char*, struct regprg_pdata*);
 extern int regprg_get_program_count(void);
 extern struct regprg_pdata *regprg_get_pointer_to_program_list(void);
 

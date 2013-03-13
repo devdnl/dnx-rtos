@@ -117,7 +117,7 @@ static struct procmem *procmem;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_init(const ch_t *srcPath, fsd_t *fsd)
+stdRet_t procfs_init(const char *srcPath, fsd_t *fsd)
 {
         (void) fsd;
         (void) srcPath;
@@ -194,7 +194,7 @@ stdRet_t procfs_release(fsd_t fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
+stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
 {
         (void) fsd;
 
@@ -217,7 +217,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
                 }
 
                 task_t *taskHdl = NULL;
-                path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
+                path = atoi((char*)path, 16, (i32_t*)&taskHdl);
 
                 if (tskm_get_task_stat(taskHdl, &taskdata) != STD_RET_OK) {
                         return STD_RET_ERROR;
@@ -236,21 +236,21 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const 
 
                 fileInf->taskHdl = taskHdl;
 
-                if (strcmp((ch_t*) path, TASK_FILE_NAME_STR) == 0) {
+                if (strcmp((char*) path, TASK_FILE_NAME_STR) == 0) {
                         fileInf->taskFile = TASK_FILE_NAME;
-                } else if (strcmp((ch_t*) path, TASK_FILE_CPULOAD_STR)
+                } else if (strcmp((char*) path, TASK_FILE_CPULOAD_STR)
                            == 0) {
                         fileInf->taskFile = TASK_FILE_CPULOAD;
-                } else if (strcmp((ch_t*) path, TASK_FILE_FREESTACK_STR)
+                } else if (strcmp((char*) path, TASK_FILE_FREESTACK_STR)
                            == 0) {
                         fileInf->taskFile = TASK_FILE_FREESTACK;
-                } else if (strcmp((ch_t*) path, TASK_FILE_OPENFILES_STR)
+                } else if (strcmp((char*) path, TASK_FILE_OPENFILES_STR)
                            == 0) {
                         fileInf->taskFile = TASK_FILE_OPENFILES;
-                } else if (strcmp((ch_t*) path, TASK_FILE_PRIO_STR)
+                } else if (strcmp((char*) path, TASK_FILE_PRIO_STR)
                            == 0) {
                         fileInf->taskFile = TASK_FILE_PRIO;
-                } else if (strcmp((ch_t*) path, TASK_FILE_USEDMEM_STR)
+                } else if (strcmp((char*) path, TASK_FILE_USEDMEM_STR)
                            == 0) {
                         fileInf->taskFile = TASK_FILE_USEDMEM;
                 } else {
@@ -423,8 +423,8 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
         taskInfo.opened_files = 0;
         taskInfo.priority     = 0;
 
-        ch_t  data[12] = {0};
-        ch_t *dataPtr  = data;
+        char  data[12] = {0};
+        char *dataPtr  = data;
         u8_t  dataSize = 0;
 
         /* DNLFIXME here is bug, cpuUsage always is 0 (why?) */
@@ -553,7 +553,7 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
         stat->st_gid   = 0;
         stat->st_uid   = 0;
 
-        ch_t data[12] = {0};
+        char data[12] = {0};
 
         switch (fileInf->taskFile) {
         case TASK_FILE_CPULOAD:
@@ -602,7 +602,7 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_mkdir(fsd_t fsd, const ch_t *path)
+stdRet_t procfs_mkdir(fsd_t fsd, const char *path)
 {
         (void) fsd;
         (void) path;
@@ -622,7 +622,7 @@ stdRet_t procfs_mkdir(fsd_t fsd, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *dcfg)
+stdRet_t procfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
 {
         (void) fsd;
         (void) path;
@@ -643,7 +643,7 @@ stdRet_t procfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *dcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
+stdRet_t procfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
 {
         (void) fsd;
 
@@ -666,7 +666,7 @@ stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
                 dir->cldir = procfs_closedir_noop;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
-                dir->dd    = calloc(TASK_ID_STR_LEN, sizeof(ch_t));
+                dir->dd    = calloc(TASK_ID_STR_LEN, sizeof(char));
                 dir->items = tskm_get_number_of_monitored_tasks();
                 dir->rddir = procfs_readdir_taskid;
                 dir->cldir = procfs_closedir_freedd;
@@ -681,7 +681,7 @@ stdRet_t procfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
                 }
 
                 task_t *taskHdl = NULL;
-                path = atoi((ch_t*)path, 16, (i32_t*)&taskHdl);
+                path = atoi((char*)path, 16, (i32_t*)&taskHdl);
 
                 if (!((*path == '/' && *(path + 1) == '\0') || *path == '\0')) {
                         return STD_RET_ERROR;
@@ -759,7 +759,7 @@ static stdRet_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_remove(fsd_t fsd, const ch_t *path)
+stdRet_t procfs_remove(fsd_t fsd, const char *path)
 {
         (void) fsd;
         (void) path;
@@ -779,7 +779,7 @@ stdRet_t procfs_remove(fsd_t fsd, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
+stdRet_t procfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 {
         (void) fsd;
         (void) oldName;
@@ -800,7 +800,7 @@ stdRet_t procfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
+stdRet_t procfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 {
         (void) fsd;
         (void) path;
@@ -822,7 +822,7 @@ stdRet_t procfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
+stdRet_t procfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 {
         (void) fsd;
         (void) path;
@@ -844,7 +844,7 @@ stdRet_t procfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_stat(fsd_t fsd, const ch_t *path, struct vfs_stat *stat)
+stdRet_t procfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
 {
       (void)fsd;
 
@@ -1035,7 +1035,7 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
                 return dirent;
         }
 
-        ch_t data[12]   = {0};
+        char data[12]   = {0};
         dirent.filetype = FILE_TYPE_REGULAR;
 
         switch (dir->seek) {

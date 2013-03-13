@@ -117,7 +117,7 @@ struct taskstat {
         u32_t   memory_usage;
         u32_t   opened_files;
         u32_t   cpu_usage;
-        ch_t   *task_name;
+        char   *task_name;
         task_t *task_handle;
         u32_t   free_stack;
         i16_t   priority;
@@ -156,9 +156,9 @@ extern void     tskm_free(void*);
 #endif
 
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-extern FILE_t  *tskm_fopen(const ch_t*, const ch_t*);
+extern FILE_t  *tskm_fopen(const char*, const char*);
 extern stdRet_t tskm_fclose(FILE_t*);
-extern DIR_t   *tskm_opendir(const ch_t*);
+extern DIR_t   *tskm_opendir(const char*);
 extern stdRet_t tskm_closedir(DIR_t*);
 #endif
 

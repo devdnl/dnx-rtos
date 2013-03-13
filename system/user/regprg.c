@@ -85,7 +85,7 @@ static const struct regprg_pdata pdata[] = {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t regprg_get_program_data(ch_t *name, struct regprg_pdata *prg_data)
+stdRet_t regprg_get_program_data(char *name, struct regprg_pdata *prg_data)
 {
         if (!prg_data || !name) {
                 return STD_RET_ERROR;

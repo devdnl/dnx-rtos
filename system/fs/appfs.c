@@ -72,7 +72,7 @@ static stdRet_t appfs_closedir(fsd_t fsd, DIR_t *dir);
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_init(const ch_t *srcPath, fsd_t *fsd)
+stdRet_t appfs_init(const char *srcPath, fsd_t *fsd)
 {
         (void)fsd;
         (void)srcPath;
@@ -94,7 +94,7 @@ stdRet_t appfs_init(const ch_t *srcPath, fsd_t *fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const ch_t *path, const ch_t *mode)
+stdRet_t appfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
 {
         (void)fsd;
         (void)fd;
@@ -231,7 +231,7 @@ stdRet_t appfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_mkdir(fsd_t fsd, const ch_t *path)
+stdRet_t appfs_mkdir(fsd_t fsd, const char *path)
 {
         (void)fsd;
         (void)path;
@@ -251,7 +251,7 @@ stdRet_t appfs_mkdir(fsd_t fsd, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *dcfg)
+stdRet_t appfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
 {
         (void)fsd;
         (void)path;
@@ -272,7 +272,7 @@ stdRet_t appfs_mknod(fsd_t fsd, const ch_t *path, struct vfs_drvcfg *dcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_opendir(fsd_t fsd, const ch_t *path, DIR_t *dir)
+stdRet_t appfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
 {
         (void)fsd;
 
@@ -321,7 +321,7 @@ static stdRet_t appfs_closedir(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_remove(fsd_t fsd, const ch_t *path)
+stdRet_t appfs_remove(fsd_t fsd, const char *path)
 {
         (void)fsd;
         (void)path;
@@ -341,7 +341,7 @@ stdRet_t appfs_remove(fsd_t fsd, const ch_t *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
+stdRet_t appfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 {
         (void)fsd;
         (void)oldName;
@@ -362,7 +362,7 @@ stdRet_t appfs_rename(fsd_t fsd, const ch_t *oldName, const ch_t *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
+stdRet_t appfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 {
         (void)fsd;
         (void)path;
@@ -384,7 +384,7 @@ stdRet_t appfs_chmod(fsd_t fsd, const ch_t *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
+stdRet_t appfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 {
         (void)fsd;
         (void)path;
@@ -406,7 +406,7 @@ stdRet_t appfs_chown(fsd_t fsd, const ch_t *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_stat(fsd_t fsd, const ch_t *path, struct vfs_stat *stat)
+stdRet_t appfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
 {
         (void)fsd;
 
@@ -492,7 +492,7 @@ static dirent_t appfs_readrootdir(fsd_t fsd, DIR_t *dir)
         if (dir) {
                 if (dir->seek < (size_t)regprg_get_program_count()) {
                         dirent.filetype = FILE_TYPE_REGULAR;
-                        dirent.name     = (ch_t*)regprg_get_pointer_to_program_list()[dir->seek].program_name;
+                        dirent.name     = (char*)regprg_get_pointer_to_program_list()[dir->seek].program_name;
                         dirent.size     = 0;
                         dir->seek++;
                 }

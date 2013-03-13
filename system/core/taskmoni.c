@@ -780,7 +780,7 @@ void tskm_free(void *mem)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-FILE_t *tskm_fopen(const ch_t *path, const ch_t *mode)
+FILE_t *tskm_fopen(const char *path, const char *mode)
 {
         FILE_t *file  = NULL;
         uint    block = 0;
@@ -935,7 +935,7 @@ stdRet_t tskm_fclose(FILE_t *file)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-DIR_t *tskm_opendir(const ch_t *path)
+DIR_t *tskm_opendir(const char *path)
 {
         DIR_t  *dir   = NULL;
         u32_t   block = 0;

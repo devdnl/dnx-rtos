@@ -134,7 +134,7 @@ void task_initd(void *arg)
                 if (current_tty >= 0 && current_tty < TTY_LAST - 1) {
                         if (!program[current_tty]) {
                                 if (tty[current_tty] == NULL) {
-                                        ch_t path[16];
+                                        char path[16];
                                         snprintf(path, sizeof(path), "/dev/tty%c",
                                                  '0' + current_tty);
                                         tty[current_tty] = fopen(path, "r+");

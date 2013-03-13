@@ -50,8 +50,8 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdRet_t init_driver(const ch_t *drvName, const ch_t *nodeName);
-extern stdRet_t release_driver(const ch_t *drvName);
+extern stdRet_t init_driver(const char *drvName, const char *nodeName);
+extern stdRet_t release_driver(const char *drvName);
 
 #ifdef __cplusplus
 }
