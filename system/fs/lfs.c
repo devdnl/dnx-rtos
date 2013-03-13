@@ -88,12 +88,12 @@ struct fshdl_s {
   Local function prototypes
 ==============================================================================*/
 static node_t   *new_node(node_t *nodebase, char *filename, i32_t *item);
-static stdRet_t  delete_node(node_t *base, node_t *target, u32_t baseitemid);
+static stdret_t  delete_node(node_t *base, node_t *target, u32_t baseitemid);
 static node_t   *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item);
 static uint      get_path_deep(const char *path);
 static dirent_t  lfs_readdir(fsd_t fsd, DIR_t *dir);
-static stdRet_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
-static stdRet_t  add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item);
+static stdret_t  lfs_closedir(fsd_t fsd, DIR_t *dir);
+static stdret_t  add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item);
 
 /*==============================================================================
   Local object definitions
@@ -115,7 +115,7 @@ static struct fshdl_s *lfs;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_init(const char *srcPath, fsd_t *fsd)
+stdret_t lfs_init(const char *srcPath, fsd_t *fsd)
 {
         (void) fsd;
         (void) srcPath;
@@ -171,7 +171,7 @@ stdRet_t lfs_init(const char *srcPath, fsd_t *fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
+stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
 {
         (void) fsd;
 
@@ -259,7 +259,7 @@ stdRet_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_mkdir(fsd_t fsd, const char *path)
+stdret_t lfs_mkdir(fsd_t fsd, const char *path)
 {
         (void) fsd;
 
@@ -340,7 +340,7 @@ stdRet_t lfs_mkdir(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
+stdret_t lfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
 {
         (void) fsd;
 
@@ -382,7 +382,7 @@ stdRet_t lfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdRet_t lfs_closedir(fsd_t fsd, DIR_t *dir)
+static stdret_t lfs_closedir(fsd_t fsd, DIR_t *dir)
 {
         (void) fsd;
         (void) dir;
@@ -436,7 +436,7 @@ static dirent_t lfs_readdir(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_remove(fsd_t fsd, const char *path)
+stdret_t lfs_remove(fsd_t fsd, const char *path)
 {
         (void) fsd;
 
@@ -511,7 +511,7 @@ stdRet_t lfs_remove(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
+stdret_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 {
         (void) fsd;
 
@@ -593,7 +593,7 @@ stdRet_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
+stdret_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 {
         (void) fsd;
 
@@ -627,7 +627,7 @@ stdRet_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
+stdret_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 {
         (void) fsd;
 
@@ -662,7 +662,7 @@ stdRet_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
+stdret_t lfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
 {
         (void) fsd;
 
@@ -707,7 +707,7 @@ stdRet_t lfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
+stdret_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 {
         (void) fsd;
 
@@ -748,7 +748,7 @@ stdRet_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
+stdret_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
 {
         (void) fsd;
 
@@ -776,7 +776,7 @@ stdRet_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_release(fsd_t fsd)
+stdret_t lfs_release(fsd_t fsd)
 {
         (void) fsd;
 
@@ -797,7 +797,7 @@ stdRet_t lfs_release(fsd_t fsd)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
 {
         (void) fsd;
 
@@ -920,11 +920,11 @@ stdRet_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const cha
  * @retval STD_RET_OK
  */
 //==============================================================================
-stdRet_t lfs_close(fsd_t fsd, fd_t fd)
+stdret_t lfs_close(fsd_t fsd, fd_t fd)
 {
         (void) fsd;
 
-        stdRet_t           status = STD_RET_ERROR;
+        stdret_t           status = STD_RET_ERROR;
         node_t            *node;
         fopenInfo_t       *foi;
         struct vfs_drvcfg *drv;
@@ -1173,7 +1173,7 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
+stdret_t lfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
 {
         (void) fsd;
 
@@ -1223,7 +1223,7 @@ stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdRet_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
+static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
 {
         /* if DIR check if is empty */
         if (target->type == NODE_TYPE_DIR) {
@@ -1434,7 +1434,7 @@ static node_t *new_node(node_t *nodebase, char *filename, i32_t *item)
  * @retval STD_RET_ERROR        file not registered
  */
 //==============================================================================
-static stdRet_t add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item)
+static stdret_t add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item)
 {
         fopenInfo_t *openFileInfo;
         fopenInfo_t *openedFile;

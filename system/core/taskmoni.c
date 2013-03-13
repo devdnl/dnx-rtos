@@ -136,7 +136,7 @@ static mutex_t *tskm_resource_mtx;
 #if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
     || (TSKM_MONITOR_FILE_USAGE > 0  ) \
     || (TSKM_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_init(void)
+stdret_t tskm_init(void)
 {
         cpuctl_init_CPU_load_timer();
 
@@ -193,7 +193,7 @@ bool_t tskm_is_task_exist(task_t *taskhdl)
 #if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
     || (TSKM_MONITOR_FILE_USAGE > 0  ) \
     || (TSKM_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_start_task_monitoring(task_t *taskhdl)
+stdret_t tskm_start_task_monitoring(task_t *taskhdl)
 {
         struct task_monitor_data *tmdata;
 
@@ -235,7 +235,7 @@ stdRet_t tskm_start_task_monitoring(task_t *taskhdl)
 #if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
     || (TSKM_MONITOR_FILE_USAGE > 0  ) \
     || (TSKM_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_stop_task_monitoring(task_t *taskhdl)
+stdret_t tskm_stop_task_monitoring(task_t *taskhdl)
 {
         struct task_monitor_data *task_monitor_data;
         struct memSlot           *mslot;
@@ -364,7 +364,7 @@ void tskm_clear_total_CPU_usage(void)
 #if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
     || (TSKM_MONITOR_FILE_USAGE > 0  ) \
     || (TSKM_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
+stdret_t tskm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
 {
         struct task_monitor_data *tmdata;
 
@@ -417,7 +417,7 @@ stdRet_t tskm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
 #if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
     || (TSKM_MONITOR_FILE_USAGE > 0  ) \
     || (TSKM_MONITOR_CPU_LOAD > 0    ) )
-stdRet_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
+stdret_t tskm_get_ntask_stat(i32_t item, struct taskstat *stat)
 {
         task_t *task;
 
@@ -473,9 +473,9 @@ int tskm_get_number_of_monitored_tasks(void)
  */
 //==============================================================================
 #if (TSKM_MONITOR_MEMORY_USAGE > 0)
-stdRet_t tskm_enable_fast_memory_monitoring(task_t *taskhdl)
+stdret_t tskm_enable_fast_memory_monitoring(task_t *taskhdl)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
         struct task_monitor_data *task_monitor_data;
 
         force_lock_recursive_mutex(tskm_resource_mtx);
@@ -857,9 +857,9 @@ FILE_t *tskm_fopen(const char *path, const char *mode)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-stdRet_t tskm_fclose(FILE_t *file)
+stdret_t tskm_fclose(FILE_t *file)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
         task_t  *task;
         struct task_monitor_data *task_monitor_data;
         struct fileSlot          *fslot;
@@ -1012,9 +1012,9 @@ DIR_t *tskm_opendir(const char *path)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-extern stdRet_t tskm_closedir(DIR_t *dir)
+extern stdret_t tskm_closedir(DIR_t *dir)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
         task_t *task;
         struct task_monitor_data *task_monitor_data;
         struct dirSlot           *dslot;

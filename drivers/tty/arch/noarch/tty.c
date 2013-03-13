@@ -143,7 +143,7 @@ static u8_t        get_message_index(u8_t dev, u8_t back);
 static void        refresh_tty(u8_t dev, FILE_t *file);
 static void        get_vt100_size(FILE_t *ttysfile);
 static void        write_input_stream(char chr, u8_t dev);
-static stdRet_t    read_input_stream(char *chr, u8_t dev);
+static stdret_t    read_input_stream(char *chr, u8_t dev);
 static void        move_editline_to_stream(u8_t dev, FILE_t *stream);
 
 /*==============================================================================
@@ -166,7 +166,7 @@ static struct termHdl *term;
  * @retval STD_RET_OK
  */
 //==============================================================================
-stdRet_t TTY_Init(devx_t dev, fd_t part)
+stdret_t TTY_Init(devx_t dev, fd_t part)
 {
         (void)part;
 
@@ -216,7 +216,7 @@ stdRet_t TTY_Init(devx_t dev, fd_t part)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t TTY_Release(devx_t dev, fd_t part)
+stdret_t TTY_Release(devx_t dev, fd_t part)
 {
         (void)part;
 
@@ -273,7 +273,7 @@ stdRet_t TTY_Release(devx_t dev, fd_t part)
  * @retval STD_RET_ERROR                  operation error
  */
 //==============================================================================
-stdRet_t TTY_Open(devx_t dev, fd_t part)
+stdret_t TTY_Open(devx_t dev, fd_t part)
 {
       (void)part;
 
@@ -309,7 +309,7 @@ stdRet_t TTY_Open(devx_t dev, fd_t part)
  * @retval STD_RET_ERROR                  operation error
  */
 //==============================================================================
-stdRet_t TTY_Close(devx_t dev, fd_t part)
+stdret_t TTY_Close(devx_t dev, fd_t part)
 {
         (void)part;
 
@@ -424,7 +424,7 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
  * @retval STD_RET_ERROR        operation error
  */
 //==============================================================================
-stdRet_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
+stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
 {
         (void)part;
 
@@ -1431,7 +1431,7 @@ static void write_input_stream(char chr, u8_t dev)
  * @retval STD_RET_ERROR        stream is empty
  */
 //==============================================================================
-static stdRet_t read_input_stream(char *chr, u8_t dev)
+static stdret_t read_input_stream(char *chr, u8_t dev)
 {
         if (TTY(dev)->input.level == 0) {
                 return STD_RET_ERROR;

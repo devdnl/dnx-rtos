@@ -83,8 +83,8 @@ struct fileinfo {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdRet_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir);
-static stdRet_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir);
+static stdret_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir);
+static stdret_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir);
 static dirent_t procfs_readdir_root(fsd_t fsd, DIR_t *dir);
 static dirent_t procfs_readdir_taskname(fsd_t fsd, DIR_t *dir);
 static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir);
@@ -117,7 +117,7 @@ static struct procmem *procmem;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_init(const char *srcPath, fsd_t *fsd)
+stdret_t procfs_init(const char *srcPath, fsd_t *fsd)
 {
         (void) fsd;
         (void) srcPath;
@@ -160,7 +160,7 @@ stdRet_t procfs_init(const char *srcPath, fsd_t *fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_release(fsd_t fsd)
+stdret_t procfs_release(fsd_t fsd)
 {
       (void)fsd;
 
@@ -194,7 +194,7 @@ stdRet_t procfs_release(fsd_t fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
 {
         (void) fsd;
 
@@ -331,7 +331,7 @@ stdRet_t procfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const 
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_close(fsd_t fsd, fd_t fd)
+stdret_t procfs_close(fsd_t fsd, fd_t fd)
 {
         (void) fsd;
 
@@ -495,7 +495,7 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
+stdret_t procfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
 {
         (void) fsd;
         (void) fd;
@@ -517,7 +517,7 @@ stdRet_t procfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
+stdret_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 {
         (void) fsd;
 
@@ -602,7 +602,7 @@ stdRet_t procfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_mkdir(fsd_t fsd, const char *path)
+stdret_t procfs_mkdir(fsd_t fsd, const char *path)
 {
         (void) fsd;
         (void) path;
@@ -622,7 +622,7 @@ stdRet_t procfs_mkdir(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
+stdret_t procfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
 {
         (void) fsd;
         (void) path;
@@ -643,7 +643,7 @@ stdRet_t procfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
+stdret_t procfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
 {
         (void) fsd;
 
@@ -713,7 +713,7 @@ stdRet_t procfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdRet_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir)
+static stdret_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir)
 {
         (void) fsd;
 
@@ -740,7 +740,7 @@ static stdRet_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdRet_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir)
+static stdret_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir)
 {
         (void) fsd;
         (void) dir;
@@ -759,7 +759,7 @@ static stdRet_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_remove(fsd_t fsd, const char *path)
+stdret_t procfs_remove(fsd_t fsd, const char *path)
 {
         (void) fsd;
         (void) path;
@@ -779,7 +779,7 @@ stdRet_t procfs_remove(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_rename(fsd_t fsd, const char *oldName, const char *newName)
+stdret_t procfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 {
         (void) fsd;
         (void) oldName;
@@ -800,7 +800,7 @@ stdRet_t procfs_rename(fsd_t fsd, const char *oldName, const char *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_chmod(fsd_t fsd, const char *path, u32_t mode)
+stdret_t procfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 {
         (void) fsd;
         (void) path;
@@ -822,7 +822,7 @@ stdRet_t procfs_chmod(fsd_t fsd, const char *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
+stdret_t procfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 {
         (void) fsd;
         (void) path;
@@ -844,7 +844,7 @@ stdRet_t procfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
+stdret_t procfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
 {
       (void)fsd;
 
@@ -874,7 +874,7 @@ stdRet_t procfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
+stdret_t procfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
 {
         (void) fsd;
 

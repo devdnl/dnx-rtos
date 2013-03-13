@@ -89,7 +89,7 @@ static u32_t    vfs_id_counter;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_init(void)
+stdret_t vfs_init(void)
 {
         vfs_mnt_list     = new_list();
         vfs_resource_mtx = new_mutex();
@@ -114,7 +114,7 @@ stdRet_t vfs_init(void)
  * @retval STD_RET_ERROR        mount error
  */
 //==============================================================================
-stdRet_t vfs_mount(const char *srcPath, const char *mntPoint, struct vfs_fscfg *mountcfg)
+stdret_t vfs_mount(const char *srcPath, const char *mntPoint, struct vfs_fscfg *mountcfg)
 {
         struct fsinfo *mountfs;
         struct fsinfo *basefs;
@@ -190,7 +190,7 @@ stdRet_t vfs_mount(const char *srcPath, const char *mntPoint, struct vfs_fscfg *
  * @retval STD_RET_ERROR        mount error
  */
 //==============================================================================
-stdRet_t vfs_umount(const char *path)
+stdret_t vfs_umount(const char *path)
 {
         u32_t          itemid;
         char          *newpath;
@@ -252,7 +252,7 @@ stdRet_t vfs_umount(const char *path)
  * @param *mntent         mount entry data
  */
 //==============================================================================
-stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
+stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
 {
         if (mntent) {
                 struct fsinfo *fs = NULL;
@@ -300,7 +300,7 @@ stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_mknod(const char *path, struct vfs_drvcfg *drvcfg)
+stdret_t vfs_mknod(const char *path, struct vfs_drvcfg *drvcfg)
 {
         if (path && drvcfg) {
                 char *extPath = NULL;
@@ -329,9 +329,9 @@ stdRet_t vfs_mknod(const char *path, struct vfs_drvcfg *drvcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_mkdir(const char *path)
+stdret_t vfs_mkdir(const char *path)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
 
         if (path) {
                 char *newpath = new_corrected_path(path, SUB_SLASH);
@@ -368,7 +368,7 @@ stdRet_t vfs_mkdir(const char *path)
 //==============================================================================
 DIR_t *vfs_opendir(const char *path)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
         DIR_t *dir      = NULL;
 
         if (!path) {
@@ -417,7 +417,7 @@ DIR_t *vfs_opendir(const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_closedir(DIR_t *dir)
+stdret_t vfs_closedir(DIR_t *dir)
 {
         if (dir) {
                 if (dir->cldir) {
@@ -464,9 +464,9 @@ dirent_t vfs_readdir(DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_remove(const char *path)
+stdret_t vfs_remove(const char *path)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
 
         if (path) {
                 char *newpath = new_corrected_path(path, ADD_SLASH);
@@ -505,7 +505,7 @@ stdRet_t vfs_remove(const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_rename(const char *oldName, const char *newName)
+stdret_t vfs_rename(const char *oldName, const char *newName)
 {
         if (oldName && newName) {
                 char *extPathOld = NULL;
@@ -539,7 +539,7 @@ stdRet_t vfs_rename(const char *oldName, const char *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_chmod(const char *path, u16_t mode)
+stdret_t vfs_chmod(const char *path, u16_t mode)
 {
         if (path) {
                 char *extPath = NULL;
@@ -571,7 +571,7 @@ stdRet_t vfs_chmod(const char *path, u16_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_chown(const char *path, u16_t owner, u16_t group)
+stdret_t vfs_chown(const char *path, u16_t owner, u16_t group)
 {
         if (path) {
                 char *extPath = NULL;
@@ -602,7 +602,7 @@ stdRet_t vfs_chown(const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_stat(const char *path, struct vfs_stat *stat)
+stdret_t vfs_stat(const char *path, struct vfs_stat *stat)
 {
         if (path && stat) {
                 char *extPath = NULL;
@@ -632,7 +632,7 @@ stdRet_t vfs_stat(const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_statfs(const char *path, struct vfs_statfs *statfs)
+stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs)
 {
         if (path && statfs) {
                 char *newpath = new_corrected_path(path, ADD_SLASH);
@@ -734,7 +734,7 @@ FILE_t *vfs_fopen(const char *path, const char *mode)
  * @retval STD_RET_ERROR        file not closed
  */
 //==============================================================================
-stdRet_t vfs_fclose(FILE_t *file)
+stdret_t vfs_fclose(FILE_t *file)
 {
         if (file) {
                 if (file->f_close) {
@@ -814,7 +814,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @retval STD_RET_ERROR        error occurred
  */
 //==============================================================================
-stdRet_t vfs_fseek(FILE_t *file, i32_t offset, int mode)
+stdret_t vfs_fseek(FILE_t *file, i32_t offset, int mode)
 {
         if (file) {
                 struct vfs_stat stat;
@@ -869,7 +869,7 @@ i32_t vfs_ftell(FILE_t *file)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data)
+stdret_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data)
 {
         if (file) {
                 if (file->f_ioctl) {
@@ -891,7 +891,7 @@ stdRet_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_fstat(FILE_t *file, struct vfs_stat *stat)
+stdret_t vfs_fstat(FILE_t *file, struct vfs_stat *stat)
 {
         if (file && stat) {
                 if (file->f_stat) {

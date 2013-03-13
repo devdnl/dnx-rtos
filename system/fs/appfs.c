@@ -47,7 +47,7 @@ extern "C" {
   Local function prototypes
 ==============================================================================*/
 static dirent_t appfs_readrootdir(fsd_t fsd, DIR_t *dir);
-static stdRet_t appfs_closedir(fsd_t fsd, DIR_t *dir);
+static stdret_t appfs_closedir(fsd_t fsd, DIR_t *dir);
 
 /*==============================================================================
   Local object definitions
@@ -72,7 +72,7 @@ static stdRet_t appfs_closedir(fsd_t fsd, DIR_t *dir);
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_init(const char *srcPath, fsd_t *fsd)
+stdret_t appfs_init(const char *srcPath, fsd_t *fsd)
 {
         (void)fsd;
         (void)srcPath;
@@ -94,7 +94,7 @@ stdRet_t appfs_init(const char *srcPath, fsd_t *fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t appfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
 {
         (void)fsd;
         (void)fd;
@@ -116,7 +116,7 @@ stdRet_t appfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const c
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_close(fsd_t fsd, fd_t fd)
+stdret_t appfs_close(fsd_t fsd, fd_t fd)
 {
         (void)fsd;
         (void)fd;
@@ -189,7 +189,7 @@ size_t appfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, siz
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
+stdret_t appfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
 {
         (void)fsd;
         (void)fd;
@@ -211,7 +211,7 @@ stdRet_t appfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
+stdret_t appfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 {
         (void)fsd;
         (void)fd;
@@ -231,7 +231,7 @@ stdRet_t appfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_mkdir(fsd_t fsd, const char *path)
+stdret_t appfs_mkdir(fsd_t fsd, const char *path)
 {
         (void)fsd;
         (void)path;
@@ -251,7 +251,7 @@ stdRet_t appfs_mkdir(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
+stdret_t appfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
 {
         (void)fsd;
         (void)path;
@@ -272,7 +272,7 @@ stdRet_t appfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
+stdret_t appfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
 {
         (void)fsd;
 
@@ -302,7 +302,7 @@ stdRet_t appfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdRet_t appfs_closedir(fsd_t fsd, DIR_t *dir)
+static stdret_t appfs_closedir(fsd_t fsd, DIR_t *dir)
 {
         (void)fsd;
         (void)dir;
@@ -321,7 +321,7 @@ static stdRet_t appfs_closedir(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_remove(fsd_t fsd, const char *path)
+stdret_t appfs_remove(fsd_t fsd, const char *path)
 {
         (void)fsd;
         (void)path;
@@ -341,7 +341,7 @@ stdRet_t appfs_remove(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_rename(fsd_t fsd, const char *oldName, const char *newName)
+stdret_t appfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 {
         (void)fsd;
         (void)oldName;
@@ -362,7 +362,7 @@ stdRet_t appfs_rename(fsd_t fsd, const char *oldName, const char *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_chmod(fsd_t fsd, const char *path, u32_t mode)
+stdret_t appfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 {
         (void)fsd;
         (void)path;
@@ -384,7 +384,7 @@ stdRet_t appfs_chmod(fsd_t fsd, const char *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
+stdret_t appfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 {
         (void)fsd;
         (void)path;
@@ -406,7 +406,7 @@ stdRet_t appfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
+stdret_t appfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
 {
         (void)fsd;
 
@@ -436,7 +436,7 @@ stdRet_t appfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
+stdret_t appfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
 {
         (void)fsd;
 
@@ -464,7 +464,7 @@ stdRet_t appfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t appfs_release(fsd_t fsd)
+stdret_t appfs_release(fsd_t fsd)
 {
         (void)fsd;
 

@@ -133,19 +133,19 @@ struct taskstat {
 #if (  (TSKM_MONITOR_MEMORY_USAGE > 0) \
     || (TSKM_MONITOR_FILE_USAGE > 0  ) \
     || (TSKM_MONITOR_CPU_LOAD > 0    ) )
-extern stdRet_t tskm_init(void);
+extern stdret_t tskm_init(void);
 extern bool_t   tskm_is_task_exist(task_t*);
-extern stdRet_t tskm_start_task_monitoring(task_t*);
-extern stdRet_t tskm_stop_task_monitoring(task_t*);
+extern stdret_t tskm_start_task_monitoring(task_t*);
+extern stdret_t tskm_stop_task_monitoring(task_t*);
 extern u32_t    tskm_get_total_CPU_usage(void);
 extern void     tskm_clear_total_CPU_usage(void);
-extern stdRet_t tskm_get_task_stat(task_t*, struct taskstat*);
-extern stdRet_t tskm_get_ntask_stat(i32_t, struct taskstat*);
+extern stdret_t tskm_get_task_stat(task_t*, struct taskstat*);
+extern stdret_t tskm_get_ntask_stat(i32_t, struct taskstat*);
 extern int      tskm_get_number_of_monitored_tasks(void);
 #endif
 
 #if (TSKM_MONITOR_MEMORY_USAGE > 0)
-extern stdRet_t tskm_enable_fast_memory_monitoring(task_t*);
+extern stdret_t tskm_enable_fast_memory_monitoring(task_t*);
 extern void    *tskm_malloc_as(task_t*, u32_t);
 extern void    *tskm_malloc(u32_t);
 extern void    *tskm_calloc_as(task_t*, u32_t, u32_t);
@@ -157,9 +157,9 @@ extern void     tskm_free(void*);
 
 #if (TSKM_MONITOR_FILE_USAGE > 0)
 extern FILE_t  *tskm_fopen(const char*, const char*);
-extern stdRet_t tskm_fclose(FILE_t*);
+extern stdret_t tskm_fclose(FILE_t*);
 extern DIR_t   *tskm_opendir(const char*);
-extern stdRet_t tskm_closedir(DIR_t*);
+extern stdret_t tskm_closedir(DIR_t*);
 #endif
 
 #if (TSKM_MONITOR_CPU_LOAD > 0)

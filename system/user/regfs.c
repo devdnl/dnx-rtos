@@ -107,9 +107,9 @@ static const regFS_t fsList[] =
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t mount(const char *fsname, const char *srcpath, const char *mountpoint)
+stdret_t mount(const char *fsname, const char *srcpath, const char *mountpoint)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
 
         if (fsname && mountpoint) {
                 for (uint i = 0; i < ARRAY_SIZE(fsList); i++) {
@@ -137,9 +137,9 @@ stdRet_t mount(const char *fsname, const char *srcpath, const char *mountpoint)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t umount(const char *mountpoint)
+stdret_t umount(const char *mountpoint)
 {
-        stdRet_t status = STD_RET_ERROR;
+        stdret_t status = STD_RET_ERROR;
 
         if (mountpoint) {
                 status = vfs_umount(mountpoint);

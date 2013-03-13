@@ -97,7 +97,7 @@ list_t *new_list(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t delete_list(list_t *list)
+stdret_t delete_list(list_t *list)
 {
         if (list) {
                 struct listitem *item     = list->head;
@@ -172,7 +172,7 @@ i32_t list_add_item(list_t *list, u32_t id, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *data)
+stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *data)
 {
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
@@ -222,7 +222,7 @@ stdRet_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *d
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *data)
+stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *data)
 {
         if (list) {
                 struct listitem *newitem = calloc(1, sizeof(struct listitem));
@@ -265,7 +265,7 @@ stdRet_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *dat
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_rm_nitem(list_t *list, i32_t nitem)
+stdret_t list_rm_nitem(list_t *list, i32_t nitem)
 {
         if (list) {
                 if ((nitem >= 0) && (list->itemcount - 1 >= nitem)) {
@@ -316,7 +316,7 @@ stdRet_t list_rm_nitem(list_t *list, i32_t nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_rm_iditem(list_t *list, u32_t id)
+stdret_t list_rm_iditem(list_t *list, u32_t id)
 {
         if (list) {
                 struct listitem *item;
@@ -367,7 +367,7 @@ stdRet_t list_rm_iditem(list_t *list, u32_t id)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_set_nitem_data(list_t *list, i32_t nitem, void *data)
+stdret_t list_set_nitem_data(list_t *list, i32_t nitem, void *data)
 {
         if (list && (nitem >= 0)) {
 
@@ -425,7 +425,7 @@ void *list_get_nitem_data(list_t *list, i32_t nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_set_iditem_data(list_t *list, u32_t id, void *data)
+stdret_t list_set_iditem_data(list_t *list, u32_t id, void *data)
 {
         if (list) {
                 struct listitem *item;
@@ -481,7 +481,7 @@ void *list_get_iditem_data(list_t *list, u32_t id)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
+stdret_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
 {
         if (list && nitem >= 0 && itemid) {
                 struct listitem *item;
@@ -510,7 +510,7 @@ stdRet_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
+stdret_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 {
         if (list && nitem) {
                 struct listitem *item;
@@ -541,7 +541,7 @@ stdRet_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_unlink_nitem_data(list_t *list, i32_t nitem)
+stdret_t list_unlink_nitem_data(list_t *list, i32_t nitem)
 {
         if (list) {
                 struct listitem *item;
@@ -570,7 +570,7 @@ stdRet_t list_unlink_nitem_data(list_t *list, i32_t nitem)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t list_unlink_iditem_data(list_t *list, u32_t id)
+stdret_t list_unlink_iditem_data(list_t *list, u32_t id)
 {
         if (list) {
                 struct listitem *item;

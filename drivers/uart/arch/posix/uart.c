@@ -83,7 +83,7 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t UART_Init(devx_t dev, fd_t part)
+stdret_t UART_Init(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -103,7 +103,7 @@ stdRet_t UART_Init(devx_t dev, fd_t part)
  * @retval STD_RET_ERROR
  */
 //================================================================================================//
-stdRet_t UART_Release(devx_t dev, fd_t part)
+stdret_t UART_Release(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -125,7 +125,7 @@ stdRet_t UART_Release(devx_t dev, fd_t part)
  * @retval UART_STATUS_NOFREEMEM          no enough free memory to allocate RxBuffer
  */
 //================================================================================================//
-stdRet_t UART_Open(devx_t dev, fd_t part)
+stdret_t UART_Open(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -146,7 +146,7 @@ stdRet_t UART_Open(devx_t dev, fd_t part)
  * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
  */
 //================================================================================================//
-stdRet_t UART_Close(devx_t dev, fd_t part)
+stdret_t UART_Close(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -244,7 +244,7 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
  * @retval UART_STATUS_BADRQ              bad request
  */
 //================================================================================================//
-stdRet_t UART_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
+stdret_t UART_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
 {
       (void)dev;
       (void)part;

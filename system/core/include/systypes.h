@@ -71,7 +71,7 @@ typedef enum
 } tfile_t;
 
 /** universal status type */
-typedef signed char stdRet_t;
+typedef signed char stdret_t;
 
 /** device number type */
 typedef uint devx_t;
@@ -90,11 +90,11 @@ typedef struct
 {
         uint     dev;
         uint     fd;
-        stdRet_t (*f_close)(uint dev, uint fd);
+        stdret_t (*f_close)(uint dev, uint fd);
         size_t   (*f_write)(uint dev, uint fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(uint dev, uint fd, void *dst, size_t size, size_t nitmes, size_t seek);
-        stdRet_t (*f_ioctl)(uint dev, uint fd, iorq_t iorq, void *data);
-        stdRet_t (*f_stat )(uint dev, uint fd, void *stat);
+        stdret_t (*f_ioctl)(uint dev, uint fd, iorq_t iorq, void *data);
+        stdret_t (*f_stat )(uint dev, uint fd, void *stat);
         size_t   f_seek;
 } FILE_t;
 
@@ -110,7 +110,7 @@ typedef struct
 typedef struct dir_s
 {
         dirent_t (*rddir)(fsd_t fsd, struct dir_s *dir);
-        stdRet_t (*cldir)(fsd_t fsd, struct dir_s *dir);
+        stdret_t (*cldir)(fsd_t fsd, struct dir_s *dir);
         size_t     items;
         size_t     seek;
         void      *dd;

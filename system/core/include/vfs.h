@@ -93,60 +93,60 @@ struct vfs_mntent {
 struct vfs_drvcfg {
         devx_t   dev;
         fd_t     part;
-        stdRet_t (*f_open )(devx_t dev, fd_t part);
-        stdRet_t (*f_close)(devx_t dev, fd_t part);
+        stdret_t (*f_open )(devx_t dev, fd_t part);
+        stdret_t (*f_close)(devx_t dev, fd_t part);
         size_t   (*f_write)(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek);
-        stdRet_t (*f_ioctl)(devx_t dev, fd_t part, iorq_t iorq, void *data);
+        stdret_t (*f_ioctl)(devx_t dev, fd_t part, iorq_t iorq, void *data);
 };
 
 struct vfs_fscfg {
         fsd_t    f_fsd;
-        stdRet_t (*f_init   )(const char *path, fsd_t *fsd);
-        stdRet_t (*f_open   )(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode);
-        stdRet_t (*f_close  )(fsd_t fsd, fd_t fd);
+        stdret_t (*f_init   )(const char *path, fsd_t *fsd);
+        stdret_t (*f_open   )(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode);
+        stdret_t (*f_close  )(fsd_t fsd, fd_t fd);
         size_t   (*f_write  )(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read   )(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-        stdRet_t (*f_ioctl  )(fsd_t fsd, fd_t fd, iorq_t iroq, void *data);
-        stdRet_t (*f_fstat  )(fsd_t fsd, fd_t fd, struct vfs_stat *stat);
-        stdRet_t (*f_mkdir  )(fsd_t fsd, const char *path);
-        stdRet_t (*f_mknod  )(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg);
-        stdRet_t (*f_opendir)(fsd_t fsd, const char *path, DIR_t *dir);
-        stdRet_t (*f_remove )(fsd_t fsd, const char *path);
-        stdRet_t (*f_rename )(fsd_t fsd, const char *oldName, const char *newName);
-        stdRet_t (*f_chmod  )(fsd_t fsd, const char *path, u32_t mode);
-        stdRet_t (*f_chown  )(fsd_t fsd, const char *path, u16_t owner, u16_t group);
-        stdRet_t (*f_stat   )(fsd_t fsd, const char *path, struct vfs_stat *stat);
-        stdRet_t (*f_statfs )(fsd_t fsd, struct vfs_statfs *statfs);
-        stdRet_t (*f_release)(fsd_t fsd);
+        stdret_t (*f_ioctl  )(fsd_t fsd, fd_t fd, iorq_t iroq, void *data);
+        stdret_t (*f_fstat  )(fsd_t fsd, fd_t fd, struct vfs_stat *stat);
+        stdret_t (*f_mkdir  )(fsd_t fsd, const char *path);
+        stdret_t (*f_mknod  )(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg);
+        stdret_t (*f_opendir)(fsd_t fsd, const char *path, DIR_t *dir);
+        stdret_t (*f_remove )(fsd_t fsd, const char *path);
+        stdret_t (*f_rename )(fsd_t fsd, const char *oldName, const char *newName);
+        stdret_t (*f_chmod  )(fsd_t fsd, const char *path, u32_t mode);
+        stdret_t (*f_chown  )(fsd_t fsd, const char *path, u16_t owner, u16_t group);
+        stdret_t (*f_stat   )(fsd_t fsd, const char *path, struct vfs_stat *stat);
+        stdret_t (*f_statfs )(fsd_t fsd, struct vfs_statfs *statfs);
+        stdret_t (*f_release)(fsd_t fsd);
 };
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdRet_t vfs_init(void);
-extern stdRet_t vfs_mount(const char *srcPath, const char *mntPoint, struct vfs_fscfg *mountcfg);
-extern stdRet_t vfs_umount(const char *path);
-extern stdRet_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent);
-extern stdRet_t vfs_mknod(const char *path, struct vfs_drvcfg *drvcfg);
-extern stdRet_t vfs_mkdir(const char *path);
+extern stdret_t vfs_init(void);
+extern stdret_t vfs_mount(const char *srcPath, const char *mntPoint, struct vfs_fscfg *mountcfg);
+extern stdret_t vfs_umount(const char *path);
+extern stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent);
+extern stdret_t vfs_mknod(const char *path, struct vfs_drvcfg *drvcfg);
+extern stdret_t vfs_mkdir(const char *path);
 extern DIR_t   *vfs_opendir(const char *path);
-extern stdRet_t vfs_closedir(DIR_t *dir);
+extern stdret_t vfs_closedir(DIR_t *dir);
 extern dirent_t vfs_readdir(DIR_t *dir);
-extern stdRet_t vfs_remove(const char *path);
-extern stdRet_t vfs_rename(const char *oldName, const char *newName);
-extern stdRet_t vfs_chmod(const char *path, u16_t mode);
-extern stdRet_t vfs_chown(const char *path, u16_t owner, u16_t group);
-extern stdRet_t vfs_stat(const char *path, struct vfs_stat *stat);
-extern stdRet_t vfs_statfs(const char *path, struct vfs_statfs *statfs);
+extern stdret_t vfs_remove(const char *path);
+extern stdret_t vfs_rename(const char *oldName, const char *newName);
+extern stdret_t vfs_chmod(const char *path, u16_t mode);
+extern stdret_t vfs_chown(const char *path, u16_t owner, u16_t group);
+extern stdret_t vfs_stat(const char *path, struct vfs_stat *stat);
+extern stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs);
 extern FILE_t  *vfs_fopen(const char *path, const char *mode);
-extern stdRet_t vfs_fclose(FILE_t *file);
+extern stdret_t vfs_fclose(FILE_t *file);
 extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
-extern stdRet_t vfs_fseek(FILE_t *file, i32_t offset, int mode);
+extern stdret_t vfs_fseek(FILE_t *file, i32_t offset, int mode);
 extern i32_t    vfs_ftell(FILE_t *file);
-extern stdRet_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data);
-extern stdRet_t vfs_fstat(FILE_t *file, struct vfs_stat *stat);
+extern stdret_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data);
+extern stdret_t vfs_fstat(FILE_t *file, struct vfs_stat *stat);
 
 #ifdef __cplusplus
 }

@@ -250,7 +250,7 @@ static void InitAFIO(void);
  * @brief Initialise all GPIOs
  */
 //================================================================================================//
-stdRet_t GPIO_Init(devx_t dev, fd_t part)
+stdret_t GPIO_Init(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -301,7 +301,7 @@ stdRet_t GPIO_Init(devx_t dev, fd_t part)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t GPIO_Open(devx_t dev, fd_t part)
+stdret_t GPIO_Open(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -320,7 +320,7 @@ stdRet_t GPIO_Open(devx_t dev, fd_t part)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t GPIO_Close(devx_t dev, fd_t part)
+stdret_t GPIO_Close(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -393,7 +393,7 @@ size_t GPIO_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t GPIO_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
+stdret_t GPIO_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
 {
       (void)dev;
       (void)part;
@@ -414,7 +414,7 @@ stdRet_t GPIO_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t GPIO_Release(devx_t dev, fd_t part)
+stdret_t GPIO_Release(devx_t dev, fd_t part)
 {
       (void) dev;
       (void)part;

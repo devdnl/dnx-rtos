@@ -75,7 +75,7 @@ extern "C" {
  * NOTE: PLL2 and PLL3 not used
  */
 //================================================================================================//
-stdRet_t PLL_Init(devx_t dev, fd_t part)
+stdret_t PLL_Init(devx_t dev, fd_t part)
 {
       (void) dev;
       (void)part;
@@ -94,7 +94,7 @@ stdRet_t PLL_Init(devx_t dev, fd_t part)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_Open(devx_t dev, fd_t part)
+stdret_t PLL_Open(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -113,7 +113,7 @@ stdRet_t PLL_Open(devx_t dev, fd_t part)
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_Close(devx_t dev, fd_t part)
+stdret_t PLL_Close(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
@@ -186,7 +186,7 @@ size_t PLL_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
+stdret_t PLL_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
 {
       (void)dev;
       (void)part;
@@ -207,7 +207,7 @@ stdRet_t PLL_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
  * @retval STD_RET_OK
  */
 //================================================================================================//
-stdRet_t PLL_Release(devx_t dev, fd_t part)
+stdret_t PLL_Release(devx_t dev, fd_t part)
 {
       (void)dev;
       (void)part;
