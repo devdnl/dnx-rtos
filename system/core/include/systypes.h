@@ -77,7 +77,7 @@ typedef signed char stdRet_t;
 typedef uint devx_t;
 
 /** IO request type */
-typedef u8_t IORq_t;
+typedef u8_t iorq_t;
 
 /** file descriptor */
 typedef uint fd_t;
@@ -93,7 +93,7 @@ typedef struct
         stdRet_t (*f_close)(uint dev, uint fd);
         size_t   (*f_write)(uint dev, uint fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(uint dev, uint fd, void *dst, size_t size, size_t nitmes, size_t seek);
-        stdRet_t (*f_ioctl)(uint dev, uint fd, IORq_t iorq, void *data);
+        stdRet_t (*f_ioctl)(uint dev, uint fd, iorq_t iorq, void *data);
         stdRet_t (*f_stat )(uint dev, uint fd, void *stat);
         size_t   f_seek;
 } FILE_t;
@@ -116,23 +116,6 @@ typedef struct dir_s
         void      *dd;
         fsd_t      fsd;
 } DIR_t;
-
-/** time structure */
-typedef struct time_struct
-{
-        u8_t seconds;     /**< [BCD] */
-        u8_t minutes;     /**< [BCD] */
-        u8_t hours;       /**< [BCD] */
-} bcdTime_t;
-
-/** date structure */
-typedef struct date_struct
-{
-        u8_t weekday;     /**< [BCD] */
-        u8_t day;         /**< [BCD] */
-        u8_t month;       /**< [BCD] */
-        u8_t year;        /**< [BCD] */
-} bcdDate_t;
 
 /*==============================================================================
   Exported object declarations

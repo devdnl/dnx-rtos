@@ -424,7 +424,7 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
  * @retval STD_RET_ERROR        operation error
  */
 //==============================================================================
-stdRet_t TTY_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
+stdRet_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
 {
         (void)part;
 

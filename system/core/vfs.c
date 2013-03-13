@@ -869,7 +869,7 @@ i32_t vfs_ftell(FILE_t *file)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data)
+stdRet_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data)
 {
         if (file) {
                 if (file->f_ioctl) {

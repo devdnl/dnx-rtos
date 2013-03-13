@@ -393,7 +393,7 @@ size_t GPIO_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t GPIO_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
+stdRet_t GPIO_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
 {
       (void)dev;
       (void)part;

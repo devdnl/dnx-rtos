@@ -767,7 +767,7 @@ size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, s
  * @retval UART_STATUS_BADRQ              bad request
  */
 //================================================================================================//
-stdRet_t UART_IOCtl(devx_t dev, fd_t part, IORq_t ioRQ, void *data)
+stdRet_t UART_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
 {
       (void)part;
 

@@ -1173,7 +1173,7 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
+stdRet_t lfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
 {
         (void) fsd;
 

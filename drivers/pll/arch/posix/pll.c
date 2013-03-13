@@ -186,7 +186,7 @@ size_t PLL_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, si
  * @retval STD_STATUS_OK
  */
 //================================================================================================//
-stdRet_t PLL_IOCtl(devx_t dev, fd_t part, IORq_t ioRq, void *data)
+stdRet_t PLL_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
 {
       (void)dev;
       (void)part;

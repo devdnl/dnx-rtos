@@ -495,7 +495,7 @@ size_t procfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, si
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdRet_t procfs_ioctl(fsd_t fsd, fd_t fd, IORq_t iorq, void *data)
+stdRet_t procfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
 {
         (void) fsd;
         (void) fd;

@@ -97,7 +97,7 @@ struct vfs_drvcfg {
         stdRet_t (*f_close)(devx_t dev, fd_t part);
         size_t   (*f_write)(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek);
-        stdRet_t (*f_ioctl)(devx_t dev, fd_t part, IORq_t iorq, void *data);
+        stdRet_t (*f_ioctl)(devx_t dev, fd_t part, iorq_t iorq, void *data);
 };
 
 struct vfs_fscfg {
@@ -107,7 +107,7 @@ struct vfs_fscfg {
         stdRet_t (*f_close  )(fsd_t fsd, fd_t fd);
         size_t   (*f_write  )(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read   )(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-        stdRet_t (*f_ioctl  )(fsd_t fsd, fd_t fd, IORq_t iroq, void *data);
+        stdRet_t (*f_ioctl  )(fsd_t fsd, fd_t fd, iorq_t iroq, void *data);
         stdRet_t (*f_fstat  )(fsd_t fsd, fd_t fd, struct vfs_stat *stat);
         stdRet_t (*f_mkdir  )(fsd_t fsd, const char *path);
         stdRet_t (*f_mknod  )(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg);
@@ -145,7 +145,7 @@ extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file);
 extern stdRet_t vfs_fseek(FILE_t *file, i32_t offset, int mode);
 extern i32_t    vfs_ftell(FILE_t *file);
-extern stdRet_t vfs_ioctl(FILE_t *file, IORq_t rq, void *data);
+extern stdRet_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data);
 extern stdRet_t vfs_fstat(FILE_t *file, struct vfs_stat *stat);
 
 #ifdef __cplusplus

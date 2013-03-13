@@ -113,7 +113,7 @@ extern stdRet_t classname##_Open   (devx_t, fd_t);                              
 extern stdRet_t classname##_Close  (devx_t, fd_t);                                  \
 extern size_t   classname##_Write  (devx_t, fd_t, void*, size_t, size_t, size_t);   \
 extern size_t   classname##_Read   (devx_t, fd_t, void*, size_t, size_t, size_t);   \
-extern stdRet_t classname##_IOCtl  (devx_t, fd_t, IORq_t, void*);                   \
+extern stdRet_t classname##_IOCtl  (devx_t, fd_t, iorq_t, void*);                   \
 extern stdRet_t classname##_Release(devx_t, fd_t)
 
 /*==============================================================================

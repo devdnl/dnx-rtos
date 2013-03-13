@@ -63,7 +63,7 @@ extern stdRet_t  classname##_open   (fsd_t, fd_t*, size_t*, const char*, const c
 extern stdRet_t  classname##_close  (fsd_t, fd_t);                                       \
 extern size_t    classname##_write  (fsd_t, fd_t, void*, size_t, size_t, size_t);        \
 extern size_t    classname##_read   (fsd_t, fd_t, void*, size_t, size_t, size_t);        \
-extern stdRet_t  classname##_ioctl  (fsd_t, fd_t, IORq_t, void*);                        \
+extern stdRet_t  classname##_ioctl  (fsd_t, fd_t, iorq_t, void*);                        \
 extern stdRet_t  classname##_mkdir  (fsd_t, const char*);                                \
 extern stdRet_t  classname##_mknod  (fsd_t, const char*, struct vfs_drvcfg*);            \
 extern stdRet_t  classname##_opendir(fsd_t, const char*, DIR_t*);                        \
