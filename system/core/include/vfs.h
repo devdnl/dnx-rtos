@@ -92,7 +92,7 @@ typedef struct
         tfile_t filetype;
 } dirent_t;
 
-/** directory type */ /* DNLFIXME make this structure vfs private */
+/** directory type */
 struct vfs_dir
 {
         dirent_t (*rddir)(fsd_t fsd, struct vfs_dir *dir);

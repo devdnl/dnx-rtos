@@ -68,7 +68,7 @@ static int   calc_format_size(const char *format, va_list arg);
  Local object definitions
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-static file_t *printk_file;
+static file_t *io_printk_file;
 #endif
 
 /*==============================================================================
@@ -295,14 +295,14 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
 void io_enable_printk(char *filename)
 {
         /* close file if opened */
-        if (printk_file) {
-                fclose(printk_file);
-                printk_file = NULL;
+        if (io_printk_file) {
+                fclose(io_printk_file);
+                io_printk_file = NULL;
         }
 
         /* open new file */
-        if (printk_file == NULL) {
-                printk_file = fopen(filename, "w");
+        if (io_printk_file == NULL) {
+                io_printk_file = fopen(filename, "w");
         }
 }
 #endif
@@ -315,9 +315,9 @@ void io_enable_printk(char *filename)
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 void io_disable_printk(void)
 {
-        if (printk_file) {
-                fclose(printk_file);
-                printk_file = NULL;
+        if (io_printk_file) {
+                fclose(io_printk_file);
+                io_printk_file = NULL;
         }
 }
 #endif
@@ -337,7 +337,7 @@ void io_printk(const char *format, ...)
 {
         va_list args;
 
-        if (printk_file) {
+        if (io_printk_file) {
                 va_start(args, format);
                 int size = calc_format_size(format, args);
                 va_end(args);
@@ -349,7 +349,7 @@ void io_printk(const char *format, ...)
                         io_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        fwrite(buffer, sizeof(char), size, printk_file);
+                        fwrite(buffer, sizeof(char), size, io_printk_file);
 
                         free(buffer);
                 }
