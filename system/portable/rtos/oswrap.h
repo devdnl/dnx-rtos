@@ -157,7 +157,7 @@ struct task_data {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *osw_new_task(taskCode_t, const char*, u16_t, void*);
+extern task_t *osw_new_task(void (*func)(void*), const char*, u16_t, void*);
 extern void    osw_delete_task(task_t *taskHdl);
 extern sem_t  *osw_create_binary_semaphore(void);
 

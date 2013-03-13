@@ -67,10 +67,10 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-typedef struct {
+struct FS_entry {
       char             *fsName;
       struct vfs_fscfg  mntcfg;
-} regFS_t;
+};
 
 /*==============================================================================
   Local function prototypes
@@ -80,7 +80,7 @@ typedef struct {
   Local object definitions
 ==============================================================================*/
 /* driver registration */
-static const regFS_t fsList[] =
+static const struct FS_entry FS_table[] =
 {
         IMPORT_FILE_SYSTEM_INTERFACE(lfs   , "lfs"   ),
 //        IMPORT_FILE_SYSTEM_INTERFACE(appfs , "appfs" ),
@@ -112,12 +112,10 @@ stdret_t mount(const char *fsname, const char *srcpath, const char *mountpoint)
         stdret_t status = STD_RET_ERROR;
 
         if (fsname && mountpoint) {
-                for (uint i = 0; i < ARRAY_SIZE(fsList); i++) {
-                        if (strcmp(fsList[i].fsName, fsname) == 0) {
-                                status = vfs_mount(srcpath,
-                                                   mountpoint,
-                                                   (struct vfs_fscfg*)
-                                                   &fsList[i].mntcfg);
+                for (uint i = 0; i < ARRAY_SIZE(FS_table); i++) {
+                        if (strcmp(FS_table[i].fsName, fsname) == 0) {
+                                status = vfs_mount(srcpath, mountpoint,
+                                                   (struct vfs_fscfg *)&FS_table[i].mntcfg);
                                 break;
                         }
                 }

@@ -68,7 +68,7 @@ extern "C" {
  * Function by default allocate memory for task data (localized in task tag)
  * which is used to cpu load calculation and standard IO and etc.
  *
- * @param[in ]  func            task code
+ * @param[in ] *func            task code
  * @param[in ] *name            task name
  * @param[in ]  stack_depth     stack deep
  * @param[in ] *argv            argument pointer
@@ -76,7 +76,7 @@ extern "C" {
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *osw_new_task(taskCode_t func, const char *name, u16_t stack_depth, void *argv)
+task_t *osw_new_task(void (*func)(void*), const char *name, u16_t stack_depth, void *argv)
 {
         task_t           *task = NULL;
         struct task_data *data;

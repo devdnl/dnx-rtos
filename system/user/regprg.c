@@ -59,7 +59,7 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const struct regprg_pdata pdata[] = {
+static const struct regprg_pdata prog_table[] = {
         IMPORT_PROGRAM(helloworld),
         IMPORT_PROGRAM(top),
         IMPORT_PROGRAM(terminal),
@@ -91,9 +91,9 @@ stdret_t regprg_get_program_data(char *name, struct regprg_pdata *prg_data)
                 return STD_RET_ERROR;
         }
 
-        for (uint i = 0; i < ARRAY_SIZE(pdata); i++) {
-                if (strcmp(name, pdata[i].program_name) == 0) {
-                        *prg_data = pdata[i];
+        for (uint i = 0; i < ARRAY_SIZE(prog_table); i++) {
+                if (strcmp(name, prog_table[i].program_name) == 0) {
+                        *prg_data = prog_table[i];
                         return STD_RET_OK;
                 }
         }
@@ -108,7 +108,7 @@ stdret_t regprg_get_program_data(char *name, struct regprg_pdata *prg_data)
 //==============================================================================
 int regprg_get_program_count(void)
 {
-        return ARRAY_SIZE(pdata);
+        return ARRAY_SIZE(prog_table);
 }
 
 //==============================================================================
@@ -118,7 +118,7 @@ int regprg_get_program_count(void)
 //==============================================================================
 struct regprg_pdata *regprg_get_pointer_to_program_list(void)
 {
-        return (struct regprg_pdata*)&pdata;
+        return (struct regprg_pdata*)&prog_table;
 }
 
 #ifdef __cplusplus

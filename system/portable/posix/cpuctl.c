@@ -49,7 +49,7 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static u32_t TotalCPUTime;
+static u32_t total_CPU_time;
 
 /*==============================================================================
   Function definitions
@@ -110,7 +110,7 @@ u32_t cpuctl_get_CPU_load_timer(void)
 //==============================================================================
 u32_t cpuctl_get_CPU_total_time(void)
 {
-        return TotalCPUTime;
+        return total_CPU_time;
 }
 
 //==============================================================================
@@ -120,7 +120,7 @@ u32_t cpuctl_get_CPU_total_time(void)
 //==============================================================================
 void cpuctl_clear_CPU_total_time(void)
 {
-        TotalCPUTime = 0;
+        total_CPU_time = 0;
 }
 
 #ifdef __cplusplus

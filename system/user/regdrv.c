@@ -67,12 +67,12 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-typedef struct {
+struct driver_entry {
         char  *drvName;
         stdret_t (*drvInit   )(devx_t dev, fd_t part);
         stdret_t (*drvRelease)(devx_t dev, fd_t part);
         struct vfs_drvcfg drvCfg;
-} regDrv_t;
+};
 
 /*==============================================================================
   Local function prototypes
@@ -82,7 +82,7 @@ typedef struct {
   Local object definitions
 ==============================================================================*/
 /* driver registration */
-static const regDrv_t drvList[] =
+static const struct driver_entry driver_table[] =
 {
         IMPORT_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1, UART_PART_NONE),
         IMPORT_DRIVER_INTERFACE(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
@@ -129,17 +129,17 @@ stdret_t init_driver(const char *drvName, const char *nodeName)
                 return STD_RET_ERROR;
         }
 
-        u16_t n = ARRAY_SIZE(drvList);
+        u16_t n = ARRAY_SIZE(driver_table);
 
         for (u16_t i = 0; i < n; i++) {
-                if (strcmp(drvList[i].drvName, drvName) != 0) {
+                if (strcmp(driver_table[i].drvName, drvName) != 0) {
                         continue;
                 }
 
-                devx_t dev  = drvList[i].drvCfg.dev;
-                fd_t   part = drvList[i].drvCfg.part;
+                devx_t dev  = driver_table[i].drvCfg.dev;
+                fd_t   part = driver_table[i].drvCfg.part;
 
-                if (drvList[i].drvInit(dev, part) != STD_RET_OK) {
+                if (driver_table[i].drvInit(dev, part) != STD_RET_OK) {
                         printk(FONT_COLOR_RED"Driver %s initialization error!"
                                RESET_ATTRIBUTES"\n", drvName);
 
@@ -148,12 +148,12 @@ stdret_t init_driver(const char *drvName, const char *nodeName)
 
                 if (nodeName) {
                         if (vfs_mknod(nodeName, (struct vfs_drvcfg*)
-                                      &drvList[i].drvCfg) == STD_RET_OK) {
+                                      &driver_table[i].drvCfg) == STD_RET_OK) {
 
                                 printk("Created node %s\n", nodeName);
                                 return STD_RET_OK;
                         } else {
-                                drvList[i].drvRelease(dev, part);
+                                driver_table[i].drvRelease(dev, part);
                                 printk(FONT_COLOR_RED"Create node %s failed"
                                        RESET_ATTRIBUTES"\n", nodeName);
                                 return STD_RET_ERROR;
@@ -185,14 +185,14 @@ stdret_t release_driver(const char *drvName)
       stdret_t status = STD_RET_ERROR;
 
       if (drvName) {
-            u16_t n = ARRAY_SIZE(drvList);
+            u16_t n = ARRAY_SIZE(driver_table);
 
             for (u16_t i = 0; i < n; i++) {
-                  if (strcmp(drvList[i].drvName, drvName) == 0) {
-                        devx_t dev  = drvList[i].drvCfg.dev;
-                        fd_t   part = drvList[i].drvCfg.part;
+                  if (strcmp(driver_table[i].drvName, drvName) == 0) {
+                        devx_t dev  = driver_table[i].drvCfg.dev;
+                        fd_t   part = driver_table[i].drvCfg.part;
 
-                        status = drvList[i].drvRelease(dev, part);
+                        status = driver_table[i].drvRelease(dev, part);
 
                         break;
                   }
