@@ -578,7 +578,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 u8_t   base = (chr == 'd' || chr == 'u' ? 10 : 16);
                                 bool_t uint = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
 
-                                resultPtr = itoa(va_arg(arg, int), result,
+                                resultPtr = itoa(va_arg(arg, i32_t), result,
                                                  base, uint, zeros);
                         }
 

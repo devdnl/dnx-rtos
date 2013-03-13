@@ -161,6 +161,23 @@ stdret_t lfs_init(const char *srcPath, fsd_t *fsd)
 
 //==============================================================================
 /**
+ * @brief Function release file system
+ *
+ * @param dev           fs device
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t lfs_release(fsd_t fsd)
+{
+        (void) fsd;
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
  * @brief Function create node for driver file
  *
  * @param  fsd                file system descriptor
@@ -764,23 +781,6 @@ stdret_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
         }
 
         return STD_RET_ERROR;
-}
-
-//==============================================================================
-/**
- * @brief Function release file system
- *
- * @param dev           fs device
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-stdret_t lfs_release(fsd_t fsd)
-{
-        (void) fsd;
-
-        return STD_RET_OK;
 }
 
 //==============================================================================

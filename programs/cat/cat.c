@@ -121,7 +121,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
 
                         fclose(file);
                 } else {
-                        printf("No such file\n");
+                        printf("No such file or file is protected\n");
 
                         status = STD_RET_ERROR;
                 }

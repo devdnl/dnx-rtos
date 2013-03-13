@@ -90,17 +90,14 @@ static dirent_t procfs_readdir_taskname(fsd_t fsd, dir_t *dir);
 static dirent_t procfs_readdir_taskid(fsd_t fsd, dir_t *dir);
 static dirent_t procfs_readdir_taskid_n(fsd_t fsd, dir_t *dir);
 
-
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 static struct procmem *procmem;
 
-
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-
 
 /*==============================================================================
   Function definitions
@@ -1080,7 +1077,6 @@ static dirent_t procfs_readdir_taskid_n(fsd_t fsd, dir_t *dir)
         dir->seek++;
         return dirent;
 }
-
 
 #ifdef __cplusplus
 }
