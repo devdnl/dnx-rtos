@@ -119,7 +119,7 @@ void task_initd(void *arg)
         enable_printk("/dev/tty3");
 
         /* stdio program control */
-        FILE_t *tty[TTY_LAST]               = {NULL};
+        file_t *tty[TTY_LAST]               = {NULL};
         task_t *program[TTY_LAST - 1]       = {NULL};
         enum prog_state state[TTY_LAST - 1] = {PROGRAM_UNKNOWN_STATE};
         i8_t current_tty                    = -1;

@@ -51,6 +51,19 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/** file type */
+struct vfs_file
+{
+        uint     dev;
+        uint     fd;
+        stdret_t (*f_close)(uint dev, uint fd);
+        size_t   (*f_write)(uint dev, uint fd, void *src, size_t size, size_t nitems, size_t seek);
+        size_t   (*f_read )(uint dev, uint fd, void *dst, size_t size, size_t nitmes, size_t seek);
+        stdret_t (*f_ioctl)(uint dev, uint fd, iorq_t iorq, void *data);
+        stdret_t (*f_stat )(uint dev, uint fd, void *stat);
+        size_t   f_seek;
+};
+
 struct fsinfo {
           char             *mnt_point;
           struct fsinfo    *base_FS;
@@ -366,16 +379,16 @@ stdret_t vfs_mkdir(const char *path)
  * @return directory object
  */
 //==============================================================================
-DIR_t *vfs_opendir(const char *path)
+dir_t *vfs_opendir(const char *path)
 {
         stdret_t status = STD_RET_ERROR;
-        DIR_t *dir      = NULL;
+        dir_t *dir      = NULL;
 
         if (!path) {
                 return NULL;
         }
 
-        dir = malloc(sizeof(DIR_t));
+        dir = malloc(sizeof(dir_t));
         if (dir) {
                 char *newpath = new_corrected_path(path, ADD_SLASH);
 
@@ -417,7 +430,7 @@ DIR_t *vfs_opendir(const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t vfs_closedir(DIR_t *dir)
+stdret_t vfs_closedir(dir_t *dir)
 {
         if (dir) {
                 if (dir->cldir) {
@@ -440,7 +453,7 @@ stdret_t vfs_closedir(DIR_t *dir)
  * @return element attributes
  */
 //==============================================================================
-dirent_t vfs_readdir(DIR_t *dir)
+dirent_t vfs_readdir(dir_t *dir)
 {
         dirent_t direntry;
         direntry.name = NULL;
@@ -663,9 +676,9 @@ stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-FILE_t *vfs_fopen(const char *path, const char *mode)
+file_t *vfs_fopen(const char *path, const char *mode)
 {
-        FILE_t *file;
+        file_t *file;
 
         if (!path || !mode) {
                 return NULL;
@@ -682,7 +695,7 @@ FILE_t *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if ((file = calloc(1, sizeof(FILE_t)))) {
+        if ((file = calloc(1, sizeof(file_t)))) {
                 char *extPath = NULL;
 
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
@@ -734,7 +747,7 @@ FILE_t *vfs_fopen(const char *path, const char *mode)
  * @retval STD_RET_ERROR        file not closed
  */
 //==============================================================================
-stdret_t vfs_fclose(FILE_t *file)
+stdret_t vfs_fclose(file_t *file)
 {
         if (file) {
                 if (file->f_close) {
@@ -760,7 +773,7 @@ stdret_t vfs_fclose(FILE_t *file)
  * @return STD_RET_OK or 0 if write finished successfully, otherwise > 0
  */
 //==============================================================================
-size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
+size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, file_t *file)
 {
         size_t n = 0;
 
@@ -787,7 +800,7 @@ size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @return number of read items
  */
 //==============================================================================
-size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
+size_t vfs_fread(void *ptr, size_t size, size_t nitems, file_t *file)
 {
         size_t n = 0;
 
@@ -814,7 +827,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE_t *file)
  * @retval STD_RET_ERROR        error occurred
  */
 //==============================================================================
-stdret_t vfs_fseek(FILE_t *file, i32_t offset, int mode)
+stdret_t vfs_fseek(file_t *file, i32_t offset, int mode)
 {
         if (file) {
                 struct vfs_stat stat;
@@ -849,7 +862,7 @@ stdret_t vfs_fseek(FILE_t *file, i32_t offset, int mode)
  * @return -1 if error, otherwise correct value
  */
 //==============================================================================
-i32_t vfs_ftell(FILE_t *file)
+i32_t vfs_ftell(file_t *file)
 {
         if (file)
                 return file->f_seek;
@@ -869,7 +882,7 @@ i32_t vfs_ftell(FILE_t *file)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data)
+stdret_t vfs_ioctl(file_t *file, iorq_t rq, void *data)
 {
         if (file) {
                 if (file->f_ioctl) {
@@ -891,7 +904,7 @@ stdret_t vfs_ioctl(FILE_t *file, iorq_t rq, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t vfs_fstat(FILE_t *file, struct vfs_stat *stat)
+stdret_t vfs_fstat(file_t *file, struct vfs_stat *stat)
 {
         if (file && stat) {
                 if (file->f_stat) {

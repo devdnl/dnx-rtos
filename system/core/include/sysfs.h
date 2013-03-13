@@ -66,7 +66,7 @@ extern size_t    fsname##_read   (fsd_t, fd_t, void*, size_t, size_t, size_t);  
 extern stdret_t  fsname##_ioctl  (fsd_t, fd_t, iorq_t, void*);                        \
 extern stdret_t  fsname##_mkdir  (fsd_t, const char*);                                \
 extern stdret_t  fsname##_mknod  (fsd_t, const char*, struct vfs_drvcfg*);            \
-extern stdret_t  fsname##_opendir(fsd_t, const char*, DIR_t*);                        \
+extern stdret_t  fsname##_opendir(fsd_t, const char*, dir_t*);                        \
 extern stdret_t  fsname##_remove (fsd_t, const char*);                                \
 extern stdret_t  fsname##_rename (fsd_t, const char*, const char*);                   \
 extern stdret_t  fsname##_chmod  (fsd_t, const char*, u32_t);                         \

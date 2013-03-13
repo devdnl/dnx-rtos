@@ -46,8 +46,8 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static dirent_t appfs_readrootdir(fsd_t fsd, DIR_t *dir);
-static stdret_t appfs_closedir(fsd_t fsd, DIR_t *dir);
+static dirent_t appfs_readrootdir(fsd_t fsd, dir_t *dir);
+static stdret_t appfs_closedir(fsd_t fsd, dir_t *dir);
 
 /*==============================================================================
   Local object definitions
@@ -272,7 +272,7 @@ stdret_t appfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
+stdret_t appfs_opendir(fsd_t fsd, const char *path, dir_t *dir)
 {
         (void)fsd;
 
@@ -302,7 +302,7 @@ stdret_t appfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t appfs_closedir(fsd_t fsd, DIR_t *dir)
+static stdret_t appfs_closedir(fsd_t fsd, dir_t *dir)
 {
         (void)fsd;
         (void)dir;
@@ -481,7 +481,7 @@ stdret_t appfs_release(fsd_t fsd)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t appfs_readrootdir(fsd_t fsd, DIR_t *dir)
+static dirent_t appfs_readrootdir(fsd_t fsd, dir_t *dir)
 {
         (void)fsd;
 

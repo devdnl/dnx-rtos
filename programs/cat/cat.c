@@ -94,7 +94,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
                         strcat(global->filepath, argv[1]);
                 }
 
-                FILE_t *file = fopen(global->filepath, "r");
+                file_t *file = fopen(global->filepath, "r");
 
                 if (file) {
                         fseek(file, 0, SEEK_END);

@@ -61,61 +61,14 @@ enum status_enum
         STD_RET_UNKNOWN = 127,
 };
 
-/** file types */
-typedef enum
-{
-        FILE_TYPE_REGULAR,
-        FILE_TYPE_DIR,
-        FILE_TYPE_DRV,
-        FILE_TYPE_LINK
-} tfile_t;
-
 /** universal status type */
 typedef signed char stdret_t;
 
-/** device number type */
-typedef uint devx_t;
+/** file object */
+typedef struct vfs_file file_t;
 
-/** IO request type */
-typedef u8_t iorq_t;
-
-/** file descriptor */
-typedef uint fd_t;
-
-/** file system descriptor */
-typedef uint fsd_t;
-
-/** file type */
-typedef struct
-{
-        uint     dev;
-        uint     fd;
-        stdret_t (*f_close)(uint dev, uint fd);
-        size_t   (*f_write)(uint dev, uint fd, void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*f_read )(uint dev, uint fd, void *dst, size_t size, size_t nitmes, size_t seek);
-        stdret_t (*f_ioctl)(uint dev, uint fd, iorq_t iorq, void *data);
-        stdret_t (*f_stat )(uint dev, uint fd, void *stat);
-        size_t   f_seek;
-} FILE_t;
-
-/** directory entry */
-typedef struct
-{
-        char   *name;
-        size_t  size;
-        tfile_t filetype;
-} dirent_t;
-
-/** directory type */
-typedef struct dir_s
-{
-        dirent_t (*rddir)(fsd_t fsd, struct dir_s *dir);
-        stdret_t (*cldir)(fsd_t fsd, struct dir_s *dir);
-        size_t     items;
-        size_t     seek;
-        void      *dd;
-        fsd_t      fsd;
-} DIR_t;
+/** directory object */
+typedef struct vfs_dir dir_t;
 
 /*==============================================================================
   Exported object declarations

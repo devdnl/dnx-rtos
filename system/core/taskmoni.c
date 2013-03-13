@@ -88,7 +88,7 @@ struct task_monitor_data {
                 bool_t full;
 
                 struct fileSlot {
-                        FILE_t *file;
+                        file_t *file;
                 } fslot[FILES_OPENED_IN_BLOCK];
 
         }*fblock[FILE_BLOCK_COUNT];
@@ -97,7 +97,7 @@ struct task_monitor_data {
                 bool_t full;
 
                 struct dirSlot {
-                        DIR_t *dir;
+                        dir_t *dir;
                 } dslot[DIRS_OPENED_IN_BLOCK];
         }*dblock[DIR_BLOCK_COUNT];
     #endif
@@ -780,9 +780,9 @@ void tskm_free(void *mem)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-FILE_t *tskm_fopen(const char *path, const char *mode)
+file_t *tskm_fopen(const char *path, const char *mode)
 {
-        FILE_t *file  = NULL;
+        file_t *file  = NULL;
         uint    block = 0;
         task_t *task;
         struct task_monitor_data *task_monitor_data;
@@ -857,7 +857,7 @@ FILE_t *tskm_fopen(const char *path, const char *mode)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-stdret_t tskm_fclose(FILE_t *file)
+stdret_t tskm_fclose(file_t *file)
 {
         stdret_t status = STD_RET_ERROR;
         task_t  *task;
@@ -935,9 +935,9 @@ stdret_t tskm_fclose(FILE_t *file)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-DIR_t *tskm_opendir(const char *path)
+dir_t *tskm_opendir(const char *path)
 {
-        DIR_t  *dir   = NULL;
+        dir_t  *dir   = NULL;
         u32_t   block = 0;
         task_t *task;
         struct task_monitor_data *task_monitor_data;
@@ -1012,7 +1012,7 @@ DIR_t *tskm_opendir(const char *path)
  */
 //==============================================================================
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-extern stdret_t tskm_closedir(DIR_t *dir)
+extern stdret_t tskm_closedir(dir_t *dir)
 {
         stdret_t status = STD_RET_ERROR;
         task_t *task;

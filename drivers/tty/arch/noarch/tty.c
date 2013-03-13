@@ -119,17 +119,17 @@ enum keycap {
   Local function prototypes
 ==============================================================================*/
 static void        task_tty(void *arg);
-static void        switch_tty_if_requested(FILE_t *stream);
-static void        stdout_service(FILE_t *stream, u8_t dev);
-static void        move_cursor_to_beginning_of_editline(u8_t dev, FILE_t *stream);
-static void        move_cursor_to_end_of_editline(u8_t dev, FILE_t *stream);
-static void        remove_character_from_editline(u8_t dev, FILE_t *stream);
-static void        delete_character_from_editline(u8_t dev, FILE_t *stream);
-static void        add_charater_to_editline(u8_t dev, char chr, FILE_t *stream);
-static void        show_new_messages(u8_t dev, FILE_t *stream);
-static void        refresh_last_line(u8_t dev, FILE_t *stream);
-static void        stdin_service(FILE_t *stream, u8_t dev);
-static void        switch_tty_immediately(u8_t dev, FILE_t *stream);
+static void        switch_tty_if_requested(file_t *stream);
+static void        stdout_service(file_t *stream, u8_t dev);
+static void        move_cursor_to_beginning_of_editline(u8_t dev, file_t *stream);
+static void        move_cursor_to_end_of_editline(u8_t dev, file_t *stream);
+static void        remove_character_from_editline(u8_t dev, file_t *stream);
+static void        delete_character_from_editline(u8_t dev, file_t *stream);
+static void        add_charater_to_editline(u8_t dev, char chr, file_t *stream);
+static void        show_new_messages(u8_t dev, file_t *stream);
+static void        refresh_last_line(u8_t dev, file_t *stream);
+static void        stdin_service(file_t *stream, u8_t dev);
+static void        switch_tty_immediately(u8_t dev, file_t *stream);
 static void        clear_tty(u8_t dev);
 static uint        add_message(u8_t dev, char *msg, uint msgLen);
 static char       *create_buffer_for_message(u8_t dev, char *msg, uint msgLen);
@@ -140,11 +140,11 @@ static void        link_message(char *msg, u8_t dev);
 static void        inc_message_counter(u8_t dev);
 static enum keycap capture_special_keys(char character);
 static u8_t        get_message_index(u8_t dev, u8_t back);
-static void        refresh_tty(u8_t dev, FILE_t *file);
-static void        get_vt100_size(FILE_t *ttysfile);
+static void        refresh_tty(u8_t dev, file_t *file);
+static void        get_vt100_size(file_t *ttysfile);
 static void        write_input_stream(char chr, u8_t dev);
 static stdret_t    read_input_stream(char *chr, u8_t dev);
-static void        move_editline_to_stream(u8_t dev, FILE_t *stream);
+static void        move_editline_to_stream(u8_t dev, file_t *stream);
 
 /*==============================================================================
   Local object definitions
@@ -534,7 +534,7 @@ static void task_tty(void *arg)
         set_priority(TTYD_PRIORITY);
 
         char   *msg;
-        FILE_t *ttys;
+        file_t *ttys;
 
         /* try open selected file */
         while ((ttys = fopen(FILE, "r+")) == NULL) {
@@ -577,7 +577,7 @@ static void task_tty(void *arg)
  * @param  dev          terminal number
  */
 //==============================================================================
-static void stdout_service(FILE_t *stream, u8_t dev)
+static void stdout_service(file_t *stream, u8_t dev)
 {
         if (take_counting_semaphore(term->semcnt_stdout, 0) == OS_OK) {
                 if (TTY(dev)->newMsgCnt > 0) {
@@ -600,7 +600,7 @@ static void stdout_service(FILE_t *stream, u8_t dev)
  * @param  dev          terminal number
  */
 //==============================================================================
-static void stdin_service(FILE_t *stream, u8_t dev)
+static void stdin_service(file_t *stream, u8_t dev)
 {
         char  chr;
         char *msg;
@@ -681,7 +681,7 @@ static void stdin_service(FILE_t *stream, u8_t dev)
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void move_cursor_to_beginning_of_editline(u8_t dev, FILE_t *stream)
+static void move_cursor_to_beginning_of_editline(u8_t dev, file_t *stream)
 {
         char *msg = VT100_CURSOR_OFF;
         fwrite(msg, sizeof(char), strlen(msg), stream);
@@ -701,7 +701,7 @@ static void move_cursor_to_beginning_of_editline(u8_t dev, FILE_t *stream)
  * @brief Function move the cursor to the end of edit line
  */
 //==============================================================================
-static void move_cursor_to_end_of_editline(u8_t dev, FILE_t *stream)
+static void move_cursor_to_end_of_editline(u8_t dev, file_t *stream)
 {
         char *msg = VT100_CURSOR_OFF;
         fwrite(msg, sizeof(char), strlen(msg), stream);
@@ -724,7 +724,7 @@ static void move_cursor_to_end_of_editline(u8_t dev, FILE_t *stream)
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void remove_character_from_editline(u8_t dev, FILE_t *stream)
+static void remove_character_from_editline(u8_t dev, file_t *stream)
 {
         if (TTY(dev)->cursorPosition == 0 || TTY(dev)->editLineLen == 0) {
                 return;
@@ -757,7 +757,7 @@ static void remove_character_from_editline(u8_t dev, FILE_t *stream)
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void delete_character_from_editline(u8_t dev, FILE_t *stream)
+static void delete_character_from_editline(u8_t dev, file_t *stream)
 {
         if (TTY(dev)->editLineLen == 0) {
                 return;
@@ -789,7 +789,7 @@ static void delete_character_from_editline(u8_t dev, FILE_t *stream)
  * @brief Function add character at cursor position in edit line
  */
 //==============================================================================
-static void add_charater_to_editline(u8_t dev, char chr, FILE_t *stream)
+static void add_charater_to_editline(u8_t dev, char chr, file_t *stream)
 {
         char *msg;
 
@@ -831,7 +831,7 @@ static void add_charater_to_editline(u8_t dev, char chr, FILE_t *stream)
  * @param *stream       required stream to refresh changed terminal
  */
 //==============================================================================
-static void switch_tty_if_requested(FILE_t *stream)
+static void switch_tty_if_requested(file_t *stream)
 {
         if (term->changeToTTY != -1) {
                 term->currentTTY  = term->changeToTTY;
@@ -848,7 +848,7 @@ static void switch_tty_if_requested(FILE_t *stream)
  * @param *stream       required stream to refresh changed terminal
  */
 //==============================================================================
-static void switch_tty_immediately(u8_t dev, FILE_t *stream)
+static void switch_tty_immediately(u8_t dev, file_t *stream)
 {
         if (dev != term->currentTTY) {
                 term->currentTTY = dev;
@@ -871,7 +871,7 @@ static void switch_tty_immediately(u8_t dev, FILE_t *stream)
  * @param *stream       required stream to refresh new messages
  */
 //==============================================================================
-static void show_new_messages(u8_t dev, FILE_t *stream)
+static void show_new_messages(u8_t dev, file_t *stream)
 {
         while (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
 
@@ -903,7 +903,7 @@ static void show_new_messages(u8_t dev, FILE_t *stream)
  * @param *stream       required stream to refresh new messages
  */
 //==============================================================================
-static void refresh_last_line(u8_t dev, FILE_t *stream)
+static void refresh_last_line(u8_t dev, file_t *stream)
 {
         while (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
 
@@ -1268,7 +1268,7 @@ static enum keycap capture_special_keys(char character)
  * @param dev     number of terminal
  */
 //==============================================================================
-static void refresh_tty(u8_t dev, FILE_t *file)
+static void refresh_tty(u8_t dev, file_t *file)
 {
         get_vt100_size(file);
 
@@ -1310,7 +1310,7 @@ static void refresh_tty(u8_t dev, FILE_t *file)
  * @param *ttysfile     tty file
  */
 //==============================================================================
-static void get_vt100_size(FILE_t *ttysfile)
+static void get_vt100_size(file_t *ttysfile)
 {
         char chr = 0;
 
@@ -1461,7 +1461,7 @@ static stdret_t read_input_stream(char *chr, u8_t dev)
  * @param [in] *stream          terminal control stream
  */
 //==============================================================================
-static void move_editline_to_stream(u8_t dev, FILE_t *stream)
+static void move_editline_to_stream(u8_t dev, file_t *stream)
 {
         TTY(dev)->editLine[TTY(dev)->editLineLen++] = '\n';
 

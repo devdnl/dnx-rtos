@@ -83,12 +83,12 @@ struct fileinfo {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir);
-static stdret_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir);
-static dirent_t procfs_readdir_root(fsd_t fsd, DIR_t *dir);
-static dirent_t procfs_readdir_taskname(fsd_t fsd, DIR_t *dir);
-static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir);
-static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir);
+static stdret_t procfs_closedir_freedd(fsd_t fsd, dir_t *dir);
+static stdret_t procfs_closedir_noop(fsd_t fsd, dir_t *dir);
+static dirent_t procfs_readdir_root(fsd_t fsd, dir_t *dir);
+static dirent_t procfs_readdir_taskname(fsd_t fsd, dir_t *dir);
+static dirent_t procfs_readdir_taskid(fsd_t fsd, dir_t *dir);
+static dirent_t procfs_readdir_taskid_n(fsd_t fsd, dir_t *dir);
 
 
 /*==============================================================================
@@ -643,7 +643,7 @@ stdret_t procfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
+stdret_t procfs_opendir(fsd_t fsd, const char *path, dir_t *dir)
 {
         (void) fsd;
 
@@ -713,7 +713,7 @@ stdret_t procfs_opendir(fsd_t fsd, const char *path, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir)
+static stdret_t procfs_closedir_freedd(fsd_t fsd, dir_t *dir)
 {
         (void) fsd;
 
@@ -740,7 +740,7 @@ static stdret_t procfs_closedir_freedd(fsd_t fsd, DIR_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t procfs_closedir_noop(fsd_t fsd, DIR_t *dir)
+static stdret_t procfs_closedir_noop(fsd_t fsd, dir_t *dir)
 {
         (void) fsd;
         (void) dir;
@@ -902,7 +902,7 @@ stdret_t procfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_root(fsd_t fsd, DIR_t *dir)
+static dirent_t procfs_readdir_root(fsd_t fsd, dir_t *dir)
 {
         (void) fsd;
 
@@ -939,7 +939,7 @@ static dirent_t procfs_readdir_root(fsd_t fsd, DIR_t *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskname(fsd_t fsd, DIR_t *dir)
+static dirent_t procfs_readdir_taskname(fsd_t fsd, dir_t *dir)
 {
         (void) fsd;
 
@@ -972,7 +972,7 @@ static dirent_t procfs_readdir_taskname(fsd_t fsd, DIR_t *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir)
+static dirent_t procfs_readdir_taskid(fsd_t fsd, dir_t *dir)
 {
         (void) fsd;
 
@@ -1012,7 +1012,7 @@ static dirent_t procfs_readdir_taskid(fsd_t fsd, DIR_t *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid_n(fsd_t fsd, DIR_t *dir)
+static dirent_t procfs_readdir_taskid_n(fsd_t fsd, dir_t *dir)
 {
         (void) fsd;
 

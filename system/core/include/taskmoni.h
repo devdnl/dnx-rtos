@@ -156,10 +156,10 @@ extern void     tskm_free(void*);
 #endif
 
 #if (TSKM_MONITOR_FILE_USAGE > 0)
-extern FILE_t  *tskm_fopen(const char*, const char*);
-extern stdret_t tskm_fclose(FILE_t*);
-extern DIR_t   *tskm_opendir(const char*);
-extern stdret_t tskm_closedir(DIR_t*);
+extern file_t  *tskm_fopen(const char*, const char*);
+extern stdret_t tskm_fclose(file_t*);
+extern dir_t   *tskm_opendir(const char*);
+extern stdret_t tskm_closedir(dir_t*);
 #endif
 
 #if (TSKM_MONITOR_CPU_LOAD > 0)

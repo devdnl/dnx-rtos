@@ -268,7 +268,7 @@ static enum cmd_status find_internal_command(char *cmd, char *arg)
 static enum cmd_status cmd_cd(char *arg)
 {
         char  *newpath  = NULL;
-        DIR_t *dir      = NULL;
+        dir_t *dir      = NULL;
         bool_t freePath = FALSE;
 
         if (strcmp(arg, "..") == 0) {
@@ -360,7 +360,7 @@ static enum cmd_status cmd_ls(char *arg)
                 newpath = global->cwd;
         }
 
-        DIR_t *dir = opendir(newpath);
+        dir_t *dir = opendir(newpath);
 
         if (dir) {
                 dirent_t dirent;
@@ -480,7 +480,7 @@ static enum cmd_status cmd_touch(char *arg)
                 newpath = global->cwd;
         }
 
-        FILE_t *file = fopen(newpath, "a+");
+        file_t *file = fopen(newpath, "a+");
 
         if (file) {
                 fclose(file);

@@ -34,6 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "systypes.h"
+#include "vfs.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -79,7 +80,7 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *prgm_new_program(char*, char*, char*, FILE_t*, FILE_t*, enum prog_state*, int*);
+extern task_t *prgm_new_program(char*, char*, char*, file_t*, file_t*, enum prog_state*, int*);
 extern void    prgm_delete_program(task_t*);
 
 #ifdef __cplusplus

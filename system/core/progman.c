@@ -63,8 +63,8 @@ struct program_data {
         char            *cwd;
         enum prog_state *status;
         int             *exit_code;
-        FILE_t          *stdin;
-        FILE_t          *stdout;
+        file_t          *stdin;
+        file_t          *stdout;
         char           **argv;
         int              argc;
         uint             globals_size;
@@ -103,8 +103,8 @@ static void   task_program_startup(void *argv);
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *prgm_new_program(char *name, char *args, char *cwd, FILE_t *stdin,
-                         FILE_t *stdout, enum prog_state *status, int *exit_code)
+task_t *prgm_new_program(char *name, char *args, char *cwd, file_t *stdin,
+                         file_t *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
         task_t              *taskhdl = NULL;

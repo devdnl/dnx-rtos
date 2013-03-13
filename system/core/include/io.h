@@ -155,18 +155,18 @@ extern void  io_disable_printk(void);
 #endif
 #if (CONFIG_PRINTF_ENABLE > 0)
 extern int   io_snprintf(char *buf, u32_t size, const char *format, ...);
-extern int   io_fprintf(FILE_t *file, const char *format, ...);
+extern int   io_fprintf(file_t *file, const char *format, ...);
 extern int   io_vsnprintf(char *buf, size_t size, const char *format, va_list arg);
 #endif
 #if (CONFIG_SCANF_ENABLE > 0)
-extern int   io_fscanf(FILE_t *buf, const char *format, ...);
+extern int   io_fscanf(file_t *buf, const char *format, ...);
 extern int   io_sscanf(const char *str, const char *format, ...);
 extern int   io_vsscanf(const char *str, const char *format, va_list args);
 #endif
 extern char *io_atoi(char *string, u8_t base, i32_t *value);
-extern int   io_fputc(int c, FILE_t *buf);
-extern int   io_getc(FILE_t *buf);
-extern char *io_fgets(char *str, int size, FILE_t *stream);
+extern int   io_fputc(int c, file_t *buf);
+extern int   io_getc(file_t *buf);
+extern char *io_fgets(char *str, int size, file_t *stream);
 
 #ifdef __cplusplus
 }

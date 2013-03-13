@@ -140,8 +140,8 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        FILE_t *f_stdin;        /* stdin file                         */
-        FILE_t *f_stdout;       /* stdout file                        */
+        file_t *f_stdin;        /* stdin file                         */
+        file_t *f_stdout;       /* stdout file                        */
         char   *f_cwd;          /* current working path               */
         void   *f_global_vars;  /* address to global variables        */
         void   *f_user;         /* pointer to user data               */

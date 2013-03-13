@@ -68,7 +68,7 @@ static int   calc_format_size(const char *format, va_list arg);
  Local object definitions
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-static FILE_t *printk_file;
+static file_t *printk_file;
 #endif
 
 /*==============================================================================
@@ -367,7 +367,7 @@ void io_printk(const char *format, ...)
  * @retval c if OK otherwise EOF
  */
 //==============================================================================
-int io_fputc(int c, FILE_t *stream)
+int io_fputc(int c, file_t *stream)
 {
         if (stream) {
                 char ch = (char)c;
@@ -390,7 +390,7 @@ int io_fputc(int c, FILE_t *stream)
  * @retval character
  */
 //==============================================================================
-int io_getc(FILE_t *stream)
+int io_getc(file_t *stream)
 {
         int chr  = EOF;
         u16_t dcnt = 0;
@@ -425,7 +425,7 @@ int io_getc(FILE_t *stream)
  * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-char *io_fgets(char *str, int size, FILE_t *stream)
+char *io_fgets(char *str, int size, file_t *stream)
 {
         if (!str || !size || !stream) {
                 return NULL;
@@ -487,7 +487,7 @@ int io_snprintf(char *bfr, u32_t size, const char *format, ...)
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-int io_fprintf(FILE_t *file, const char *format, ...)
+int io_fprintf(file_t *file, const char *format, ...)
 {
         va_list args;
         int n = 0;
@@ -610,7 +610,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
  */
 //==============================================================================
 #if (CONFIG_SCANF_ENABLE > 0)
-int io_fscanf(FILE_t *stream, const char *format, ...)
+int io_fscanf(file_t *stream, const char *format, ...)
 {
         int n = 0;
         va_list args;
