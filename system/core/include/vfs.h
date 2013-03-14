@@ -145,7 +145,7 @@ struct vfs_drvcfg {
 
 /** file system configuration */
 struct vfs_fscfg {
-        fsd_t    f_fsd;
+        fsd_t    f_fsd;     /* data provided by FS driver in the initialization and used by VFS in accessing to FS driver */
         stdret_t (*f_init   )(const char *path, fsd_t *fsd);
         stdret_t (*f_open   )(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode);
         stdret_t (*f_close  )(fsd_t fsd, fd_t fd);

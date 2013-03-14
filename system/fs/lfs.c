@@ -106,10 +106,10 @@ static struct fshdl_s *lfs;
 
 //==============================================================================
 /**
- * @brief Initialize VFS module
+ * @brief Initialize file system
  *
- * @param *srcPath      source path
- * @param *fsd          file system descriptor
+ * @param[in]  *srcPath         source path
+ * @param[out] *fsd             file system descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -163,7 +163,7 @@ stdret_t lfs_init(const char *srcPath, fsd_t *fsd)
 /**
  * @brief Function release file system
  *
- * @param dev           fs device
+ * @param[in] fsd               fs device
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -180,9 +180,9 @@ stdret_t lfs_release(fsd_t fsd)
 /**
  * @brief Function create node for driver file
  *
- * @param  fsd                file system descriptor
- * @param *path               path when driver-file shall be created
- * @param *drvcfg             pointer to description of driver
+ * @param[in]  fsd              file system descriptor
+ * @param[in] *path             path when driver-file shall be created
+ * @param[in] *drvcfg           pointer to description of driver
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -269,8 +269,8 @@ stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
 /**
  * @brief Create directory
  *
- * @param  fsd          file system descriptor
- * @param *path         path to new directory
+ * @param[in]  fsd              file system descriptor
+ * @param[in] *path             path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -349,9 +349,9 @@ stdret_t lfs_mkdir(fsd_t fsd, const char *path)
 /**
  * @brief Function open directory
  *
- * @param  fsd          file system descriptor
- * @param *path         directory path
- * @param *dir          directory info
+ * @param[in]   fsd             file system descriptor
+ * @param[in]  *path            directory path
+ * @param[out] *dir             directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -392,8 +392,8 @@ stdret_t lfs_opendir(fsd_t fsd, const char *path, dir_t *dir)
 /**
  * @brief Function close dir
  *
- * @param  fsd          file system descriptor
- * @param *dir          directory info
+ * @param[in]  fsd              file system descriptor
+ * @param[in] *dir              directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -411,7 +411,8 @@ static stdret_t lfs_closedir(fsd_t fsd, dir_t *dir)
 /**
  * @brief Function read next item of opened directory
  *
- * @param *dir          directory object
+ * @param[in]  fsd              file system descriptor
+ * @param[in] *dir              directory object
  *
  * @return element attributes
  */
@@ -446,8 +447,8 @@ static dirent_t lfs_readdir(fsd_t fsd, dir_t *dir)
 /**
  * @brief Remove file
  *
- * @param  fsd          file system descriptor
- * @param *patch        localization of file/directory
+ * @param[in]  fsd              file system descriptor
+ * @param[in] *patch            localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -520,9 +521,9 @@ stdret_t lfs_remove(fsd_t fsd, const char *path)
  * The implementation of rename can move files only if external FS provide
  * functionality. Local VFS cannot do this.
  *
- * @param  fsd                file system descriptor
- * @param *oldName            old file name
- * @param *newName            new file name
+ * @param[in]  fsd                  file system descriptor
+ * @param[in] *oldName              old file name
+ * @param[in] *newName              new file name
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -602,9 +603,9 @@ stdret_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 /**
  * @brief Function change file mode
  *
- * @param dev     fs device
- * @param *path   path
- * @param mode    file mode
+ * @param[in]  dev                  file system descriptor
+ * @param[in] *path                 path
+ * @param[in]  mode                 file mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -635,10 +636,10 @@ stdret_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 /**
  * @brief Function change file owner and group
  *
- * @param dev     fs device
- * @param *path   path
- * @param owner   file owner
- * @param group   file group
+ * @param[in]  fsd                  file system descriptor
+ * @param[in] *path                 path
+ * @param[in]  owner                file owner
+ * @param[in]  group                file group
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -671,9 +672,9 @@ stdret_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 /**
  * @brief Function returns file/dir status
  *
- * @param  fsd          file system descriptor
- * @param *path         file/dir path
- * @param *stat         pointer to stat structure
+ * @param[in]   fsd             file system descriptor
+ * @param[in]  *path            file/dir path
+ * @param[out] *stat            pointer to stat structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -716,9 +717,9 @@ stdret_t lfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
 /**
  * @brief Function returns file status
  *
- * @param  fsd          file system descriptor
- * @param  fd           file descriptor
- * @param *stat         pointer to status structure
+ * @param[in]   fsd             file system descriptor
+ * @param[in]   fd              file descriptor
+ * @param[out] *stat            pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -758,8 +759,8 @@ stdret_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
 /**
  * @brief Function returns FS status
  *
- * @param dev           fs device
- * @param *statfs       pointer to status structure
+ * @param[in]   fsd             file system descriptor
+ * @param[out] *statfs          pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -914,8 +915,8 @@ stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const cha
  * Function return always STD_RET_OK, to close file in LFS no operation is
  * needed.
  *
- * @param dev     device number
- * @param fd      file descriptor
+ * @param[in] fsd               file system descriptor
+ * @param[in] fd                file descriptor
  *
  * @retval STD_RET_OK
  */
@@ -997,12 +998,12 @@ stdret_t lfs_close(fsd_t fsd, fd_t fd)
 /**
  * @brief Function write to file data
  *
- * @param  fsd          file system descriptor
- * @param  fd           file descriptor
- * @param *src          data source
- * @param  size         item size
- * @param  nitems       number of items
- * @param  seek         position in file
+ * @param[in]  fsd              file system descriptor
+ * @param[in]  fd               file descriptor
+ * @param[in] *src              data source
+ * @param[in]  size             item size
+ * @param[in]  nitems           number of items
+ * @param[in]  seek             position in file
  *
  * @return number of written items
  */
@@ -1085,12 +1086,12 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
 /**
  * @brief Function read from file data
  *
- * @param  fsd          file system descriptor
- * @param  fd           file descriptor
- * @param *dst          data destination
- * @param  size         item size
- * @param  nitems       number of items
- * @param  seek         position in file
+ * @param[in]   fsd             file system descriptor
+ * @param[in]   fd              file descriptor
+ * @param[out] *dst             data destination
+ * @param[in]   size            item size
+ * @param[in]   nitems          number of items
+ * @param[in]   seek            position in file
  *
  * @return number of read items
  */
@@ -1164,10 +1165,10 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
 /**
  * @brief IO operations on files
  *
- * @param  fsd    file system descriptor
- * @param  fd     file descriptor
- * @param  iorq   request
- * @param *data   data pointer
+ * @param[in]      fsd          file system descriptor
+ * @param[in]      fd           file descriptor
+ * @param[in]      iorq         request
+ * @param[in,out] *data         data pointer
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -1215,9 +1216,9 @@ stdret_t lfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
 /**
  * @brief Remove selected node
  *
- * @param *base            base node
- * @param *target          target node
- * @param  baseitemid      item in base node that point to target
+ * @param[in] *base             base node
+ * @param[in] *target           target node
+ * @param[in]  baseitemid       item in base node that point to target
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -1255,7 +1256,7 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
 /**
  * @brief Check path deep
  *
- * @param *path         path
+ * @param[in] *path             path
  *
  * @return path deep
  */
@@ -1450,7 +1451,7 @@ static stdret_t add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i
         openFileInfo->nodebase      = nodebase;
 
         if (list_get_nitem_ID(nodebase->data, *item,
-                        &openFileInfo->itemID) != STD_RET_OK) {
+                              &openFileInfo->itemID) != STD_RET_OK) {
                 goto AddFileToListOfOpenFiles_Error;
         }
 

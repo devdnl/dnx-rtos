@@ -54,8 +54,8 @@ extern "C" {
 /** file type */
 struct vfs_file
 {
-        uint     dev;
-        uint     fd;
+        uint     dev;   /* device number or file system description */
+        uint     fd;    /* device part number or file description   */
         stdret_t (*f_close)(uint dev, uint fd);
         size_t   (*f_write)(uint dev, uint fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(uint dev, uint fd, void *dst, size_t size, size_t nitmes, size_t seek);
@@ -116,12 +116,10 @@ stdret_t vfs_init(void)
 //==============================================================================
 /**
  * @brief Function mount file system in VFS
- * External file system is mounted to empty directory. If directory is not empty
- * mounting is not possible.
  *
- * @param *srcPath              path to source file when file system load data
- * @param *mntPoint             path when dir shall be mounted
- * @param *mountcfg             pointer to description of mount FS
+ * @param[in] *srcPath          path to source file when file system load data
+ * @param[in] *mntPoint         path when dir shall be mounted
+ * @param[in] *mountcfg         pointer to description of mount FS
  *
  * @retval STD_RET_OK           mount success
  * @retval STD_RET_ERROR        mount error
@@ -197,7 +195,7 @@ stdret_t vfs_mount(const char *srcPath, const char *mntPoint, struct vfs_fscfg *
 /**
  * @brief Function unmount dir from file system
  *
- * @param *path                 dir path
+ * @param[in] *path             dir path
  *
  * @retval STD_RET_OK           mount success
  * @retval STD_RET_ERROR        mount error
@@ -261,8 +259,8 @@ stdret_t vfs_umount(const char *path)
 /**
  * @brief Function gets mount point for n item
  *
- * @param  item           mount point number
- * @param *mntent         mount entry data
+ * @param[in]   item        mount point number
+ * @param[out] *mntent      mount entry data
  */
 //==============================================================================
 stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
@@ -306,8 +304,8 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
 /**
  * @brief Function create node for driver file
  *
- * @param *path                   path when driver-file shall be created
- * @param *drvcfg                 pointer to description of driver
+ * @param[in] *path                 path when driver-file shall be created
+ * @param[in] *drvcfg               pointer to description of driver
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -336,7 +334,7 @@ stdret_t vfs_mknod(const char *path, struct vfs_drvcfg *drvcfg)
 /**
  * @brief Create directory
  *
- * @param *path   path to new directory
+ * @param[in] *path                 path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -374,7 +372,7 @@ stdret_t vfs_mkdir(const char *path)
 /**
  * @brief Function open directory
  *
- * @param *path           directory path
+ * @param[in] *path                 directory path
  *
  * @return directory object
  */
@@ -424,7 +422,7 @@ dir_t *vfs_opendir(const char *path)
 /**
  * @brief Function close opened directory
  *
- * @param *dir            directory object
+ * @param[in] *dir                  directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -448,7 +446,7 @@ stdret_t vfs_closedir(dir_t *dir)
 /**
  * @brief Function read next item of opened directory
  *
- * @param *dir            directory object
+ * @param[in] *dir                  directory object
  *
  * @return element attributes
  */
@@ -471,7 +469,7 @@ dirent_t vfs_readdir(dir_t *dir)
  * @brief Remove file
  * Removes file or directory. Removes directory if is not a mount point.
  *
- * @param *patch          localization of file/directory
+ * @param[in] *patch                localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -509,10 +507,10 @@ stdret_t vfs_remove(const char *path)
 /**
  * @brief Rename file name
  * The implementation of rename can move files only if external FS provide
- * functionality. Local VFS cannot do this.
+ * functionality. Local VFS cannot do this. Cross FS move is also not possible.
  *
- * @param *oldName                old file name
- * @param *newName                new file name
+ * @param[in] *oldName                  old file name
+ * @param[in] *newName                  new file name
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -545,8 +543,8 @@ stdret_t vfs_rename(const char *oldName, const char *newName)
 /**
  * @brief Function change file mode
  *
- * @param *path   file path
- * @param  mode   file mode
+ * @param[in] *path         file path
+ * @param[in]  mode         file mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -576,9 +574,9 @@ stdret_t vfs_chmod(const char *path, u16_t mode)
 /**
  * @brief Function change file owner and group
  *
- * @param *path   file path
- * @param  owner  file owner
- * @param  group  file group
+ * @param[in] *path         file path
+ * @param[in]  owner        file owner
+ * @param[in]  group        file group
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -608,8 +606,8 @@ stdret_t vfs_chown(const char *path, u16_t owner, u16_t group)
 /**
  * @brief Function returns file/dir status
  *
- * @param *path           file/dir path
- * @param *stat           pointer to structure
+ * @param[in]  *path            file/dir path
+ * @param[out] *stat            pointer to structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -638,8 +636,8 @@ stdret_t vfs_stat(const char *path, struct vfs_stat *stat)
 /**
  * @brief Function returns file system status
  *
- * @param *path           fs path
- * @param *statfs         pointer to FS status structure
+ * @param[in]  *path            fs path
+ * @param[out] *statfs          pointer to FS status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -670,8 +668,8 @@ stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs)
 /**
  * @brief Function open selected file
  *
- * @param *name           file path
- * @param *mode           file mode
+ * @param[in] *name             file path
+ * @param[in] *mode             file mode
  *
  * @retval NULL if file can't be created
  */
@@ -741,7 +739,7 @@ file_t *vfs_fopen(const char *path, const char *mode)
 /**
  * @brief Function close opened file
  *
- * @param *file                 pinter to file
+ * @param[in] *file             pinter to file
  *
  * @retval STD_RET_OK           file closed successfully
  * @retval STD_RET_ERROR        file not closed
@@ -765,10 +763,10 @@ stdret_t vfs_fclose(file_t *file)
 /**
  * @brief Function write data to file
  *
- * @param *ptr                    address to data (src)
- * @param size                    item size
- * @param nitems                  number of items
- * @param *file                   pointer to file object
+ * @param[in] *ptr              address to data (src)
+ * @param[in]  size             item size
+ * @param[in]  nitems           number of items
+ * @param[in] *file             pointer to file object
  *
  * @return STD_RET_OK or 0 if write finished successfully, otherwise > 0
  */
@@ -792,10 +790,10 @@ size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, file_t *file)
 /**
  * @brief Function read data from file
  *
- * @param *ptr                    address to data (dst)
- * @param size                    item size
- * @param nitems                  number of items
- * @param *file                   pointer to file object
+ * @param[out] *ptr             address to data (dst)
+ * @param[in]   size            item size
+ * @param[in]   nitems          number of items
+ * @param[in]  *file            pointer to file object
  *
  * @return number of read items
  */
@@ -819,9 +817,9 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, file_t *file)
 /**
  * @brief Function set seek value
  *
- * @param *file                 file object
- * @param offset                seek value
- * @param mode                  seek mode
+ * @param[in] *file             file object
+ * @param[in]  offset           seek value
+ * @param[in]  mode             seek mode
  *
  * @retval STD_RET_OK           seek moved successfully
  * @retval STD_RET_ERROR        error occurred
@@ -857,7 +855,7 @@ stdret_t vfs_fseek(file_t *file, i32_t offset, int mode)
 /**
  * @brief Function returns seek value
  *
- * @param *file                   file object
+ * @param[in] *file             file object
  *
  * @return -1 if error, otherwise correct value
  */
@@ -874,9 +872,9 @@ i32_t vfs_ftell(file_t *file)
 /**
  * @brief Function support not standard operations
  *
- * @param *file                   file
- * @param rq                      request
- * @param *data                   pointer to data
+ * @param[in]     *file         file
+ * @param[in]      rq           request
+ * @param[in,out] *data         pointer to data
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -897,8 +895,8 @@ stdret_t vfs_ioctl(file_t *file, iorq_t rq, void *data)
 /**
  * @brief Function returns file/dir status
  *
- * @param *path           file/dir path
- * @param *stat           pointer to stat structure
+ * @param[in]  *path            file/dir path
+ * @param[out] *stat            pointer to stat structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -919,9 +917,9 @@ stdret_t vfs_fstat(file_t *file, struct vfs_stat *stat)
 /**
  * @brief Function find FS in mounted list
  *
- * @param *path           path to FS
- * @param  len            path length
- * @param *itemid         item id in mount list
+ * @param[in]  *path            path to FS
+ * @param[in]   len             path length
+ * @param[out] *itemid          item id in mount list
  *
  * @return pointer to FS info
  */
@@ -958,8 +956,8 @@ static struct fsinfo *find_mounted_FS(const char *path, u16_t len, u32_t *itemid
 /**
  * @brief Function find base FS of selected path
  *
- * @param *path         path to FS
- * @param **extPath     pointer to external part of path
+ * @param[in]   *path           path to FS
+ * @param[out] **extPath        pointer to external part of path
  *
  * @return pointer to FS info
  */
@@ -996,8 +994,8 @@ static struct fsinfo *find_base_FS(const char *path, char **extPath)
 /**
  * @brief Function create new path with slash correction
  *
- * @param *path           path to correct
- * @param  corr           path correction kind
+ * @param[in] *path             path to correct
+ * @param[in]  corr             path correction kind
  *
  * @return pointer to new path
  */
