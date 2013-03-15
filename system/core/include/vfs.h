@@ -106,7 +106,6 @@ struct vfs_dir
 /** file statistics */
 struct vfs_statf {
         u32_t  st_dev;           /* ID of device containing file */
-        u32_t  st_rdev;          /* device ID (if special file) */
         u32_t  st_mode;          /* protection */
         u32_t  st_uid;           /* user ID of owner */
         u32_t  st_gid;           /* group ID of owner */
@@ -134,12 +133,12 @@ struct vfs_mntent {
 
 /** driver configuration */
 struct vfs_drv_interface {
-        stdret_t (*drv_open )(void *drvhdl, fd_t fd);
-        stdret_t (*drv_close)(void *drvhdl, fd_t fd);
-        size_t   (*drv_write)(void *drvhdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*drv_read )(void *drvhdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-        stdret_t (*drv_ioctl)(void *drvhdl, fd_t fd, iorq_t iorq, void *data);
-        fd_t     fd;
+        void     *handle;
+        stdret_t (*drv_open )(void *drvhdl);
+        stdret_t (*drv_close)(void *drvhdl);
+        size_t   (*drv_write)(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek);
+        size_t   (*drv_read )(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek);
+        stdret_t (*drv_ioctl)(void *drvhdl, iorq_t iorq, void *data);
 };
 
 /** file system configuration */

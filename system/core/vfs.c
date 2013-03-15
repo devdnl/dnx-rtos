@@ -54,13 +54,13 @@ extern "C" {
 /** file type */
 struct vfs_file
 {
-        void     *handle;       /* file system or device memory handle */
+        void     *handle;       /* file system handle */
         stdret_t (*f_close)(void *handle, fd_t fd);
         size_t   (*f_write)(void *handle, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(void *handle, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
         stdret_t (*f_ioctl)(void *handle, fd_t fd, iorq_t iorq, void *data);
         stdret_t (*f_stat )(void *handle, fd_t fd, struct vfs_statf *stat);
-        fd_t     fd;            /* file description                    */
+        fd_t     fd;            /* file description */
         size_t   f_seek;
 };
 

@@ -107,14 +107,14 @@ extern "C" {
 #define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
 #define fstat(file, statPtr)              vfs_fstat(file, stat)
 
-#define DRIVER_INTERFACE(drvname)                                                 \
-extern stdret_t drvname##_Init   (devx_t, fd_t);                                  \
-extern stdret_t drvname##_Open   (devx_t, fd_t);                                  \
-extern stdret_t drvname##_Close  (devx_t, fd_t);                                  \
-extern size_t   drvname##_Write  (devx_t, fd_t, void*, size_t, size_t, size_t);   \
-extern size_t   drvname##_Read   (devx_t, fd_t, void*, size_t, size_t, size_t);   \
-extern stdret_t drvname##_IOCtl  (devx_t, fd_t, iorq_t, void*);                   \
-extern stdret_t drvname##_Release(devx_t, fd_t)
+#define DRIVER_INTERFACE(drvname)                                          \
+extern stdret_t drvname##_init   (void**, uint);                           \
+extern stdret_t drvname##_release(void*);                                  \
+extern stdret_t drvname##_open   (void*);                                  \
+extern stdret_t drvname##_close  (void*);                                  \
+extern size_t   drvname##_write  (void*, void*, size_t, size_t, size_t);   \
+extern size_t   drvname##_read   (void*, void*, size_t, size_t, size_t);   \
+extern stdret_t drvname##_ioctl  (void*, iorq_t, void*)
 
 /*==============================================================================
   Exported types, enums definitions

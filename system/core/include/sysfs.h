@@ -45,36 +45,36 @@ extern "C" {
 #error "system.h and sysfs.h cannot never included together!"
 #endif
 
-#ifndef calloc
-#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
+#ifndef kcalloc
+#define kcalloc(nmemb, msize)             memman_calloc(nmemb, msize)
 #endif
 
-#ifndef malloc
-#define malloc(size)                      memman_malloc(size)
+#ifndef kmalloc
+#define kmalloc(size)                     memman_malloc(size)
 #endif
 
-#ifndef free
-#define free(mem)                         memman_free(mem)
+#ifndef kfree
+#define kfree(mem)                        memman_free(mem)
 #endif
 
 #define FILE_SYSTEM_INTERFACE(fsname)                                                 \
-extern stdret_t  fsname##_init   (const char*, fsd_t*);                               \
-extern stdret_t  fsname##_open   (fsd_t, fd_t*, size_t*, const char*, const char*);   \
-extern stdret_t  fsname##_close  (fsd_t, fd_t);                                       \
-extern size_t    fsname##_write  (fsd_t, fd_t, void*, size_t, size_t, size_t);        \
-extern size_t    fsname##_read   (fsd_t, fd_t, void*, size_t, size_t, size_t);        \
-extern stdret_t  fsname##_ioctl  (fsd_t, fd_t, iorq_t, void*);                        \
-extern stdret_t  fsname##_mkdir  (fsd_t, const char*);                                \
-extern stdret_t  fsname##_mknod  (fsd_t, const char*, struct vfs_drvcfg*);            \
-extern stdret_t  fsname##_opendir(fsd_t, const char*, dir_t*);                        \
-extern stdret_t  fsname##_remove (fsd_t, const char*);                                \
-extern stdret_t  fsname##_rename (fsd_t, const char*, const char*);                   \
-extern stdret_t  fsname##_chmod  (fsd_t, const char*, u32_t);                         \
-extern stdret_t  fsname##_chown  (fsd_t, const char*, u16_t, u16_t);                  \
-extern stdret_t  fsname##_stat   (fsd_t, const char*, struct vfs_stat*);              \
-extern stdret_t  fsname##_fstat  (fsd_t, fd_t, struct vfs_stat*);                     \
-extern stdret_t  fsname##_statfs (fsd_t, struct vfs_statfs*);                         \
-extern stdret_t  fsname##_release(fsd_t)
+extern stdret_t  fsname##_init   (void**, const char*);                               \
+extern stdret_t  fsname##_release(void*);                                             \
+extern stdret_t  fsname##_open   (void*, fd_t*, size_t*, const char*, const char*);   \
+extern stdret_t  fsname##_close  (void*, fd_t);                                       \
+extern size_t    fsname##_write  (void*, fd_t, void*, size_t, size_t, size_t);        \
+extern size_t    fsname##_read   (void*, fd_t, void*, size_t, size_t, size_t);        \
+extern stdret_t  fsname##_ioctl  (void*, fd_t, iorq_t, void*);                        \
+extern stdret_t  fsname##_mkdir  (void*, const char*);                                \
+extern stdret_t  fsname##_mknod  (void*, const char*, struct vfs_drv_interface*);     \
+extern stdret_t  fsname##_opendir(void*, const char*, dir_t*);                        \
+extern stdret_t  fsname##_remove (void*, const char*);                                \
+extern stdret_t  fsname##_rename (void*, const char*, const char*);                   \
+extern stdret_t  fsname##_chmod  (void*, const char*, u32_t);                         \
+extern stdret_t  fsname##_chown  (void*, const char*, u16_t, u16_t);                  \
+extern stdret_t  fsname##_stat   (void*, const char*, struct vfs_statf*);             \
+extern stdret_t  fsname##_fstat  (void*, fd_t, struct vfs_statf*);                    \
+extern stdret_t  fsname##_statfs (void*, struct vfs_statfs*)
 
 /*==============================================================================
   Exported types, enums definitions

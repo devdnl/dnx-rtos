@@ -47,58 +47,56 @@ extern "C" {
   Local types, enums definitions
 ==============================================================================*/
 /** file types */
-typedef enum {
+enum node_type {
         NODE_TYPE_DIR  = FILE_TYPE_DIR,
         NODE_TYPE_FILE = FILE_TYPE_REGULAR,
         NODE_TYPE_DRV  = FILE_TYPE_DRV,
         NODE_TYPE_LINK = FILE_TYPE_LINK
-} nodeType_t;
+};
 
 /** node structure */
 typedef struct node {
-        char       *name;       /* file name */
-        nodeType_t  type;       /* file type */
-        u32_t       dev;        /* major device number */
-        u32_t       part;       /* minor device number */
-        u32_t       mode;       /* protection */
-        u32_t       uid;        /* user ID of owner */
-        u32_t       gid;        /* group ID of owner */
-        size_t      size;       /* file size */
-        u32_t       mtime;      /* time of last modification */
-        void       *data;       /* file type specified data */
+        char            *name;                  /* file name                 */
+        enum node_type  type;                   /* file type                 */
+        fd_t            fd;                     /* file desriptor            */
+        u32_t           mode;                   /* protection                */
+        u32_t           uid;                    /* user ID of owner          */
+        u32_t           gid;                    /* group ID of owner         */
+        size_t          size;                   /* file size                 */
+        u32_t           mtime;                  /* time of last modification */
+        void            *data;                  /* file type specified data  */
 } node_t;
 
-/** open file info */
-typedef struct openInfo {
-        node_t *node;           /* opened node */
-        node_t *nodebase;       /* base of opened node */
-        bool_t  removeAtClose;  /* file to remove after close */
-        u32_t   itemID;         /* item ID in base directory list */
-} fopenInfo_t;
+/** info of opened file */
+struct opened_file_info {
+        node_t          *node;                  /* opened node                    */
+        node_t          *base_node;             /* base of opened node            */
+        bool_t          remove_at_close;        /* file to remove after close     */
+        u32_t           item_ID;                /* item ID in base directory list */
+};
 
 /** main memory structure */
-struct fshdl_s {
-        node_t   root;          /* root dir '/' */
-        mutex_t *mtx;           /* lock mutex */
-        list_t  *openFile;      /* list with opened files */
-        u32_t    idcnt;         /* list ID counter */
+struct LFS_data {
+        node_t          root_dir;               /* root dir '/'           */
+        mutex_t         *resource_mtx;          /* lock mutex             */
+        list_t          *list_of_opended_files; /* list with opened files */
+        u32_t           id_counter;             /* list ID counter        */
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static node_t   *new_node(node_t *nodebase, char *filename, i32_t *item);
-static stdret_t  delete_node(node_t *base, node_t *target, u32_t baseitemid);
-static node_t   *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item);
-static uint      get_path_deep(const char *path);
-static dirent_t  lfs_readdir(fsd_t fsd, dir_t *dir);
-static stdret_t  lfs_closedir(fsd_t fsd, dir_t *dir);
-static stdret_t  add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item);
+static node_t   *new_node(struct LFS_data*, node_t*, char*, i32_t*);
+static stdret_t  delete_node(node_t*, node_t*, u32_t);
+static node_t   *get_node(const char*, node_t*, i32_t, i32_t*);
+static uint      get_path_deep(const char*);
+static dirent_t  lfs_readdir(void*, dir_t*);
+static stdret_t  lfs_closedir(void*, dir_t*);
+static stdret_t  add_node_to_list_of_open_files(struct LFS_data*, node_t*, node_t*, i32_t*);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static struct fshdl_s *lfs;
 
 /*==============================================================================
   Function definitions
@@ -108,99 +106,102 @@ static struct fshdl_s *lfs;
 /**
  * @brief Initialize file system
  *
- * @param[in]  *srcPath         source path
- * @param[out] *fsd             file system descriptor
+ * @param[out] **fshdl          pointer to allocated memory by file system
+ * @param[in]  *src_path        file source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_init(const char *srcPath, fsd_t *fsd)
+stdret_t lfs_init(void **fshdl, const char *src_path)
 {
-        (void) fsd;
-        (void) srcPath;
+        (void) src_path;
 
-        if (lfs != NULL) {
+        struct LFS_data *lfs;
+
+        if (!fshdl) {
+                return STD_RET_ERROR;
+        }
+
+        if (!(lfs = kcalloc(1, sizeof(struct LFS_data)))) {
+                return STD_RET_ERROR;
+        }
+
+        lfs->resource_mtx  = new_mutex();
+        lfs->root_dir.data = new_list();
+        lfs->list_of_opended_files = new_list();
+
+        if (!lfs->resource_mtx || !lfs->root_dir.data || !lfs->list_of_opended_files) {
+                if (lfs->resource_mtx) {
+                        delete_mutex(lfs->resource_mtx);
+                }
+
+                if (lfs->root_dir.data) {
+                        delete_list(lfs->root_dir.data);
+                }
+
+                if (lfs->list_of_opended_files) {
+                        delete_list(lfs->list_of_opended_files);
+                }
+
+                kfree(lfs);
+                return STD_RET_ERROR;
+        } else {
+                lfs->root_dir.name = "/";
+                lfs->root_dir.size = sizeof(node_t);
+                lfs->root_dir.type = NODE_TYPE_DIR;
+
+                *fshdl = lfs;
                 return STD_RET_OK;
         }
-
-        lfs = calloc(1, sizeof(struct fshdl_s));
-        if (lfs) {
-                lfs->mtx = new_mutex();
-                lfs->root.data = new_list();
-                lfs->openFile  = new_list();
-
-                if (!lfs->mtx || !lfs->root.data || !lfs->openFile) {
-                        if (lfs->mtx) {
-                                delete_mutex(lfs->mtx);
-                        }
-
-                        if (lfs->root.data) {
-                                delete_list(lfs->root.data);
-                        }
-
-                        if (lfs->openFile) {
-                                delete_list(lfs->openFile);
-                        }
-
-                        free(lfs);
-                        lfs = NULL;
-
-                        return STD_RET_ERROR;
-                } else {
-                        lfs->root.name = "/";
-                        lfs->root.size = sizeof(node_t);
-                        lfs->root.type = NODE_TYPE_DIR;
-
-                        return STD_RET_OK;
-                }
-        }
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Function release file system
  *
- * @param[in] fsd               fs device
+ * @param[in] *fshdl            FS handle
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_release(fsd_t fsd)
+stdret_t lfs_release(void *fshdl)
 {
-        (void) fsd;
+        (void)fshdl;
 
-        return STD_RET_OK;
+        /*
+         * Here the LFS should delete all lists and free all allocated buffers.
+         * If will be necessary this should be implemented in the future.
+         */
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Function create node for driver file
  *
- * @param[in]  fsd              file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[in] *path             path when driver-file shall be created
- * @param[in] *drvcfg           pointer to description of driver
+ * @param[in] *drv_if           pointer to driver interface
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drv_interface *drvcfg)
+stdret_t lfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_if)
 {
-        (void) fsd;
-
+        struct LFS_data *lfs = fshdl;
         node_t *node;
-        node_t *ifnode;
-        node_t *dirfile;
-        char   *drvname;
-        char   *filename;
-        uint  drvnamelen;
-        struct vfs_drv_interface *dcfg;
+        node_t *drv_node;
+        node_t *drv_file;
+        char   *drv_name;
+        char   *drv_file_name;
+        uint   drv_name_len;
+        struct vfs_drv_interface *drv_interface;
 
-        if (!path || !drvcfg || !lfs) {
+        if (!path || !drv_if || !lfs) {
                 return STD_RET_ERROR;
         }
 
@@ -208,12 +209,12 @@ stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drv_interface *drvcfg
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
-        node   = get_node(path, &lfs->root, -1, NULL);
-        ifnode = get_node(strrchr(path, '/'), node, 0, NULL);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
+        node     = get_node(path, &lfs->root_dir, -1, NULL);
+        drv_node = get_node(strrchr(path, '/'), node, 0, NULL);
 
-        /* directory must exist and created node not */
-        if (node == NULL || ifnode != NULL) {
+        /* directory must exist and driver's file not */
+        if (!node || drv_node) {
                 goto lfs_mknod_error;
         }
 
@@ -221,47 +222,45 @@ stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drv_interface *drvcfg
                 goto lfs_mknod_error;
         }
 
-        drvname    = strrchr(path, '/') + 1;
-        drvnamelen = strlen(drvname);
+        drv_name     = strrchr(path, '/') + 1;
+        drv_name_len = strlen(drv_name);
 
-        filename = calloc(drvnamelen + 1, sizeof(char));
-        if (filename) {
-                strcpy(filename, drvname);
+        if ((drv_file_name = kcalloc(drv_name_len + 1, sizeof(char)))) {
+                strcpy(drv_file_name, drv_name);
 
-                dirfile = calloc(1, sizeof(node_t));
-                dcfg    = calloc(1, sizeof(struct vfs_drv_interface));
+                drv_file      = kcalloc(1, sizeof(node_t));
+                drv_interface = kcalloc(1, sizeof(struct vfs_drv_interface));
 
-                if (dirfile && dcfg) {
-                        memcpy(dcfg, drvcfg, sizeof(struct vfs_drv_interface));
+                if (drv_file && drv_interface) {
+                        memcpy(drv_interface, drv_if, sizeof(struct vfs_drv_interface));
 
-                        dirfile->name = filename;
-                        dirfile->size = 0;
-                        dirfile->type = NODE_TYPE_DRV;
-                        dirfile->data = dcfg;
-                        dirfile->dev  = dcfg->dev;
-                        dirfile->part = dcfg->part;
+                        drv_file->name = drv_file_name;
+                        drv_file->size = 0;
+                        drv_file->type = NODE_TYPE_DRV;
+                        drv_file->data = drv_interface;
+                        drv_file->fd   = 0;
 
                         /* add new driver to this folder */
-                        if (list_add_item(node->data, lfs->idcnt++, dirfile) >= 0) {
-                                unlock_mutex(lfs->mtx);
+                        if (list_add_item(node->data, lfs->id_counter++, drv_file) >= 0) {
+                                unlock_mutex(lfs->resource_mtx);
                                 return STD_RET_OK;
                         }
                 }
 
                 /* free memory when error */
-                if (dirfile) {
-                        free(dirfile);
+                if (drv_file) {
+                        kfree(drv_file);
                 }
 
-                if (dcfg) {
-                        free(dcfg);
+                if (drv_interface) {
+                        kfree(drv_interface);
                 }
 
-                free(filename);
+                kfree(drv_file_name);
         }
 
         lfs_mknod_error:
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -269,23 +268,22 @@ stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drv_interface *drvcfg
 /**
  * @brief Create directory
  *
- * @param[in]  fsd              file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[in] *path             path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_mkdir(fsd_t fsd, const char *path)
+stdret_t lfs_mkdir(void *fshdl, const char *path)
 {
-        (void) fsd;
-
-        node_t *node;
-        node_t *ifnode;
-        node_t *dir;
-        char   *dirname;
-        char   *name;
-        uint  dirnamelen;
+        struct LFS_data *lfs = fshdl;
+        node_t *base_node;
+        node_t *file_node;
+        node_t *new_dir;
+        char   *dir_name_ptr;
+        char   *new_dir_name;
+        uint   dir_name_len;
 
         if (!path || !lfs) {
                 return STD_RET_ERROR;
@@ -295,53 +293,54 @@ stdret_t lfs_mkdir(fsd_t fsd, const char *path)
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
-        node   = get_node(path, &lfs->root, -1, NULL);
-        ifnode = get_node(strrchr(path, '/'), node, 0, NULL);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
+        base_node = get_node(path, &lfs->root_dir, -1, NULL);
+        file_node = get_node(strrchr(path, '/'), base_node, 0, NULL);
 
-        /* check if target node not exist or the same name exist */
-        if (node == NULL || ifnode != NULL) {
+        /* base node must exist and created node not */
+        if (base_node == NULL || file_node != NULL) {
                 return STD_RET_ERROR;
         }
 
-        if (node->type != NODE_TYPE_DIR) {
+        if (base_node->type != NODE_TYPE_DIR) {
                 return STD_RET_ERROR;
         }
 
-        dirname    = strrchr(path, '/') + 1;
-        dirnamelen = strlen(dirname);
+        dir_name_ptr = strrchr(path, '/') + 1;
+        dir_name_len = strlen(dir_name_ptr);
 
-        name = calloc(dirnamelen + 1, sizeof(char));
-        if (name) {
-                strcpy(name, dirname);
+        if ((new_dir_name = kcalloc(dir_name_len + 1, sizeof(char)))) {
+                strcpy(new_dir_name, dir_name_ptr);
 
-                dir = calloc(1, sizeof(node_t));
-                if (dir == NULL) {
-                        goto lfs_mkdir_error;
+                if (!(new_dir = kcalloc(1, sizeof(node_t)))) {
+                        goto error;
                 }
 
-                dir->data = new_list();
-                if (dir->data) {
-                        dir->name = (char*)name;
-                        dir->size = sizeof(node_t) + strlen(name);
-                        dir->type = NODE_TYPE_DIR;
+                if ((new_dir->data = new_list())) {
+                        new_dir->name = new_dir_name;
+                        new_dir->size = sizeof(node_t);
+                        new_dir->type = NODE_TYPE_DIR;
 
                         /* add new folder to this folder */
-                        if (list_add_item(node->data, lfs->idcnt++, dir) >= 0) {
-                                unlock_mutex(lfs->mtx);
+                        if (list_add_item(base_node->data, lfs->id_counter++, new_dir) >= 0) {
+                                unlock_mutex(lfs->resource_mtx);
                                 return STD_RET_OK;
+                        } else {
+                                delete_list(new_dir->data);
                         }
-
-                        delete_list(dir->data);
                 }
-
-                /* free memory when error */
-                free(dir);
-                free(name);
         }
 
-        lfs_mkdir_error:
-        unlock_mutex(lfs->mtx);
+        error:
+        if (new_dir) {
+                kfree(new_dir);
+        }
+
+        if (new_dir_name) {
+                kfree(new_dir_name);
+        }
+
+        unlock_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -349,7 +348,7 @@ stdret_t lfs_mkdir(fsd_t fsd, const char *path)
 /**
  * @brief Function open directory
  *
- * @param[in]   fsd             file system descriptor
+ * @param[in]  *fshdl           FS handle
  * @param[in]  *path            directory path
  * @param[out] *dir             directory info
  *
@@ -357,17 +356,16 @@ stdret_t lfs_mkdir(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_opendir(fsd_t fsd, const char *path, dir_t *dir)
+stdret_t lfs_opendir(void *fshdl, const char *path, dir_t *dir)
 {
-        (void) fsd;
+        struct LFS_data *lfs = fshdl;
+        node_t *node;
 
         if (path && lfs) {
-                force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+                force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
                 /* go to target dir */
-                node_t *node = get_node(path, &lfs->root, 0, NULL);
-
-                if (node) {
+                if ((node = get_node(path, &lfs->root_dir, 0, NULL))) {
                         if (node->type == NODE_TYPE_DIR) {
                                 if (dir) {
                                         dir->items = list_get_item_count(node->data);
@@ -377,12 +375,12 @@ stdret_t lfs_opendir(fsd_t fsd, const char *path, dir_t *dir)
                                         dir->dd    = node;
                                 }
 
-                                unlock_mutex(lfs->mtx);
+                                unlock_mutex(lfs->resource_mtx);
                                 return STD_RET_OK;
                         }
                 }
 
-                unlock_mutex(lfs->mtx);
+                unlock_mutex(lfs->resource_mtx);
         }
 
         return STD_RET_ERROR;
@@ -392,16 +390,16 @@ stdret_t lfs_opendir(fsd_t fsd, const char *path, dir_t *dir)
 /**
  * @brief Function close dir
  *
- * @param[in]  fsd              file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[in] *dir              directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t lfs_closedir(fsd_t fsd, dir_t *dir)
+static stdret_t lfs_closedir(void *fshdl, dir_t *dir)
 {
-        (void) fsd;
+        (void) fshdl;
         (void) dir;
 
         return STD_RET_OK;
@@ -411,22 +409,22 @@ static stdret_t lfs_closedir(fsd_t fsd, dir_t *dir)
 /**
  * @brief Function read next item of opened directory
  *
- * @param[in]  fsd              file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[in] *dir              directory object
  *
  * @return element attributes
  */
 //==============================================================================
-static dirent_t lfs_readdir(fsd_t fsd, dir_t *dir)
+static dirent_t lfs_readdir(void *fshdl, dir_t *dir)
 {
-        (void) fsd;
+        struct LFS_data *lfs = fshdl;
 
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
         if (dir && lfs) {
-                force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+                force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
                 node_t *from = dir->dd;
                 node_t *node = list_get_nitem_data(from->data, dir->seek++);
@@ -437,7 +435,7 @@ static dirent_t lfs_readdir(fsd_t fsd, dir_t *dir)
                         dirent.size = node->size;
                 }
 
-                unlock_mutex(lfs->mtx);
+                unlock_mutex(lfs->resource_mtx);
         }
 
         return dirent;
@@ -447,81 +445,78 @@ static dirent_t lfs_readdir(fsd_t fsd, dir_t *dir)
 /**
  * @brief Remove file
  *
- * @param[in]  fsd              file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[in] *patch            localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_remove(fsd_t fsd, const char *path)
+stdret_t lfs_remove(void *fshdl, const char *path)
 {
-        (void) fsd;
-
+        struct LFS_data *lfs = fshdl;
+        struct opened_file_info *opened_file;
         i32_t   item;
-        bool_t  dorm;
-        u32_t   itemid;
-        node_t *nodebase;
-        node_t *nodeobj;
+        bool_t  remove_file;
+        u32_t   item_ID;
+        node_t *base_node;
+        node_t *obj_node;
 
         if (!path || !lfs) {
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-        dorm     = TRUE;
-        nodebase = get_node(path, &lfs->root, -1, NULL);
-        nodeobj  = get_node(path, &lfs->root, 0, &item);
+        remove_file = TRUE;
+        base_node   = get_node(path, &lfs->root_dir, -1, NULL);
+        obj_node    = get_node(path, &lfs->root_dir, 0, &item);
 
-        if (!nodebase || !nodeobj || nodeobj == &lfs->root) {
+        if (!base_node || !obj_node || obj_node == &lfs->root_dir) {
                 goto lfs_remove_error;
         }
 
         /* if path is ending on slash, the object must be DIR */
         if (path[strlen(path) - 1] == '/') {
-                if (nodeobj->type != NODE_TYPE_DIR) {
+                if (obj_node->type != NODE_TYPE_DIR) {
                         goto lfs_remove_error;
                 }
         }
 
         /* check if file is opened */
-        if (nodeobj->type != NODE_TYPE_DIR) {
-                i32_t n = list_get_item_count(lfs->openFile);
+        if (obj_node->type != NODE_TYPE_DIR) {
+                i32_t n = list_get_item_count(lfs->list_of_opended_files);
 
                 for (int i = 0; i < n; i++) {
-                        fopenInfo_t *olfoi = list_get_nitem_data(lfs->openFile, i);
-
-                        if (olfoi->node == nodeobj) {
-                                olfoi->removeAtClose = TRUE;
-                                dorm = FALSE;
+                        opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
+                        if (opened_file->node == obj_node) {
+                                opened_file->remove_at_close = TRUE;
+                                remove_file = FALSE;
                         }
                 }
         }
 
         /* remove node if possible */
-        if (dorm == TRUE) {
-                if (list_get_nitem_ID(nodebase->data, item, &itemid) == STD_RET_OK) {
-                        unlock_mutex(lfs->mtx);
-                        return delete_node(nodebase, nodeobj, itemid);
+        if (remove_file == TRUE) {
+                if (list_get_nitem_ID(base_node->data, item, &item_ID) == STD_RET_OK) {
+                        unlock_mutex(lfs->resource_mtx);
+                        return delete_node(base_node, obj_node, item_ID);
                 }
         } else {
-                unlock_mutex(lfs->mtx);
+                unlock_mutex(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
         lfs_remove_error:
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Rename file name
- * The implementation of rename can move files only if external FS provide
- * functionality. Local VFS cannot do this.
  *
- * @param[in]  fsd                  file system descriptor
+ * @param[in] *fshdl                FS handle
  * @param[in] *oldName              old file name
  * @param[in] *newName              new file name
  *
@@ -529,73 +524,65 @@ stdret_t lfs_remove(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
+stdret_t lfs_rename(void *fshdl, const char *old_name, const char *new_name)
 {
-        (void) fsd;
-
-        node_t *oldNodeBase;
-        node_t *newNodeBase;
+        struct LFS_data *lfs = fshdl;
+        node_t *old_node_base;
+        node_t *new_node_base;
         node_t *node;
-        char   *name;
+        char   *new_node_name = NULL;
 
-        if (!oldName || !newName || !lfs) {
+        if (!old_name || !new_name || !lfs) {
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
-        oldNodeBase = get_node(oldName, &lfs->root, -1, NULL);
-        newNodeBase = get_node(newName, &lfs->root, -1, NULL);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
+        old_node_base = get_node(old_name, &lfs->root_dir, -1, NULL);
+        new_node_base = get_node(new_name, &lfs->root_dir, -1, NULL);
 
-        if (!oldNodeBase || !newNodeBase) {
+        if (!old_node_base || !new_node_base) {
                 goto lfs_rename_error;
         }
 
-        if (oldNodeBase != oldNodeBase) {
+        if (old_node_base != old_node_base) {
                 goto lfs_rename_error;
         }
 
-        if (oldName[0] != '/' || newName[0] != '/') {
+        if (old_name[0] != '/' || new_name[0] != '/') {
                 goto lfs_rename_error;
         }
 
-        if (  oldName[strlen(oldName) - 1] == '/'
-           || newName[strlen(newName) - 1] == '/') {
+        if (  old_name[strlen(old_name) - 1] == '/'
+           || new_name[strlen(new_name) - 1] == '/') {
                 goto lfs_rename_error;
         }
 
-        name = calloc(1, strlen(strrchr(newName, '/') + 1));
-        node = get_node(oldName, &lfs->root, 0, NULL);
+        new_node_name = kcalloc(1, strlen(strrchr(new_name, '/') + 1));
+        node = get_node(old_name, &lfs->root_dir, 0, NULL);
 
-        if (name && node) {
-                strcpy(name, strrchr(newName, '/') + 1);
+        if (new_node_name && node) {
+                strcpy(new_node_name, strrchr(new_name, '/') + 1);
 
                 if (node->name) {
-                        free(node->name);
+                        kfree(node->name);
                 }
 
-                node->name = name;
+                node->name = new_node_name;
 
                 if (node->type == NODE_TYPE_DIR) {
-                        node->size = sizeof(node_t) + strlen(name);
-                } else if (node->type == NODE_TYPE_DRV) {
-                        node->size = 0;
+                        node->size = sizeof(node_t);
                 }
 
-                unlock_mutex(lfs->mtx);
+                unlock_mutex(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
-        /* error - free allocated memory */
-        if (name) {
-                free(name);
-        }
-
-        if (node) {
-                free(node);
-        }
-
         lfs_rename_error:
-        unlock_mutex(lfs->mtx);
+        if (new_node_name) {
+                kfree(new_node_name);
+        }
+
+        unlock_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -603,7 +590,7 @@ stdret_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
 /**
  * @brief Function change file mode
  *
- * @param[in]  dev                  file system descriptor
+ * @param[in] *fshdl                FS handle
  * @param[in] *path                 path
  * @param[in]  mode                 file mode
  *
@@ -611,22 +598,22 @@ stdret_t lfs_rename(fsd_t fsd, const char *oldName, const char *newName)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
+stdret_t lfs_chmod(void *fshdl, const char *path, u32_t mode)
 {
-        (void) fsd;
+        struct LFS_data *lfs = fshdl;
 
         if (path && lfs) {
-                force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+                force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-                node_t *node = get_node(path, &lfs->root, 0, NULL);
+                node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
 
                 if (node) {
                         node->mode = mode;
-                        unlock_mutex(lfs->mtx);
+                        unlock_mutex(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
 
-                unlock_mutex(lfs->mtx);
+                unlock_mutex(lfs->resource_mtx);
         }
 
         return STD_RET_ERROR;
@@ -636,7 +623,7 @@ stdret_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
 /**
  * @brief Function change file owner and group
  *
- * @param[in]  fsd                  file system descriptor
+ * @param[in] *fshdl                FS handle
  * @param[in] *path                 path
  * @param[in]  owner                file owner
  * @param[in]  group                file group
@@ -645,24 +632,24 @@ stdret_t lfs_chmod(fsd_t fsd, const char *path, u32_t mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
+stdret_t lfs_chown(void *fshdl, const char *path, u16_t owner, u16_t group)
 {
-        (void) fsd;
+        struct LFS_data *lfs = fshdl;
 
         if (path && lfs) {
-                force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+                force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-                node_t *node = get_node(path, &lfs->root, 0, NULL);
+                node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
 
                 if (node) {
                         node->uid = owner;
                         node->gid = group;
 
-                        unlock_mutex(lfs->mtx);
+                        unlock_mutex(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
 
-                unlock_mutex(lfs->mtx);
+                unlock_mutex(lfs->resource_mtx);
         }
 
         return STD_RET_ERROR;
@@ -672,43 +659,42 @@ stdret_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
 /**
  * @brief Function returns file/dir status
  *
- * @param[in]   fsd             file system descriptor
- * @param[in]  *path            file/dir path
- * @param[out] *stat            pointer to stat structure
+ * @param[in]  *fshdl                FS handle
+ * @param[in]  *path                 file/dir path
+ * @param[out] *stat                 pointer to stat structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_stat(fsd_t fsd, const char *path, struct vfs_statf *stat)
+stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_statf *stat)
 {
-        (void) fsd;
+        struct LFS_data *lfs = fshdl;
 
         if (!path || !stat || !lfs) {
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-        node_t *node = get_node(path, &lfs->root, 0, NULL);
+        node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
         if (node) {
                 if ( (path[strlen(path) - 1] == '/' && node->type == NODE_TYPE_DIR)
                    || path[strlen(path) - 1] != '/') {
 
-                        stat->st_dev   = node->dev;
-                        stat->st_rdev  = node->part;
+                        stat->st_dev   = node->fd;
                         stat->st_gid   = node->gid;
                         stat->st_mode  = node->mode;
                         stat->st_mtime = node->mtime;
                         stat->st_size  = node->size;
                         stat->st_uid   = node->uid;
 
-                        unlock_mutex(lfs->mtx);
+                        unlock_mutex(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
         }
 
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -717,39 +703,38 @@ stdret_t lfs_stat(fsd_t fsd, const char *path, struct vfs_statf *stat)
 /**
  * @brief Function returns file status
  *
- * @param[in]   fsd             file system descriptor
- * @param[in]   fd              file descriptor
- * @param[out] *stat            pointer to status structure
+ * @param[in]  *fshdl                FS handle
+ * @param[in]  fd                    file descriptor
+ * @param[out] *stat                 pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_statf *stat)
+stdret_t lfs_fstat(void *fshdl, fd_t fd, struct vfs_statf *stat)
 {
-        (void) fsd;
+        struct LFS_data *lfs = fshdl;
+        struct opened_file_info *opened_file;
 
         if (stat && lfs) {
-                force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+                force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-                fopenInfo_t *foi = list_get_iditem_data(lfs->openFile, fd);
+                opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+                if (opened_file) {
+                        if (opened_file->node) {
+                                stat->st_dev   = opened_file->node->fd;
+                                stat->st_gid   = opened_file->node->gid;
+                                stat->st_mode  = opened_file->node->mode;
+                                stat->st_mtime = opened_file->node->mtime;
+                                stat->st_size  = opened_file->node->size;
+                                stat->st_uid   = opened_file->node->uid;
 
-                if (foi) {
-                        if (foi->node) {
-                                stat->st_dev   = foi->node->dev;
-                                stat->st_rdev  = foi->node->part;
-                                stat->st_gid   = foi->node->gid;
-                                stat->st_mode  = foi->node->mode;
-                                stat->st_mtime = foi->node->mtime;
-                                stat->st_size  = foi->node->size;
-                                stat->st_uid   = foi->node->uid;
-
-                                unlock_mutex(lfs->mtx);
+                                unlock_mutex(lfs->resource_mtx);
                                 return STD_RET_OK;
                         }
                 }
 
-                unlock_mutex(lfs->mtx);
+                unlock_mutex(lfs->resource_mtx);
         }
 
         return STD_RET_ERROR;
@@ -759,16 +744,16 @@ stdret_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_statf *stat)
 /**
  * @brief Function returns FS status
  *
- * @param[in]   fsd             file system descriptor
- * @param[out] *statfs          pointer to status structure
+ * @param[in]  *fshdl               FS handle
+ * @param[out] *statfs              pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
+stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 {
-        (void) fsd;
+        (void)fshdl;
 
         if (statfs) {
                 statfs->f_bfree  = 0;
@@ -788,7 +773,7 @@ stdret_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
 /**
  * @brief Function open selected file
  *
- * @param [in]  fsd             file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[out] *fd              file descriptor
  * @param[out] *seek            file position
  * @param [in] *path            file path
@@ -798,25 +783,23 @@ stdret_t lfs_statfs(fsd_t fsd, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const char *mode)
 {
-        (void) fsd;
-
+        struct LFS_data *lfs = fshdl;
         node_t *node;
         node_t *nodebase;
         char   *filename;
         i32_t   item;
         u32_t   cfd;
 
-
         if (!fd || !path || !mode || !lfs) {
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-        node     = get_node(path, &lfs->root, 0, &item);
-        nodebase = get_node(path, &lfs->root, -1, NULL);
+        node     = get_node(path, &lfs->root_dir, 0, &item);
+        nodebase = get_node(path, &lfs->root_dir, -1, NULL);
 
         /* create new file when necessary */
         if (nodebase && node == NULL) {
@@ -827,16 +810,16 @@ stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const cha
                         goto lfs_open_error;
                 }
 
-                filename = calloc(1, strlen(strrchr(path, '/')));
+                filename = kcalloc(1, strlen(strrchr(path, '/')));
                 if (filename == NULL) {
                         goto lfs_open_error;
                 }
 
                 strcpy(filename, strrchr(path, '/') + 1);
-                node = new_node(nodebase, filename, &item);
+                node = new_node(lfs, nodebase, filename, &item);
 
                 if (node == NULL) {
-                        free(filename);
+                        kfree(filename);
                         goto lfs_open_error;
                 }
         }
@@ -852,7 +835,7 @@ stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const cha
         }
 
         /* add file to list of open files */
-        if (add_node_to_list_of_open_files(nodebase, node, &item) == STD_RET_ERROR) {
+        if (add_node_to_list_of_open_files(lfs, nodebase, node, &item) == STD_RET_ERROR) {
                 goto lfs_open_error;
         }
 
@@ -871,7 +854,7 @@ stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const cha
                    || strncmp("w+", mode, 2) == 0 ) {
 
                         if (node->data) {
-                                free(node->data);
+                                kfree(node->data);
                                 node->data = NULL;
                         }
 
@@ -886,63 +869,61 @@ stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const cha
         } else if (node->type == NODE_TYPE_DRV) {
                 struct vfs_drv_interface *drv = node->data;
 
-                if (drv->f_open == NULL) {
+                if (!drv->drv_open) {
                         goto lfs_open_error;
                 }
 
-                if (drv->f_open(drv->dev, drv->part) == STD_RET_OK) {
+                if (drv->drv_open(drv->handle) == STD_RET_OK) {
                         *seek = 0;
                 } else {
-                        list_rm_nitem(lfs->openFile, item);
+                        list_rm_nitem(lfs->list_of_opended_files, item);
                         goto lfs_open_error;
                 }
         }
 
         /* everything success - load FD */
-        list_get_nitem_ID(lfs->openFile, item, &cfd);
+        list_get_nitem_ID(lfs->list_of_opended_files, item, &cfd);
         *fd = (fd_t)cfd;
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return STD_RET_OK;
 
         lfs_open_error:
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Function close file in LFS
- * Function return always STD_RET_OK, to close file in LFS no operation is
- * needed.
  *
- * @param[in] fsd               file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[in] fd                file descriptor
  *
  * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_close(fsd_t fsd, fd_t fd)
+stdret_t lfs_close(void *fshdl, fd_t fd)
 {
-        (void) fsd;
+        struct LFS_data          *lfs   = fshdl;
+        stdret_t                 status = STD_RET_ERROR;
+        node_t                   *node;
+        struct opened_file_info  *opened_file;
+        struct vfs_drv_interface *drv_if;
+        struct opened_file_info  opened_file_data;
 
-        stdret_t           status = STD_RET_ERROR;
-        node_t            *node;
-        fopenInfo_t       *foi;
-        struct vfs_drv_interface *drv;
-        fopenInfo_t        finf;
-
-        if (lfs == NULL) {
+        if (!lfs) {
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-        foi = list_get_iditem_data(lfs->openFile, fd);
-        if (foi == NULL) {
+        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        if (opened_file == NULL) {
                 goto lfs_close_end;
         }
 
-        node = foi->node;
+        node = opened_file->node;
         if (node == NULL) {
                 goto lfs_close_end;
         }
@@ -953,52 +934,54 @@ stdret_t lfs_close(fsd_t fsd, fd_t fd)
                         goto lfs_close_end;
                 }
 
-                drv = node->data;
-                if (drv->f_close == NULL) {
+                drv_if = node->data;
+                if (!drv_if->drv_close) {
                         goto lfs_close_end;
                 }
 
-                if ((status = drv->f_close(drv->dev, drv->part)) != STD_RET_OK) {
+                if ((status = drv_if->drv_close(drv_if->handle)) != STD_RET_OK) {
                         goto lfs_close_end;
                 }
         }
 
         /* delete file from open list */
-        finf = *foi;
+        opened_file_data = *opened_file;
 
-        if (list_rm_iditem(lfs->openFile, fd) != STD_RET_OK) {
+        if (list_rm_iditem(lfs->list_of_opended_files, fd) != STD_RET_OK) {
                 /* critical error! */
                 goto lfs_close_end;
         }
 
-        /* file to remove, check if other app does not opens this file */
+        /* file to remove, check if other task does not opens this file */
         status = STD_RET_OK;
 
-        if (finf.removeAtClose == TRUE) {
-                i32_t n = list_get_item_count(lfs->openFile);
+        if (opened_file_data.remove_at_close == TRUE) {
+                i32_t n = list_get_item_count(lfs->list_of_opended_files);
 
                 for (int i = 0; i < n; i++) {
-                        foi = list_get_nitem_data(lfs->openFile, i);
+                        opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
 
-                        if (foi->node == node) {
+                        if (opened_file->node == node) {
                                 goto lfs_close_end;
                         }
                 }
 
                 /* file can be removed */
-                status = delete_node(finf.nodebase, finf.node, finf.itemID);
+                status = delete_node(opened_file_data.base_node,
+                                     opened_file_data.node,
+                                     opened_file_data.item_ID);
         }
 
         lfs_close_end:
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return status;
 }
 
 //==============================================================================
 /**
- * @brief Function write to file data
+ * @brief Function write data to the file
  *
- * @param[in]  fsd              file system descriptor
+ * @param[in] *fshdl            FS handle
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
  * @param[in]  size             item size
@@ -1008,77 +991,75 @@ stdret_t lfs_close(fsd_t fsd, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+size_t lfs_write(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
 {
-        (void) fsd;
-
-        struct vfs_drv_interface *drv;
-        node_t      *node;
-        fopenInfo_t *foi;
-        char        *newdata;
-        size_t       wrsize;
-        size_t       filelen;
-        size_t       n = 0;
+        struct LFS_data *lfs = fshdl;
+        struct vfs_drv_interface *drv_if;
+        struct opened_file_info  *opened_file;
+        node_t *node;
+        char   *new_data;
+        size_t  write_size;
+        size_t  file_length;
+        size_t  n = 0;
 
 
         if (!src || !size || !nitems || !lfs) {
                 return 0;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
-        foi = list_get_iditem_data(lfs->openFile, fd);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
+        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
 
-        if (foi == NULL) {
+        if (!opened_file) {
                 goto lfs_write_end;
         }
 
-        node = foi->node;
-        if (node == NULL) {
+        node = opened_file->node;
+        if (!node) {
                 goto lfs_write_end;
         }
 
         if (node->type == NODE_TYPE_DRV && node->data) {
-                drv = node->data;
+                drv_if = node->data;
 
-                if (drv->f_write) {
-                        unlock_mutex(lfs->mtx);
+                if (drv_if->drv_write) {
+                        unlock_mutex(lfs->resource_mtx);
 
-                        return drv->f_write(drv->dev, drv->part, src, size,
-                                            nitems, seek);
+                        return drv_if->drv_write(drv_if->handle, src, size, nitems, seek);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
-                wrsize  = size * nitems;
-                filelen = node->size;
+                write_size  = size * nitems;
+                file_length = node->size;
 
-                if (seek > filelen) {
-                        seek = filelen;
+                if (seek > file_length) {
+                        seek = file_length;
                 }
 
-                if ((seek + wrsize) > filelen || node->data == NULL) {
-                        newdata = malloc(filelen + wrsize);
-                        if (newdata == NULL) {
+                if ((seek + write_size) > file_length || node->data == NULL) {
+                        new_data = kmalloc(file_length + write_size);
+                        if (new_data == NULL) {
                                 goto lfs_write_end;
                         }
 
                         if (node->data) {
-                                memcpy(newdata, node->data, filelen);
-                                free(node->data);
+                                memcpy(new_data, node->data, file_length);
+                                kfree(node->data);
                         }
 
-                        memcpy(newdata + seek, src, wrsize);
+                        memcpy(new_data + seek, src, write_size);
 
-                        node->data  = newdata;
-                        node->size += wrsize - (filelen - seek);
+                        node->data  = new_data;
+                        node->size += write_size - (file_length - seek);
 
                         n = nitems;
                 } else {
-                        memcpy(node->data + seek, src, wrsize);
+                        memcpy(node->data + seek, src, write_size);
                         n = nitems;
                 }
         }
 
         lfs_write_end:
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return n;
 }
 
@@ -1086,7 +1067,7 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
 /**
  * @brief Function read from file data
  *
- * @param[in]   fsd             file system descriptor
+ * @param[in]  *fshdl           FS handle
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
  * @param[in]   size            item size
@@ -1096,68 +1077,66 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
  * @return number of read items
  */
 //==============================================================================
-size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
 {
-        (void)fsd;
-
-        node_t            *node;
-        fopenInfo_t       *foi;
-        struct vfs_drv_interface *drv;
-        size_t             filelen;
-        size_t             items2rd;
-        size_t             n = 0;
+        struct LFS_data *lfs = fshdl;
+        struct vfs_drv_interface *drv_if;
+        struct opened_file_info  *opened_file;
+        node_t *node;
+        size_t  file_length;
+        size_t  items_to_read;
+        size_t  n = 0;
 
 
         if (!dst || !size || !nitems || !lfs) {
                 return 0;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-        foi = list_get_iditem_data(lfs->openFile, fd);
-        if (foi == NULL) {
+        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        if (opened_file == NULL) {
                 goto lfs_read_end;
         }
 
-        node = foi->node;
+        node = opened_file->node;
         if (node == NULL) {
                 goto lfs_read_end;
         }
 
         if (node->type == NODE_TYPE_DRV && node->data) {
-                drv = node->data;
+                drv_if = node->data;
 
-                if (drv->f_read) {
-                        unlock_mutex(lfs->mtx);
-                        return drv->f_read(drv->dev, drv->part, dst, size,
-                                           nitems, seek);
+                if (drv_if->drv_read) {
+                        unlock_mutex(lfs->resource_mtx);
+                        return drv_if->drv_read(drv_if->handle, dst, size, nitems, seek);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
-                filelen = node->size;
+                file_length = node->size;
 
                 /* check if seek is not bigger than file length */
-                if (seek > filelen) {
-                        seek = filelen;
+                if (seek > file_length) {
+                        seek = file_length;
                 }
 
                 /* check how many items to read is on current file position */
-                if (((filelen - seek) / size) >= nitems) {
-                        items2rd = nitems;
+                if (((file_length - seek) / size) >= nitems) {
+                        items_to_read = nitems;
                 } else {
-                        items2rd = (filelen - seek) / size;
+                        items_to_read = (file_length - seek) / size;
                 }
 
                 /* copy if file buffer exist */
                 if (node->data) {
-                        if (items2rd > 0) {
-                                memcpy(dst, node->data + seek, items2rd * size);
-                                n = items2rd;
+                        if (items_to_read > 0) {
+                                memcpy(dst, node->data + seek, items_to_read * size);
+                                n = items_to_read;
                         }
                 }
         }
 
         lfs_read_end:
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return n;
 }
 
@@ -1165,7 +1144,7 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
 /**
  * @brief IO operations on files
  *
- * @param[in]      fsd          file system descriptor
+ * @param[in]     *fshdl        FS handle
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
  * @param[in,out] *data         data pointer
@@ -1174,41 +1153,39 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
+stdret_t lfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, void *data)
 {
-        (void) fsd;
-
-        fopenInfo_t       *foi;
-        struct vfs_drv_interface *drv;
+        struct LFS_data *lfs = fshdl;
+        struct opened_file_info  *opened_file;
+        struct vfs_drv_interface *drv_if;
 
 
         if (lfs == NULL) {
                 return STD_RET_ERROR;
         }
 
-        force_lock_mutex(lfs->mtx, MTX_BLOCK_TIME);
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
 
-        foi = list_get_iditem_data(lfs->openFile, fd);
-        if (foi == NULL) {
+        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        if (opened_file == NULL) {
                 goto lfs_ioctl_end;
         }
 
-        if (foi->node == NULL) {
+        if (opened_file->node == NULL) {
                 goto lfs_ioctl_end;
         }
 
-        if (foi->node->type == NODE_TYPE_DRV && foi->node->data) {
-                drv = foi->node->data;
+        if (opened_file->node->type == NODE_TYPE_DRV && opened_file->node->data) {
+                drv_if = opened_file->node->data;
 
-                if (drv->f_ioctl) {
-                        unlock_mutex(lfs->mtx);
-                        return drv->f_ioctl(foi->node->dev, foi->node->part,
-                                            iorq, data);
+                if (drv_if->drv_ioctl) {
+                        unlock_mutex(lfs->resource_mtx);
+                        return drv_if->drv_ioctl(drv_if->handle, iorq, data);
                 }
         }
 
         lfs_ioctl_end:
-        unlock_mutex(lfs->mtx);
+        unlock_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -1238,11 +1215,11 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
         }
 
         if (target->name) {
-                free(target->name);
+                kfree(target->name);
         }
 
         if (target->data) {
-                free(target->data);
+                kfree(target->data);
         }
 
         if (list_rm_iditem(base->data, baseitemid) == STD_RET_OK) {
@@ -1290,7 +1267,7 @@ static uint get_path_deep(const char *path)
  * @param[in]  *path          path
  * @param[in]  *startnode     start node
  * @param[out] **extPath      external path begin (pointer from path)
- * @param[in]   deep          deep control
+ * @param[in]  deep           deep control
  * @param[out] *item          node is n-item of list which was found
  *
  * @return node
@@ -1301,9 +1278,9 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
         node_t *curnode;
         node_t *node;
         char   *pathend;
-        int   dirdeep;
-        uint  pathlen;
-        int   listsize;
+        int    dirdeep;
+        uint   pathlen;
+        int    listsize;
 
 
         if (!path || !startnode) {
@@ -1378,6 +1355,7 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
  * Function allocate new node. If node is created successfully then filename
  * cannot be freed!
  *
+ * @param [in] *lfs             pointer to current LFS instance
  * @param [in] *nodebase        node base
  * @param [in] *filename        filename (must be earlier allocated)
  * @param[out] *item            new node number in base node
@@ -1385,7 +1363,7 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
  * @return NULL if error, otherwise new node address
  */
 //==============================================================================
-static node_t *new_node(node_t *nodebase, char *filename, i32_t *item)
+static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, i32_t *item)
 {
         node_t *fnode;
         i32_t   nitem;
@@ -1398,23 +1376,21 @@ static node_t *new_node(node_t *nodebase, char *filename, i32_t *item)
                 return NULL;
         }
 
-        if ((fnode = calloc(1, sizeof(node_t))) == NULL) {
+        if ((fnode = kcalloc(1, sizeof(node_t))) == NULL) {
                 return NULL;
         }
 
         fnode->name  = filename;
         fnode->data  = NULL;
-        fnode->dev   = 0;
         fnode->gid   = 0;
         fnode->mode  = 0;
         fnode->mtime = 0;
-        fnode->part  = 0;
         fnode->size  = 0;
         fnode->type  = NODE_TYPE_FILE;
         fnode->uid   = 0;
 
-        if ((nitem = list_add_item(nodebase->data, lfs->idcnt++, fnode)) < 0) {
-                free(fnode);
+        if ((nitem = list_add_item(nodebase->data, lfs->id_counter++, fnode)) < 0) {
+                kfree(fnode);
                 return NULL;
         }
 
@@ -1426,6 +1402,7 @@ static node_t *new_node(node_t *nodebase, char *filename, i32_t *item)
 /**
  * @brief Function add node to list of open files
  *
+ * @param [in] *lfs             pointer to current LFS instance
  * @param [in] *nodebase        base node
  * @param [in] *node            node data added to list of open files
  * @param [io] *item            in:  node number in base node
@@ -1435,54 +1412,55 @@ static node_t *new_node(node_t *nodebase, char *filename, i32_t *item)
  * @retval STD_RET_ERROR        file not registered
  */
 //==============================================================================
-static stdret_t add_node_to_list_of_open_files(node_t *nodebase, node_t *node, i32_t *item)
+static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *nodebase,
+                                               node_t *node, i32_t *item)
 {
-        fopenInfo_t *openFileInfo;
-        fopenInfo_t *openedFile;
-        i32_t        openFileCount;
-        i32_t        openFileListPos;
+        struct opened_file_info *opened_file_info;
+        struct opened_file_info *opened_file;
+        i32_t open_file_count;
+        i32_t open_file_list_position;
 
-        if ((openFileInfo = calloc(1, sizeof(fopenInfo_t))) == NULL) {
+        if (!(opened_file_info = kcalloc(1, sizeof(struct opened_file_info)))) {
                 return STD_RET_ERROR;
         }
 
-        openFileInfo->removeAtClose = FALSE;
-        openFileInfo->node          = node;
-        openFileInfo->nodebase      = nodebase;
+        opened_file_info->remove_at_close = FALSE;
+        opened_file_info->node          = node;
+        opened_file_info->base_node      = nodebase;
 
         if (list_get_nitem_ID(nodebase->data, *item,
-                              &openFileInfo->itemID) != STD_RET_OK) {
+                              &opened_file_info->item_ID) != STD_RET_OK) {
                 goto AddFileToListOfOpenFiles_Error;
         }
 
         /* find if file shall be removed */
-        openFileCount = list_get_item_count(lfs->openFile);
+        open_file_count = list_get_item_count(lfs->list_of_opended_files);
 
-        for (i32_t i = 0; i < openFileCount; i++) {
-                openedFile = list_get_nitem_data(lfs->openFile, i);
+        for (i32_t i = 0; i < open_file_count; i++) {
+                opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
 
-                if (openedFile->node != node) {
+                if (opened_file->node != node) {
                         continue;
                 }
 
-                if (openedFile->removeAtClose == TRUE) {
-                        openFileInfo->removeAtClose = TRUE;
+                if (opened_file->remove_at_close == TRUE) {
+                        opened_file_info->remove_at_close = TRUE;
                         break;
                 }
         }
 
         /* add open file info to list */
-        openFileListPos = list_add_item(lfs->openFile,
-                                      lfs->idcnt++,
-                                      openFileInfo);
+        open_file_list_position = list_add_item(lfs->list_of_opended_files,
+                                                lfs->id_counter++,
+                                                opened_file_info);
 
-        if (openFileListPos >= 0) {
-                *item = openFileListPos;
+        if (open_file_list_position >= 0) {
+                *item = open_file_list_position;
                 return STD_RET_OK;
         }
 
         AddFileToListOfOpenFiles_Error:
-        free(openFileInfo);
+        kfree(opened_file_info);
         return STD_RET_ERROR;
 }
 

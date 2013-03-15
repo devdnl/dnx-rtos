@@ -52,26 +52,26 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define IMPORT_DRIVER_INTERFACE(classname, drvname, devno, devpart)\
+#define IMPORT_DRIVER_INTERFACE(drvmodule, drvname, devno, devpart)\
 {.drvName    = drvname,\
- .drvInit    = classname##_Init,\
- .drvRelease = classname##_Release,\
- .drvCfg     = {.dev    = devno,\
+ .drvInit    = drvmodule##_init,\
+ .drvRelease = drvmodule##_release,\
+ .drv_if     = {.dev    = devno,\
                .part    = devpart,\
-               .f_open  = classname##_Open,\
-               .f_close = classname##_Close,\
-               .f_write = classname##_Write,\
-               .f_read  = classname##_Read,\
-               .f_ioctl = classname##_IOCtl}}
+               .f_open  = drvmodule##_ppen,\
+               .f_close = drvmodule##_close,\
+               .f_write = drvmodule##_write,\
+               .f_read  = drvmodule##_read,\
+               .f_ioctl = drvmodule##_ioctl}}
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 struct driver_entry {
-        char  *drvName;
-        stdret_t (*drvInit   )(devx_t dev, fd_t part);
-        stdret_t (*drvRelease)(devx_t dev, fd_t part);
-        struct vfs_drv_interface drvCfg;
+        char  *drv_name;
+        stdret_t (*drv_init   )(void **drvhdl, uint dev, uint part);
+        stdret_t (*drv_release)(void *drvhdl);
+        struct vfs_drv_interface drv_if;
 };
 
 /*==============================================================================
