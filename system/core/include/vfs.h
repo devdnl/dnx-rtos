@@ -63,20 +63,14 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** device number type */
-typedef uint devx_t;
-
 /** IO request type */
 typedef uint iorq_t;
 
 /** file descriptor */
 typedef uint fd_t;
 
-/** file system descriptor */
-typedef uint fsd_t;
-
 /** file type */
-typedef enum
+typedef enum tfile
 {
         FILE_TYPE_REGULAR,
         FILE_TYPE_DIR,
@@ -85,7 +79,7 @@ typedef enum
 } tfile_t;
 
 /** directory entry */
-typedef struct
+typedef struct dirent
 {
         char   *name;
         size_t  size;

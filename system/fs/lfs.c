@@ -328,14 +328,12 @@ stdret_t lfs_mkdir(void *fshdl, const char *path)
                         } else {
                                 delete_list(new_dir->data);
                         }
+                } else {
+                        kfree(new_dir);
                 }
         }
 
         error:
-        if (new_dir) {
-                kfree(new_dir);
-        }
-
         if (new_dir_name) {
                 kfree(new_dir_name);
         }
@@ -1275,12 +1273,12 @@ static uint get_path_deep(const char *path)
 //==============================================================================
 static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item)
 {
-        node_t *curnode;
-        node_t *node;
-        char   *pathend;
-        int    dirdeep;
-        uint   pathlen;
-        int    listsize;
+        node_t *current_node;
+        node_t *next_node;
+        char   *path_end;
+        int    dir_deep;
+        uint   path_length;
+        int    list_size;
 
 
         if (!path || !startnode) {
@@ -1291,11 +1289,11 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
                 return NULL;
         }
 
-        curnode = startnode;
-        dirdeep = get_path_deep(path);
+        current_node = startnode;
+        dir_deep = get_path_deep(path);
 
         /* go to selected node -----------------------------------------------*/
-        while (dirdeep + deep > 0) {
+        while (dir_deep + deep > 0) {
                 /* get element from path */
                 if ((path = strchr(path, '/')) == NULL) {
                         break;
@@ -1303,29 +1301,29 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
                         path++;
                 }
 
-                if ((pathend = strchr(path, '/')) == NULL) {
-                        pathlen = strlen(path);
+                if ((path_end = strchr(path, '/')) == NULL) {
+                        path_length = strlen(path);
                 } else {
-                        pathlen = pathend - path;
+                        path_length = path_end - path;
                 }
 
                 /* get number of list items */
-                listsize = list_get_item_count(curnode->data);
+                list_size = list_get_item_count(current_node->data);
 
                 /* find that object exist ------------------------------------*/
                 int i = 0;
-                while (listsize > 0) {
-                        node = list_get_nitem_data(curnode->data, i++);
+                while (list_size > 0) {
+                        next_node = list_get_nitem_data(current_node->data, i++);
 
-                        if (node == NULL) {
-                                dirdeep = 1 - deep;
+                        if (next_node == NULL) {
+                                dir_deep = 1 - deep;
                                 break;
                         }
 
-                        if (  strlen(node->name) == pathlen
-                           && strncmp(node->name, path, pathlen) == 0 ) {
+                        if (  strlen(next_node->name) == path_length
+                           && strncmp(next_node->name, path, path_length) == 0 ) {
 
-                                curnode = node;
+                                current_node = next_node;
 
                                 if (item) {
                                         *item = i - 1;
@@ -1334,19 +1332,19 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
                                 break;
                         }
 
-                        listsize--;
+                        list_size--;
                 }
 
                 /* directory does not found or error */
-                if (listsize == 0 || curnode == NULL) {
-                        curnode = NULL;
+                if (list_size == 0 || current_node == NULL) {
+                        current_node = NULL;
                         break;
                 }
 
-                dirdeep--;
+                dir_deep--;
         }
 
-        return curnode;
+        return current_node;
 }
 
 //==============================================================================
@@ -1365,8 +1363,8 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
 //==============================================================================
 static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, i32_t *item)
 {
-        node_t *fnode;
-        i32_t   nitem;
+        node_t *node;
+        i32_t   node_number;
 
         if (!nodebase || !filename) {
                 return NULL;
@@ -1376,26 +1374,26 @@ static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, 
                 return NULL;
         }
 
-        if ((fnode = kcalloc(1, sizeof(node_t))) == NULL) {
+        if ((node = kcalloc(1, sizeof(node_t))) == NULL) {
                 return NULL;
         }
 
-        fnode->name  = filename;
-        fnode->data  = NULL;
-        fnode->gid   = 0;
-        fnode->mode  = 0;
-        fnode->mtime = 0;
-        fnode->size  = 0;
-        fnode->type  = NODE_TYPE_FILE;
-        fnode->uid   = 0;
+        node->name  = filename;
+        node->data  = NULL;
+        node->gid   = 0;
+        node->mode  = 0;
+        node->mtime = 0;
+        node->size  = 0;
+        node->type  = NODE_TYPE_FILE;
+        node->uid   = 0;
 
-        if ((nitem = list_add_item(nodebase->data, lfs->id_counter++, fnode)) < 0) {
-                kfree(fnode);
+        if ((node_number = list_add_item(nodebase->data, lfs->id_counter++, node)) < 0) {
+                kfree(node);
                 return NULL;
         }
 
-        *item = nitem;
-        return fnode;
+        *item = node_number;
+        return node;
 }
 
 //==============================================================================

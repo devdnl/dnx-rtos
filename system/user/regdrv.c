@@ -53,22 +53,25 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 #define IMPORT_DRIVER_INTERFACE(drvmodule, drvname, devno, devpart)\
-{.drvName    = drvname,\
- .drvInit    = drvmodule##_init,\
- .drvRelease = drvmodule##_release,\
- .drv_if     = {.dev    = devno,\
-               .part    = devpart,\
-               .f_open  = drvmodule##_ppen,\
-               .f_close = drvmodule##_close,\
-               .f_write = drvmodule##_write,\
-               .f_read  = drvmodule##_read,\
-               .f_ioctl = drvmodule##_ioctl}}
+{.drv_name    = drvname,\
+ .dev         = devno,\
+ .part        = devpart,\
+ .drv_init    = drvmodule##_init,\
+ .drv_release = drvmodule##_release,\
+ .drv_if      = {.handle    = NULL,\
+                 .drv_open  = drvmodule##_open,\
+                 .drv_close = drvmodule##_close,\
+                 .drv_write = drvmodule##_write,\
+                 .drv_read  = drvmodule##_read,\
+                 .drv_ioctl = drvmodule##_ioctl}}
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 struct driver_entry {
         char  *drv_name;
+        uint  dev;
+        uint  part;
         stdret_t (*drv_init   )(void **drvhdl, uint dev, uint part);
         stdret_t (*drv_release)(void *drvhdl);
         struct vfs_drv_interface drv_if;
@@ -81,7 +84,6 @@ struct driver_entry {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-/* driver registration */
 static const struct driver_entry driver_table[] =
 {
         IMPORT_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1, UART_PART_NONE),
@@ -105,6 +107,9 @@ static const struct driver_entry driver_table[] =
         #endif
 };
 
+/* pointers to memory handle used by drivers */
+static void *driver_handle[ARRAY_SIZE(driver_table)];
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -117,56 +122,58 @@ static const struct driver_entry driver_table[] =
 /**
  * @brief Function find driver name and then initialize device
  *
- * @param *drvName            driver name
- * @param *nodeName           file name in /dev/ directory
+ * @param *drv_name           driver name
+ * @param *node_path          path name to create in the file system
  *
  * @return driver depending value, everything not equal to STD_RET_OK are errors
  */
 //==============================================================================
-stdret_t init_driver(const char *drvName, const char *nodeName)
+stdret_t init_driver(const char *drv_name, const char *node_path)
 {
-        if (drvName == NULL) {
+        if (drv_name == NULL) {
                 return STD_RET_ERROR;
         }
 
         u16_t n = ARRAY_SIZE(driver_table);
 
         for (u16_t i = 0; i < n; i++) {
-                if (strcmp(driver_table[i].drvName, drvName) != 0) {
+                if (strcmp(driver_table[i].drv_name, drv_name) != 0) {
                         continue;
                 }
 
-                devx_t dev  = driver_table[i].drvCfg.dev;
-                fd_t   part = driver_table[i].drvCfg.part;
+                if (driver_table[i].drv_init(&driver_handle[i],
+                                             driver_table[i].dev,
+                                             driver_table[i].part) != STD_RET_OK) {
 
-                if (driver_table[i].drvInit(dev, part) != STD_RET_OK) {
                         printk(FONT_COLOR_RED"Driver %s initialization error!"
-                               RESET_ATTRIBUTES"\n", drvName);
+                               RESET_ATTRIBUTES"\n", drv_name);
 
                         return STD_RET_ERROR;
                 }
 
-                if (nodeName) {
-                        if (vfs_mknod(nodeName, (struct vfs_drv_interface*)
-                                      &driver_table[i].drvCfg) == STD_RET_OK) {
+                if (node_path) {
+                        if (vfs_mknod(node_path, (struct vfs_drv_interface *)
+                                      &driver_table[i].drv_if) == STD_RET_OK) {
 
-                                printk("Created node %s\n", nodeName);
+                                printk("Created node %s\n", node_path);
                                 return STD_RET_OK;
                         } else {
-                                driver_table[i].drvRelease(dev, part);
+                                driver_table[i].drv_release(driver_handle[i]);
+
                                 printk(FONT_COLOR_RED"Create node %s failed"
-                                       RESET_ATTRIBUTES"\n", nodeName);
+                                       RESET_ATTRIBUTES"\n", node_path);
+
                                 return STD_RET_ERROR;
                         }
 
                 } else {
-                        printk("Driver %s initialized\n", drvName);
+                        printk("Driver %s initialized\n", drv_name);
                         return STD_RET_OK;
                 }
         }
 
         printk(FONT_COLOR_RED"Driver %s does not exist!"
-               RESET_ATTRIBUTES"\n", drvName);
+               RESET_ATTRIBUTES"\n", drv_name);
 
         return STD_RET_ERROR;
 }
@@ -175,31 +182,24 @@ stdret_t init_driver(const char *drvName, const char *nodeName)
 /**
  * @brief Function find driver name and then release device
  *
- * @param *drvName            driver name
+ * @param *drv_name           driver name
  *
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //==============================================================================
-stdret_t release_driver(const char *drvName)
+stdret_t release_driver(const char *drv_name)
 {
-      stdret_t status = STD_RET_ERROR;
+        if (!drv_name) {
+                return STD_RET_ERROR;
+        }
 
-      if (drvName) {
-            u16_t n = ARRAY_SIZE(driver_table);
+        for (uint i = 0; i < ARRAY_SIZE(driver_table); i++) {
+                if (strcmp(driver_table[i].drv_name, drv_name) == 0) {
+                        return driver_table[i].drv_release(driver_handle[i]);
+                }
+        }
 
-            for (u16_t i = 0; i < n; i++) {
-                  if (strcmp(driver_table[i].drvName, drvName) == 0) {
-                        devx_t dev  = driver_table[i].drvCfg.dev;
-                        fd_t   part = driver_table[i].drvCfg.part;
-
-                        status = driver_table[i].drvRelease(dev, part);
-
-                        break;
-                  }
-            }
-      }
-
-      return status;
+        return STD_RET_ERROR;
 }
 
 #ifdef __cplusplus

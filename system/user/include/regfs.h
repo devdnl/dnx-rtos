@@ -50,8 +50,8 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdret_t mount (const char *fsname, const char *srcpath, const char *mountpoint);
-extern stdret_t umount(const char *mountpoint);
+extern stdret_t mount (const char*, const char*, const char*);
+extern stdret_t umount(const char*);
 
 #ifdef __cplusplus
 }
