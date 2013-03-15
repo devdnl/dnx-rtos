@@ -88,7 +88,7 @@ extern "C" {
 #define reboot()                          cpuctl_restart_system()
 #define get_OS_name()                     "dnx"
 #define get_kernel_name()                 "FreeRTOS"
-#define get_OS_version()                  "0.8.0"
+#define get_OS_version()                  "0.9.0"
 #define get_kernel_version()              "7.3.0"
 #define get_host_name()                   CONFIG_HOSTNAME
 #define getcwd(buf, size)                 strncpy(buf, get_this_task_data()->f_cwd, size)

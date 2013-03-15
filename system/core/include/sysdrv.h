@@ -46,40 +46,40 @@ extern "C" {
 #error "dnx.h and sysdrv.h shall never included together!"
 #endif
 
+#ifndef kcalloc
+#define kcalloc(nmemb, msize)             memman_calloc(nmemb, msize)
+#endif
+
+#ifndef kmalloc
+#define kmalloc(size)                     memman_malloc(size)
+#endif
+
+#ifndef kfree
+#define kfree(mem)                        memman_free(mem)
+#endif
+
 #ifndef calloc
-#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
+#define calloc(nmemb, msize)              tskm_calloc(nmemb, msize)
 #endif
 
 #ifndef malloc
-#define malloc(size)                      memman_malloc(size)
+#define malloc(size)                      tskm_malloc(size)
 #endif
 
 #ifndef free
-#define free(mem)                         memman_free(mem)
+#define free(mem)                         tskm_free(mem)
 #endif
 
-#ifndef mcalloc
-#define mcalloc(nmemb, msize)             tskm_calloc(nmemb, msize)
+#ifndef calloc_as
+#define calloc_as(taskhdl, nmemb, msize)  tskm_calloc_as(taskhdl, nmemb, msize)
 #endif
 
-#ifndef mmalloc
-#define mmalloc(size)                     tskm_malloc(size)
+#ifndef malloc_as
+#define malloc_as(taskhdl, size)          tskm_malloc_as(taskhdl, size)
 #endif
 
-#ifndef mfree
-#define mfree(mem, size)                  tskm_freemem_as(get_task_handle(), mem, size)
-#endif
-
-#ifndef mcalloc_as
-#define mcalloc_as(taskhdl, nmemb, msize) tskm_calloc_as(taskhdl, nmemb, msize)
-#endif
-
-#ifndef mmalloc_as
-#define mmalloc_as(taskhdl, size)         tskm_malloc_as(taskhdl, size)
-#endif
-
-#ifndef mfree_as
-#define mfree_as(taskhdl, mem, size)      tskm_freemem_as(taskhdl, mem, size)
+#ifndef free_as
+#define free_as(taskhdl, mem)             tskm_free_as(taskhdl, mem)
 #endif
 
 #define enable_fast_memory_monitoring()   tskm_enable_fast_memory_monitoring(get_task_handle())

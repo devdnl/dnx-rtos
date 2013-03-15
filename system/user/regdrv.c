@@ -134,9 +134,8 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                 return STD_RET_ERROR;
         }
 
-        u16_t n = ARRAY_SIZE(driver_table);
+        for (u16_t i = 0; i < ARRAY_SIZE(driver_table); i++) {
 
-        for (u16_t i = 0; i < n; i++) {
                 if (strcmp(driver_table[i].drv_name, drv_name) != 0) {
                         continue;
                 }
