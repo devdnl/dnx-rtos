@@ -69,7 +69,7 @@ extern "C" {
 ==============================================================================*/
 struct FS_entry {
       char             *fsName;
-      struct vfs_fscfg  mntcfg;
+      struct vfs_FS_interface  mntcfg;
 };
 
 /*==============================================================================
@@ -115,7 +115,7 @@ stdret_t mount(const char *fsname, const char *srcpath, const char *mountpoint)
                 for (uint i = 0; i < ARRAY_SIZE(FS_table); i++) {
                         if (strcmp(FS_table[i].fsName, fsname) == 0) {
                                 status = vfs_mount(srcpath, mountpoint,
-                                                   (struct vfs_fscfg *)&FS_table[i].mntcfg);
+                                                   (struct vfs_FS_interface *)&FS_table[i].mntcfg);
                                 break;
                         }
                 }

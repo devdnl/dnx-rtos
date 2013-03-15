@@ -95,16 +95,16 @@ typedef struct
 /** directory type */
 struct vfs_dir
 {
-        dirent_t (*rddir)(fsd_t fsd, struct vfs_dir *dir);
-        stdret_t (*cldir)(fsd_t fsd, struct vfs_dir *dir);
-        size_t     items;
-        size_t     seek;
+        dirent_t (*rddir)(void *fshdl, struct vfs_dir *dir);
+        stdret_t (*cldir)(void *fshdl, struct vfs_dir *dir);
         void      *dd;
-        fsd_t      fsd;
+        void      *handle;
+        size_t    items;
+        size_t    seek;
 };
 
 /** file statistics */
-struct vfs_stat {
+struct vfs_statf {
         u32_t  st_dev;           /* ID of device containing file */
         u32_t  st_rdev;          /* device ID (if special file) */
         u32_t  st_mode;          /* protection */
@@ -133,64 +133,62 @@ struct vfs_mntent {
 };
 
 /** driver configuration */
-struct vfs_drvcfg {
-        devx_t   dev;
-        fd_t     part;
-        stdret_t (*f_open )(devx_t dev, fd_t part);
-        stdret_t (*f_close)(devx_t dev, fd_t part);
-        size_t   (*f_write)(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*f_read )(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek);
-        stdret_t (*f_ioctl)(devx_t dev, fd_t part, iorq_t iorq, void *data);
+struct vfs_drv_interface {
+        stdret_t (*drv_open )(void *drvhdl, fd_t fd);
+        stdret_t (*drv_close)(void *drvhdl, fd_t fd);
+        size_t   (*drv_write)(void *drvhdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+        size_t   (*drv_read )(void *drvhdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+        stdret_t (*drv_ioctl)(void *drvhdl, fd_t fd, iorq_t iorq, void *data);
+        fd_t     fd;
 };
 
 /** file system configuration */
-struct vfs_fscfg {
-        fsd_t    f_fsd;     /* data provided by FS driver in the initialization and used by VFS in accessing to FS driver */
-        stdret_t (*f_init   )(const char *path, fsd_t *fsd);
-        stdret_t (*f_open   )(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const char *mode);
-        stdret_t (*f_close  )(fsd_t fsd, fd_t fd);
-        size_t   (*f_write  )(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*f_read   )(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-        stdret_t (*f_ioctl  )(fsd_t fsd, fd_t fd, iorq_t iroq, void *data);
-        stdret_t (*f_fstat  )(fsd_t fsd, fd_t fd, struct vfs_stat *stat);
-        stdret_t (*f_mkdir  )(fsd_t fsd, const char *path);
-        stdret_t (*f_mknod  )(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg);
-        stdret_t (*f_opendir)(fsd_t fsd, const char *path, dir_t *dir);
-        stdret_t (*f_remove )(fsd_t fsd, const char *path);
-        stdret_t (*f_rename )(fsd_t fsd, const char *oldName, const char *newName);
-        stdret_t (*f_chmod  )(fsd_t fsd, const char *path, u32_t mode);
-        stdret_t (*f_chown  )(fsd_t fsd, const char *path, u16_t owner, u16_t group);
-        stdret_t (*f_stat   )(fsd_t fsd, const char *path, struct vfs_stat *stat);
-        stdret_t (*f_statfs )(fsd_t fsd, struct vfs_statfs *statfs);
-        stdret_t (*f_release)(fsd_t fsd);
+struct vfs_FS_interface {
+        stdret_t (*fs_init   )(void **fshdl, const char *path);
+        stdret_t (*fs_release)(void *fshdl);
+        stdret_t (*fs_open   )(void *fshdl, fd_t *fd, size_t *seek, const char *path, const char *mode);
+        stdret_t (*fs_close  )(void *fshdl, fd_t fd);
+        size_t   (*fs_write  )(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+        size_t   (*fs_read   )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
+        stdret_t (*fs_ioctl  )(void *fshdl, fd_t fd, iorq_t iroq, void *data);
+        stdret_t (*fs_fstat  )(void *fshdl, fd_t fd, struct vfs_statf *stat);
+        stdret_t (*fs_mkdir  )(void *fshdl, const char *path);
+        stdret_t (*fs_mknod  )(void *fshdl, const char *path, struct vfs_drv_interface *drv_if);
+        stdret_t (*fs_opendir)(void *fshdl, const char *path, dir_t *dir);
+        stdret_t (*fs_remove )(void *fshdl, const char *path);
+        stdret_t (*fs_rename )(void *fshdl, const char *oldName, const char *newName);
+        stdret_t (*fs_chmod  )(void *fshdl, const char *path, u32_t mode);
+        stdret_t (*fs_chown  )(void *fshdl, const char *path, u16_t owner, u16_t group);
+        stdret_t (*fs_stat   )(void *fshdl, const char *path, struct vfs_statf *stat);
+        stdret_t (*fs_statfs )(void *fshdl, struct vfs_statfs *statfs);
 };
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
 extern stdret_t vfs_init(void);
-extern stdret_t vfs_mount(const char *srcPath, const char *mntPoint, struct vfs_fscfg *mountcfg);
-extern stdret_t vfs_umount(const char *path);
-extern stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent);
-extern stdret_t vfs_mknod(const char *path, struct vfs_drvcfg *drvcfg);
-extern stdret_t vfs_mkdir(const char *path);
-extern dir_t   *vfs_opendir(const char *path);
-extern stdret_t vfs_closedir(dir_t *dir);
-extern dirent_t vfs_readdir(dir_t *dir);
-extern stdret_t vfs_remove(const char *path);
-extern stdret_t vfs_rename(const char *oldName, const char *newName);
-extern stdret_t vfs_chmod(const char *path, u16_t mode);
-extern stdret_t vfs_chown(const char *path, u16_t owner, u16_t group);
-extern stdret_t vfs_stat(const char *path, struct vfs_stat *stat);
-extern stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs);
-extern file_t  *vfs_fopen(const char *path, const char *mode);
-extern stdret_t vfs_fclose(file_t *file);
-extern size_t   vfs_fwrite(void *ptr, size_t size, size_t nitems, file_t *file);
-extern size_t   vfs_fread(void *ptr, size_t size, size_t nitems, file_t *file);
-extern stdret_t vfs_fseek(file_t *file, i32_t offset, int mode);
-extern i32_t    vfs_ftell(file_t *file);
-extern stdret_t vfs_ioctl(file_t *file, iorq_t rq, void *data);
-extern stdret_t vfs_fstat(file_t *file, struct vfs_stat *stat);
+extern stdret_t vfs_mount(const char*, const char*, struct vfs_FS_interface*);
+extern stdret_t vfs_umount(const char*);
+extern stdret_t vfs_getmntentry(size_t, struct vfs_mntent*);
+extern stdret_t vfs_mknod(const char*, struct vfs_drv_interface*);
+extern stdret_t vfs_mkdir(const char*);
+extern dir_t   *vfs_opendir(const char*);
+extern stdret_t vfs_closedir(dir_t*);
+extern dirent_t vfs_readdir(dir_t*);
+extern stdret_t vfs_remove(const char*);
+extern stdret_t vfs_rename(const char*, const char*);
+extern stdret_t vfs_chmod(const char*, u16_t);
+extern stdret_t vfs_chown(const char*, u16_t, u16_t);
+extern stdret_t vfs_stat(const char*, struct vfs_statf*);
+extern stdret_t vfs_statfs(const char*, struct vfs_statfs*);
+extern file_t  *vfs_fopen(const char*, const char*);
+extern stdret_t vfs_fclose(file_t*);
+extern size_t   vfs_fwrite(void*, size_t, size_t, file_t*);
+extern size_t   vfs_fread(void*, size_t, size_t, file_t*);
+extern stdret_t vfs_fseek(file_t*, i32_t, int);
+extern i32_t    vfs_ftell(file_t*);
+extern stdret_t vfs_ioctl(file_t*, iorq_t, void*);
+extern stdret_t vfs_fstat(file_t*, struct vfs_statf*);
 
 #ifdef __cplusplus
 }

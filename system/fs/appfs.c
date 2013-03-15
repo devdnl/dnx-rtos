@@ -211,7 +211,7 @@ stdret_t appfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
+stdret_t appfs_fstat(fsd_t fsd, fd_t fd, struct vfs_statf *stat)
 {
         (void)fsd;
         (void)fd;
@@ -251,7 +251,7 @@ stdret_t appfs_mkdir(fsd_t fsd, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *dcfg)
+stdret_t appfs_mknod(fsd_t fsd, const char *path, struct vfs_drv_interface *dcfg)
 {
         (void)fsd;
         (void)path;
@@ -406,7 +406,7 @@ stdret_t appfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
+stdret_t appfs_stat(fsd_t fsd, const char *path, struct vfs_statf *stat)
 {
         (void)fsd;
 

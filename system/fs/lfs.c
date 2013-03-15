@@ -188,7 +188,7 @@ stdret_t lfs_release(fsd_t fsd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
+stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drv_interface *drvcfg)
 {
         (void) fsd;
 
@@ -198,7 +198,7 @@ stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
         char   *drvname;
         char   *filename;
         uint  drvnamelen;
-        struct vfs_drvcfg *dcfg;
+        struct vfs_drv_interface *dcfg;
 
         if (!path || !drvcfg || !lfs) {
                 return STD_RET_ERROR;
@@ -229,10 +229,10 @@ stdret_t lfs_mknod(fsd_t fsd, const char *path, struct vfs_drvcfg *drvcfg)
                 strcpy(filename, drvname);
 
                 dirfile = calloc(1, sizeof(node_t));
-                dcfg    = calloc(1, sizeof(struct vfs_drvcfg));
+                dcfg    = calloc(1, sizeof(struct vfs_drv_interface));
 
                 if (dirfile && dcfg) {
-                        memcpy(dcfg, drvcfg, sizeof(struct vfs_drvcfg));
+                        memcpy(dcfg, drvcfg, sizeof(struct vfs_drv_interface));
 
                         dirfile->name = filename;
                         dirfile->size = 0;
@@ -680,7 +680,7 @@ stdret_t lfs_chown(fsd_t fsd, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
+stdret_t lfs_stat(fsd_t fsd, const char *path, struct vfs_statf *stat)
 {
         (void) fsd;
 
@@ -725,7 +725,7 @@ stdret_t lfs_stat(fsd_t fsd, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_stat *stat)
+stdret_t lfs_fstat(fsd_t fsd, fd_t fd, struct vfs_statf *stat)
 {
         (void) fsd;
 
@@ -884,7 +884,7 @@ stdret_t lfs_open(fsd_t fsd, fd_t *fd, size_t *seek, const char *path, const cha
                         *seek = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
-                struct vfs_drvcfg *drv = node->data;
+                struct vfs_drv_interface *drv = node->data;
 
                 if (drv->f_open == NULL) {
                         goto lfs_open_error;
@@ -928,7 +928,7 @@ stdret_t lfs_close(fsd_t fsd, fd_t fd)
         stdret_t           status = STD_RET_ERROR;
         node_t            *node;
         fopenInfo_t       *foi;
-        struct vfs_drvcfg *drv;
+        struct vfs_drv_interface *drv;
         fopenInfo_t        finf;
 
         if (lfs == NULL) {
@@ -1012,13 +1012,13 @@ size_t lfs_write(fsd_t fsd, fd_t fd, void *src, size_t size, size_t nitems, size
 {
         (void) fsd;
 
-        node_t            *node;
-        fopenInfo_t       *foi;
-        struct vfs_drvcfg *drv;
-        char              *newdata;
-        size_t             wrsize;
-        size_t             filelen;
-        size_t             n = 0;
+        struct vfs_drv_interface *drv;
+        node_t      *node;
+        fopenInfo_t *foi;
+        char        *newdata;
+        size_t       wrsize;
+        size_t       filelen;
+        size_t       n = 0;
 
 
         if (!src || !size || !nitems || !lfs) {
@@ -1102,7 +1102,7 @@ size_t lfs_read(fsd_t fsd, fd_t fd, void *dst, size_t size, size_t nitems, size_
 
         node_t            *node;
         fopenInfo_t       *foi;
-        struct vfs_drvcfg *drv;
+        struct vfs_drv_interface *drv;
         size_t             filelen;
         size_t             items2rd;
         size_t             n = 0;
@@ -1179,7 +1179,7 @@ stdret_t lfs_ioctl(fsd_t fsd, fd_t fd, iorq_t iorq, void *data)
         (void) fsd;
 
         fopenInfo_t       *foi;
-        struct vfs_drvcfg *drv;
+        struct vfs_drv_interface *drv;
 
 
         if (lfs == NULL) {

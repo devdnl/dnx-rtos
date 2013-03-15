@@ -71,7 +71,7 @@ struct driver_entry {
         char  *drvName;
         stdret_t (*drvInit   )(devx_t dev, fd_t part);
         stdret_t (*drvRelease)(devx_t dev, fd_t part);
-        struct vfs_drvcfg drvCfg;
+        struct vfs_drv_interface drvCfg;
 };
 
 /*==============================================================================
@@ -147,7 +147,7 @@ stdret_t init_driver(const char *drvName, const char *nodeName)
                 }
 
                 if (nodeName) {
-                        if (vfs_mknod(nodeName, (struct vfs_drvcfg*)
+                        if (vfs_mknod(nodeName, (struct vfs_drv_interface*)
                                       &driver_table[i].drvCfg) == STD_RET_OK) {
 
                                 printk("Created node %s\n", nodeName);
