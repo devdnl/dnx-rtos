@@ -40,7 +40,7 @@ extern "C" {
 /** define TTY max supported lines */
 #define TTY_MAX_LINES               40
 
-/** define output stream size (from keyborad) */
+/** define output stream size (from keyboard) */
 #define TTY_STREAM_SIZE             80
 
 /** define edit line length */
@@ -56,42 +56,36 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 /** devices number */
-enum tty_list
-{
-      #if TTY_NUMBER_OF_VT > 0
-      TTY_DEV_0,
-      #endif
-
-      #if TTY_NUMBER_OF_VT > 1
-      TTY_DEV_1,
-      #endif
-
-      #if TTY_NUMBER_OF_VT > 2
-      TTY_DEV_2,
-      #endif
-
-      #if TTY_NUMBER_OF_VT > 3
-      TTY_DEV_3,
-      #endif
-
-      #if TTY_NUMBER_OF_VT > 4
-      #error "TTY support 4 virtual terminals!"
-      #endif
-      TTY_LAST
+enum tty_list {
+#if TTY_NUMBER_OF_VT > 0
+        TTY_DEV_0,
+#endif
+#if TTY_NUMBER_OF_VT > 1
+        TTY_DEV_1,
+#endif
+#if TTY_NUMBER_OF_VT > 2
+        TTY_DEV_2,
+#endif
+#if TTY_NUMBER_OF_VT > 3
+        TTY_DEV_3,
+#endif
+#if TTY_NUMBER_OF_VT > 4
+#error "TTY support 4 virtual terminals!"
+#endif
+        TTY_DEV_COUNT
 };
 
 /** TTY requests */
-enum TTY_IORQ_enum
-{
-      TTY_IORQ_GETCURRENTTTY,                   /* [out] u8_t */
-      TTY_IORQ_SETACTIVETTY,                    /* [in ] u8_t */
-      TTY_IORQ_CLEARTTY,                        /* none */
-      TTY_IORQ_GETCOL,                          /* [out] u8_t */
-      TTY_IORQ_GETROW,                          /* [out] u8_t */
-      TTY_IORQ_CLEARSCR,                        /* none */
-      TTY_IORQ_CLEARLASTLINE,                   /* none */
-      TTY_IORQ_ECHO_ON,                         /* none */
-      TTY_IORQ_ECHO_OFF,                        /* none */
+enum TTY_IORQ_enum {
+        TTY_IORQ_GET_CURRENT_TTY,               /* [out] u8_t */
+        TTY_IORQ_SET_ACTIVE_TTY,                /* [in ] u8_t */
+        TTY_IORQ_CLEAR_TTY,                     /* none */
+        TTY_IORQ_GET_COL,                       /* [out] u8_t */
+        TTY_IORQ_GET_ROW,                       /* [out] u8_t */
+        TTY_IORQ_CLEAR_SCR,                     /* none */
+        TTY_IORQ_CLEAR_LAST_LINE,               /* none */
+        TTY_IORQ_ECHO_ON,                       /* none */
+        TTY_IORQ_ECHO_OFF,                      /* none */
 };
 
 /*==============================================================================

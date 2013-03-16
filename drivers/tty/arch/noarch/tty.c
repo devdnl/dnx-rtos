@@ -87,7 +87,7 @@ struct termHdl {
                 char editLine[TTY_EDIT_LINE_LEN + 1]; /* input line */
                 uint editLineLen;             /* edit line fill level */
                 uint cursorPosition;          /* cursor position in line */
-        } *tty[TTY_LAST];
+        } *tty[TTY_DEV_COUNT];
 
         u8_t    currentTTY;     /* current terminal */
         i8_t    changeToTTY;    /* terminal to change */
@@ -158,19 +158,21 @@ static struct termHdl *term;
 
 //==============================================================================
 /**
- * @brief Initialize USART devices
+ * @brief Initialize TTY devices
  *
- * @param dev     device number
- * @param part    device part
+ * @param[out] **drvhdl         driver's memory handler
+ * @param[in]  dev              device number
+ * @param[in]  part             device part
  *
  * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_Init(devx_t dev, fd_t part)
+stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 {
         (void)part;
 
-        if (dev >= TTY_LAST) {
+        if (dev >= TTY_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
 
@@ -178,7 +180,7 @@ stdret_t TTY_Init(devx_t dev, fd_t part)
                 return STD_RET_OK;
         }
 
-        if ((term = calloc(1, sizeof(struct termHdl))) == NULL) {
+        if ((term = kcalloc(1, sizeof(struct termHdl))) == NULL) {
                 return STD_RET_ERROR;
         }
 
@@ -199,7 +201,7 @@ stdret_t TTY_Init(devx_t dev, fd_t part)
                 delete_counting_semaphore(term->semcnt_stdout);
         }
 
-        free(term);
+        kfree(term);
         term = NULL;
 
         return STD_RET_ERROR;
@@ -220,7 +222,7 @@ stdret_t TTY_Release(devx_t dev, fd_t part)
 {
         (void)part;
 
-        if (!term || dev >= TTY_LAST) {
+        if (!term || dev >= TTY_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
 
@@ -234,18 +236,18 @@ stdret_t TTY_Release(devx_t dev, fd_t part)
                 /* free unused terminal */
                 for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
                         if (TTY(dev)->line[i]) {
-                                free(TTY(dev)->line[i]);
+                                kfree(TTY(dev)->line[i]);
                         }
                 }
 
-                free(TTY(dev));
+                kfree(TTY(dev));
                 TTY(dev) = NULL;
 
                 unlock_recursive_mutex(mtx);
                 delete_recursive_mutex(mtx);
 
                 /* if all terminal are unused free terminal handler */
-                for (u8_t i = 0; i < TTY_LAST; i++) {
+                for (u8_t i = 0; i < TTY_DEV_COUNT; i++) {
                         if (term->tty[i]) {
                                 return STD_RET_OK;
                         }
@@ -253,7 +255,7 @@ stdret_t TTY_Release(devx_t dev, fd_t part)
 
                 delete_counting_semaphore(term->semcnt_stdout);
                 delete_task(term->taskhdl);
-                free(term);
+                kfree(term);
                 term = NULL;
 
                 return STD_RET_OK;
@@ -277,7 +279,7 @@ stdret_t TTY_Open(devx_t dev, fd_t part)
 {
       (void)part;
 
-      if (dev >= TTY_LAST || term == NULL) {
+      if (dev >= TTY_DEV_COUNT || term == NULL) {
               return STD_RET_ERROR;
       }
 
@@ -285,13 +287,13 @@ stdret_t TTY_Open(devx_t dev, fd_t part)
               return STD_RET_OK;
       }
 
-      if ((TTY(dev) = calloc(1, sizeof(struct ttyEntry))) != NULL) {
+      if ((TTY(dev) = kcalloc(1, sizeof(struct ttyEntry))) != NULL) {
               if ((TTY(dev)->mtx = new_recursive_mutex()) != NULL) {
                       TTY(dev)->echoOn = SET;
                       return STD_RET_OK;
               }
 
-              free(TTY(dev));
+              kfree(TTY(dev));
               TTY(dev) = NULL;
       }
 
@@ -313,7 +315,7 @@ stdret_t TTY_Close(devx_t dev, fd_t part)
 {
         (void)part;
 
-        if (dev < TTY_LAST) {
+        if (dev < TTY_DEV_COUNT) {
                 return STD_RET_OK;
         }
 
@@ -342,7 +344,7 @@ size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
 
         size_t n = 0;
 
-        if (!term && dev >= TTY_LAST && !src && !size && !nitems) {
+        if (!term && dev >= TTY_DEV_COUNT && !src && !size && !nitems) {
                 return n;
         }
 
@@ -388,7 +390,7 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
 
         size_t n = 0;
 
-        if (!term && dev >= TTY_LAST && !dst && !size && !nitems) {
+        if (!term && dev >= TTY_DEV_COUNT && !dst && !size && !nitems) {
                 return 0;
         }
 
@@ -428,13 +430,13 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
 {
         (void)part;
 
-        if (!term || dev >= TTY_LAST) {
+        if (!term || dev >= TTY_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
 
         switch (ioRQ) {
         /* return current TTY */
-        case TTY_IORQ_GETCURRENTTTY:
+        case TTY_IORQ_GET_CURRENT_TTY:
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
@@ -442,7 +444,7 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                 break;
 
         /* set active terminal */
-        case TTY_IORQ_SETACTIVETTY:
+        case TTY_IORQ_SET_ACTIVE_TTY:
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
@@ -450,12 +452,12 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                 break;
 
         /* clear terminal */
-        case TTY_IORQ_CLEARTTY:
+        case TTY_IORQ_CLEAR_TTY:
                 clear_tty(dev);
                 break;
 
         /* terminal size - number of columns */
-        case TTY_IORQ_GETCOL:
+        case TTY_IORQ_GET_COL:
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
@@ -463,7 +465,7 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                 break;
 
         /* terminal size - number of rows */
-        case TTY_IORQ_GETROW:
+        case TTY_IORQ_GET_ROW:
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
@@ -471,15 +473,15 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                 break;
 
         /* clear screen */
-        case TTY_IORQ_CLEARSCR:
+        case TTY_IORQ_CLEAR_SCR:
                 term->changeToTTY = term->currentTTY;
                 clear_tty(dev);
                 break;
 
         /* clear last line */
-        case TTY_IORQ_CLEARLASTLINE:
+        case TTY_IORQ_CLEAR_LAST_LINE:
                 if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
-                        char *msg = malloc(2);
+                        char *msg = kmalloc(2);
 
                         if (msg) {
                                 msg[0] = '\r';
@@ -939,7 +941,7 @@ static void clear_tty(u8_t dev)
         if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
                 for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
                         if (TTY(dev)->line[i]) {
-                                free(TTY(dev)->line[i]);
+                                kfree(TTY(dev)->line[i]);
                                 TTY(dev)->line[i] = NULL;
                         }
                 }
@@ -1022,7 +1024,7 @@ static char *create_buffer_for_message(u8_t dev, char *msgSrc, uint msgLen)
         if (lstMsg && (*(lstMsg + lstMsgSize - 1) != '\n')) {
                 lstMsgSize += 1;
 
-                msg = malloc(lstMsgSize + msgLen + (2 * LF_count));
+                msg = kmalloc(lstMsgSize + msgLen + (2 * LF_count));
                 if (msg) {
                         TTY(dev)->wrIdx--;
                         if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
@@ -1038,7 +1040,7 @@ static char *create_buffer_for_message(u8_t dev, char *msgSrc, uint msgLen)
                         strncpy_LF2CRLF(msg + strlen(msg), msgSrc, msgLen + LF_count);
                 }
         } else {
-                msg = malloc(msgLen + (2 * LF_count));
+                msg = kmalloc(msgLen + (2 * LF_count));
                 if (msg) {
                         strncpy_LF2CRLF(msg, msgSrc, msgLen + (2 * LF_count));
                         inc_message_counter(dev);
@@ -1129,7 +1131,7 @@ static void free_non_lf_ended_messages(u8_t dev, u8_t mgscount)
 
         while (mgscount--) {
                 if (TTY(dev)->line[wridx]) {
-                        free(TTY(dev)->line[wridx]);
+                        kfree(TTY(dev)->line[wridx]);
                         TTY(dev)->line[wridx] = NULL;
                 }
 

@@ -77,7 +77,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
         stdret_t status = STD_RET_OK;
 
         u32_t col = 80;
-        ioctl(stdin, TTY_IORQ_GETCOL, &col);
+        ioctl(stdin, TTY_IORQ_GET_COL, &col);
 
         char *data = calloc(col + 1, sizeof(char));
 

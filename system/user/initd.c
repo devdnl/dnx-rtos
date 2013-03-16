@@ -129,7 +129,7 @@ void task_initd(void *arg)
         }
 
         for (;;) {
-                ioctl(tty[0], TTY_IORQ_GETCURRENTTTY, &current_tty);
+                ioctl(tty[0], TTY_IORQ_GET_CURRENT_TTY, &current_tty);
 
                 if (current_tty >= 0 && current_tty < TTY_LAST - 1) {
                         if (!program[current_tty]) {
@@ -173,12 +173,12 @@ void task_initd(void *arg)
                                 program[i] = NULL;
                                 state[i]   = PROGRAM_UNKNOWN_STATE;
 
-                                ioctl(tty[i], TTY_IORQ_CLEARTTY, NULL);
+                                ioctl(tty[i], TTY_IORQ_CLEAR_TTY, NULL);
                                 fclose(tty[i]);
                                 tty[i] = NULL;
 
                                 current_tty = 0;
-                                ioctl(tty[0], TTY_IORQ_SETACTIVETTY, &current_tty);
+                                ioctl(tty[0], TTY_IORQ_SET_ACTIVE_TTY, &current_tty);
                         }
                 }
 

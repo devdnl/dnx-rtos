@@ -58,29 +58,29 @@ extern "C" {
 #define kfree(mem)                        memman_free(mem)
 #endif
 
-#ifndef calloc
-#define calloc(nmemb, msize)              tskm_calloc(nmemb, msize)
-#endif
+//#ifndef calloc /* DNLFIXME driver's task monitoring or single task */
+//#define calloc(nmemb, msize)              tskm_calloc(nmemb, msize)
+//#endif
 
-#ifndef malloc
-#define malloc(size)                      tskm_malloc(size)
-#endif
+//#ifndef malloc /* DNLFIXME driver's task monitoring or single task */
+//#define malloc(size)                      tskm_malloc(size)
+//#endif
 
-#ifndef free
-#define free(mem)                         tskm_free(mem)
-#endif
+//#ifndef free /* DNLFIXME driver's task monitoring or single task */
+//#define free(mem)                         tskm_free(mem)
+//#endif
 
-#ifndef calloc_as
-#define calloc_as(taskhdl, nmemb, msize)  tskm_calloc_as(taskhdl, nmemb, msize)
-#endif
+//#ifndef calloc_as /* DNLFIXME driver's task monitoring or single task */
+//#define calloc_as(taskhdl, nmemb, msize)  tskm_calloc_as(taskhdl, nmemb, msize)
+//#endif
 
-#ifndef malloc_as
-#define malloc_as(taskhdl, size)          tskm_malloc_as(taskhdl, size)
-#endif
+//#ifndef malloc_as /* DNLFIXME driver's task monitoring or single task */
+//#define malloc_as(taskhdl, size)          tskm_malloc_as(taskhdl, size)
+//#endif
 
-#ifndef free_as
-#define free_as(taskhdl, mem)             tskm_free_as(taskhdl, mem)
-#endif
+//#ifndef free_as /* DNLFIXME driver's task monitoring or single task */
+//#define free_as(taskhdl, mem)             tskm_free_as(taskhdl, mem)
+//#endif
 
 #define enable_fast_memory_monitoring()   tskm_enable_fast_memory_monitoring(get_task_handle())
 

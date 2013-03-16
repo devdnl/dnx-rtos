@@ -125,7 +125,7 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
 
         strcpy(global->cwd, "/");
 
-        ioctl(stdin, TTY_IORQ_GETCURRENTTTY, &tty);
+        ioctl(stdin, TTY_IORQ_GET_CURRENT_TTY, &tty);
 
         printf("Welcome to %s/%s (tty%u)\n", get_OS_name(), get_kernel_name(), tty);
 
@@ -593,7 +593,7 @@ static enum cmd_status cmd_clear(char *arg)
 {
         (void)arg;
 
-        ioctl(stdout, TTY_IORQ_CLEARSCR, NULL);
+        ioctl(stdout, TTY_IORQ_CLEAR_SCR, NULL);
 
         return CMD_EXECUTED;
 }
