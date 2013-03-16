@@ -33,12 +33,12 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stddef.h>
-#include "basic_types.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
+#include <stddef.h>             /* DNLFIXME czy na pewno potrzebne? */
+#include "basic_types.h"        /* DNLFIXME czy na pewno potrzebne? */
+#include "FreeRTOS.h"           /* DNLFIXME czy na pewno potrzebne? */
+#include "task.h"               /* DNLFIXME czy na pewno potrzebne? */
+#include "queue.h"              /* DNLFIXME czy na pewno potrzebne? */
+#include "semphr.h"             /* DNLFIXME czy na pewno potrzebne? */
 
 /*==============================================================================
   Exported symbolic constants/macros

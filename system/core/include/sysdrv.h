@@ -108,7 +108,7 @@ extern "C" {
 #define fstat(file, statPtr)              vfs_fstat(file, stat)
 
 #define DRIVER_INTERFACE(drvname)                                          \
-extern stdret_t drvname##_init   (void**, uint);                           \
+extern stdret_t drvname##_init   (void**, uint, uint);                     \
 extern stdret_t drvname##_release(void*);                                  \
 extern stdret_t drvname##_open   (void*);                                  \
 extern stdret_t drvname##_close  (void*);                                  \

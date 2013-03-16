@@ -140,6 +140,13 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                         continue;
                 }
 
+                if (driver_handle[i]) {
+                        printk(FONT_COLOR_RED"Driver %s is already initialized!"
+                               RESET_ATTRIBUTES"\n", drv_name);
+
+                        return STD_RET_ERROR;
+                }
+
                 if (driver_table[i].drv_init(&driver_handle[i],
                                              driver_table[i].dev,
                                              driver_table[i].part) != STD_RET_OK) {
@@ -188,13 +195,22 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
 //==============================================================================
 stdret_t release_driver(const char *drv_name)
 {
+        stdret_t status;
+
         if (!drv_name) {
                 return STD_RET_ERROR;
         }
 
         for (uint i = 0; i < ARRAY_SIZE(driver_table); i++) {
                 if (strcmp(driver_table[i].drv_name, drv_name) == 0) {
-                        return driver_table[i].drv_release(driver_handle[i]);
+
+                        status = driver_table[i].drv_release(driver_handle[i]);
+
+                        if (status == STD_RET_OK) {
+                                driver_handle[i] = NULL;
+                        }
+
+                        return status;
                 }
         }
 

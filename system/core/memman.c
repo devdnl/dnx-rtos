@@ -257,7 +257,7 @@ void memman_free(void *rmem)
         }
 
         /* protect the heap from concurrent access */
-        suspend_all_tasks();
+        vTaskSuspendAll();
 
         /* Get the corresponding struct mem ... */
         mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
@@ -275,7 +275,7 @@ void memman_free(void *rmem)
         /* finally, see if prev or next are free also */
         plug_holes(mem);
 
-        resume_all_tasks();
+        xTaskResumeAll();
 }
 
 //==============================================================================
@@ -311,7 +311,7 @@ void *memman_malloc(size_t size)
         }
 
         /* protect the heap from concurrent access */
-        suspend_all_tasks();
+        vTaskSuspendAll();
 
         /*
          * Scan through the heap searching for a free block that is big enough,
@@ -383,12 +383,12 @@ void *memman_malloc(size_t size)
                         }
 
 
-                        resume_all_tasks();
+                        xTaskResumeAll();
                         return (u8_t *)mem + SIZEOF_STRUCT_MEM;
                 }
         }
 
-        resume_all_tasks();
+        xTaskResumeAll();
         return NULL;
 }
 

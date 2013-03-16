@@ -1,6 +1,6 @@
 #ifndef UART_DEF_H_
 #define UART_DEF_H_
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    usart_def.h
 
 @author  Daniel Zorychta
@@ -24,81 +24,65 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
-                                            Include files
-==================================================================================================*/
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "systypes.h"
 
+/*==============================================================================
+  Exported symbolic constants/macros
+==============================================================================*/
 
-/*==================================================================================================
-                                 Exported symbolic constants/macros
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                  Exported types, enums definitions
-==================================================================================================*/
-/** statuses */
-enum UART_STATUS_enum
-{
-      UART_STATUS_PORTNOTEXIST          = -1,
-      UART_STATUS_PORTLOCKED            = -2,
-      UART_STATUS_INCORRECTSIZE         = -3,
-      UART_STATUS_NOFREEMEM             = -4,
-      UART_STATUS_BADRQ                 = -5,
-      UART_STATUS_BUFFEREMPTY           = -6,
-};
-
-
+/*==============================================================================
+  Exported types, enums definitions
+==============================================================================*/
 /** IO request for UART driver */
-enum UART_IORq_enum
+enum UART_IORq
 {
-      UART_IORQ_ENABLE_WAKEUP_IDLE,                   /* no arg       */
-      UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK,           /* no arg       */
-      UART_IORQ_ENABLE_PARITY_CHECK,                  /* no arg       */
-      UART_IORQ_DISABLE_PARITY_CHECK,                 /* no arg       */
-      UART_IORQ_SET_ODD_PARITY,                       /* no arg       */
-      UART_IORQ_SET_EVEN_PARITY,                      /* no arg       */
-      UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE,          /* no arg       */
-      UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE,         /* no arg       */
-      UART_IORQ_ENABLE_LIN_MODE,                      /* no arg       */
-      UART_IORQ_DISABLE_LIN_MODE,                     /* no arg       */
-      UART_IORQ_SET_1_STOP_BIT,                       /* no arg       */
-      UART_IORQ_SET_2_STOP_BITS,                      /* no arg       */
-      UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS,         /* no arg       */
-      UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS,         /* no arg       */
-      UART_IORQ_SET_ADDRESS_NODE,                     /* in u8_t arg  */
-      UART_IORQ_ENABLE_CTS,                           /* no arg       */
-      UART_IORQ_DISABLE_CTS,                          /* no arg       */
-      UART_IORQ_ENABLE_RTS,                           /* no arg       */
-      UART_IORQ_DISABLE_RTS,                          /* no arg       */
-      UART_IORQ_GET_BYTE,                             /* out u8_t arg */
-      UART_IORQ_GET_BYTE_BLOCKING,                    /* out u8_t arg */
-      UART_IORQ_SEND_BYTE,                            /* in u8_t arg  */
-      UART_IORQ_SET_BAUDRATE,                         /* in u32_t arg */
+        UART_IORQ_ENABLE_WAKEUP_IDLE,                   /* [---] no arg       */
+        UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK,           /* [---] no arg       */
+        UART_IORQ_ENABLE_PARITY_CHECK,                  /* [---] no arg       */
+        UART_IORQ_DISABLE_PARITY_CHECK,                 /* [---] no arg       */
+        UART_IORQ_SET_ODD_PARITY,                       /* [---] no arg       */
+        UART_IORQ_SET_EVEN_PARITY,                      /* [---] no arg       */
+        UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE,          /* [---] no arg       */
+        UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE,         /* [---] no arg       */
+        UART_IORQ_ENABLE_LIN_MODE,                      /* [---] no arg       */
+        UART_IORQ_DISABLE_LIN_MODE,                     /* [---] no arg       */
+        UART_IORQ_SET_1_STOP_BIT,                       /* [---] no arg       */
+        UART_IORQ_SET_2_STOP_BITS,                      /* [---] no arg       */
+        UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS,         /* [---] no arg       */
+        UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS,         /* [---] no arg       */
+        UART_IORQ_SET_ADDRESS_NODE,                     /* [in ] u8_t arg     */
+        UART_IORQ_ENABLE_CTS,                           /* [---] no arg       */
+        UART_IORQ_DISABLE_CTS,                          /* [---] no arg       */
+        UART_IORQ_ENABLE_RTS,                           /* [---] no arg       */
+        UART_IORQ_DISABLE_RTS,                          /* [---] no arg       */
+        UART_IORQ_GET_BYTE,                             /* [out] u8_t arg     */
+        UART_IORQ_GET_BYTE_BLOCKING,                    /* [out] u8_t arg     */
+        UART_IORQ_SEND_BYTE,                            /* [in ] u8_t arg     */
+        UART_IORQ_SET_BAUDRATE,                         /* [in ] u32_t arg    */
 };
 
+/*==============================================================================
+  Exported object declarations
+==============================================================================*/
 
-/*==================================================================================================
-                                     Exported object declarations
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported function prototypes
-==================================================================================================*/
-
+/*==============================================================================
+ Exported function prototypes
+==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* UART_DEF_H_ */
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/

@@ -84,8 +84,6 @@ extern "C" {
 #define suspend_this_task()                             vTaskSuspend(THIS_TASK)
 #define resume_task(taskhdl)                            vTaskResume(taskhdl)
 #define resume_task_from_ISR(taskhdl)                   xTaskResumeFromISR(taskhdl)
-#define suspend_all_tasks()                             vTaskSuspendAll()
-#define resume_all_tasks()                              xTaskResumeAll()
 #define yield_task()                                    taskYIELD()
 #define enter_critical()                                taskENTER_CRITICAL()
 #define exit_critical()                                 taskEXIT_CRITICAL()

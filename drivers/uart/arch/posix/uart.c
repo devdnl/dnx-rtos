@@ -1,4 +1,4 @@
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    usart.c
 
 @author  Daniel Zorychta
@@ -22,16 +22,15 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
-/*==================================================================================================
-                                            Include files
-==================================================================================================*/
+/*==============================================================================
+  Include files
+==============================================================================*/
 #include "uart.h"
 #include <stdlib.h>
 
@@ -47,218 +46,188 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
+/*==============================================================================
+  Local symbolic constants/macros
+==============================================================================*/
 
-/*==================================================================================================
-                                  Local symbolic constants/macros
-==================================================================================================*/
+/*==============================================================================
+  Local types, enums definitions
+==============================================================================*/
 
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
 
-/*==================================================================================================
-                                   Local types, enums definitions
-==================================================================================================*/
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
 
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Initialize USART devices
  *
- * @param[in] dev           UART device
- * @param[in] part          device part
+ * @param[out] **drvhdl         driver's memory handler
+ * @param[in]  dev              device number
+ * @param[in]  part             device part
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t UART_Init(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t UART_init(void **drvhdl, uint dev, uint part)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
+        (void)dev;
+        (void)part;
 
-      return STD_RET_OK;
+        return STD_RET_OK;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Release USART devices
  *
- * @param[in] dev           I2C device
- * @param[in] part          device part
+ * @param[in] *drvhdl           driver's memory handler
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t UART_Release(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t UART_release(void *drvhdl)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
 
-      return STD_RET_OK;
+        return STD_RET_OK;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
- * @brief Opens specified port and initialize default settings
+ * @brief Opens specified port
  *
- * @param[in]  dev                        USART name (number)
- * @param[in]  part                       device part
+ * @param[in] *drvhdl           driver's memory handler
  *
- * @retval STD_STATUS_OK                  operation success
- * @retval UART_STATUS_PORTLOCKED         port locked for other task
- * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
- * @retval UART_STATUS_NOFREEMEM          no enough free memory to allocate RxBuffer
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t UART_Open(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t UART_open(void *drvhdl)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
 
-      return STD_RET_OK;
+        return STD_RET_ERROR;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Function close opened port
  *
- * @param[in]  dev                        USART name (number)
- * @param[in]  part                       device part
+ * @param[in] *drvhdl           driver's memory handler
  *
- * @retval STD_STATUS_OK                  operation success
- * @retval UART_STATUS_PORTLOCKED         port locked for other task
- * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t UART_Close(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t UART_close(void *drvhdl)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
 
-      return STD_RET_OK;
+        return STD_RET_ERROR;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Write data to UART (ISR or DMA)
  *
- * @param[in]  dev                        dev number
- * @param[in]  part                       device part
- * @param[in]  *src                       source buffer
- * @param[in]  size                       item size
- * @param[in]  nitems                     number of items
- * @param[in]  seek                       seek
+ * @param[in] *drvhdl           driver's memory handle
+ * @param[in] *src              source
+ * @param[in] size              size
+ * @param[in] seek              seek
  *
- * @return number of transmitted nitems
+ * @retval number of written nitems
  */
-//================================================================================================//
-size_t UART_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
+//==============================================================================
+size_t UART_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
-      (void)part;
-      (void)seek;
+        (void)drvhdl;
+        (void)seek;
 
-      ch_t *buf = calloc(256, sizeof(ch_t));
+        char *buf = calloc(256, sizeof(char));
 
-      size_t datasize = 0;
+        size_t datasize = 0;
 
-      if (size * nitems < 256) {
-            datasize = size * nitems;
-      } else {
-            datasize = sizeof(buf);
-      }
+        if (size * nitems < 256) {
+                datasize = size * nitems;
+        } else {
+                datasize = sizeof(buf);
+        }
 
-      snprintf(buf, datasize, "%s", (ch_t*)src);
+        snprintf(buf, datasize, "%s", (char*) src);
 
-      printf("%s", buf);
+        printf("%s", buf);
 
-      return datasize;
+        return datasize;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Read data from UART Rx buffer
  *
- * @param[in]  dev                        dev number
- * @param[in]  part                       device part
- * @param[out] *dst                       destination buffer
- * @param[in]  size                       item size
- * @param[in]  nitems                     number of items
- * @param[in]  seek                       seek
+ * @param[in]  *drvhdl          driver's memory handle
+ * @param[out] *dst             destination
+ * @param[in]  size             size
+ * @param[in]  seek             seek
  *
- * @return number of received nitems
+ * @retval number of read nitems
  */
-//================================================================================================//
-size_t UART_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
+//==============================================================================
+size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
-      (void)part;
-      (void)dst;
-      (void)size;
-      (void)nitems;
-      (void)seek;
+        (void) drvhdl;
+        (void) dst;
+        (void) size;
+        (void) nitems;
+        (void) seek;
 
-      if (dst) {
-            ch_t *data = dst;
+        if (dst) {
+                char *data = dst;
 
-            for (uint_t i = 0; i < (size * nitems); i++) {
-                  *(data++) = getc(stdin);
-            }
-      }
+                for (uint i = 0; i < (size * nitems); i++) {
+                        *(data++) = getc(stdin);
+                }
+        }
 
-      return nitems;
+        return nitems;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Direct IO control
  *
- * @param[in]     dev                     USART name (number)
- * @param[in]     part                    device part
- * @param[in,out] ioRQ                    IO request
- * @param[in,out] *data                   IO data (arguments, results, etc)
+ * @param[in]     *drvhdl       driver's memory handle
+ * @param[in]     ioRq          IO reqest
+ * @param[in,out] data          data pointer
  *
- * @retval STD_STATUS_OK                  operation success
- * @retval UART_STATUS_PORTLOCKED         port locked for other task
- * @retval UART_STATUS_PORTNOTEXIST       port number does not exist
- * @retval UART_STATUS_BUFFEREMPTY        rx buffer empty
- * @retval UART_STATUS_BADRQ              bad request
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t UART_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
+//==============================================================================
+stdret_t UART_ioctl(void *drvhdl, iorq_t ioRq, void *data)
 {
-      (void)dev;
-      (void)part;
-      (void)ioRQ;
-      (void)data;
+        (void)drvhdl;
+        (void)ioRq;
+        (void)data;
 
-      return STD_RET_OK;
+        return STD_RET_ERROR;
 }
-
 
 #ifdef __cplusplus
 }
 #endif
 
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/

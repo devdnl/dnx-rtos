@@ -1,11 +1,12 @@
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    gpio.c
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO. GPIO driver not provide any interface functions. All operations
-         on ports should be made direct via definitions (much faster). When operation on a ports are
-         needed please write own driver which controls pins directly and register it in the VFS if
+@brief   This driver support GPIO. GPIO driver not provide any interface
+         functions. All operations on ports should be made direct via definitions
+         (much faster). When operation on a ports are needed please write own
+         driver which controls pins directly and register it in the VFS if
          needed.
 
 @note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
@@ -25,22 +26,21 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
       extern "C" {
 #endif
 
-/*==================================================================================================
-                                             Include files
-==================================================================================================*/
+/*==============================================================================
+  Include files
+==============================================================================*/
 #include "gpio.h"
 #include "stm32f10x.h"
 
-
-/*==================================================================================================
-                                   Local symbolic constants/macros
-==================================================================================================*/
+/*==============================================================================
+  Local symbolic constants/macros
+==============================================================================*/
 /** define pin configure size (CNF[1:0] + MODE[1:0]) */
 #define GPIO_PIN_CFG_SIZE                 4U
 
@@ -218,281 +218,282 @@
                      | (GPIOG_PIN_14_DEFAULT_STATE << 14) | (GPIOG_PIN_15_DEFAULT_STATE << 15) )
 #endif
 
+/*==============================================================================
+  Local types, enums definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                   Local types, enums definitions
-==================================================================================================*/
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+static void init_GPIOx(GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr);
+static void init_AFIO(void);
 
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
-static void InitGPIOx(GPIO_t *gpio_p, u32_t crl_u32, u32_t crh_u32, u32_t odr_u32);
-static void InitAFIO(void);
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
 
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                         Function definitions
-==================================================================================================*/
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Initialise all GPIOs
+ *
+ * @param[out] **drvhdl         driver's memory handle
+ * @param[in]  dev              device number
+ * @param[in]  part             device part
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t GPIO_Init(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t GPIO_init(void **drvhdl, uint dev, uint part)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
+        (void)dev;
+        (void)part;
 
-      #if (AFIO_EN > 0)
-            InitAFIO();
-      #endif
+#if (AFIO_EN > 0)
+        init_AFIO();
+#endif
 
-      #if (GPIOA_EN > 0)
-           InitGPIOx(GPIOA, GPIOA_CRL, GPIOA_CRH, GPIOA_ODR);
-      #endif
+#if (GPIOA_EN > 0)
+        init_GPIOx(GPIOA, GPIOA_CRL, GPIOA_CRH, GPIOA_ODR);
+#endif
 
-      #if (GPIOB_EN > 0)
-           InitGPIOx(GPIOB, GPIOB_CRL, GPIOB_CRH, GPIOB_ODR);
-      #endif
+#if (GPIOB_EN > 0)
+        init_GPIOx(GPIOB, GPIOB_CRL, GPIOB_CRH, GPIOB_ODR);
+#endif
 
-      #if (GPIOC_EN > 0)
-           InitGPIOx(GPIOC, GPIOC_CRL, GPIOC_CRH, GPIOC_ODR);
-      #endif
+#if (GPIOC_EN > 0)
+        init_GPIOx(GPIOC, GPIOC_CRL, GPIOC_CRH, GPIOC_ODR);
+#endif
 
-      #if (GPIOD_EN > 0)
-           InitGPIOx(GPIOD, GPIOD_CRL, GPIOD_CRH, GPIOD_ODR);
-      #endif
+#if (GPIOD_EN > 0)
+        init_GPIOx(GPIOD, GPIOD_CRL, GPIOD_CRH, GPIOD_ODR);
+#endif
 
-      #if (GPIOE_EN > 0)
-           InitGPIOx(GPIOE, GPIOE_CRL, GPIOE_CRH, GPIOE_ODR);
-      #endif
+#if (GPIOE_EN > 0)
+        init_GPIOx(GPIOE, GPIOE_CRL, GPIOE_CRH, GPIOE_ODR);
+#endif
 
-      #if (GPIOF_EN > 0)
-            InitGPIOx(GPIOF, GPIOF_CRL, GPIOF_CRH, GPIOF_ODR);
-      #endif
+#if (GPIOF_EN > 0)
+        init_GPIOx(GPIOF, GPIOF_CRL, GPIOF_CRH, GPIOF_ODR);
+#endif
 
-      #if (GPIOG_EN > 0)
-            InitGPIOx(GPIOG, GPIOG_CRL, GPIOG_CRH, GPIOG_ODR);
-      #endif
+#if (GPIOG_EN > 0)
+        init_GPIOx(GPIOG, GPIOG_CRL, GPIOG_CRH, GPIOG_ODR);
+#endif
 
-      return STD_RET_OK;
+        return STD_RET_OK;
 }
 
-
-//================================================================================================//
-/**
- * @brief Open device
- *
- * @param dev     device number
- * @param part    device part
- *
- * @retval STD_STATUS_OK
- */
-//================================================================================================//
-stdret_t GPIO_Open(devx_t dev, fd_t part)
-{
-      (void)dev;
-      (void)part;
-
-      return STD_RET_OK;
-}
-
-
-//================================================================================================//
-/**
- * @brief Close device
- *
- * @param dev     device number
- * @param part    device part
- *
- * @retval STD_STATUS_OK
- */
-//================================================================================================//
-stdret_t GPIO_Close(devx_t dev, fd_t part)
-{
-      (void)dev;
-      (void)part;
-
-      return STD_RET_OK;
-}
-
-
-//================================================================================================//
-/**
- * @brief Write to the device
- *
- * @param dev     device number
- * @param part    device part
- * @param *src    source
- * @param size    size
- * @param seek    seek
- *
- * @retval number of written nitems
- */
-//================================================================================================//
-size_t GPIO_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
-{
-      (void)dev;
-      (void)part;
-      (void)src;
-      (void)size;
-      (void)seek;
-      (void)nitems;
-
-      return 0;
-}
-
-
-//================================================================================================//
-/**
- * @brief Read from device
- *
- * @param dev     device number
- * @param part    device part
- * @param *dst    destination
- * @param size    size
- * @param seek    seek
- *
- * @retval number of read nitems
- */
-//================================================================================================//
-size_t GPIO_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
-{
-      (void)dev;
-      (void)part;
-      (void)dst;
-      (void)size;
-      (void)seek;
-      (void)nitems;
-
-      return 0;
-}
-
-
-//================================================================================================//
-/**
- * @brief IO control
- *
- * @param[in]     dev     device number
- * @param[in]     part    device part
- * @param[in]     ioRq    IO reqest
- * @param[in,out] data    data pointer
- *
- * @retval STD_STATUS_OK
- */
-//================================================================================================//
-stdret_t GPIO_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
-{
-      (void)dev;
-      (void)part;
-      (void)ioRq;
-      (void)data;
-
-      return STD_RET_OK;
-}
-
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Release GPIO devices. Here is removed driver node and reseted device
  *
- * @param dev           device number
- * @param part          device part
+ * @param[in] *drvhdl           driver's memory handle
  *
  * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t GPIO_Release(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t GPIO_release(void *drvhdl)
 {
-      (void) dev;
-      (void)part;
+        (void)drvhdl;
 
-      return STD_RET_OK;
+        return STD_RET_OK;
 }
 
+//==============================================================================
+/**
+ * @brief Open device
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t GPIO_open(void *drvhdl)
+{
+        (void)drvhdl;
 
-//================================================================================================//
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Close device
+ *
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t GPIO_close(void *drvhdl)
+{
+        (void)drvhdl;
+
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Write to the device
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ * @param[in] *src              source
+ * @param[in] size              size
+ * @param[in] seek              seek
+ *
+ * @retval number of written nitems
+ */
+//==============================================================================
+size_t GPIO_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
+{
+        (void)drvhdl;
+        (void)src;
+        (void)size;
+        (void)seek;
+        (void)nitems;
+
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Read from device
+ *
+ * @param[in]  *drvhdl          driver's memory handle
+ * @param[out] *dst             destination
+ * @param[in]  size             size
+ * @param[in]  seek             seek
+ *
+ * @retval number of read nitems
+ */
+//==============================================================================
+size_t GPIO_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
+{
+        (void)drvhdl;
+        (void)dst;
+        (void)size;
+        (void)seek;
+        (void)nitems;
+
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief IO control
+ *
+ * @param[in]     *drvhdl       driver's memory handle
+ * @param[in]     ioRq          IO reqest
+ * @param[in,out] data          data pointer
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t GPIO_ioctl(void *drvhdl, iorq_t ioRq, void *data)
+{
+        (void)drvhdl;
+        (void)ioRq;
+        (void)data;
+
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
 /**
  * @brief Initialize GPIOx
  *
- * @param[in] *gpio_p      GPIO address
- * @param[in] crl_u32      CRL register value
- * @param[in] crh_u32      CRH register value
- * @param[in] odr_u32      ODR register value
+ * @param[in] *gpio             GPIO address
+ * @param[in] crl               CRL register value
+ * @param[in] crh               CRH register value
+ * @param[in] odr               ODR register value
  */
-//================================================================================================//
-static void InitGPIOx(GPIO_t *gpio_p, u32_t crl_u32, u32_t crh_u32, u32_t odr_u32)
+//==============================================================================
+static void init_GPIOx(GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr)
 {
-      /* enable peripherals */
-      switch ((u32_t)gpio_p)
-      {
-            #if (GPIOA_EN > 0)
-                  case GPIOA_BASE: RCC->APB2ENR |= RCC_APB2ENR_IOPAEN; break;
-            #endif
+        /* enable peripherals */
+        switch ((u32_t)gpio) {
+#if (GPIOA_EN > 0)
+        case GPIOA_BASE:
+                RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+                break;
+#endif
 
-            #if (GPIOB_EN > 0)
-                  case GPIOB_BASE: RCC->APB2ENR |= RCC_APB2ENR_IOPBEN; break;
-            #endif
+#if (GPIOB_EN > 0)
+        case GPIOB_BASE:
+                RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+                break;
+#endif
 
-            #if (GPIOC_EN > 0)
-                  case GPIOC_BASE: RCC->APB2ENR |= RCC_APB2ENR_IOPCEN; break;
-            #endif
+#if (GPIOC_EN > 0)
+        case GPIOC_BASE:
+                RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+                break;
+#endif
 
-            #if (GPIOD_EN > 0)
-                  case GPIOD_BASE: RCC->APB2ENR |= RCC_APB2ENR_IOPDEN; break;
-            #endif
+#if (GPIOD_EN > 0)
+        case GPIOD_BASE:
+                RCC->APB2ENR |= RCC_APB2ENR_IOPDEN;
+                break;
+#endif
 
-            #if (GPIOE_EN > 0)
-                  case GPIOE_BASE: RCC->APB2ENR |= RCC_APB2ENR_IOPEEN; break;
-            #endif
+#if (GPIOE_EN > 0)
+        case GPIOE_BASE:
+                RCC->APB2ENR |= RCC_APB2ENR_IOPEEN;
+                break;
+#endif
 
-            #if (GPIOF_EN > 0)
-                  case GPIOF_BASE: RCC->APB2ENR |= RCC_APB2ENR_IOPFEN; break;
-            #endif
+#if (GPIOF_EN > 0)
+        case GPIOF_BASE:
+                RCC->APB2ENR |= RCC_APB2ENR_IOPFEN;
+                break;
+#endif
 
-            #if (GPIOG_EN > 0)
-                  case GPIOG_BASE: RCC->APB2ENR |= RCC_APB2ENR_IOPGEN; break;
-            #endif
+#if (GPIOG_EN > 0)
+        case GPIOG_BASE:
+                RCC->APB2ENR |= RCC_APB2ENR_IOPGEN;
+                break;
+#endif
 
-            default:
-                  return;
-      }
+        default:
+                return;
+        }
 
-      /* pin 0-7 configuration */
-      gpio_p->CRL = crl_u32;
+        /* pin 0-7 configuration */
+        gpio->CRL = crl;
 
-      /* pin 8-15 configuration */
-      gpio_p->CRH = crh_u32;
+        /* pin 8-15 configuration */
+        gpio->CRH = crh;
 
-      /* configure outputs and inputs initial state */
-      gpio_p->ODR = odr_u32;
+        /* configure outputs and inputs initial state */
+        gpio->ODR = odr;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
- * @brief Enable AFIO clock
+ * @brief Initialize AFIO peripheral
  */
-//================================================================================================//
-static void InitAFIO(void)
+//==============================================================================
+static void init_AFIO(void)
 {
-      RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
+        RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
 
-      #if (SPI3_REMAP > 0)
-            AFIO->MAPR |= AFIO_MAPR_SPI3_REMAP;
-      #endif
+#if (SPI3_REMAP > 0)
+        AFIO->MAPR |= AFIO_MAPR_SPI3_REMAP;
+#endif
 }
 
 
@@ -500,6 +501,6 @@ static void InitAFIO(void)
    }
 #endif
 
-/*==================================================================================================
+/*==============================================================================
                                              End of file
-==================================================================================================*/
+==============================================================================*/

@@ -1,4 +1,4 @@
-/*=============================================================================================*//**
+/*=========================================================================*//**
 @file    pll.c
 
 @author  Daniel Zorychta
@@ -22,280 +22,258 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==============================================================================================*/
+*//*==========================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*==================================================================================================
-                                            Include files
-==================================================================================================*/
+/*==============================================================================
+  Include files
+==============================================================================*/
 #include "pll.h"
 #include "stm32f10x.h"
 
+/*==============================================================================
+  Local symbolic constants/macros
+==============================================================================*/
 
-/*==================================================================================================
-                                  Local symbolic constants/macros
-==================================================================================================*/
+/*==============================================================================
+  Local types, enums definitions
+==============================================================================*/
 
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
 
-/*==================================================================================================
-                                   Local types, enums definitions
-==================================================================================================*/
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
 
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
 
-/*==================================================================================================
-                                      Local function prototypes
-==================================================================================================*/
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
-
-/*==================================================================================================
-                                      Local object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                     Exported object definitions
-==================================================================================================*/
-
-
-/*==================================================================================================
-                                        Function definitions
-==================================================================================================*/
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Initialize clocks
  *
- * @param dev     device number
- * @param part    device part
+ * @param[out] **drvhdl         driver's memory handler
+ * @param[in]  dev              device number
+ * @param[in]  part             device part
  *
- * @retval STD_STATUS_OK
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  *
  * NOTE: PLL2 and PLL3 not used
  */
-//================================================================================================//
-stdret_t PLL_Init(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t PLL_init(void **drvhdl, uint dev, uint part)
 {
-      (void) dev;
-      (void)part;
+        (void)drvhdl;
+        (void)dev;
+        (void)part;
 
-      u32_t wait;
+        u32_t wait;
 
-      /* turn on HSE oscillator */
-      RCC->CR |= RCC_CR_HSEON;
+        /* turn on HSE oscillator */
+        RCC->CR |= RCC_CR_HSEON;
 
-      /* waiting for HSE ready */
-      wait = UINT32_MAX;
+        /* waiting for HSE ready */
+        wait = UINT32_MAX;
 
-      while (!(RCC->CR & RCC_CR_HSERDY) && wait)
-      {
-            wait--;
-      }
+        while (!(RCC->CR & RCC_CR_HSERDY) && wait) {
+                wait--;
+        }
 
-      if (wait == 0)
-            return PLL_STATUS_HSE_ERROR;
+        if (wait == 0)
+                return PLL_STATUS_HSE_ERROR;
 
-      /* wait states */
-      if (CPU_TARGET_FREQ <= 24000000UL)
-            FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
-      else if (CPU_TARGET_FREQ <= 48000000UL)
-            FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
-      else if (CPU_TARGET_FREQ <= 72000000UL)
-            FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
-      else
-            FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
+        /* wait states */
+        if (CPU_TARGET_FREQ <= 24000000UL)
+                FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
+        else if (CPU_TARGET_FREQ <= 48000000UL)
+                FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
+        else if (CPU_TARGET_FREQ <= 72000000UL)
+                FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
+        else
+                FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
 
-      /* AHB prescaler  configuration (/1) */
-      RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+        /* AHB prescaler  configuration (/1) */
+        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
 
-      /* APB1 prescaler configuration (/2) */
-      RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+        /* APB1 prescaler configuration (/2) */
+        RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
 
-      /* APB2 prescaler configuration (/1) */
-      RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
+        /* APB2 prescaler configuration (/1) */
+        RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
 
-      /* FCLK cortex free running clock */
-      SysTick->CTRL |= SysTick_CTRL_CLKSOURCE;
+        /* FCLK cortex free running clock */
+        SysTick->CTRL |= SysTick_CTRL_CLKSOURCE;
 
-      /* PLL source - HSE; PREDIV1 = 1; PLL x9 */
-      RCC->CFGR2 |= RCC_CFGR2_PREDIV1SRC_HSE | RCC_CFGR2_PREDIV1_DIV1;
-      RCC->CFGR  |= RCC_CFGR_PLLSRC_PREDIV1  | RCC_CFGR_PLLMULL9;
+        /* PLL source - HSE; PREDIV1 = 1; PLL x9 */
+        RCC->CFGR2 |= RCC_CFGR2_PREDIV1SRC_HSE | RCC_CFGR2_PREDIV1_DIV1;
+        RCC->CFGR  |= RCC_CFGR_PLLSRC_PREDIV1  | RCC_CFGR_PLLMULL9;
 
-      /* OTG USB set to 48 MHz (72*2 / 3)*/
-      RCC->CFGR &= ~RCC_CFGR_OTGFSPRE;
+        /* OTG USB set to 48 MHz (72*2 / 3)*/
+        RCC->CFGR &= ~RCC_CFGR_OTGFSPRE;
 
-      /* I2S3 and I2S2 from SYSCLK */
-      RCC->CFGR2 &= ~(RCC_CFGR2_I2S3SRC | RCC_CFGR2_I2S2SRC);
+        /* I2S3 and I2S2 from SYSCLK */
+        RCC->CFGR2 &= ~(RCC_CFGR2_I2S3SRC | RCC_CFGR2_I2S2SRC);
 
-      /* enable PLL */
-      RCC->CR |= RCC_CR_PLLON;
+        /* enable PLL */
+        RCC->CR |= RCC_CR_PLLON;
 
-      /* waiting for PLL ready */
-      wait = UINT32_MAX;
+        /* waiting for PLL ready */
+        wait = UINT32_MAX;
+        while (!(RCC->CR & RCC_CR_PLLRDY) && wait) {
+                wait--;
+        }
 
-      while (!(RCC->CR & RCC_CR_PLLRDY) && wait)
-      {
-            wait--;
-      }
+        if (wait == 0)
+                return PLL_STATUS_PLL_ERROR;
 
-      if (wait == 0)
-            return PLL_STATUS_PLL_ERROR;
+        /* set PLL as system clock */
+        RCC->CFGR |= RCC_CFGR_SW_PLL;
 
-      /* set PLL as system clock */
-      RCC->CFGR |= RCC_CFGR_SW_PLL;
+        wait = UINT32_MAX;
+        while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {
+                wait--;
+        }
 
-      wait = UINT32_MAX;
+        if (wait == 0)
+                return PLL_STATUS_PLL_SW_ERROR;
 
-      while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL)
-      {
-            wait--;
-      }
-
-      if (wait == 0)
-            return PLL_STATUS_PLL_SW_ERROR;
-
-      return STD_RET_OK;
+        return STD_RET_OK;
 }
 
 
-//================================================================================================//
+//==============================================================================
+/**
+ * @brief Release PLL devices
+ *
+ * @param[in] *drvhdl           driver's memory handler
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t PLL_release(void *drvhdl)
+{
+        (void)drvhdl;
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
 /**
  * @brief Open device
  *
- * @param dev     device number
- * @param part    device part
+ * @param[in] *drvhdl           driver's memory handler
  *
- * @retval STD_STATUS_OK
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t PLL_Open(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t PLL_open(void *drvhdl)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
 
-      return STD_RET_OK;
+        return STD_RET_ERROR;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Close device
  *
- * @param dev     device number
- * @param part    device part
+ * @param[in] *drvhdl           driver's memory handler
  *
- * @retval STD_STATUS_OK
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t PLL_Close(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t PLL_close(void *drvhdl)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
 
-      return STD_RET_OK;
+        return STD_RET_ERROR;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Write to the device
  *
- * @param dev     device number
- * @param part    device part
- * @param *src    source
- * @param size    size
- * @param seek    seek
+ * @param[in] *drvhdl           driver's memory handle
+ * @param[in] *src              source
+ * @param[in] size              size
+ * @param[in] seek              seek
  *
  * @retval number of written nitems
  */
-//================================================================================================//
-size_t PLL_Write(devx_t dev, fd_t part, void *src, size_t size, size_t nitems, size_t seek)
+//==============================================================================
+size_t PLL_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
-      (void)part;
-      (void)src;
-      (void)size;
-      (void)seek;
-      (void)nitems;
+        (void)drvhdl;
+        (void)src;
+        (void)size;
+        (void)seek;
+        (void)nitems;
 
-      return STD_RET_OK;
+        return 0;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief Read from device
  *
- * @param dev     device number
- * @param part    device part
- * @param *dst    destination
- * @param size    size
- * @param seek    seek
+ * @param[in]  *drvhdl          driver's memory handle
+ * @param[out] *dst             destination
+ * @param[in]  size             size
+ * @param[in]  seek             seek
  *
  * @retval number of read nitems
  */
-//================================================================================================//
-size_t PLL_Read(devx_t dev, fd_t part, void *dst, size_t size, size_t nitems, size_t seek)
+//==============================================================================
+size_t PLL_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
 {
-      (void)dev;
-      (void)part;
-      (void)dst;
-      (void)size;
-      (void)seek;
-      (void)nitems;
+        (void)drvhdl;
+        (void)dst;
+        (void)size;
+        (void)seek;
+        (void)nitems;
 
-      return STD_RET_OK;
+        return 0;
 }
 
-
-//================================================================================================//
+//==============================================================================
 /**
  * @brief IO control
  *
- * @param[in]     dev     device number
- * @param part    device part
- * @param[in]     ioRq    IO reqest
- * @param[in,out] data    data pointer
- *
- * @retval STD_STATUS_OK
- */
-//================================================================================================//
-stdret_t PLL_IOCtl(devx_t dev, fd_t part, iorq_t ioRq, void *data)
-{
-      (void)dev;
-      (void)part;
-      (void)ioRq;
-      (void)data;
-
-      return STD_RET_OK;
-}
-
-
-//================================================================================================//
-/**
- * @brief Release PLL devices. Here is removed driver node and reseted device
- *
- * @param dev           device number
- * @param part          device part
+ * @param[in]     *drvhdl       driver's memory handle
+ * @param[in]     ioRq          IO reqest
+ * @param[in,out] data          data pointer
  *
  * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
-//================================================================================================//
-stdret_t PLL_Release(devx_t dev, fd_t part)
+//==============================================================================
+stdret_t PLL_ioctl(void *drvhdl, iorq_t ioRq, void *data)
 {
-      (void)dev;
-      (void)part;
+        (void)drvhdl;
+        (void)ioRq;
+        (void)data;
 
-      return STD_RET_OK;
+        return STD_RET_ERROR;
 }
-
 
 #ifdef __cplusplus
 }
 #endif
 
-/*==================================================================================================
-                                            End of file
-==================================================================================================*/
+/*==============================================================================
+  End of file
+==============================================================================*/
