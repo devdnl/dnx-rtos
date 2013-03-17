@@ -46,11 +46,11 @@ extern "C" {
 #endif
 
 #ifndef kcalloc
-#define kcalloc(nmemb, msize)             memman_calloc(nmemb, msize)
+#define kcalloc(nmemb, msize)             memman_calloc(nmemb, msize, NULL)
 #endif
 
 #ifndef kmalloc
-#define kmalloc(size)                     memman_malloc(size)
+#define kmalloc(size)                     memman_malloc(size, NULL)
 #endif
 
 #ifndef kfree

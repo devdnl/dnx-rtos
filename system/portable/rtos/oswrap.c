@@ -38,7 +38,7 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nitems, itemsize)        memman_calloc(nitems, itemsize)
+#define calloc(nitems, itemsize)        memman_calloc(nitems, itemsize, NULL)
 #define free(mem)                       memman_free(mem)
 
 /*==============================================================================

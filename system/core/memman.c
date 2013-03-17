@@ -242,18 +242,21 @@ void memman_init(void)
  *
  * @param rmem is the data portion of a struct mem as returned by a previous
  *             call to mem_malloc()
+ *
+ * @return number of really freed bytes
  */
 //==============================================================================
-void memman_free(void *rmem)
+size_t memman_free(void *rmem)
 {
         struct mem *mem;
+        size_t freed;
 
         if (rmem == NULL) {
-                return;
+                return 0;
         }
 
         if ((u8_t *)rmem < (u8_t *)ram || (u8_t *)rmem >= (u8_t *)ram_end) {
-                return;
+                return 0;
         }
 
         /* protect the heap from concurrent access */
@@ -270,12 +273,15 @@ void memman_free(void *rmem)
                 lfree = mem;
         }
 
-        used_mem -= (mem->next - (size_t)(((u8_t *)mem - ram)));
+        freed = (mem->next - (size_t)(((u8_t *)mem - ram)));
+        used_mem -= freed;
 
         /* finally, see if prev or next are free also */
         plug_holes(mem);
 
         xTaskResumeAll();
+
+        return freed;
 }
 
 //==============================================================================
@@ -283,16 +289,18 @@ void memman_free(void *rmem)
  * Adam's mem_malloc() plus solution for bug #17922
  * Allocate a block of memory with a minimum of 'size' bytes.
  *
- * @param size is the minimum size of the requested block in bytes.
+ * @param[in]  size          is the minimum size of the requested block in bytes.
+ * @param[out] *real_size    the real allocated memory
  * @return pointer to allocated memory or NULL if no free memory was found.
  *
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
  */
 //==============================================================================
-void *memman_malloc(size_t size)
+void *memman_malloc(size_t size, size_t *real_size)
 {
         size_t ptr, ptr2;
         struct mem *mem, *mem2;
+        size_t used;
 
         if (size == 0) {
                 return NULL;
@@ -359,7 +367,8 @@ void *memman_malloc(size_t size)
                                         ((struct mem *)(void *)&ram[mem2->next])->prev = ptr2;
                                 }
 
-                                used_mem += (size + SIZEOF_STRUCT_MEM);
+                                used = (size + SIZEOF_STRUCT_MEM);
+                                used_mem += used;
                         } else {
                                 /* (a mem2 struct does no fit into the user data space of
                                  *  mem and mem->next will always
@@ -372,7 +381,8 @@ void *memman_malloc(size_t size)
                                  */
                                 mem->used = 1;
 
-                                used_mem += (mem->next - (size_t)((u8_t *)mem - ram));
+                                used = (mem->next - (size_t)((u8_t *)mem - ram));
+                                used_mem += used;
                         }
 
                         if (mem == lfree) {
@@ -382,11 +392,16 @@ void *memman_malloc(size_t size)
                                 }
                         }
 
+                        if (real_size)
+                                *real_size = used;
 
                         xTaskResumeAll();
                         return (u8_t *)mem + SIZEOF_STRUCT_MEM;
                 }
         }
+
+        if (real_size)
+                *real_size = 0;
 
         xTaskResumeAll();
         return NULL;
@@ -399,14 +414,15 @@ void *memman_malloc(size_t size)
  *
  * The allocated memory is filled with bytes of value zero.
  *
- * @param count number of objects to allocate
- * @param size size of the objects to allocate
+ * @param[in]  count            number of objects to allocate
+ * @param[in]  size             size of the objects to allocate
+ * @param[out] *real_size       the real allocated memory
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
 //==============================================================================
-void *memman_calloc(size_t count, size_t size)
+void *memman_calloc(size_t count, size_t size, size_t *real_size)
 {
-        void *p = memman_malloc(count * size);
+        void *p = memman_malloc(count * size, real_size);
 
         if (p) {
                 memset(p, 0, count * size);

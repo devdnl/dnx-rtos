@@ -82,11 +82,11 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void  memman_init(void);
-extern void *memman_malloc(size_t size);
-extern void *memman_calloc(size_t count, size_t size);
-extern void  memman_free(void *mem);
-extern u32_t memman_get_free_heap(void);
+extern void   memman_init(void);
+extern void  *memman_malloc(size_t size, size_t *real_size);
+extern void  *memman_calloc(size_t count, size_t size, size_t *real_size);
+extern size_t memman_free(void *mem);
+extern u32_t  memman_get_free_heap(void);
 
 #ifdef __cplusplus
 }

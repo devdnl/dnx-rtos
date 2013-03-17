@@ -119,9 +119,9 @@ void task_initd(void *arg)
         enable_printk("/dev/tty3");
 
         /* stdio program control */
-        file_t *tty[TTY_LAST]               = {NULL};
-        task_t *program[TTY_LAST - 1]       = {NULL};
-        enum prog_state state[TTY_LAST - 1] = {PROGRAM_UNKNOWN_STATE};
+        file_t *tty[TTY_DEV_COUNT]               = {NULL};
+        task_t *program[TTY_DEV_COUNT - 1]       = {NULL};
+        enum prog_state state[TTY_DEV_COUNT - 1] = {PROGRAM_UNKNOWN_STATE};
         i8_t current_tty                    = -1;
 
         while ((tty[0] = fopen("/dev/tty0", "r+")) == NULL) {
@@ -131,7 +131,7 @@ void task_initd(void *arg)
         for (;;) {
                 ioctl(tty[0], TTY_IORQ_GET_CURRENT_TTY, &current_tty);
 
-                if (current_tty >= 0 && current_tty < TTY_LAST - 1) {
+                if (current_tty >= 0 && current_tty < TTY_DEV_COUNT - 1) {
                         if (!program[current_tty]) {
                                 if (tty[current_tty] == NULL) {
                                         char path[16];
@@ -162,7 +162,7 @@ void task_initd(void *arg)
                         }
                 }
 
-                for (u8_t i = 0; i < TTY_LAST - 1; i++) {
+                for (uint i = 0; i < TTY_DEV_COUNT - 1; i++) {
                         if (program[i] == NULL) {
                                 continue;
                         }
