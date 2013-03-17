@@ -100,10 +100,15 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                 printf("Up time: %ud %u2:%u2\n", udays, uhrs, umins);
 
-                printf("Memory:\t%u total,\t%u used,\t%u free\n\n",
+                printf("Memory:\t%u total,\t%u used,\t%u free\n",
                        get_memory_size(),
                        get_used_memory(),
                        get_free_memory());
+
+                printf("Kernel: %d\tSystem: %d\tFile Systems: %d\n\n",
+                       get_used_memory_by_kernel(),
+                       get_used_memory_by_system(),
+                       get_used_memory_by_FS());
 
                 printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 

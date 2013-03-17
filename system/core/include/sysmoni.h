@@ -76,6 +76,7 @@ extern "C" {
 #define sysm_kmalloc(size)                      memman_malloc(size, NULL)
 #define sysm_kcalloc(count, size)               memman_calloc(count, size, NULL)
 #define sysm_kfree(mem)                         memman_free(mem)
+#define sysm_get_used_kernel_memory()           0
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -83,6 +84,7 @@ extern "C" {
 #define sysm_sysmalloc(size)                    memman_malloc(size, NULL)
 #define sysm_syscalloc(count, size)             memman_calloc(count, size, NULL)
 #define sysm_sysfree(mem)                       memman_free(mem)
+#define sysm_get_used_system_memory()           0
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -90,6 +92,7 @@ extern "C" {
 #define sysm_fsmalloc(size)                     sysm_sysmalloc(size)
 #define sysm_fscalloc(count, size)              sysm_syscalloc(count, size)
 #define sysm_fsfree(mem)                        sysm_sysfree(mem)
+#define sysm_get_used_file_system_memory()      sysm_get_used_system_memory()
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -178,18 +181,21 @@ extern int      sysm_get_number_of_monitored_tasks(void);
 extern void *sysm_kmalloc(size_t);
 extern void *sysm_kcalloc(size_t, size_t);
 extern void  sysm_kfree(void*);
+extern i32_t sysm_get_used_kernel_memory(void);
 #endif
 
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
 extern void *sysm_sysmalloc(size_t);
 extern void *sysm_syscalloc(size_t, size_t);
 extern void  sysm_sysfree(void*);
+extern i32_t sysm_get_used_system_memory(void);
 #endif
 
 #if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
 extern void *sysm_fsmalloc(size_t);
 extern void *sysm_fscalloc(size_t, size_t);
 extern void  sysm_fsfree(void*);
+extern i32_t sysm_get_used_file_system_memory(void);
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)

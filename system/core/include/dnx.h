@@ -92,6 +92,9 @@ extern "C" {
 #define get_kernel_version()              "7.3.0"
 #define get_host_name()                   CONFIG_HOSTNAME
 #define getcwd(buf, size)                 strncpy(buf, get_this_task_data()->f_cwd, size)
+#define get_used_memory_by_FS()           sysm_get_used_file_system_memory()
+#define get_used_memory_by_kernel()       sysm_get_used_kernel_memory()
+#define get_used_memory_by_system()       sysm_get_used_system_memory()
 
 /*==============================================================================
   Exported types, enums definitions

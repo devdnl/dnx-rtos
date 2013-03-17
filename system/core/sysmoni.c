@@ -116,12 +116,15 @@ struct task_monitor_data {
 static list_t  *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
 #endif
+
 #if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
 static i32_t sysm_kernel_memory_usage;
 #endif
+
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
 static i32_t sysm_system_memory_usage;
 #endif
+
 #if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
 static i32_t sysm_file_system_memory_usage;
 #endif
@@ -555,6 +558,20 @@ void sysm_kfree(void *mem)
 
 //==============================================================================
 /**
+ * @brief Function returns used memory by kernel
+ *
+ * @return used memory by kernel
+ */
+//==============================================================================
+#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
+i32_t sysm_get_used_kernel_memory(void)
+{
+        return sysm_kernel_memory_usage;
+}
+#endif
+
+//==============================================================================
+/**
  * @brief Function monitor memory usage of system
  *
  * @param  size         block size
@@ -608,6 +625,20 @@ void sysm_sysfree(void *mem)
 
 //==============================================================================
 /**
+ * @brief Function returns used memory by system
+ *
+ * @return used memory by kernel
+ */
+//==============================================================================
+#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+i32_t sysm_get_used_system_memory(void)
+{
+        return sysm_system_memory_usage;
+}
+#endif
+
+//==============================================================================
+/**
  * @brief Function monitor memory usage of file systems
  *
  * @param  size         block size
@@ -656,6 +687,20 @@ void *sysm_fscalloc(size_t count, size_t size)
 void sysm_fsfree(void *mem)
 {
         sysm_file_system_memory_usage -= memman_free(mem);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function returns used memory by file systems
+ *
+ * @return used memory by kernel
+ */
+//==============================================================================
+#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
+i32_t sysm_get_used_file_system_memory(void)
+{
+        return sysm_file_system_memory_usage;
 }
 #endif
 
