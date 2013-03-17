@@ -40,7 +40,7 @@ extern "C" {
 #include "oswrap.h"
 #include "io.h"
 #include "progman.h"
-#include "taskmoni.h"
+#include "sysmoni.h"
 #include "regfs.h"
 #include "regdrv.h"
 #include "oshooks.h"
@@ -49,31 +49,31 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** MEMORY MANAGEMENT DEFINTIONS */
-#define malloc(size)                      tskm_malloc(size)
-#define calloc(nitems, isize)             tskm_calloc(nitems, isize)
-#define free(mem)                         tskm_free(mem)
+#define malloc(size)                      sysm_malloc(size)
+#define calloc(nitems, isize)             sysm_calloc(nitems, isize)
+#define free(mem)                         sysm_free(mem)
 
 /** FILE ACCESS MANAGEMENT */
-#define getmntentry(item, mntentPtr)      tskm_getmntentry(item, mntentPtr)
-#define mknod(path, drv_cfgPtr)           tskm_mknod(path, drv_cfgPtr)
-#define mkdir(path)                       tskm_mkdir(path)
-#define opendir(path)                     tskm_opendir(path)
-#define closedir(dir)                     tskm_closedir(dir)
-#define readdir(dir)                      tskm_readdir(dir)
-#define remove(path)                      tskm_remove(path)
-#define rename(oldName, newName)          tskm_rename(oldName, newName)
-#define chmod(path, mode)                 tskm_chmod(path, mode)
-#define chown(path, owner, group)         tskm_chown(path, owner, group)
-#define stat(path, statPtr)               tskm_stat(path, statPtr)
-#define statfs(path, statfsPtr)           tskm_statfs(path, statfsPtr)
-#define fopen(path, mode)                 tskm_fopen(path, mode)
-#define fclose(file)                      tskm_fclose(file)
-#define fwrite(ptr, isize, nitems, file)  tskm_fwrite(ptr, isize, nitems, file)
-#define fread(ptr, isize, nitems, file)   tskm_fread(ptr, isize, nitems, file)
-#define fseek(file, offset, mode)         tskm_fseek(file, offset, mode)
-#define ftell(file)                       tskm_ftell(file)
-#define ioctl(file, rq, data)             tskm_ioctl(file, rq, data)
-#define fstat(file, statPtr)              tskm_fstat(file, stat)
+#define getmntentry(item, mntentPtr)      sysm_getmntentry(item, mntentPtr)
+#define mknod(path, drv_cfgPtr)           sysm_mknod(path, drv_cfgPtr)
+#define mkdir(path)                       sysm_mkdir(path)
+#define opendir(path)                     sysm_opendir(path)
+#define closedir(dir)                     sysm_closedir(dir)
+#define readdir(dir)                      sysm_readdir(dir)
+#define remove(path)                      sysm_remove(path)
+#define rename(oldName, newName)          sysm_rename(oldName, newName)
+#define chmod(path, mode)                 sysm_chmod(path, mode)
+#define chown(path, owner, group)         sysm_chown(path, owner, group)
+#define stat(path, statPtr)               sysm_stat(path, statPtr)
+#define statfs(path, statfsPtr)           sysm_statfs(path, statfsPtr)
+#define fopen(path, mode)                 sysm_fopen(path, mode)
+#define fclose(file)                      sysm_fclose(file)
+#define fwrite(ptr, isize, nitems, file)  sysm_fwrite(ptr, isize, nitems, file)
+#define fread(ptr, isize, nitems, file)   sysm_fread(ptr, isize, nitems, file)
+#define fseek(file, offset, mode)         sysm_fseek(file, offset, mode)
+#define ftell(file)                       sysm_ftell(file)
+#define ioctl(file, rq, data)             sysm_ioctl(file, rq, data)
+#define fstat(file, statPtr)              sysm_fstat(file, stat)
 
 /** ENVIRONMENT DEFINITIONS */
 #define get_used_static_memory()          (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE)
@@ -81,10 +81,10 @@ extern "C" {
 #define get_used_memory()                 (get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()))
 #define get_memory_size()                 CONFIG_RAM_SIZE
 #define get_uptime()                      get_uptime_counter()
-#define get_task_stat(ntask, statPtr)     tskm_get_ntask_stat(ntask, statPtr)
-#define get_number_of_monitored_tasks()   tskm_get_number_of_monitored_tasks()
-#define get_total_CPU_usage()             tskm_get_total_CPU_usage()
-#define clear_total_CPU_usage()           tskm_clear_total_CPU_usage()
+#define get_task_stat(ntask, statPtr)     sysm_get_ntask_stat(ntask, statPtr)
+#define get_number_of_monitored_tasks()   sysm_get_number_of_monitored_tasks()
+#define get_total_CPU_usage()             sysm_get_total_CPU_usage()
+#define clear_total_CPU_usage()           sysm_clear_total_CPU_usage()
 #define reboot()                          cpuctl_restart_system()
 #define get_OS_name()                     "dnx"
 #define get_kernel_name()                 "FreeRTOS"

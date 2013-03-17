@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "oswrap.h"
-#include "taskmoni.h"
+#include "sysmoni.h"
 #include "memman.h"
 
 /*==============================================================================
@@ -100,7 +100,7 @@ task_t *osw_new_task(void (*func)(void*), const char *name, u16_t stack_depth, v
                 exit_critical();
                 vTaskSetApplicationTaskTag(task, (void *)data);
 
-                if (tskm_start_task_monitoring(task) == STD_RET_OK) {
+                if (sysm_start_task_monitoring(task) == STD_RET_OK) {
                         vTaskResume(task);
                 } else {
                         vTaskDelete(task);
@@ -128,8 +128,8 @@ void osw_delete_task(task_t *taskHdl)
 {
         struct task_data *data;
 
-        if (tskm_is_task_exist(taskHdl)) {
-                tskm_stop_task_monitoring(taskHdl);
+        if (sysm_is_task_exist(taskHdl)) {
+                sysm_stop_task_monitoring(taskHdl);
 
                 if ((data = get_task_tag(taskHdl))) {
 

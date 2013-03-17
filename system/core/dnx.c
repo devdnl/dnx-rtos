@@ -71,7 +71,7 @@ void dnx_init(void)
                 for (;;);
         }
 
-        if (tskm_init() != STD_RET_OK) {
+        if (sysm_init() != STD_RET_OK) {
                 for (;;);
         }
 }

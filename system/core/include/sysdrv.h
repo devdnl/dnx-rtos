@@ -37,7 +37,7 @@ extern "C" {
 #include "memman.h"
 #include "oswrap.h"
 #include "vfs.h"
-#include "taskmoni.h"
+#include "sysmoni.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -58,15 +58,15 @@ extern "C" {
 #define kfree(mem)                        memman_free(mem)
 #endif
 
-#define enable_fast_memory_monitoring()   tskm_enable_fast_memory_monitoring(get_task_handle())
+#define enable_fast_memory_monitoring()   sysm_enable_fast_memory_monitoring(get_task_handle())
 
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
 #define umount(path)                      vfs_umount(path)
 #define getmntentry(item, mntentPtr)      vfs_getmntentry(item, mntentPtr)
 #define mknod(path, drv_cfgPtr)           vfs_mknod(path, drv_cfgPtr)
 #define mkdir(path)                       vfs_mkdir(path)
-#define opendir(path)                     tskm_opendir(path)
-#define closedir(dir)                     tskm_closedir(dir)
+#define opendir(path)                     sysm_opendir(path)
+#define closedir(dir)                     sysm_closedir(dir)
 #define readdir(dir)                      vfs_readdir(dir)
 #define remove(path)                      vfs_remove(path)
 #define rename(oldName, newName)          vfs_rename(oldName, newName)
@@ -74,8 +74,8 @@ extern "C" {
 #define chown(path, owner, group)         vfs_chown(path, owner, group)
 #define stat(path, statPtr)               vfs_stat(path, statPtr)
 #define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
-#define fopen(path, mode)                 tskm_fopen(path, mode)
-#define fclose(file)                      tskm_fclose(file)
+#define fopen(path, mode)                 sysm_fopen(path, mode)
+#define fclose(file)                      sysm_fclose(file)
 #define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
 #define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
 #define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
