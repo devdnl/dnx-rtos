@@ -119,14 +119,19 @@ extern "C" {
 
 /**=== SYSTEM MONITOR CONFIGURATION ==========================================*/
 /**
- * Enable (1) or disable (0) memory usage monitoring
+ * Enable (1) or disable (0) task memory usage monitoring
  */
-#define CONFIG_MONITOR_MEMORY_USAGE                     (1)
+#define CONFIG_MONITOR_TASK_MEMORY_USAGE                (1)
 
 /**
  * Enable (1) or disable (0) kernel memory usage monitoring
  */
 #define CONFIG_MONITOR_KERNEL_MEMORY_USAGE              (1)
+
+/**
+ * Enable (1) or disable (0) system memory usage monitoring
+ */
+#define CONFIG_MONITOR_SYSTEM_MEMORY_USAGE              (1)
 
 /**
  * Enable (1) or disable (0) file usage monitoring

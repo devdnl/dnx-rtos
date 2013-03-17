@@ -42,7 +42,13 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* USER CFG: enable (1) or disable (0) task memory usage monitoring */
-#define SYSM_MONITOR_MEMORY_USAGE               CONFIG_MONITOR_MEMORY_USAGE
+#define SYSM_MONITOR_TASK_MEMORY_USAGE          CONFIG_MONITOR_TASK_MEMORY_USAGE
+
+/* USER CFG: enable (1) or disable (0) kernel memory usage monitoring */
+#define SYSM_MONITOR_KERNEL_MEMORY_USAGE        CONFIG_MONITOR_KERNEL_MEMORY_USAGE
+
+/* USER CFG: enable (1) or disable (0) system memory usage monitoring */
+#define SYSM_MONITOR_SYSTEM_MEMORY_USAGE        CONFIG_MONITOR_SYSTEM_MEMORY_USAGE
 
 /* USER CFG: enable (1) or disable (0) task opened file monitoring */
 #define SYSM_MONITOR_FILE_USAGE                 CONFIG_MONITOR_FILE_USAGE
@@ -50,12 +56,9 @@ extern "C" {
 /* USER CFG: enable (1) or disable (0) task CPU load monitoring */
 #define SYSM_MONITOR_CPU_LOAD                   CONFIG_MONITOR_CPU_LOAD
 
-/* USER CFG: enable (1) or disable (0) kernel memory usage monitoring */
-#define SYSM_MONITOR_KERNEL_MEMORY_USAGE        CONFIG_MONITOR_KERNEL_MEMORY_USAGE
-
 /* ---------------------------------------------------------------------------*/
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
-#if (SYSM_MONITOR_MEMORY_USAGE == 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE == 0)
 #define sysm_malloc_as(taskhdl, size)           memman_malloc(size, NULL)
 #define sysm_calloc_as(taskhdl, nmemb, msize)   memman_calloc(nmemb, msize, NULL)
 #define sysm_free_as(taskhdl, mem)              memman_free(mem)
@@ -70,6 +73,13 @@ extern "C" {
 #define sysm_kmalloc(size)                      memman_malloc(size, NULL)
 #define sysm_kcalloc(count, size)               memman_calloc(count, size, NULL)
 #define sysm_kfree(mem)                         memman_free(mem)
+#endif
+
+/* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
+#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE == 0)
+#define sysm_smalloc(size)                      memman_malloc(size, NULL)
+#define sysm_scalloc(count, size)               memman_calloc(count, size, NULL)
+#define sysm_sfree(mem)                         memman_free(mem)
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -106,7 +116,7 @@ extern "C" {
 #define sysm_fstat(file, statPtr)               vfs_fstat(file, stat)
 
 /* IF MONITOR MODULE IS NOT USED DISABLE INITIALIZATION */
-#if (  (SYSM_MONITOR_MEMORY_USAGE == 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE == 0) \
     && (SYSM_MONITOR_FILE_USAGE == 0  ) \
     && (SYSM_MONITOR_CPU_LOAD == 0    ) )
 #define sysm_init()
@@ -140,7 +150,7 @@ struct taskstat {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 extern stdret_t sysm_init(void);
@@ -160,7 +170,13 @@ extern void *sysm_kcalloc(size_t, size_t);
 extern void  sysm_kfree(void*);
 #endif
 
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+extern void *sysm_smalloc(size_t);
+extern void *sysm_scalloc(size_t, size_t);
+extern void  sysm_sfree(void*);
+#endif
+
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 extern stdret_t sysm_enable_fast_memory_monitoring(task_t*);
 extern void    *sysm_malloc_as(task_t*, u32_t);
 extern void    *sysm_malloc(u32_t);
@@ -179,7 +195,7 @@ extern stdret_t sysm_closedir(dir_t*);
 #endif
 
 #if (SYSM_MONITOR_CPU_LOAD > 0)
-extern void sysm_task_switched_in (void);
+extern void sysm_task_switched_in(void);
 extern void sysm_task_switched_out(void);
 #endif
 

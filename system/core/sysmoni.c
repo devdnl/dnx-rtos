@@ -63,11 +63,11 @@ extern "C" {
 ==============================================================================*/
 /* task information */
 struct task_monitor_data {
-    #if (SYSM_MONITOR_MEMORY_USAGE > 0) || (SYSM_MONITOR_FILE_USAGE > 0)
+    #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) || (SYSM_MONITOR_FILE_USAGE > 0)
         bool_t fast_monitoring;
     #endif
 
-    #if (SYSM_MONITOR_MEMORY_USAGE > 0)
+    #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
         u32_t used_memory;
 
         struct memBlock {
@@ -110,12 +110,19 @@ struct task_monitor_data {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 static list_t  *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
-static i32_t    sysm_kernel_memory_usage;
+#endif
+
+#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
+static i32_t sysm_kernel_memory_usage;
+#endif
+
+#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+static i32_t sysm_system_memory_usage;
 #endif
 
 /*==============================================================================
@@ -134,7 +141,7 @@ static i32_t    sysm_kernel_memory_usage;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 stdret_t sysm_init(void)
@@ -191,7 +198,7 @@ bool_t sysm_is_task_exist(task_t *taskhdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 stdret_t sysm_start_task_monitoring(task_t *taskhdl)
@@ -233,7 +240,7 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
@@ -253,7 +260,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
                 goto exit_error;
         }
 
-    #if (SYSM_MONITOR_MEMORY_USAGE > 0)
+    #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
         for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
                 if (task_monitor_data->mblock[block] == NULL) {
                         continue;
@@ -328,7 +335,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
  * @return CPU total time
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 u32_t sysm_get_total_CPU_usage(void)
@@ -342,7 +349,7 @@ u32_t sysm_get_total_CPU_usage(void)
  * @brief Function clears the CPU total time
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 void sysm_clear_total_CPU_usage(void)
@@ -362,7 +369,7 @@ void sysm_clear_total_CPU_usage(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
@@ -415,7 +422,7 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 stdret_t sysm_get_ntask_stat(i32_t item, struct taskstat *stat)
@@ -448,7 +455,7 @@ stdret_t sysm_get_ntask_stat(i32_t item, struct taskstat *stat)
  * @return number of monitor tasks
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_MEMORY_USAGE > 0) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 int sysm_get_number_of_monitored_tasks(void)
@@ -473,7 +480,7 @@ int sysm_get_number_of_monitored_tasks(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 stdret_t sysm_enable_fast_memory_monitoring(task_t *taskhdl)
 {
         stdret_t status = STD_RET_ERROR;
@@ -505,12 +512,8 @@ stdret_t sysm_enable_fast_memory_monitoring(task_t *taskhdl)
 void *sysm_kmalloc(size_t size)
 {
       size_t allocated;
-      void *p;
-
-      p = memman_malloc(size, &allocated);
-
+      void *p = memman_malloc(size, &allocated);
       sysm_kernel_memory_usage += allocated;
-
       return p;
 }
 #endif
@@ -529,12 +532,8 @@ void *sysm_kmalloc(size_t size)
 void *sysm_kcalloc(size_t count, size_t size)
 {
         size_t allocated;
-        void *p;
-
-        p = memman_calloc(count, size, &allocated);
-
+        void *p = memman_calloc(count, size, &allocated);
         sysm_kernel_memory_usage += allocated;
-
         return p;
 }
 #endif
@@ -555,6 +554,59 @@ void sysm_kfree(void *mem)
 
 //==============================================================================
 /**
+ * @brief Function monitor memory usage of system
+ *
+ * @param  size         block size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+void *sysm_smalloc(size_t size)
+{
+      size_t allocated;
+      void *p = memman_malloc(size, &allocated);
+      sysm_system_memory_usage += allocated;
+      return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of system
+ *
+ * @param  count        count of items
+ * @param  size         item size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+void *sysm_scalloc(size_t count, size_t size)
+{
+        size_t allocated;
+        void *p = memman_calloc(count, size, &allocated);
+        sysm_system_memory_usage += allocated;
+        return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing for system
+ *
+ * @param *mem          block to free
+ */
+//==============================================================================
+#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
+void sysm_sfree(void *mem)
+{
+        sysm_system_memory_usage -= memman_free(mem);
+}
+#endif
+
+//==============================================================================
+/**
  * @brief Monitor memory allocation for specified task
  *
  * @param *taskhdl      task handle
@@ -563,7 +615,7 @@ void sysm_kfree(void *mem)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void *sysm_malloc_as(task_t *taskhdl, u32_t size)
 {
         void   *mem   = NULL;
@@ -648,7 +700,7 @@ void *sysm_malloc_as(task_t *taskhdl, u32_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void *sysm_malloc(u32_t size)
 {
         return sysm_malloc_as(get_task_handle(), size);
@@ -666,7 +718,7 @@ void *sysm_malloc(u32_t size)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void *sysm_calloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
 {
         void *ptr = sysm_malloc_as(taskhdl, nmemb * msize);
@@ -689,7 +741,7 @@ void *sysm_calloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void *sysm_calloc(u32_t nmemb, u32_t msize)
 {
         void *ptr = sysm_malloc_as(get_task_handle(), nmemb * msize);
@@ -710,7 +762,7 @@ void *sysm_calloc(u32_t nmemb, u32_t msize)
  * @param *mem          block to free
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void sysm_free_as(task_t *taskhdl, void *mem)
 {
         struct task_monitor_data *task_monitor_data;
@@ -794,7 +846,7 @@ void sysm_free_as(task_t *taskhdl, void *mem)
  * @param  size         freed block size
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void sysm_freemem_as(task_t *taskhdl, void *mem, u32_t size)
 {
         struct task_monitor_data *task_monitor_data;
@@ -824,7 +876,7 @@ void sysm_freemem_as(task_t *taskhdl, void *mem, u32_t size)
  * @param *mem          block to free
  */
 //==============================================================================
-#if (SYSM_MONITOR_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void sysm_free(void *mem)
 {
         sysm_free_as(get_task_handle(), mem);
