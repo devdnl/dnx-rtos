@@ -1457,6 +1457,8 @@ static stdret_t read_input_stream(struct tty_data *tty, char *chr)
 //==============================================================================
 static void move_editline_to_stream(struct tty_data *tty, file_t *stream)
 {
+        char *msg;
+
         tty->edit_line[tty->edit_line_length++] = '\n';
 
         uint line_len = tty->edit_line_length;
@@ -1474,7 +1476,12 @@ static void move_editline_to_stream(struct tty_data *tty, file_t *stream)
         tty->edit_line_length = 0;
         tty->cursor_position  = 0;
 
-        char *msg = "\r\n";
+        if (tty->new_msg_counter == 0) {
+                msg = "\r\n";
+        } else {
+                msg = "\r"VT100_ERASE_LINE_FROM_CUR;
+        }
+
         fwrite(msg, sizeof(char), strlen(msg), stream);
 }
 
