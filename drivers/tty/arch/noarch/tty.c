@@ -45,7 +45,6 @@ extern "C" {
 
 #define FILE                            "/dev/ttyS0"
 
-#define TTY(number)                     term->tty[number]
 #define BLOCK_TIME                      10000
 
 #define VT100_RESET_ATTRIBUTES          "\e[0m"
@@ -67,37 +66,42 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/* independent TTY device */
+struct tty_data {
+        char    *line[TTY_MAX_LINES];
+        u8_t    write_index;
+        u8_t    new_msg_counter;
+        flag_t  refresh_last_line;
+        mutex_t *secure_resources_mtx;
+        flag_t  echo_enabled;
+
+        /* FIFO for keyboard read */
+        struct input_stream {
+                u16_t level;
+                char  buffer[TTY_STREAM_SIZE];
+                u16_t txidx;
+                u16_t rxidx;
+        } input;
+
+        char edit_line[TTY_EDIT_LINE_LEN + 1];
+        uint edit_line_length;
+        uint cursor_position;
+
+        u8_t number;
+};
+
 /* memory structure */
-struct termHdl {
-        struct ttyEntry {
-                char    *line[TTY_MAX_LINES];   /* line buffer */
-                u8_t     wrIdx;                 /* write index */
-                u8_t     newMsgCnt;             /* new message counter */
-                flag_t   refLstLn;              /* request to refresh last line */
-                mutex_t *mtx;                   /* resources security */
-                flag_t   echoOn;                /* echo indicator */
-
-                struct inputstream {            /* FIFO for keyboard read */
-                        u16_t level;
-                        char  buffer[TTY_STREAM_SIZE];
-                        u16_t txidx;
-                        u16_t rxidx;
-                } input;
-
-                char editLine[TTY_EDIT_LINE_LEN + 1]; /* input line */
-                uint editLineLen;             /* edit line fill level */
-                uint cursorPosition;          /* cursor position in line */
-        } *tty[TTY_DEV_COUNT];
-
-        u8_t    currentTTY;     /* current terminal */
-        i8_t    changeToTTY;    /* terminal to change */
-        u8_t    col;            /* terminal column count */
-        u8_t    row;            /* terminal row count */
-        task_t *taskhdl;        /* TTY worker */
-        sem_t  *semcnt_stdout;  /* semaphore used to trigger daemon operation */
-        u8_t    captureKeyStep; /* decode Fn key step */
-        char    captureKeyTmp;  /* temporary value */
-        uint    taskDelay;      /* task delay depended by user activity */
+struct tty_ctrl {
+        struct tty_data *tty[TTY_DEV_COUNT];
+        u8_t    current_TTY;
+        i8_t    change_to_TTY;
+        u8_t    column_count;
+        u8_t    row_count;
+        task_t *tty_taskhdl;
+        sem_t  *stdout_semcnt;          /* semaphore used to trigger daemon operation */
+        u8_t    capture_key_step;       /* decode Fn key step */
+        char    capture_key_tmp;        /* temporary value */
+        uint    task_delay;             /* task delay depended by user activity */
 };
 
 /* key detector results */
@@ -118,39 +122,39 @@ enum keycap {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void        task_tty(void *arg);
-static void        switch_tty_if_requested(file_t *stream);
-static void        stdout_service(file_t *stream, u8_t dev);
-static void        move_cursor_to_beginning_of_editline(u8_t dev, file_t *stream);
-static void        move_cursor_to_end_of_editline(u8_t dev, file_t *stream);
-static void        remove_character_from_editline(u8_t dev, file_t *stream);
-static void        delete_character_from_editline(u8_t dev, file_t *stream);
-static void        add_charater_to_editline(u8_t dev, char chr, file_t *stream);
-static void        show_new_messages(u8_t dev, file_t *stream);
-static void        refresh_last_line(u8_t dev, file_t *stream);
-static void        stdin_service(file_t *stream, u8_t dev);
-static void        switch_tty_immediately(u8_t dev, file_t *stream);
-static void        clear_tty(u8_t dev);
-static uint        add_message(u8_t dev, char *msg, uint msgLen);
-static char       *create_buffer_for_message(u8_t dev, char *msg, uint msgLen);
-static u8_t        count_non_lf_ended_messages(u8_t dev);
-static void        strncpy_LF2CRLF(char *dst, char *src, uint n);
-static void        free_non_lf_ended_messages(u8_t dev, u8_t mgscount);
-static void        link_message(char *msg, u8_t dev);
-static void        inc_message_counter(u8_t dev);
+static void  task_tty(void *arg);
+static void  switch_tty_if_requested(file_t *stream);
+static void  stdout_service(struct tty_data *tty, file_t *stream);
+static void  move_cursor_to_beginning_of_editline(struct tty_data *tty, file_t *stream);
+static void  move_cursor_to_end_of_editline(struct tty_data *tty, file_t *stream);
+static void  remove_character_from_editline(struct tty_data *tty, file_t *stream);
+static void  delete_character_from_editline(struct tty_data *tty, file_t *stream);
+static void  add_charater_to_editline(struct tty_data *tty, char chr, file_t *stream);
+static void  show_new_messages(struct tty_data *tty, file_t *stream);
+static void  refresh_last_line(struct tty_data *tty, file_t *stream);
+static void  stdin_service(struct tty_data *tty, file_t *stream);
+static void  switch_tty_immediately(u8_t tty_number, file_t *stream);
+static void  clear_tty(struct tty_data *tty);
+static uint  add_message(struct tty_data *tty, char *msg, uint msg_len);
+static char *create_buffer_for_message(struct tty_data *tty, char *msg_src, uint msg_len);
+static u8_t  count_non_lf_ended_messages(struct tty_data *tty);
+static void  strncpy_LF2CRLF(char *dst, char *src, uint n);
+static void  free_non_lf_ended_messages(struct tty_data *tty, u8_t msg_count);
+static void  link_message(struct tty_data *tty, char *msg);
+static void  inc_message_counter(struct tty_data *tty);
 static enum keycap capture_special_keys(char character);
-static u8_t        get_message_index(u8_t dev, u8_t back);
-static void        refresh_tty(u8_t dev, file_t *file);
-static void        get_vt100_size(file_t *ttysfile);
-static void        write_input_stream(char chr, u8_t dev);
-static stdret_t    read_input_stream(char *chr, u8_t dev);
-static void        move_editline_to_stream(u8_t dev, file_t *stream);
+static u8_t  get_message_index(struct tty_data *tty, u8_t back);
+static void  refresh_tty(struct tty_data *tty, file_t *file);
+static void  get_vt100_size(file_t *ttysfile);
+static void  write_input_stream(struct tty_data *tty, char chr);
+static stdret_t read_input_stream(struct tty_data *tty, char *chr);
+static void  move_editline_to_stream(struct tty_data *tty, file_t *stream);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 /* memory used by driver */
-static struct termHdl *term;
+static struct tty_ctrl *tty_ctrl;
 
 /*==============================================================================
   Function definitions
@@ -172,38 +176,73 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 {
         (void)part;
 
+        struct tty_data *tty;
+
         if (dev >= TTY_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
 
-        if (term != NULL) {
-                return STD_RET_OK;
-        }
 
-        if ((term = kcalloc(1, sizeof(struct termHdl))) == NULL) {
-                return STD_RET_ERROR;
-        }
-
-        if ((term->semcnt_stdout = new_counting_semaphore(10, 0)) != NULL) {
-
-                term->taskhdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_DEPTH, NULL);
-                if (term->taskhdl) {
-                        term->col = 80;
-                        term->row = 24;
-
-                        term->changeToTTY = -1;
-
-                        return STD_RET_OK;
+        /* initialize control structure */
+        if (!tty_ctrl) {
+                if (!(tty_ctrl = kcalloc(1, sizeof(struct tty_ctrl)))) {
+                        goto ctrl_error;
                 }
+
+                if (!(tty_ctrl->stdout_semcnt = new_counting_semaphore(10, 0))) {
+                        goto ctrl_error;
+                }
+
+                if (!(tty_ctrl->tty_taskhdl = new_task(task_tty, TTYD_NAME, TTYD_STACK_DEPTH, NULL))) {
+                        goto ctrl_error;
+                }
+
+                tty_ctrl->column_count  = 80;
+                tty_ctrl->row_count     = 24;
+                tty_ctrl->change_to_TTY = -1;
         }
 
-        if (term->semcnt_stdout) {
-                delete_counting_semaphore(term->semcnt_stdout);
+
+        /* initialize driver data */
+        if (!(tty = kcalloc(1, sizeof(struct tty_data)))) {
+                goto drv_error;
         }
 
-        kfree(term);
-        term = NULL;
+        if (!(tty->secure_resources_mtx = new_recursive_mutex())) {
+                goto drv_error;
+        }
 
+        tty->echo_enabled  = SET;
+        tty_ctrl->tty[dev] = tty;
+        tty->number = dev;
+        *drvhdl     = tty;
+        return STD_RET_OK;
+
+
+        drv_error:
+        if (tty) {
+                if (tty->secure_resources_mtx) {
+                        delete_recursive_mutex(tty->secure_resources_mtx);
+                }
+
+                kfree(tty);
+        }
+        return STD_RET_ERROR;
+
+
+        ctrl_error:
+        if (tty_ctrl) {
+                if (tty_ctrl->stdout_semcnt) {
+                        delete_counting_semaphore(tty_ctrl->stdout_semcnt);
+                }
+
+                if (tty_ctrl->tty_taskhdl) {
+                        delete_task(tty_ctrl->tty_taskhdl);
+                }
+
+                kfree(tty_ctrl);
+                tty_ctrl = NULL;
+        }
         return STD_RET_ERROR;
 }
 
@@ -211,158 +250,115 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 /**
  * @brief Release TTY device
  *
- * @param dev     device number
- * @param part    device part
+ * @param[in] *drvhdl           driver's memory handler
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_Release(devx_t dev, fd_t part)
+stdret_t TTY_release(void *drvhdl)
 {
-        (void)part;
+        struct tty_data *tty = drvhdl;
 
-        if (!term || dev >= TTY_DEV_COUNT) {
+        if (!tty_ctrl || !tty) {
                 return STD_RET_ERROR;
         }
 
-        if (TTY(dev) == NULL) {
+        if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+                clear_tty(tty);
+                enter_critical();
+                unlock_recursive_mutex(tty->secure_resources_mtx);
+                delete_recursive_mutex(tty->secure_resources_mtx);
+                tty_ctrl->tty[tty->number] = NULL;
+                exit_critical();
+                kfree(tty);
                 return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
         }
-
-        if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
-                mutex_t *mtx = TTY(dev)->mtx;
-
-                /* free unused terminal */
-                for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
-                        if (TTY(dev)->line[i]) {
-                                kfree(TTY(dev)->line[i]);
-                        }
-                }
-
-                kfree(TTY(dev));
-                TTY(dev) = NULL;
-
-                unlock_recursive_mutex(mtx);
-                delete_recursive_mutex(mtx);
-
-                /* if all terminal are unused free terminal handler */
-                for (u8_t i = 0; i < TTY_DEV_COUNT; i++) {
-                        if (term->tty[i]) {
-                                return STD_RET_OK;
-                        }
-                }
-
-                delete_counting_semaphore(term->semcnt_stdout);
-                delete_task(term->taskhdl);
-                kfree(term);
-                term = NULL;
-
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Opens specified port and initialize default settings
  *
- * @param[in]  dev                        TTY number
- * @param[in]  part                       device part
+ * @param[in] *drvhdl           driver's memory handler
  *
- * @retval STD_RET_OK                     operation success
- * @retval STD_RET_ERROR                  operation error
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_Open(devx_t dev, fd_t part)
+stdret_t TTY_open(void *drvhdl)
 {
-      (void)part;
+        struct tty_data *tty = drvhdl;
 
-      if (dev >= TTY_DEV_COUNT || term == NULL) {
-              return STD_RET_ERROR;
-      }
-
-      if (TTY(dev) != NULL) {
-              return STD_RET_OK;
-      }
-
-      if ((TTY(dev) = kcalloc(1, sizeof(struct ttyEntry))) != NULL) {
-              if ((TTY(dev)->mtx = new_recursive_mutex()) != NULL) {
-                      TTY(dev)->echoOn = SET;
-                      return STD_RET_OK;
-              }
-
-              kfree(TTY(dev));
-              TTY(dev) = NULL;
-      }
-
-      return STD_RET_ERROR;
+        if (!tty_ctrl || !tty) {
+                return STD_RET_ERROR;
+        } else {
+                return STD_RET_OK;
+        }
 }
 
 //==============================================================================
 /**
  * @brief Function close opened port
  *
- * @param[in]  dev                        TTY number
- * @param[in]  part                       device part
+ * @param[in] *drvhdl           driver's memory handler
  *
- * @retval STD_RET_OK                     operation success
- * @retval STD_RET_ERROR                  operation error
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_Close(devx_t dev, fd_t part)
+stdret_t TTY_close(void *drvhdl)
 {
-        (void)part;
+        struct tty_data *tty = drvhdl;
 
-        if (dev < TTY_DEV_COUNT) {
+        if (!tty_ctrl || !tty) {
+                return STD_RET_ERROR;
+        } else {
                 return STD_RET_OK;
         }
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Write data to TTY
  *
- * @param[in]  dev                        TTY number
- * @param[in]  part                       device part
- * @param[in]  *src                       source buffer
- * @param[in]  size                       buffer size
- * @param[in]  nitems                     number of items
- * @param[in]  seek                       seek
+ * @param[in] *drvhdl           driver's memory handle
+ * @param[in] *src              source
+ * @param[in] size              size
+ * @param[in] seek              seek
  *
  * @retval number of written nitems
  */
 //==============================================================================
-size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
-                 size_t size, size_t nitems, size_t  seek)
+size_t TTY_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
 {
         (void)seek;
-        (void)part;
 
+        struct tty_data *tty = drvhdl;
         size_t n = 0;
 
-        if (!term && dev >= TTY_DEV_COUNT && !src && !size && !nitems) {
+        if (!tty_ctrl || !tty || !src || !size || !nitems) {
                 return n;
         }
 
         /* if current TTY is showing wait to show refreshed line */
-        while (TTY(dev)->refLstLn == SET && dev == term->currentTTY) {
+        while (  tty_ctrl->tty[tty_ctrl->current_TTY]->refresh_last_line
+              && tty_ctrl->current_TTY == tty->number) {
                 milisleep(10);
         }
 
         /* wait for secure access to data */
-        if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 /* check if screen is cleared */
                 if (strncmp(VT100_CLEAR_SCREEN, src, 4) == 0) {
-                        clear_tty(dev);
+                        clear_tty(tty);
                 }
 
-                n = add_message(dev, src, nitems);
+                n = add_message(tty, src, nitems);
 
-                unlock_recursive_mutex(TTY(dev)->mtx);
+                unlock_recursive_mutex(tty->secure_resources_mtx);
         }
 
         return n;
@@ -372,31 +368,28 @@ size_t TTY_Write(devx_t dev,  fd_t   part,   void   *src,
 /**
  * @brief Write data to TTY
  *
- * @param[in]  dev                        TTY number
- * @param[in]  part                       device part
- * @param[in]  *dst                       destination buffer
- * @param[in]  size                       item size
- * @param[in]  nitems                     number of items
- * @param[in]  seek                       seek
+ * @param[in]  *drvhdl          driver's memory handle
+ * @param[out] *dst             destination
+ * @param[in]  size             size
+ * @param[in]  seek             seek
  *
  * @retval number of read nitems
  */
 //==============================================================================
-size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
-                size_t size, size_t nitems, size_t  seek)
+size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
 {
         (void)seek;
-        (void)part;
 
+        struct tty_data *tty = drvhdl;
         size_t n = 0;
 
-        if (!term && dev >= TTY_DEV_COUNT && !dst && !size && !nitems) {
-                return 0;
+        if (!tty_ctrl || !tty || !dst || !size || !nitems) {
+                return n;
         }
 
-        if (lock_recursive_mutex(TTY(dev)->mtx, 0) == OS_OK) {
+        if (lock_recursive_mutex(tty->secure_resources_mtx, 0) == MUTEX_LOCKED) {
                 while (nitems > 0) {
-                        if (read_input_stream(dst, dev) != STD_RET_OK) {
+                        if (read_input_stream(tty, dst) != STD_RET_OK) {
                                 break;
                         }
 
@@ -407,7 +400,7 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
 
                 n /= size;
 
-                unlock_recursive_mutex(TTY(dev)->mtx);
+                unlock_recursive_mutex(tty->secure_resources_mtx);
         }
 
         return n;
@@ -417,30 +410,29 @@ size_t TTY_Read(devx_t dev,  fd_t   part,   void   *dst,
 /**
  * @brief Specific settings of TTY
  *
- * @param[in    ] dev           TTY device
- * @param[in    ]  part         device part
- * @param[in    ] ioRQ          input/output request
- * @param[in,out] *data         input/output data
+ * @param[in]     *drvhdl       driver's memory handle
+ * @param[in]     ioRq          IO reqest
+ * @param[in,out] data          data pointer
  *
- * @retval STD_RET_OK           operation success
- * @retval STD_RET_ERROR        operation error
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
+stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
 {
-        (void)part;
+        struct tty_data *tty = drvhdl;
 
-        if (!term || dev >= TTY_DEV_COUNT) {
+        if (!tty_ctrl || !tty) {
                 return STD_RET_ERROR;
         }
 
-        switch (ioRQ) {
+        switch (iorq) {
         /* return current TTY */
         case TTY_IORQ_GET_CURRENT_TTY:
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
-                *((u8_t*)data) = term->currentTTY;
+                *((u8_t*)data) = tty_ctrl->current_TTY;
                 break;
 
         /* set active terminal */
@@ -448,12 +440,12 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
-                term->changeToTTY = *((u8_t*)data);
+                tty_ctrl->change_to_TTY = *((u8_t*)data);
                 break;
 
         /* clear terminal */
         case TTY_IORQ_CLEAR_TTY:
-                clear_tty(dev);
+                clear_tty(tty);
                 break;
 
         /* terminal size - number of columns */
@@ -461,7 +453,7 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
-                *((u8_t*)data) = term->col;
+                *((u8_t*)data) = tty_ctrl->column_count;
                 break;
 
         /* terminal size - number of rows */
@@ -469,18 +461,18 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                 if (data == NULL) {
                         return STD_RET_ERROR;
                 }
-                *((u8_t*)data) = term->row;
+                *((u8_t*)data) = tty_ctrl->row_count;
                 break;
 
         /* clear screen */
         case TTY_IORQ_CLEAR_SCR:
-                term->changeToTTY = term->currentTTY;
-                clear_tty(dev);
+                tty_ctrl->change_to_TTY = tty_ctrl->current_TTY;
+                clear_tty(tty);
                 break;
 
         /* clear last line */
         case TTY_IORQ_CLEAR_LAST_LINE:
-                if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+                if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                         char *msg = kmalloc(2);
 
                         if (msg) {
@@ -488,33 +480,33 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
                                 msg[1] = '\0';
 
                                 /* move message pointer back */
-                                TTY(dev)->wrIdx--;
+                                tty->write_index--;
 
-                                if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
-                                        TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
+                                if (tty->write_index >= TTY_MAX_LINES) {
+                                        tty->write_index = TTY_MAX_LINES - 1;
                                 }
 
                                 /* if no message to refresh setup refresh only one */
-                                if (TTY(dev)->newMsgCnt == 0) {
-                                        TTY(dev)->refLstLn = SET;
+                                if (tty->new_msg_counter == 0) {
+                                        tty->refresh_last_line = SET;
                                 }
 
-                                add_message(dev, msg, FALSE);
+                                add_message(tty, msg, FALSE);
                         }
 
-                        unlock_recursive_mutex(TTY(dev)->mtx);
+                        unlock_recursive_mutex(tty->secure_resources_mtx);
                 }
 
                 break;
 
         /* turn on terminal echo */
         case TTY_IORQ_ECHO_ON:
-                TTY(dev)->echoOn = SET;
+                tty->echo_enabled = SET;
                 break;
 
         /* turn off terminal echo */
         case TTY_IORQ_ECHO_OFF:
-                TTY(dev)->echoOn = RESET;
+                tty->echo_enabled = RESET;
                 break;
 
         default:
@@ -532,39 +524,36 @@ stdret_t TTY_IOCtl(devx_t dev, fd_t part, iorq_t ioRQ, void *data)
 static void task_tty(void *arg)
 {
         (void) arg;
+        char   *msg;
+        file_t *io_file;
 
         set_priority(TTYD_PRIORITY);
 
-        char   *msg;
-        file_t *ttys;
-
         /* try open selected file */
-        while ((ttys = fopen(FILE, "r+")) == NULL) {
+        while ((io_file = fopen(FILE, "r+")) == NULL) {
                 milisleep(250);
         }
 
         msg = VT100_RESET_ATTRIBUTES VT100_CLEAR_SCREEN VT100_DISABLE_LINE_WRAP
               VT100_CURSOR_HOME;
 
-        fwrite(msg, sizeof(char), strlen(msg), ttys);
+        fwrite(msg, sizeof(char), strlen(msg), io_file);
 
-        get_vt100_size(ttys);
+        get_vt100_size(io_file);
 
-        term->taskDelay = 10;
+        tty_ctrl->task_delay = 10;
 
         for (;;) {
-                if (TTY(term->currentTTY) == NULL) {
+                if (tty_ctrl->tty[tty_ctrl->current_TTY] == NULL) {
                         milisleep(100);
                         continue;
                 }
 
-                stdout_service(ttys, term->currentTTY);
+                stdout_service(tty_ctrl->tty[tty_ctrl->current_TTY], io_file);
+                stdin_service(tty_ctrl->tty[tty_ctrl->current_TTY], io_file);
+                switch_tty_if_requested(io_file);
 
-                stdin_service(ttys, term->currentTTY);
-
-                switch_tty_if_requested(ttys);
-
-                milisleep(term->taskDelay);
+                milisleep(tty_ctrl->task_delay);
         }
 
         /* this should never happen */
@@ -575,21 +564,21 @@ static void task_tty(void *arg)
 /**
  * @brief Function provide STDOUT service
  *
+ * @param *tty          terminal data
  * @param *stream       file
- * @param  dev          terminal number
  */
 //==============================================================================
-static void stdout_service(file_t *stream, u8_t dev)
+static void stdout_service(struct tty_data *tty, file_t *stream)
 {
-        if (take_counting_semaphore(term->semcnt_stdout, 0) == OS_OK) {
-                if (TTY(dev)->newMsgCnt > 0) {
-                        show_new_messages(dev, stream);
+        if (take_counting_semaphore(tty_ctrl->stdout_semcnt, 0) == OS_OK) {
+                if (tty->new_msg_counter > 0) {
+                        show_new_messages(tty, stream);
 
-                        if (term->taskDelay > 40){
-                                term->taskDelay = 40;
+                        if (tty_ctrl->task_delay > 40){
+                                tty_ctrl->task_delay = 40;
                         }
-                } else if (TTY(dev)->refLstLn == SET) {
-                        refresh_last_line(dev, stream);
+                } else if (tty->refresh_last_line == SET) {
+                        refresh_last_line(tty, stream);
                 }
         }
 }
@@ -598,24 +587,24 @@ static void stdout_service(file_t *stream, u8_t dev)
 /**
  * @brief Function provide STDIN service
  *
+ * @param *tty          terminal data
  * @param *stream       file
- * @param  dev          terminal number
  */
 //==============================================================================
-static void stdin_service(file_t *stream, u8_t dev)
+static void stdin_service(struct tty_data *tty, file_t *stream)
 {
         char  chr;
         char *msg;
         enum keycap keydec;
 
         if (ioctl(stream, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK) {
-                if (term->taskDelay < 200) {
-                        term->taskDelay += 10;
+                if (tty_ctrl->task_delay < 200) {
+                        tty_ctrl->task_delay += 10;
                 }
                 return;
         }
 
-        term->taskDelay = 10;
+        tty_ctrl->task_delay = 10;
 
         switch ((keydec = capture_special_keys(chr))) {
         case F1_KEY:
@@ -629,45 +618,45 @@ static void stdin_service(file_t *stream, u8_t dev)
                 switch (chr) {
                 case '\r':
                 case '\n':
-                        move_editline_to_stream(dev, stream);
+                        move_editline_to_stream(tty, stream);
                         break;
 
                 case '\b':
-                        remove_character_from_editline(dev, stream);
+                        remove_character_from_editline(tty, stream);
                         break;
 
                 default:
-                        add_charater_to_editline(dev, chr, stream);
+                        add_charater_to_editline(tty, chr, stream);
                         break;
                 }
                 break;
 
         case ARROW_LEFT_KEY:
-                if (TTY(dev)->cursorPosition > 0) {
+                if (tty->cursor_position > 0) {
                         chr = '\b';
                         ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
-                        TTY(dev)->cursorPosition--;
+                        tty->cursor_position--;
                 }
                 break;
 
         case ARROW_RIGHT_KEY:
-                if (TTY(dev)->cursorPosition < TTY(dev)->editLineLen) {
+                if (tty->cursor_position < tty->edit_line_length) {
                         msg = VT100_SHIFT_CURSOR_RIGHT(1);
                         fwrite(msg, sizeof(char), strlen(msg), stream);
-                        TTY(dev)->cursorPosition++;
+                        tty->cursor_position++;
                 }
                 break;
 
         case HOME_KEY:
-                move_cursor_to_beginning_of_editline(dev, stream);
+                move_cursor_to_beginning_of_editline(tty, stream);
                 break;
 
         case END_KEY:
-                move_cursor_to_end_of_editline(dev, stream);
+                move_cursor_to_end_of_editline(tty, stream);
                 break;
 
         case DEL_KEY:
-                delete_character_from_editline(dev, stream);
+                delete_character_from_editline(tty, stream);
                 break;
 
         default:
@@ -679,19 +668,19 @@ static void stdin_service(file_t *stream, u8_t dev)
 /**
  * @brief Function move the cursor to the beginning of edit line
  *
- * @param  dev                  number of terminal
+ * @param *tty                  terminal data
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void move_cursor_to_beginning_of_editline(u8_t dev, file_t *stream)
+static void move_cursor_to_beginning_of_editline(struct tty_data *tty, file_t *stream)
 {
         char *msg = VT100_CURSOR_OFF;
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
-        while (TTY(dev)->cursorPosition > 0) {
+        while (tty->cursor_position > 0) {
                 char chr = '\b';
                 ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
-                TTY(dev)->cursorPosition--;
+                tty->cursor_position--;
         }
 
         msg = VT100_CURSOR_ON;
@@ -701,17 +690,20 @@ static void move_cursor_to_beginning_of_editline(u8_t dev, file_t *stream)
 //==============================================================================
 /**
  * @brief Function move the cursor to the end of edit line
+ *
+ * @param *tty                  terminal data
+ * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void move_cursor_to_end_of_editline(u8_t dev, file_t *stream)
+static void move_cursor_to_end_of_editline(struct tty_data *tty, file_t *stream)
 {
         char *msg = VT100_CURSOR_OFF;
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
-        while (TTY(dev)->cursorPosition < TTY(dev)->editLineLen) {
+        while (tty->cursor_position < tty->edit_line_length) {
                 char *msg = VT100_SHIFT_CURSOR_RIGHT(1);
                 fwrite(msg, sizeof(char), strlen(msg), stream);
-                TTY(dev)->cursorPosition++;
+                tty->cursor_position++;
         }
 
         msg = VT100_CURSOR_ON;
@@ -722,30 +714,29 @@ static void move_cursor_to_end_of_editline(u8_t dev, file_t *stream)
 /**
  * @brief Function remove character at cursor position from edit line
  *
- * @param  dev                  number of terminal
+ * @param *tty                  terminal data
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void remove_character_from_editline(u8_t dev, file_t *stream)
+static void remove_character_from_editline(struct tty_data *tty, file_t *stream)
 {
-        if (TTY(dev)->cursorPosition == 0 || TTY(dev)->editLineLen == 0) {
+        if (tty->cursor_position == 0 || tty->edit_line_length == 0) {
                 return;
         }
 
-        TTY(dev)->cursorPosition--;
+        tty->cursor_position--;
 
-        for (u8_t i = TTY(dev)->cursorPosition; i < TTY(dev)->editLineLen; i++) {
-                TTY(dev)->editLine[i] = TTY(dev)->editLine[i + 1];
+        for (uint i = tty->cursor_position; i < tty->edit_line_length; i++) {
+                tty->edit_line[i] = tty->edit_line[i + 1];
         }
 
-        TTY(dev)->editLineLen--;
+        tty->edit_line_length--;
 
         char *msg = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
-        msg = &TTY(dev)->editLine[TTY(dev)->cursorPosition];
-        fwrite(msg, sizeof(char),
-               TTY(dev)->editLineLen - TTY(dev)->cursorPosition, stream);
+        msg = &tty->edit_line[tty->cursor_position];
+        fwrite(msg, sizeof(char), tty->edit_line_length - tty->cursor_position, stream);
 
         msg = VT100_RESTORE_CURSOR_POSITION;
         fwrite(msg, sizeof(char), strlen(msg), stream);
@@ -755,32 +746,31 @@ static void remove_character_from_editline(u8_t dev, file_t *stream)
 /**
  * @brief Function delete right character from edit line
  *
- * @param  dev                  number of terminal
+ * @param *tty                  terminal data
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void delete_character_from_editline(u8_t dev, file_t *stream)
+static void delete_character_from_editline(struct tty_data *tty, file_t *stream)
 {
-        if (TTY(dev)->editLineLen == 0) {
+        if (tty->edit_line_length == 0) {
                 return;
         }
 
-        if (TTY(dev)->cursorPosition == TTY(dev)->editLineLen) {
+        if (tty->cursor_position == tty->edit_line_length) {
                 return;
         }
 
-        for (u8_t i = TTY(dev)->cursorPosition; i <= TTY(dev)->editLineLen; i++) {
-                TTY(dev)->editLine[i] = TTY(dev)->editLine[i + 1];
+        for (uint i = tty->cursor_position; i <= tty->edit_line_length; i++) {
+                tty->edit_line[i] = tty->edit_line[i + 1];
         }
 
-        TTY(dev)->editLineLen--;
+        tty->edit_line_length--;
 
         char *msg = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
-        msg = &TTY(dev)->editLine[TTY(dev)->cursorPosition];
-        fwrite(msg, sizeof(char),
-               TTY(dev)->editLineLen - TTY(dev)->cursorPosition, stream);
+        msg = &tty->edit_line[tty->cursor_position];
+        fwrite(msg, sizeof(char), tty->edit_line_length - tty->cursor_position, stream);
 
         msg = VT100_RESTORE_CURSOR_POSITION;
         fwrite(msg, sizeof(char), strlen(msg), stream);
@@ -789,38 +779,41 @@ static void delete_character_from_editline(u8_t dev, file_t *stream)
 //==============================================================================
 /**
  * @brief Function add character at cursor position in edit line
+ *
+ * @param *tty                  terminal data
+ * @param chr                   character added to edit line
+ * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void add_charater_to_editline(u8_t dev, char chr, file_t *stream)
+static void add_charater_to_editline(struct tty_data *tty, char chr, file_t *stream)
 {
         char *msg;
 
-        if (TTY(dev)->editLineLen >= TTY_EDIT_LINE_LEN - 1) {
+        if (tty->edit_line_length >= TTY_EDIT_LINE_LEN - 1) {
                 return;
         }
 
-        if (TTY(dev)->cursorPosition < TTY(dev)->editLineLen) {
-                for (u8_t i = TTY(dev)->editLineLen; i > TTY(dev)->cursorPosition; i--) {
-                        TTY(dev)->editLine[i] = TTY(dev)->editLine[i - 1];
+        if (tty->cursor_position < tty->edit_line_length) {
+                for (uint i = tty->edit_line_length; i > tty->cursor_position; i--) {
+                        tty->edit_line[i] = tty->edit_line[i - 1];
                 }
 
-                TTY(dev)->editLine[TTY(dev)->cursorPosition++] = chr;
-                TTY(dev)->editLineLen++;
+                tty->edit_line[tty->cursor_position++] = chr;
+                tty->edit_line_length++;
 
                 msg = VT100_SAVE_CURSOR_POSITION;
                 fwrite(msg, sizeof(char), strlen(msg), stream);
 
-                msg = &TTY(dev)->editLine[TTY(dev)->cursorPosition - 1];
-                fwrite(msg, sizeof(char),
-                       TTY(dev)->editLineLen - (TTY(dev)->cursorPosition - 1), stream);
+                msg = &tty->edit_line[tty->cursor_position - 1];
+                fwrite(msg, sizeof(char), tty->edit_line_length - (tty->cursor_position - 1), stream);
 
                 msg = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
                 fwrite(msg, sizeof(char), strlen(msg), stream);
         } else {
-                TTY(dev)->editLine[TTY(dev)->cursorPosition++] = chr;
-                TTY(dev)->editLineLen++;
+                tty->edit_line[tty->cursor_position++] = chr;
+                tty->edit_line_length++;
 
-                if (TTY(dev)->echoOn == SET) {
+                if (tty->echo_enabled == SET) {
                         ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
                 }
         }
@@ -835,10 +828,10 @@ static void add_charater_to_editline(u8_t dev, char chr, file_t *stream)
 //==============================================================================
 static void switch_tty_if_requested(file_t *stream)
 {
-        if (term->changeToTTY != -1) {
-                term->currentTTY  = term->changeToTTY;
-                term->changeToTTY = -1;
-                refresh_tty(term->currentTTY, stream);
+        if (tty_ctrl->change_to_TTY != -1) {
+                tty_ctrl->current_TTY   = tty_ctrl->change_to_TTY;
+                tty_ctrl->change_to_TTY = -1;
+                refresh_tty(tty_ctrl->tty[tty_ctrl->current_TTY], stream);
         }
 }
 
@@ -850,17 +843,17 @@ static void switch_tty_if_requested(file_t *stream)
  * @param *stream       required stream to refresh changed terminal
  */
 //==============================================================================
-static void switch_tty_immediately(u8_t dev, file_t *stream)
+static void switch_tty_immediately(u8_t tty_number, file_t *stream)
 {
-        if (dev != term->currentTTY) {
-                term->currentTTY = dev;
+        if (tty_number != tty_ctrl->current_TTY) {
+                tty_ctrl->current_TTY = tty_number;
 
-                if (TTY(term->currentTTY) == NULL) {
-                        TTY_Open(term->currentTTY, TTY_PART_NONE);
-                }
+//                if (tty_ctrl->tty[tty_ctrl->current_TTY] == NULL) {
+//                        TTY_Open(tty_ctrl->current_TTY, TTY_PART_NONE);
+//                }
 
-                if (TTY(term->currentTTY)) {
-                        refresh_tty(term->currentTTY, stream);
+                if (tty_ctrl->tty[tty_ctrl->current_TTY]) {
+                        refresh_tty(tty_ctrl->tty[tty_ctrl->current_TTY], stream);
                 }
         }
 }
@@ -869,45 +862,44 @@ static void switch_tty_immediately(u8_t dev, file_t *stream)
 /**
  * @brief Function show new messages
  *
- * @param  dev          number of terminal
+ * @param *tty          terminal data
  * @param *stream       required stream to refresh new messages
  */
 //==============================================================================
-static void show_new_messages(u8_t dev, file_t *stream)
+static void show_new_messages(struct tty_data *tty, file_t *stream)
 {
-        while (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+        while (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) != MUTEX_LOCKED);
 
-        while (TTY(dev)->newMsgCnt) {
-                if (TTY(dev)->newMsgCnt > term->row) {
-                        TTY(dev)->newMsgCnt = term->row;
+        while (tty->new_msg_counter) {
+                if (tty->new_msg_counter > tty_ctrl->row_count) {
+                        tty->new_msg_counter = tty_ctrl->row_count;
                 }
 
-                char *msg = TTY(dev)->line[get_message_index(term->currentTTY,
-                                                             TTY(dev)->newMsgCnt)];
+                char *msg = tty->line[get_message_index(tty, tty->new_msg_counter)];
 
-                TTY(dev)->newMsgCnt--;
+                tty->new_msg_counter--;
 
                 if (msg) {
                         fwrite(msg, sizeof(char), strlen(msg), stream);
                 }
         }
 
-        TTY(dev)->refLstLn = RESET;
+        tty->refresh_last_line = RESET;
 
-        unlock_recursive_mutex(TTY(dev)->mtx);
+        unlock_recursive_mutex(tty->secure_resources_mtx);
 }
 
 //==============================================================================
 /**
  * @brief Function refresh last line
  *
- * @param  dev          number of terminal
+ * @param *tty          terminal data
  * @param *stream       required stream to refresh new messages
  */
 //==============================================================================
-static void refresh_last_line(u8_t dev, file_t *stream)
+static void refresh_last_line(struct tty_data *tty, file_t *stream)
 {
-        while (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
+        while (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) != MUTEX_LOCKED);
 
         char *msg = VT100_CURSOR_OFF
                     VT100_CARRIAGE_RETURN
@@ -917,42 +909,42 @@ static void refresh_last_line(u8_t dev, file_t *stream)
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
         /* refresh line */
-        msg = TTY(dev)->line[get_message_index(term->currentTTY, 1)];
+        msg = tty->line[get_message_index(tty, 1)];
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
         /* cursor on */
         msg = VT100_CURSOR_ON;
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
-        TTY(dev)->refLstLn = RESET;
+        tty->refresh_last_line = RESET;
 
-        unlock_recursive_mutex(TTY(dev)->mtx);
+        unlock_recursive_mutex(tty->secure_resources_mtx);
 }
 
 //==============================================================================
 /**
  * @brief Clear all messages from terminal and free memory
  *
- * @param dev        terminal number
+ * @param *tty          terminal data
  */
 //==============================================================================
-static void clear_tty(u8_t dev)
+static void clear_tty(struct tty_data *tty)
 {
-        if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
-                for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
-                        if (TTY(dev)->line[i]) {
-                                kfree(TTY(dev)->line[i]);
-                                TTY(dev)->line[i] = NULL;
+        if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+                for (uint i = 0; i < TTY_MAX_LINES; i++) {
+                        if (tty->line[i]) {
+                                kfree(tty->line[i]);
+                                tty->line[i] = NULL;
                         }
                 }
 
-                TTY(dev)->newMsgCnt = 0;
-                TTY(dev)->wrIdx     = 0;
-                TTY(dev)->refLstLn  = RESET;
+                tty->new_msg_counter   = 0;
+                tty->write_index       = 0;
+                tty->refresh_last_line = RESET;
 
-                give_counting_semaphore(term->semcnt_stdout);
+                give_counting_semaphore(tty_ctrl->stdout_semcnt);
 
-                unlock_recursive_mutex(TTY(dev)->mtx);
+                unlock_recursive_mutex(tty->secure_resources_mtx);
         }
 }
 
@@ -960,34 +952,34 @@ static void clear_tty(u8_t dev)
 /**
  * @brief Add new message or modify existing
  *
- * @param  dev          number of terminal
+ * @param *tty          terminal address
  * @param *msg          message
  * @param  msgLen       message length
  *
  * @return msgLen if message created, otherwise 0
  */
 //==============================================================================
-static uint add_message(u8_t dev, char *msg, uint msgLen)
+static uint add_message(struct tty_data *tty, char *msg, uint msg_len)
 {
-        u8_t  mgcnt;
-        char *newMsg;
+        uint  msg_cnt;
+        char *new_msg;
 
-        if (!msgLen || !msg) {
+        if (!msg_len || !msg) {
                 return 0;
         }
 
-        mgcnt = count_non_lf_ended_messages(dev);
+        msg_cnt = count_non_lf_ended_messages(tty);
 
-        free_non_lf_ended_messages(dev, mgcnt);
+        free_non_lf_ended_messages(tty, msg_cnt);
 
-        newMsg = create_buffer_for_message(dev, msg, msgLen);
+        new_msg = create_buffer_for_message(tty, msg, msg_len);
 
-        link_message(newMsg, dev);
+        link_message(tty, new_msg);
 
-        give_counting_semaphore(term->semcnt_stdout);
+        give_counting_semaphore(tty_ctrl->stdout_semcnt);
 
-        if (newMsg) {
-                return msgLen;
+        if (new_msg) {
+                return msg_len;
         } else {
                 return 0;
         }
@@ -996,54 +988,54 @@ static uint add_message(u8_t dev, char *msg, uint msgLen)
 //==============================================================================
 /**
  * @brief Function create new buffer for new message
- * Function create new buffer for new message if lates message is LF ended,
+ * Function create new buffer for new message if latest message is LF ended,
  * otherwise function merge latest message with new message. Function returns
  * pointer to new buffer.
  *
- * @param [in]  dev             number of terminal
- * @param [in] *msgSrc          message source pointer
- * @param [in]  msgLen          message length
+ * @param [in] *tty             terminal address
+ * @param [in] *msg_src         message source pointer
+ * @param [in]  msg_len         message length
  *
  * @return pointer to new message buffer
  */
 //==============================================================================
-static char *create_buffer_for_message(u8_t dev, char *msgSrc, uint msgLen)
+static char *create_buffer_for_message(struct tty_data *tty, char *msg_src, uint msg_len)
 {
         char   *msg;
-        char   *lstMsg     = TTY(dev)->line[get_message_index(dev, 1)];
-        size_t  lstMsgSize = strlen(lstMsg);
-        uint    LF_count   = 0;
+        char   *lst_msg     = tty->line[get_message_index(tty, 1)];
+        size_t  lst_msg_len = strlen(lst_msg);
+        uint    LF_count    = 0;
 
         /* calculate how many '\n' exist in string */
-        for (uint i = 0; i < msgLen; i++) {
-                if (msgSrc[i] == '\n') {
+        for (uint i = 0; i < msg_len; i++) {
+                if (msg_src[i] == '\n') {
                         LF_count++;
                 }
         }
 
-        if (lstMsg && (*(lstMsg + lstMsgSize - 1) != '\n')) {
-                lstMsgSize += 1;
+        if (lst_msg && (*(lst_msg + lst_msg_len - 1) != '\n')) {
+                lst_msg_len += 1;
 
-                msg = kmalloc(lstMsgSize + msgLen + (2 * LF_count));
+                msg = kmalloc(lst_msg_len + msg_len + (2 * LF_count));
                 if (msg) {
-                        TTY(dev)->wrIdx--;
-                        if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
-                                TTY(dev)->wrIdx = TTY_MAX_LINES - 1;
+                        tty->write_index--;
+                        if (tty->write_index >= TTY_MAX_LINES) {
+                                tty->write_index = TTY_MAX_LINES - 1;
                         }
 
                         /* if no message to refresh setup refresh only one */
-                        if (TTY(dev)->newMsgCnt == 0) {
-                                TTY(dev)->refLstLn = SET;
+                        if (tty->new_msg_counter == 0) {
+                                tty->refresh_last_line = SET;
                         }
 
-                        strcpy(msg, lstMsg);
-                        strncpy_LF2CRLF(msg + strlen(msg), msgSrc, msgLen + LF_count);
+                        strcpy(msg, lst_msg);
+                        strncpy_LF2CRLF(msg + strlen(msg), msg_src, msg_len + LF_count);
                 }
         } else {
-                msg = kmalloc(msgLen + (2 * LF_count));
+                msg = kmalloc(msg_len + (2 * LF_count));
                 if (msg) {
-                        strncpy_LF2CRLF(msg, msgSrc, msgLen + (2 * LF_count));
-                        inc_message_counter(dev);
+                        strncpy_LF2CRLF(msg, msg_src, msg_len + (2 * LF_count));
+                        inc_message_counter(tty);
                 }
         }
 
@@ -1085,34 +1077,34 @@ static void strncpy_LF2CRLF(char *dst, char *src, uint n)
  * @brief Function find and count number of non-LF ended lines
  * Function count the number of non-LF ended messages from current write index.
  *
- * @param  dev          number of terminal
+ * @param *tty          terminal address
  */
 //==============================================================================
-static u8_t count_non_lf_ended_messages(u8_t dev)
+static u8_t count_non_lf_ended_messages(struct tty_data *tty)
 {
-        u8_t wridx = TTY(dev)->wrIdx;
-        u8_t mgcnt = 1;
+        u8_t write_index = tty->write_index;
+        u8_t msg_cnt = 1;
 
         /* find all messages which are not ended by LF (this is common line) */
-        for (u8_t i = 0; i < TTY_MAX_LINES; i++) {
-                char *lastmsg = TTY(dev)->line[wridx++];
+        for (uint i = 0; i < TTY_MAX_LINES; i++) {
+                char *last_msg = tty->line[write_index++];
 
-                if (lastmsg == NULL) {
+                if (last_msg == NULL) {
                         break;
                 }
 
-                if (wridx >= TTY_MAX_LINES) {
-                        wridx = 0;
+                if (write_index >= TTY_MAX_LINES) {
+                        write_index = 0;
                 }
 
-                if (*(lastmsg + strlen(lastmsg) - 1) != '\n') {
-                        mgcnt++;
+                if (*(last_msg + strlen(last_msg) - 1) != '\n') {
+                        msg_cnt++;
                 } else {
                         break;
                 }
         }
 
-        return mgcnt;
+        return msg_cnt;
 }
 
 //==============================================================================
@@ -1121,24 +1113,24 @@ static u8_t count_non_lf_ended_messages(u8_t dev)
  * Function does not change tty's wrIdx. Function free all non-LF ended messages
  * from current write index -- function clear the latest messages.
  *
- * @param  dev          number of terminal
- * @param  msgcnt       message count to free
+ * @param  *tty         terminal address
+ * @param  msg_count    message count to free
  */
 //==============================================================================
-static void free_non_lf_ended_messages(u8_t dev, u8_t mgscount)
+static void free_non_lf_ended_messages(struct tty_data *tty, u8_t msg_count)
 {
-        u8_t wridx = TTY(dev)->wrIdx;
+        u8_t write_idx = tty->write_index;
 
-        while (mgscount--) {
-                if (TTY(dev)->line[wridx]) {
-                        kfree(TTY(dev)->line[wridx]);
-                        TTY(dev)->line[wridx] = NULL;
+        while (msg_count--) {
+                if (tty->line[write_idx]) {
+                        kfree(tty->line[write_idx]);
+                        tty->line[write_idx] = NULL;
                 }
 
-                wridx++;
+                write_idx++;
 
-                if (wridx >= TTY_MAX_LINES) {
-                        wridx = 0;
+                if (write_idx >= TTY_MAX_LINES) {
+                        write_idx = 0;
                 }
         }
 }
@@ -1147,16 +1139,16 @@ static void free_non_lf_ended_messages(u8_t dev, u8_t mgscount)
 /**
  * @brief Function link prepared message to TTY
  *
+ * @param *tty          terminal address
  * @param *msg          message
- * @param  dev          number of terminal
  */
 //==============================================================================
-static void link_message(char *msg, u8_t dev)
+static void link_message(struct tty_data *tty, char *msg)
 {
-        TTY(dev)->line[TTY(dev)->wrIdx++] = msg;
+        tty->line[tty->write_index++] = msg;
 
-        if (TTY(dev)->wrIdx >= TTY_MAX_LINES) {
-                TTY(dev)->wrIdx = 0;
+        if (tty->write_index >= TTY_MAX_LINES) {
+                tty->write_index = 0;
         }
 }
 
@@ -1164,13 +1156,13 @@ static void link_message(char *msg, u8_t dev)
 /**
  * @brief Function increase message counter
  *
- * @param  dev          number of terminal
+ * @param *tty          terminal address
  */
 //==============================================================================
-static void inc_message_counter(u8_t dev)
+static void inc_message_counter(struct tty_data *tty)
 {
-        if (TTY(dev)->newMsgCnt < TTY_MAX_LINES) {
-                TTY(dev)->newMsgCnt++;
+        if (tty->new_msg_counter < TTY_MAX_LINES) {
+                tty->new_msg_counter++;
         }
 }
 
@@ -1178,19 +1170,19 @@ static void inc_message_counter(u8_t dev)
 /**
  * @brief Get last or selected message
  *
- * @param dev           number of terminal
+ * @param *tty          terminal address
  * @param back          number of lines from current index
  *
  * @return index to message
  */
 //==============================================================================
-static u8_t get_message_index(u8_t dev, u8_t back)
+static u8_t get_message_index(struct tty_data *tty, u8_t back)
 {
         /* check if index underflow when calculating with back */
-        if (TTY(dev)->wrIdx < back) {
-                return TTY_MAX_LINES - (back - TTY(dev)->wrIdx);
+        if (tty->write_index < back) {
+                return TTY_MAX_LINES - (back - tty->write_index);
         } else {
-                return TTY(dev)->wrIdx - back;
+                return tty->write_index - back;
         }
 }
 
@@ -1205,25 +1197,25 @@ static u8_t get_message_index(u8_t dev, u8_t back)
 //==============================================================================
 static enum keycap capture_special_keys(char character)
 {
-        switch (term->captureKeyStep) {
+        switch (tty_ctrl->capture_key_step) {
         case 0:
                 if (character == '\e') {
-                        term->captureKeyStep++;
+                        tty_ctrl->capture_key_step++;
                         return KEY_CAPTURE_PENDING;
                 }
                 break;
 
         case 1:
                 if (character == 'O' || character == '[') {
-                        term->captureKeyStep++;
+                        tty_ctrl->capture_key_step++;
                         return KEY_CAPTURE_PENDING;
                 } else {
-                        term->captureKeyStep = 0;
+                        tty_ctrl->capture_key_step = 0;
                 }
                 break;
 
         case 2:
-                term->captureKeyStep = 0;
+                tty_ctrl->capture_key_step = 0;
 
                 switch (character) {
                 case 'P': return F1_KEY;
@@ -1233,21 +1225,21 @@ static enum keycap capture_special_keys(char character)
                 case 'D': return ARROW_LEFT_KEY;
                 case 'C': return ARROW_RIGHT_KEY;
                 case 'F': return END_KEY;
-                case '1': term->captureKeyTmp  = '1';
-                          term->captureKeyStep = 3;
+                case '1': tty_ctrl->capture_key_tmp  = '1';
+                          tty_ctrl->capture_key_step = 3;
                           return KEY_CAPTURE_PENDING;
-                case '3': term->captureKeyTmp  = '3';
-                          term->captureKeyStep = 3;
+                case '3': tty_ctrl->capture_key_tmp  = '3';
+                          tty_ctrl->capture_key_step = 3;
                           return KEY_CAPTURE_PENDING;
                 }
 
                 break;
 
         case 3:
-                term->captureKeyStep = 0;
+                tty_ctrl->capture_key_step = 0;
 
                 if (character == '~') {
-                        switch (term->captureKeyTmp) {
+                        switch (tty_ctrl->capture_key_tmp) {
                         case '1': return HOME_KEY;
                         case '3': return DEL_KEY;
                         }
@@ -1256,7 +1248,7 @@ static enum keycap capture_special_keys(char character)
                 break;
 
         default:
-                term->captureKeyStep = 0;
+                tty_ctrl->capture_key_step = 0;
                 break;
         }
 
@@ -1267,10 +1259,10 @@ static enum keycap capture_special_keys(char character)
 /**
  * @brief Refresh selected TTY
  *
- * @param dev     number of terminal
+ * @param *tty          terminal address
  */
 //==============================================================================
-static void refresh_tty(u8_t dev, file_t *file)
+static void refresh_tty(struct tty_data *tty, file_t *file)
 {
         get_vt100_size(file);
 
@@ -1279,29 +1271,29 @@ static void refresh_tty(u8_t dev, file_t *file)
 
         fwrite(msg, sizeof(char), strlen(msg), file);
 
-        if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
+        if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 i8_t rows;
 
-                if (term->row < TTY_MAX_LINES) {
-                        rows = term->row;
+                if (tty_ctrl->row_count < TTY_MAX_LINES) {
+                        rows = tty_ctrl->row_count;
                 } else {
                         rows = TTY_MAX_LINES;
                 }
 
                 for (i8_t i = rows - 1; i > 0; i--) {
-                        msg = TTY(dev)->line[get_message_index(term->currentTTY, i)];
+                        msg = tty->line[get_message_index(tty, i)];
 
                         if (msg) {
                                 fwrite(msg, sizeof(char), strlen(msg), file);
                         }
                 }
 
-                msg = TTY(dev)->editLine;
+                msg = tty->edit_line;
                 fwrite(msg, sizeof(char), strlen(msg), file);
 
-                TTY(dev)->newMsgCnt = 0;
+                tty->new_msg_counter = 0;
 
-                unlock_recursive_mutex(TTY(dev)->mtx);
+                unlock_recursive_mutex(tty->secure_resources_mtx);
         }
 }
 
@@ -1317,8 +1309,8 @@ static void get_vt100_size(file_t *ttysfile)
         char chr = 0;
 
         /* set default values */
-        term->col = 80;
-        term->row = 24;
+        tty_ctrl->column_count = 80;
+        tty_ctrl->row_count = 24;
 
         char *rq = VT100_SAVE_CURSOR_POSITION
                    VT100_CURSOR_OFF
@@ -1375,7 +1367,7 @@ static void get_vt100_size(file_t *ttysfile)
         u8_t row = 0;
         u8_t col = 0;
 
-        /* calculate row */
+        /* calculate row_count */
         while ((chr = *(seek++)) != ';') {
                 row *= 10;
                 row += chr - '0';
@@ -1387,38 +1379,38 @@ static void get_vt100_size(file_t *ttysfile)
                 col += chr - '0';
         }
 
-        term->row = row;
-        term->col = col;
+        tty_ctrl->row_count    = row;
+        tty_ctrl->column_count = col;
 }
 
 //==============================================================================
 /**
  * @brief Function puts data to input stream
  *
+ * @param *tty          terminal address
  * @param chr           character
- * @param dev           device
  */
 //==============================================================================
-static void write_input_stream(char chr, u8_t dev)
+static void write_input_stream(struct tty_data *tty, char chr)
 {
-        if (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) == OS_OK) {
-                TTY(dev)->input.buffer[TTY(dev)->input.txidx++] = chr;
+        if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+                tty->input.buffer[tty->input.txidx++] = chr;
 
-                if (TTY(dev)->input.txidx >= TTY_STREAM_SIZE) {
-                        TTY(dev)->input.txidx = 0;
+                if (tty->input.txidx >= TTY_STREAM_SIZE) {
+                        tty->input.txidx = 0;
                 }
 
-                if (TTY(dev)->input.level < TTY_STREAM_SIZE) {
-                        TTY(dev)->input.level++;
+                if (tty->input.level < TTY_STREAM_SIZE) {
+                        tty->input.level++;
                 } else {
-                        TTY(dev)->input.rxidx++;
+                        tty->input.rxidx++;
 
-                        if (TTY(dev)->input.rxidx >= TTY_STREAM_SIZE) {
-                                TTY(dev)->input.rxidx = 0;
+                        if (tty->input.rxidx >= TTY_STREAM_SIZE) {
+                                tty->input.rxidx = 0;
                         }
                 }
 
-                unlock_recursive_mutex(TTY(dev)->mtx);
+                unlock_recursive_mutex(tty->secure_resources_mtx);
         }
 }
 
@@ -1426,29 +1418,29 @@ static void write_input_stream(char chr, u8_t dev)
 /**
  * @brief Function gets character from input stream
  *
+ * @param[in]  *tty             terminal address
  * @param[out] *chr             pointer to character
- * @param [in]  dev             device
  *
  * @retval STD_RET_OK           loaded character from stream
  * @retval STD_RET_ERROR        stream is empty
  */
 //==============================================================================
-static stdret_t read_input_stream(char *chr, u8_t dev)
+static stdret_t read_input_stream(struct tty_data *tty, char *chr)
 {
-        if (TTY(dev)->input.level == 0) {
+        if (tty->input.level == 0) {
                 return STD_RET_ERROR;
         }
 
-        if (lock_recursive_mutex(TTY(dev)->mtx, 0) == OS_OK) {
-                *chr = TTY(dev)->input.buffer[TTY(dev)->input.rxidx++];
+        if (lock_recursive_mutex(tty->secure_resources_mtx, 0) == MUTEX_LOCKED) {
+                *chr = tty->input.buffer[tty->input.rxidx++];
 
-                if (TTY(dev)->input.rxidx >= TTY_STREAM_SIZE) {
-                        TTY(dev)->input.rxidx = 0;
+                if (tty->input.rxidx >= TTY_STREAM_SIZE) {
+                        tty->input.rxidx = 0;
                 }
 
-                TTY(dev)->input.level--;
+                tty->input.level--;
 
-                unlock_recursive_mutex(TTY(dev)->mtx);
+                unlock_recursive_mutex(tty->secure_resources_mtx);
                 return STD_RET_OK;
         }
 
@@ -1459,28 +1451,28 @@ static stdret_t read_input_stream(char *chr, u8_t dev)
 /**
  * @brief Function move edit line to stream
  *
- * @param [in]  dev             device
- * @param [in] *stream          terminal control stream
+ * @param[in] *tty              terminal address
+ * @param[in] *stream           terminal control stream
  */
 //==============================================================================
-static void move_editline_to_stream(u8_t dev, file_t *stream)
+static void move_editline_to_stream(struct tty_data *tty, file_t *stream)
 {
-        TTY(dev)->editLine[TTY(dev)->editLineLen++] = '\n';
+        tty->edit_line[tty->edit_line_length++] = '\n';
 
-        uint line_len = TTY(dev)->editLineLen;
+        uint line_len = tty->edit_line_length;
 
         for (uint i = 0; i < line_len; i++) {
-                write_input_stream(TTY(dev)->editLine[i], dev);
+                write_input_stream(tty, tty->edit_line[i]);
         }
 
-        while (lock_recursive_mutex(TTY(dev)->mtx, BLOCK_TIME) != OS_OK);
-        add_message(dev, TTY(dev)->editLine, line_len);
-        TTY(dev)->refLstLn = RESET;
-        unlock_recursive_mutex(TTY(dev)->mtx);
+        while (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) != MUTEX_LOCKED);
+        add_message(tty, tty->edit_line, line_len);
+        tty->refresh_last_line = RESET;
+        unlock_recursive_mutex(tty->secure_resources_mtx);
 
-        memset(TTY(dev)->editLine, '\0', TTY_EDIT_LINE_LEN);
-        TTY(dev)->editLineLen    = 0;
-        TTY(dev)->cursorPosition = 0;
+        memset(tty->edit_line, '\0', TTY_EDIT_LINE_LEN);
+        tty->edit_line_length = 0;
+        tty->cursor_position  = 0;
 
         char *msg = "\r\n";
         fwrite(msg, sizeof(char), strlen(msg), stream);

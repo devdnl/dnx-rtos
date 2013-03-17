@@ -40,17 +40,9 @@ extern "C" {
 /*==============================================================================
  Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)              memman_calloc(nmemb, msize)
-#define malloc(size)                      memman_malloc(size)
+#define calloc(nmemb, msize)              memman_calloc(nmemb, msize, NULL)
+#define malloc(size)                      memman_malloc(size, NULL)
 #define free(mem)                         memman_free(mem)
-
-#define fopen(path, mode)                 vfs_fopen(path, mode)
-#define fclose(file)                      vfs_fclose(file)
-#define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
-#define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
-#define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
-#define ftell(file)                       vfs_ftell(file)
-#define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
 
 /*==============================================================================
  Local types, enums definitions
@@ -296,13 +288,13 @@ void io_enable_printk(char *filename)
 {
         /* close file if opened */
         if (io_printk_file) {
-                fclose(io_printk_file);
+                vfs_fclose(io_printk_file);
                 io_printk_file = NULL;
         }
 
         /* open new file */
         if (io_printk_file == NULL) {
-                io_printk_file = fopen(filename, "w");
+                io_printk_file = vfs_fopen(filename, "w");
         }
 }
 #endif
@@ -316,7 +308,7 @@ void io_enable_printk(char *filename)
 void io_disable_printk(void)
 {
         if (io_printk_file) {
-                fclose(io_printk_file);
+                vfs_fclose(io_printk_file);
                 io_printk_file = NULL;
         }
 }
@@ -349,7 +341,7 @@ void io_printk(const char *format, ...)
                         io_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        fwrite(buffer, sizeof(char), size, io_printk_file);
+                        vfs_fwrite(buffer, sizeof(char), size, io_printk_file);
 
                         free(buffer);
                 }
@@ -371,7 +363,7 @@ int io_fputc(int c, file_t *stream)
 {
         if (stream) {
                 char ch = (char)c;
-                if (fwrite(&ch, sizeof(char), 1, stream) < 1) {
+                if (vfs_fwrite(&ch, sizeof(char), 1, stream) < 1) {
                         return EOF;
                 } else {
                         return c;
@@ -399,7 +391,7 @@ int io_getc(file_t *stream)
                 return EOF;
         }
 
-        while (fread(&chr, sizeof(char), 1, stream) < 1) {
+        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
                 if (dcnt >= 60000) {
                         milisleep(200);
                 } else if (dcnt >= 5000) {

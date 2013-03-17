@@ -51,8 +51,8 @@ extern "C" {
 #define monitored_calloc(nmemb, msize)          tskm_calloc(nmemb, msize)
 #define monitored_malloc(size)                  tskm_malloc(size)
 #define monitored_free(mem)                     tskm_free(mem)
-#define calloc(nmemb, msize)                    memman_calloc(nmemb, msize)
-#define malloc(size)                            memman_malloc(size)
+#define calloc(nmemb, msize)                    memman_calloc(nmemb, msize, NULL)
+#define malloc(size)                            memman_malloc(size, NULL)
 #define free(mem)                               memman_free(mem)
 
 /*==============================================================================

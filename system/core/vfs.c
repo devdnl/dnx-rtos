@@ -44,8 +44,8 @@ extern "C" {
 #define MTX_BLOCK_TIME                        10
 #define force_lock_mutex(mtx, blocktime)      while (lock_mutex(mtx, blocktime) != MUTEX_LOCKED)
 
-#define kcalloc(nmemb, msize)                 memman_calloc(nmemb, msize)
-#define kmalloc(size)                         memman_malloc(size)
+#define kcalloc(nmemb, msize)                 memman_calloc(nmemb, msize, NULL)
+#define kmalloc(size)                         memman_malloc(size, NULL)
 #define kfree(mem)                            memman_free(mem)
 
 /*==============================================================================
