@@ -51,7 +51,6 @@ extern "C" {
 #define TASK_FILE_FREESTACK_STR           "freestack"
 #define TASK_FILE_USEDMEM_STR             "usedmem"
 #define TASK_FILE_OPENFILES_STR           "openfiles"
-#define TASK_FILE_CPULOAD_STR             "cpuload"
 
 #define MTX_BLOCK_TIME                    10
 
@@ -64,7 +63,6 @@ enum taskInfFile {
       TASK_FILE_FREESTACK,
       TASK_FILE_USEDMEM,
       TASK_FILE_OPENFILES,
-      TASK_FILE_CPULOAD,
       TASK_FILE_COUNT,
       TASK_FILE_NONE
 };
@@ -232,20 +230,13 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
 
                 if (strcmp((char*) path, TASK_FILE_NAME_STR) == 0) {
                         fileInf->task_file = TASK_FILE_NAME;
-                } else if (strcmp((char*) path, TASK_FILE_CPULOAD_STR)
-                           == 0) {
-                        fileInf->task_file = TASK_FILE_CPULOAD;
-                } else if (strcmp((char*) path, TASK_FILE_FREESTACK_STR)
-                           == 0) {
+                } else if (strcmp((char*) path, TASK_FILE_FREESTACK_STR) == 0) {
                         fileInf->task_file = TASK_FILE_FREESTACK;
-                } else if (strcmp((char*) path, TASK_FILE_OPENFILES_STR)
-                           == 0) {
+                } else if (strcmp((char*) path, TASK_FILE_OPENFILES_STR) == 0) {
                         fileInf->task_file = TASK_FILE_OPENFILES;
-                } else if (strcmp((char*) path, TASK_FILE_PRIO_STR)
-                           == 0) {
+                } else if (strcmp((char*) path, TASK_FILE_PRIO_STR) == 0) {
                         fileInf->task_file = TASK_FILE_PRIO;
-                } else if (strcmp((char*) path, TASK_FILE_USEDMEM_STR)
-                           == 0) {
+                } else if (strcmp((char*) path, TASK_FILE_USEDMEM_STR) == 0) {
                         fileInf->task_file = TASK_FILE_USEDMEM;
                 } else {
                         kfree(fileInf);
@@ -389,7 +380,6 @@ size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, 
         struct file_info *fileInf;
         struct taskstat  taskInfo;
         size_t           n = 0;
-        u32_t            total_cpu_usage;
 
         if (!dst || !procmem) {
                 return 0;
@@ -419,20 +409,11 @@ size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, 
         char *dataPtr  = data;
         u8_t  dataSize = 0;
 
-        /* DNLFIXME here is bug, cpuUsage always is 0 (why?) */
         if (tskm_get_task_stat(fileInf->taskhdl, &taskInfo) != STD_RET_OK) {
                 return 0;
         }
 
         switch (fileInf->task_file) {
-        case TASK_FILE_CPULOAD:
-                total_cpu_usage = tskm_get_total_CPU_usage();
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u.%u",
-                                    ( taskInfo.cpu_usage *  100) / total_cpu_usage,
-                                    ((taskInfo.cpu_usage * 1000) / total_cpu_usage) % 10);
-                cpuctl_clear_CPU_total_time();
-                break;
-
         case TASK_FILE_FREESTACK:
                 dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
                                     taskInfo.free_stack);
@@ -514,7 +495,6 @@ stdret_t procfs_fstat(void *fshdl, fd_t fd, struct vfs_statf *stat)
         struct procfs    *procmem = fshdl;
         struct file_info *fileInf;
         struct taskstat  taskInfo;
-        u32_t            total_cpu_usage;
 
         if (!stat || !procmem) {
                 return STD_RET_ERROR;
@@ -546,13 +526,6 @@ stdret_t procfs_fstat(void *fshdl, fd_t fd, struct vfs_statf *stat)
         char data[12] = {0};
 
         switch (fileInf->task_file) {
-        case TASK_FILE_CPULOAD:
-                total_cpu_usage = tskm_get_total_CPU_usage();
-                stat->st_size = snprintf(data, sizeof(data), "%u.%u",
-                                         ( taskInfo.cpu_usage *  100) / total_cpu_usage,
-                                         ((taskInfo.cpu_usage * 1000) / total_cpu_usage) % 10);
-                break;
-
         case TASK_FILE_FREESTACK:
                 stat->st_size = snprintf(data, sizeof(data), "%u",
                                          taskInfo.free_stack);
@@ -1006,7 +979,6 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir)
         (void)fshdl;
 
         struct taskstat taskdata;
-        u32_t total_cpu_usage;
 
         dirent_t dirent;
         dirent.name = NULL;
@@ -1055,14 +1027,6 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir)
                 dirent.name = TASK_FILE_OPENFILES_STR;
                 dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
                                        taskdata.opened_files);
-                break;
-
-        case TASK_FILE_CPULOAD:
-                total_cpu_usage = tskm_get_total_CPU_usage();
-                dirent.name = TASK_FILE_CPULOAD_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%u.%u",
-                                       ( taskdata.cpu_usage *  100) / total_cpu_usage,
-                                       ((taskdata.cpu_usage * 1000) / total_cpu_usage) % 10);
                 break;
         }
 

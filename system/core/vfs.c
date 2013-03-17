@@ -54,12 +54,12 @@ extern "C" {
 /** file type */
 struct vfs_file
 {
-        void     *handle;       /* file system handle */
-        stdret_t (*f_close)(void *handle, fd_t fd);
-        size_t   (*f_write)(void *handle, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*f_read )(void *handle, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
-        stdret_t (*f_ioctl)(void *handle, fd_t fd, iorq_t iorq, void *data);
-        stdret_t (*f_stat )(void *handle, fd_t fd, struct vfs_statf *stat);
+        void     *fshdl;        /* file system handle */
+        stdret_t (*f_close)(void *fshdl, fd_t fd);
+        size_t   (*f_write)(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+        size_t   (*f_read )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+        stdret_t (*f_ioctl)(void *fshdl, fd_t fd, iorq_t iorq, void *data);
+        stdret_t (*f_stat )(void *fshdl, fd_t fd, struct vfs_statf *stat);
         fd_t     fd;            /* file description */
         size_t   f_seek;
 };
@@ -719,7 +719,7 @@ file_t *vfs_fopen(const char *path, const char *mode)
                 if (fs->interface.fs_open(fs->handle, &file->fd, &file->f_seek,
                                           extPath, mode) == STD_RET_OK) {
 
-                        file->handle  = fs->handle;
+                        file->fshdl   = fs->handle;
                         file->f_close = fs->interface.fs_close;
                         file->f_ioctl = fs->interface.fs_ioctl;
                         file->f_stat  = fs->interface.fs_fstat;
@@ -757,7 +757,7 @@ stdret_t vfs_fclose(file_t *file)
 {
         if (file) {
                 if (file->f_close) {
-                        if (file->f_close(file->handle, file->fd) == STD_RET_OK) {
+                        if (file->f_close(file->fshdl, file->fd) == STD_RET_OK) {
                                 kfree(file);
                                 return STD_RET_OK;
                         }
@@ -785,7 +785,7 @@ size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, file_t *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_write) {
-                        n = file->f_write(file->handle, file->fd, ptr, size,
+                        n = file->f_write(file->fshdl, file->fd, ptr, size,
                                           nitems, file->f_seek);
                         file->f_seek += n * size;
                 }
@@ -812,7 +812,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, file_t *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_read) {
-                        n = file->f_read(file->handle, file->fd, ptr, size,
+                        n = file->f_read(file->fshdl, file->fd, ptr, size,
                                          nitems, file->f_seek);
                         file->f_seek += n * size;
                 }
@@ -892,7 +892,7 @@ stdret_t vfs_ioctl(file_t *file, iorq_t rq, void *data)
 {
         if (file) {
                 if (file->f_ioctl) {
-                        return file->f_ioctl(file->handle, file->fd, rq, data);
+                        return file->f_ioctl(file->fshdl, file->fd, rq, data);
                 }
         }
 
@@ -914,7 +914,7 @@ stdret_t vfs_fstat(file_t *file, struct vfs_statf *stat)
 {
         if (file && stat) {
                 if (file->f_stat) {
-                        return file->f_stat(file->handle, file->fd, stat);
+                        return file->f_stat(file->fshdl, file->fd, stat);
                 }
         }
 

@@ -718,10 +718,10 @@ static enum cmd_status cmd_mount(char *arg)
         } else {
                 if (fssrc[0] == '/' || fssrc[0] == '-') {
                         if (mount(fstype, fssrc, fsmntp) != STD_RET_OK) {
-                                printf("File error while mounting file system!\n");
+                                printf("Error while mounting file system!\n");
                         }
                 } else {
-                        printf("Select file to mount or '-' if FS not need source file.\n");
+                        printf("Typed path is not correct!\n");
                 }
         }
 
@@ -757,7 +757,7 @@ static enum cmd_status cmd_umount(char *arg)
                 printf("Usage: umount [mount point]\n");
         } else {
                 if (umount(arg) != STD_RET_OK) {
-                        printf("File error while unmounting file system!\n");
+                        printf("Cannot unmount file system!\n");
                 }
         }
 
