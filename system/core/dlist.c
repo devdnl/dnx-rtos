@@ -32,14 +32,14 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "dlist.h"
-#include "memman.h"
+#include "sysmoni.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)              memman_calloc(nmemb, msize, NULL)
-#define malloc(size)                      memman_malloc(size, NULL)
-#define free(mem)                         memman_free(mem)
+#define calloc(nmemb, msize)              sysm_syscalloc(nmemb, msize)
+#define malloc(size)                      sysm_sysmalloc(size)
+#define free(mem)                         sysm_sysfree(mem)
 
 /*==============================================================================
   Local types, enums definitions

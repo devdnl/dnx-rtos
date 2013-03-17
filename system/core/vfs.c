@@ -34,7 +34,7 @@ extern "C" {
 #include "vfs.h"
 #include "dlist.h"
 #include "oswrap.h"
-#include "memman.h"
+#include "sysmoni.h"
 #include <string.h>
 
 /*==============================================================================
@@ -44,9 +44,9 @@ extern "C" {
 #define MTX_BLOCK_TIME                        10
 #define force_lock_mutex(mtx, blocktime)      while (lock_mutex(mtx, blocktime) != MUTEX_LOCKED)
 
-#define kcalloc(nmemb, msize)                 memman_calloc(nmemb, msize, NULL)
-#define kmalloc(size)                         memman_malloc(size, NULL)
-#define kfree(mem)                            memman_free(mem)
+#define calloc(nmemb, msize)                  sysm_syscalloc(nmemb, msize)
+#define malloc(size)                          sysm_sysmalloc(size)
+#define free(mem)                             sysm_sysfree(mem)
 
 /*==============================================================================
   Local types, enums definitions
@@ -157,7 +157,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                                                          extPath,
                                                          NULL) == STD_RET_OK) {
 
-                                newfs = kcalloc(1, sizeof(struct FS_data));
+                                newfs = calloc(1, sizeof(struct FS_data));
                                 basefs->mounted_FS_counter++;
                         }
                 }
@@ -165,7 +165,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                   && strlen(newpath) == 1
                   && newpath[0] == '/' ) {
 
-                newfs = kcalloc(1, sizeof(struct FS_data));
+                newfs = calloc(1, sizeof(struct FS_data));
         }
 
         /*
@@ -185,8 +185,8 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                         }
                 }
 
-                kfree(newfs);
-                kfree(newpath);
+                free(newfs);
+                free(newpath);
         }
 
         unlock_mutex(vfs_resource_mtx);
@@ -224,7 +224,7 @@ stdret_t vfs_umount(const char *path)
 
         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
         mountfs = find_mounted_FS(newpath, -1, &itemid);
-        kfree(newpath);
+        free(newpath);
 
         if (mountfs == NULL) {
                 goto vfs_umount_error;
@@ -244,7 +244,7 @@ stdret_t vfs_umount(const char *path)
                 }
 
                 if (mountfs->mount_point) {
-                        kfree(mountfs->mount_point);
+                        free(mountfs->mount_point);
                 }
 
                 if (list_rm_iditem(vfs_mnt_list, itemid) == STD_RET_OK) {
@@ -368,7 +368,7 @@ stdret_t vfs_mkdir(const char *path)
                         }
                 }
 
-                kfree(newpath);
+                free(newpath);
         }
 
         return status;
@@ -395,7 +395,7 @@ dir_t *vfs_opendir(const char *path)
                 return NULL;
         }
 
-        if ((dir = kmalloc(sizeof(dir_t)))) {
+        if ((dir = malloc(sizeof(dir_t)))) {
                 if ((newpath = new_corrected_path(path, ADD_SLASH))) {
                         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
                         fs = find_base_FS(newpath, &extPath);
@@ -409,11 +409,11 @@ dir_t *vfs_opendir(const char *path)
                                 }
                         }
 
-                        kfree(newpath);
+                        free(newpath);
                 }
 
                 if (status == STD_RET_ERROR) {
-                        kfree(dir);
+                        free(dir);
                         dir = NULL;
                 }
         }
@@ -436,7 +436,7 @@ stdret_t vfs_closedir(dir_t *dir)
         if (dir) {
                 if (dir->cldir) {
                         if (dir->cldir(dir->handle, dir) == STD_RET_OK) {
-                                kfree(dir);
+                                free(dir);
                                 return STD_RET_OK;
                         }
                 }
@@ -499,7 +499,7 @@ stdret_t vfs_remove(const char *path)
                                 }
                         }
 
-                        kfree(newpath);
+                        free(newpath);
                 }
         }
 
@@ -659,7 +659,7 @@ stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs)
                         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
                         fs = find_mounted_FS(newpath, -1, NULL);
                         unlock_mutex(vfs_resource_mtx);
-                        kfree(newpath);
+                        free(newpath);
 
                         if (fs) {
                                 if (fs->interface.fs_statfs) {
@@ -703,7 +703,7 @@ file_t *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if ((file = kcalloc(1, sizeof(file_t)))) {
+        if ((file = calloc(1, sizeof(file_t)))) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
                 fs = find_base_FS(path, &extPath);
                 unlock_mutex(vfs_resource_mtx);
@@ -737,7 +737,7 @@ file_t *vfs_fopen(const char *path, const char *mode)
                 }
 
                 vfs_open_error:
-                kfree(file);
+                free(file);
         }
 
         return NULL;
@@ -758,7 +758,7 @@ stdret_t vfs_fclose(file_t *file)
         if (file) {
                 if (file->f_close) {
                         if (file->f_close(file->fshdl, file->fd) == STD_RET_OK) {
-                                kfree(file);
+                                free(file);
                                 return STD_RET_OK;
                         }
                 }
@@ -1025,7 +1025,7 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
                 return NULL;
         }
 
-        new_path = kcalloc(new_path_len + 1, sizeof(char));
+        new_path = calloc(new_path_len + 1, sizeof(char));
         if (new_path) {
                 if (corr == SUB_SLASH) {
                         strncpy(new_path, path, new_path_len);

@@ -50,6 +50,9 @@ extern "C" {
 /* USER CFG: enable (1) or disable (0) system memory usage monitoring */
 #define SYSM_MONITOR_SYSTEM_MEMORY_USAGE        CONFIG_MONITOR_SYSTEM_MEMORY_USAGE
 
+/* USER CFG: enable (1) or disable (0) file systems memory usage monitoring */
+#define SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE   CONFIG_MONITOR_FILE_SYSTEM_MEMORY_USAGE
+
 /* USER CFG: enable (1) or disable (0) task opened file monitoring */
 #define SYSM_MONITOR_FILE_USAGE                 CONFIG_MONITOR_FILE_USAGE
 
@@ -77,9 +80,16 @@ extern "C" {
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE == 0)
-#define sysm_smalloc(size)                      memman_malloc(size, NULL)
-#define sysm_scalloc(count, size)               memman_calloc(count, size, NULL)
-#define sysm_sfree(mem)                         memman_free(mem)
+#define sysm_sysmalloc(size)                    memman_malloc(size, NULL)
+#define sysm_syscalloc(count, size)             memman_calloc(count, size, NULL)
+#define sysm_sysfree(mem)                       memman_free(mem)
+#endif
+
+/* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
+#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE == 0)
+#define sysm_fsmalloc(size)                     sysm_sysmalloc(size)
+#define sysm_fscalloc(count, size)              sysm_syscalloc(count, size)
+#define sysm_fsfree(mem)                        sysm_sysfree(mem)
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -171,9 +181,15 @@ extern void  sysm_kfree(void*);
 #endif
 
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-extern void *sysm_smalloc(size_t);
-extern void *sysm_scalloc(size_t, size_t);
-extern void  sysm_sfree(void*);
+extern void *sysm_sysmalloc(size_t);
+extern void *sysm_syscalloc(size_t, size_t);
+extern void  sysm_sysfree(void*);
+#endif
+
+#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
+extern void *sysm_fsmalloc(size_t);
+extern void *sysm_fscalloc(size_t, size_t);
+extern void  sysm_fsfree(void*);
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)

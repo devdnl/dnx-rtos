@@ -41,9 +41,9 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)            memman_calloc(nmemb, msize, NULL)
-#define malloc(size)                    memman_malloc(size, NULL)
-#define free(mem)                       memman_free(mem)
+#define calloc(nmemb, msize)            sysm_syscalloc(nmemb, msize)
+#define malloc(size)                    sysm_sysmalloc(size)
+#define free(mem)                       sysm_sysfree(mem)
 
 #define MEM_BLOCK_COUNT                 4
 #define MEM_ADR_IN_BLOCK                7
@@ -116,13 +116,14 @@ struct task_monitor_data {
 static list_t  *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
 #endif
-
 #if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
 static i32_t sysm_kernel_memory_usage;
 #endif
-
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
 static i32_t sysm_system_memory_usage;
+#endif
+#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
+static i32_t sysm_file_system_memory_usage;
 #endif
 
 /*==============================================================================
@@ -562,7 +563,7 @@ void sysm_kfree(void *mem)
  */
 //==============================================================================
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-void *sysm_smalloc(size_t size)
+void *sysm_sysmalloc(size_t size)
 {
       size_t allocated;
       void *p = memman_malloc(size, &allocated);
@@ -582,7 +583,7 @@ void *sysm_smalloc(size_t size)
  */
 //==============================================================================
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-void *sysm_scalloc(size_t count, size_t size)
+void *sysm_syscalloc(size_t count, size_t size)
 {
         size_t allocated;
         void *p = memman_calloc(count, size, &allocated);
@@ -599,9 +600,62 @@ void *sysm_scalloc(size_t count, size_t size)
  */
 //==============================================================================
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-void sysm_sfree(void *mem)
+void sysm_sysfree(void *mem)
 {
         sysm_system_memory_usage -= memman_free(mem);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of file systems
+ *
+ * @param  size         block size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
+void *sysm_fsmalloc(size_t size)
+{
+      size_t allocated;
+      void *p = memman_malloc(size, &allocated);
+      sysm_file_system_memory_usage += allocated;
+      return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of file systems
+ *
+ * @param  count        count of items
+ * @param  size         item size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
+void *sysm_fscalloc(size_t count, size_t size)
+{
+        size_t allocated;
+        void *p = memman_calloc(count, size, &allocated);
+        sysm_file_system_memory_usage += allocated;
+        return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing for file systems
+ *
+ * @param *mem          block to free
+ */
+//==============================================================================
+#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
+void sysm_fsfree(void *mem)
+{
+        sysm_file_system_memory_usage -= memman_free(mem);
 }
 #endif
 

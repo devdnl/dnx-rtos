@@ -35,7 +35,6 @@ extern "C" {
 #include "progman.h"
 #include "regprg.h"
 #include "sysmoni.h"
-#include "memman.h"
 #include "dlist.h"
 #include <string.h>
 
@@ -51,9 +50,9 @@ extern "C" {
 #define monitored_calloc(nmemb, msize)          sysm_calloc(nmemb, msize)
 #define monitored_malloc(size)                  sysm_malloc(size)
 #define monitored_free(mem)                     sysm_free(mem)
-#define calloc(nmemb, msize)                    memman_calloc(nmemb, msize, NULL)
-#define malloc(size)                            memman_malloc(size, NULL)
-#define free(mem)                               memman_free(mem)
+#define calloc(nmemb, msize)                    sysm_syscalloc(nmemb, msize)
+#define malloc(size)                            sysm_sysmalloc(size)
+#define free(mem)                               sysm_sysfree(mem)
 
 /*==============================================================================
   Local types, enums definitions

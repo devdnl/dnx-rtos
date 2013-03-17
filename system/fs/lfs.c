@@ -123,7 +123,7 @@ stdret_t lfs_init(void **fshdl, const char *src_path)
                 return STD_RET_ERROR;
         }
 
-        if (!(lfs = kcalloc(1, sizeof(struct LFS_data)))) {
+        if (!(lfs = calloc(1, sizeof(struct LFS_data)))) {
                 return STD_RET_ERROR;
         }
 
@@ -144,7 +144,7 @@ stdret_t lfs_init(void **fshdl, const char *src_path)
                         delete_list(lfs->list_of_opended_files);
                 }
 
-                kfree(lfs);
+                free(lfs);
                 return STD_RET_ERROR;
         } else {
                 lfs->root_dir.name = "/";
@@ -225,11 +225,11 @@ stdret_t lfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_
         drv_name     = strrchr(path, '/') + 1;
         drv_name_len = strlen(drv_name);
 
-        if ((drv_file_name = kcalloc(drv_name_len + 1, sizeof(char)))) {
+        if ((drv_file_name = calloc(drv_name_len + 1, sizeof(char)))) {
                 strcpy(drv_file_name, drv_name);
 
-                drv_file      = kcalloc(1, sizeof(node_t));
-                drv_interface = kcalloc(1, sizeof(struct vfs_drv_interface));
+                drv_file      = calloc(1, sizeof(node_t));
+                drv_interface = calloc(1, sizeof(struct vfs_drv_interface));
 
                 if (drv_file && drv_interface) {
                         memcpy(drv_interface, drv_if, sizeof(struct vfs_drv_interface));
@@ -249,14 +249,14 @@ stdret_t lfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_
 
                 /* free memory when error */
                 if (drv_file) {
-                        kfree(drv_file);
+                        free(drv_file);
                 }
 
                 if (drv_interface) {
-                        kfree(drv_interface);
+                        free(drv_interface);
                 }
 
-                kfree(drv_file_name);
+                free(drv_file_name);
         }
 
         lfs_mknod_error:
@@ -309,10 +309,10 @@ stdret_t lfs_mkdir(void *fshdl, const char *path)
         dir_name_ptr = strrchr(path, '/') + 1;
         dir_name_len = strlen(dir_name_ptr);
 
-        if ((new_dir_name = kcalloc(dir_name_len + 1, sizeof(char)))) {
+        if ((new_dir_name = calloc(dir_name_len + 1, sizeof(char)))) {
                 strcpy(new_dir_name, dir_name_ptr);
 
-                if (!(new_dir = kcalloc(1, sizeof(node_t)))) {
+                if (!(new_dir = calloc(1, sizeof(node_t)))) {
                         goto error;
                 }
 
@@ -329,13 +329,13 @@ stdret_t lfs_mkdir(void *fshdl, const char *path)
                                 delete_list(new_dir->data);
                         }
                 } else {
-                        kfree(new_dir);
+                        free(new_dir);
                 }
         }
 
         error:
         if (new_dir_name) {
-                kfree(new_dir_name);
+                free(new_dir_name);
         }
 
         unlock_mutex(lfs->resource_mtx);
@@ -555,14 +555,14 @@ stdret_t lfs_rename(void *fshdl, const char *old_name, const char *new_name)
                 goto lfs_rename_error;
         }
 
-        new_node_name = kcalloc(1, strlen(strrchr(new_name, '/') + 1));
+        new_node_name = calloc(1, strlen(strrchr(new_name, '/') + 1));
         node = get_node(old_name, &lfs->root_dir, 0, NULL);
 
         if (new_node_name && node) {
                 strcpy(new_node_name, strrchr(new_name, '/') + 1);
 
                 if (node->name) {
-                        kfree(node->name);
+                        free(node->name);
                 }
 
                 node->name = new_node_name;
@@ -577,7 +577,7 @@ stdret_t lfs_rename(void *fshdl, const char *old_name, const char *new_name)
 
         lfs_rename_error:
         if (new_node_name) {
-                kfree(new_node_name);
+                free(new_node_name);
         }
 
         unlock_mutex(lfs->resource_mtx);
@@ -808,7 +808,7 @@ stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const c
                         goto lfs_open_error;
                 }
 
-                filename = kcalloc(1, strlen(strrchr(path, '/')));
+                filename = calloc(1, strlen(strrchr(path, '/')));
                 if (filename == NULL) {
                         goto lfs_open_error;
                 }
@@ -817,7 +817,7 @@ stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const c
                 node = new_node(lfs, nodebase, filename, &item);
 
                 if (node == NULL) {
-                        kfree(filename);
+                        free(filename);
                         goto lfs_open_error;
                 }
         }
@@ -852,7 +852,7 @@ stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const c
                    || strncmp("w+", mode, 2) == 0 ) {
 
                         if (node->data) {
-                                kfree(node->data);
+                                free(node->data);
                                 node->data = NULL;
                         }
 
@@ -1034,14 +1034,14 @@ size_t lfs_write(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, si
                 }
 
                 if ((seek + write_size) > file_length || node->data == NULL) {
-                        new_data = kmalloc(file_length + write_size);
+                        new_data = malloc(file_length + write_size);
                         if (new_data == NULL) {
                                 goto lfs_write_end;
                         }
 
                         if (node->data) {
                                 memcpy(new_data, node->data, file_length);
-                                kfree(node->data);
+                                free(node->data);
                         }
 
                         memcpy(new_data + seek, src, write_size);
@@ -1213,11 +1213,11 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
         }
 
         if (target->name) {
-                kfree(target->name);
+                free(target->name);
         }
 
         if (target->data) {
-                kfree(target->data);
+                free(target->data);
         }
 
         if (list_rm_iditem(base->data, baseitemid) == STD_RET_OK) {
@@ -1374,7 +1374,7 @@ static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, 
                 return NULL;
         }
 
-        if ((node = kcalloc(1, sizeof(node_t))) == NULL) {
+        if ((node = calloc(1, sizeof(node_t))) == NULL) {
                 return NULL;
         }
 
@@ -1388,7 +1388,7 @@ static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, 
         node->uid   = 0;
 
         if ((node_number = list_add_item(nodebase->data, lfs->id_counter++, node)) < 0) {
-                kfree(node);
+                free(node);
                 return NULL;
         }
 
@@ -1418,7 +1418,7 @@ static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *nod
         i32_t open_file_count;
         i32_t open_file_list_position;
 
-        if (!(opened_file_info = kcalloc(1, sizeof(struct opened_file_info)))) {
+        if (!(opened_file_info = calloc(1, sizeof(struct opened_file_info)))) {
                 return STD_RET_ERROR;
         }
 
@@ -1458,7 +1458,7 @@ static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *nod
         }
 
         AddFileToListOfOpenFiles_Error:
-        kfree(opened_file_info);
+        free(opened_file_info);
         return STD_RET_ERROR;
 }
 

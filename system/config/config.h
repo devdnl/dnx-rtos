@@ -134,6 +134,11 @@ extern "C" {
 #define CONFIG_MONITOR_SYSTEM_MEMORY_USAGE              (1)
 
 /**
+ * Enable (1) or disable (0) file systems memory usage monitoring
+ */
+#define CONFIG_MONITOR_FILE_SYSTEM_MEMORY_USAGE         (1)
+
+/**
  * Enable (1) or disable (0) file usage monitoring
  */
 #define CONFIG_MONITOR_FILE_USAGE                       (1)

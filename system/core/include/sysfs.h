@@ -34,7 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "systypes.h"
-#include "memman.h"
+#include "sysmoni.h"
 #include "oswrap.h"
 #include "vfs.h"
 
@@ -45,36 +45,36 @@ extern "C" {
 #error "system.h and sysfs.h cannot never included together!"
 #endif
 
-#ifndef kcalloc
-#define kcalloc(nmemb, msize)             memman_calloc(nmemb, msize, NULL)
+#ifndef calloc
+#define calloc(nmemb, msize)             sysm_fscalloc(nmemb, msize)
 #endif
 
-#ifndef kmalloc
-#define kmalloc(size)                     memman_malloc(size, NULL)
+#ifndef malloc
+#define malloc(size)                     sysm_fsmalloc(size)
 #endif
 
-#ifndef kfree
-#define kfree(mem)                        memman_free(mem)
+#ifndef free
+#define free(mem)                        sysm_fsfree(mem)
 #endif
 
-#define FILE_SYSTEM_INTERFACE(fsname)                                                 \
-extern stdret_t  fsname##_init   (void**, const char*);                               \
-extern stdret_t  fsname##_release(void*);                                             \
-extern stdret_t  fsname##_open   (void*, fd_t*, size_t*, const char*, const char*);   \
-extern stdret_t  fsname##_close  (void*, fd_t);                                       \
-extern size_t    fsname##_write  (void*, fd_t, void*, size_t, size_t, size_t);        \
-extern size_t    fsname##_read   (void*, fd_t, void*, size_t, size_t, size_t);        \
-extern stdret_t  fsname##_ioctl  (void*, fd_t, iorq_t, void*);                        \
-extern stdret_t  fsname##_mkdir  (void*, const char*);                                \
-extern stdret_t  fsname##_mknod  (void*, const char*, struct vfs_drv_interface*);     \
-extern stdret_t  fsname##_opendir(void*, const char*, dir_t*);                        \
-extern stdret_t  fsname##_remove (void*, const char*);                                \
-extern stdret_t  fsname##_rename (void*, const char*, const char*);                   \
-extern stdret_t  fsname##_chmod  (void*, const char*, u32_t);                         \
-extern stdret_t  fsname##_chown  (void*, const char*, u16_t, u16_t);                  \
-extern stdret_t  fsname##_stat   (void*, const char*, struct vfs_statf*);             \
-extern stdret_t  fsname##_fstat  (void*, fd_t, struct vfs_statf*);                    \
-extern stdret_t  fsname##_statfs (void*, struct vfs_statfs*)
+#define FILE_SYSTEM_INTERFACE(fsname)                                                \
+extern stdret_t fsname##_init   (void**, const char*);                               \
+extern stdret_t fsname##_release(void*);                                             \
+extern stdret_t fsname##_open   (void*, fd_t*, size_t*, const char*, const char*);   \
+extern stdret_t fsname##_close  (void*, fd_t);                                       \
+extern size_t   fsname##_write  (void*, fd_t, void*, size_t, size_t, size_t);        \
+extern size_t   fsname##_read   (void*, fd_t, void*, size_t, size_t, size_t);        \
+extern stdret_t fsname##_ioctl  (void*, fd_t, iorq_t, void*);                        \
+extern stdret_t fsname##_mkdir  (void*, const char*);                                \
+extern stdret_t fsname##_mknod  (void*, const char*, struct vfs_drv_interface*);     \
+extern stdret_t fsname##_opendir(void*, const char*, dir_t*);                        \
+extern stdret_t fsname##_remove (void*, const char*);                                \
+extern stdret_t fsname##_rename (void*, const char*, const char*);                   \
+extern stdret_t fsname##_chmod  (void*, const char*, u32_t);                         \
+extern stdret_t fsname##_chown  (void*, const char*, u16_t, u16_t);                  \
+extern stdret_t fsname##_stat   (void*, const char*, struct vfs_statf*);             \
+extern stdret_t fsname##_fstat  (void*, fd_t, struct vfs_statf*);                    \
+extern stdret_t fsname##_statfs (void*, struct vfs_statfs*)
 
 /*==============================================================================
   Exported types, enums definitions

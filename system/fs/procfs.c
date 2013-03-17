@@ -32,7 +32,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "procfs.h"
-#include "sysdrv.h"
 #include "io.h"
 #include "dlist.h"
 #include "cpuctl.h"
@@ -120,7 +119,7 @@ stdret_t procfs_init(void **fshdl, const char *src_path)
                 return STD_RET_ERROR;
         }
 
-        if (!(procmem = kcalloc(1, sizeof(struct procfs)))) {
+        if (!(procmem = calloc(1, sizeof(struct procfs)))) {
                 return STD_RET_ERROR;
         }
 
@@ -136,7 +135,7 @@ stdret_t procfs_init(void **fshdl, const char *src_path)
                         delete_mutex(procmem->resource_mtx);
                 }
 
-                kfree(procmem);
+                free(procmem);
                 return STD_RET_ERROR;
         } else {
                 *fshdl = procmem;
@@ -167,7 +166,7 @@ stdret_t procfs_release(void *fshdl)
         unlock_mutex(procmem->resource_mtx);
         delete_mutex(procmem->resource_mtx);
         delete_list(procmem->file_list);
-        kfree(procmem);
+        free(procmem);
         exit_critical();
 
         return STD_RET_OK;
@@ -221,7 +220,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                         path++;
                 }
 
-                fileInf = kcalloc(1, sizeof(struct file_info));
+                fileInf = calloc(1, sizeof(struct file_info));
                 if (fileInf == NULL) {
                         return STD_RET_ERROR;
                 }
@@ -239,7 +238,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                 } else if (strcmp((char*) path, TASK_FILE_USEDMEM_STR) == 0) {
                         fileInf->task_file = TASK_FILE_USEDMEM;
                 } else {
-                        kfree(fileInf);
+                        free(fileInf);
                         return STD_RET_ERROR;
                 }
 
@@ -254,7 +253,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                 }
 
                 unlock_mutex(procmem->resource_mtx);
-                kfree(fileInf);
+                free(fileInf);
                 return STD_RET_ERROR;
 
         } else if (strncmp(path, "/"DIR_TASKNAME_STR"/",
@@ -276,7 +275,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                                 continue;
                         }
 
-                        fileInf = kcalloc(1, sizeof(struct file_info));
+                        fileInf = calloc(1, sizeof(struct file_info));
                         if (fileInf == NULL) {
                                 return STD_RET_ERROR;
                         }
@@ -297,7 +296,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                         }
 
                         unlock_mutex(procmem->resource_mtx);
-                        kfree(fileInf);
+                        free(fileInf);
                         return STD_RET_ERROR;
                 }
         }
@@ -629,7 +628,7 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 dir->cldir = procfs_closedir_noop;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
-                dir->dd    = kcalloc(TASK_ID_STR_LEN, sizeof(char));
+                dir->dd    = calloc(TASK_ID_STR_LEN, sizeof(char));
                 dir->items = sysm_get_number_of_monitored_tasks();
                 dir->rddir = procfs_readdir_taskid;
                 dir->cldir = procfs_closedir_freedd;
@@ -682,7 +681,7 @@ static stdret_t procfs_closedir_freedd(void *fshdl, dir_t *dir)
 
         if (dir) {
                 if (dir->dd) {
-                        kfree(dir->dd);
+                        free(dir->dd);
                         dir->dd = NULL;
                         return STD_RET_OK;
                 }
