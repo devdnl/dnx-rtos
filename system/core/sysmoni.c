@@ -115,6 +115,7 @@ struct task_monitor_data {
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 static list_t  *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
+static i32_t    sysm_kernel_memory_usage;
 #endif
 
 /*==============================================================================
@@ -488,6 +489,67 @@ stdret_t sysm_enable_fast_memory_monitoring(task_t *taskhdl)
         unlock_recursive_mutex(sysm_resource_mtx);
 
         return status;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of kernel
+ *
+ * @param  size         block size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
+void *sysm_kmalloc(size_t size)
+{
+      size_t allocated;
+      void *p;
+
+      p = memman_malloc(size, &allocated);
+
+      sysm_kernel_memory_usage += allocated;
+
+      return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of kernel
+ *
+ * @param  count        count of items
+ * @param  size         item size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
+void *sysm_kcalloc(size_t count, size_t size)
+{
+        size_t allocated;
+        void *p;
+
+        p = memman_calloc(count, size, &allocated);
+
+        sysm_kernel_memory_usage += allocated;
+
+        return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing for kernel
+ *
+ * @param *mem          block to free
+ */
+//==============================================================================
+#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
+void sysm_kfree(void *mem)
+{
+        sysm_kernel_memory_usage -= memman_free(mem);
 }
 #endif
 

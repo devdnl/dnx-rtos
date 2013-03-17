@@ -42,13 +42,16 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* USER CFG: enable (1) or disable (0) task memory usage monitoring */
-#define SYSM_MONITOR_MEMORY_USAGE                CONFIG_MONITOR_MEMORY_USAGE
+#define SYSM_MONITOR_MEMORY_USAGE               CONFIG_MONITOR_MEMORY_USAGE
 
 /* USER CFG: enable (1) or disable (0) task opened file monitoring */
-#define SYSM_MONITOR_FILE_USAGE                  CONFIG_MONITOR_FILE_USAGE
+#define SYSM_MONITOR_FILE_USAGE                 CONFIG_MONITOR_FILE_USAGE
 
 /* USER CFG: enable (1) or disable (0) task CPU load monitoring */
-#define SYSM_MONITOR_CPU_LOAD                    CONFIG_MONITOR_CPU_LOAD
+#define SYSM_MONITOR_CPU_LOAD                   CONFIG_MONITOR_CPU_LOAD
+
+/* USER CFG: enable (1) or disable (0) kernel memory usage monitoring */
+#define SYSM_MONITOR_KERNEL_MEMORY_USAGE        CONFIG_MONITOR_KERNEL_MEMORY_USAGE
 
 /* ---------------------------------------------------------------------------*/
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -60,6 +63,13 @@ extern "C" {
 #define sysm_calloc(nmemb, msize)               memman_calloc(nmemb, msize, NULL)
 #define sysm_freemem_as(taskhdl, mem, size)     memman_free(mem)
 #define sysm_free(mem)                          memman_free(mem)
+#endif
+
+/* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
+#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE == 0)
+#define sysm_kmalloc(size)                      memman_malloc(size, NULL)
+#define sysm_kcalloc(count, size)               memman_calloc(count, size, NULL)
+#define sysm_kfree(mem)                         memman_free(mem)
 #endif
 
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
@@ -142,6 +152,12 @@ extern void     sysm_clear_total_CPU_usage(void);
 extern stdret_t sysm_get_task_stat(task_t*, struct taskstat*);
 extern stdret_t sysm_get_ntask_stat(i32_t, struct taskstat*);
 extern int      sysm_get_number_of_monitored_tasks(void);
+#endif
+
+#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
+extern void *sysm_kmalloc(size_t);
+extern void *sysm_kcalloc(size_t, size_t);
+extern void  sysm_kfree(void*);
 #endif
 
 #if (SYSM_MONITOR_MEMORY_USAGE > 0)

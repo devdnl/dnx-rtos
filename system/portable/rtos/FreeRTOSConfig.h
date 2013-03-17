@@ -73,10 +73,10 @@
 /*-------------------------------------------------------------
  * Used prototypes from external modules
  *-----------------------------------------------------------*/
-extern void  *memman_malloc(size_t size, size_t *real_size);
-extern size_t memman_free(void *mem);
-extern void   sysm_task_switched_in(void);
-extern void   sysm_task_switched_out(void);
+extern void *sysm_kmalloc(size_t);
+extern void  sysm_kfree(void*);
+extern void  sysm_task_switched_in(void);
+extern void  sysm_task_switched_out(void);
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -139,8 +139,8 @@ NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY CONFIG_RTOS_LIB_KERNEL_IRQ_PRIO
 
 /** dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
-#define malloc(size)                            memman_malloc(size, NULL)
-#define free(mem)                               memman_free(mem)
+#define malloc(size)                            sysm_kmalloc(size)
+#define free(mem)                               sysm_kfree(mem)
 
 /* required functions in cpu load stats */
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
