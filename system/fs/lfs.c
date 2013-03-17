@@ -771,11 +771,11 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 /**
  * @brief Function open selected file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in]  *fshdl           FS handle
  * @param[out] *fd              file descriptor
  * @param[out] *seek            file position
- * @param [in] *path            file path
- * @param [in] *mode            file mode
+ * @param[in]  *path            file path
+ * @param[in]  *mode            file mode
  *
  * @retval STD_RET_OK           file opened/created
  * @retval STD_RET_ERROR        file not opened/created
