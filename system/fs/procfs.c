@@ -126,6 +126,9 @@ stdret_t procfs_init(void **fshdl, const char *src_path)
                 return STD_RET_ERROR;
         }
 
+        procmem->file_list    = new_list();
+        procmem->resource_mtx = new_mutex();
+
         if (!procmem->file_list || !procmem->resource_mtx) {
                 if (procmem->file_list) {
                         delete_list(procmem->file_list);

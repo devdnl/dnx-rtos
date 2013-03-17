@@ -84,7 +84,7 @@ struct driver_entry {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const struct driver_entry driver_table[] =
+static const struct driver_entry regdrv_driver_table[] =
 {
         IMPORT_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1, UART_PART_NONE),
         IMPORT_DRIVER_INTERFACE(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
@@ -108,7 +108,7 @@ static const struct driver_entry driver_table[] =
 };
 
 /* pointers to memory handle used by drivers */
-static void *driver_handle[ARRAY_SIZE(driver_table)];
+static void *regdrv_driver_handle[ARRAY_SIZE(regdrv_driver_table)];
 
 /*==============================================================================
   Exported object definitions
@@ -130,26 +130,28 @@ static void *driver_handle[ARRAY_SIZE(driver_table)];
 //==============================================================================
 stdret_t init_driver(const char *drv_name, const char *node_path)
 {
+        struct vfs_drv_interface drv_if;
+
         if (drv_name == NULL) {
                 return STD_RET_ERROR;
         }
 
-        for (u16_t i = 0; i < ARRAY_SIZE(driver_table); i++) {
+        for (u16_t i = 0; i < ARRAY_SIZE(regdrv_driver_table); i++) {
 
-                if (strcmp(driver_table[i].drv_name, drv_name) != 0) {
+                if (strcmp(regdrv_driver_table[i].drv_name, drv_name) != 0) {
                         continue;
                 }
 
-                if (driver_handle[i]) {
+                if (regdrv_driver_handle[i]) {
                         printk(FONT_COLOR_RED"Driver %s is already initialized!"
                                RESET_ATTRIBUTES"\n", drv_name);
 
                         return STD_RET_ERROR;
                 }
 
-                if (driver_table[i].drv_init(&driver_handle[i],
-                                             driver_table[i].dev,
-                                             driver_table[i].part) != STD_RET_OK) {
+                if (regdrv_driver_table[i].drv_init(&regdrv_driver_handle[i],
+                                             regdrv_driver_table[i].dev,
+                                             regdrv_driver_table[i].part) != STD_RET_OK) {
 
                         printk(FONT_COLOR_RED"Driver %s initialization error!"
                                RESET_ATTRIBUTES"\n", drv_name);
@@ -158,13 +160,14 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                 }
 
                 if (node_path) {
-                        if (vfs_mknod(node_path, (struct vfs_drv_interface *)
-                                      &driver_table[i].drv_if) == STD_RET_OK) {
+                        drv_if = regdrv_driver_table[i].drv_if;
+                        drv_if.handle = regdrv_driver_handle[i];
 
+                        if (vfs_mknod(node_path, &drv_if) == STD_RET_OK) {
                                 printk("Created node %s\n", node_path);
                                 return STD_RET_OK;
                         } else {
-                                driver_table[i].drv_release(driver_handle[i]);
+                                regdrv_driver_table[i].drv_release(regdrv_driver_handle[i]);
 
                                 printk(FONT_COLOR_RED"Create node %s failed"
                                        RESET_ATTRIBUTES"\n", node_path);
@@ -201,13 +204,13 @@ stdret_t release_driver(const char *drv_name)
                 return STD_RET_ERROR;
         }
 
-        for (uint i = 0; i < ARRAY_SIZE(driver_table); i++) {
-                if (strcmp(driver_table[i].drv_name, drv_name) == 0) {
+        for (uint i = 0; i < ARRAY_SIZE(regdrv_driver_table); i++) {
+                if (strcmp(regdrv_driver_table[i].drv_name, drv_name) == 0) {
 
-                        status = driver_table[i].drv_release(driver_handle[i]);
+                        status = regdrv_driver_table[i].drv_release(regdrv_driver_handle[i]);
 
                         if (status == STD_RET_OK) {
-                                driver_handle[i] = NULL;
+                                regdrv_driver_handle[i] = NULL;
                         }
 
                         return status;
