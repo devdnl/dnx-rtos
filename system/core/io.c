@@ -496,7 +496,7 @@ int io_fprintf(file_t *file, const char *format, ...)
                         n = io_vsnprintf(str, size, format, args);
                         va_end(args);
 
-                        fwrite(str, sizeof(char), size, file);
+                        vfs_fwrite(str, sizeof(char), size, file);
 
                         free(str);
                 }

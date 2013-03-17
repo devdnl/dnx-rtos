@@ -53,11 +53,11 @@ extern "C" {
 /* ---------------------------------------------------------------------------*/
 /* DIRECT FUNCTIONS IF MONITORING IS DISABLED */
 #if (TSKM_MONITOR_MEMORY_USAGE == 0)
-#define tskm_malloc_as(taskhdl, size)           memman_malloc(size)
-#define tskm_calloc_as(taskhdl, nmemb, msize)   memman_calloc(nmemb, msize)
+#define tskm_malloc_as(taskhdl, size)           memman_malloc(size, NULL)
+#define tskm_calloc_as(taskhdl, nmemb, msize)   memman_calloc(nmemb, msize, NULL)
 #define tskm_free_as(taskhdl, mem)              memman_free(mem)
-#define tskm_malloc(size)                       memman_malloc(size)
-#define tskm_calloc(nmemb, msize)               memman_calloc(nmemb, msize)
+#define tskm_malloc(size)                       memman_malloc(size, NULL)
+#define tskm_calloc(nmemb, msize)               memman_calloc(nmemb, msize, NULL)
 #define tskm_freemem_as(taskhdl, mem, size)     memman_free(mem)
 #define tskm_free(mem)                          memman_free(mem)
 #endif
