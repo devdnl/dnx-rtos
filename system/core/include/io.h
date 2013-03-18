@@ -34,7 +34,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdarg.h>
-#include "basic_types.h"
 #include "systypes.h"
 #include "config.h"
 

@@ -40,9 +40,6 @@ extern "C" {
 /*==============================================================================
  Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)              sysm_syscalloc(nmemb, msize)
-#define malloc(size)                      sysm_sysmalloc(size)
-#define free(mem)                         sysm_sysfree(mem)
 
 /*==============================================================================
  Local types, enums definitions
@@ -334,7 +331,7 @@ void io_printk(const char *format, ...)
                 int size = calc_format_size(format, args);
                 va_end(args);
 
-                char *buffer = calloc(size, sizeof(char));
+                char *buffer = sysm_syscalloc(size, sizeof(char));
 
                 if (buffer) {
                         va_start(args, format);
@@ -343,7 +340,7 @@ void io_printk(const char *format, ...)
 
                         vfs_fwrite(buffer, sizeof(char), size, io_printk_file);
 
-                        free(buffer);
+                        sysm_sysfree(buffer);
                 }
         }
 }
@@ -489,7 +486,7 @@ int io_fprintf(file_t *file, const char *format, ...)
                 u32_t size = calc_format_size(format, args);
                 va_end(args);
 
-                char *str = calloc(1, size);
+                char *str = sysm_syscalloc(1, size);
 
                 if (str) {
                         va_start(args, format);
@@ -498,7 +495,7 @@ int io_fprintf(file_t *file, const char *format, ...)
 
                         vfs_fwrite(str, sizeof(char), size, file);
 
-                        free(str);
+                        sysm_sysfree(str);
                 }
         }
 
@@ -607,7 +604,7 @@ int io_fscanf(file_t *stream, const char *format, ...)
         int n = 0;
         va_list args;
 
-        char *str = calloc(BUFSIZ, sizeof(char));
+        char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
 
         if (str == NULL) {
                 return 0;
@@ -626,7 +623,7 @@ int io_fscanf(file_t *stream, const char *format, ...)
                 va_end(args);
         }
 
-        free(str);
+        sysm_sysfree(str);
         return n;
 }
 #endif

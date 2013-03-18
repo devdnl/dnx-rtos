@@ -49,9 +49,9 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** MEMORY MANAGEMENT DEFINTIONS */
-#define malloc(size)                      sysm_malloc(size)
-#define calloc(nitems, isize)             sysm_calloc(nitems, isize)
-#define free(mem)                         sysm_free(mem)
+#define malloc(size)                      sysm_tskmalloc(size)
+#define calloc(nitems, isize)             sysm_tskcalloc(nitems, isize)
+#define free(mem)                         sysm_tskfree(mem)
 
 /** FILE ACCESS MANAGEMENT */
 #define getmntentry(item, mntentPtr)      sysm_getmntentry(item, mntentPtr)
@@ -92,7 +92,6 @@ extern "C" {
 #define get_kernel_version()              "7.3.0"
 #define get_host_name()                   CONFIG_HOSTNAME
 #define getcwd(buf, size)                 strncpy(buf, get_this_task_data()->f_cwd, size)
-#define get_used_memory_by_FS()           sysm_get_used_file_system_memory()
 #define get_used_memory_by_kernel()       sysm_get_used_kernel_memory()
 #define get_used_memory_by_system()       sysm_get_used_system_memory()
 

@@ -44,16 +44,6 @@ extern "C" {
 #undef stdin
 #undef stdout
 
-#define monitored_calloc_as(task, nmemb, msize) sysm_calloc_as(task, nmemb, msize)
-#define monitored_malloc_as(task, size)         sysm_malloc_as(task, size)
-#define monitored_free_as(task, mem)            sysm_free_as(task, mem)
-#define monitored_calloc(nmemb, msize)          sysm_calloc(nmemb, msize)
-#define monitored_malloc(size)                  sysm_malloc(size)
-#define monitored_free(mem)                     sysm_free(mem)
-#define calloc(nmemb, msize)                    sysm_syscalloc(nmemb, msize)
-#define malloc(size)                            sysm_sysmalloc(size)
-#define free(mem)                               sysm_sysfree(mem)
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -119,13 +109,13 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, file_t *stdin,
                 return NULL;
         }
 
-        if ((pdata = calloc(1, sizeof(struct program_data))) == NULL) {
+        if ((pdata = sysm_syscalloc(1, sizeof(struct program_data))) == NULL) {
                 set_status(status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                 return NULL;
         }
 
         if ((pdata->argv = new_argument_table(args, name, &pdata->argc)) == NULL) {
-                free(pdata);
+                sysm_sysfree(pdata);
                 set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
                 return NULL;
         }
@@ -150,7 +140,7 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, file_t *stdin,
         if (taskhdl == NULL) {
                 set_status(status, PROGRAM_HANDLE_ERROR);
                 delete_argument_table(pdata->argv, pdata->argc);
-                free(pdata);
+                sysm_sysfree(pdata);
                 return NULL;
         }
 
@@ -175,7 +165,7 @@ void prgm_delete_program(task_t *taskhdl)
 
         if ((tdata = get_task_data(taskhdl))) {
                 if (tdata->f_global_vars) {
-                        monitored_free_as(taskhdl, tdata->f_global_vars);
+                        sysm_tskfree_as(taskhdl, tdata->f_global_vars);
                         tdata->f_global_vars = NULL;
                 }
 
@@ -192,7 +182,7 @@ void prgm_delete_program(task_t *taskhdl)
                                 *pdata->status = PROGRAM_ENDED;
                         }
 
-                        free(pdata);
+                        sysm_sysfree(pdata);
                         tdata->f_user = NULL;
                 }
         }
@@ -215,7 +205,7 @@ static void task_program_startup(void *argv)
         int                  exit_code = STD_RET_UNKNOWN;
 
         if (!(tdata = get_this_task_data())) {
-                free(pdata);
+                sysm_sysfree(pdata);
                 set_status(pdata->status, PROGRAM_HANDLE_ERROR);
                 task_exit();
         }
@@ -226,7 +216,7 @@ static void task_program_startup(void *argv)
         tdata->f_cwd    = pdata->cwd;
 
         if (pdata->globals_size) {
-                if (!(taskmem = monitored_calloc(1, pdata->globals_size))) {
+                if (!(taskmem = sysm_tskcalloc(1, pdata->globals_size))) {
                         set_status(pdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                         goto task_exit;
                 }
@@ -244,7 +234,7 @@ static void task_program_startup(void *argv)
         }
 
         if (tdata->f_global_vars) {
-                monitored_free(tdata->f_global_vars);
+                sysm_tskfree(tdata->f_global_vars);
                 tdata->f_global_vars = NULL;
         }
 
@@ -252,7 +242,7 @@ static void task_program_startup(void *argv)
                 delete_argument_table(pdata->argv, pdata->argc);
         }
 
-        free(pdata);
+        sysm_sysfree(pdata);
         tdata->f_user = NULL;
 
         task_exit();
@@ -310,7 +300,7 @@ static char **new_argument_table(char *arg, const char *name, int *argc)
                 goto add_args_to_table;
         }
 
-        if ((arg_string = calloc(strlen(arg) + 1, sizeof(char))) == NULL) {
+        if ((arg_string = sysm_syscalloc(strlen(arg) + 1, sizeof(char))) == NULL) {
                 goto exit_error;
         }
 
@@ -382,7 +372,7 @@ static char **new_argument_table(char *arg, const char *name, int *argc)
         }
 
 add_args_to_table:
-        if ((arg_table = calloc(arg_count, sizeof(char*))) == NULL) {
+        if ((arg_table = sysm_syscalloc(arg_count, sizeof(char*))) == NULL) {
                 goto exit_error;
         }
 
@@ -406,7 +396,7 @@ add_args_to_table:
         /* error occurred - memory/object deallocation */
 exit_error:
         if (arg_table) {
-                free(arg_table);
+                sysm_sysfree(arg_table);
         }
 
         if (arg_list) {
@@ -420,7 +410,7 @@ exit_error:
         }
 
         if (arg_string) {
-                free(arg_string);
+                sysm_sysfree(arg_string);
         }
 
         *argc = 0;
@@ -443,11 +433,11 @@ static void delete_argument_table(char **argv, int argc)
 
         if (argc > 1) {
                 if (argv[1]) {
-                        free(argv[1]);
+                        sysm_sysfree(argv[1]);
                 }
         }
 
-        free(argv);
+        sysm_sysfree(argv);
 }
 
 #ifdef __cplusplus

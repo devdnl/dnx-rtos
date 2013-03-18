@@ -46,15 +46,15 @@ extern "C" {
 #endif
 
 #ifndef calloc
-#define calloc(nmemb, msize)             sysm_fscalloc(nmemb, msize)
+#define calloc(nmemb, msize)             sysm_syscalloc(nmemb, msize)
 #endif
 
 #ifndef malloc
-#define malloc(size)                     sysm_fsmalloc(size)
+#define malloc(size)                     sysm_sysmalloc(size)
 #endif
 
 #ifndef free
-#define free(mem)                        sysm_fsfree(mem)
+#define free(mem)                        sysm_sysfree(mem)
 #endif
 
 #define FILE_SYSTEM_INTERFACE(fsname)                                                \

@@ -45,9 +45,9 @@ extern "C" {
   Local types, enums definitions
 ==============================================================================*/
 enum cmd_status {
-        CMD_EXECUTED,
-        CMD_NOT_EXIST,
-        CMD_NOT_ENOUGH_FREE_MEMORY
+        CMD_STATUS_EXECUTED,
+        CMD_STATUS_NOT_EXIST,
+        CMD_STATUS_NOT_ENOUGH_FREE_MEMORY
 };
 
 struct cmd_entry {
@@ -161,19 +161,19 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 /* identify program localization */
                 cmd_status = find_internal_command(cmd, arg);
 
-                if (cmd_status == CMD_NOT_EXIST) {
+                if (cmd_status == CMD_STATUS_NOT_EXIST) {
                         cmd_status = find_external_command(cmd, arg);
                 }
 
                 switch (cmd_status) {
-                case CMD_EXECUTED:
+                case CMD_STATUS_EXECUTED:
                         continue;
 
-                case CMD_NOT_EXIST:
+                case CMD_STATUS_NOT_EXIST:
                         printf("\"%s\" is unknown command.\n", cmd);
                         break;
 
-                case CMD_NOT_ENOUGH_FREE_MEMORY:
+                case CMD_STATUS_NOT_ENOUGH_FREE_MEMORY:
                         printf("Not enough free memory.\n");
                         break;
                 }
@@ -206,7 +206,7 @@ static void print_prompt(void)
 static enum cmd_status find_external_command(char *cmd, char *arg)
 {
         enum prog_state state  = PROGRAM_UNKNOWN_STATE;
-        enum cmd_status status = CMD_NOT_EXIST;
+        enum cmd_status status = CMD_STATUS_NOT_EXIST;
 
         new_program(cmd, arg, global->cwd, stdin, stdout, &state, NULL);
 
@@ -220,17 +220,17 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
                 break;
 
         case PROGRAM_ENDED:
-                status = CMD_EXECUTED;
+                status = CMD_STATUS_EXECUTED;
                 break;
 
         case PROGRAM_HANDLE_ERROR:
         case PROGRAM_ARGUMENTS_PARSE_ERROR:
         case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
-                status = CMD_NOT_ENOUGH_FREE_MEMORY;
+                status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY;
                 break;
 
         case PROGRAM_DOES_NOT_EXIST:
-                status = CMD_NOT_EXIST;
+                status = CMD_STATUS_NOT_EXIST;
                 break;
         }
 
@@ -255,7 +255,7 @@ static enum cmd_status find_internal_command(char *cmd, char *arg)
                 }
         }
 
-        return CMD_NOT_EXIST;
+        return CMD_STATUS_NOT_EXIST;
 }
 
 //==============================================================================
@@ -316,7 +316,7 @@ static enum cmd_status cmd_cd(char *arg)
                         free(newpath);
         }
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -397,7 +397,7 @@ static enum cmd_status cmd_ls(char *arg)
         if (freePath)
                 free(newpath);
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -442,7 +442,7 @@ static enum cmd_status cmd_mkdir(char *arg)
         if (freePath)
                 free(newpath);
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -491,7 +491,7 @@ static enum cmd_status cmd_touch(char *arg)
         if (freePath)
                 free(newpath);
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -536,7 +536,7 @@ static enum cmd_status cmd_rm(char *arg)
         if (freePath)
                 free(newpath);
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -555,14 +555,13 @@ static enum cmd_status cmd_free(char *arg)
 
         printf("Total: %d\n", get_memory_size());
         printf("Free : %d\n", free);
-        printf("Used : %d (kernel: %d, system: %d, FS: %d)\n", used,
+        printf("Used : %d (kernel: %d, system: %d)\n", used,
                get_used_memory_by_kernel(),
-               get_used_memory_by_system(),
-               get_used_memory_by_FS());
+               get_used_memory_by_system());
         printf("Memory usage: %d%%\n",
                (used * 100)/get_memory_size());
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -583,7 +582,7 @@ static enum cmd_status cmd_uptime(char *arg)
 
         printf("up %ud %u2:%u2\n", udays, uhrs, umins);
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -599,7 +598,7 @@ static enum cmd_status cmd_clear(char *arg)
 
         ioctl(stdout, TTY_IORQ_CLEAR_SCR, NULL);
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -617,7 +616,7 @@ static enum cmd_status cmd_reboot(char *arg)
         milisleep(500);
         reboot();
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -663,7 +662,7 @@ static enum cmd_status cmd_df(char *arg)
         if (mnt.mnt_fsname)
                 free(mnt.mnt_fsname);
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -688,7 +687,7 @@ static enum cmd_status cmd_mount(char *arg)
 
         if (arg[0] == '\0') {
                 printf("Usage: mount [file system name] [source path|-] [mount point]\n");
-                return CMD_EXECUTED;
+                return CMD_STATUS_EXECUTED;
         }
 
         if ((fstype = calloc(len + 1, sizeof(char))) != NULL) {
@@ -741,7 +740,7 @@ static enum cmd_status cmd_mount(char *arg)
                 free(fsmntp);
         }
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 #ifdef __cplusplus
@@ -765,7 +764,7 @@ static enum cmd_status cmd_umount(char *arg)
                 }
         }
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
@@ -783,7 +782,7 @@ static enum cmd_status cmd_help(char *arg)
                 printf("%s\n", commands[cmd].name);
         }
 
-        return CMD_EXECUTED;
+        return CMD_STATUS_EXECUTED;
 }
 
 /*==============================================================================

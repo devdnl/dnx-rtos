@@ -58,8 +58,6 @@ extern "C" {
 #define kfree(mem)                        memman_free(mem)
 #endif
 
-#define enable_fast_memory_monitoring()   sysm_enable_fast_memory_monitoring(get_task_handle())
-
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
 #define umount(path)                      vfs_umount(path)
 #define getmntentry(item, mntentPtr)      vfs_getmntentry(item, mntentPtr)

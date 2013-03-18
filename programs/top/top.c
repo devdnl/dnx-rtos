@@ -105,10 +105,9 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                        get_used_memory(),
                        get_free_memory());
 
-                printf("Kernel: %d\tSystem: %d\tFile Systems: %d\n\n",
+                printf("Kernel: %d\nSystem: %d\n\n",
                        get_used_memory_by_kernel(),
-                       get_used_memory_by_system(),
-                       get_used_memory_by_FS());
+                       get_used_memory_by_system());
 
                 printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 

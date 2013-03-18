@@ -33,13 +33,10 @@ extern "C" {
 ==============================================================================*/
 #include "oswrap.h"
 #include "sysmoni.h"
-#include "memman.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nitems, itemsize)        memman_calloc(nitems, itemsize, NULL)
-#define free(mem)                       memman_free(mem)
 
 /*==============================================================================
   Local types, enums definitions
@@ -78,38 +75,38 @@ extern "C" {
 //==============================================================================
 task_t *osw_new_task(void (*func)(void*), const char *name, u16_t stack_depth, void *argv)
 {
-        task_t           *task = NULL;
+        task_t           *task          = NULL;
+        uint             child_priority = PRIORITY(0);
         struct task_data *data;
-        uint              child_priority = PRIORITY(0);
 
-        if (!(data = calloc(1, sizeof(struct task_data)))) {
+        if (!(data = sysm_kcalloc(1, sizeof(struct task_data)))) {
                 return NULL;
         }
 
-        data->f_parent_task = get_task_handle();
+        data->f_parent_task = xTaskGetCurrentTaskHandle();
 
         if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
                 child_priority = uxTaskPriorityGet(THIS_TASK);
         }
 
-        enter_critical();
+        taskENTER_CRITICAL();
         if (xTaskCreate(func, (signed char *)name, stack_depth,
                         argv, child_priority, &task) == OS_OK) {
 
                 vTaskSuspend(task);
-                exit_critical();
+                taskEXIT_CRITICAL();
                 vTaskSetApplicationTaskTag(task, (void *)data);
 
                 if (sysm_start_task_monitoring(task) == STD_RET_OK) {
                         vTaskResume(task);
                 } else {
                         vTaskDelete(task);
-                        free(data);
+                        sysm_kfree(data);
                         task = NULL;
                 }
         } else {
-                exit_critical();
-                free(data);
+                taskEXIT_CRITICAL();
+                sysm_kfree(data);
         }
 
         return task;
@@ -131,14 +128,14 @@ void osw_delete_task(task_t *taskHdl)
         if (sysm_is_task_exist(taskHdl)) {
                 sysm_stop_task_monitoring(taskHdl);
 
-                if ((data = get_task_tag(taskHdl))) {
+                if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
 
                         if (data->f_parent_task) {
                                 vTaskResume(data->f_parent_task);
                         }
 
-                        free(data);
-                        set_task_tag(taskHdl, NULL);
+                        sysm_kfree(data);
+                        vTaskSetApplicationTaskTag(taskHdl, NULL);
                 }
 
                 vTaskDelete(taskHdl);
@@ -155,9 +152,7 @@ void osw_delete_task(task_t *taskHdl)
 sem_t *osw_create_binary_semaphore(void)
 {
         sem_t *sem = NULL;
-
         vSemaphoreCreateBinary(sem);
-
         return sem;
 }
 

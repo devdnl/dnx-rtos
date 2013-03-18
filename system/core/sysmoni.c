@@ -41,21 +41,11 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)            sysm_syscalloc(nmemb, msize)
-#define malloc(size)                    sysm_sysmalloc(size)
-#define free(mem)                       sysm_sysfree(mem)
-
-#define MEM_BLOCK_COUNT                 4
-#define MEM_ADR_IN_BLOCK                7
-
-#define FILE_BLOCK_COUNT                3
-#define FILES_OPENED_IN_BLOCK           7
-
-#define DIR_BLOCK_COUNT                 1
-#define DIRS_OPENED_IN_BLOCK            3
+#define TASK_MEMORY_SLOTS               20
+#define TASK_FILE_SLOTS                 8
+#define TASK_DIR_SLOTS                  4
 
 #define MTX_BLOCK_TIME                  10
-
 #define force_lock_recursive_mutex(mtx) while (lock_recursive_mutex(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED)
 
 /*==============================================================================
@@ -63,44 +53,16 @@ extern "C" {
 ==============================================================================*/
 /* task information */
 struct task_monitor_data {
-    #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) || (SYSM_MONITOR_FILE_USAGE > 0)
-        bool_t fast_monitoring;
-    #endif
-
-    #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
         u32_t used_memory;
+        void  *mem_slot[TASK_MEMORY_SLOTS];
+#endif
 
-        struct memBlock {
-                bool_t full;
-
-                struct memSlot {
-                        void *addr;
-                        u32_t size;
-                } mslot[MEM_ADR_IN_BLOCK];
-
-        }*mblock[MEM_BLOCK_COUNT];
-    #endif
-
-    #if (SYSM_MONITOR_FILE_USAGE > 0)
-        uint opened_files;
-
-        struct fileBlock {
-                bool_t full;
-
-                struct fileSlot {
-                        file_t *file;
-                } fslot[FILES_OPENED_IN_BLOCK];
-
-        }*fblock[FILE_BLOCK_COUNT];
-
-        struct dirBlock {
-                bool_t full;
-
-                struct dirSlot {
-                        dir_t *dir;
-                } dslot[DIRS_OPENED_IN_BLOCK];
-        }*dblock[DIR_BLOCK_COUNT];
-    #endif
+#if (SYSM_MONITOR_FILE_USAGE > 0)
+        uint   opened_files;
+        file_t *file_slot[TASK_FILE_SLOTS];
+        dir_t  *dir_slot[TASK_DIR_SLOTS];
+#endif
 };
 
 /*==============================================================================
@@ -123,10 +85,6 @@ static i32_t sysm_kernel_memory_usage;
 
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
 static i32_t sysm_system_memory_usage;
-#endif
-
-#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
-static i32_t sysm_file_system_memory_usage;
 #endif
 
 /*==============================================================================
@@ -215,10 +173,10 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
                 goto exit_error;
         }
 
-        if ((tmdata = calloc(1, sizeof(struct task_monitor_data)))) {
+        if ((tmdata = sysm_syscalloc(1, sizeof(struct task_monitor_data)))) {
 
                 if (list_add_item(sysm_task_list, (u32_t)taskhdl, NULL) < 0) {
-                        free(tmdata);
+                        sysm_sysfree(tmdata);
                         set_task_monitor_data(taskhdl, NULL);
                         goto exit_error;
                 } else {
@@ -250,9 +208,6 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
 stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 {
         struct task_monitor_data *task_monitor_data;
-        struct memSlot           *mslot;
-        struct fileSlot          *fslot;
-        struct dirSlot           *dslot;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -264,63 +219,29 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
                 goto exit_error;
         }
 
-    #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-        for (u32_t block = 0; block < MEM_BLOCK_COUNT; block++) {
-                if (task_monitor_data->mblock[block] == NULL) {
-                        continue;
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
+        for (uint slot = 0; slot < TASK_MEMORY_SLOTS; slot++) {
+                if (task_monitor_data->mem_slot[slot]) {
+                        memman_free(task_monitor_data->mem_slot[slot]);
                 }
-
-                for (u32_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                        mslot = &task_monitor_data->mblock[block]->mslot[slot];
-
-                        if (mslot->addr) {
-                                free(mslot->addr);
-                                mslot->size = 0;
-                        }
-                }
-
-                free(task_monitor_data->mblock[block]);
-                task_monitor_data->mblock[block] = NULL;
         }
-    #endif
+#endif
 
-    #if (SYSM_MONITOR_FILE_USAGE > 0)
-        for (u32_t block = 0; block < FILE_BLOCK_COUNT; block++) {
-                if (task_monitor_data->fblock[block] == NULL) {
-                        continue;
+#if (SYSM_MONITOR_FILE_USAGE > 0)
+        for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
+                if (task_monitor_data->file_slot[slot]) {
+                        vfs_fclose(task_monitor_data->file_slot[slot]);
                 }
-
-                for (u32_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
-                        fslot = &task_monitor_data->fblock[block]->fslot[slot];
-
-                        if (fslot->file) {
-                                vfs_fclose(fslot->file);
-                        }
-                }
-
-                free(task_monitor_data->fblock[block]);
-                task_monitor_data->fblock[block] = NULL;
         }
 
-        for (u32_t block = 0; block < DIR_BLOCK_COUNT; block++) {
-                if (task_monitor_data->dblock[block] == NULL) {
-                        continue;
+        for (uint slot = 0; slot < TASK_DIR_SLOTS; slot++) {
+                if (task_monitor_data->dir_slot[slot]) {
+                        vfs_closedir(task_monitor_data->dir_slot[slot]);
                 }
-
-                for (u32_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
-                        dslot = &task_monitor_data->dblock[block]->dslot[slot];
-
-                        if (dslot->dir) {
-                                vfs_closedir(dslot->dir);
-                        }
-                }
-
-                free(task_monitor_data->fblock[block]);
-                task_monitor_data->fblock[block] = NULL;
         }
-   #endif
+#endif
 
-        free(task_monitor_data);
+        sysm_sysfree(task_monitor_data);
         set_task_monitor_data(taskhdl, NULL);
         list_rm_iditem(sysm_task_list, (u32_t)taskhdl);
         unlock_recursive_mutex(sysm_resource_mtx);
@@ -476,35 +397,6 @@ int sysm_get_number_of_monitored_tasks(void)
 
 //==============================================================================
 /**
- * @brief Function enable fast memory monitoring (not remember allocation addresses)
- *
- * @param *taskhdl      task handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-stdret_t sysm_enable_fast_memory_monitoring(task_t *taskhdl)
-{
-        stdret_t status = STD_RET_ERROR;
-        struct task_monitor_data *task_monitor_data;
-
-        force_lock_recursive_mutex(sysm_resource_mtx);
-
-        if ((task_monitor_data = get_task_monitor_data(taskhdl))) {
-                task_monitor_data->fast_monitoring = TRUE;
-                status = STD_RET_OK;
-        }
-
-        unlock_recursive_mutex(sysm_resource_mtx);
-
-        return status;
-}
-#endif
-
-//==============================================================================
-/**
  * @brief Function monitor memory usage of kernel
  *
  * @param  size         block size
@@ -639,73 +531,6 @@ i32_t sysm_get_used_system_memory(void)
 
 //==============================================================================
 /**
- * @brief Function monitor memory usage of file systems
- *
- * @param  size         block size
- *
- * @return pointer to allocated block or NULL if error
- */
-//==============================================================================
-#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
-void *sysm_fsmalloc(size_t size)
-{
-      size_t allocated;
-      void *p = memman_malloc(size, &allocated);
-      sysm_file_system_memory_usage += allocated;
-      return p;
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function monitor memory usage of file systems
- *
- * @param  count        count of items
- * @param  size         item size
- *
- * @return pointer to allocated block or NULL if error
- */
-//==============================================================================
-#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
-void *sysm_fscalloc(size_t count, size_t size)
-{
-        size_t allocated;
-        void *p = memman_calloc(count, size, &allocated);
-        sysm_file_system_memory_usage += allocated;
-        return p;
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Monitor memory freeing for file systems
- *
- * @param *mem          block to free
- */
-//==============================================================================
-#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
-void sysm_fsfree(void *mem)
-{
-        sysm_file_system_memory_usage -= memman_free(mem);
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function returns used memory by file systems
- *
- * @return used memory by kernel
- */
-//==============================================================================
-#if (SYSM_MONITOR_FILE_SYSTEM_MEMORY_USAGE > 0)
-i32_t sysm_get_used_file_system_memory(void)
-{
-        return sysm_file_system_memory_usage;
-}
-#endif
-
-//==============================================================================
-/**
  * @brief Monitor memory allocation for specified task
  *
  * @param *taskhdl      task handle
@@ -715,12 +540,11 @@ i32_t sysm_get_used_file_system_memory(void)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_malloc_as(task_t *taskhdl, u32_t size)
+void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
 {
-        void   *mem   = NULL;
-        uint    block = 0;
+        void *mem = NULL;
+        size_t allocated;
         struct task_monitor_data *task_monitor_data;
-        struct memSlot           *mslot;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -736,50 +560,15 @@ void *sysm_malloc_as(task_t *taskhdl, u32_t size)
                 goto exit;
         }
 
-        if (task_monitor_data->fast_monitoring) {
-                mem = malloc(size);
-                if (mem) {
-                        task_monitor_data->used_memory += size;
-                }
-
-                goto exit;
-        }
-
-        /* find empty address slot */
-        while (block < MEM_BLOCK_COUNT) {
-                if (task_monitor_data->mblock[block] == NULL) {
-                        task_monitor_data->mblock[block] = calloc(1, sizeof(struct memBlock));
-
-                        if (task_monitor_data->mblock[block] == NULL) {
-                                block++;
-                                continue;
-                        }
-                }
-
-                /* find empty address slot in block */
-                for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK; slot++) {
-                        if (task_monitor_data->mblock[block]->full == TRUE) {
-                                break;
+        for (uint slot = 0; slot < TASK_MEMORY_SLOTS; slot++) {
+                if (task_monitor_data->mem_slot[slot] == NULL) {
+                        if ((mem = memman_malloc(size, &allocated))) {
+                                task_monitor_data->mem_slot[slot] = mem;
+                                task_monitor_data->used_memory   += allocated;
                         }
 
-                        mslot = &task_monitor_data->mblock[block]->mslot[slot];
-
-                        if (mslot->addr == NULL) {
-                                if ((mslot->addr = malloc(size))) {
-                                        mem = mslot->addr;
-                                        mslot->size = size;
-                                        task_monitor_data->used_memory += size;
-                                }
-
-                                if (slot == MEM_ADR_IN_BLOCK - 1) {
-                                        task_monitor_data->mblock[block]->full = TRUE;
-                                }
-
-                                goto exit;
-                        }
+                        goto exit;
                 }
-
-                block++;
         }
 
         printk("%s: Not enough free slots to allocate memory!\n", get_this_task_name());
@@ -800,9 +589,9 @@ void *sysm_malloc_as(task_t *taskhdl, u32_t size)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_malloc(u32_t size)
+void *sysm_tskmalloc(u32_t size)
 {
-        return sysm_malloc_as(get_task_handle(), size);
+        return sysm_tskmalloc_as(get_task_handle(), size);
 }
 #endif
 
@@ -818,9 +607,9 @@ void *sysm_malloc(u32_t size)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_calloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
+void *sysm_tskcalloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
 {
-        void *ptr = sysm_malloc_as(taskhdl, nmemb * msize);
+        void *ptr = sysm_tskmalloc_as(taskhdl, nmemb * msize);
 
         if (ptr) {
                 memset(ptr, 0, nmemb * msize);
@@ -841,9 +630,9 @@ void *sysm_calloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_calloc(u32_t nmemb, u32_t msize)
+void *sysm_tskcalloc(u32_t nmemb, u32_t msize)
 {
-        void *ptr = sysm_malloc_as(get_task_handle(), nmemb * msize);
+        void *ptr = sysm_tskmalloc_as(get_task_handle(), nmemb * msize);
 
         if (ptr) {
                 memset(ptr, 0, nmemb * msize);
@@ -862,10 +651,9 @@ void *sysm_calloc(u32_t nmemb, u32_t msize)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void sysm_free_as(task_t *taskhdl, void *mem)
+void sysm_tskfree_as(task_t *taskhdl, void *mem)
 {
         struct task_monitor_data *task_monitor_data;
-        struct memSlot           *mslot;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -881,50 +669,10 @@ void sysm_free_as(task_t *taskhdl, void *mem)
                 goto exit;
         }
 
-        if (task_monitor_data->fast_monitoring) {
-                free(mem);
-                goto exit;
-        }
-
-        /* find address slot */
-        for (u8_t block = 0; block < MEM_BLOCK_COUNT; block++) {
-                if (task_monitor_data->mblock[block] == NULL) {
-                        continue;
-                }
-
-                /* find empty address slot in block */
-                for (u8_t slot = 0; slot < MEM_ADR_IN_BLOCK;slot++) {
-
-                        mslot = &task_monitor_data->mblock[block]->mslot[slot];
-
-                        if (mslot->addr != mem) {
-                                continue;
-                        }
-
-                        free(mslot->addr);
-                        mslot->addr = NULL;
-
-                        task_monitor_data->used_memory -= mslot->size;
-                        mslot->size = 0;
-
-                        task_monitor_data->mblock[block]->full = FALSE;
-
-                        /* first block cannot be freed */
-                        if (block == 0) {
-                                goto exit;
-                        }
-
-                        /* check if block is empty */
-                        for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                if (task_monitor_data->mblock[block]->mslot[i].addr != NULL) {
-                                        goto exit;
-                                }
-                        }
-
-                        /* block is empty - freeing whole block */
-                        free(task_monitor_data->mblock[block]);
-                        task_monitor_data->mblock[block] = NULL;
-
+        for (uint slot = 0; slot < TASK_MEMORY_SLOTS; slot++) {
+                if (task_monitor_data->mem_slot[slot] == mem) {
+                        task_monitor_data->used_memory   -= memman_free(mem);
+                        task_monitor_data->mem_slot[slot] = NULL;
                         goto exit;
                 }
         }
@@ -938,47 +686,15 @@ void sysm_free_as(task_t *taskhdl, void *mem)
 
 //==============================================================================
 /**
- * @brief Monitor memory freeing for specified task
- *
- * @param *taskhdl      task handle
- * @param *mem          block to free
- * @param  size         freed block size
- */
-//==============================================================================
-#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void sysm_freemem_as(task_t *taskhdl, void *mem, u32_t size)
-{
-        struct task_monitor_data *task_monitor_data;
-
-        if (size && mem && taskhdl) {
-                force_lock_recursive_mutex(sysm_resource_mtx);
-
-                if (sysm_is_task_exist(taskhdl)) {
-                        if ((task_monitor_data = get_task_monitor_data(taskhdl))) {
-                                if (task_monitor_data->fast_monitoring) {
-                                        task_monitor_data->used_memory -= size;
-                                }
-
-                                sysm_free_as(taskhdl, mem);
-                        }
-                }
-
-                unlock_recursive_mutex(sysm_resource_mtx);
-        }
-}
-#endif
-
-//==============================================================================
-/**
  * @brief Monitor memory freeing
  *
  * @param *mem          block to free
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void sysm_free(void *mem)
+void sysm_tskfree(void *mem)
 {
-        sysm_free_as(get_task_handle(), mem);
+        sysm_tskfree_as(get_task_handle(), mem);
 }
 #endif
 
@@ -995,11 +711,9 @@ void sysm_free(void *mem)
 #if (SYSM_MONITOR_FILE_USAGE > 0)
 file_t *sysm_fopen(const char *path, const char *mode)
 {
-        file_t *file  = NULL;
-        uint    block = 0;
+        file_t *file = NULL;
         task_t *task;
         struct task_monitor_data *task_monitor_data;
-        struct fileSlot          *fslot;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -1013,42 +727,17 @@ file_t *sysm_fopen(const char *path, const char *mode)
                 goto exit;
         }
 
-        /* find empty file slot */
-        while (block < FILE_BLOCK_COUNT) {
-                if (task_monitor_data->fblock[block] == NULL) {
-                        task_monitor_data->fblock[block] = calloc(1, sizeof(struct fileBlock));
+        for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
+                if (task_monitor_data->file_slot[slot] == NULL) {
+                        file = vfs_fopen(path, mode);
 
-                        if (task_monitor_data->fblock[block] == NULL) {
-                                block++;
-                                continue;
+                        if (file) {
+                                task_monitor_data->file_slot[slot] = file;
+                                task_monitor_data->opened_files++;
                         }
+
+                        goto exit;
                 }
-
-                /* find empty file slot in block */
-                for (u8_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
-                        if (task_monitor_data->fblock[block]->full == TRUE) {
-                                break;
-                        }
-
-                        fslot = &task_monitor_data->fblock[block]->fslot[slot];
-
-                        if (fslot->file == NULL) {
-                                fslot->file = vfs_fopen(path, mode);
-
-                                if (fslot->file) {
-                                        file = fslot->file;
-                                        task_monitor_data->opened_files++;
-                                }
-
-                                if (slot == FILES_OPENED_IN_BLOCK - 1) {
-                                        task_monitor_data->fblock[block]->full = TRUE;
-                                }
-
-                                goto exit;
-                        }
-                }
-
-                block++;
         }
 
         printk("%s: Not enough free slots to open file!\n", get_this_task_name());
@@ -1073,9 +762,8 @@ file_t *sysm_fopen(const char *path, const char *mode)
 stdret_t sysm_fclose(file_t *file)
 {
         stdret_t status = STD_RET_ERROR;
-        task_t  *task;
+        task_t *task;
         struct task_monitor_data *task_monitor_data;
-        struct fileSlot          *fslot;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -1089,42 +777,14 @@ stdret_t sysm_fclose(file_t *file)
                 goto exit;
         }
 
-        /* find empty file slot */
-        for (u8_t block = 0; block < FILE_BLOCK_COUNT; block++) {
-                if (task_monitor_data->fblock[block] == NULL) {
-                        continue;
-                }
+        for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
+                if (task_monitor_data->file_slot[slot] == file) {
+                        status = vfs_fclose(file);
 
-                /* find opened file */
-                for (u8_t slot = 0; slot < FILES_OPENED_IN_BLOCK; slot++) {
-                        fslot = &task_monitor_data->fblock[block]->fslot[slot];
-
-                        if (fslot->file != file) {
-                                continue;
+                        if (status == STD_RET_OK) {
+                                task_monitor_data->file_slot[slot] = NULL;
+                                task_monitor_data->opened_files--;
                         }
-
-                        if ((status = vfs_fclose(file)) != STD_RET_OK) {
-                                goto exit;
-                        }
-
-                        fslot->file = NULL;
-                        task_monitor_data->opened_files--;
-                        task_monitor_data->fblock[block]->full = FALSE;
-
-                        if (block == 0) {
-                                goto exit;
-                        }
-
-                        /* check if block is empty */
-                        for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                if (task_monitor_data->fblock[block]->fslot[i].file != NULL) {
-                                        goto exit;
-                                }
-                        }
-
-                        /* block is empty - freeing memory */
-                        free(task_monitor_data->fblock[block]);
-                        task_monitor_data->fblock[block] = NULL;
 
                         goto exit;
                 }
@@ -1150,11 +810,9 @@ stdret_t sysm_fclose(file_t *file)
 #if (SYSM_MONITOR_FILE_USAGE > 0)
 dir_t *sysm_opendir(const char *path)
 {
-        dir_t  *dir   = NULL;
-        u32_t   block = 0;
+        dir_t  *dir = NULL;
         task_t *task;
         struct task_monitor_data *task_monitor_data;
-        struct dirSlot           *dslot;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -1168,42 +826,17 @@ dir_t *sysm_opendir(const char *path)
                 goto exit;
         }
 
-        /* find empty file slot */
-        while (block < DIR_BLOCK_COUNT) {
-                if (task_monitor_data->dblock[block] == NULL) {
-                        task_monitor_data->dblock[block] = calloc(1, sizeof(struct dirBlock));
+        for (uint slot = 0; slot < TASK_DIR_SLOTS; slot++) {
+                if (task_monitor_data->dir_slot[slot] == NULL) {
+                        dir = vfs_opendir(path);
 
-                        if (task_monitor_data->dblock[block] == NULL) {
-                                block++;
-                                continue;
+                        if (dir) {
+                                task_monitor_data->dir_slot[slot] = dir;
+                                task_monitor_data->opened_files++;
                         }
+
+                        goto exit;
                 }
-
-                /* find empty dir slot in block */
-                for (u8_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
-                        if (task_monitor_data->dblock[block]->full == TRUE) {
-                                break;
-                        }
-
-                        dslot = &task_monitor_data->dblock[block]->dslot[slot];
-
-                        if (dslot->dir == NULL) {
-                                dslot->dir = vfs_opendir(path);
-
-                                if (dslot->dir) {
-                                        dir = dslot->dir;
-                                        task_monitor_data->opened_files++;
-                                }
-
-                                if (slot == DIRS_OPENED_IN_BLOCK - 1) {
-                                        task_monitor_data->dblock[block]->full = TRUE;
-                                }
-
-                                goto exit;
-                        }
-                }
-
-                block++;
         }
 
         printk("%s: Not enough free slots to open directory!\n", get_this_task_name());
@@ -1230,7 +863,6 @@ extern stdret_t sysm_closedir(dir_t *dir)
         stdret_t status = STD_RET_ERROR;
         task_t *task;
         struct task_monitor_data *task_monitor_data;
-        struct dirSlot           *dslot;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -1244,48 +876,20 @@ extern stdret_t sysm_closedir(dir_t *dir)
                 goto exit;
         }
 
-        /* find empty file slot */
-        for (u8_t block = 0; block < DIR_BLOCK_COUNT; block++) {
-                if (task_monitor_data->dblock[block] == NULL) {
-                        continue;
-                }
+        for (uint slot = 0; slot < TASK_DIR_SLOTS; slot++) {
+                if (task_monitor_data->dir_slot[slot] == dir) {
+                        status = vfs_closedir(dir);
 
-                /* find opened file */
-                for (u8_t slot = 0; slot < DIRS_OPENED_IN_BLOCK; slot++) {
-                        dslot = &task_monitor_data->dblock[block]->dslot[slot];
-
-                        if (dslot->dir != dir) {
-                                continue;
+                        if (status == STD_RET_OK) {
+                                task_monitor_data->dir_slot[slot] = NULL;
+                                task_monitor_data->opened_files--;
                         }
-
-                        if ((status = vfs_closedir(dir)) != STD_RET_OK) {
-                                goto exit;
-                        }
-
-                        dslot->dir = NULL;
-                        task_monitor_data->opened_files--;
-                        task_monitor_data->dblock[block]->full = FALSE;
-
-                        if (block == 0) {
-                                goto exit;
-                        }
-
-                        /* check if block is empty */
-                        for (u8_t i = 0; i < MEM_ADR_IN_BLOCK; i++) {
-                                if (task_monitor_data->dblock[block]->dslot[i].dir != NULL) {
-                                        goto exit;
-                                }
-                        }
-
-                        /* block is empty - freeing memory */
-                        free(task_monitor_data->dblock[block]);
-                        task_monitor_data->dblock[block] = NULL;
 
                         goto exit;
                 }
         }
 
-        printk("%s: Dir does not exist or closed!\n", get_this_task_name());
+        printk("%s: Directory does not exist or closed!\n", get_this_task_name());
 
         exit:
         unlock_recursive_mutex(sysm_resource_mtx);
