@@ -124,19 +124,24 @@ extern "C" {
 #define CONFIG_MONITOR_TASK_MEMORY_USAGE                (1)
 
 /**
+ * Enable (1) or disable (0) file usage monitoring
+ */
+#define CONFIG_MONITOR_TASK_FILE_USAGE                  (1)
+
+/**
  * Enable (1) or disable (0) kernel memory usage monitoring
  */
 #define CONFIG_MONITOR_KERNEL_MEMORY_USAGE              (1)
 
 /**
+ * Enable (1) or disable (0) drivers memory usage monitoring
+ */
+#define CONFIG_MONITOR_DRIVER_MEMORY_USAGE              (1)
+
+/**
  * Enable (1) or disable (0) system memory usage monitoring
  */
 #define CONFIG_MONITOR_SYSTEM_MEMORY_USAGE              (1)
-
-/**
- * Enable (1) or disable (0) file usage monitoring
- */
-#define CONFIG_MONITOR_FILE_USAGE                       (1)
 
 /**
  * Enable (1) or disable (0) CPU load monitoring

@@ -58,7 +58,7 @@ struct task_monitor_data {
         void  *mem_slot[TASK_MEMORY_SLOTS];
 #endif
 
-#if (SYSM_MONITOR_FILE_USAGE > 0)
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
         uint   opened_files;
         file_t *file_slot[TASK_FILE_SLOTS];
         dir_t  *dir_slot[TASK_DIR_SLOTS];
@@ -73,7 +73,7 @@ struct task_monitor_data {
   Local object definitions
 ==============================================================================*/
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0    ) )
 static list_t  *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
@@ -103,9 +103,12 @@ static i32_t sysm_system_memory_usage;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
+#if (  (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0) \
+    || (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0) \
+    || (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0) \
+    || (SYSM_MONITOR_TASK_MEMORY_USAGE > 0  ) \
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0    ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0           ) )
 stdret_t sysm_init(void)
 {
         cpuctl_init_CPU_load_timer();
@@ -130,6 +133,9 @@ stdret_t sysm_init(void)
  * @retval FALSE        task does not exist
  */
 //==============================================================================
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 bool_t sysm_is_task_exist(task_t *taskhdl)
 {
         i32_t  item  = -1;
@@ -149,6 +155,7 @@ bool_t sysm_is_task_exist(task_t *taskhdl)
 
         return exist;
 }
+#endif
 
 //==============================================================================
 /**
@@ -161,8 +168,8 @@ bool_t sysm_is_task_exist(task_t *taskhdl)
  */
 //==============================================================================
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_start_task_monitoring(task_t *taskhdl)
 {
         struct task_monitor_data *tmdata;
@@ -203,8 +210,8 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
  */
 //==============================================================================
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 {
         struct task_monitor_data *task_monitor_data;
@@ -227,7 +234,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
         }
 #endif
 
-#if (SYSM_MONITOR_FILE_USAGE > 0)
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
         for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
                 if (task_monitor_data->file_slot[slot]) {
                         vfs_fclose(task_monitor_data->file_slot[slot]);
@@ -255,36 +262,6 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Function returns the CPU total time (used to calculate CPU load)
- *
- * @return CPU total time
- */
-//==============================================================================
-#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
-u32_t sysm_get_total_CPU_usage(void)
-{
-        return cpuctl_get_CPU_total_time();
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function clears the CPU total time
- */
-//==============================================================================
-#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
-void sysm_clear_total_CPU_usage(void)
-{
-        cpuctl_clear_CPU_total_time();
-}
-#endif
-
-//==============================================================================
-/**
  * @brief Function gets task status
  *
  * @param *taskHdl      task handle
@@ -295,8 +272,8 @@ void sysm_clear_total_CPU_usage(void)
  */
 //==============================================================================
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
 {
         struct task_monitor_data *tmdata;
@@ -348,8 +325,8 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
  */
 //==============================================================================
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_get_ntask_stat(i32_t item, struct taskstat *stat)
 {
         task_t *task;
@@ -381,8 +358,8 @@ stdret_t sysm_get_ntask_stat(i32_t item, struct taskstat *stat)
  */
 //==============================================================================
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_FILE_USAGE > 0  ) \
-    || (SYSM_MONITOR_CPU_LOAD > 0    ) )
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 int sysm_get_number_of_monitored_tasks(void)
 {
         int task_count;
@@ -708,7 +685,7 @@ void sysm_tskfree(void *mem)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-#if (SYSM_MONITOR_FILE_USAGE > 0)
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
 file_t *sysm_fopen(const char *path, const char *mode)
 {
         file_t *file = NULL;
@@ -758,7 +735,7 @@ file_t *sysm_fopen(const char *path, const char *mode)
  * @retval STD_RET_ERROR      file not closed
  */
 //==============================================================================
-#if (SYSM_MONITOR_FILE_USAGE > 0)
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
 stdret_t sysm_fclose(file_t *file)
 {
         stdret_t status = STD_RET_ERROR;
@@ -807,7 +784,7 @@ stdret_t sysm_fclose(file_t *file)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-#if (SYSM_MONITOR_FILE_USAGE > 0)
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
 dir_t *sysm_opendir(const char *path)
 {
         dir_t  *dir = NULL;
@@ -857,7 +834,7 @@ dir_t *sysm_opendir(const char *path)
  * @retval STD_RET_ERROR      file not closed
  */
 //==============================================================================
-#if (SYSM_MONITOR_FILE_USAGE > 0)
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
 extern stdret_t sysm_closedir(dir_t *dir)
 {
         stdret_t status = STD_RET_ERROR;
@@ -894,6 +871,32 @@ extern stdret_t sysm_closedir(dir_t *dir)
         exit:
         unlock_recursive_mutex(sysm_resource_mtx);
         return status;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function returns the CPU total time (used to calculate CPU load)
+ *
+ * @return CPU total time
+ */
+//==============================================================================
+#if (SYSM_MONITOR_CPU_LOAD > 0)
+u32_t sysm_get_total_CPU_usage(void)
+{
+        return cpuctl_get_CPU_total_time();
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function clears the CPU total time
+ */
+//==============================================================================
+#if (SYSM_MONITOR_CPU_LOAD > 0)
+void sysm_clear_total_CPU_usage(void)
+{
+        cpuctl_clear_CPU_total_time();
 }
 #endif
 
