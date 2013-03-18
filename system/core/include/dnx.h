@@ -44,6 +44,7 @@ extern "C" {
 #include "regfs.h"
 #include "regdrv.h"
 #include "oshooks.h"
+#include <string.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -77,7 +78,7 @@ extern "C" {
 
 /** ENVIRONMENT DEFINITIONS */
 #define get_used_static_memory()          (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE)
-#define get_free_memory()                 (memman_get_free_heap())
+#define get_free_memory()                 memman_get_free_heap()
 #define get_used_memory()                 (get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()))
 #define get_memory_size()                 CONFIG_RAM_SIZE
 #define get_uptime()                      get_uptime_counter()
@@ -88,7 +89,7 @@ extern "C" {
 #define reboot()                          cpuctl_restart_system()
 #define get_OS_name()                     "dnx"
 #define get_kernel_name()                 "FreeRTOS"
-#define get_OS_version()                  "0.9.0"
+#define get_OS_version()                  "0.9.1"
 #define get_kernel_version()              "7.3.0"
 #define get_host_name()                   CONFIG_HOSTNAME
 #define getcwd(buf, size)                 strncpy(buf, get_this_task_data()->f_cwd, size)
