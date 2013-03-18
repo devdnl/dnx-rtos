@@ -122,10 +122,10 @@ static USART_t *const USART_peripherals[UART_DEV_COUNT] = {
 #if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
         USART3,
 #endif
-#if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
+#if defined(RCC_APB1ENR_UART4EN)  && (UART_4_ENABLE > 0)
         UART4,
 #endif
-#if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
+#if defined(RCC_APB1ENR_UART5EN)  && (UART_5_ENABLE > 0)
         UART5,
 #endif
 };
@@ -157,7 +157,7 @@ stdret_t UART_init(void **drvhdl, uint dev, uint part)
               return STD_RET_ERROR;
       }
 
-      if (!(USART_data[dev] = kcalloc(1, sizeof(struct USART_data)))) {
+      if (!(USART_data[dev] = calloc(1, sizeof(struct USART_data)))) {
               return STD_RET_ERROR;
       }
 
@@ -270,7 +270,7 @@ stdret_t UART_init(void **drvhdl, uint dev, uint part)
               delete_recursive_mutex(USART_data[dev]->port_lock_mtx);
       }
 
-      kfree(USART_data[dev]);
+      free(USART_data[dev]);
       return STD_RET_ERROR;
 }
 
@@ -298,7 +298,7 @@ stdret_t UART_release(void *drvhdl)
         delete_recursive_mutex(hdl->port_lock_mtx);
         delete_semaphore(hdl->data_write_sem);
         turn_off_USART(hdl->USART);
-        kfree(hdl);
+        free(hdl);
         exit_critical();
 
         return STD_RET_OK;

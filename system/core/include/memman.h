@@ -1,13 +1,13 @@
 #ifndef __MEMMAN_H__
 #define __MEMMAN_H__
 /*=========================================================================*//**
-@file    printf.h
+@file    memman.h
 
 @author  Daniel Zorychta
 
-@brief   This file support message printing
+@brief   This file support dynamic memory management.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -93,7 +93,6 @@ extern u32_t  memman_get_free_heap(void);
 #endif
 
 #endif /* __MEMMAN_H__ */
-
 /*==============================================================================
   End of file
 ==============================================================================*/

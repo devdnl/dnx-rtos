@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief   This file support dynamic memory management.
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by

@@ -192,10 +192,10 @@ extern i32_t sysm_get_used_system_memory(void);
 #endif
 
 #if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
-extern void *sysm_drvmalloc(size_t, uint);
-extern void *sysm_drvcalloc(size_t, size_t, uint);
-extern void  sysm_drvfree(void*, uint);
-extern i32_t sysm_get_used_driver_memory(uint);
+extern void *sysm_drvmalloc(size_t);
+extern void *sysm_drvcalloc(size_t, size_t);
+extern void  sysm_drvfree(void*);
+extern i32_t sysm_get_used_driver_memory(void);
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)

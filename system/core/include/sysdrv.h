@@ -34,10 +34,10 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "systypes.h"
-#include "memman.h"
 #include "oswrap.h"
 #include "vfs.h"
 #include "sysmoni.h"
+#include "regdrv.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -46,16 +46,16 @@ extern "C" {
 #error "dnx.h and sysdrv.h shall never included together!"
 #endif
 
-#ifndef kcalloc
-#define kcalloc(nmemb, msize)             memman_calloc(nmemb, msize, NULL)
+#ifndef calloc
+#define calloc(nmemb, msize)              sysm_drvcalloc(nmemb, msize)
 #endif
 
-#ifndef kmalloc
-#define kmalloc(size)                     memman_malloc(size, NULL)
+#ifndef malloc
+#define malloc(size)                      sysm_drvmalloc(size)
 #endif
 
-#ifndef kfree
-#define kfree(mem)                        memman_free(mem)
+#ifndef free
+#define free(mem)                         sysm_drvfree(mem)
 #endif
 
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
@@ -63,8 +63,8 @@ extern "C" {
 #define getmntentry(item, mntentPtr)      vfs_getmntentry(item, mntentPtr)
 #define mknod(path, drv_cfgPtr)           vfs_mknod(path, drv_cfgPtr)
 #define mkdir(path)                       vfs_mkdir(path)
-#define opendir(path)                     sysm_opendir(path)
-#define closedir(dir)                     sysm_closedir(dir)
+#define opendir(path)                     vfs_opendir(path)
+#define closedir(dir)                     vfs_closedir(dir)
 #define readdir(dir)                      vfs_readdir(dir)
 #define remove(path)                      vfs_remove(path)
 #define rename(oldName, newName)          vfs_rename(oldName, newName)
@@ -72,8 +72,8 @@ extern "C" {
 #define chown(path, owner, group)         vfs_chown(path, owner, group)
 #define stat(path, statPtr)               vfs_stat(path, statPtr)
 #define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
-#define fopen(path, mode)                 sysm_fopen(path, mode)
-#define fclose(file)                      sysm_fclose(file)
+#define fopen(path, mode)                 vfs_fopen(path, mode)
+#define fclose(file)                      vfs_fclose(file)
 #define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
 #define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
 #define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)

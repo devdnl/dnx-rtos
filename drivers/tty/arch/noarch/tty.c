@@ -185,7 +185,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 
         /* initialize control structure */
         if (!tty_ctrl) {
-                if (!(tty_ctrl = kcalloc(1, sizeof(struct tty_ctrl)))) {
+                if (!(tty_ctrl = calloc(1, sizeof(struct tty_ctrl)))) {
                         goto ctrl_error;
                 }
 
@@ -204,7 +204,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 
 
         /* initialize driver data */
-        if (!(tty = kcalloc(1, sizeof(struct tty_data)))) {
+        if (!(tty = calloc(1, sizeof(struct tty_data)))) {
                 goto drv_error;
         }
 
@@ -225,7 +225,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
                         delete_recursive_mutex(tty->secure_resources_mtx);
                 }
 
-                kfree(tty);
+                free(tty);
         }
         return STD_RET_ERROR;
 
@@ -240,7 +240,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
                         delete_task(tty_ctrl->tty_taskhdl);
                 }
 
-                kfree(tty_ctrl);
+                free(tty_ctrl);
                 tty_ctrl = NULL;
         }
         return STD_RET_ERROR;
@@ -271,7 +271,7 @@ stdret_t TTY_release(void *drvhdl)
                 delete_recursive_mutex(tty->secure_resources_mtx);
                 tty_ctrl->tty[tty->number] = NULL;
                 exit_critical();
-                kfree(tty);
+                free(tty);
                 return STD_RET_OK;
         } else {
                 return STD_RET_ERROR;
@@ -473,7 +473,7 @@ stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
         /* clear last line */
         case TTY_IORQ_CLEAR_LAST_LINE:
                 if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
-                        char *msg = kmalloc(2);
+                        char *msg = malloc(2);
 
                         if (msg) {
                                 msg[0] = '\r';
@@ -848,10 +848,6 @@ static void switch_tty_immediately(u8_t tty_number, file_t *stream)
         if (tty_number != tty_ctrl->current_TTY) {
                 tty_ctrl->current_TTY = tty_number;
 
-//                if (tty_ctrl->tty[tty_ctrl->current_TTY] == NULL) {
-//                        TTY_Open(tty_ctrl->current_TTY, TTY_PART_NONE);
-//                }
-
                 if (tty_ctrl->tty[tty_ctrl->current_TTY]) {
                         refresh_tty(tty_ctrl->tty[tty_ctrl->current_TTY], stream);
                 }
@@ -933,7 +929,7 @@ static void clear_tty(struct tty_data *tty)
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 for (uint i = 0; i < TTY_MAX_LINES; i++) {
                         if (tty->line[i]) {
-                                kfree(tty->line[i]);
+                                free(tty->line[i]);
                                 tty->line[i] = NULL;
                         }
                 }
@@ -1016,7 +1012,7 @@ static char *create_buffer_for_message(struct tty_data *tty, char *msg_src, uint
         if (lst_msg && (*(lst_msg + lst_msg_len - 1) != '\n')) {
                 lst_msg_len += 1;
 
-                msg = kmalloc(lst_msg_len + msg_len + (2 * LF_count));
+                msg = malloc(lst_msg_len + msg_len + (2 * LF_count));
                 if (msg) {
                         tty->write_index--;
                         if (tty->write_index >= TTY_MAX_LINES) {
@@ -1032,7 +1028,7 @@ static char *create_buffer_for_message(struct tty_data *tty, char *msg_src, uint
                         strncpy_LF2CRLF(msg + strlen(msg), msg_src, msg_len + LF_count);
                 }
         } else {
-                msg = kmalloc(msg_len + (2 * LF_count));
+                msg = malloc(msg_len + (2 * LF_count));
                 if (msg) {
                         strncpy_LF2CRLF(msg, msg_src, msg_len + (2 * LF_count));
                         inc_message_counter(tty);
@@ -1123,7 +1119,7 @@ static void free_non_lf_ended_messages(struct tty_data *tty, u8_t msg_count)
 
         while (msg_count--) {
                 if (tty->line[write_idx]) {
-                        kfree(tty->line[write_idx]);
+                        free(tty->line[write_idx]);
                         tty->line[write_idx] = NULL;
                 }
 

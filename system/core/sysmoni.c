@@ -84,7 +84,11 @@ static i32_t sysm_kernel_memory_usage;
 #endif
 
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-static i32_t sysm_system_memory_usage;
+static i32_t sysm_system_memory_usage = (i32_t)CONFIG_RAM_SIZE - (i32_t)CONFIG_HEAP_SIZE;
+#endif
+
+#if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
+static i32_t sysm_drivers_memory_usage;
 #endif
 
 /*==============================================================================
@@ -503,6 +507,73 @@ void sysm_sysfree(void *mem)
 i32_t sysm_get_used_system_memory(void)
 {
         return sysm_system_memory_usage;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of drivers
+ *
+ * @param  size         block size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
+void *sysm_drvmalloc(size_t size)
+{
+      size_t allocated;
+      void *p = memman_malloc(size, &allocated);
+      sysm_drivers_memory_usage += allocated;
+      return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of drivers
+ *
+ * @param  count        count of items
+ * @param  size         item size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+#if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
+void *sysm_drvcalloc(size_t count, size_t size)
+{
+        size_t allocated;
+        void *p = memman_calloc(count, size, &allocated);
+        sysm_drivers_memory_usage += allocated;
+        return p;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing for drivers
+ *
+ * @param *mem          block to free
+ */
+//==============================================================================
+#if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
+void sysm_drvfree(void *mem)
+{
+        sysm_drivers_memory_usage -= memman_free(mem);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function returns used memory by drivers
+ *
+ * @return used memory by kernel
+ */
+//==============================================================================
+#if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
+i32_t sysm_get_used_driver_memory(void)
+{
+        return sysm_drivers_memory_usage;
 }
 #endif
 

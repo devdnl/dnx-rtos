@@ -41,9 +41,11 @@ extern "C" {
 #define new_program(name, args, cwd, fstdin, fstdout, status, exit_code) \
         prgm_new_program(name, args, cwd, fstdin, fstdout, status, exit_code)
 
-#define delete_program(taskhdl)                 prgm_delete_program(taskhdl)
+#define delete_program(taskhdl) \
+        prgm_delete_program(taskhdl)
 
-#define GLOBAL_VARIABLES                        struct __global_vars__
+#define GLOBAL_VARIABLES \
+        struct __global_vars__
 
 #define PROGRAM_PARAMS(name, stack)\
         const uint prog_##name##_gs = sizeof(struct __global_vars__);\
@@ -53,11 +55,20 @@ extern "C" {
         extern const uint prog_##name##_gs;\
         extern const uint prog_##name##_stack
 
-#define PROGRAM_MAIN(name, argc, argv)          program_##name##_main(argc, argv)
-#define stdin                                   get_this_task_data()->f_stdin
-#define stdout                                  get_this_task_data()->f_stdout
-#define global                                  ((struct __global_vars__*)get_this_task_data()->f_global_vars)
-#define create_fast_global(name)                struct __global_vars__*name = global
+#define PROGRAM_MAIN(name, argc, argv) \
+        program_##name##_main(argc, argv)
+
+#define stdin \
+        get_this_task_data()->f_stdin
+
+#define stdout \
+        get_this_task_data()->f_stdout
+
+#define global \
+        ((struct __global_vars__*)get_this_task_data()->f_global_vars)
+
+#define create_fast_global(name) \
+        struct __global_vars__*name = global
 
 /*==============================================================================
   Exported types, enums definitions

@@ -84,8 +84,7 @@ struct driver_entry {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const struct driver_entry regdrv_driver_table[] =
-{
+static const struct driver_entry regdrv_driver_table[] = {
         IMPORT_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1, UART_PART_NONE),
         IMPORT_DRIVER_INTERFACE(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
         IMPORT_DRIVER_INTERFACE(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
@@ -113,6 +112,7 @@ static void *regdrv_driver_handle[ARRAY_SIZE(regdrv_driver_table)];
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+const uint regdrv_drivers_count = ARRAY_SIZE(regdrv_driver_table);
 
 /*==============================================================================
   Function definitions

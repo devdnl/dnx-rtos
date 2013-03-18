@@ -94,6 +94,7 @@ extern "C" {
 #define getcwd(buf, size)                 strncpy(buf, get_this_task_data()->f_cwd, size)
 #define get_used_memory_by_kernel()       sysm_get_used_kernel_memory()
 #define get_used_memory_by_system()       sysm_get_used_system_memory()
+#define get_used_memory_by_drivers()      sysm_get_used_driver_memory()
 
 /*==============================================================================
   Exported types, enums definitions
