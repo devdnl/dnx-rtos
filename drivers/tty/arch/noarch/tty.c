@@ -153,6 +153,8 @@ static void  move_editline_to_stream(struct tty_data *tty, file_t *stream);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+DRIVER_ID(TTY);
+
 /* memory used by driver */
 static struct tty_ctrl *tty_ctrl;
 
@@ -167,14 +169,17 @@ static struct tty_ctrl *tty_ctrl;
  * @param[out] **drvhdl         driver's memory handler
  * @param[in]  dev              device number
  * @param[in]  part             device part
+ * @param[in]  drvid            driver's ID delivered by system
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_init(void **drvhdl, uint dev, uint part)
+stdret_t TTY_init(void **drvhdl, uint dev, uint part, uint drvid)
 {
         (void)part;
+
+        set_driver_ID(drvid);
 
         struct tty_data *tty;
 

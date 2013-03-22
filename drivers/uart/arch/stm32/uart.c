@@ -111,6 +111,8 @@ static void IRQ_handler(struct USART_data *USART_data);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+DRIVER_ID(UART);
+
 /* addresses of UART devices */
 static USART_t *const USART_peripherals[UART_DEV_COUNT] = {
 #if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
@@ -144,134 +146,136 @@ struct USART_data *USART_data[UART_DEV_COUNT];
  * @param[out] **drvhdl         driver's memory handler
  * @param[in]  dev              device number
  * @param[in]  part             device part
+ * @param[in]  drvid            driver's ID delivered by system
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_init(void **drvhdl, uint dev, uint part)
-{
-      (void)part;
+stdret_t UART_init(void **drvhdl, uint dev, uint part, uint drvid)
+{;
+        (void)part;
 
-      if (!drvhdl || dev >= UART_DEV_COUNT) {
-              return STD_RET_ERROR;
-      }
+        set_driver_ID(drvid);
 
-      if (!(USART_data[dev] = calloc(1, sizeof(struct USART_data)))) {
-              return STD_RET_ERROR;
-      }
+        if (!drvhdl || dev >= UART_DEV_COUNT) {
+                return STD_RET_ERROR;
+        }
 
-      *drvhdl = USART_data[dev];
+        if (!(USART_data[dev] = calloc(1, sizeof(struct USART_data)))) {
+                return STD_RET_ERROR;
+        }
 
-      USART_data[dev]->USART          = USART_peripherals[dev];
-      USART_data[dev]->data_write_sem = new_semaphore();
-      USART_data[dev]->port_lock_mtx  = new_recursive_mutex();
+        *drvhdl = USART_data[dev];
 
-      if (!USART_data[dev]->data_write_sem || !USART_data[dev]->port_lock_mtx) {
-              goto error;
-      } else {
-              take_semaphore(USART_data[dev]->data_write_sem, 1);
+        USART_data[dev]->USART = USART_peripherals[dev];
+        USART_data[dev]->data_write_sem = new_semaphore();
+        USART_data[dev]->port_lock_mtx = new_recursive_mutex();
 
-              if (turn_on_USART(USART_data[dev]->USART) != STD_RET_OK) {
-                      goto error;
-              }
+        if (!USART_data[dev]->data_write_sem || !USART_data[dev]->port_lock_mtx) {
+                goto error;
+        } else {
+                take_semaphore(USART_data[dev]->data_write_sem, 1);
 
-              enable_USART(USART_data[dev]->USART);
+                if (turn_on_USART(USART_data[dev]->USART) != STD_RET_OK) {
+                        goto error;
+                }
 
-              if ((u32_t)USART_data[dev]->USART == USART1_BASE) {
-                      set_baud_rate(USART_data[dev]->USART, UART_PCLK2_FREQ, UART_DEFAULT_BAUDRATE);
-              } else {
-                      set_baud_rate(USART_data[dev]->USART, UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
-              }
+                enable_USART(USART_data[dev]->USART);
 
-              if (UART_DEFAULT_WAKE_METHOD) {
-                      wakeup_USART_on_address_mark(USART_data[dev]->USART);
-              } else {
-                      wakeup_USART_on_idle_line(USART_data[dev]->USART);
-              }
+                if ((u32_t) USART_data[dev]->USART == USART1_BASE) {
+                        set_baud_rate(USART_data[dev]->USART, UART_PCLK2_FREQ, UART_DEFAULT_BAUDRATE);
+                } else {
+                        set_baud_rate(USART_data[dev]->USART, UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
+                }
 
-              if (UART_DEFAULT_PARITY_ENABLE) {
-                      enable_parity_check(USART_data[dev]->USART);
-              } else {
-                      disable_parity_check(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_WAKE_METHOD) {
+                        wakeup_USART_on_address_mark(USART_data[dev]->USART);
+                } else {
+                        wakeup_USART_on_idle_line(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_PARITY_SELECTION) {
-                      enable_odd_parity(USART_data[dev]->USART);
-              } else {
-                      enable_even_parity(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_PARITY_ENABLE) {
+                        enable_parity_check(USART_data[dev]->USART);
+                } else {
+                        disable_parity_check(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_TX_ENABLE) {
-                      enable_transmitter(USART_data[dev]->USART);
-              } else {
-                      disable_transmitter(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_PARITY_SELECTION) {
+                        enable_odd_parity(USART_data[dev]->USART);
+                } else {
+                        enable_even_parity(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_RX_ENABLE) {
-                      enable_receiver(USART_data[dev]->USART);
-              } else {
-                      disable_receiver(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_TX_ENABLE) {
+                        enable_transmitter(USART_data[dev]->USART);
+                } else {
+                        disable_transmitter(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_RX_WAKEUP_MODE) {
-                      receiver_wakeup_in_mute_mode(USART_data[dev]->USART);
-              } else {
-                      receiver_wakeup_in_active_mode(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_RX_ENABLE) {
+                        enable_receiver(USART_data[dev]->USART);
+                } else {
+                        disable_receiver(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_LIN_ENABLE) {
-                      enable_LIN_mode(USART_data[dev]->USART);
-              } else {
-                      disable_LIN_mode(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_RX_WAKEUP_MODE) {
+                        receiver_wakeup_in_mute_mode(USART_data[dev]->USART);
+                } else {
+                        receiver_wakeup_in_active_mode(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_STOP_BITS) {
-                      set_2_stop_bits(USART_data[dev]->USART);
-              } else {
-                      set_1_stop_bit(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_LIN_ENABLE) {
+                        enable_LIN_mode(USART_data[dev]->USART);
+                } else {
+                        disable_LIN_mode(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_LIN_BREAK_LEN_DET) {
-                      detect_11_bit_LIN_break(USART_data[dev]->USART);
-              } else {
-                      detect_10_bit_LIN_break(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_STOP_BITS) {
+                        set_2_stop_bits(USART_data[dev]->USART);
+                } else {
+                        set_1_stop_bit(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_CTS_ENABLE) {
-                      enable_CTS(USART_data[dev]->USART);
-              } else {
-                      disable_CTS(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_LIN_BREAK_LEN_DET) {
+                        detect_11_bit_LIN_break(USART_data[dev]->USART);
+                } else {
+                        detect_10_bit_LIN_break(USART_data[dev]->USART);
+                }
 
-              if (UART_DEFAULT_RTS_ENABLE) {
-                      enable_RTS(USART_data[dev]->USART);
-              } else {
-                      disable_RTS(USART_data[dev]->USART);
-              }
+                if (UART_DEFAULT_CTS_ENABLE) {
+                        enable_CTS(USART_data[dev]->USART);
+                } else {
+                        disable_CTS(USART_data[dev]->USART);
+                }
 
-              set_address_node(USART_data[dev]->USART, UART_DEFAULT_MULTICOM_ADDRESS);
+                if (UART_DEFAULT_RTS_ENABLE) {
+                        enable_RTS(USART_data[dev]->USART);
+                } else {
+                        disable_RTS(USART_data[dev]->USART);
+                }
 
-              if (enable_USART_interrupts(USART_data[dev]->USART) != STD_RET_OK) {
-                      goto error;
-              }
+                set_address_node(USART_data[dev]->USART, UART_DEFAULT_MULTICOM_ADDRESS);
 
-              enable_RXNE_IRQ(USART_data[dev]->USART);
+                if (enable_USART_interrupts(USART_data[dev]->USART) != STD_RET_OK) {
+                        goto error;
+                }
 
-              return STD_RET_OK;
-      }
+                enable_RXNE_IRQ(USART_data[dev]->USART);
 
-      error:
-      if (USART_data[dev]->data_write_sem) {
-              delete_semaphore(USART_data[dev]->data_write_sem);
-      }
+                return STD_RET_OK;
+        }
 
-      if (USART_data[dev]->port_lock_mtx) {
-              delete_recursive_mutex(USART_data[dev]->port_lock_mtx);
-      }
+        error: if (USART_data[dev]->data_write_sem) {
+                delete_semaphore(USART_data[dev]->data_write_sem);
+        }
 
-      free(USART_data[dev]);
-      return STD_RET_ERROR;
+        if (USART_data[dev]->port_lock_mtx) {
+                delete_recursive_mutex(USART_data[dev]->port_lock_mtx);
+        }
+
+        free(USART_data[dev]);
+        return STD_RET_ERROR;
 }
 
 //==============================================================================

@@ -550,18 +550,30 @@ static enum cmd_status cmd_free(char *arg)
 {
         (void) arg;
 
-        u32_t free = get_free_memory();
-        u32_t used = get_used_memory();
+        u32_t free      = get_free_memory();
+        u32_t used      = get_used_memory();
+        uint  drv_count = get_driver_count();
 
         printf("Total: %d\n", get_memory_size());
         printf("Free : %d\n", free);
-        printf("Used : %d (kernel: %d, system: %d, drivers: %d, programs: %d)\n", used,
+        printf("Used : %d\n", used);
+        printf("Memory usage: %d%%\n\n",
+               (used * 100)/get_memory_size());
+
+        printf("Detailed memory usage:\n"
+               "  Kernel  : %d\n"
+               "  System  : %d\n"
+               "  Programs: %d\n"
+               "  Drivers : %d\n\n",
                get_used_memory_by_kernel(),
                get_used_memory_by_system(),
-               get_used_memory_by_drivers(),
-               get_used_memory_by_programs());
-        printf("Memory usage: %d%%\n",
-               (used * 100)/get_memory_size());
+               get_used_memory_by_programs(),
+               get_used_memory_by_drivers());
+
+        printf("Detailed drivers memory usage:\n");
+        for (uint drvid = 0; drvid < drv_count; drvid++) {
+                printf("  %s\t: %d\n", get_driver_name(drvid), get_driver_memory_usage(drvid));
+        }
 
         return CMD_STATUS_EXECUTED;
 }

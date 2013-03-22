@@ -46,16 +46,19 @@ extern "C" {
 #error "dnx.h and sysdrv.h shall never included together!"
 #endif
 
+#define DRIVER_ID(drvname)                static uint _drvid_
+#define set_driver_ID(drvid)              _drvid_ = drvid
+
 #ifndef calloc
-#define calloc(nmemb, msize)              sysm_drvcalloc(nmemb, msize)
+#define calloc(nmemb, msize)              sysm_drvcalloc(nmemb, msize, _drvid_)
 #endif
 
 #ifndef malloc
-#define malloc(size)                      sysm_drvmalloc(size)
+#define malloc(size)                      sysm_drvmalloc(size, _drvid_)
 #endif
 
 #ifndef free
-#define free(mem)                         sysm_drvfree(mem)
+#define free(mem)                         sysm_drvfree(mem, _drvid_)
 #endif
 
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
@@ -82,7 +85,7 @@ extern "C" {
 #define fstat(file, statPtr)              vfs_fstat(file, stat)
 
 #define DRIVER_INTERFACE(drvname)                                          \
-extern stdret_t drvname##_init   (void**, uint, uint);                     \
+extern stdret_t drvname##_init   (void**, uint, uint, uint);               \
 extern stdret_t drvname##_release(void*);                                  \
 extern stdret_t drvname##_open   (void*);                                  \
 extern stdret_t drvname##_close  (void*);                                  \

@@ -36,6 +36,7 @@ extern "C" {
 #include "cpuctl.h"
 #include "oswrap.h"
 #include "io.h"
+#include "regdrv.h"
 #include <string.h>
 
 /*==============================================================================
@@ -88,7 +89,8 @@ static i32_t sysm_system_memory_usage = (i32_t)CONFIG_RAM_SIZE - (i32_t)CONFIG_H
 #endif
 
 #if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
-static i32_t sysm_drivers_memory_usage;
+static i32_t sysm_total_drivers_memory_usage;
+static i32_t *sysm_drivers_memory_usage_table;
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
@@ -121,10 +123,12 @@ stdret_t sysm_init(void)
 {
         cpuctl_init_CPU_load_timer();
 
-        sysm_task_list    = new_list();
-        sysm_resource_mtx = new_recursive_mutex();
+        sysm_task_list                  = new_list();
+        sysm_resource_mtx               = new_recursive_mutex();
+        sysm_drivers_memory_usage_table = sysm_syscalloc(regdrv_get_driver_count(),
+                                                         sizeof(i32_t));
 
-        if (!sysm_task_list || !sysm_resource_mtx)
+        if (!sysm_task_list || !sysm_resource_mtx || !sysm_drivers_memory_usage_table)
                 return STD_RET_ERROR;
         else
                 return STD_RET_OK;
@@ -519,17 +523,24 @@ i32_t sysm_get_used_system_memory(void)
  * @brief Function monitor memory usage of drivers
  *
  * @param  size         block size
+ * @param  drvid        driver ID
  *
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
 #if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
-void *sysm_drvmalloc(size_t size)
+void *sysm_drvmalloc(size_t size, uint drvid)
 {
-      size_t allocated;
-      void *p = memman_malloc(size, &allocated);
-      sysm_drivers_memory_usage += allocated;
-      return p;
+        size_t allocated;
+        void   *p = NULL;
+
+        if (drvid < regdrv_get_driver_count()) {
+                p = memman_malloc(size, &allocated);
+                sysm_total_drivers_memory_usage      += allocated;
+                sysm_drivers_memory_usage_table[drvid] += allocated;
+        }
+
+        return p;
 }
 #endif
 
@@ -539,16 +550,23 @@ void *sysm_drvmalloc(size_t size)
  *
  * @param  count        count of items
  * @param  size         item size
+ * @param  drvid        driver ID
  *
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
 #if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
-void *sysm_drvcalloc(size_t count, size_t size)
+void *sysm_drvcalloc(size_t count, size_t size, uint drvid)
 {
         size_t allocated;
-        void *p = memman_calloc(count, size, &allocated);
-        sysm_drivers_memory_usage += allocated;
+        void   *p = NULL;
+
+        if (drvid < regdrv_get_driver_count()) {
+                p = memman_calloc(count, size, &allocated);
+                sysm_total_drivers_memory_usage      += allocated;
+                sysm_drivers_memory_usage_table[drvid] += allocated;
+        }
+
         return p;
 }
 #endif
@@ -558,12 +576,17 @@ void *sysm_drvcalloc(size_t count, size_t size)
  * @brief Monitor memory freeing for drivers
  *
  * @param *mem          block to free
+ * @param  drvid        driver ID
  */
 //==============================================================================
 #if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
-void sysm_drvfree(void *mem)
+void sysm_drvfree(void *mem, uint drvid)
 {
-        sysm_drivers_memory_usage -= memman_free(mem);
+        if (drvid < regdrv_get_driver_count()) {
+                size_t freed = memman_free(mem);
+                sysm_total_drivers_memory_usage      -= freed;
+                sysm_drivers_memory_usage_table[drvid] -= freed;
+        }
 }
 #endif
 
@@ -571,13 +594,32 @@ void sysm_drvfree(void *mem)
 /**
  * @brief Function returns used memory by drivers
  *
- * @return used memory by kernel
+ * @return used memory by drivers in total
  */
 //==============================================================================
 #if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
-i32_t sysm_get_used_driver_memory(void)
+i32_t sysm_get_used_drivers_memory(void)
 {
-        return sysm_drivers_memory_usage;
+        return sysm_total_drivers_memory_usage;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function return memory usage of selected driver
+ *
+ * @param  drvid        driver ID
+ *
+ * @return used memory by selected driver
+ */
+//==============================================================================
+#if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
+i32_t sysm_get_driver_used_memory(uint drvid)
+{
+        if (drvid >= regdrv_get_driver_count())
+                return 0;
+        else
+                return sysm_drivers_memory_usage_table[drvid];
 }
 #endif
 

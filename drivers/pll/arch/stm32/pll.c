@@ -49,6 +49,7 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+DRIVER_ID(PLL);
 
 /*==============================================================================
   Exported object definitions
@@ -65,6 +66,7 @@ extern "C" {
  * @param[out] **drvhdl         driver's memory handler
  * @param[in]  dev              device number
  * @param[in]  part             device part
+ * @param[in]  drvid            driver's ID delivered by system
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -72,11 +74,13 @@ extern "C" {
  * NOTE: PLL2 and PLL3 not used
  */
 //==============================================================================
-stdret_t PLL_init(void **drvhdl, uint dev, uint part)
+stdret_t PLL_init(void **drvhdl, uint dev, uint part, uint drvid)
 {
         (void)drvhdl;
         (void)dev;
         (void)part;
+
+        set_driver_ID(drvid);
 
         u32_t wait;
 
