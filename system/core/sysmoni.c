@@ -91,6 +91,10 @@ static i32_t sysm_system_memory_usage = (i32_t)CONFIG_RAM_SIZE - (i32_t)CONFIG_H
 static i32_t sysm_drivers_memory_usage;
 #endif
 
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
+static i32_t sysm_programs_memory_usage;
+#endif
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -613,6 +617,7 @@ void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
                         if ((mem = memman_malloc(size, &allocated))) {
                                 task_monitor_data->mem_slot[slot] = mem;
                                 task_monitor_data->used_memory   += allocated;
+                                sysm_programs_memory_usage       += allocated;
                         }
 
                         goto exit;
@@ -702,6 +707,7 @@ void *sysm_tskcalloc(u32_t nmemb, u32_t msize)
 void sysm_tskfree_as(task_t *taskhdl, void *mem)
 {
         struct task_monitor_data *task_monitor_data;
+        size_t freed;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -719,8 +725,10 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
 
         for (uint slot = 0; slot < TASK_MEMORY_SLOTS; slot++) {
                 if (task_monitor_data->mem_slot[slot] == mem) {
-                        task_monitor_data->used_memory   -= memman_free(mem);
+                        freed = memman_free(mem);
+                        task_monitor_data->used_memory   -= freed;
                         task_monitor_data->mem_slot[slot] = NULL;
+                        sysm_programs_memory_usage       -= freed;
                         goto exit;
                 }
         }
@@ -743,6 +751,20 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
 void sysm_tskfree(void *mem)
 {
         sysm_tskfree_as(get_task_handle(), mem);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function returns used memory by programs
+ *
+ * @return used memory by programs
+ */
+//==============================================================================
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
+i32_t sysm_get_used_program_memory(void)
+{
+        return sysm_programs_memory_usage;
 }
 #endif
 

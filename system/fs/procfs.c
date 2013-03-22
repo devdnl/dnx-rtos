@@ -35,7 +35,6 @@ extern "C" {
 #include "io.h"
 #include "dlist.h"
 #include "cpuctl.h"
-#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros

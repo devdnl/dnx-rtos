@@ -96,6 +96,7 @@ extern "C" {
 #define get_used_memory_by_kernel()       sysm_get_used_kernel_memory()
 #define get_used_memory_by_system()       sysm_get_used_system_memory()
 #define get_used_memory_by_drivers()      sysm_get_used_driver_memory()
+#define get_used_memory_by_programs()     sysm_get_used_program_memory()
 
 /*==============================================================================
   Exported types, enums definitions

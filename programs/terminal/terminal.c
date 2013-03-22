@@ -555,10 +555,11 @@ static enum cmd_status cmd_free(char *arg)
 
         printf("Total: %d\n", get_memory_size());
         printf("Free : %d\n", free);
-        printf("Used : %d (kernel: %d, system: %d, drivers: %d)\n", used,
+        printf("Used : %d (kernel: %d, system: %d, drivers: %d, programs: %d)\n", used,
                get_used_memory_by_kernel(),
                get_used_memory_by_system(),
-               get_used_memory_by_drivers());
+               get_used_memory_by_drivers(),
+               get_used_memory_by_programs());
         printf("Memory usage: %d%%\n",
                (used * 100)/get_memory_size());
 

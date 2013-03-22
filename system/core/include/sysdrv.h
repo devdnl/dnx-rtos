@@ -37,7 +37,7 @@ extern "C" {
 #include "oswrap.h"
 #include "vfs.h"
 #include "sysmoni.h"
-#include "regdrv.h"
+#include <string.h>
 
 /*==============================================================================
   Exported symbolic constants/macros

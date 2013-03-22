@@ -86,6 +86,7 @@ extern "C" {
 #define sysm_tskcalloc(nmemb, msize)            memman_calloc(nmemb, msize, NULL)
 #define sysm_tskfreemem_as(taskhdl, mem, size)  memman_free(mem)
 #define sysm_tskfree(mem)                       memman_free(mem)
+#define sysm_get_used_program_memory()          0
 #endif
 
 #if (SYSM_MONITOR_KERNEL_MEMORY_USAGE == 0)
@@ -205,6 +206,7 @@ extern void  sysm_tskfree_as(task_t*, void*);
 extern void *sysm_tskmalloc(u32_t);
 extern void *sysm_tskcalloc(u32_t, u32_t);
 extern void  sysm_tskfree(void*);
+extern i32_t sysm_get_used_program_memory(void);
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
