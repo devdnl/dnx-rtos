@@ -381,16 +381,18 @@ size_t UART_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t se
                 return n;
         }
 
+        if (!src || !size || !nitems) {
+                return n;
+        }
+
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                if (src && size && nitems) {
-                        hdl->Tx_buffer.src_ptr   = src;
-                        hdl->Tx_buffer.data_size = size * nitems;
+                hdl->Tx_buffer.src_ptr   = src;
+                hdl->Tx_buffer.data_size = size * nitems;
 
-                        enable_TXE_IRQ(hdl->USART);
-                        take_semaphore(hdl->data_write_sem, TXC_WAIT_TIME);
+                enable_TXE_IRQ(hdl->USART);
+                take_semaphore(hdl->data_write_sem, TXC_WAIT_TIME);
 
-                        n = nitems;
-                }
+                n = nitems;
 
                 unlock_recursive_mutex(hdl->port_lock_mtx);
         }
@@ -423,33 +425,35 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
                 return n;
         }
 
+        if (!dst || !size || !nitems) {
+                return n;
+        }
+
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                if (dst && size && nitems) {
-                        dst_ptr = (u8_t *)dst;
-                        data_size = nitems * size;
+                dst_ptr   = (u8_t *)dst;
+                data_size = nitems * size;
 
-                        do {
-                                enter_critical();
+                do {
+                        enter_critical();
 
-                                if (hdl->Rx_FIFO.buffer_level > 0) {
-                                        *dst_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+                        if (hdl->Rx_FIFO.buffer_level > 0) {
+                                *dst_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
 
-                                        if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
-                                                hdl->Rx_FIFO.read_index = 0;
+                                if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
+                                        hdl->Rx_FIFO.read_index = 0;
 
-                                        hdl->Rx_FIFO.buffer_level--;
-                                        data_size--;
-                                        n++;
+                                hdl->Rx_FIFO.buffer_level--;
+                                data_size--;
+                                n++;
 
-                                        exit_critical();
-                                } else {
-                                        exit_critical();
-                                        suspend_this_task();
-                                }
-                        } while (data_size);
+                                exit_critical();
+                        } else {
+                                exit_critical();
+                                suspend_this_task();
+                        }
+                } while (data_size);
 
-                        n /= size;
-                }
+                n /= size;
 
                 unlock_recursive_mutex(hdl->port_lock_mtx);
         }
