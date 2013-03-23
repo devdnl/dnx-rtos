@@ -34,6 +34,8 @@ extern "C" {
 #include "uart.h"
 #include "stm32f10x.h"
 
+MODULE_NAME(UART);
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -111,8 +113,6 @@ static void IRQ_handler(struct USART_data *USART_data);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-DRIVER_ID(UART);
-
 /* addresses of UART devices */
 static USART_t *const USART_peripherals[UART_DEV_COUNT] = {
 #if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
@@ -146,17 +146,14 @@ struct USART_data *USART_data[UART_DEV_COUNT];
  * @param[out] **drvhdl         driver's memory handler
  * @param[in]  dev              device number
  * @param[in]  part             device part
- * @param[in]  drvid            driver's ID delivered by system
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_init(void **drvhdl, uint dev, uint part, uint drvid)
-{;
+stdret_t UART_init(void **drvhdl, uint dev, uint part)
+{
         (void)part;
-
-        set_driver_ID(drvid);
 
         if (!drvhdl || dev >= UART_DEV_COUNT) {
                 return STD_RET_ERROR;

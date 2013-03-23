@@ -134,9 +134,9 @@ extern "C" {
 #define CONFIG_MONITOR_KERNEL_MEMORY_USAGE              (1)
 
 /**
- * Enable (1) or disable (0) drivers memory usage monitoring
+ * Enable (1) or disable (0) modules (drivers) memory usage monitoring
  */
-#define CONFIG_MONITOR_DRIVER_MEMORY_USAGE              (1)
+#define CONFIG_MONITOR_MODULE_MEMORY_USAGE              (1)
 
 /**
  * Enable (1) or disable (0) system memory usage monitoring

@@ -95,11 +95,11 @@ extern "C" {
 #define getcwd(buf, size)                 strncpy(buf, get_this_task_data()->f_cwd, size)
 #define get_used_memory_by_kernel()       sysm_get_used_kernel_memory()
 #define get_used_memory_by_system()       sysm_get_used_system_memory()
-#define get_used_memory_by_drivers()      sysm_get_used_drivers_memory()
+#define get_used_memory_by_modules()      sysm_get_used_modules_memory()
 #define get_used_memory_by_programs()     sysm_get_used_program_memory()
-#define get_driver_memory_usage(drvid)    sysm_get_driver_used_memory(drvid)
-#define get_driver_name(drvid)            regdrv_get_driver_name(drvid)
-#define get_driver_count()                regdrv_get_driver_count()
+#define get_module_memory_usage(modid)    sysm_get_module_used_memory(modid)
+#define get_module_name(modid)            regdrv_get_module_name(modid)
+#define get_module_count()                REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES
 
 /*==============================================================================
   Exported types, enums definitions

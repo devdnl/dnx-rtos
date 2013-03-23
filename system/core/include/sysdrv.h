@@ -37,6 +37,7 @@ extern "C" {
 #include "oswrap.h"
 #include "vfs.h"
 #include "sysmoni.h"
+#include "regdrv.h"
 #include <string.h>
 
 /*==============================================================================
@@ -46,19 +47,18 @@ extern "C" {
 #error "dnx.h and sysdrv.h shall never included together!"
 #endif
 
-#define DRIVER_ID(drvname)                static uint _drvid_
-#define set_driver_ID(drvid)              _drvid_ = drvid
+#define MODULE_NAME(module_name)          static const char *__module_name__ = #module_name
 
 #ifndef calloc
-#define calloc(nmemb, msize)              sysm_drvcalloc(nmemb, msize, _drvid_)
+#define calloc(nmemb, msize)              sysm_modcalloc(nmemb, msize, regdrv_get_module_number(__module_name__))
 #endif
 
 #ifndef malloc
-#define malloc(size)                      sysm_drvmalloc(size, _drvid_)
+#define malloc(size)                      sysm_modmalloc(size, regdrv_get_module_number(__module_name__))
 #endif
 
 #ifndef free
-#define free(mem)                         sysm_drvfree(mem, _drvid_)
+#define free(mem)                         sysm_modfree(mem, regdrv_get_module_number(__module_name__))
 #endif
 
 #define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
@@ -85,7 +85,7 @@ extern "C" {
 #define fstat(file, statPtr)              vfs_fstat(file, stat)
 
 #define DRIVER_INTERFACE(drvname)                                          \
-extern stdret_t drvname##_init   (void**, uint, uint, uint);               \
+extern stdret_t drvname##_init   (void**, uint, uint);                     \
 extern stdret_t drvname##_release(void*);                                  \
 extern stdret_t drvname##_open   (void*);                                  \
 extern stdret_t drvname##_close  (void*);                                  \

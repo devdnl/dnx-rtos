@@ -38,6 +38,14 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/*
+ * USER CONFIGURATION: this determine how many driver modules are used in the
+ *                     system. Driver module example: UART, TTY, I2C, etc.
+ *                     One module can support many devices e.g.: UART can support
+ *                     uart1, uart2, etc, so here type only number of modules not
+ *                     supported devices.
+ */
+#define REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES      4
 
 /*==============================================================================
   Exported types, enums definitions
@@ -52,8 +60,8 @@ extern "C" {
 ==============================================================================*/
 extern stdret_t    init_driver(const char *drvName, const char *nodeName);
 extern stdret_t    release_driver(const char *drvName);
-extern uint        regdrv_get_driver_count(void);
-extern const char *regdrv_get_driver_name(uint driver_number);
+extern const char *regdrv_get_module_name(uint module_number);
+extern int         regdrv_get_module_number(const char *module_name);
 
 #ifdef __cplusplus
 }

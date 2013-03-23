@@ -47,8 +47,8 @@ extern "C" {
 /* USER CFG: enable (1) or disable (0) system memory usage monitoring */
 #define SYSM_MONITOR_SYSTEM_MEMORY_USAGE        CONFIG_MONITOR_SYSTEM_MEMORY_USAGE
 
-/* USER CFG: enable (1) or disable (0) driver memory usage monitoring */
-#define SYSM_MONITOR_DRIVER_MEMORY_USAGE        CONFIG_MONITOR_DRIVER_MEMORY_USAGE
+/* USER CFG: enable (1) or disable (0) module (driver) memory usage monitoring */
+#define SYSM_MONITOR_MODULE_MEMORY_USAGE        CONFIG_MONITOR_MODULE_MEMORY_USAGE
 
 /* USER CFG: enable (1) or disable (0) task memory usage monitoring */
 #define SYSM_MONITOR_TASK_MEMORY_USAGE          CONFIG_MONITOR_TASK_MEMORY_USAGE
@@ -117,12 +117,9 @@ extern "C" {
 #define sysm_task_switched_out()                NULL()
 #endif
 
-#if (  (SYSM_MONITOR_KERNEL_MEMORY_USAGE == 0) \
-    && (SYSM_MONITOR_SYSTEM_MEMORY_USAGE == 0) \
-    && (SYSM_MONITOR_DRIVER_MEMORY_USAGE == 0) \
-    && (SYSM_MONITOR_TASK_MEMORY_USAGE == 0  ) \
-    && (SYSM_MONITOR_TASK_FILE_USAGE == 0    ) \
-    && (SYSM_MONITOR_CPU_LOAD == 0           ) )
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE == 0 ) \
+    && (SYSM_MONITOR_TASK_FILE_USAGE == 0   ) \
+    && (SYSM_MONITOR_CPU_LOAD == 0          ) )
 #define sysm_init()                             NULL()
 #endif
 
@@ -158,10 +155,7 @@ struct taskstat {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-#if (  (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0) \
-    || (SYSM_MONITOR_TASK_MEMORY_USAGE > 0  ) \
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0  ) \
     || (SYSM_MONITOR_TASK_FILE_USAGE > 0    ) \
     || (SYSM_MONITOR_CPU_LOAD > 0           ) )
 extern stdret_t sysm_init(void);
@@ -192,12 +186,12 @@ extern void  sysm_sysfree(void*);
 extern i32_t sysm_get_used_system_memory(void);
 #endif
 
-#if (SYSM_MONITOR_DRIVER_MEMORY_USAGE > 0)
-extern void *sysm_drvmalloc(size_t, uint);
-extern void *sysm_drvcalloc(size_t, size_t, uint);
-extern void  sysm_drvfree(void*, uint);
-extern i32_t sysm_get_used_drivers_memory(void);
-extern i32_t sysm_get_driver_used_memory(uint);
+#if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
+extern void *sysm_modmalloc(size_t, uint);
+extern void *sysm_modcalloc(size_t, size_t, uint);
+extern void  sysm_modfree(void*, uint);
+extern i32_t sysm_get_used_modules_memory(void);
+extern i32_t sysm_get_module_used_memory(uint);
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)

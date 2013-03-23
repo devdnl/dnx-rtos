@@ -52,7 +52,9 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define IMPORT_DRIVER_INTERFACE(drvmodule, drvname, devno, devpart)\
+#define USE_MODULE(module_name)      #module_name
+
+#define USE_DRIVER_INTERFACE(drvmodule, drvname, devno, devpart)\
 {.drv_name    = drvname,\
  .dev         = devno,\
  .part        = devpart,\
@@ -69,10 +71,10 @@ extern "C" {
   Local types, enums definitions
 ==============================================================================*/
 struct driver_entry {
-        char  *drv_name;
+        const char *drv_name;
         uint  dev;
         uint  part;
-        stdret_t (*drv_init   )(void **drvhdl, uint dev, uint part, uint drvid);
+        stdret_t (*drv_init   )(void **drvhdl, uint dev, uint part);
         stdret_t (*drv_release)(void *drvhdl);
         struct vfs_drv_interface drv_if;
 };
@@ -84,26 +86,21 @@ struct driver_entry {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static const char *regdrv_used_modules[REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES] = {
+        USE_MODULE(UART),
+        USE_MODULE(GPIO),
+        USE_MODULE(PLL),
+        USE_MODULE(TTY),
+};
+
 static const struct driver_entry regdrv_driver_table[] = {
-        IMPORT_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1, UART_PART_NONE),
-        IMPORT_DRIVER_INTERFACE(GPIO, "gpio", GPIO_DEV_NONE, GPIO_PART_NONE),
-        IMPORT_DRIVER_INTERFACE(PLL, "pll", PLL_DEV_NONE, PLL_PART_NONE),
-
-        #if (TTY_NUMBER_OF_VT > 0)
-        IMPORT_DRIVER_INTERFACE(TTY, "tty0", TTY_DEV_0, TTY_PART_NONE),
-        #endif
-
-        #if (TTY_NUMBER_OF_VT > 1)
-        IMPORT_DRIVER_INTERFACE(TTY, "tty1", TTY_DEV_1, TTY_PART_NONE),
-        #endif
-
-        #if (TTY_NUMBER_OF_VT > 2)
-        IMPORT_DRIVER_INTERFACE(TTY, "tty2", TTY_DEV_2, TTY_PART_NONE),
-        #endif
-
-        #if (TTY_NUMBER_OF_VT > 3)
-        IMPORT_DRIVER_INTERFACE(TTY, "tty3", TTY_DEV_3, TTY_PART_NONE),
-        #endif
+        USE_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1   , UART_PART_NONE),
+        USE_DRIVER_INTERFACE(GPIO, "gpio" , GPIO_DEV_NONE, GPIO_PART_NONE),
+        USE_DRIVER_INTERFACE(PLL , "pll"  , PLL_DEV_NONE , PLL_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY , "tty0" , TTY_DEV_0    , TTY_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY , "tty1" , TTY_DEV_1    , TTY_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY , "tty2" , TTY_DEV_2    , TTY_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY , "tty3" , TTY_DEV_3    , TTY_PART_NONE ),
 };
 
 /* pointers to memory handle used by drivers */
@@ -135,7 +132,7 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                 return STD_RET_ERROR;
         }
 
-        for (u16_t drvid = 0; drvid < ARRAY_SIZE(regdrv_driver_table); drvid++) {
+        for (uint drvid = 0; drvid < ARRAY_SIZE(regdrv_driver_table); drvid++) {
 
                 if (strcmp(regdrv_driver_table[drvid].drv_name, drv_name) != 0) {
                         continue;
@@ -149,9 +146,12 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                 }
 
                 if (regdrv_driver_table[drvid].drv_init(&regdrv_driver_handle[drvid],
-                                                    regdrv_driver_table[drvid].dev,
-                                                    regdrv_driver_table[drvid].part,
-                                                    drvid) != STD_RET_OK) {
+                                                        regdrv_driver_table[drvid].dev,
+                                                        regdrv_driver_table[drvid].part)
+                                                        != STD_RET_OK) {
+
+                        if (regdrv_driver_handle[drvid] == NULL)
+                                regdrv_driver_handle[drvid] = (void*)(size_t)drvid;
 
                         printk(FONT_COLOR_RED"Driver %s initialization error!"
                                RESET_ATTRIBUTES"\n", drv_name);
@@ -222,18 +222,6 @@ stdret_t release_driver(const char *drv_name)
 
 //==============================================================================
 /**
- * @brief Function return number of registered drivers
- *
- * @return number of drivers
- */
-//==============================================================================
-uint regdrv_get_driver_count(void)
-{
-        return ARRAY_SIZE(regdrv_driver_table);
-}
-
-//==============================================================================
-/**
  * @brief Function return name of the driver
  *
  * @param driver_number         the driver number in the table
@@ -241,17 +229,41 @@ uint regdrv_get_driver_count(void)
  * @return pointer to driver's name or NULL if error
  */
 //==============================================================================
-const char *regdrv_get_driver_name(uint driver_number)
+const char *regdrv_get_module_name(uint module_number)
 {
-        if (driver_number >= ARRAY_SIZE(regdrv_driver_table))
+        if (module_number >= REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES)
                 return NULL;
         else
-                return regdrv_driver_table[driver_number].drv_name;
+                return regdrv_used_modules[module_number];
 }
+
+//==============================================================================
+/**
+ * @brief Function return driver ID based on driver handler
+ *
+ * @param[in] *drvhdl           driver's handler
+ *
+ * @return driver ID
+ */
+//==============================================================================
 
 #ifdef __cplusplus
 }
 #endif
+int regdrv_get_module_number(const char *module_name)
+{
+        if (!module_name)
+                return ARRAY_SIZE(regdrv_used_modules);
+
+        for (uint module = 0; module < ARRAY_SIZE(regdrv_used_modules); module++) {
+                if (strcmp(regdrv_used_modules[module], module_name) == 0) {
+                        return module;
+                }
+        }
+
+        printk(FONT_COLOR_RED"Module %s does not exist!"RESET_ATTRIBUTES"\n", module_name);
+        return ARRAY_SIZE(regdrv_used_modules);
+}
 
 /*==============================================================================
   End of file

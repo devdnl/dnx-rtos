@@ -231,7 +231,6 @@ static void init_AFIO(void);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-DRIVER_ID(GPIO);
 
 /*==============================================================================
   Exported object definitions
@@ -248,19 +247,16 @@ DRIVER_ID(GPIO);
  * @param[out] **drvhdl         driver's memory handle
  * @param[in]  dev              device number
  * @param[in]  part             device part
- * @param[in]  drvid            driver's ID delivered by system
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t GPIO_init(void **drvhdl, uint dev, uint part, uint drvid)
+stdret_t GPIO_init(void **drvhdl, uint dev, uint part)
 {
         (void)drvhdl;
         (void)dev;
         (void)part;
-
-        set_driver_ID(drvid);
 
 #if (AFIO_EN > 0)
         init_AFIO();
