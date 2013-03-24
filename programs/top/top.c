@@ -89,7 +89,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                 u8_t n = get_number_of_monitored_tasks();
 
-                printf("\x1B[2J\x1B[HPress q to quit\n");
+                printf(CLEAR_SCREEN"Press q to quit\n");
 
                 printf("Total tasks: %u\n", n);
 

@@ -70,10 +70,10 @@ extern "C" {
 #define ENABLE_LINE_WRAP                        "\e[?7h"
 #define SET_NEW_LINE_MODE                       "\e[20h"
 #define SET_LINE_FEED_MODE                      "\e[20l"
-#define CLRSRC                                  "\e[2J"
+#define CLEAR_SCREEN                            "\e[2J"
 #define ERASE_LINE                              "\e[2K"
 #define ERASE_LINE_END                          "\e[K"
-#define CUR_HOME                                "\e[H"
+#define CURSOR_HOME                             "\e[H"
 #if (CONFIG_COLOR_TERM_ENABLE > 0)
 #define RESET_ATTRIBUTES                        "\e[0m"
 #define FONT_BLINKING                           "\e[5m"

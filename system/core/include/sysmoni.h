@@ -164,7 +164,7 @@ extern stdret_t sysm_init(void);
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
-extern bool_t   sysm_is_task_exist(task_t*);
+extern bool     sysm_is_task_exist(task_t*);
 extern stdret_t sysm_start_task_monitoring(task_t*);
 extern stdret_t sysm_stop_task_monitoring(task_t*);
 extern stdret_t sysm_get_task_stat(task_t*, struct taskstat*);

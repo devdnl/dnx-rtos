@@ -49,7 +49,7 @@ extern "C" {
  Local function prototypes
 ==============================================================================*/
 #if (CONFIG_PRINTF_ENABLE > 0)
-static char *itoa(i32_t val, char *buf, u8_t base, bool_t usign_val, u8_t zeros_req);
+static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req);
 static int   calc_format_size(const char *format, va_list arg);
 #endif
 
@@ -82,7 +82,7 @@ static file_t *io_printk_file;
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-static char *itoa(i32_t val, char *buf, u8_t base, bool_t usign_val, u8_t zeros_req)
+static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
 {
         static const char digits[] = "0123456789ABCDEF";
 
@@ -210,9 +210,9 @@ static int calc_format_size(const char *format, va_list arg)
 //==============================================================================
 char *io_atoi(char *string, u8_t base, i32_t *value)
 {
-        char character;
+        char  character;
         i32_t sign = 1;
-        bool_t charFound = FALSE;
+        bool  charFound = FALSE;
 
         *value = 0;
 
@@ -564,8 +564,8 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                         format--;
                                 }
 
-                                u8_t   base = (chr == 'd' || chr == 'u' ? 10 : 16);
-                                bool_t uint = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
+                                u8_t base = (chr == 'd' || chr == 'u' ? 10 : 16);
+                                bool uint = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
 
                                 resultPtr = itoa(va_arg(arg, i32_t), result,
                                                  base, uint, zeros);

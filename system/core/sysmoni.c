@@ -143,10 +143,10 @@ stdret_t sysm_init(void)
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
-bool_t sysm_is_task_exist(task_t *taskhdl)
+bool sysm_is_task_exist(task_t *taskhdl)
 {
-        i32_t  item  = -1;
-        bool_t exist = FALSE;
+        i32_t item  = -1;
+        bool  exist = FALSE;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 

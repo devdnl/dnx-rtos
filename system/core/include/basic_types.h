@@ -73,7 +73,7 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 /** define boolean type */
-typedef uint8_t bool_t;
+typedef uint8_t bool;
 
 /** define flag type */
 typedef uint8_t flag_t;

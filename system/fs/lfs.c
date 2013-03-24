@@ -70,7 +70,7 @@ typedef struct node {
 struct opened_file_info {
         node_t          *node;                  /* opened node                    */
         node_t          *base_node;             /* base of opened node            */
-        bool_t          remove_at_close;        /* file to remove after close     */
+        bool            remove_at_close;        /* file to remove after close     */
         u32_t           item_ID;                /* item ID in base directory list */
 };
 
@@ -454,7 +454,7 @@ stdret_t lfs_remove(void *fshdl, const char *path)
         struct LFS_data *lfs = fshdl;
         struct opened_file_info *opened_file;
         i32_t   item;
-        bool_t  remove_file;
+        bool    remove_file;
         u32_t   item_ID;
         node_t *base_node;
         node_t *obj_node;

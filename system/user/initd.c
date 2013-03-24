@@ -151,13 +151,27 @@ void task_initd(void *arg)
                                 }
 
                                 switch (state[current_tty]) {
-                                case PROGRAM_UNKNOWN_STATE: printk("Program does not start!\n"); break;
-                                case PROGRAM_RUNNING: printk("Program started.\n"); break;
-                                case PROGRAM_ENDED: printk("Program finished.\n"); break;
-                                case PROGRAM_NOT_ENOUGH_FREE_MEMORY: printk("No enough free memory!\n"); break;
-                                case PROGRAM_ARGUMENTS_PARSE_ERROR: printk("Bad arguments!\n"); break;
-                                case PROGRAM_DOES_NOT_EXIST: printk("Program does not exist!\n"); break;
-                                case PROGRAM_HANDLE_ERROR: printk("Handle error!\n"); break;
+                                case PROGRAM_UNKNOWN_STATE:
+                                        printk("Program does not start!\n");
+                                        break;
+                                case PROGRAM_RUNNING:
+                                        printk("Program started.\n");
+                                        break;
+                                case PROGRAM_ENDED:
+                                        printk("Program finished.\n");
+                                        break;
+                                case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
+                                        printk("No enough free memory!\n");
+                                        break;
+                                case PROGRAM_ARGUMENTS_PARSE_ERROR:
+                                        printk("Bad arguments!\n");
+                                        break;
+                                case PROGRAM_DOES_NOT_EXIST:
+                                        printk("Program does not exist!\n");
+                                        break;
+                                case PROGRAM_HANDLE_ERROR:
+                                        printk("Handle error!\n");
+                                        break;
                                 }
                         }
                 }
@@ -173,7 +187,7 @@ void task_initd(void *arg)
                                 program[i] = NULL;
                                 state[i]   = PROGRAM_UNKNOWN_STATE;
 
-                                ioctl(tty[i], TTY_IORQ_CLEAR_TTY, NULL);
+                                ioctl(tty[i], TTY_IORQ_CLEAN_TTY, NULL);
                                 fclose(tty[i]);
                                 tty[i] = NULL;
 

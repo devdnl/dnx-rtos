@@ -79,11 +79,10 @@ enum tty_list {
 enum TTY_IORQ_enum {
         TTY_IORQ_GET_CURRENT_TTY,               /* [out] u8_t */
         TTY_IORQ_SET_ACTIVE_TTY,                /* [in ] u8_t */
-        TTY_IORQ_CLEAR_TTY,                     /* none */
+        TTY_IORQ_CLEAN_TTY,                     /* none */
         TTY_IORQ_GET_COL,                       /* [out] u8_t */
         TTY_IORQ_GET_ROW,                       /* [out] u8_t */
         TTY_IORQ_CLEAR_SCR,                     /* none */
-        TTY_IORQ_CLEAR_LAST_LINE,               /* none */
         TTY_IORQ_ECHO_ON,                       /* none */
         TTY_IORQ_ECHO_OFF,                      /* none */
 };

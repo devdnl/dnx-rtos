@@ -269,7 +269,7 @@ static enum cmd_status cmd_cd(char *arg)
 {
         char  *newpath  = NULL;
         dir_t *dir      = NULL;
-        bool_t freePath = FALSE;
+        bool   freePath = FALSE;
 
         if (strcmp(arg, "..") == 0) {
                 char *lastslash = strrchr(global->cwd, '/');
@@ -329,7 +329,7 @@ static enum cmd_status cmd_cd(char *arg)
 static enum cmd_status cmd_ls(char *arg)
 {
         char  *newpath  = NULL;
-        bool_t freePath = FALSE;
+        bool   freePath = FALSE;
 
         if (arg) {
                 if (strcmp(".", arg) == 0) {
@@ -410,7 +410,7 @@ static enum cmd_status cmd_ls(char *arg)
 static enum cmd_status cmd_mkdir(char *arg)
 {
         char  *newpath  = NULL;
-        bool_t freePath = FALSE;
+        bool   freePath = FALSE;
 
         if (arg) {
                 if (arg[0] == '/') {
@@ -455,7 +455,7 @@ static enum cmd_status cmd_mkdir(char *arg)
 static enum cmd_status cmd_touch(char *arg)
 {
         char  *newpath  = NULL;
-        bool_t freePath = FALSE;
+        bool   freePath = FALSE;
 
         if (arg) {
                 if (arg[0] == '/') {
@@ -504,7 +504,7 @@ static enum cmd_status cmd_touch(char *arg)
 static enum cmd_status cmd_rm(char *arg)
 {
         char  *newpath  = NULL;
-        bool_t freePath = FALSE;
+        bool   freePath = FALSE;
 
         if (arg) {
                 if (arg[0] == '/') {

@@ -76,6 +76,11 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
 
         stdret_t status = STD_RET_OK;
 
+        if (argc == 1) {
+                printf("Usage: cat [file]\n");
+                return STD_RET_ERROR;
+        }
+
         u32_t col = 80;
         ioctl(stdin, TTY_IORQ_GET_COL, &col);
 

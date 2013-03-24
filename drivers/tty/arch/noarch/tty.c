@@ -89,7 +89,7 @@ struct tty_data {
         uint edit_line_length;
         uint cursor_position;
 
-        u8_t number;
+        u8_t device_number;
 };
 
 /* memory structure */
@@ -137,11 +137,9 @@ static void  refresh_last_line(struct tty_data *tty, file_t *stream);
 static void  stdin_service(struct tty_data *tty, file_t *stream);
 static void  switch_tty_immediately(u8_t tty_number, file_t *stream);
 static void  clear_tty(struct tty_data *tty);
-static uint  add_message(struct tty_data *tty, char *msg, uint msg_len);
-static char *create_buffer_for_message(struct tty_data *tty, char *msg_src, uint msg_len);
-static u8_t  count_non_lf_ended_messages(struct tty_data *tty);
+static void  add_message(struct tty_data *tty, char *msg, uint msg_len);
+static char *merge_or_create_message(struct tty_data *tty, char *msg_src, uint msg_len);
 static void  strncpy_LF2CRLF(char *dst, char *src, uint n);
-static void  free_non_lf_ended_messages(struct tty_data *tty, u8_t msg_count);
 static void  link_message(struct tty_data *tty, char *msg);
 static void  inc_message_counter(struct tty_data *tty);
 static enum keycap capture_special_keys(char character);
@@ -216,8 +214,8 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 
         tty->echo_enabled  = SET;
         tty_ctrl->tty[dev] = tty;
-        tty->number = dev;
-        *drvhdl     = tty;
+        tty->device_number = dev;
+        *drvhdl            = tty;
         return STD_RET_OK;
 
 
@@ -271,7 +269,7 @@ stdret_t TTY_release(void *drvhdl)
                 enter_critical();
                 unlock_recursive_mutex(tty->secure_resources_mtx);
                 delete_recursive_mutex(tty->secure_resources_mtx);
-                tty_ctrl->tty[tty->number] = NULL;
+                tty_ctrl->tty[tty->device_number] = NULL;
                 exit_critical();
                 free(tty);
                 return STD_RET_OK;
@@ -347,7 +345,8 @@ size_t TTY_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t see
 
         /* if current TTY is showing wait to show refreshed line */
         while (  tty_ctrl->tty[tty_ctrl->current_TTY]->refresh_last_line
-              && tty_ctrl->current_TTY == tty->number) {
+              && tty_ctrl->current_TTY == tty->device_number) {
+
                 milisleep(10);
         }
 
@@ -358,7 +357,9 @@ size_t TTY_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t see
                         clear_tty(tty);
                 }
 
-                n = add_message(tty, src, nitems);
+                add_message(tty, src, nitems);
+
+                n = nitems;
 
                 unlock_recursive_mutex(tty->secure_resources_mtx);
         }
@@ -446,7 +447,7 @@ stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
                 break;
 
         /* clear terminal */
-        case TTY_IORQ_CLEAR_TTY:
+        case TTY_IORQ_CLEAN_TTY:
                 clear_tty(tty);
                 break;
 
@@ -468,37 +469,8 @@ stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
 
         /* clear screen */
         case TTY_IORQ_CLEAR_SCR:
-                tty_ctrl->change_to_TTY = tty_ctrl->current_TTY;
                 clear_tty(tty);
-                break;
-
-        /* clear last line */
-        case TTY_IORQ_CLEAR_LAST_LINE:
-                if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
-                        char *msg = malloc(2);
-
-                        if (msg) {
-                                msg[0] = '\r';
-                                msg[1] = '\0';
-
-                                /* move message pointer back */
-                                tty->write_index--;
-
-                                if (tty->write_index >= TTY_MAX_LINES) {
-                                        tty->write_index = TTY_MAX_LINES - 1;
-                                }
-
-                                /* if no message to refresh setup refresh only one */
-                                if (tty->new_msg_counter == 0) {
-                                        tty->refresh_last_line = SET;
-                                }
-
-                                add_message(tty, msg, FALSE);
-                        }
-
-                        unlock_recursive_mutex(tty->secure_resources_mtx);
-                }
-
+                tty_ctrl->change_to_TTY = tty_ctrl->current_TTY;
                 break;
 
         /* turn on terminal echo */
@@ -953,39 +925,27 @@ static void clear_tty(struct tty_data *tty)
  * @param *tty          terminal address
  * @param *msg          message
  * @param  msgLen       message length
- *
- * @return msgLen if message created, otherwise 0
  */
 //==============================================================================
-static uint add_message(struct tty_data *tty, char *msg, uint msg_len)
+static void add_message(struct tty_data *tty, char *msg, uint msg_len)
 {
-        uint  msg_cnt;
         char *new_msg;
 
         if (!msg_len || !msg) {
-                return 0;
+                return;
         }
 
-        msg_cnt = count_non_lf_ended_messages(tty);
-
-        free_non_lf_ended_messages(tty, msg_cnt);
-
-        new_msg = create_buffer_for_message(tty, msg, msg_len);
-
+        new_msg = merge_or_create_message(tty, msg, msg_len);
         link_message(tty, new_msg);
 
         give_counting_semaphore(tty_ctrl->stdout_semcnt);
-
-        if (new_msg) {
-                return msg_len;
-        } else {
-                return 0;
-        }
 }
 
 //==============================================================================
 /**
- * @brief Function create new buffer for new message
+ * @brief Function create new buffer for new message or merge new message with
+ *        latest
+ *
  * Function create new buffer for new message if latest message is LF ended,
  * otherwise function merge latest message with new message. Function returns
  * pointer to new buffer.
@@ -997,7 +957,7 @@ static uint add_message(struct tty_data *tty, char *msg, uint msg_len)
  * @return pointer to new message buffer
  */
 //==============================================================================
-static char *create_buffer_for_message(struct tty_data *tty, char *msg_src, uint msg_len)
+static char *merge_or_create_message(struct tty_data *tty, char *msg_src, uint msg_len)
 {
         char   *msg;
         char   *lst_msg     = tty->line[get_message_index(tty, 1)];
@@ -1016,12 +976,11 @@ static char *create_buffer_for_message(struct tty_data *tty, char *msg_src, uint
 
                 msg = malloc(lst_msg_len + msg_len + (2 * LF_count));
                 if (msg) {
-                        tty->write_index--;
-                        if (tty->write_index >= TTY_MAX_LINES) {
+                        if (tty->write_index == 0)
                                 tty->write_index = TTY_MAX_LINES - 1;
-                        }
+                        else
+                                tty->write_index--;
 
-                        /* if no message to refresh setup refresh only one */
                         if (tty->new_msg_counter == 0) {
                                 tty->refresh_last_line = SET;
                         }
@@ -1072,69 +1031,6 @@ static void strncpy_LF2CRLF(char *dst, char *src, uint n)
 
 //==============================================================================
 /**
- * @brief Function find and count number of non-LF ended lines
- * Function count the number of non-LF ended messages from current write index.
- *
- * @param *tty          terminal address
- */
-//==============================================================================
-static u8_t count_non_lf_ended_messages(struct tty_data *tty)
-{
-        u8_t write_index = tty->write_index;
-        u8_t msg_cnt = 1;
-
-        /* find all messages which are not ended by LF (this is common line) */
-        for (uint i = 0; i < TTY_MAX_LINES; i++) {
-                char *last_msg = tty->line[write_index++];
-
-                if (last_msg == NULL) {
-                        break;
-                }
-
-                if (write_index >= TTY_MAX_LINES) {
-                        write_index = 0;
-                }
-
-                if (*(last_msg + strlen(last_msg) - 1) != '\n') {
-                        msg_cnt++;
-                } else {
-                        break;
-                }
-        }
-
-        return msg_cnt;
-}
-
-//==============================================================================
-/**
- * @brief Function free all old non-LF ended messages
- * Function does not change tty's wrIdx. Function free all non-LF ended messages
- * from current write index -- function clear the latest messages.
- *
- * @param  *tty         terminal address
- * @param  msg_count    message count to free
- */
-//==============================================================================
-static void free_non_lf_ended_messages(struct tty_data *tty, u8_t msg_count)
-{
-        u8_t write_idx = tty->write_index;
-
-        while (msg_count--) {
-                if (tty->line[write_idx]) {
-                        free(tty->line[write_idx]);
-                        tty->line[write_idx] = NULL;
-                }
-
-                write_idx++;
-
-                if (write_idx >= TTY_MAX_LINES) {
-                        write_idx = 0;
-                }
-        }
-}
-
-//==============================================================================
-/**
  * @brief Function link prepared message to TTY
  *
  * @param *tty          terminal address
@@ -1143,6 +1039,10 @@ static void free_non_lf_ended_messages(struct tty_data *tty, u8_t msg_count)
 //==============================================================================
 static void link_message(struct tty_data *tty, char *msg)
 {
+        if (tty->line[tty->write_index]) {
+                free(tty->line[tty->write_index]);
+        }
+
         tty->line[tty->write_index++] = msg;
 
         if (tty->write_index >= TTY_MAX_LINES) {
