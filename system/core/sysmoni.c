@@ -653,8 +653,8 @@ void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
                 if (task_monitor_data->mem_slot[slot] == NULL) {
                         if ((mem = memman_malloc(size, &allocated))) {
                                 task_monitor_data->mem_slot[slot] = mem;
-                                task_monitor_data->used_memory   += allocated;
-                                sysm_programs_memory_usage       += allocated;
+                                task_monitor_data->used_memory += allocated;
+                                sysm_programs_memory_usage     += allocated;
                         }
 
                         goto exit;

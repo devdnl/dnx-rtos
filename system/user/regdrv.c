@@ -36,7 +36,7 @@ extern "C" {
 #include "vfs.h"
 #include "io.h"
 
-/* include here drivers headers */
+/* include here modules headers */
 #if defined(ARCH_stm32)
 #include "uart.h"
 #include "gpio.h"
@@ -86,6 +86,7 @@ struct driver_entry {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+/* a table of used modules */
 static const char *regdrv_used_modules[REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES] = {
         USE_MODULE(UART),
         USE_MODULE(GPIO),
@@ -93,6 +94,7 @@ static const char *regdrv_used_modules[REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULE
         USE_MODULE(TTY),
 };
 
+/* a table of a drivers interfaces */
 static const struct driver_entry regdrv_driver_table[] = {
         USE_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1   , UART_PART_NONE),
         USE_DRIVER_INTERFACE(GPIO, "gpio" , GPIO_DEV_NONE, GPIO_PART_NONE),
@@ -222,11 +224,11 @@ stdret_t release_driver(const char *drv_name)
 
 //==============================================================================
 /**
- * @brief Function return name of the driver
+ * @brief Function return module name
  *
- * @param driver_number         the driver number in the table
+ * @param module_number         the module number in the table
  *
- * @return pointer to driver's name or NULL if error
+ * @return pointer to module's name or NULL if error
  */
 //==============================================================================
 const char *regdrv_get_module_name(uint module_number)
@@ -239,17 +241,13 @@ const char *regdrv_get_module_name(uint module_number)
 
 //==============================================================================
 /**
- * @brief Function return driver ID based on driver handler
+ * @brief Function return module number
  *
- * @param[in] *drvhdl           driver's handler
+ * @param[in] *module_name      module name
  *
- * @return driver ID
+ * @return module number
  */
 //==============================================================================
-
-#ifdef __cplusplus
-}
-#endif
 int regdrv_get_module_number(const char *module_name)
 {
         if (!module_name)
@@ -264,6 +262,10 @@ int regdrv_get_module_number(const char *module_name)
         printk(FONT_COLOR_RED"Module %s does not exist!"RESET_ATTRIBUTES"\n", module_name);
         return ARRAY_SIZE(regdrv_used_modules);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 /*==============================================================================
   End of file
