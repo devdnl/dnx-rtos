@@ -133,6 +133,7 @@ struct vfs_drv_interface {
         size_t   (*drv_write)(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*drv_read )(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek);
         stdret_t (*drv_ioctl)(void *drvhdl, iorq_t iorq, void *data);
+        stdret_t (*drv_flush)(void *drvhdl);
 };
 
 /** file system configuration */
@@ -145,6 +146,7 @@ struct vfs_FS_interface {
         size_t   (*fs_read   )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
         stdret_t (*fs_ioctl  )(void *fshdl, fd_t fd, iorq_t iroq, void *data);
         stdret_t (*fs_fstat  )(void *fshdl, fd_t fd, struct vfs_statf *stat);
+        stdret_t (*fs_flush  )(void *fshdl, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path);
         stdret_t (*fs_mknod  )(void *fshdl, const char *path, struct vfs_drv_interface *drv_if);
         stdret_t (*fs_opendir)(void *fshdl, const char *path, dir_t *dir);
@@ -182,6 +184,7 @@ extern stdret_t vfs_fseek(file_t*, i32_t, int);
 extern i32_t    vfs_ftell(file_t*);
 extern stdret_t vfs_ioctl(file_t*, iorq_t, void*);
 extern stdret_t vfs_fstat(file_t*, struct vfs_statf*);
+extern stdret_t vfs_fflush(file_t*);
 
 #ifdef __cplusplus
 }

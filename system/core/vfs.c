@@ -54,13 +54,14 @@ extern "C" {
 /** file type */
 struct vfs_file
 {
-        void     *fshdl;        /* file system handle */
+        void     *fshdl;
         stdret_t (*f_close)(void *fshdl, fd_t fd);
         size_t   (*f_write)(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
         stdret_t (*f_ioctl)(void *fshdl, fd_t fd, iorq_t iorq, void *data);
         stdret_t (*f_stat )(void *fshdl, fd_t fd, struct vfs_statf *stat);
-        fd_t     fd;            /* file description */
+        stdret_t (*f_flush)(void *fshdl, fd_t fd);
+        fd_t     fd;
         size_t   f_seek;
 };
 
@@ -915,6 +916,27 @@ stdret_t vfs_fstat(file_t *file, struct vfs_statf *stat)
         if (file && stat) {
                 if (file->f_stat) {
                         return file->f_stat(file->fshdl, file->fd, stat);
+                }
+        }
+
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function flush file data
+ *
+ * @param[in] *file     file to flush
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t vfs_fflush(file_t *file)
+{
+        if (file) {
+                if (file->f_flush) {
+                        return file->f_flush(file->fshdl, file->fd);
                 }
         }
 
