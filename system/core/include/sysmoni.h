@@ -104,6 +104,14 @@ extern "C" {
 #define sysm_get_used_system_memory()           0
 #endif
 
+#if (SYSM_MONITOR_MODULE_MEMORY_USAGE == 0)
+#define sysm_modmalloc(size, mod)               memman_malloc(size, NULL)
+#define sysm_modcalloc(count, size, mod)        memman_calloc(count, size, NULL)
+#define sysm_modfree(mem, mod)                  memman_free(mem)
+#define sysm_get_used_modules_memory()          0
+#define sysm_get_module_used_memory(mod)        0
+#endif
+
 #if (SYSM_MONITOR_TASK_FILE_USAGE == 0)
 #define sysm_fopen(path, mode)                  vfs_fopen(path, mode)
 #define sysm_fclose(file)                       vfs_fclose(file)
@@ -112,16 +120,16 @@ extern "C" {
 #endif
 
 #if (SYSM_MONITOR_CPU_LOAD == 0)
-#define sysm_get_total_CPU_usage()              0
-#define sysm_clear_total_CPU_usage()            NULL()
-#define sysm_task_switched_in()                 NULL()
-#define sysm_task_switched_out()                NULL()
+#define sysm_get_total_CPU_usage()              1
+#define sysm_clear_total_CPU_usage()
+#define sysm_task_switched_in()
+#define sysm_task_switched_out()
 #endif
 
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE == 0 ) \
     && (SYSM_MONITOR_TASK_FILE_USAGE == 0   ) \
     && (SYSM_MONITOR_CPU_LOAD == 0          ) )
-#define sysm_init()                             NULL()
+#define sysm_init()                             STD_RET_OK
 #endif
 
 /* IF MONITOR MODULE IS NOT USED DISABLE INITIALIZATION */

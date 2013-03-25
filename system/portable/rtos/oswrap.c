@@ -126,7 +126,7 @@ void osw_delete_task(task_t *taskHdl)
         struct task_data *data;
 
         if (sysm_is_task_exist(taskHdl)) {
-                sysm_stop_task_monitoring(taskHdl);
+                (void)sysm_stop_task_monitoring(taskHdl);
 
                 if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
 

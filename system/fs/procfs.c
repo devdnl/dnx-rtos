@@ -279,7 +279,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                                 return STD_RET_ERROR;
                         }
 
-                        fileInf->taskhdl  = taskdata.task_handle;
+                        fileInf->taskhdl   = taskdata.task_handle;
                         fileInf->task_file = TASK_FILE_NONE;
 
                         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
@@ -967,8 +967,7 @@ static dirent_t procfs_readdir_taskid(void *fshdl, dir_t *dir)
 
         if (dir->dd && dir->seek < (size_t)sysm_get_number_of_monitored_tasks()) {
                 if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
-                        snprintf(dir->dd, TASK_ID_STR_LEN,
-                                 "%x", (int)taskdata.task_handle);
+                        snprintf(dir->dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
 
                         dirent.filetype = FILE_TYPE_DIR;
                         dirent.name     = dir->dd;

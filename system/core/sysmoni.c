@@ -64,6 +64,10 @@ struct task_monitor_data {
         file_t *file_slot[TASK_FILE_SLOTS];
         dir_t  *dir_slot[TASK_DIR_SLOTS];
 #endif
+
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE == 0) && (SYSM_MONITOR_TASK_FILE_USAGE == 0)
+        int dummy; /* used only to create structure in some cases (e.g. only CPU load measurement enable) */
+#endif
 };
 
 /*==============================================================================
@@ -305,8 +309,16 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
         exit_critical();
 
         stat->free_stack   = get_task_free_stack(taskhdl);
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
         stat->memory_usage = tmdata->used_memory;
+#else
+        stat->memory_usage = 0;
+#endif
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
         stat->opened_files = tmdata->opened_files;
+#else
+        stat->opened_files = 0;
+#endif
         stat->priority     = get_task_priority(taskhdl);
         stat->task_handle  = taskhdl;
         stat->task_name    = get_task_name(taskhdl);

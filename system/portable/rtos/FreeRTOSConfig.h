@@ -73,10 +73,20 @@
 /*-------------------------------------------------------------
  * Used prototypes from external modules
  *-----------------------------------------------------------*/
-extern void *sysm_kmalloc(size_t);
-extern void  sysm_kfree(void*);
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
 extern void  sysm_task_switched_in(void);
 extern void  sysm_task_switched_out(void);
+#endif
+
+#if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
+extern void *sysm_kmalloc(size_t);
+extern void  sysm_kfree(void*);
+#else
+extern void  *memman_malloc(size_t, size_t*);
+extern size_t memman_free(void*);
+#define sysm_kmalloc(size)      memman_malloc(size, NULL)
+#define sysm_kfree(mem)         memman_free(mem)
+#endif
 
 /*-----------------------------------------------------------
  * Application specific definitions.
