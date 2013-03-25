@@ -43,7 +43,7 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define IMPORT_FILE_SYSTEM_INTERFACE(fs_name)\
+#define USE_FILE_SYSTEM_INTERFACE(fs_name)\
 {.FS_name = #fs_name,\
  .FS_if   = {.fs_init    = fs_name##_init,\
              .fs_chmod   = fs_name##_chmod,\
@@ -61,6 +61,7 @@ extern "C" {
              .fs_stat    = fs_name##_stat,\
              .fs_fstat   = fs_name##_fstat,\
              .fs_statfs  = fs_name##_statfs,\
+             .fs_flush   = fs_name##_flush,\
              .fs_write   = fs_name##_write}}
 
 /*==============================================================================
@@ -81,9 +82,9 @@ struct FS_entry {
 /* driver registration */
 static const struct FS_entry FS_table[] =
 {
-        IMPORT_FILE_SYSTEM_INTERFACE(lfs),
-//        IMPORT_FILE_SYSTEM_INTERFACE(appfs),
-        IMPORT_FILE_SYSTEM_INTERFACE(procfs),
+        USE_FILE_SYSTEM_INTERFACE(lfs),
+//        USE_FILE_SYSTEM_INTERFACE(appfs),
+        USE_FILE_SYSTEM_INTERFACE(procfs),
 };
 
 /*==============================================================================

@@ -478,6 +478,25 @@ stdret_t procfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, void *data)
 
 //==============================================================================
 /**
+ * @brief Function flush file data
+ *
+ * @param[in]     *fshdl        FS handle
+ * @param[in]      fd           file descriptor
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t procfs_flush(void *fshdl, fd_t fd)
+{
+        (void)fshdl;
+        (void)fd;
+
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
  * @brief Function returns file status
  *
  * @param[in]  *fshdl                FS handle

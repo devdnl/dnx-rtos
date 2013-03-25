@@ -492,6 +492,27 @@ stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
 
 //==============================================================================
 /**
+ * @brief Function flush device
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t TTY_flush(void *drvhdl)
+{
+        struct tty_data *tty = drvhdl;
+
+        if (!tty_ctrl || !tty) {
+                return STD_RET_ERROR;
+        }
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
  * @brief TTY daemon
  */
 //==============================================================================

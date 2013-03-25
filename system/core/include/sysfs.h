@@ -75,6 +75,7 @@ extern stdret_t fsname##_chmod  (void*, const char*, u32_t);                    
 extern stdret_t fsname##_chown  (void*, const char*, u16_t, u16_t);                  \
 extern stdret_t fsname##_stat   (void*, const char*, struct vfs_statf*);             \
 extern stdret_t fsname##_fstat  (void*, fd_t, struct vfs_statf*);                    \
+extern stdret_t fsname##_flush  (void*, fd_t);                                       \
 extern stdret_t fsname##_statfs (void*, struct vfs_statfs*)
 
 /*==============================================================================

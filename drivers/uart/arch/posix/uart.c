@@ -46,6 +46,8 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
+MODULE_NAME(UART);
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -222,6 +224,23 @@ stdret_t UART_ioctl(void *drvhdl, iorq_t ioRq, void *data)
         (void)data;
 
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function flush device
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t UART_flush(void *drvhdl)
+{
+        (void)drvhdl;
+
+        return STD_RET_OK;
 }
 
 #ifdef __cplusplus

@@ -1188,6 +1188,52 @@ stdret_t lfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, void *data)
 
 //==============================================================================
 /**
+ * @brief Function flush file data
+ *
+ * @param[in]     *fshdl        FS handle
+ * @param[in]      fd           file descriptor
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t lfs_flush(void *fshdl, fd_t fd)
+{
+        struct LFS_data *lfs = fshdl;
+        struct opened_file_info  *opened_file;
+        struct vfs_drv_interface *drv_if;
+
+        if (lfs == NULL) {
+                return STD_RET_ERROR;
+        }
+
+        force_lock_mutex(lfs->resource_mtx, MTX_BLOCK_TIME);
+
+        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        if (opened_file == NULL) {
+                goto error;
+        }
+
+        if (opened_file->node == NULL) {
+                goto error;
+        }
+
+        if (opened_file->node->type == NODE_TYPE_DRV && opened_file->node->data) {
+                drv_if = opened_file->node->data;
+
+                if (drv_if->drv_flush) {
+                        unlock_mutex(lfs->resource_mtx);
+                        return drv_if->drv_flush(drv_if->handle);
+                }
+        }
+
+        error:
+        unlock_mutex(lfs->resource_mtx);
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
  * @brief Remove selected node
  *
  * @param[in] *base             base node

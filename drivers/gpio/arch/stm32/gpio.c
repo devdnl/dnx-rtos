@@ -416,6 +416,23 @@ stdret_t GPIO_ioctl(void *drvhdl, iorq_t ioRq, void *data)
 
 //==============================================================================
 /**
+ * @brief Function flush device
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t GPIO_flush(void *drvhdl)
+{
+        (void)drvhdl;
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
  * @brief Initialize GPIOx
  *
  * @param[in] *gpio             GPIO address

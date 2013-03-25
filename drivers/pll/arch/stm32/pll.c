@@ -272,6 +272,23 @@ stdret_t PLL_ioctl(void *drvhdl, iorq_t ioRq, void *data)
         return STD_RET_ERROR;
 }
 
+//==============================================================================
+/**
+ * @brief Function flush device
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t PLL_flush(void *drvhdl)
+{
+        (void)drvhdl;
+
+        return STD_RET_OK;
+}
+
 #ifdef __cplusplus
 }
 #endif

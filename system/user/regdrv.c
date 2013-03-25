@@ -65,7 +65,8 @@ extern "C" {
                  .drv_close = drvmodule##_close,\
                  .drv_write = drvmodule##_write,\
                  .drv_read  = drvmodule##_read,\
-                 .drv_ioctl = drvmodule##_ioctl}}
+                 .drv_ioctl = drvmodule##_ioctl,\
+                 .drv_flush = drvmodule##_flush}}
 
 /*==============================================================================
   Local types, enums definitions

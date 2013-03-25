@@ -630,6 +630,23 @@ stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, void *data)
 
 //==============================================================================
 /**
+ * @brief Function flush device
+ *
+ * @param[in] *drvhdl           driver's memory handle
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t UART_flush(void *drvhdl)
+{
+        (void)drvhdl;
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
  * @brief Interrupt handling
  *
  * @param usart   usart address
