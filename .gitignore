@@ -1,5 +1,6 @@
 target/
 .settings/
+.cproject
 *.o
 *.lst
 *.src
@@ -9,4 +10,3 @@ target/
 *.hex
 *.elf
 *.*~
-
