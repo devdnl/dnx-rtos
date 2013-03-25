@@ -83,6 +83,7 @@ extern "C" {
 #define ftell(file)                       vfs_ftell(file)
 #define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
 #define fstat(file, statPtr)              vfs_fstat(file, stat)
+#define fflush(file)                      vfs_fflush(file)
 
 #define DRIVER_INTERFACE(modname)                                          \
 extern stdret_t modname##_init   (void**, uint, uint);                     \

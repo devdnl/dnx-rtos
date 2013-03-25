@@ -77,6 +77,7 @@ extern "C" {
 #define sysm_ftell(file)                        vfs_ftell(file)
 #define sysm_ioctl(file, rq, data)              vfs_ioctl(file, rq, data)
 #define sysm_fstat(file, statPtr)               vfs_fstat(file, stat)
+#define sysm_fflush(file)                       vfs_fflush(file)
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE == 0)
 #define sysm_tskmalloc_as(taskhdl, size)        memman_malloc(size, NULL)
