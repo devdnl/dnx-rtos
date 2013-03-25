@@ -54,7 +54,7 @@ CSRC_CORE = $(sort \
    system/fs/lfs.c \
    system/portable/rtos/oshooks.c \
    system/portable/rtos/oswrap.c \
-   )
+)
    
 ####################################################################################################
 # INSERT HERE C PROGRAMS SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
@@ -64,14 +64,14 @@ CSRC_PROGRAMS = $(sort \
    programs/helloworld/helloworld.c \
    programs/top/top.c \
    programs/terminal/terminal.c \
-   )
+)
    
 ####################################################################################################
 # INSERT HERE C SOURCES ARCHITECTURE NOT DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CSRC_noarch = $(sort \
    drivers/tty/arch/noarch/tty.c \
-   )
+)
 
 ####################################################################################################
 # INSERT HERE C SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
@@ -85,7 +85,7 @@ CSRC_stm32 = $(sort \
    system/portable/stm32/cpuhooks.c \
    system/portable/stm32/stm32f10x_vectors.c \
    system/portable/stm32/STM32F10x_StdPeriph_Driver/misc.c \
-   )
+)
 
 CSRC_posix = $(sort \
    drivers/i2c/arch/posix/i2c.c \
@@ -93,38 +93,38 @@ CSRC_posix = $(sort \
    drivers/pll/arch/posix/pll.c \
    system/kernel/FreeRTOS/Source/portable/GCC/Posix/port.c \
    system/portable/posix/cpuctl.c \
-   )
+)
 
 ####################################################################################################
 # INSERT HERE C++ SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CXXSRC = $(sort \
-   )
+)
    
 ####################################################################################################
 # INSERT HERE C++ SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 CXXSRC_stm32 = $(sort \
-   )
+)
    
 CXXSRC_posix = $(sort \
-   )
+)
 
 ####################################################################################################
 # INSERT HERE ASSEMBLER SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 ASRC = $(sort \
-   )
+)
    
 ####################################################################################################
 # INSERT HERE ASSEMBLER SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
 ####################################################################################################
 ASRC_stm32 = $(sort \
    system/portable/lib/cm_startup.s \
-   )
+)
    
 ASCR_posix = $(sort \
-   )
+)
 
 ####################################################################################################
 # INSERT HERE PATHS WITH HEADER FILES ONLY
@@ -137,7 +137,7 @@ HDRLOC = $(sort $(dir $(CSRC_CORE)) $(dir $(CSRC_PROGRAMS)) $(dir $(CSRC_noarch)
    system/fs/include \
    system/user/include \
    system/portable \
-   )
+)
    
 ####################################################################################################
 # INSERT HERE PATHS WITH HEADER FILES ONLY WHICH ARE DEPENDING ON ARCHITECTURE
@@ -150,13 +150,13 @@ HDRLOC_stm32 = $(sort $(dir $(CSRC_stm32)) $(dir $(CXXSRC_stm32)) \
    lib/lwip \
    lib/lwip/include \
    lib/lwip/include/ipv4 \
-   )
+)
    
 HDRLOC_posix = $(sort $(dir $(CSRC_posix)) $(dir $(CXXSRC_posix)) \
    drivers/i2c \
    drivers/uart \
    drivers/pll \
-   )
+)
 
 
 ####################################################################################################

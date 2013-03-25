@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-qemu-system-arm -cpu cortex-m3 -m 2 -nographic -monitor null -serial null -kernel 01_binaries/qemu/main.elf -gdb tcp::3333
