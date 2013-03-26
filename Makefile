@@ -461,6 +461,6 @@ cleanall:
 .PHONY : flash
 flash :
 	@echo -e "target remote localhost:3333\nmonitor reset halt\nload\nmonitor reset halt\nq\ny\n" > $(BIN_LOC)/gdbcmd
-	@arm-none-eabi-gdb $(BIN_LOC)/stm32/main.elf -x $(BIN_LOC)/gdbcmd
+	@arm-none-eabi-gdb $(BIN_LOC)/stm32f1/main.elf -x $(BIN_LOC)/gdbcmd
 	-@$(RM) $(BIN_LOC)/gdbcmd
 
