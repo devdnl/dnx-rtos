@@ -32,9 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "tty.h"
-#include <string.h>
 #include "uart_def.h"
-#include "vfs.h"
 
 MODULE_NAME(TTY);
 

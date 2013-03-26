@@ -32,13 +32,12 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "regfs.h"
-#include <string.h>
-#include "vfs.h"
+#include "core/vfs.h"
 
 /* include here FS headers */
-#include "lfs.h"
-#include "appfs.h"
-#include "procfs.h"
+#include "fs/lfs.h"
+#include "fs/appfs.h"
+#include "fs/procfs.h"
 
 /*==============================================================================
   Local symbolic constants/macros

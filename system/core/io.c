@@ -31,10 +31,9 @@ extern "C" {
 /*==============================================================================
  Include files
  =============================================================================*/
-#include "io.h"
-#include <string.h>
-#include "vfs.h"
-#include "sysmoni.h"
+#include "core/io.h"
+#include "core/vfs.h"
+#include "core/sysmoni.h"
 #include "oswrap.h"
 
 /*==============================================================================

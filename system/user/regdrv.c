@@ -32,12 +32,11 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "regdrv.h"
-#include <string.h>
-#include "vfs.h"
-#include "io.h"
+#include "core/vfs.h"
+#include "core/io.h"
 
 /* include here modules headers */
-#if defined(ARCH_stm32)
+#if defined(ARCH_stm32f1)
 #include "uart.h"
 #include "gpio.h"
 #include "pll.h"

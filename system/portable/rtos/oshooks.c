@@ -28,7 +28,7 @@
   Include files
 ==============================================================================*/
 #include "oshooks.h"
-#include "io.h"
+#include "core/io.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,11 +1,11 @@
-#ifndef SYSTYPES_H_
-#define SYSTYPES_H_
+#ifndef CPUCTL_H_
+#define CPUCTL_H_
 /*=========================================================================*//**
-@file    systypes.h
+@file    cpuctl.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains all system types
+@brief   This file support CPU control
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,56 +33,36 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stddef.h>
-#include "basic_types.h"
-#include "ostypes.h"
+#include "core/basic_types.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* disable conflicting types from standard libraries */
-#undef stdin
-#undef stdout
-#undef malloc
-#undef free
-
-/*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
+/* interrupt rename */
+#define xPortPendSVHandler                      PendSV_Handler
+#define xPortSysTickHandler                     SysTick_Handler
+#define vPortSVCHandler                         SVC_Handler
 
 /*==============================================================================
   Exported types, enums definitions
-==============================================================================*/
-/** default system status */
-enum status_enum
-{
-        STD_RET_OK      = 0,
-        STD_RET_ERROR   = 1,
-        STD_RET_UNKNOWN = 127,
-};
-
-/** universal status type */
-typedef signed char stdret_t;
-
-/** file object */
-typedef struct vfs_file file_t;
-
-/** directory object */
-typedef struct vfs_dir dir_t;
-
-/*==============================================================================
-  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+extern void  cpuctl_init(void);
+extern void  cpuctl_restart_system(void);
+extern void  cpuctl_init_CPU_load_timer(void);
+extern u32_t cpuctl_get_CPU_load_timer(void);
+extern void  cpuctl_clear_CPU_load_timer(void);
+extern u32_t cpuctl_get_CPU_total_time(void);
+extern void  cpuctl_clear_CPU_total_time(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SYSTYPES_H_ */
+#endif /* CPUCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

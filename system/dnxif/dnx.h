@@ -33,14 +33,13 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "basic_types.h"
-#include "systypes.h"
 #include "config.h"
-#include "memman.h"
+#include "core/systypes.h"
+#include "core/memman.h"
+#include "core/progman.h"
+#include "core/sysmoni.h"
+#include "core/io.h"
 #include "oswrap.h"
-#include "io.h"
-#include "progman.h"
-#include "sysmoni.h"
 #include "regfs.h"
 #include "regdrv.h"
 #include "oshooks.h"

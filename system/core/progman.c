@@ -31,12 +31,12 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "core/progman.h"
+#include "core/sysmoni.h"
+#include "core/list.h"
 #include "oswrap.h"
-#include "progman.h"
 #include "regprg.h"
-#include "sysmoni.h"
-#include "dlist.h"
-#include <string.h>
+
 
 /*==============================================================================
   Local symbolic constants/macros

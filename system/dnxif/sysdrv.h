@@ -33,12 +33,11 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "systypes.h"
-#include "oswrap.h"
-#include "vfs.h"
-#include "sysmoni.h"
+#include "core/systypes.h"
+#include "core/vfs.h"
+#include "core/sysmoni.h"
 #include "regdrv.h"
-#include <string.h>
+#include "oswrap.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

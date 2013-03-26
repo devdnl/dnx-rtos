@@ -26,9 +26,108 @@
 #
 ####################################################################################################
 
+####################################################################################################
+# INSERT HERE PROGRAMS SOURCES
+####################################################################################################
+# C source files
+CSRC_PROGRAMS = $(sort \
+   programs/cat/cat.c \
+   programs/helloworld/helloworld.c \
+   programs/top/top.c \
+   programs/terminal/terminal.c \
+)
+
+# C++ source files
+CXXSRC_PROGRAMS = $(sort \
+)
+
+# paths to headers
+HDRLOC_PROGRAMS = $(sort \
+   $(dir $(CSRC_PROGRAMS)) \
+)
 
 ####################################################################################################
-# INSERT HERE C CORE SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
+# INSERT HERE SOURCES NOT ARCHITECTURE DEPENDED
+####################################################################################################
+# C source files
+CSRC_noarch = $(sort \
+   drivers/tty/arch/noarch/tty.c \
+)
+
+# C++ source files
+CXXSRC_noarch = $(sort \
+)
+
+# paths to headers
+HDRLOC_noarch = $(sort \
+   drivers/tty \
+)
+
+####################################################################################################
+# INSERT HERE SOURCES STM32F1 ARCHITECTURE DEPENDED
+####################################################################################################
+# C source files
+CSRC_stm32f1 = $(sort \
+   drivers/gpio/arch/stm32f1/gpio.c \
+   drivers/uart/arch/stm32f1/uart.c \
+   drivers/pll/arch/stm32f1/pll.c \
+   system/portable/stm32f1/cpuctl.c \
+   system/portable/stm32f1/cpuhooks.c \
+   system/portable/stm32f1/stm32f10x_vectors.c \
+   system/portable/stm32f1/STM32F10x_StdPeriph_Driver/misc.c \
+   system/kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c \
+)
+
+# C++ source files
+CXXSRC_stm32f1 = $(sort \
+)
+
+# assembler source file
+ASRC_stm32f1 = $(sort \
+   system/portable/lib/cm_startup.s \
+)
+
+# paths to headers
+HDRLOC_stm32f1 = $(sort \
+   $(dir $(CSRC_stm32f1)) \
+   $(dir $(CXXSRC_stm32f1)) \
+   drivers/gpio \
+   drivers/pll \
+   drivers/uart \
+   system/portable/lib/CMSIS \
+)
+
+####################################################################################################
+# INSERT HERE SOURCES POSIX ARCHITECTURE DEPENDED
+####################################################################################################
+# C source files
+CSRC_posix = $(sort \
+   drivers/i2c/arch/posix/i2c.c \
+   drivers/uart/arch/posix/uart.c \
+   drivers/pll/arch/posix/pll.c \
+   system/portable/posix/cpuctl.c \
+   system/kernel/FreeRTOS/Source/portable/GCC/Posix/port.c \
+)
+
+# C++ source files
+CXXSRC_posix = $(sort \
+)
+
+# assembler source file
+ASRC_posix = $(sort \
+)
+
+# paths to headers
+HDRLOC_posix = $(sort \
+   $(dir $(CSRC_posix)) \
+   $(dir $(CXXSRC_posix)) \
+   drivers/i2c \
+   drivers/uart \
+   drivers/pll \
+)
+
+####################################################################################################
+# CORE SOURCES
 ####################################################################################################
 CSRC_CORE = $(sort \
    system/kernel/FreeRTOS/Source/croutine.c \
@@ -40,7 +139,7 @@ CSRC_CORE = $(sort \
    system/core/dnx.c \
    system/core/sysmoni.c \
    system/core/progman.c \
-   system/core/dlist.c \
+   system/core/list.c \
    system/core/main.c \
    system/core/memman.c \
    system/core/io.c \
@@ -55,109 +154,15 @@ CSRC_CORE = $(sort \
    system/portable/rtos/oshooks.c \
    system/portable/rtos/oswrap.c \
 )
-   
-####################################################################################################
-# INSERT HERE C PROGRAMS SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-CSRC_PROGRAMS = $(sort \
-   programs/cat/cat.c \
-   programs/helloworld/helloworld.c \
-   programs/top/top.c \
-   programs/terminal/terminal.c \
-)
-   
-####################################################################################################
-# INSERT HERE C SOURCES ARCHITECTURE NOT DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-CSRC_noarch = $(sort \
-   drivers/tty/arch/noarch/tty.c \
-)
 
-####################################################################################################
-# INSERT HERE C SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-CSRC_stm32 = $(sort \
-   drivers/gpio/arch/stm32/gpio.c \
-   drivers/uart/arch/stm32/uart.c \
-   drivers/pll/arch/stm32/pll.c \
-   system/kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c \
-   system/portable/stm32/cpuctl.c \
-   system/portable/stm32/cpuhooks.c \
-   system/portable/stm32/stm32f10x_vectors.c \
-   system/portable/stm32/STM32F10x_StdPeriph_Driver/misc.c \
-)
-
-CSRC_posix = $(sort \
-   drivers/i2c/arch/posix/i2c.c \
-   drivers/uart/arch/posix/uart.c \
-   drivers/pll/arch/posix/pll.c \
-   system/kernel/FreeRTOS/Source/portable/GCC/Posix/port.c \
-   system/portable/posix/cpuctl.c \
-)
-
-####################################################################################################
-# INSERT HERE C++ SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-CXXSRC = $(sort \
-)
-   
-####################################################################################################
-# INSERT HERE C++ SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-CXXSRC_stm32 = $(sort \
-)
-   
-CXXSRC_posix = $(sort \
-)
-
-####################################################################################################
-# INSERT HERE ASSEMBLER SOURCES (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-ASRC = $(sort \
-)
-   
-####################################################################################################
-# INSERT HERE ASSEMBLER SOURCES ARCHITECTURE DEPENDED (AUTOMATIC ADDS PATHS AS HEADER PATHS)
-####################################################################################################
-ASRC_stm32 = $(sort \
-   system/portable/lib/cm_startup.s \
-)
-   
-ASCR_posix = $(sort \
-)
-
-####################################################################################################
-# INSERT HERE PATHS WITH HEADER FILES ONLY
-####################################################################################################
-HDRLOC = $(sort $(dir $(CSRC_CORE)) $(dir $(CSRC_PROGRAMS)) $(dir $(CSRC_noarch)) $(dir $(CXXSRC)) \
-   drivers/tty \
+HDRLOC_CORE = $(sort \
+   $(dir $(CSRC_CORE)) \
    system/kernel/FreeRTOS/Source/include \
    system/config \
-   system/core/include \
-   system/fs/include \
    system/user/include \
-   system/portable \
+   system/dnxif \
+   system/include \
 )
-   
-####################################################################################################
-# INSERT HERE PATHS WITH HEADER FILES ONLY WHICH ARE DEPENDING ON ARCHITECTURE
-####################################################################################################
-HDRLOC_stm32 = $(sort $(dir $(CSRC_stm32)) $(dir $(CXXSRC_stm32)) \
-   drivers/gpio \
-   drivers/pll \
-   drivers/uart \
-   system/portable/lib/CMSIS \
-   lib/lwip \
-   lib/lwip/include \
-   lib/lwip/include/ipv4 \
-)
-   
-HDRLOC_posix = $(sort $(dir $(CSRC_posix)) $(dir $(CXXSRC_posix)) \
-   drivers/i2c \
-   drivers/uart \
-   drivers/pll \
-)
-
 
 ####################################################################################################
 ####################################################################################################
@@ -171,30 +176,30 @@ PROJECT = main
 OPT = s
 
 #---------------------------------------------------------------------------------------------------
-# ARCHITECTURE CONFIG: STM32
+# ARCHITECTURE CONFIG: STM32F1
 #---------------------------------------------------------------------------------------------------
-CC_stm32        = arm-none-eabi-gcc
-CXX_stm32       = arm-none-eabi-g++
-LINKER_stm32    = arm-none-eabi-gcc
-AS_stm32        = arm-none-eabi-gcc -x assembler-with-cpp
-OBJCOPY_stm32   = arm-none-eabi-objcopy
-OBJDUMP_stm32   = arm-none-eabi-objdump
-SIZE_stm32      = arm-none-eabi-size
-LD_SCRIPT_stm32 = system/portable/stm32/stm32f107xx.ld
-CPU_stm32       = cortex-m3
-MCU_stm32       = STM32F10X_CL
+CC_stm32f1        = arm-none-eabi-gcc
+CXX_stm32f1       = arm-none-eabi-g++
+LINKER_stm32f1    = arm-none-eabi-gcc
+AS_stm32f1        = arm-none-eabi-gcc -x assembler-with-cpp
+OBJCOPY_stm32f1   = arm-none-eabi-objcopy
+OBJDUMP_stm32f1   = arm-none-eabi-objdump
+SIZE_stm32f1      = arm-none-eabi-size
+LD_SCRIPT_stm32f1 = system/portable/stm32f1/stm32f107xx.ld
+CPU_stm32f1       = cortex-m3
+MCU_stm32f1       = STM32F10X_CL
 
-CFLAGS_stm32    = -c -mcpu=$(CPU_stm32) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
+CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
                   -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
-                  -D$(MCU_stm32) -DGCC_ARMCM3 -DARCH_$(TARGET)
+                  -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
 
-CXXFLAGS_stm32  =
+CXXFLAGS_stm32f1  =
 
-LFLAGS_stm32    = -mcpu=$(CPU_stm32) -mthumb -T$(LD_SCRIPT_stm32) -g -nostartfiles -Wl,--gc-sections -Wall \
+LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -T$(LD_SCRIPT_stm32f1) -g -nostartfiles -Wl,--gc-sections -Wall \
                   -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
                   -DGCC_ARMCM3 -DARCH_$(TARGET)
 
-AFLAGS_stm32    = -c -mcpu=$(CPU_stm32) -mthumb -g -ggdb3 -DARCH_$(TARGET)
+AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 -DARCH_$(TARGET)
 
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: POSIX
@@ -281,16 +286,21 @@ TARGET_PATH = $(BIN_LOC)/$(TARGET)
 # object path (do not edit)
 OBJ_PATH = $(BIN_LOC)/$(TARGET)/$(OBJ_LOC)
 
-# defines objects names (do not edit)
-OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) \
-          $(ASRC_$(TARGET):.$(AS_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_CORE:.$(C_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_PROGRAMS:.$(C_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_noarch:.$(C_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_$(TARGET):.$(C_EXT)=.$(OBJ_EXT)) \
-          $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT)) \
-          $(CXXSRC_$(TARGET):.$(CXX_EXT)=.$(OBJ_EXT))
+# defines objects localizations (do not edit)
+HDRLOC = $(HDRLOC_noarch) \
+         $(HDRLOC_$(TARGET)) \
+         $(HDRLOC_PROGRAMS) \
+         $(HDRLOC_CORE)
 
+# defines objects names (do not edit)
+OBJECTS = $(ASRC_$(TARGET):.$(AS_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_$(TARGET):.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CXXSRC_$(TARGET):.$(CXX_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_PROGRAMS:.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CXXSRC_PROGRAMS:.$(CXX_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_noarch:.$(C_EXT)=.$(OBJ_EXT)) \
+          $(CXXSRC_noarch:.$(CXX_EXT)=.$(OBJ_EXT)) \
+          $(CSRC_CORE:.$(C_EXT)=.$(OBJ_EXT))
 
 ####################################################################################################
 ####################################################################################################
@@ -301,7 +311,7 @@ all :
 	@echo "This is help for this $(THIS_MAKEFILE)"
 	@echo "Possible targets:"
 	@echo "   help                this help"
-	@echo "   stm32               compilation for ARM-Cortex-M3 stm32"
+	@echo "   stm32f1             compilation for ARM-Cortex-M3 STM32F1XX microcontroller family"
 	@echo "   posix               compilation for POSIX system"
 	@echo "   clean               clean project"
 	@echo "   cleanall            clean all non-project files"
@@ -312,9 +322,9 @@ all :
 ####################################################################################################
 # targets
 ####################################################################################################
-.PHONY : stm32 posix
-stm32 : dependencies buildobjects linkobjects hex status
-posix : dependencies buildobjects linkobjects status
+.PHONY : stm32f1 posix
+stm32f1 : dependencies buildobjects linkobjects hex status
+posix   : dependencies buildobjects linkobjects status
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.

@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "oswrap.h"
-#include "sysmoni.h"
+#include "core/sysmoni.h"
 
 /*==============================================================================
   Local symbolic constants/macros

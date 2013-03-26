@@ -63,10 +63,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "memman.h"
-#include <string.h>
+#include "core/memman.h"
 #include "config.h"
 #include "oswrap.h"
+#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros

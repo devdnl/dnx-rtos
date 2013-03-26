@@ -33,9 +33,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "basic_types.h"
 #include "ostypes.h"
-#include "systypes.h"
+#include "core/systypes.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"

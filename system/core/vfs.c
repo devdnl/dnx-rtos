@@ -31,11 +31,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "vfs.h"
-#include "dlist.h"
+#include "core/vfs.h"
+#include "core/list.h"
+#include "core/sysmoni.h"
 #include "oswrap.h"
-#include "sysmoni.h"
-#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros
