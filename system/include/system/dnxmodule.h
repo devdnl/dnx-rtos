@@ -1,11 +1,11 @@
-#ifndef SYSDRV_H_
-#define SYSDRV_H_
+#ifndef DNXMODULE_H_
+#define DNXMODULE_H_
 /*=========================================================================*//**
-@file    sysdrv.h
+@file    dnxmodule.h
 
 @author  Daniel Zorychta
 
-@brief   This function provide all required function needed to write drivers.
+@brief   This function provide all required function needed to write modules.
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -43,7 +43,7 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 #ifdef DNX_H_
-#error "dnx.h and sysdrv.h shall never included together!"
+#error "dnx.h and dnxmodule.h shall never included together!"
 #endif
 
 #define MODULE_NAME(module_name)          static const char *__module_name__ = #module_name
@@ -110,7 +110,7 @@ extern stdret_t modname##_flush  (void*)
 }
 #endif
 
-#endif /* SYSDRV_H_ */
+#endif /* DNXMODULE_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

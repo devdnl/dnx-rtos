@@ -33,9 +33,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "system/dnxmodule.h"
 #include "uart_cfg.h"
 #include "uart_def.h"
-#include "system/sysdrv.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

@@ -33,9 +33,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "system/dnxmodule.h"
 #include "gpio_cfg.h"
 #include "gpio_def.h"
-#include "system/sysdrv.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

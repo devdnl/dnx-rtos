@@ -33,9 +33,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "system/dnxmodule.h"
 #include "pll_cfg.h"
 #include "pll_def.h"
-#include "system/sysdrv.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
