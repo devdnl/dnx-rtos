@@ -1,7 +1,7 @@
-#ifndef SYSFS_H_
-#define SYSFS_H_
+#ifndef DNXFS_H_
+#define DNXFS_H_
 /*=========================================================================*//**
-@file    sysfs.h
+@file    dnxfs.h
 
 @author  Daniel Zorychta
 
@@ -42,20 +42,41 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 #ifdef SYSTEM_H_
-#error "system.h and sysfs.h cannot never included together!"
+#error "dnx.h and dnxfs.h cannot never included together!"
 #endif
 
 #ifndef calloc
-#define calloc(nmemb, msize)             sysm_syscalloc(nmemb, msize)
+#define calloc(nmemb, msize)              sysm_syscalloc(nmemb, msize)
 #endif
 
 #ifndef malloc
-#define malloc(size)                     sysm_sysmalloc(size)
+#define malloc(size)                      sysm_sysmalloc(size)
 #endif
 
 #ifndef free
-#define free(mem)                        sysm_sysfree(mem)
+#define free(mem)                         sysm_sysfree(mem)
 #endif
+
+#define mknod(path, drv_cfgPtr)           vfs_mknod(path, drv_cfgPtr)
+#define mkdir(path)                       vfs_mkdir(path)
+#define opendir(path)                     vfs_opendir(path)
+#define closedir(dir)                     vfs_closedir(dir)
+#define readdir(dir)                      vfs_readdir(dir)
+#define remove(path)                      vfs_remove(path)
+#define rename(oldName, newName)          vfs_rename(oldName, newName)
+#define chmod(path, mode)                 vfs_chmod(path, mode)
+#define chown(path, owner, group)         vfs_chown(path, owner, group)
+#define stat(path, statPtr)               vfs_stat(path, statPtr)
+#define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
+#define fopen(path, mode)                 vfs_fopen(path, mode)
+#define fclose(file)                      vfs_fclose(file)
+#define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
+#define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
+#define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
+#define ftell(file)                       vfs_ftell(file)
+#define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
+#define fstat(file, statPtr)              vfs_fstat(file, stat)
+#define fflush(file)                      vfs_fflush(file)
 
 #define FILE_SYSTEM_INTERFACE(fsname)                                                \
 extern stdret_t fsname##_init   (void**, const char*);                               \
@@ -93,7 +114,7 @@ extern stdret_t fsname##_statfs (void*, struct vfs_statfs*)
 }
 #endif
 
-#endif /* SYSFS_H_ */
+#endif /* DNXFS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

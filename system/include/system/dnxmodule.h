@@ -60,9 +60,6 @@ extern "C" {
 #define free(mem)                         sysm_modfree(mem, regdrv_get_module_number(__module_name__))
 #endif
 
-#define mount(path, fs_cfgPtr)            vfs_mount(path, fs_cfgPtr)
-#define umount(path)                      vfs_umount(path)
-#define getmntentry(item, mntentPtr)      vfs_getmntentry(item, mntentPtr)
 #define mknod(path, drv_cfgPtr)           vfs_mknod(path, drv_cfgPtr)
 #define mkdir(path)                       vfs_mkdir(path)
 #define opendir(path)                     vfs_opendir(path)
