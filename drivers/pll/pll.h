@@ -35,7 +35,7 @@ extern "C" {
 ==============================================================================*/
 #include "pll_cfg.h"
 #include "pll_def.h"
-#include "sysdrv.h"
+#include "system/sysdrv.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

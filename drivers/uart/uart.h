@@ -35,7 +35,7 @@ extern "C" {
 ==============================================================================*/
 #include "uart_cfg.h"
 #include "uart_def.h"
-#include "sysdrv.h"
+#include "system/sysdrv.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

@@ -158,7 +158,6 @@ HDRLOC_CORE = $(sort \
    system/kernel/FreeRTOS/Source/include \
    system/config \
    system/portable/rtos \
-   system/dnxif \
    system/include \
    . \
 )

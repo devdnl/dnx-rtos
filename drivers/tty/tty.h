@@ -34,7 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "tty_def.h"
-#include "sysdrv.h"
+#include "system/sysdrv.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
