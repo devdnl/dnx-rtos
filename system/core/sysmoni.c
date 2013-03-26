@@ -34,9 +34,9 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "core/io.h"
+#include "user/regdrv.h"
 #include "cpuctl.h"
 #include "oswrap.h"
-#include "regdrv.h"
 
 /*==============================================================================
   Local symbolic constants/macros

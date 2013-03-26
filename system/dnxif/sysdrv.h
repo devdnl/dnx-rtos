@@ -36,7 +36,7 @@ extern "C" {
 #include "core/systypes.h"
 #include "core/vfs.h"
 #include "core/sysmoni.h"
-#include "regdrv.h"
+#include "user/regdrv.h"
 #include "oswrap.h"
 
 /*==============================================================================

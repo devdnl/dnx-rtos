@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "dnx.h"
-#include "initd.h"
+#include "user/initd.h"
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -31,27 +31,27 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "regdrv.h"
+#include "user/regdrv.h"
 #include "core/vfs.h"
 #include "core/io.h"
 
 /* include here modules headers */
 #if defined(ARCH_stm32f1)
-#include "uart.h"
-#include "gpio.h"
-#include "pll.h"
-#include "tty.h"
+#include "drivers/uart/uart.h"
+#include "drivers/gpio/gpio.h"
+#include "drivers/pll/pll.h"
+#include "drivers/tty/tty.h"
 #elif defined(ARCH_posix)
-#include "uart.h"
-#include "tty.h"
-#include "pll.h"
+#include "drivers/uart/uart.h"
+#include "drivers/tty/tty.h"
+#include "drivers/pll/pll.h"
 #else
 #endif
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define USE_MODULE(module_name)      #module_name
+#define USE_MODULE(module_name)                 #module_name
 
 #define USE_DRIVER_INTERFACE(drvmodule, drvname, devno, devpart)\
 {.drv_name    = drvname,\

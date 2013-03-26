@@ -39,9 +39,9 @@ extern "C" {
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/io.h"
+#include "user/regfs.h"
+#include "user/regdrv.h"
 #include "oswrap.h"
-#include "regfs.h"
-#include "regdrv.h"
 #include "oshooks.h"
 #include <string.h>
 

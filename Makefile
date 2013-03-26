@@ -43,7 +43,6 @@ CXXSRC_PROGRAMS = $(sort \
 
 # paths to headers
 HDRLOC_PROGRAMS = $(sort \
-   $(dir $(CSRC_PROGRAMS)) \
 )
 
 ####################################################################################################
@@ -130,12 +129,6 @@ HDRLOC_posix = $(sort \
 # CORE SOURCES
 ####################################################################################################
 CSRC_CORE = $(sort \
-   system/kernel/FreeRTOS/Source/croutine.c \
-   system/kernel/FreeRTOS/Source/list.c \
-   system/kernel/FreeRTOS/Source/queue.c \
-   system/kernel/FreeRTOS/Source/tasks.c \
-   system/kernel/FreeRTOS/Source/timers.c \
-   system/kernel/FreeRTOS/Source/portable/MemMang/heap_3.c \
    system/core/dnx.c \
    system/core/sysmoni.c \
    system/core/progman.c \
@@ -144,24 +137,30 @@ CSRC_CORE = $(sort \
    system/core/memman.c \
    system/core/io.c \
    system/core/vfs.c \
+   system/fs/procfs.c \
+   system/fs/appfs.c \
+   system/fs/lfs.c \
    system/user/initd.c \
    system/user/regdrv.c \
    system/user/regfs.c \
    system/user/regprg.c \
-   system/fs/procfs.c \
-   system/fs/appfs.c \
-   system/fs/lfs.c \
    system/portable/rtos/oshooks.c \
    system/portable/rtos/oswrap.c \
+   system/kernel/FreeRTOS/Source/croutine.c \
+   system/kernel/FreeRTOS/Source/list.c \
+   system/kernel/FreeRTOS/Source/queue.c \
+   system/kernel/FreeRTOS/Source/tasks.c \
+   system/kernel/FreeRTOS/Source/timers.c \
+   system/kernel/FreeRTOS/Source/portable/MemMang/heap_3.c \
 )
 
 HDRLOC_CORE = $(sort \
-   $(dir $(CSRC_CORE)) \
    system/kernel/FreeRTOS/Source/include \
    system/config \
-   system/user/include \
+   system/portable/rtos \
    system/dnxif \
    system/include \
+   . \
 )
 
 ####################################################################################################

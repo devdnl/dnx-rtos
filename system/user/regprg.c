@@ -31,13 +31,13 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "regprg.h"
-#include <string.h>
+#include "user/regprg.h"
 
-#include "helloworld.h"
-#include "top.h"
-#include "terminal.h"
-#include "cat.h"
+/* USER: include here programs */
+#include "programs/helloworld/helloworld.h"
+#include "programs/top/top.h"
+#include "programs/terminal/terminal.h"
+#include "programs/cat/cat.h"
 
 /*==============================================================================
   Local symbolic constants/macros

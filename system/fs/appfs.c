@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "fs/appfs.h"
-#include "regprg.h"
+#include "user/regprg.h"
 
 /*==============================================================================
   Local symbolic constants/macros
