@@ -35,7 +35,7 @@ extern "C" {
 #include "core/list.h"
 #include "core/io.h"
 #include "user/regdrv.h"
-#include "kernel/kwrap.h"
+#include "kernel/kwrapper.h"
 #include "cpuctl.h"
 
 /*==============================================================================

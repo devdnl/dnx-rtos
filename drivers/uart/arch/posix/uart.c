@@ -32,7 +32,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "uart.h"
-#include <stdlib.h>
 
 #undef fclose
 #undef fopen
@@ -40,6 +39,7 @@ extern "C" {
 #undef fseek
 #undef ftell
 #undef fwrite
+#undef fflush
 #undef remove
 #undef rename
 

@@ -101,7 +101,6 @@ HDRLOC_stm32f1 = $(sort \
 ####################################################################################################
 # C source files
 CSRC_posix = $(sort \
-   drivers/i2c/arch/posix/i2c.c \
    drivers/uart/arch/posix/uart.c \
    drivers/pll/arch/posix/pll.c \
    system/portable/posix/cpuctl.c \
@@ -145,7 +144,7 @@ CSRC_CORE = $(sort \
    system/user/regfs.c \
    system/user/regprg.c \
    system/kernel/khooks.c \
-   system/kernel/kwrap.c \
+   system/kernel/kwrapper.c \
    system/kernel/FreeRTOS/Source/croutine.c \
    system/kernel/FreeRTOS/Source/list.c \
    system/kernel/FreeRTOS/Source/queue.c \

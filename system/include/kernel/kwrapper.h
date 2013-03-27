@@ -1,7 +1,7 @@
-#ifndef KWRAP_H_
-#define KWRAP_H_
+#ifndef KWRAPPER_H_
+#define KWRAPPER_H_
 /*=========================================================================*//**
-@file    kwrap.h
+@file    kwrapper.h
 
 @author  Daniel Zorychta
 
@@ -162,7 +162,7 @@ extern sem_t  *osw_create_binary_semaphore(void);
 }
 #endif
 
-#endif /* KWRAP_H_ */
+#endif /* KWRAPPER_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

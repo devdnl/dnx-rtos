@@ -65,7 +65,7 @@ extern "C" {
 ==============================================================================*/
 #include "config.h"
 #include "core/memman.h"
-#include "kernel/kwrap.h"
+#include "kernel/kwrapper.h"
 #include <string.h>
 
 /*==============================================================================

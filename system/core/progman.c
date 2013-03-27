@@ -35,7 +35,7 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "user/regprg.h"
-#include "kernel/kwrap.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Local symbolic constants/macros

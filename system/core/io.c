@@ -34,7 +34,7 @@ extern "C" {
 #include "core/io.h"
 #include "core/vfs.h"
 #include "core/sysmoni.h"
-#include "kernel/kwrap.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
  Local symbolic constants/macros

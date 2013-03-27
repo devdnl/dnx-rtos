@@ -97,7 +97,9 @@ static const char *regdrv_used_modules[REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULE
 /* a table of a drivers interfaces */
 static const struct driver_entry regdrv_driver_table[] = {
         USE_DRIVER_INTERFACE(UART, "uart1", UART_DEV_1   , UART_PART_NONE),
+#ifdef GPIO_H_
         USE_DRIVER_INTERFACE(GPIO, "gpio" , GPIO_DEV_NONE, GPIO_PART_NONE),
+#endif
         USE_DRIVER_INTERFACE(PLL , "pll"  , PLL_DEV_NONE , PLL_PART_NONE ),
         USE_DRIVER_INTERFACE(TTY , "tty0" , TTY_DEV_0    , TTY_PART_NONE ),
         USE_DRIVER_INTERFACE(TTY , "tty1" , TTY_DEV_1    , TTY_PART_NONE ),

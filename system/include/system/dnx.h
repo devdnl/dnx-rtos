@@ -41,7 +41,7 @@ extern "C" {
 #include "core/io.h"
 #include "user/regfs.h"
 #include "user/regdrv.h"
-#include "kernel/kwrap.h"
+#include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include <string.h>
 
