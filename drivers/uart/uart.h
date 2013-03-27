@@ -34,8 +34,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
-#include "uart_cfg.h"
 #include "uart_def.h"
+
+#if defined ARCH_stm32f1
+        #include "arch/stm32f1/uart_cfg.h"
+#elif defined ARCH_posix
+        #include "arch/posix/uart_cfg.h"
+#endif
 
 /*==============================================================================
   Exported symbolic constants/macros

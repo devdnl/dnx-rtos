@@ -34,8 +34,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
-#include "pll_cfg.h"
 #include "pll_def.h"
+
+#if defined ARCH_stm32f1
+        #include "arch/stm32f1/pll_cfg.h"
+#elif defined ARCH_posix
+        #include "arch/posix/pll_cfg.h"
+#endif
 
 /*==============================================================================
   Exported symbolic constants/macros
