@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    oshooks.c
+@file    khooks.c
 
 @author  Daniel Zorychta
 
-@brief   This file support all operating system hooks
+@brief   This file support all kernel hooks
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "oshooks.h"
+#include "kernel/khooks.h"
 #include "core/io.h"
 
 #ifdef __cplusplus

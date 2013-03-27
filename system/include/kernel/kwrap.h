@@ -1,11 +1,11 @@
-#ifndef OSWRAP_H_
-#define OSWRAP_H_
+#ifndef KWRAP_H_
+#define KWRAP_H_
 /*=========================================================================*//**
-@file    oswrap.h
+@file    kwrap.h
 
 @author  Daniel Zorychta
 
-@brief   Operating system wrapper
+@brief   Kernel wrapper
 
 @note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,7 +33,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "ostypes.h"
+#include "ktypes.h"
 #include "core/systypes.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -162,7 +162,7 @@ extern sem_t  *osw_create_binary_semaphore(void);
 }
 #endif
 
-#endif /* OSWRAP_H_ */
+#endif /* KWRAP_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

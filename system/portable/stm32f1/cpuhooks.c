@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include "cpuhooks.h"
 #include "core/io.h"
-#include "oswrap.h"
+#include "kernel/kwrap.h"
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    oswrap.c
+@file    kwrap.c
 
 @author  Daniel Zorychta
 
-@brief   Operating system wrapper
+@brief   Kernel wrapper
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "oswrap.h"
+#include "kernel/kwrap.h"
 #include "core/sysmoni.h"
 
 /*==============================================================================

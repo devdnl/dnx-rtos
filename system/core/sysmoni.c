@@ -35,8 +35,8 @@ extern "C" {
 #include "core/list.h"
 #include "core/io.h"
 #include "user/regdrv.h"
+#include "kernel/kwrap.h"
 #include "cpuctl.h"
-#include "oswrap.h"
 
 /*==============================================================================
   Local symbolic constants/macros

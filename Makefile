@@ -144,8 +144,8 @@ CSRC_CORE = $(sort \
    system/user/regdrv.c \
    system/user/regfs.c \
    system/user/regprg.c \
-   system/portable/rtos/oshooks.c \
-   system/portable/rtos/oswrap.c \
+   system/kernel/khooks.c \
+   system/kernel/kwrap.c \
    system/kernel/FreeRTOS/Source/croutine.c \
    system/kernel/FreeRTOS/Source/list.c \
    system/kernel/FreeRTOS/Source/queue.c \
@@ -156,8 +156,8 @@ CSRC_CORE = $(sort \
 
 HDRLOC_CORE = $(sort \
    system/kernel/FreeRTOS/Source/include \
+   system/kernel \
    system/config \
-   system/portable/rtos \
    system/include \
    . \
 )

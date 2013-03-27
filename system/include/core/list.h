@@ -1,7 +1,7 @@
-#ifndef _DLIST_H_
-#define _DLIST_H_
+#ifndef _LIST_H_
+#define _LIST_H_
 /*=========================================================================*//**
-@file    dlist.h
+@file    list.h
 
 @author  Daniel Zorychta
 
@@ -68,7 +68,7 @@ extern i32_t    list_get_item_count(list_t *list);
 }
 #endif
 
-#endif /* _DLIST_H_ */
+#endif /* _LIST_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

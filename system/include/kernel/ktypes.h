@@ -1,13 +1,13 @@
-#ifndef OSHOOKS_H_
-#define OSHOOKS_H_
+#ifndef KTYPES_H_
+#define KTYPES_H_
 /*=========================================================================*//**
-@file    oshooks.h
+@file    ktypes.h
 
 @author  Daniel Zorychta
 
-@brief   This file support all operating system hooks
+@brief   This file contains kernel types
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -27,13 +27,16 @@
 *//*==========================================================================*/
 
 #ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #endif
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "oswrap.h"
+
+/*==============================================================================
+  Exported symbolic constants/macros
+==============================================================================*/
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -42,23 +45,23 @@
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef void task_t;
+typedef void sem_t;
+typedef void mutex_t;
 
 /*==============================================================================
-  Exported object declarations
+   Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void  vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName);
-extern void  vApplicationTickHook(void);
-extern u32_t get_uptime_counter(void);
 
 #ifdef __cplusplus
-   }
+}
 #endif
 
-#endif /* OSHOOKS_H_ */
+#endif /* KTYPES_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

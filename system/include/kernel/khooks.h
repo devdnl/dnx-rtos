@@ -1,11 +1,11 @@
-#ifndef OSTYPES_H_
-#define OSTYPES_H_
+#ifndef KHOOKS_H_
+#define KHOOKS_H_
 /*=========================================================================*//**
-@file    ostypes.h
+@file    khooks.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains operating system types
+@brief   This file support all kernel hooks
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,16 +27,13 @@
 *//*==========================================================================*/
 
 #ifdef __cplusplus
-extern "C" {
+   extern "C" {
 #endif
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-
-/*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
+#include "kwrap.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -45,23 +42,23 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef void task_t;
-typedef void sem_t;
-typedef void mutex_t;
 
 /*==============================================================================
-   Exported object declarations
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+extern void  vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName);
+extern void  vApplicationTickHook(void);
+extern u32_t get_uptime_counter(void);
 
 #ifdef __cplusplus
-}
+   }
 #endif
 
-#endif /* OSTYPES_H_ */
+#endif /* KHOOKS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -34,9 +34,9 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stddef.h>
-#include "basic_types.h"
-#include "ostypes.h"
 #include <string.h>
+#include "core/basic_types.h"
+#include "kernel/ktypes.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
