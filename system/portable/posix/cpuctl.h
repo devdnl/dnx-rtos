@@ -38,10 +38,8 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* interrupt rename */
-#define xPortPendSVHandler                      PendSV_Handler
-#define xPortSysTickHandler                     SysTick_Handler
-#define vPortSVCHandler                         SVC_Handler
+/* CPU/platform name */
+#define CPUCTL_PLATFORM_NAME                         "POSIX"
 
 /*==============================================================================
   Exported types, enums definitions

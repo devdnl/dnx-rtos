@@ -43,6 +43,9 @@ extern "C" {
 #define xPortSysTickHandler                     SysTick_Handler
 #define vPortSVCHandler                         SVC_Handler
 
+/* CPU/platform name */
+#define CPUCTL_PLATFORM_NAME                    "ARM Cortex-M3 STM32F1xx"
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -57,7 +60,6 @@ extern u32_t cpuctl_get_CPU_load_timer(void);
 extern void  cpuctl_clear_CPU_load_timer(void);
 extern u32_t cpuctl_get_CPU_total_time(void);
 extern void  cpuctl_clear_CPU_total_time(void);
-
 #ifdef __cplusplus
 }
 #endif

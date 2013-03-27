@@ -73,6 +73,7 @@ static enum cmd_status cmd_reboot(char *arg);
 static enum cmd_status cmd_df(char *arg);
 static enum cmd_status cmd_mount(char *arg);
 static enum cmd_status cmd_umount(char *arg);
+static enum cmd_status cmd_uname(char *arg);
 static enum cmd_status cmd_help(char *arg);
 
 /*==============================================================================
@@ -96,6 +97,7 @@ static const struct cmd_entry commands[] = {
         {"df"    , cmd_df    },
         {"mount" , cmd_mount },
         {"umount", cmd_umount},
+        {"uname" , cmd_uname },
         {"help"  , cmd_help  },
 };
 
@@ -777,6 +779,26 @@ static enum cmd_status cmd_umount(char *arg)
                         printf("Cannot unmount file system!\n");
                 }
         }
+
+        return CMD_STATUS_EXECUTED;
+}
+
+//==============================================================================
+/**
+ * @brief Function present system name
+ *
+ * @param *arg          arguments
+ */
+//==============================================================================
+static enum cmd_status cmd_uname(char *arg)
+{
+        (void)arg;
+
+        printf("%s/%s, %s %s, %s %s, %s\n",
+               get_OS_name(), get_kernel_name(),
+               get_OS_name(), get_OS_version(),
+               get_kernel_name(), get_kernel_version(),
+               get_platform_name());
 
         return CMD_STATUS_EXECUTED;
 }
