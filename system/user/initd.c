@@ -119,16 +119,17 @@ void task_initd(void *arg)
 
         /* stdio program control */
         file_t *tty[TTY_DEV_COUNT]               = {NULL};
+        file_t *tty0                             = NULL;
         task_t *program[TTY_DEV_COUNT - 1]       = {NULL};
         enum prog_state state[TTY_DEV_COUNT - 1] = {PROGRAM_UNKNOWN_STATE};
         int current_tty                          = -1;
 
-        while ((tty[0] = fopen("/dev/tty0", "r+")) == NULL) {
+        while ((tty0 = fopen("/dev/tty0", "r+")) == NULL) {
                 milisleep(200);
         }
 
         for (;;) {
-                ioctl(tty[0], TTY_IORQ_GET_CURRENT_TTY, &current_tty);
+                ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
 
                 if (current_tty >= 0 && current_tty < TTY_DEV_COUNT - 1) {
                         if (!program[current_tty]) {
@@ -189,7 +190,7 @@ void task_initd(void *arg)
                                 fclose(tty[i]);
                                 tty[i] = NULL;
 
-                                ioctl(tty[0], TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
                         }
                 }
 
