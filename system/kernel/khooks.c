@@ -27,8 +27,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "config.h"
 #include "kernel/khooks.h"
 #include "core/io.h"
+#include "portable/cpuctl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,6 +70,9 @@ u32_t uptime_divider;
 //==============================================================================
 void vApplicationIdleHook(void)
 {
+#if (CONFIG_RTOS_SLEEP_ON_IDLE > 0)
+        cpuctl_sleep();
+#endif
 }
 
 //==============================================================================

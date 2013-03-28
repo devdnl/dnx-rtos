@@ -60,6 +60,7 @@ extern u32_t cpuctl_get_CPU_load_timer(void);
 extern void  cpuctl_clear_CPU_load_timer(void);
 extern u32_t cpuctl_get_CPU_total_time(void);
 extern void  cpuctl_clear_CPU_total_time(void);
+extern void  cpuctl_sleep(void);
 #ifdef __cplusplus
 }
 #endif

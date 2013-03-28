@@ -34,12 +34,12 @@ extern "C" {
 #include "stm32f1/cpuctl.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/misc.h"
+#include "arch/stm32f1/pll_cfg.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define APB1FREQ                    36000000UL
-#define TIM2FREQ                    1000000UL
+#define TIM2FREQ                          1000000UL
 
 /*==============================================================================
   Local types, enums definitions
@@ -95,7 +95,7 @@ void cpuctl_init_CPU_load_timer(void)
         RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
 
         /* configure timer */
-        TIM2->PSC = (APB1FREQ/TIM2FREQ) - 1;
+        TIM2->PSC = (PLL_APB1FREQ/TIM2FREQ) - 1;
         TIM2->ARR = 0xFFFF;
         TIM2->CR1 = TIM_CR1_CEN;
 }
@@ -144,6 +144,15 @@ void cpuctl_clear_CPU_total_time(void)
         total_CPU_time = 0;
 }
 
+//==============================================================================
+/**
+ * @brief Function sleep CPU (is not a deep sleep, wake up by any IRQ)
+ */
+//==============================================================================
+void cpuctl_sleep(void)
+{
+        __WFI();
+}
 
 #ifdef __cplusplus
 }

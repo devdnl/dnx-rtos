@@ -122,6 +122,15 @@ void cpuctl_clear_CPU_total_time(void)
         total_CPU_time = 0;
 }
 
+//==============================================================================
+/**
+ * @brief Function sleep CPU (is not a deep sleep, wake up by any IRQ)
+ */
+//==============================================================================
+void cpuctl_sleep(void)
+{
+}
+
 #ifdef __cplusplus
 }
 #endif

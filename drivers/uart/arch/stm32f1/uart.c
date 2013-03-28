@@ -467,7 +467,7 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
  * @brief Direct IO control
  *
  * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     ioRq          IO reqest
+ * @param[in]     iorq          IO reqest
  * @param[in,out] args          additional arguments
  *
  * @retval STD_RET_OK

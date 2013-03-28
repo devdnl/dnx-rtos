@@ -96,11 +96,11 @@ stdret_t PLL_init(void **drvhdl, uint dev, uint part)
                 return PLL_STATUS_HSE_ERROR;
 
         /* wait states */
-        if (CPU_TARGET_FREQ <= 24000000UL)
+        if (PLL_CPU_TARGET_FREQ <= 24000000UL)
                 FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
-        else if (CPU_TARGET_FREQ <= 48000000UL)
+        else if (PLL_CPU_TARGET_FREQ <= 48000000UL)
                 FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
-        else if (CPU_TARGET_FREQ <= 72000000UL)
+        else if (PLL_CPU_TARGET_FREQ <= 72000000UL)
                 FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
         else
                 FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
@@ -256,17 +256,17 @@ size_t PLL_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek
  * @brief IO control
  *
  * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     ioRq          IO reqest
+ * @param[in]     iorq          IO reqest
  * @param[in,out] args          additional arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t PLL_ioctl(void *drvhdl, iorq_t ioRq, va_list args)
+stdret_t PLL_ioctl(void *drvhdl, iorq_t iorq, va_list args)
 {
         (void)drvhdl;
-        (void)ioRq;
+        (void)iorq;
         (void)args;
 
         return STD_RET_ERROR;

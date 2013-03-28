@@ -439,7 +439,7 @@ stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, va_list args)
                 break;
 
         /* set active terminal */
-        case TTY_IORQ_SET_ACTIVE_TTY:
+        case TTY_IORQ_SWITCH_TTY_TO:
                 tty_ctrl->change_to_TTY = va_arg(args, int);
                 break;
 

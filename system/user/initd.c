@@ -189,8 +189,7 @@ void task_initd(void *arg)
                                 fclose(tty[i]);
                                 tty[i] = NULL;
 
-                                current_tty = 0;
-                                ioctl(tty[0], TTY_IORQ_SET_ACTIVE_TTY, &current_tty);
+                                ioctl(tty[0], TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
                         }
                 }
 

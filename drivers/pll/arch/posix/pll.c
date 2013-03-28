@@ -182,18 +182,18 @@ size_t PLL_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek
  * @brief IO control
  *
  * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     ioRq          IO reqest
- * @param[in,out] data          data pointer
+ * @param[in]     iorq          IO reqest
+ * @param[in,out] args          additional arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t PLL_ioctl(void *drvhdl, iorq_t ioRq, void *data)
+stdret_t PLL_ioctl(void *drvhdl, iorq_t iorq, va_list args)
 {
         (void)drvhdl;
-        (void)ioRq;
-        (void)data;
+        (void)iorq;
+        (void)args;
 
         return STD_RET_ERROR;
 }

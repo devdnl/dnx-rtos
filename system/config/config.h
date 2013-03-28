@@ -90,6 +90,11 @@ extern "C" {
  */
 #define CONFIG_RTOS_LIB_KERNEL_IRQ_PRIO                 (15)
 
+/**
+ * Enable (1) or disable (0) CPU low power mode in Idle task
+ * Note: if enabled, in some systems debugging and programming could be hindered
+ */
+#define CONFIG_RTOS_SLEEP_ON_IDLE                       (0)
 
 /**=== PRINT CONFIGURATION ===================================================*/
 /**

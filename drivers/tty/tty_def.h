@@ -78,7 +78,7 @@ enum tty_list {
 /** TTY requests */
 enum TTY_IORQ_enum {
         TTY_IORQ_GET_CURRENT_TTY,               /* [out] int*   */
-        TTY_IORQ_SET_ACTIVE_TTY,                /* [in ] int    */
+        TTY_IORQ_SWITCH_TTY_TO,                 /* [in ] int    */
         TTY_IORQ_CLEAN_TTY,                     /* none         */
         TTY_IORQ_GET_COL,                       /* [out] int*   */
         TTY_IORQ_GET_ROW,                       /* [out] int*   */
