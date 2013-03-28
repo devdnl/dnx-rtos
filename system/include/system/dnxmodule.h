@@ -88,7 +88,7 @@ extern stdret_t modname##_open   (void*);                                  \
 extern stdret_t modname##_close  (void*);                                  \
 extern size_t   modname##_write  (void*, void*, size_t, size_t, size_t);   \
 extern size_t   modname##_read   (void*, void*, size_t, size_t, size_t);   \
-extern stdret_t modname##_ioctl  (void*, iorq_t, void*);                   \
+extern stdret_t modname##_ioctl  (void*, iorq_t, va_list);                 \
 extern stdret_t modname##_flush  (void*)
 
 /*==============================================================================

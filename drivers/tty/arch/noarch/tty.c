@@ -413,15 +413,16 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek
  *
  * @param[in]     *drvhdl       driver's memory handle
  * @param[in]     ioRq          IO reqest
- * @param[in,out] data          data pointer
+ * @param[in,out] args          additional arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
+stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, va_list args)
 {
         struct tty_data *tty = drvhdl;
+        int *out_ptr;
 
         if (!tty_ctrl || !tty) {
                 return STD_RET_ERROR;
@@ -430,18 +431,16 @@ stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
         switch (iorq) {
         /* return current TTY */
         case TTY_IORQ_GET_CURRENT_TTY:
-                if (data == NULL) {
+                out_ptr = va_arg(args, int*);
+                if (out_ptr == NULL) {
                         return STD_RET_ERROR;
                 }
-                *((u8_t*)data) = tty_ctrl->current_TTY;
+                *out_ptr = tty_ctrl->current_TTY;
                 break;
 
         /* set active terminal */
         case TTY_IORQ_SET_ACTIVE_TTY:
-                if (data == NULL) {
-                        return STD_RET_ERROR;
-                }
-                tty_ctrl->change_to_TTY = *((u8_t*)data);
+                tty_ctrl->change_to_TTY = va_arg(args, int);
                 break;
 
         /* clear terminal */
@@ -451,18 +450,20 @@ stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, void *data)
 
         /* terminal size - number of columns */
         case TTY_IORQ_GET_COL:
-                if (data == NULL) {
+                out_ptr = va_arg(args, int*);
+                if (out_ptr == NULL) {
                         return STD_RET_ERROR;
                 }
-                *((u8_t*)data) = tty_ctrl->column_count;
+                *out_ptr = tty_ctrl->column_count;
                 break;
 
         /* terminal size - number of rows */
         case TTY_IORQ_GET_ROW:
-                if (data == NULL) {
+                out_ptr = va_arg(args, int*);
+                if (out_ptr == NULL) {
                         return STD_RET_ERROR;
                 }
-                *((u8_t*)data) = tty_ctrl->row_count;
+                *out_ptr = tty_ctrl->row_count;
                 break;
 
         /* clear screen */
@@ -626,8 +627,7 @@ static void stdin_service(struct tty_data *tty, file_t *stream)
 
         case ARROW_LEFT_KEY:
                 if (tty->cursor_position > 0) {
-                        chr = '\b';
-                        ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
+                        ioctl(stream, UART_IORQ_SEND_BYTE, '\b');
                         tty->cursor_position--;
                 }
                 break;
@@ -671,8 +671,7 @@ static void move_cursor_to_beginning_of_editline(struct tty_data *tty, file_t *s
         fwrite(msg, sizeof(char), strlen(msg), stream);
 
         while (tty->cursor_position > 0) {
-                char chr = '\b';
-                ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
+                ioctl(stream, UART_IORQ_SEND_BYTE, '\b');
                 tty->cursor_position--;
         }
 
@@ -807,7 +806,7 @@ static void add_charater_to_editline(struct tty_data *tty, char chr, file_t *str
                 tty->edit_line_length++;
 
                 if (tty->echo_enabled == SET) {
-                        ioctl(stream, UART_IORQ_SEND_BYTE, &chr);
+                        ioctl(stream, UART_IORQ_SEND_BYTE, chr);
                 }
         }
 }
@@ -821,7 +820,9 @@ static void add_charater_to_editline(struct tty_data *tty, char chr, file_t *str
 //==============================================================================
 static void switch_tty_if_requested(file_t *stream)
 {
-        if (tty_ctrl->change_to_TTY != -1) {
+        if (tty_ctrl->change_to_TTY >= TTY_DEV_COUNT) {
+                tty_ctrl->change_to_TTY = -1;
+        } else if (tty_ctrl->change_to_TTY != -1) {
                 tty_ctrl->current_TTY   = tty_ctrl->change_to_TTY;
                 tty_ctrl->change_to_TTY = -1;
                 refresh_tty(tty_ctrl->tty[tty_ctrl->current_TTY], stream);

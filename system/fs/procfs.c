@@ -460,18 +460,18 @@ size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, 
  * @param[in]     *fshdl        FS handle
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
- * @param[in,out] *data         data pointer
+ * @param[in,out]  args         additional arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, void *data)
+stdret_t procfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, va_list args)
 {
         (void)fshdl;
         (void)fd;
         (void)iorq;
-        (void)data;
+        (void)args;
 
         return STD_RET_ERROR;
 }

@@ -34,6 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "systypes.h"
+#include <stdarg.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -132,7 +133,7 @@ struct vfs_drv_interface {
         stdret_t (*drv_close)(void *drvhdl);
         size_t   (*drv_write)(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*drv_read )(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek);
-        stdret_t (*drv_ioctl)(void *drvhdl, iorq_t iorq, void *data);
+        stdret_t (*drv_ioctl)(void *drvhdl, iorq_t iorq, va_list args);
         stdret_t (*drv_flush)(void *drvhdl);
 };
 
@@ -144,7 +145,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_close  )(void *fshdl, fd_t fd);
         size_t   (*fs_write  )(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*fs_read   )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek);
-        stdret_t (*fs_ioctl  )(void *fshdl, fd_t fd, iorq_t iroq, void *data);
+        stdret_t (*fs_ioctl  )(void *fshdl, fd_t fd, iorq_t iroq, va_list args);
         stdret_t (*fs_fstat  )(void *fshdl, fd_t fd, struct vfs_statf *stat);
         stdret_t (*fs_flush  )(void *fshdl, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path);
@@ -182,7 +183,7 @@ extern size_t   vfs_fwrite(void*, size_t, size_t, file_t*);
 extern size_t   vfs_fread(void*, size_t, size_t, file_t*);
 extern stdret_t vfs_fseek(file_t*, i32_t, int);
 extern i32_t    vfs_ftell(file_t*);
-extern stdret_t vfs_ioctl(file_t*, iorq_t, void*);
+extern stdret_t vfs_ioctl(file_t*, iorq_t, ...);
 extern stdret_t vfs_fstat(file_t*, struct vfs_statf*);
 extern stdret_t vfs_fflush(file_t*);
 

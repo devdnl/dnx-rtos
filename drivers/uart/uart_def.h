@@ -59,15 +59,15 @@ enum UART_IORq
         UART_IORQ_SET_2_STOP_BITS,                      /* [---] no arg       */
         UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS,         /* [---] no arg       */
         UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS,         /* [---] no arg       */
-        UART_IORQ_SET_ADDRESS_NODE,                     /* [in ] u8_t arg     */
+        UART_IORQ_SET_ADDRESS_NODE,                     /* [in ] int          */
         UART_IORQ_ENABLE_CTS,                           /* [---] no arg       */
         UART_IORQ_DISABLE_CTS,                          /* [---] no arg       */
         UART_IORQ_ENABLE_RTS,                           /* [---] no arg       */
         UART_IORQ_DISABLE_RTS,                          /* [---] no arg       */
-        UART_IORQ_GET_BYTE,                             /* [out] u8_t arg     */
-        UART_IORQ_GET_BYTE_BLOCKING,                    /* [out] u8_t arg     */
-        UART_IORQ_SEND_BYTE,                            /* [in ] u8_t arg     */
-        UART_IORQ_SET_BAUDRATE,                         /* [in ] u32_t arg    */
+        UART_IORQ_GET_BYTE,                             /* [out] u8_t*        */
+        UART_IORQ_GET_BYTE_BLOCKING,                    /* [out] u8_t*        */
+        UART_IORQ_SEND_BYTE,                            /* [in ] int          */
+        UART_IORQ_SET_BAUDRATE,                         /* [in ] int          */
 };
 
 /*==============================================================================

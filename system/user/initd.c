@@ -121,7 +121,7 @@ void task_initd(void *arg)
         file_t *tty[TTY_DEV_COUNT]               = {NULL};
         task_t *program[TTY_DEV_COUNT - 1]       = {NULL};
         enum prog_state state[TTY_DEV_COUNT - 1] = {PROGRAM_UNKNOWN_STATE};
-        i8_t current_tty                    = -1;
+        int current_tty                          = -1;
 
         while ((tty[0] = fopen("/dev/tty0", "r+")) == NULL) {
                 milisleep(200);
@@ -134,8 +134,7 @@ void task_initd(void *arg)
                         if (!program[current_tty]) {
                                 if (tty[current_tty] == NULL) {
                                         char path[16];
-                                        snprintf(path, sizeof(path), "/dev/tty%c",
-                                                 '0' + current_tty);
+                                        snprintf(path, sizeof(path), "/dev/tty%c", '0' + current_tty);
                                         tty[current_tty] = fopen(path, "r+");
                                 }
 
@@ -186,7 +185,7 @@ void task_initd(void *arg)
                                 program[i] = NULL;
                                 state[i]   = PROGRAM_UNKNOWN_STATE;
 
-                                ioctl(tty[i], TTY_IORQ_CLEAN_TTY, NULL);
+                                ioctl(tty[i], TTY_IORQ_CLEAN_TTY);
                                 fclose(tty[i]);
                                 tty[i] = NULL;
 

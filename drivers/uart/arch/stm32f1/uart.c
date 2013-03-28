@@ -468,16 +468,17 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
  *
  * @param[in]     *drvhdl       driver's memory handle
  * @param[in]     ioRq          IO reqest
- * @param[in,out] data          data pointer
+ * @param[in,out] args          additional arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, void *data)
+stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, va_list args)
 {
         struct USART_data *hdl = drvhdl;
         stdret_t status = STD_RET_OK;
+        u8_t *out_ptr;
 
         if (!hdl) {
                 return STD_RET_ERROR;
@@ -542,7 +543,7 @@ stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, void *data)
                         break;
 
                 case UART_IORQ_SET_ADDRESS_NODE:
-                        set_address_node(hdl->USART, *(u8_t *)data);
+                        set_address_node(hdl->USART, va_arg(args, int));
                         break;
 
                 case UART_IORQ_ENABLE_CTS:
@@ -564,8 +565,14 @@ stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, void *data)
                 case UART_IORQ_GET_BYTE:
                         enter_critical();
 
+                        if (!(out_ptr = va_arg(args, u8_t*))) {
+                                exit_critical();
+                                status = STD_RET_ERROR;
+                                break;
+                        }
+
                         if (hdl->Rx_FIFO.buffer_level > 0) {
-                                *(u8_t *)data = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+                                *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
 
                                 if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
                                         hdl->Rx_FIFO.read_index = 0;
@@ -582,8 +589,14 @@ stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, void *data)
                         while (TRUE) {
                                 enter_critical();
 
+                                if (!(out_ptr = va_arg(args, u8_t*))) {
+                                        exit_critical();
+                                        status = STD_RET_ERROR;
+                                        break;
+                                }
+
                                 if (hdl->Rx_FIFO.buffer_level > 0) {
-                                        *(u8_t *)data = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+                                        *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
 
                                         if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
                                                 hdl->Rx_FIFO.read_index = 0;
@@ -604,14 +617,14 @@ stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, void *data)
                                 milisleep(1);
                         }
 
-                        hdl->USART->DR = *(u8_t *)data;
+                        hdl->USART->DR = va_arg(args, int);
                         break;
 
                 case UART_IORQ_SET_BAUDRATE:
                         if ((u32_t)hdl->USART == USART1_BASE) {
-                                set_baud_rate(hdl->USART, UART_PCLK2_FREQ, *(u32_t *)data);
+                                set_baud_rate(hdl->USART, UART_PCLK2_FREQ, va_arg(args, int));
                         } else {
-                                set_baud_rate(hdl->USART, UART_PCLK1_FREQ, *(u32_t *)data);
+                                set_baud_rate(hdl->USART, UART_PCLK1_FREQ, va_arg(args, int));
                         }
                         break;
 

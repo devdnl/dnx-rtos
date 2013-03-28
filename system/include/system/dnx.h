@@ -44,6 +44,7 @@ extern "C" {
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include <string.h>
+#include <stdarg.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -72,7 +73,7 @@ extern "C" {
 #define fread(ptr, isize, nitems, file)   sysm_fread(ptr, isize, nitems, file)
 #define fseek(file, offset, mode)         sysm_fseek(file, offset, mode)
 #define ftell(file)                       sysm_ftell(file)
-#define ioctl(file, rq, data)             sysm_ioctl(file, rq, data)
+#define ioctl(file, ...)                  sysm_ioctl(file, __VA_ARGS__)
 #define fstat(file, statPtr)              sysm_fstat(file, stat)
 #define fflush(file)                      sysm_fflush(file)
 

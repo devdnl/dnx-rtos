@@ -33,10 +33,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "systypes.h"
-#include "memman.h"
-#include "vfs.h"
 #include "config.h"
+#include "core/systypes.h"
+#include "core/memman.h"
+#include "core/vfs.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -75,7 +75,7 @@ extern "C" {
 #define sysm_fread(ptr, isize, nitems, file)    vfs_fread(ptr, isize, nitems, file)
 #define sysm_fseek(file, offset, mode)          vfs_fseek(file, offset, mode)
 #define sysm_ftell(file)                        vfs_ftell(file)
-#define sysm_ioctl(file, rq, data)              vfs_ioctl(file, rq, data)
+#define sysm_ioctl(file, ...)                   vfs_ioctl(file, __VA_ARGS__)
 #define sysm_fstat(file, statPtr)               vfs_fstat(file, stat)
 #define sysm_fflush(file)                       vfs_fflush(file)
 

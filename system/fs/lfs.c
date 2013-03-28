@@ -1144,13 +1144,13 @@ size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, siz
  * @param[in]     *fshdl        FS handle
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
- * @param[in,out] *data         data pointer
+ * @param[in,out]  args         additional arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, void *data)
+stdret_t lfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, va_list args)
 {
         struct LFS_data *lfs = fshdl;
         struct opened_file_info  *opened_file;
@@ -1177,7 +1177,7 @@ stdret_t lfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, void *data)
 
                 if (drv_if->drv_ioctl) {
                         unlock_mutex(lfs->resource_mtx);
-                        return drv_if->drv_ioctl(drv_if->handle, iorq, data);
+                        return drv_if->drv_ioctl(drv_if->handle, iorq, args);
                 }
         }
 

@@ -57,7 +57,7 @@ struct vfs_file
         stdret_t (*f_close)(void *fshdl, fd_t fd);
         size_t   (*f_write)(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
         size_t   (*f_read )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
-        stdret_t (*f_ioctl)(void *fshdl, fd_t fd, iorq_t iorq, void *data);
+        stdret_t (*f_ioctl)(void *fshdl, fd_t fd, iorq_t iorq, va_list);
         stdret_t (*f_stat )(void *fshdl, fd_t fd, struct vfs_statf *stat);
         stdret_t (*f_flush)(void *fshdl, fd_t fd);
         fd_t     fd;
@@ -882,21 +882,26 @@ i32_t vfs_ftell(file_t *file)
  *
  * @param[in]     *file         file
  * @param[in]      rq           request
- * @param[in,out] *data         pointer to data
+ * @param[in,out] ...           additional function arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t vfs_ioctl(file_t *file, iorq_t rq, void *data)
+stdret_t vfs_ioctl(file_t *file, iorq_t rq, ...)
 {
+        va_list  args;
+        stdret_t status = STD_RET_ERROR;
+
         if (file) {
                 if (file->f_ioctl) {
-                        return file->f_ioctl(file->fshdl, file->fd, rq, data);
+                        va_start(args, rq);
+                        status = file->f_ioctl(file->fshdl, file->fd, rq, args);
+                        va_end(args);
                 }
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
