@@ -69,6 +69,7 @@ extern "C" {
 
 /** CALCULATIONS */
 #define PRIORITY(prio)                                  (prio + (configMAX_PRIORITIES / 2))
+#define MS2TICK(ms)                                     ms <= (configTICK_RATE_HZ/1000) ? 1 : ms/(configTICK_RATE_HZ/1000)
 
 /** TASK LEVEL DEFINITIONS */
 #define new_task(func, name, stack_depth, args)         osw_new_task(func, name, stack_depth, args)

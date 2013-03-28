@@ -34,7 +34,7 @@ extern "C" {
 /**
  * CPU frequency [Hz]
  */
-#define CONFIG_CPU_TARGET_FREQ                          (8000000UL)
+#define CONFIG_CPU_TARGET_FREQ                          (72000000UL)
 
 
 /**=== MEMORY CONFIGURATION ==================================================*/
@@ -78,12 +78,17 @@ extern "C" {
 /**
  * Kernel interrupt priority
  */
-#define CONFIG_RTOS_KERNEL_IRQ_PRIO                     (0xFF) /* priority 15 (lowest) */
+#define CONFIG_RTOS_KERNEL_IRQ_PRIORITY                 (0xFF) /* priority 15 (lowest) */
 
 /**
  * System call interrupt priority
  */
-#define CONFIG_RTOS_SYSCALL_IRQ_PRIO                    (0xEF) /* priority 14 */
+#define CONFIG_RTOS_SYSCALL_IRQ_PRIORITY                (0xEF) /* priority 14 */
+
+/**
+ * User programs interrupt priority
+ */
+#define CONFIG_USER_IRQ_PRIORITY                        (0xDF) /* priority 13 */
 
 /**
  * Enable (1) or disable (0) CPU low power mode in Idle task

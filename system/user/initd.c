@@ -128,7 +128,6 @@ void task_initd(void *arg)
                 milisleep(200);
         }
 
-
         for (;;) {
                 ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
 

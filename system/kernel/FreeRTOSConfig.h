@@ -138,8 +138,8 @@ to exclude the API function. */
 #define INCLUDE_xTaskGetSchedulerState          1
 
 /* interrupt priority */
-#define configKERNEL_INTERRUPT_PRIORITY         CONFIG_RTOS_KERNEL_IRQ_PRIO
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    CONFIG_RTOS_SYSCALL_IRQ_PRIO
+#define configKERNEL_INTERRUPT_PRIORITY         CONFIG_RTOS_KERNEL_IRQ_PRIORITY
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY    CONFIG_RTOS_SYSCALL_IRQ_PRIORITY
 
 /* dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
 #define malloc(size)                            sysm_kmalloc(size)

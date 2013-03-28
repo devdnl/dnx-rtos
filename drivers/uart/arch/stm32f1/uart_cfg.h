@@ -85,7 +85,7 @@ extern "C" {
 #define UART_DEFAULT_MULTICOM_ADDRESS           0
 
 /** baud rate */
-#define UART_DEFAULT_BAUDRATE                   460800
+#define UART_DEFAULT_BAUDRATE                   115200
 
 /** CTS hardware flow control enable (1) or disable (0) */
 #define UART_DEFAULT_CTS_ENABLE                 0
@@ -95,10 +95,10 @@ extern "C" {
 
 
 /** PCLK1 frequency */
-#define UART_PCLK1_FREQ                         8000000UL
+#define UART_PCLK1_FREQ                         36000000UL
 
 /** PCLK2 frequency */
-#define UART_PCLK2_FREQ                         8000000UL
+#define UART_PCLK2_FREQ                         72000000UL
 
 /** RX buffer size [B] */
 #define UART_RX_BUFFER_SIZE                     128
