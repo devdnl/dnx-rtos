@@ -34,7 +34,6 @@ extern "C" {
 #include "fs/procfs.h"
 #include "core/io.h"
 #include "core/list.h"
-#include "cpuctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

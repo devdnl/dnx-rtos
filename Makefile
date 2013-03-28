@@ -73,7 +73,7 @@ CSRC_stm32f1 = $(sort \
    system/portable/stm32f1/cpuctl.c \
    system/portable/stm32f1/cpuhooks.c \
    system/portable/stm32f1/stm32f10x_vectors.c \
-   system/portable/stm32f1/STM32F10x_StdPeriph_Driver/misc.c \
+   system/portable/stm32f1/lib/misc.c \
    system/kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c \
 )
 
@@ -83,17 +83,17 @@ CXXSRC_stm32f1 = $(sort \
 
 # assembler source file
 ASRC_stm32f1 = $(sort \
-   system/portable/lib/cm_startup.s \
+   system/portable/stm32f1/cmx_startup.s \
 )
 
 # paths to headers
 HDRLOC_stm32f1 = $(sort \
-   $(dir $(CSRC_stm32f1)) \
-   $(dir $(CXXSRC_stm32f1)) \
    drivers/gpio \
+   drivers/gpio/arch/stm32f1 \
    drivers/pll \
    drivers/uart \
    system/portable/lib/CMSIS \
+   system/portable/stm32f1 \
 )
 
 ####################################################################################################
@@ -157,6 +157,7 @@ HDRLOC_CORE = $(sort \
    system/kernel/FreeRTOS/Source/include \
    system/kernel \
    system/config \
+   system/portable \
    system/include \
    . \
 )

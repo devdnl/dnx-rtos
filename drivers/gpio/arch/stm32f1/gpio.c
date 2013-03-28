@@ -36,7 +36,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "gpio.h"
-#include "stm32f10x.h"
+#include "stm32f1/stm32f10x.h"
 
 MODULE_NAME(GPIO);
 

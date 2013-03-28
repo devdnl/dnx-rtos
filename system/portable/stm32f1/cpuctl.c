@@ -31,9 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "cpuctl.h"
-#include "stm32f10x.h"
-#include "misc.h"
+#include "stm32f1/cpuctl.h"
+#include "stm32f1/stm32f10x.h"
+#include "stm32f1/lib/misc.h"
 
 /*==============================================================================
   Local symbolic constants/macros

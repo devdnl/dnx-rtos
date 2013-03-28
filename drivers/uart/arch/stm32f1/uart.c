@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "uart.h"
-#include "stm32f10x.h"
+#include "stm32f1/stm32f10x.h"
 
 MODULE_NAME(UART);
 

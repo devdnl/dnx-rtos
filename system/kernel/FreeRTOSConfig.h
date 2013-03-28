@@ -67,8 +67,8 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
-#include "config.h"     /* general configuration  */
-#include "cpuctl.h"     /* CPU specified settings */
+#include "config.h"             /* general configuration  */
+#include "portable/cpuctl.h"    /* CPU vector definitions */
 
 /*-------------------------------------------------------------
  * Used prototypes from external modules

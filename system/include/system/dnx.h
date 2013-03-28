@@ -43,6 +43,7 @@ extern "C" {
 #include "user/regdrv.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
+#include "portable/cpuctl.h"
 #include <string.h>
 #include <stdarg.h>
 
