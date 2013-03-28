@@ -95,10 +95,10 @@ extern "C" {
 
 
 /** PCLK1 frequency */
-#define UART_PCLK1_FREQ                         36000000UL
+#define UART_PCLK1_FREQ                         8000000UL
 
 /** PCLK2 frequency */
-#define UART_PCLK2_FREQ                         72000000UL
+#define UART_PCLK2_FREQ                         8000000UL
 
 /** RX buffer size [B] */
 #define UART_RX_BUFFER_SIZE                     128

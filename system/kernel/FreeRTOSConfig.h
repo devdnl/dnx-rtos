@@ -137,18 +137,11 @@ to exclude the API function. */
 #define INCLUDE_vTaskCleanUpResources           0
 #define INCLUDE_xTaskGetSchedulerState          1
 
-/* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
-(lowest) to 0 (1?) (highest). */
+/* interrupt priority */
 #define configKERNEL_INTERRUPT_PRIORITY         CONFIG_RTOS_KERNEL_IRQ_PRIO
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY    CONFIG_RTOS_SYSCALL_IRQ_PRIO
 
-/* This is the value being used as per the ST library which permits 16
-priority values, 0 to 15.  This must correspond to the
-configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
-NVIC value of 255. */
-#define configLIBRARY_KERNEL_INTERRUPT_PRIORITY CONFIG_RTOS_LIB_KERNEL_IRQ_PRIO
-
-/** dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
+/* dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
 #define malloc(size)                            sysm_kmalloc(size)
 #define free(mem)                               sysm_kfree(mem)
 

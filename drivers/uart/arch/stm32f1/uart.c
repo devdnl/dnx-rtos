@@ -680,6 +680,8 @@ static void IRQ_handler(struct USART_data *USART_data)
                                 disable_TXE_IRQ(USART_data->USART);
                                 give_semaphore_from_ISR(USART_data->data_write_sem, &woke);
                         }
+                } else {
+                        disable_TXE_IRQ(USART_data->USART);
                 }
         }
 

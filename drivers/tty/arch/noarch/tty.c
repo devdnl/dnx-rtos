@@ -63,6 +63,9 @@ MODULE_NAME(TTY);
 #define VT100_CURSOR_ON                 "\e[?25h"
 #define VT100_SHIFT_CURSOR_RIGHT(t)     "\e["#t"C"
 
+#define DEFAULT_COL                     80
+#define DEFAULT_ROW                     24
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -195,8 +198,8 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
                         goto ctrl_error;
                 }
 
-                tty_ctrl->column_count  = 80;
-                tty_ctrl->row_count     = 24;
+                tty_ctrl->column_count  = DEFAULT_COL;
+                tty_ctrl->row_count     = DEFAULT_ROW;
                 tty_ctrl->change_to_TTY = -1;
         }
 
@@ -1227,8 +1230,8 @@ static void get_vt100_size(file_t *ttysfile)
         char chr = 0;
 
         /* set default values */
-        tty_ctrl->column_count = 80;
-        tty_ctrl->row_count = 24;
+        tty_ctrl->column_count = DEFAULT_COL;
+        tty_ctrl->row_count    = DEFAULT_ROW;
 
         char *rq = VT100_SAVE_CURSOR_POSITION
                    VT100_CURSOR_OFF
@@ -1297,8 +1300,16 @@ static void get_vt100_size(file_t *ttysfile)
                 col += chr - '0';
         }
 
-        tty_ctrl->row_count    = row;
-        tty_ctrl->column_count = col;
+
+        if (row == 0)
+                tty_ctrl->row_count = DEFAULT_ROW;
+        else
+                tty_ctrl->row_count = row;
+
+        if (col == 0)
+                tty_ctrl->column_count = DEFAULT_COL;
+        else
+                tty_ctrl->column_count = col;
 }
 
 //==============================================================================

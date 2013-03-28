@@ -171,7 +171,7 @@ HDRLOC_CORE = $(sort \
 PROJECT = main
 
 # optymalization
-OPT = s
+OPT = 1
 
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: STM32F1
