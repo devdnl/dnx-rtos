@@ -80,74 +80,74 @@ stdret_t PLL_init(void **drvhdl, uint dev, uint part)
         (void)dev;
         (void)part;
 
-//        u32_t wait; /* FIXME enable PLL on 72e6 */
-//
-//        /* turn on HSE oscillator */
-//        RCC->CR |= RCC_CR_HSEON;
-//
-//        /* waiting for HSE ready */
-//        wait = UINT32_MAX;
-//        while (!(RCC->CR & RCC_CR_HSERDY) && wait) {
-//                wait--;
-//        }
-//
-//        if (wait == 0)
-//                return PLL_STATUS_HSE_ERROR;
-//
-//        /* wait states */
-//        if (PLL_CPU_TARGET_FREQ <= 24000000UL)
-//                FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
-//        else if (PLL_CPU_TARGET_FREQ <= 48000000UL)
-//                FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
-//        else if (PLL_CPU_TARGET_FREQ <= 72000000UL)
-//                FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
-//        else
-//                FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
-//
-//        /* AHB prescaler  configuration (/1) */
-//        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
-//
-//        /* APB1 prescaler configuration (/2) */
-//        RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
-//
-//        /* APB2 prescaler configuration (/1) */
-//        RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
-//
-//        /* FCLK cortex free running clock */
-//        SysTick->CTRL |= SysTick_CTRL_CLKSOURCE;
-//
-//        /* PLL source - HSE; PREDIV1 = 1; PLL x9 */
-//        RCC->CFGR2 |= RCC_CFGR2_PREDIV1SRC_HSE | RCC_CFGR2_PREDIV1_DIV1;
-//        RCC->CFGR  |= RCC_CFGR_PLLSRC_PREDIV1  | RCC_CFGR_PLLMULL9;
-//
-//        /* OTG USB set to 48 MHz (72*2 / 3)*/
-//        RCC->CFGR &= ~RCC_CFGR_OTGFSPRE;
-//
-//        /* I2S3 and I2S2 from SYSCLK */
-//        RCC->CFGR2 &= ~(RCC_CFGR2_I2S3SRC | RCC_CFGR2_I2S2SRC);
-//
-//        /* enable PLL */
-//        RCC->CR |= RCC_CR_PLLON;
-//
-//        /* waiting for PLL ready */
-//        wait = UINT32_MAX;
-//        while (!(RCC->CR & RCC_CR_PLLRDY) && wait) {
-//                wait--;
-//        }
-//
-//        if (wait == 0)
-//                return PLL_STATUS_PLL_ERROR;
-//
-//        /* set PLL as system clock */
-//        RCC->CFGR |= RCC_CFGR_SW_PLL;
-//
-//        wait = UINT32_MAX;
-//        while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {
-//                wait--;
-//        }
-//
-//        if (wait == 0)
-//                return PLL_STATUS_PLL_SW_ERROR;
+        u32_t wait;
+
+        /* turn on HSE oscillator */
+        RCC->CR |= RCC_CR_HSEON;
+
+        /* waiting for HSE ready */
+        wait = UINT32_MAX;
+        while (!(RCC->CR & RCC_CR_HSERDY) && wait) {
+                wait--;
+        }
+
+        if (wait == 0)
+                return PLL_STATUS_HSE_ERROR;
+
+        /* wait states */
+        if (PLL_CPU_TARGET_FREQ <= 24000000UL)
+                FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
+        else if (PLL_CPU_TARGET_FREQ <= 48000000UL)
+                FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
+        else if (PLL_CPU_TARGET_FREQ <= 72000000UL)
+                FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
+        else
+                FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
+
+        /* AHB prescaler  configuration (/1) */
+        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+
+        /* APB1 prescaler configuration (/2) */
+        RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+
+        /* APB2 prescaler configuration (/1) */
+        RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
+
+        /* FCLK cortex free running clock */
+        SysTick->CTRL |= SysTick_CTRL_CLKSOURCE;
+
+        /* PLL source - HSE; PREDIV1 = 1; PLL x9 */
+        RCC->CFGR2 |= RCC_CFGR2_PREDIV1SRC_HSE | RCC_CFGR2_PREDIV1_DIV1;
+        RCC->CFGR  |= RCC_CFGR_PLLSRC_PREDIV1  | RCC_CFGR_PLLMULL9;
+
+        /* OTG USB set to 48 MHz (72*2 / 3)*/
+        RCC->CFGR &= ~RCC_CFGR_OTGFSPRE;
+
+        /* I2S3 and I2S2 from SYSCLK */
+        RCC->CFGR2 &= ~(RCC_CFGR2_I2S3SRC | RCC_CFGR2_I2S2SRC);
+
+        /* enable PLL */
+        RCC->CR |= RCC_CR_PLLON;
+
+        /* waiting for PLL ready */
+        wait = UINT32_MAX;
+        while (!(RCC->CR & RCC_CR_PLLRDY) && wait) {
+                wait--;
+        }
+
+        if (wait == 0)
+                return PLL_STATUS_PLL_ERROR;
+
+        /* set PLL as system clock */
+        RCC->CFGR |= RCC_CFGR_SW_PLL;
+
+        wait = UINT32_MAX;
+        while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {
+                wait--;
+        }
+
+        if (wait == 0)
+                return PLL_STATUS_PLL_SW_ERROR;
 
         return STD_RET_OK;
 }

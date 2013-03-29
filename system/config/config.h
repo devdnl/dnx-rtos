@@ -34,7 +34,7 @@ extern "C" {
 /**
  * CPU frequency [Hz]
  */
-#define CONFIG_CPU_TARGET_FREQ                          (8000000UL) /* FIXME to 72e6 */
+#define CONFIG_CPU_TARGET_FREQ                          (72000000UL)
 
 
 /**=== MEMORY CONFIGURATION ==================================================*/

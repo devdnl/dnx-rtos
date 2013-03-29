@@ -38,9 +38,9 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** CPU target frequency */
-#define PLL_CPU_TARGET_FREQ               8000000UL /* FIXME to 76e6 */
+#define PLL_CPU_TARGET_FREQ               72000000UL
 
-#define PLL_APB1FREQ                      8000000UL /* FIXME to 36e6 */
+#define PLL_APB1FREQ                      36000000UL
 
 /** PLL exit statuses */
 #define PLL_STATUS_HSE_ERROR              -1
