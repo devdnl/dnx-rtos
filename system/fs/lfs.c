@@ -281,7 +281,7 @@ stdret_t lfs_mkdir(void *fshdl, const char *path)
         node_t *file_node;
         node_t *new_dir;
         char   *dir_name_ptr;
-        char   *new_dir_name;
+        char   *new_dir_name = NULL;
         uint   dir_name_len;
 
         if (!path || !lfs) {
@@ -298,11 +298,11 @@ stdret_t lfs_mkdir(void *fshdl, const char *path)
 
         /* base node must exist and created node not */
         if (base_node == NULL || file_node != NULL) {
-                return STD_RET_ERROR;
+                goto error;
         }
 
         if (base_node->type != NODE_TYPE_DIR) {
-                return STD_RET_ERROR;
+                goto error;
         }
 
         dir_name_ptr = strrchr(path, '/') + 1;

@@ -82,7 +82,7 @@ struct FS_entry {
 static const struct FS_entry FS_table[] =
 {
         USE_FILE_SYSTEM_INTERFACE(lfs),
-//        USE_FILE_SYSTEM_INTERFACE(appfs),
+        USE_FILE_SYSTEM_INTERFACE(appfs),
         USE_FILE_SYSTEM_INTERFACE(procfs),
 };
 

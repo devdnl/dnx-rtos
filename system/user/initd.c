@@ -74,16 +74,12 @@ void task_initd(void *arg)
         /* mount main file system */
         mount("lfs", NULL, "/");
 
-        /* create basic directories */
         mkdir("/bin");
         mkdir("/dev");
         mkdir("/etc");
-        mkdir("/fbin");
         mkdir("/home");
         mkdir("/mnt");
         mkdir("/proc");
-        mkdir("/srv");
-        mkdir("/srv/www");
         mkdir("/tmp");
 
         mount("procfs", NULL, "/proc");

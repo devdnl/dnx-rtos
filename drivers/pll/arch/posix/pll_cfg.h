@@ -37,16 +37,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** CPU target frequency */
-#define CPU_TARGET_FREQ                   72000000UL
-
-/** PLL exit statuses */
-#define PLL_STATUS_HSE_ERROR              -1
-#define PLL_STATUS_PLL_ERROR              -2
-#define PLL_STATUS_PLL2_ERROR             -3
-#define PLL_STATUS_PLL3_ERROR             -4
-#define PLL_STATUS_PLL_SW_ERROR           -5
-
 #define PLL_PART_NONE                     0
 #define PLL_DEV_NONE                      0
 
