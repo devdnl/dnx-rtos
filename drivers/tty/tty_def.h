@@ -52,6 +52,9 @@ extern "C" {
 /** define part count */
 #define TTY_PART_NONE               0
 
+/** enable (1) or disable (0) checking terminal size */
+#define TTY_TERM_SIZE_CHECK         0
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

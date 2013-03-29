@@ -1227,11 +1227,14 @@ static void refresh_tty(struct tty_data *tty, file_t *file)
 //==============================================================================
 static void get_vt100_size(file_t *ttysfile)
 {
-        char chr = 0;
+        (void)ttysfile;
 
         /* set default values */
         tty_ctrl->column_count = DEFAULT_COL;
         tty_ctrl->row_count    = DEFAULT_ROW;
+
+#if (TTY_TERM_SIZE_CHECK != 0)
+        char chr = 0;
 
         char *rq = VT100_SAVE_CURSOR_POSITION
                    VT100_CURSOR_OFF
@@ -1310,6 +1313,7 @@ static void get_vt100_size(file_t *ttysfile)
                 tty_ctrl->column_count = DEFAULT_COL;
         else
                 tty_ctrl->column_count = col;
+#endif
 }
 
 //==============================================================================

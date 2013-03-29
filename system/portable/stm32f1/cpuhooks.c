@@ -53,7 +53,6 @@
 /*==============================================================================
  Function definitions
 ==============================================================================*/
-
 //==============================================================================
 /**
  * @brief Hard Fault ISR
@@ -62,9 +61,9 @@
 void HardFault_Handler(void)
 {
         char *name = get_task_name(THIS_TASK);
-        printk(FONT_COLOR_RED"Task %s generated Hard Fault!"RESET_ATTRIBUTES"\n", name);
+        printk(FONT_COLOR_RED"%s: Hard Fault!"RESET_ATTRIBUTES"\n", name);
 //        delete_task(THIS_TASK);
-        for (;;);
+//        for (;;);
 }
 
 //==============================================================================

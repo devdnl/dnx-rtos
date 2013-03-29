@@ -72,9 +72,9 @@ extern "C" {
 #define MS2TICK(ms)                                     ms <= (configTICK_RATE_HZ/1000) ? 1 : ms/(configTICK_RATE_HZ/1000)
 
 /** TASK LEVEL DEFINITIONS */
-#define new_task(func, name, stack_depth, args)         osw_new_task(func, name, stack_depth, args)
-#define delete_task(taskhdl)                            osw_delete_task(taskhdl)
-#define task_exit()                                     delete_task(get_task_handle())
+#define new_task(func, name, stack_depth, args)         kwrap_new_task(func, name, stack_depth, args)
+#define delete_task(taskhdl)                            kwrap_delete_task(taskhdl)
+#define task_exit()                                     do{delete_task(get_task_handle()); for (;;);}while(0)
 #define milisleep(msdelay)                              vTaskDelay(msdelay)
 #define sleep(seconds)                                  vTaskDelay((seconds) * 1000UL)
 #define prepare_sleep_until()                           long int __last_wake_time__ = get_tick_counter();
@@ -113,7 +113,7 @@ extern "C" {
 #define get_task_monitor_data(taskhdl)                  get_task_data(taskhdl)->f_monitor
 
 /** SEMAPHORES AND MUTEXES */
-#define new_semaphore()                                 osw_create_binary_semaphore()
+#define new_semaphore()                                 kwrap_create_binary_semaphore()
 #define new_counting_semaphore(maxCnt, intCnt)          xSemaphoreCreateCounting(maxCnt, intCnt)
 #define new_mutex()                                     xSemaphoreCreateMutex()
 #define new_recursive_mutex()                           xSemaphoreCreateRecursiveMutex()
@@ -155,9 +155,9 @@ struct task_data {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *osw_new_task(void (*func)(void*), const char*, u16_t, void*);
-extern void    osw_delete_task(task_t *taskHdl);
-extern sem_t  *osw_create_binary_semaphore(void);
+extern task_t *kwrap_new_task(void (*func)(void*), const char*, u16_t, void*);
+extern void    kwrap_delete_task(task_t *taskHdl);
+extern sem_t  *kwrap_create_binary_semaphore(void);
 
 #ifdef __cplusplus
 }

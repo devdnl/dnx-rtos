@@ -73,7 +73,7 @@ extern "C" {
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *osw_new_task(void (*func)(void*), const char *name, u16_t stack_depth, void *argv)
+task_t *kwrap_new_task(void (*func)(void*), const char *name, u16_t stack_depth, void *argv)
 {
         task_t           *task          = NULL;
         uint             child_priority = PRIORITY(0);
@@ -121,24 +121,28 @@ task_t *osw_new_task(void (*func)(void*), const char *name, u16_t stack_depth, v
  * @param *taskHdl       task handle
  */
 //==============================================================================
-void osw_delete_task(task_t *taskHdl)
+void kwrap_delete_task(task_t *taskHdl)
 {
         struct task_data *data;
 
         if (sysm_is_task_exist(taskHdl)) {
                 (void)sysm_stop_task_monitoring(taskHdl);
 
+                taskENTER_CRITICAL();
                 if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
 
+                        vTaskSetApplicationTaskTag(taskHdl, NULL);
+
+                        taskYIELD();
                         if (data->f_parent_task) {
                                 vTaskResume(data->f_parent_task);
                         }
 
                         sysm_kfree(data);
-                        vTaskSetApplicationTaskTag(taskHdl, NULL);
                 }
 
                 vTaskDelete(taskHdl);
+                taskEXIT_CRITICAL();
         }
 }
 
@@ -149,7 +153,7 @@ void osw_delete_task(task_t *taskHdl)
  * @return binary semaphore object
  */
 //==============================================================================
-sem_t *osw_create_binary_semaphore(void)
+sem_t *kwrap_create_binary_semaphore(void)
 {
         sem_t *sem = NULL;
         vSemaphoreCreateBinary(sem);

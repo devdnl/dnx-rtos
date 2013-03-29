@@ -171,7 +171,7 @@ HDRLOC_CORE = $(sort \
 PROJECT = main
 
 # optymalization
-OPT = 1
+OPT = s
 
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: STM32F1
@@ -187,13 +187,13 @@ LD_SCRIPT_stm32f1 = system/portable/stm32f1/stm32f107xx.ld
 CPU_stm32f1       = cortex-m3
 MCU_stm32f1       = STM32F10X_CL
 
-CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -O$(OPT) -ffunction-sections -fdata-sections -Wall \
-                  -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -fverbose-asm -Wparentheses\
+CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -O$(OPT) -ffunction-sections -Wall \
+                  -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -Wparentheses\
                   -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
 
 CXXFLAGS_stm32f1  =
 
-LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -T$(LD_SCRIPT_stm32f1) -g -nostartfiles -Wl,--gc-sections -Wall \
+LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles -Wl,--gc-sections -Wall \
                   -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
                   -DGCC_ARMCM3 -DARCH_$(TARGET)
 

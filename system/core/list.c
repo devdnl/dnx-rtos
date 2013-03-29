@@ -518,11 +518,11 @@ stdret_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 
                 if (item) {
                         *nitem = itemno;
-                        return STD_RET_OK;
                 } else {
                         *nitem = -1;
-                        return STD_RET_OK;
                 }
+
+                return STD_RET_OK;
         }
 
         return STD_RET_ERROR;
