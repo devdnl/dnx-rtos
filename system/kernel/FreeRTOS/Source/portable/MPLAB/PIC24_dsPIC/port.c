@@ -1,7 +1,7 @@
 /*
-    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
     http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
@@ -29,20 +29,23 @@
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
     Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
-    >>>NOTE<<< The modification to the GPL is included to allow you to
+
+    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
     distribute a combined work that includes FreeRTOS without being obliged to
     provide the source code for proprietary components outside of the FreeRTOS
-    kernel.  FreeRTOS is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-    more details. You should have received a copy of the GNU General Public
-    License and the FreeRTOS license exception along with FreeRTOS; if not it
-    can be viewed here: http://www.freertos.org/a00114.html and also obtained
-    by writing to Richard Barry, contact details for whom are available on the
-    FreeRTOS WEB site.
+    kernel.
+
+    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+    details. You should have received a copy of the GNU General Public License
+    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
+    viewed here: http://www.freertos.org/a00114.html and also obtained by
+    writing to Real Time Engineers Ltd., contact details for whom are available
+    on the FreeRTOS WEB site.
 
     1 tab == 4 spaces!
-    
+
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
@@ -52,18 +55,21 @@
      *                                                                       *
     ***************************************************************************
 
-    
-    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
-    and contact details.  
-    
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool.
 
-    Real Time Engineers ltd license FreeRTOS to High Integrity Systems, who sell 
-    the code with commercial support, indemnification, and middleware, under 
-    the OpenRTOS brand: http://www.OpenRTOS.com.  High Integrity Systems also
-    provide a safety engineered and independently SIL3 certified version under 
-    the SafeRTOS brand: http://www.SafeRTOS.com.
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    license and Real Time Engineers Ltd. contact details.
+
+    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
+    including FreeRTOS+Trace - an indispensable productivity tool, and our new
+    fully thread aware and reentrant UDP/IP stack.
+
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
+    Integrity Systems, who sell the code with commercial support, 
+    indemnification and middleware, under the OpenRTOS brand.
+    
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
+    engineered and independently SIL3 certified version for use in safety and 
+    mission critical applications that require provable dependability.
 */
 
 /*
@@ -85,7 +91,7 @@
 #define portTIMER_PRESCALE 8
 #define portINITIAL_SR	0
 
-/* Defined for backward compatability with project created prior to 
+/* Defined for backward compatability with project created prior to
 FreeRTOS.org V4.3.0. */
 #ifndef configKERNEL_INTERRUPT_PRIORITY
 	#define configKERNEL_INTERRUPT_PRIORITY 1
@@ -103,25 +109,46 @@ unsigned portBASE_TYPE uxCriticalNesting = 0xef;
 
 #ifdef MPLAB_PIC24_PORT
 
-	#define portRESTORE_CONTEXT()																						\
-		asm volatile(	"MOV	_pxCurrentTCB, W0		\n"	/* Restore the stack pointer for the task. */				\
-						"MOV	[W0], W15				\n"																\
-						"POP	W0						\n"	/* Restore the critical nesting counter for the task. */	\
-						"MOV	W0, _uxCriticalNesting	\n"																\
-						"POP	PSVPAG					\n"																\
-						"POP	CORCON					\n"																\
-						"POP	TBLPAG					\n"																\
-						"POP	RCOUNT					\n"	/* Restore the registers from the stack. */					\
-						"POP	W14						\n"																\
-						"POP.D	W12						\n"																\
-						"POP.D	W10						\n"																\
-						"POP.D	W8						\n"																\
-						"POP.D	W6						\n"																\
-						"POP.D	W4						\n"																\
-						"POP.D	W2						\n"																\
-						"POP.D	W0						\n"																\
-						"POP	SR						  " );
-
+    #ifdef __HAS_EDS__
+		#define portRESTORE_CONTEXT()																						\
+					asm volatile(	"MOV	_pxCurrentTCB, W0		\n"	/* Restore the stack pointer for the task. */		\
+							"MOV	[W0], W15				\n"																\
+							"POP	W0						\n"	/* Restore the critical nesting counter for the task. */	\
+							"MOV	W0, _uxCriticalNesting	\n"																\
+							"POP	DSWPAG					\n"																\
+							"POP    DSRPAG					\n"																\
+							"POP	CORCON					\n"																\
+							"POP	TBLPAG					\n"																\
+							"POP	RCOUNT					\n"	/* Restore the registers from the stack. */					\
+							"POP	W14						\n"																\
+							"POP.D	W12						\n"																\
+							"POP.D	W10						\n"																\
+							"POP.D	W8						\n"																\
+							"POP.D	W6						\n"																\
+							"POP.D	W4						\n"																\
+							"POP.D	W2						\n"																\
+							"POP.D	W0						\n"																\
+							"POP	SR						  " );
+	#else /* __HAS_EDS__ */
+		#define portRESTORE_CONTEXT()																						\
+			asm volatile(	"MOV	_pxCurrentTCB, W0		\n"	/* Restore the stack pointer for the task. */				\
+							"MOV	[W0], W15				\n"																\
+							"POP	W0						\n"	/* Restore the critical nesting counter for the task. */	\
+							"MOV	W0, _uxCriticalNesting	\n"																\
+							"POP	PSVPAG					\n"																\
+							"POP	CORCON					\n"																\
+							"POP	TBLPAG					\n"																\
+							"POP	RCOUNT					\n"	/* Restore the registers from the stack. */					\
+							"POP	W14						\n"																\
+							"POP.D	W12						\n"																\
+							"POP.D	W10						\n"																\
+							"POP.D	W8						\n"																\
+							"POP.D	W6						\n"																\
+							"POP.D	W4						\n"																\
+							"POP.D	W2						\n"																\
+							"POP.D	W0						\n"																\
+							"POP	SR						  " );
+		#endif /* __HAS_EDS__ */
 #endif /* MPLAB_PIC24_PORT */
 
 #ifdef MPLAB_DSPIC_PORT
@@ -163,15 +190,15 @@ unsigned portBASE_TYPE uxCriticalNesting = 0xef;
  */
 static void prvSetupTimerInterrupt( void );
 
-/* 
- * See header file for description. 
+/*
+ * See header file for description.
  */
 portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
 {
 unsigned short usCode;
 portBASE_TYPE i;
 
-const portSTACK_TYPE xInitialStack[] = 
+const portSTACK_TYPE xInitialStack[] =
 {
 	0x1111,	/* W1 */
 	0x2222, /* W2 */
@@ -235,8 +262,16 @@ const portSTACK_TYPE xInitialStack[] =
 
 	*pxTopOfStack = CORCON;
 	pxTopOfStack++;
-	*pxTopOfStack = PSVPAG;
-	pxTopOfStack++;
+
+	#if defined(__HAS_EDS__)
+		*pxTopOfStack = DSRPAG;
+		pxTopOfStack++;
+		*pxTopOfStack = DSWPAG;
+		pxTopOfStack++;
+	#else /* __HAS_EDS__ */
+		*pxTopOfStack = PSVPAG;
+		pxTopOfStack++;
+	#endif /* __HAS_EDS__ */
 
 	/* Finally the critical nesting depth. */
 	*pxTopOfStack = 0x00;
@@ -249,7 +284,7 @@ const portSTACK_TYPE xInitialStack[] =
 portBASE_TYPE xPortStartScheduler( void )
 {
 	/* Setup a timer for the tick ISR. */
-	prvSetupTimerInterrupt(); 
+	prvSetupTimerInterrupt();
 
 	/* Restore the context of the first task to run. */
 	portRESTORE_CONTEXT();
@@ -265,7 +300,7 @@ portBASE_TYPE xPortStartScheduler( void )
 void vPortEndScheduler( void )
 {
 	/* It is unlikely that the scheduler for the PIC port will get stopped
-	once running.  If required disable the tick interrupt here, then return 
+	once running.  If required disable the tick interrupt here, then return
 	to xPortStartScheduler(). */
 }
 /*-----------------------------------------------------------*/

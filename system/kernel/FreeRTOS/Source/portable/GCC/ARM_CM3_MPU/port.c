@@ -1,7 +1,7 @@
 /*
-    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
 
-    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT 
+    FEATURES AND PORTS ARE ADDED TO FREERTOS ALL THE TIME.  PLEASE VISIT
     http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
     ***************************************************************************
@@ -29,20 +29,23 @@
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
     Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
-    >>>NOTE<<< The modification to the GPL is included to allow you to
+
+    >>>>>>NOTE<<<<<< The modification to the GPL is included to allow you to
     distribute a combined work that includes FreeRTOS without being obliged to
     provide the source code for proprietary components outside of the FreeRTOS
-    kernel.  FreeRTOS is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-    more details. You should have received a copy of the GNU General Public
-    License and the FreeRTOS license exception along with FreeRTOS; if not it
-    can be viewed here: http://www.freertos.org/a00114.html and also obtained
-    by writing to Richard Barry, contact details for whom are available on the
-    FreeRTOS WEB site.
+    kernel.
+
+    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+    details. You should have received a copy of the GNU General Public License
+    and the FreeRTOS license exception along with FreeRTOS; if not itcan be
+    viewed here: http://www.freertos.org/a00114.html and also obtained by
+    writing to Real Time Engineers Ltd., contact details for whom are available
+    on the FreeRTOS WEB site.
 
     1 tab == 4 spaces!
-    
+
     ***************************************************************************
      *                                                                       *
      *    Having a problem?  Start by reading the FAQ "My application does   *
@@ -52,18 +55,21 @@
      *                                                                       *
     ***************************************************************************
 
-    
-    http://www.FreeRTOS.org - Documentation, training, latest versions, license 
-    and contact details.  
-    
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool.
 
-    Real Time Engineers ltd license FreeRTOS to High Integrity Systems, who sell 
-    the code with commercial support, indemnification, and middleware, under 
-    the OpenRTOS brand: http://www.OpenRTOS.com.  High Integrity Systems also
-    provide a safety engineered and independently SIL3 certified version under 
-    the SafeRTOS brand: http://www.SafeRTOS.com.
+    http://www.FreeRTOS.org - Documentation, books, training, latest versions, 
+    license and Real Time Engineers Ltd. contact details.
+
+    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
+    including FreeRTOS+Trace - an indispensable productivity tool, and our new
+    fully thread aware and reentrant UDP/IP stack.
+
+    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High 
+    Integrity Systems, who sell the code with commercial support, 
+    indemnification and middleware, under the OpenRTOS brand.
+    
+    http://www.SafeRTOS.com - High Integrity Systems also provide a safety 
+    engineered and independently SIL3 certified version for use in safety and 
+    mission critical applications that require provable dependability.
 */
 
 /*-----------------------------------------------------------
@@ -180,7 +186,7 @@ void MPU_vTaskDelayUntil( portTickType * const pxPreviousWakeTime, portTickType 
 void MPU_vTaskDelay( portTickType xTicksToDelay );
 unsigned portBASE_TYPE MPU_uxTaskPriorityGet( xTaskHandle pxTask );
 void MPU_vTaskPrioritySet( xTaskHandle pxTask, unsigned portBASE_TYPE uxNewPriority );
-eTaskState MPU_eTaskStateGet( xTaskHandle pxTask );
+eTaskState MPU_eTaskGetState( xTaskHandle pxTask );
 void MPU_vTaskSuspend( xTaskHandle pxTaskToSuspend );
 signed portBASE_TYPE MPU_xTaskIsTaskSuspended( xTaskHandle xTask );
 void MPU_vTaskResume( xTaskHandle pxTaskToResume );
@@ -196,8 +202,10 @@ portBASE_TYPE MPU_xTaskCallApplicationTaskHook( xTaskHandle xTask, void *pvParam
 unsigned portBASE_TYPE MPU_uxTaskGetStackHighWaterMark( xTaskHandle xTask );
 xTaskHandle MPU_xTaskGetCurrentTaskHandle( void );
 portBASE_TYPE MPU_xTaskGetSchedulerState( void );
+xTaskHandle MPU_xTaskGetIdleTaskHandle( void );
 xQueueHandle MPU_xQueueGenericCreate( unsigned portBASE_TYPE uxQueueLength, unsigned portBASE_TYPE uxItemSize, unsigned char ucQueueType );
 signed portBASE_TYPE MPU_xQueueGenericSend( xQueueHandle xQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition );
+portBASE_TYPE MPU_xQueueGenericReset( xQueueHandle pxQueue, portBASE_TYPE xNewQueue );
 unsigned portBASE_TYPE MPU_uxQueueMessagesWaiting( const xQueueHandle pxQueue );
 signed portBASE_TYPE MPU_xQueueGenericReceive( xQueueHandle pxQueue, void * const pvBuffer, portTickType xTicksToWait, portBASE_TYPE xJustPeeking );
 xQueueHandle MPU_xQueueCreateMutex( void );
@@ -212,6 +220,10 @@ void *MPU_pvPortMalloc( size_t xSize );
 void MPU_vPortFree( void *pv );
 void MPU_vPortInitialiseBlocks( void );
 size_t MPU_xPortGetFreeHeapSize( void );
+xQueueSetHandle MPU_xQueueCreateSet( unsigned portBASE_TYPE uxEventQueueLength );
+xQueueSetMemberHandle MPU_xQueueSelectFromSet( xQueueSetHandle xQueueSet, portTickType xBlockTimeTicks );
+portBASE_TYPE MPU_xQueueAddToSet( xQueueSetMemberHandle xQueueOrSemaphore, xQueueSetHandle xQueueSet );
+portBASE_TYPE MPU_xQueueRemoveFromSet( xQueueSetMemberHandle xQueueOrSemaphore, xQueueSetHandle xQueueSet );
 
 /*-----------------------------------------------------------*/
 
@@ -736,13 +748,26 @@ portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
 #endif
 /*-----------------------------------------------------------*/
 
-#if ( INCLUDE_eTaskStateGet == 1 )
-	eTaskState MPU_eTaskStateGet( xTaskHandle pxTask )
+#if ( INCLUDE_eTaskGetState == 1 )
+	eTaskState MPU_eTaskGetState( xTaskHandle pxTask )
 	{
     portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
 	eTaskState eReturn;
 
-		eReturn = eTaskStateGet( pxTask );
+		eReturn = eTaskGetState( pxTask );
+        portRESET_PRIVILEGE( xRunningPrivileged );
+		return eReturn;
+	}
+#endif
+/*-----------------------------------------------------------*/
+
+#if ( INCLUDE_xTaskGetIdleTaskHandle == 1 )
+	xTaskHandle MPU_xTaskGetIdleTaskHandle( void )
+	{
+	xTaskHandle xReturn;
+    portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+
+		xReturn = xTaskGetIdleTaskHandle();
         portRESET_PRIVILEGE( xRunningPrivileged );
 		return eReturn;
 	}
@@ -935,6 +960,17 @@ portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
 }
 /*-----------------------------------------------------------*/
 
+portBASE_TYPE MPU_xQueueGenericReset( xQueueHandle pxQueue, portBASE_TYPE xNewQueue )
+{
+portBASE_TYPE xReturn;
+portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+
+	xReturn = xQueueGenericReset( pxQueue, xNewQueue );
+	portRESET_PRIVILEGE( xRunningPrivileged );
+	return xReturn;
+}
+/*-----------------------------------------------------------*/
+
 signed portBASE_TYPE MPU_xQueueGenericSend( xQueueHandle xQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition )
 {
 signed portBASE_TYPE xReturn;
@@ -1014,6 +1050,58 @@ signed portBASE_TYPE xReturn;
 	portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
 
 		xReturn = xQueueGiveMutexRecursive( xMutex );
+		portRESET_PRIVILEGE( xRunningPrivileged );
+		return xReturn;
+	}
+#endif
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_QUEUE_SETS == 1 )
+	xQueueSetHandle MPU_xQueueCreateSet( unsigned portBASE_TYPE uxEventQueueLength )
+	{
+	xQueueSetHandle xReturn;
+	portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+
+		xReturn = xQueueCreateSet( uxEventQueueLength );
+		portRESET_PRIVILEGE( xRunningPrivileged );
+		return xReturn;
+	}
+#endif
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_QUEUE_SETS == 1 )
+	xQueueSetMemberHandle MPU_xQueueSelectFromSet( xQueueSetHandle xQueueSet, portTickType xBlockTimeTicks )
+	{
+	xQueueSetMemberHandle xReturn;
+	portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+
+		xReturn = xQueueSelectFromSet( xQueueSet, xBlockTimeTicks );
+		portRESET_PRIVILEGE( xRunningPrivileged );
+		return xReturn;
+	}
+#endif
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_QUEUE_SETS == 1 )
+	portBASE_TYPE MPU_xQueueAddToSet( xQueueSetMemberHandle xQueueOrSemaphore, xQueueSetHandle xQueueSet )
+	{
+	portBASE_TYPE xReturn;
+	portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+
+		xReturn = xQueueAddToSet( xQueueOrSemaphore, xQueueSet );
+		portRESET_PRIVILEGE( xRunningPrivileged );
+		return xReturn;
+	}
+#endif
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_QUEUE_SETS == 1 )
+	portBASE_TYPE MPU_xQueueRemoveFromSet( xQueueSetMemberHandle xQueueOrSemaphore, xQueueSetHandle xQueueSet )
+	{
+	portBASE_TYPE xReturn;
+	portBASE_TYPE xRunningPrivileged = prvRaisePrivilege();
+
+		xReturn = xQueueRemoveFromSet( xQueueOrSemaphore, xQueueSet );
 		portRESET_PRIVILEGE( xRunningPrivileged );
 		return xReturn;
 	}

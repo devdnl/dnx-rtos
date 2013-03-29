@@ -1,5 +1,5 @@
 ;/*
-;    FreeRTOS V7.3.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+;    FreeRTOS V7.4.0 - Copyright (C) 2013 Real Time Engineers Ltd.
 ;	
 ;
 ;    ***************************************************************************
@@ -232,15 +232,6 @@ vPortPreemptiveTick:
 
         ; Restore the context of the task selected to execute.
         portRESTORE_CONTEXT
-
-;-------------------------------------------------------------------------------
-
-		.def ulPortCountLeadingZeros
-
-ulPortCountLeadingZeros:
-
-		CLZ		R0, R0
-		BX		LR
 
 ;-------------------------------------------------------------------------------
 
