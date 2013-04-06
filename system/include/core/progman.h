@@ -59,13 +59,13 @@ extern "C" {
         program_##name##_main(argc, argv)
 
 #define stdin \
-        get_this_task_data()->f_stdin
+        _get_this_task_data()->f_stdin
 
 #define stdout \
-        get_this_task_data()->f_stdout
+        _get_this_task_data()->f_stdout
 
 #define global \
-        ((struct __global_vars__*)get_this_task_data()->f_global_vars)
+        ((struct __global_vars__*)_get_this_task_data()->f_global_vars)
 
 #define create_fast_global(name) \
         struct __global_vars__*name = global

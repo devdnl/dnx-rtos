@@ -162,7 +162,7 @@ void prgm_delete_program(task_t *taskhdl)
                 return;
         }
 
-        if ((tdata = get_task_data(taskhdl))) {
+        if ((tdata = _get_task_data(taskhdl))) {
                 if (tdata->f_global_vars) {
                         sysm_tskfree_as(taskhdl, tdata->f_global_vars);
                         tdata->f_global_vars = NULL;
@@ -198,51 +198,51 @@ void prgm_delete_program(task_t *taskhdl)
 //==============================================================================
 static void task_program_startup(void *argv)
 {
-        struct program_data *pdata     = argv;
-        struct task_data    *tdata     = NULL;
-        void                *taskmem   = NULL;
+        struct program_data *prog_data = argv;
+        struct task_data    *task_data = NULL;
+        void                *task_mem  = NULL;
         int                  exit_code = STD_RET_UNKNOWN;
 
-        if (!(tdata = get_this_task_data())) {
-                sysm_sysfree(pdata);
-                set_status(pdata->status, PROGRAM_HANDLE_ERROR);
+        if (!(task_data = _get_this_task_data())) {
+                sysm_sysfree(prog_data);
+                set_status(prog_data->status, PROGRAM_HANDLE_ERROR);
                 task_exit();
         }
 
-        tdata->f_user   = pdata;
-        tdata->f_stdin  = pdata->stdin;
-        tdata->f_stdout = pdata->stdout;
-        tdata->f_cwd    = pdata->cwd;
+        task_data->f_user   = prog_data;
+        task_data->f_stdin  = prog_data->stdin;
+        task_data->f_stdout = prog_data->stdout;
+        task_data->f_cwd    = prog_data->cwd;
 
-        if (pdata->globals_size) {
-                if (!(taskmem = sysm_tskcalloc(1, pdata->globals_size))) {
-                        set_status(pdata->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
+        if (prog_data->globals_size) {
+                if (!(task_mem = sysm_tskcalloc(1, prog_data->globals_size))) {
+                        set_status(prog_data->status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
                         goto task_exit;
                 }
 
-                tdata->f_global_vars = taskmem;
+                task_data->f_global_vars = task_mem;
         }
 
-        exit_code = pdata->main(pdata->argc, pdata->argv);
+        exit_code = prog_data->main(prog_data->argc, prog_data->argv);
 
-        set_status(pdata->status, PROGRAM_ENDED);
+        set_status(prog_data->status, PROGRAM_ENDED);
 
         task_exit:
-        if (pdata->exit_code) {
-                *pdata->exit_code = exit_code;
+        if (prog_data->exit_code) {
+                *prog_data->exit_code = exit_code;
         }
 
-        if (tdata->f_global_vars) {
-                sysm_tskfree(tdata->f_global_vars);
-                tdata->f_global_vars = NULL;
+        if (task_data->f_global_vars) {
+                sysm_tskfree(task_data->f_global_vars);
+                task_data->f_global_vars = NULL;
         }
 
-        if (pdata->argv) {
-                delete_argument_table(pdata->argv, pdata->argc);
+        if (prog_data->argv) {
+                delete_argument_table(prog_data->argv, prog_data->argc);
         }
 
-        sysm_sysfree(pdata);
-        tdata->f_user = NULL;
+        sysm_sysfree(prog_data);
+        task_data->f_user = NULL;
 
         task_exit();
 }

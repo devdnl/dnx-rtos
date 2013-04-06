@@ -80,7 +80,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                         break;
                 }
 
-                milisleep(100);
+                sleep_ms(100);
 
                 if (divcnt < 10) {
                         divcnt++;

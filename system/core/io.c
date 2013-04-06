@@ -85,9 +85,9 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 {
         static const char digits[] = "0123456789ABCDEF";
 
-        char  *bufferCopy = buf;
-        i32_t  sign    = 0;
-        u8_t   zeroCnt = 0;
+        char  *buffer_copy = buf;
+        i32_t  sign     = 0;
+        u8_t   zero_cnt = 0;
         i32_t  quot;
         i32_t  rem;
 
@@ -100,7 +100,7 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
                         quot   = (u32_t) ((u32_t) val / (u32_t) base);
                         rem    = (u32_t) ((u32_t) val % (u32_t) base);
                         *buf++ = digits[rem];
-                        zeroCnt++;
+                        zero_cnt++;
                 } while ((val = quot));
         } else {
                 if ((base == 10) && ((sign = val) < 0)) {
@@ -111,13 +111,13 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
                         quot   = val / base;
                         rem    = val % base;
                         *buf++ = digits[rem];
-                        zeroCnt++;
+                        zero_cnt++;
                 } while ((val = quot));
         }
 
-        while (zeros_req > zeroCnt) {
+        while (zeros_req > zero_cnt) {
                 *buf++ = '0';
-                zeroCnt++;
+                zero_cnt++;
         }
 
         if (sign < 0) {
@@ -126,7 +126,7 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 
         /* reverse buffer */
         char  temp;
-        char *begin = bufferCopy;
+        char *begin = buffer_copy;
         char *end   = (buf - 1);
 
         while (end > begin) {
@@ -137,7 +137,7 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 
         itoa_exit:
         *buf = '\0';
-        return bufferCopy;
+        return buffer_copy;
 }
 #endif
 
@@ -211,7 +211,7 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
 {
         char  character;
         i32_t sign = 1;
-        bool  charFound = FALSE;
+        bool  char_found = FALSE;
 
         *value = 0;
 
@@ -221,11 +221,11 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
 
         while ((character = *string) != '\0') {
                 /* if space exist, atoi continue finding correct character */
-                if ((character == ' ') && (charFound == FALSE)) {
+                if ((character == ' ') && (char_found == FALSE)) {
                         string++;
                         continue;
                 } else {
-                        charFound = TRUE;
+                        char_found = TRUE;
                 }
 
                 /* check signum */
@@ -380,7 +380,7 @@ int io_fputc(int c, file_t *stream)
 //==============================================================================
 int io_getc(file_t *stream)
 {
-        int chr  = EOF;
+        int chr    = EOF;
         u16_t dcnt = 0;
 
         if (!stream) {
@@ -389,13 +389,13 @@ int io_getc(file_t *stream)
 
         while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
                 if (dcnt >= 60000) {
-                        milisleep(200);
+                        sleep_ms(200);
                 } else if (dcnt >= 5000) {
                         dcnt += 100;
-                        milisleep(100);
+                        sleep_ms(100);
                 } else {
                         dcnt += 20;
-                        milisleep(20);
+                        sleep_ms(20);
                 }
         }
 
@@ -517,7 +517,7 @@ int io_fprintf(file_t *file, const char *format, ...)
 #if (CONFIG_PRINTF_ENABLE > 0)
 int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
-#define putCharacter(character)                 \
+#define put_character(character)                \
         {                                       \
                 if ((size_t)slen < size)  {     \
                         *buf++ = character;     \
@@ -527,12 +527,12 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }                               \
         }
 
-        char  chr;
-        int slen = 1;
+        char chr;
+        int  slen = 1;
 
         while ((chr = *format++) != '\0') {
                 if (chr != '%') {
-                        putCharacter(chr);
+                        put_character(chr);
                         continue;
                 }
 
@@ -543,7 +543,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 chr = va_arg(arg, int);
                         }
 
-                        putCharacter(chr);
+                        put_character(chr);
                         continue;
                 }
 
@@ -571,7 +571,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         }
 
                         while ((chr = *resultPtr++)) {
-                                putCharacter(chr);
+                                put_character(chr);
                         }
 
                         continue;
@@ -664,11 +664,11 @@ int io_sscanf(const char *str, const char *format, ...)
 int io_vsscanf(const char *str, const char *format, va_list args)
 {
         int   read_fields = 0;
-        char    chr;
+        char  chr;
         int   value;
-        char   *strs;
+        char  *strs;
         int   sign;
-        char   *string;
+        char  *string;
         uint  bfr_size;
 
         if (!str || !format) {

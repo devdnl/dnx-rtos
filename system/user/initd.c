@@ -67,7 +67,7 @@ extern "C" {
 //==============================================================================
 void task_initd(void *arg)
 {
-        (void) arg;
+        (void)arg;
 
         set_priority(INITD_PRIORITY);
 
@@ -121,7 +121,7 @@ void task_initd(void *arg)
         int current_tty                          = -1;
 
         while ((tty0 = fopen("/dev/tty0", "r+")) == NULL) {
-                milisleep(200);
+                sleep_ms(200);
         }
 
         for (;;) {
@@ -190,7 +190,7 @@ void task_initd(void *arg)
                         }
                 }
 
-                milisleep(500);
+                sleep_ms(500);
         }
 
         /* this should never happen */

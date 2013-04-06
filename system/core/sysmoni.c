@@ -65,7 +65,7 @@ struct task_monitor_data {
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE == 0) && (SYSM_MONITOR_TASK_FILE_USAGE == 0)
-        int dummy; /* used only to create structure in some cases (e.g. only CPU load measurement enable) */
+        int dummy; /* used only to create structure when above fields doesn't exist */
 #endif
 };
 
@@ -93,7 +93,7 @@ static i32_t sysm_system_memory_usage = (i32_t)CONFIG_RAM_SIZE - (i32_t)CONFIG_H
 
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 static i32_t sysm_modules_memory_usage;
-static i32_t sysm_module_memory_usage[REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES];
+static i32_t sysm_module_memory_usage[REGDRV_NUMBER_OF_REGISTERED_MODULES];
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
@@ -194,10 +194,10 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
 
                 if (list_add_item(sysm_task_list, (u32_t)taskhdl, NULL) < 0) {
                         sysm_sysfree(tmdata);
-                        set_task_monitor_data(taskhdl, NULL);
+                        _set_task_monitor_data(taskhdl, NULL);
                         goto exit_error;
                 } else {
-                        set_task_monitor_data(taskhdl, tmdata);
+                        _set_task_monitor_data(taskhdl, tmdata);
                         unlock_recursive_mutex(sysm_resource_mtx);
                         return STD_RET_OK;
                 }
@@ -232,7 +232,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
                 goto exit_error;
         }
 
-        if (!(task_monitor_data = get_task_monitor_data(taskhdl))) {
+        if (!(task_monitor_data = _get_task_monitor_data(taskhdl))) {
                 goto exit_error;
         }
 
@@ -259,7 +259,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 #endif
 
         sysm_sysfree(task_monitor_data);
-        set_task_monitor_data(taskhdl, NULL);
+        _set_task_monitor_data(taskhdl, NULL);
         list_rm_iditem(sysm_task_list, (u32_t)taskhdl);
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_OK;
@@ -298,13 +298,13 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
                 goto exit_error;
         }
 
-        if (!(tmdata = get_task_monitor_data(taskhdl))) {
+        if (!(tmdata = _get_task_monitor_data(taskhdl))) {
                 goto exit_error;
         }
 
         enter_critical();
-        stat->cpu_usage = get_task_data(taskhdl)->f_cpu_usage;
-        get_task_data(taskhdl)->f_cpu_usage = 0;
+        stat->cpu_usage = _get_task_data(taskhdl)->f_cpu_usage;
+        _get_task_data(taskhdl)->f_cpu_usage = 0;
         exit_critical();
 
         stat->free_stack   = get_task_free_stack(taskhdl);
@@ -540,7 +540,7 @@ void *sysm_modmalloc(size_t size, uint module_number)
         size_t allocated;
         void   *p = NULL;
 
-        if (module_number < REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES) {
+        if (module_number < REGDRV_NUMBER_OF_REGISTERED_MODULES) {
                 p = memman_malloc(size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
@@ -567,7 +567,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
         size_t allocated;
         void   *p = NULL;
 
-        if (module_number < REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES) {
+        if (module_number < REGDRV_NUMBER_OF_REGISTERED_MODULES) {
                 p = memman_calloc(count, size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
@@ -588,7 +588,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 void sysm_modfree(void *mem, uint module_number)
 {
-        if (module_number < REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES) {
+        if (module_number < REGDRV_NUMBER_OF_REGISTERED_MODULES) {
                 size_t freed = memman_free(mem);
                 sysm_modules_memory_usage -= freed;
                 sysm_module_memory_usage[module_number] -= freed;
@@ -622,7 +622,7 @@ i32_t sysm_get_used_modules_memory(void)
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 i32_t sysm_get_module_used_memory(uint module_number)
 {
-        if (module_number >= REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES)
+        if (module_number >= REGDRV_NUMBER_OF_REGISTERED_MODULES)
                 return 0;
         else
                 return sysm_module_memory_usage[module_number];
@@ -656,7 +656,7 @@ void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
                 goto exit;
         }
 
-        if (!(task_monitor_data = get_task_monitor_data(taskhdl))) {
+        if (!(task_monitor_data = _get_task_monitor_data(taskhdl))) {
                 goto exit;
         }
 
@@ -767,7 +767,7 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
                 goto exit;
         }
 
-        if (!(task_monitor_data = get_task_monitor_data(taskhdl))) {
+        if (!(task_monitor_data = _get_task_monitor_data(taskhdl))) {
                 goto exit;
         }
 
@@ -841,7 +841,7 @@ file_t *sysm_fopen(const char *path, const char *mode)
                 goto exit;
         }
 
-        if (!(task_monitor_data = get_task_monitor_data(task))) {
+        if (!(task_monitor_data = _get_task_monitor_data(task))) {
                 goto exit;
         }
 
@@ -891,7 +891,7 @@ stdret_t sysm_fclose(file_t *file)
                 goto exit;
         }
 
-        if (!(task_monitor_data = get_task_monitor_data(task))) {
+        if (!(task_monitor_data = _get_task_monitor_data(task))) {
                 goto exit;
         }
 
@@ -940,7 +940,7 @@ dir_t *sysm_opendir(const char *path)
                 goto exit;
         }
 
-        if (!(task_monitor_data = get_task_monitor_data(task))) {
+        if (!(task_monitor_data = _get_task_monitor_data(task))) {
                 goto exit;
         }
 
@@ -990,7 +990,7 @@ extern stdret_t sysm_closedir(dir_t *dir)
                 goto exit;
         }
 
-        if (!(task_monitor_data = get_task_monitor_data(task))) {
+        if (!(task_monitor_data = _get_task_monitor_data(task))) {
                 goto exit;
         }
 
@@ -1061,7 +1061,7 @@ void sysm_task_switched_in(void)
 #if (SYSM_MONITOR_CPU_LOAD > 0)
 void sysm_task_switched_out(void)
 {
-        struct task_data *tdata = get_this_task_data();
+        struct task_data *tdata = _get_this_task_data();
         u32_t             cnt   = cpuctl_get_CPU_load_timer();
 
         if (tdata) {

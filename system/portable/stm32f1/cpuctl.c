@@ -91,7 +91,7 @@ void cpuctl_init_CPU_load_timer(void)
         RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
 
         /* reset timer */
-        RCC->APB1RSTR |= RCC_APB1RSTR_TIM2RST;
+        RCC->APB1RSTR |=  RCC_APB1RSTR_TIM2RST;
         RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
 
         /* configure timer */
@@ -117,7 +117,7 @@ void cpuctl_clear_CPU_load_timer(void)
 //==============================================================================
 u32_t cpuctl_get_CPU_load_timer(void)
 {
-        u16_t cnt     = TIM2->CNT;
+        u16_t cnt       = TIM2->CNT;
         total_CPU_time += cnt;
         return cnt;
 }

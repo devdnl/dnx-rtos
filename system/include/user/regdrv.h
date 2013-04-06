@@ -45,7 +45,7 @@ extern "C" {
  *                     uart1, uart2, etc, so here type only number of modules not
  *                     supported devices.
  */
-#define REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES      4
+#define REGDRV_NUMBER_OF_REGISTERED_MODULES             4
 
 /*==============================================================================
   Exported types, enums definitions

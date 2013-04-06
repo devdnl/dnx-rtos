@@ -348,7 +348,7 @@ size_t TTY_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t see
         while (  tty_ctrl->tty[tty_ctrl->current_TTY]->refresh_last_line
               && tty_ctrl->current_TTY == tty->device_number) {
 
-                milisleep(10);
+                sleep_ms(10);
         }
 
         /* wait for secure access to data */
@@ -528,7 +528,7 @@ static void task_tty(void *arg)
 
         /* try open selected file */
         while ((io_file = fopen(FILE, "r+")) == NULL) {
-                milisleep(250);
+                sleep_ms(250);
         }
 
         msg = VT100_RESET_ATTRIBUTES VT100_CLEAR_SCREEN VT100_DISABLE_LINE_WRAP
@@ -542,7 +542,7 @@ static void task_tty(void *arg)
 
         for (;;) {
                 if (tty_ctrl->tty[tty_ctrl->current_TTY] == NULL) {
-                        milisleep(100);
+                        sleep_ms(100);
                         continue;
                 }
 
@@ -550,7 +550,7 @@ static void task_tty(void *arg)
                 stdin_service(tty_ctrl->tty[tty_ctrl->current_TTY], io_file);
                 switch_tty_if_requested(io_file);
 
-                milisleep(tty_ctrl->task_delay);
+                sleep_ms(tty_ctrl->task_delay);
         }
 
         /* this should never happen */
@@ -1251,7 +1251,7 @@ static void get_vt100_size(file_t *ttysfile)
         u8_t try = 10;
         do {
                 if (ioctl(ttysfile, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK) {
-                        milisleep(100);
+                        sleep_ms(100);
                 }
         } while (--try && chr != '\x1B');
 
@@ -1266,7 +1266,7 @@ static void get_vt100_size(file_t *ttysfile)
                 try = 10;
 
                 while ((ioctl(ttysfile, UART_IORQ_GET_BYTE, respPtr) != STD_RET_OK) && try) {
-                        milisleep(10);
+                        sleep_ms(10);
                         try--;
                 }
 

@@ -91,18 +91,18 @@ extern "C" {
 #define reboot()                          cpuctl_restart_system()
 #define get_platform_name()               CPUCTL_PLATFORM_NAME
 #define get_OS_name()                     "dnx"
-#define get_OS_version()                  "0.9.5"
+#define get_OS_version()                  "0.9.6"
 #define get_kernel_name()                 "FreeRTOS"
 #define get_kernel_version()              tskKERNEL_VERSION_NUMBER
 #define get_host_name()                   CONFIG_HOSTNAME
-#define getcwd(buf, size)                 strncpy(buf, get_this_task_data()->f_cwd, size)
+#define getcwd(buf, size)                 strncpy(buf, _get_this_task_data()->f_cwd, size)
 #define get_used_memory_by_kernel()       sysm_get_used_kernel_memory()
 #define get_used_memory_by_system()       sysm_get_used_system_memory()
 #define get_used_memory_by_modules()      sysm_get_used_modules_memory()
 #define get_used_memory_by_programs()     sysm_get_used_program_memory()
 #define get_module_memory_usage(modid)    sysm_get_module_used_memory(modid)
 #define get_module_name(modid)            regdrv_get_module_name(modid)
-#define get_module_count()                REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES
+#define get_module_count()                REGDRV_NUMBER_OF_REGISTERED_MODULES
 
 /*==============================================================================
   Exported types, enums definitions

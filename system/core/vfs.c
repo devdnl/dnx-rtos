@@ -53,13 +53,13 @@ extern "C" {
 /** file type */
 struct vfs_file
 {
-        void     *fshdl;
-        stdret_t (*f_close)(void *fshdl, fd_t fd);
-        size_t   (*f_write)(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*f_read )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
-        stdret_t (*f_ioctl)(void *fshdl, fd_t fd, iorq_t iorq, va_list);
-        stdret_t (*f_stat )(void *fshdl, fd_t fd, struct vfs_statf *stat);
-        stdret_t (*f_flush)(void *fshdl, fd_t fd);
+        void     *FS_hdl;
+        stdret_t (*f_close)(void *FS_hdl, fd_t fd);
+        size_t   (*f_write)(void *FS_hdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek);
+        size_t   (*f_read )(void *FS_hdl, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+        stdret_t (*f_ioctl)(void *FS_hdl, fd_t fd, iorq_t iorq, va_list);
+        stdret_t (*f_stat )(void *FS_hdl, fd_t fd, struct vfs_statf *stat);
+        stdret_t (*f_flush)(void *FS_hdl, fd_t fd);
         fd_t     fd;
         size_t   f_seek;
 };
@@ -128,65 +128,65 @@ stdret_t vfs_init(void)
 //==============================================================================
 stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_interface *fs_interface)
 {
-        struct FS_data *mountfs;
-        struct FS_data *basefs;
-        struct FS_data *newfs   = NULL;
-        char           *newpath = NULL;
-        char           *extPath;
+        struct FS_data *mount_fs;
+        struct FS_data *base_fs;
+        struct FS_data *new_fs   = NULL;
+        char           *new_path = NULL;
+        char           *external_path;
 
         if (!mount_point || !fs_interface) {
                 return STD_RET_ERROR;
         }
 
-        if (!(newpath = new_corrected_path(mount_point, ADD_SLASH))) {
+        if (!(new_path = new_corrected_path(mount_point, ADD_SLASH))) {
                 return STD_RET_ERROR;
         }
 
         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-        mountfs = find_mounted_FS(newpath, -1, NULL);
-        basefs  = find_base_FS(newpath, &extPath);
+        mount_fs = find_mounted_FS(new_path, -1, NULL);
+        base_fs  = find_base_FS(new_path, &external_path);
 
         /*
          * create new FS in existing DIR and FS, otherwise create new FS if
          * first mount
          */
-        if (basefs && mountfs == NULL) {
-                if (basefs->interface.fs_opendir && extPath) {
+        if (base_fs && mount_fs == NULL) {
+                if (base_fs->interface.fs_opendir && external_path) {
 
-                        if (basefs->interface.fs_opendir(basefs->handle,
-                                                         extPath,
+                        if (base_fs->interface.fs_opendir(base_fs->handle,
+                                                         external_path,
                                                          NULL) == STD_RET_OK) {
 
-                                newfs = calloc(1, sizeof(struct FS_data));
-                                basefs->mounted_FS_counter++;
+                                new_fs = calloc(1, sizeof(struct FS_data));
+                                base_fs->mounted_FS_counter++;
                         }
                 }
         } else if (  list_get_item_count(vfs_mnt_list) == 0
-                  && strlen(newpath) == 1
-                  && newpath[0] == '/' ) {
+                  && strlen(new_path) == 1
+                  && new_path[0] == '/' ) {
 
-                newfs = calloc(1, sizeof(struct FS_data));
+                new_fs = calloc(1, sizeof(struct FS_data));
         }
 
         /*
          * mount FS if created
          */
-        if (newfs && fs_interface->fs_init) {
-                newfs->interface = *fs_interface;
+        if (new_fs && fs_interface->fs_init) {
+                new_fs->interface = *fs_interface;
 
-                if (fs_interface->fs_init(&newfs->handle, src_path) == STD_RET_OK) {
-                        newfs->mount_point = newpath;
-                        newfs->base_FS     = basefs;
-                        newfs->mounted_FS_counter = 0;
+                if (fs_interface->fs_init(&new_fs->handle, src_path) == STD_RET_OK) {
+                        new_fs->mount_point = new_path;
+                        new_fs->base_FS     = base_fs;
+                        new_fs->mounted_FS_counter = 0;
 
-                        if (list_add_item(vfs_mnt_list, vfs_id_counter++, newfs) >= 0) {
+                        if (list_add_item(vfs_mnt_list, vfs_id_counter++, new_fs) >= 0) {
                                 unlock_mutex(vfs_resource_mtx);
                                 return STD_RET_OK;
                         }
                 }
 
-                free(newfs);
-                free(newpath);
+                free(new_fs);
+                free(new_path);
         }
 
         unlock_mutex(vfs_resource_mtx);
@@ -205,9 +205,9 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
 //==============================================================================
 stdret_t vfs_umount(const char *path)
 {
-        u32_t          itemid;
-        char           *newpath;
-        struct FS_data *mountfs;
+        u32_t          item_id;
+        char           *new_path;
+        struct FS_data *mount_fs;
 
         if (!path) {
                 return STD_RET_ERROR;
@@ -217,37 +217,37 @@ stdret_t vfs_umount(const char *path)
                 return STD_RET_ERROR;
         }
 
-        newpath = new_corrected_path(path, ADD_SLASH);
-        if (newpath == NULL) {
+        new_path = new_corrected_path(path, ADD_SLASH);
+        if (new_path == NULL) {
                 return STD_RET_ERROR;
         }
 
         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-        mountfs = find_mounted_FS(newpath, -1, &itemid);
-        free(newpath);
+        mount_fs = find_mounted_FS(new_path, -1, &item_id);
+        free(new_path);
 
-        if (mountfs == NULL) {
+        if (mount_fs == NULL) {
                 goto vfs_umount_error;
         }
 
-        if (mountfs->interface.fs_release && mountfs->mounted_FS_counter == 0) {
-                if (mountfs->interface.fs_release(mountfs->handle) != STD_RET_OK) {
+        if (mount_fs->interface.fs_release && mount_fs->mounted_FS_counter == 0) {
+                if (mount_fs->interface.fs_release(mount_fs->handle) != STD_RET_OK) {
                         goto vfs_umount_error;
                 }
 
-                mountfs->handle = NULL;
+                mount_fs->handle = NULL;
 
-                if (mountfs->base_FS) {
-                        if (mountfs->base_FS->mounted_FS_counter) {
-                                mountfs->base_FS->mounted_FS_counter--;
+                if (mount_fs->base_FS) {
+                        if (mount_fs->base_FS->mounted_FS_counter) {
+                                mount_fs->base_FS->mounted_FS_counter--;
                         }
                 }
 
-                if (mountfs->mount_point) {
-                        free(mountfs->mount_point);
+                if (mount_fs->mount_point) {
+                        free(mount_fs->mount_point);
                 }
 
-                if (list_rm_iditem(vfs_mnt_list, itemid) == STD_RET_OK) {
+                if (list_rm_iditem(vfs_mnt_list, item_id) == STD_RET_OK) {
                         unlock_mutex(vfs_resource_mtx);
                         return STD_RET_OK;
                 }
@@ -269,7 +269,7 @@ stdret_t vfs_umount(const char *path)
 stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
 {
         struct FS_data    *fs = NULL;
-        struct vfs_statfs statfs;
+        struct vfs_statfs stat_fs;
 
         if (mntent) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
@@ -277,13 +277,13 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 unlock_mutex(vfs_resource_mtx);
 
                 if (fs) {
-                        statfs.fsname = NULL;
+                        stat_fs.fsname = NULL;
 
                         if (fs->interface.fs_statfs) {
-                                fs->interface.fs_statfs(fs->handle, &statfs);
+                                fs->interface.fs_statfs(fs->handle, &stat_fs);
                         }
 
-                        if (statfs.fsname) {
+                        if (stat_fs.fsname) {
                                 if (strlen(fs->mount_point) > 1) {
                                         strncpy(mntent->mnt_dir, fs->mount_point,
                                                 strlen(fs->mount_point) - 1);
@@ -291,9 +291,9 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                                         strcpy(mntent->mnt_dir, fs->mount_point);
                                 }
 
-                                strcpy(mntent->mnt_fsname, statfs.fsname);
-                                mntent->free  = statfs.f_bfree;
-                                mntent->total = statfs.f_blocks;
+                                strcpy(mntent->mnt_fsname, stat_fs.fsname);
+                                mntent->free  = stat_fs.f_bfree;
+                                mntent->total = stat_fs.f_blocks;
 
                                 return STD_RET_OK;
                         }
@@ -316,19 +316,19 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
 //==============================================================================
 stdret_t vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
 {
-        char           *extPath = NULL;
+        char           *external_path = NULL;
         struct FS_data *fs;
 
         if (path && drv_interface) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                fs = find_base_FS(path, &extPath);
+                fs = find_base_FS(path, &external_path);
                 unlock_mutex(vfs_resource_mtx);
 
                 if (fs) {
                         if (fs->interface.fs_mknod) {
                                 return fs->interface.fs_mknod(fs->handle,
-                                                             extPath,
-                                                             drv_interface);
+                                                              external_path,
+                                                              drv_interface);
                         }
                 }
         }
@@ -348,27 +348,27 @@ stdret_t vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
 //==============================================================================
 stdret_t vfs_mkdir(const char *path)
 {
-        stdret_t       status   = STD_RET_ERROR;
-        char           *newpath;
-        char           *extPath = NULL;
+        stdret_t       status = STD_RET_ERROR;
+        char           *new_path;
+        char           *external_path = NULL;
         struct FS_data *fs;
 
         if (path) {
-                if (!(newpath = new_corrected_path(path, SUB_SLASH))) {
+                if (!(new_path = new_corrected_path(path, SUB_SLASH))) {
                        return STD_RET_ERROR;
                 }
 
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                fs = find_base_FS(newpath, &extPath);
+                fs = find_base_FS(new_path, &external_path);
                 unlock_mutex(vfs_resource_mtx);
 
                 if (fs) {
                         if (fs->interface.fs_mkdir) {
-                                status = fs->interface.fs_mkdir(fs->handle, extPath);
+                                status = fs->interface.fs_mkdir(fs->handle, external_path);
                         }
                 }
 
-                free(newpath);
+                free(new_path);
         }
 
         return status;
@@ -385,10 +385,10 @@ stdret_t vfs_mkdir(const char *path)
 //==============================================================================
 dir_t *vfs_opendir(const char *path)
 {
-        stdret_t       status   = STD_RET_ERROR;
-        dir_t          *dir     = NULL;
-        char           *extPath = NULL;
-        char           *newpath;
+        stdret_t       status         = STD_RET_ERROR;
+        dir_t          *dir           = NULL;
+        char           *external_path = NULL;
+        char           *new_path;
         struct FS_data *fs;
 
         if (!path) {
@@ -396,20 +396,20 @@ dir_t *vfs_opendir(const char *path)
         }
 
         if ((dir = malloc(sizeof(dir_t)))) {
-                if ((newpath = new_corrected_path(path, ADD_SLASH))) {
+                if ((new_path = new_corrected_path(path, ADD_SLASH))) {
                         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                        fs = find_base_FS(newpath, &extPath);
+                        fs = find_base_FS(new_path, &external_path);
                         unlock_mutex(vfs_resource_mtx);
 
                         if (fs) {
                                 dir->handle = fs->handle;
 
                                 if (fs->interface.fs_opendir) {
-                                        status = fs->interface.fs_opendir(fs->handle, extPath, dir);
+                                        status = fs->interface.fs_opendir(fs->handle, external_path, dir);
                                 }
                         }
 
-                        free(newpath);
+                        free(new_path);
                 }
 
                 if (status == STD_RET_ERROR) {
@@ -480,26 +480,27 @@ dirent_t vfs_readdir(dir_t *dir)
 //==============================================================================
 stdret_t vfs_remove(const char *path)
 {
-        stdret_t       status   = STD_RET_ERROR;
-        char           *extPath = NULL;
-        char           *newpath;
-        struct FS_data *mntfs;
-        struct FS_data *basefs;
+        stdret_t       status         = STD_RET_ERROR;
+        char           *external_path = NULL;
+        char           *new_path;
+        struct FS_data *mount_fs;
+        struct FS_data *base_fs;
 
         if (path) {
-                if ((newpath = new_corrected_path(path, ADD_SLASH))) {
+                if ((new_path = new_corrected_path(path, ADD_SLASH))) {
                         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                        mntfs  = find_mounted_FS(newpath, -1, NULL);
-                        basefs = find_base_FS(path, &extPath);
+                        mount_fs = find_mounted_FS(new_path, -1, NULL);
+                        base_fs  = find_base_FS(path, &external_path);
                         unlock_mutex(vfs_resource_mtx);
 
-                        if (basefs && !mntfs) {
-                                if (basefs->interface.fs_remove) {
-                                        status = basefs->interface.fs_remove(basefs->handle, extPath);
+                        if (base_fs && !mount_fs) {
+                                if (base_fs->interface.fs_remove) {
+                                        status = base_fs->interface.fs_remove(base_fs->handle,
+                                                                              external_path);
                                 }
                         }
 
-                        free(newpath);
+                        free(new_path);
                 }
         }
 
@@ -521,22 +522,22 @@ stdret_t vfs_remove(const char *path)
 //==============================================================================
 stdret_t vfs_rename(const char *oldName, const char *newName)
 {
-        char *extPathOld = NULL;
-        char *extPathNew = NULL;
-        struct FS_data *fsOld;
-        struct FS_data *fsNew;
+        char *old_extern_path = NULL;
+        char *new_extern_path = NULL;
+        struct FS_data *old_fs;
+        struct FS_data *new_fs;
 
         if (oldName && newName) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                fsOld = find_base_FS(oldName, &extPathOld);
-                fsNew = find_base_FS(newName, &extPathNew);
+                old_fs = find_base_FS(oldName, &old_extern_path);
+                new_fs = find_base_FS(newName, &new_extern_path);
                 unlock_mutex(vfs_resource_mtx);
 
-                if (fsOld && fsNew && fsOld == fsNew) {
-                        if (fsOld->interface.fs_rename) {
-                                return fsOld->interface.fs_rename(fsOld->handle,
-                                                                 extPathOld,
-                                                                 extPathNew);
+                if (old_fs && new_fs && old_fs == new_fs) {
+                        if (old_fs->interface.fs_rename) {
+                                return old_fs->interface.fs_rename(old_fs->handle,
+                                                                   old_extern_path,
+                                                                   new_extern_path);
                         }
                 }
         }
@@ -557,17 +558,17 @@ stdret_t vfs_rename(const char *oldName, const char *newName)
 //==============================================================================
 stdret_t vfs_chmod(const char *path, u16_t mode)
 {
-        char *extPath = NULL;
+        char *external_path = NULL;
         struct FS_data *fs;
 
         if (path) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                fs = find_base_FS(path, &extPath);
+                fs = find_base_FS(path, &external_path);
                 unlock_mutex(vfs_resource_mtx);
 
                 if (fs) {
                         if (fs->interface.fs_chmod) {
-                                return fs->interface.fs_chmod(fs->handle, extPath, mode);
+                                return fs->interface.fs_chmod(fs->handle, external_path, mode);
                         }
                 }
         }
@@ -589,17 +590,17 @@ stdret_t vfs_chmod(const char *path, u16_t mode)
 //==============================================================================
 stdret_t vfs_chown(const char *path, u16_t owner, u16_t group)
 {
-        char *extPath = NULL;
+        char *external_path = NULL;
         struct FS_data *fs;
 
         if (path) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                fs = find_base_FS(path, &extPath);
+                fs = find_base_FS(path, &external_path);
                 unlock_mutex(vfs_resource_mtx);
 
                 if (fs) {
                         if (fs->interface.fs_chown) {
-                                return fs->interface.fs_chown(fs->handle, extPath, owner, group);
+                                return fs->interface.fs_chown(fs->handle, external_path, owner, group);
                         }
                 }
         }
@@ -620,17 +621,17 @@ stdret_t vfs_chown(const char *path, u16_t owner, u16_t group)
 //==============================================================================
 stdret_t vfs_stat(const char *path, struct vfs_statf *stat)
 {
-        char *extPath = NULL;
+        char *external_path = NULL;
         struct FS_data *fs;
 
         if (path && stat) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                fs = find_base_FS(path, &extPath);
+                fs = find_base_FS(path, &external_path);
                 unlock_mutex(vfs_resource_mtx);
 
                 if (fs) {
                         if (fs->interface.fs_stat) {
-                                return fs->interface.fs_stat(fs->handle, extPath, stat);
+                                return fs->interface.fs_stat(fs->handle, external_path, stat);
                         }
                 }
         }
@@ -651,15 +652,15 @@ stdret_t vfs_stat(const char *path, struct vfs_statf *stat)
 //==============================================================================
 stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs)
 {
-        char *newpath;
+        char *new_path;
         struct FS_data *fs;
 
         if (path && statfs) {
-                if ((newpath = new_corrected_path(path, ADD_SLASH))) {
+                if ((new_path = new_corrected_path(path, ADD_SLASH))) {
                         force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                        fs = find_mounted_FS(newpath, -1, NULL);
+                        fs = find_mounted_FS(new_path, -1, NULL);
                         unlock_mutex(vfs_resource_mtx);
-                        free(newpath);
+                        free(new_path);
 
                         if (fs) {
                                 if (fs->interface.fs_statfs) {
@@ -685,7 +686,7 @@ stdret_t vfs_statfs(const char *path, struct vfs_statfs *statfs)
 file_t *vfs_fopen(const char *path, const char *mode)
 {
         file_t *file;
-        char   *extPath = NULL;
+        char   *external_path = NULL;
         struct FS_data *fs;
 
         if (!path || !mode) {
@@ -705,7 +706,7 @@ file_t *vfs_fopen(const char *path, const char *mode)
 
         if ((file = calloc(1, sizeof(file_t)))) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
-                fs = find_base_FS(path, &extPath);
+                fs = find_base_FS(path, &external_path);
                 unlock_mutex(vfs_resource_mtx);
 
                 if (fs == NULL) {
@@ -717,9 +718,9 @@ file_t *vfs_fopen(const char *path, const char *mode)
                 }
 
                 if (fs->interface.fs_open(fs->handle, &file->fd, &file->f_seek,
-                                          extPath, mode) == STD_RET_OK) {
+                                          external_path, mode) == STD_RET_OK) {
 
-                        file->fshdl   = fs->handle;
+                        file->FS_hdl   = fs->handle;
                         file->f_close = fs->interface.fs_close;
                         file->f_ioctl = fs->interface.fs_ioctl;
                         file->f_stat  = fs->interface.fs_fstat;
@@ -757,7 +758,7 @@ stdret_t vfs_fclose(file_t *file)
 {
         if (file) {
                 if (file->f_close) {
-                        if (file->f_close(file->fshdl, file->fd) == STD_RET_OK) {
+                        if (file->f_close(file->FS_hdl, file->fd) == STD_RET_OK) {
                                 free(file);
                                 return STD_RET_OK;
                         }
@@ -785,7 +786,7 @@ size_t vfs_fwrite(void *ptr, size_t size, size_t nitems, file_t *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_write) {
-                        n = file->f_write(file->fshdl, file->fd, ptr, size,
+                        n = file->f_write(file->FS_hdl, file->fd, ptr, size,
                                           nitems, file->f_seek);
                         file->f_seek += n * size;
                 }
@@ -812,7 +813,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, file_t *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_read) {
-                        n = file->f_read(file->fshdl, file->fd, ptr, size,
+                        n = file->f_read(file->FS_hdl, file->fd, ptr, size,
                                          nitems, file->f_seek);
                         file->f_seek += n * size;
                 }
@@ -896,7 +897,7 @@ stdret_t vfs_ioctl(file_t *file, iorq_t rq, ...)
         if (file) {
                 if (file->f_ioctl) {
                         va_start(args, rq);
-                        status = file->f_ioctl(file->fshdl, file->fd, rq, args);
+                        status = file->f_ioctl(file->FS_hdl, file->fd, rq, args);
                         va_end(args);
                 }
         }
@@ -919,7 +920,7 @@ stdret_t vfs_fstat(file_t *file, struct vfs_statf *stat)
 {
         if (file && stat) {
                 if (file->f_stat) {
-                        return file->f_stat(file->fshdl, file->fd, stat);
+                        return file->f_stat(file->FS_hdl, file->fd, stat);
                 }
         }
 
@@ -940,7 +941,7 @@ stdret_t vfs_fflush(file_t *file)
 {
         if (file) {
                 if (file->f_flush) {
-                        return file->f_flush(file->fshdl, file->fd);
+                        return file->f_flush(file->FS_hdl, file->fd);
                 }
         }
 
@@ -960,11 +961,11 @@ stdret_t vfs_fflush(file_t *file)
 //==============================================================================
 static struct FS_data *find_mounted_FS(const char *path, u16_t len, u32_t *itemid)
 {
-        struct FS_data *fsinfo = NULL;
+        struct FS_data *fs_info = NULL;
 
-        int icount = list_get_item_count(vfs_mnt_list);
+        int item_count = list_get_item_count(vfs_mnt_list);
 
-        for (int i = 0; i < icount; i++) {
+        for (int i = 0; i < item_count; i++) {
 
                 struct FS_data *data = list_get_nitem_data(vfs_mnt_list, i);
 
@@ -972,18 +973,18 @@ static struct FS_data *find_mounted_FS(const char *path, u16_t len, u32_t *itemi
                         continue;
                 }
 
-                fsinfo = data;
+                fs_info = data;
 
                 if (itemid) {
                         if (list_get_nitem_ID(vfs_mnt_list, i, itemid) != STD_RET_OK) {
-                                fsinfo = NULL;
+                                fs_info = NULL;
                         }
                 }
 
                 break;
         }
 
-        return fsinfo;
+        return fs_info;
 }
 
 //==============================================================================
@@ -998,30 +999,30 @@ static struct FS_data *find_mounted_FS(const char *path, u16_t len, u32_t *itemi
 //==============================================================================
 static struct FS_data *find_base_FS(const char *path, char **extPath)
 {
-        struct FS_data *fsinfo = NULL;
+        struct FS_data *fs_info = NULL;
 
-        char *pathTail = (char*)path + strlen(path);
+        char *path_tail = (char*)path + strlen(path);
 
-        if (*(pathTail - 1) == '/') {
-                pathTail--;
+        if (*(path_tail - 1) == '/') {
+                path_tail--;
         }
 
-        while (pathTail >= path) {
-                struct FS_data *fs = find_mounted_FS(path, pathTail - path + 1, NULL);
+        while (path_tail >= path) {
+                struct FS_data *fs = find_mounted_FS(path, path_tail - path + 1, NULL);
 
                 if (fs) {
-                        fsinfo = fs;
+                        fs_info = fs;
                         break;
                 } else {
-                        while (*(--pathTail) != '/' && pathTail >= path);
+                        while (*(--path_tail) != '/' && path_tail >= path);
                 }
         }
 
-        if (fsinfo && extPath) {
-                *extPath = pathTail;
+        if (fs_info && extPath) {
+                *extPath = path_tail;
         }
 
-        return fsinfo;
+        return fs_info;
 }
 
 //==============================================================================

@@ -50,7 +50,7 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdret_t mount (const char*, const char*, const char*);
+extern stdret_t mount(const char*, const char*, const char*);
 extern stdret_t umount(const char*);
 
 #ifdef __cplusplus

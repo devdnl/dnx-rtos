@@ -87,7 +87,7 @@ struct driver_entry {
   Local object definitions
 ==============================================================================*/
 /* a table of used modules */
-static const char *regdrv_used_modules[REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES] = {
+static const char *regdrv_used_modules[REGDRV_NUMBER_OF_REGISTERED_MODULES] = {
         USE_MODULE(UART),
         USE_MODULE(GPIO),
         USE_MODULE(PLL),
@@ -235,7 +235,7 @@ stdret_t release_driver(const char *drv_name)
 //==============================================================================
 const char *regdrv_get_module_name(uint module_number)
 {
-        if (module_number >= REGDRV_NUMBER_OF_REGISTERED_DRIVER_MODULES)
+        if (module_number >= REGDRV_NUMBER_OF_REGISTERED_MODULES)
                 return NULL;
         else
                 return regdrv_used_modules[module_number];

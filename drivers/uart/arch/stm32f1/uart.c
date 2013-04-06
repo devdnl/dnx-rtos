@@ -614,7 +614,7 @@ stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, va_list args)
 
                 case UART_IORQ_SEND_BYTE:
                         while (!(hdl->USART->SR & USART_SR_TXE)) {
-                                milisleep(1);
+                                sleep_ms(1);
                         }
 
                         hdl->USART->DR = va_arg(args, int);
