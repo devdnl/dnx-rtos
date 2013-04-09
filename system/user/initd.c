@@ -60,9 +60,10 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief Task which initialise high-level devices/applications etc
- * Task is responsible for low-level program runtime environment (stdio).
- * Task connect programs' stdio with hardware layer.
+ * @brief Initialise devices and programs
+ * User program which provide basic system functionality e.g. STDIO handle
+ * (joining TTY driver with program), basic program starting and etc. This task
+ * is an example to show how this can be implemented.
  */
 //==============================================================================
 void task_initd(void *arg)
@@ -193,7 +194,6 @@ void task_initd(void *arg)
                 sleep_ms(500);
         }
 
-        /* this should never happen */
         task_exit();
 }
 
