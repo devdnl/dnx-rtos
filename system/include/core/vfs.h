@@ -178,6 +178,7 @@ extern stdret_t vfs_chown(const char*, u16_t, u16_t);
 extern stdret_t vfs_stat(const char*, struct vfs_statf*);
 extern stdret_t vfs_statfs(const char*, struct vfs_statfs*);
 extern file_t  *vfs_fopen(const char*, const char*);
+extern file_t  *vfs_freopen(const char*, const char*, file_t*);
 extern stdret_t vfs_fclose(file_t*);
 extern size_t   vfs_fwrite(void*, size_t, size_t, file_t*);
 extern size_t   vfs_fread(void*, size_t, size_t, file_t*);

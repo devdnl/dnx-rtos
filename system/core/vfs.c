@@ -746,6 +746,28 @@ file_t *vfs_fopen(const char *path, const char *mode)
 
 //==============================================================================
 /**
+ * @brief Function close old stream and open new
+ *
+ * @param[in] *name             file path
+ * @param[in] *mode             file mode
+ * @param[in] *file             old stream
+ *
+ * @retval NULL if file can't be created
+ */
+//==============================================================================
+file_t *vfs_freopen(const char *name, const char *mode, file_t *file)
+{
+        if (name || mode || file) {
+                if (vfs_fclose(file) == STD_RET_OK) {
+                        return vfs_fopen(name, mode);
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
  * @brief Function close opened file
  *
  * @param[in] *file             pinter to file

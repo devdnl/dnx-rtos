@@ -69,6 +69,7 @@ extern "C" {
 #define stat(path, statPtr)               sysm_stat(path, statPtr)
 #define statfs(path, statfsPtr)           sysm_statfs(path, statfsPtr)
 #define fopen(path, mode)                 sysm_fopen(path, mode)
+#define freopen(path, mode, file)         sysm_freopen(path, mode, file)
 #define fclose(file)                      sysm_fclose(file)
 #define fwrite(ptr, isize, nitems, file)  sysm_fwrite(ptr, isize, nitems, file)
 #define fread(ptr, isize, nitems, file)   sysm_fread(ptr, isize, nitems, file)

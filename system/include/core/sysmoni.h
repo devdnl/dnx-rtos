@@ -115,6 +115,7 @@ extern "C" {
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE == 0)
 #define sysm_fopen(path, mode)                  vfs_fopen(path, mode)
+#define sysm_freopen(path, mode, file)          vfs_freopen(path, mode, file)
 #define sysm_fclose(file)                       vfs_fclose(file)
 #define sysm_opendir(path)                      vfs_opendir(path)
 #define sysm_closedir(dir)                      vfs_closedir(dir)
@@ -216,6 +217,7 @@ extern i32_t sysm_get_used_program_memory(void);
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
 extern file_t  *sysm_fopen(const char*, const char*);
+extern file_t  *sysm_freopen(const char*, const char*, file_t*);
 extern stdret_t sysm_fclose(file_t*);
 extern dir_t   *sysm_opendir(const char*);
 extern stdret_t sysm_closedir(dir_t*);

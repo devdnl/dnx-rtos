@@ -868,6 +868,28 @@ file_t *sysm_fopen(const char *path, const char *mode)
 
 //==============================================================================
 /**
+ * @brief Function reopen selected file
+ *
+ * @param *name         file path
+ * @param *mode         file mode
+ * @param *file         old file
+ *
+ * @retval NULL if file can't be created
+ */
+//==============================================================================
+#if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
+file_t *sysm_freopen(const char *path, const char *mode, file_t *file)
+{
+        if (sysm_fclose(file) == STD_RET_OK) {
+                return sysm_fopen(path, mode);
+        } else {
+                return NULL;
+        }
+}
+#endif
+
+//==============================================================================
+/**
  * @brief Function close opened file
  *
  * @param *file               pinter to file
