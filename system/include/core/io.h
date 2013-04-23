@@ -50,6 +50,7 @@ extern "C" {
 #define printf(...)                             io_fprintf(stdout, __VA_ARGS__)
 #define fprintf(...)                            io_fprintf(__VA_ARGS__)
 #define snprintf(bfr, size, ...)                io_snprintf(bfr, size, __VA_ARGS__)
+#define sprintf(bfr, ...)                       io_snprintf(bfr, UINT16_MAX, __VA_ARGS__)
 #define vsnprintf(bfr, size, args)              io_vsnprintf(bfr, size, args)
 #define printk(...)                             io_printk(__VA_ARGS__)
 #define enable_printk(path)                     io_enable_printk(path)
