@@ -950,6 +950,30 @@ stdret_t vfs_fflush(file_t *file)
 
 //==============================================================================
 /**
+ * @brief Function check end of file
+ *
+ * @param[in] *file     file
+ *
+ * @return 0 if there is not a file end, otherwise greather than 0
+ */
+//==============================================================================
+int vfs_feof(file_t *file)
+{
+        if (file) {
+                u32_t seek  = vfs_ftell(file);
+                u32_t fsize = vfs_fseek(file, 0, SEEK_END);
+                vfs_fseek(file, seek, SEEK_SET);
+
+                if (seek >= fsize) {
+                        return 1;
+                }
+        }
+
+        return 0;
+}
+
+//==============================================================================
+/**
  * @brief Function find FS in mounted list
  *
  * @param[in]  *path            path to FS

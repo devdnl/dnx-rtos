@@ -186,6 +186,7 @@ extern i32_t    vfs_ftell(file_t*);
 extern stdret_t vfs_ioctl(file_t*, iorq_t, ...);
 extern stdret_t vfs_fstat(file_t*, struct vfs_statf*);
 extern stdret_t vfs_fflush(file_t*);
+extern int      vfs_feof(file_t*);
 
 #ifdef __cplusplus
 }

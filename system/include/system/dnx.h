@@ -77,6 +77,7 @@ extern "C" {
 #define ioctl(file, ...)                  sysm_ioctl(file, __VA_ARGS__)
 #define fstat(file, statPtr)              sysm_fstat(file, stat)
 #define fflush(file)                      sysm_fflush(file)
+#define feof(file)                        sysm_feof(file)
 
 /** ENVIRONMENT DEFINITIONS */
 #define get_used_static_memory()          (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE)
