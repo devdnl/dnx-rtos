@@ -42,6 +42,7 @@ extern "C" {
 ==============================================================================*/
 #undef stdin
 #undef stdout
+#undef stderr
 
 /*==============================================================================
   Local types, enums definitions
@@ -53,6 +54,7 @@ struct program_data {
         int             *exit_code;
         file_t          *stdin;
         file_t          *stdout;
+        file_t          *stderr;
         char           **argv;
         int              argc;
         uint             globals_size;
@@ -123,6 +125,7 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, file_t *stdin,
         pdata->cwd          = cwd;
         pdata->stdin        = stdin;
         pdata->stdout       = stdout;
+        pdata->stderr       = stdout;
         pdata->globals_size = *regpdata.globals_size;
         pdata->status       = status;
         pdata->exit_code    = exit_code;
@@ -212,6 +215,7 @@ static void task_program_startup(void *argv)
         task_data->f_user   = prog_data;
         task_data->f_stdin  = prog_data->stdin;
         task_data->f_stdout = prog_data->stdout;
+        task_data->f_stderr = prog_data->stdout;
         task_data->f_cwd    = prog_data->cwd;
 
         if (prog_data->globals_size) {

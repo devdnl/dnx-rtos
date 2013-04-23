@@ -74,7 +74,7 @@ extern "C" {
 /** TASK LEVEL DEFINITIONS */
 #define new_task(func, name, stack_depth, args)         kwrap_new_task(func, name, stack_depth, args)
 #define delete_task(taskhdl)                            kwrap_delete_task(taskhdl)
-#define task_exit()                                     do{delete_task(get_task_handle()); for (;;);}while(0)
+#define task_exit()                                     kwrap_task_exit()
 #define sleep_ms(msdelay)                               vTaskDelay(msdelay)
 #define sleep(seconds)                                  vTaskDelay((seconds) * 1000UL)
 #define prepare_sleep_until()                           long int __last_wake_time__ = get_tick_counter();
@@ -107,6 +107,7 @@ extern "C" {
 #define set_global_variables(ptr)                       _get_task_data(THIS_TASK)->f_global_vars = ptr
 #define set_stdin(file)                                 _get_task_data(THIS_TASK)->f_stdin = file
 #define set_stdout(file)                                _get_task_data(THIS_TASK)->f_stdout = file
+#define set_stderr(file)                                _get_task_data(THIS_TASK)->f_stderr = file
 #define set_user_data(ptr)                              _get_task_data(THIS_TASK)->f_user = ptr
 #define get_user_data()                                 _get_task_data(THIS_TASK)->f_user
 #define _set_task_monitor_data(taskhdl, ptr)            _get_task_data(taskhdl)->f_monitor = ptr
@@ -140,6 +141,7 @@ extern "C" {
 struct task_data {
         file_t *f_stdin;        /* stdin file                         */
         file_t *f_stdout;       /* stdout file                        */
+        file_t *f_stderr;       /* stderr file                        */
         char   *f_cwd;          /* current working path               */
         void   *f_global_vars;  /* address to global variables        */
         void   *f_user;         /* pointer to user data               */
@@ -158,6 +160,7 @@ struct task_data {
 extern task_t *kwrap_new_task(void (*func)(void*), const char*, u16_t, void*);
 extern void    kwrap_delete_task(task_t *taskHdl);
 extern sem_t  *kwrap_create_binary_semaphore(void);
+extern void    kwrap_task_exit(void);
 
 #ifdef __cplusplus
 }

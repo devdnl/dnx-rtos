@@ -64,6 +64,9 @@ extern "C" {
 #define stdout \
         _get_this_task_data()->f_stdout
 
+#define stderr \
+        _get_this_task_data()->f_stderr
+
 #define global \
         ((struct __global_vars__*)_get_this_task_data()->f_global_vars)
 

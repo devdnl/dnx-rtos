@@ -160,6 +160,22 @@ sem_t *kwrap_create_binary_semaphore(void)
         return sem;
 }
 
+//==============================================================================
+/**
+ * @brief Function wait for task exit
+ */
+//==============================================================================
+void kwrap_task_exit(void)
+{
+        do {
+                /* request to delete task */
+                delete_task(get_task_handle());
+
+                /* wait for exit */
+                for (;;) {}
+        } while(0);
+}
+
 #ifdef __cplusplus
 }
 #endif
