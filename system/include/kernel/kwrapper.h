@@ -33,6 +33,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdio.h>
 #include "kernel/ktypes.h"
 #include "core/systypes.h"
 #include "FreeRTOS.h"
@@ -142,9 +143,9 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        file_t *f_stdin;        /* stdin file                         */
-        file_t *f_stdout;       /* stdout file                        */
-        file_t *f_stderr;       /* stderr file                        */
+        FILE   *f_stdin;        /* stdin file                         */
+        FILE   *f_stdout;       /* stdout file                        */
+        FILE   *f_stderr;       /* stderr file                        */
         char   *f_cwd;          /* current working path               */
         void   *f_global_vars;  /* address to global variables        */
         void   *f_user;         /* pointer to user data               */

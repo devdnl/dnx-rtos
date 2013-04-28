@@ -57,7 +57,7 @@ static int   calc_format_size(const char *format, va_list arg);
  Local object definitions
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-static file_t *io_printk_file;
+static FILE *io_printk_file;
 #endif
 
 /*==============================================================================
@@ -594,7 +594,7 @@ void io_printk(const char *format, ...)
  * @retval c if OK otherwise EOF
  */
 //==============================================================================
-int io_fputc(int c, file_t *stream)
+int io_fputc(int c, FILE *stream)
 {
         if (stream) {
                 char ch = (char)c;
@@ -613,7 +613,7 @@ int io_fputc(int c, file_t *stream)
  * @brief  TODO Enter function description
  */
 //==============================================================================
-int io_fputs(const char *s, file_t *file)
+int io_fputs(const char *s, FILE *file)
 {
         int n;
 
@@ -636,7 +636,7 @@ int io_fputs(const char *s, file_t *file)
  * @retval character
  */
 //==============================================================================
-int io_getc(file_t *stream)
+int io_getc(FILE *stream)
 {
         int chr    = EOF;
         u16_t dcnt = 0;
@@ -671,7 +671,7 @@ int io_getc(file_t *stream)
  * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-char *io_fgets(char *str, int size, file_t *stream)
+char *io_fgets(char *str, int size, FILE *stream)
 {
         if (!str || !size || !stream) {
                 return NULL;
@@ -733,7 +733,7 @@ int io_snprintf(char *bfr, u32_t size, const char *format, ...)
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-int io_fprintf(file_t *file, const char *format, ...)
+int io_fprintf(FILE *file, const char *format, ...)
 {
         va_list args;
         int n = 0;
@@ -862,7 +862,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
  */
 //==============================================================================
 #if (CONFIG_SCANF_ENABLE > 0)
-int io_fscanf(file_t *stream, const char *format, ...)
+int io_fscanf(FILE *stream, const char *format, ...)
 {
         int n = 0;
         va_list args;

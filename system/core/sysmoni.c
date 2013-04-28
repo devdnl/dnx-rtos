@@ -68,9 +68,9 @@ struct task_monitor_data {
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-        uint   opened_files;
-        file_t *file_slot[TASK_FILE_SLOTS];
-        dir_t  *dir_slot[TASK_DIR_SLOTS];
+        uint  opened_files;
+        FILE  *file_slot[TASK_FILE_SLOTS];
+        dir_t *dir_slot[TASK_DIR_SLOTS];
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE == 0) && (SYSM_MONITOR_TASK_FILE_USAGE == 0)
@@ -877,9 +877,9 @@ i32_t sysm_get_used_program_memory(void)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-file_t *sysm_fopen(const char *path, const char *mode)
+FILE *sysm_fopen(const char *path, const char *mode)
 {
-        file_t *file = NULL;
+        FILE *file = NULL;
         task_t *task;
         struct task_monitor_data *task_monitor_data;
 
@@ -928,7 +928,7 @@ file_t *sysm_fopen(const char *path, const char *mode)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-file_t *sysm_freopen(const char *path, const char *mode, file_t *file)
+FILE *sysm_freopen(const char *path, const char *mode, FILE *file)
 {
         if (sysm_fclose(file) == STD_RET_OK) {
                 return sysm_fopen(path, mode);
@@ -949,7 +949,7 @@ file_t *sysm_freopen(const char *path, const char *mode, file_t *file)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-stdret_t sysm_fclose(file_t *file)
+stdret_t sysm_fclose(FILE *file)
 {
         stdret_t status = STD_RET_ERROR;
         task_t *task;

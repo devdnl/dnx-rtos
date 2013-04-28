@@ -108,7 +108,7 @@ extern size_t memman_free(void*);
 #define configMAX_PRIORITIES                    ((unsigned portBASE_TYPE) CONFIG_RTOS_TASK_MAX_PRIORITIES)
 #define configMINIMAL_STACK_SIZE                ((unsigned short) CONFIG_RTOS_TASK_MIN_STACK_DEPTH)
 #define configMAX_TASK_NAME_LEN                 (CONFIG_RTOS_TASK_NAME_LEN)
-#define configUSE_TRACE_FACILITY                1
+#define configUSE_TRACE_FACILITY                0
 #define configUSE_16_BIT_TICKS                  0
 #define configIDLE_SHOULD_YIELD                 0
 #define configUSE_CO_ROUTINES                   0

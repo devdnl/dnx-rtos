@@ -31,6 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdio.h>
 #include "user/initd.h"
 #include "tty_def.h"
 
@@ -115,8 +116,8 @@ void task_initd(void *arg)
         enable_printk("/dev/tty3");
 
         /* stdio program control */
-        file_t *tty[TTY_DEV_COUNT]               = {NULL};
-        file_t *tty0                             = NULL;
+        FILE *tty[TTY_DEV_COUNT]                 = {NULL};
+        FILE *tty0                               = NULL;
         task_t *program[TTY_DEV_COUNT - 1]       = {NULL};
         enum prog_state state[TTY_DEV_COUNT - 1] = {PROGRAM_UNKNOWN_STATE};
         int current_tty                          = -1;

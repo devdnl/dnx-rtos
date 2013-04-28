@@ -43,7 +43,7 @@ MODULE_NAME(TTY);
 #define TTYD_STACK_DEPTH                STACK_DEPTH_VERY_LOW
 #define TTYD_PRIORITY                   0
 
-#define FILE                            "/dev/ttyS0"
+#define TTYFILE                         "/dev/ttyS0"
 
 #define BLOCK_TIME                      10000
 
@@ -126,17 +126,17 @@ enum keycap {
   Local function prototypes
 ==============================================================================*/
 static void  task_tty(void *arg);
-static void  switch_tty_if_requested(file_t *stream);
-static void  stdout_service(struct tty_data *tty, file_t *stream);
-static void  move_cursor_to_beginning_of_editline(struct tty_data *tty, file_t *stream);
-static void  move_cursor_to_end_of_editline(struct tty_data *tty, file_t *stream);
-static void  remove_character_from_editline(struct tty_data *tty, file_t *stream);
-static void  delete_character_from_editline(struct tty_data *tty, file_t *stream);
-static void  add_charater_to_editline(struct tty_data *tty, char chr, file_t *stream);
-static void  show_new_messages(struct tty_data *tty, file_t *stream);
-static void  refresh_last_line(struct tty_data *tty, file_t *stream);
-static void  stdin_service(struct tty_data *tty, file_t *stream);
-static void  switch_tty_immediately(u8_t tty_number, file_t *stream);
+static void  switch_tty_if_requested(FILE *stream);
+static void  stdout_service(struct tty_data *tty, FILE *stream);
+static void  move_cursor_to_beginning_of_editline(struct tty_data *tty, FILE *stream);
+static void  move_cursor_to_end_of_editline(struct tty_data *tty, FILE *stream);
+static void  remove_character_from_editline(struct tty_data *tty, FILE *stream);
+static void  delete_character_from_editline(struct tty_data *tty, FILE *stream);
+static void  add_charater_to_editline(struct tty_data *tty, char chr, FILE *stream);
+static void  show_new_messages(struct tty_data *tty, FILE *stream);
+static void  refresh_last_line(struct tty_data *tty, FILE *stream);
+static void  stdin_service(struct tty_data *tty, FILE *stream);
+static void  switch_tty_immediately(u8_t tty_number, FILE *stream);
 static void  clear_tty(struct tty_data *tty);
 static void  add_message(struct tty_data *tty, const char *msg, uint msg_len);
 static char *merge_or_create_message(struct tty_data *tty, const char *msg_src, uint msg_len);
@@ -145,11 +145,11 @@ static void  link_message(struct tty_data *tty, char *msg);
 static void  inc_message_counter(struct tty_data *tty);
 static enum keycap capture_special_keys(char character);
 static u8_t  get_message_index(struct tty_data *tty, u8_t back);
-static void  refresh_tty(struct tty_data *tty, file_t *file);
-static void  get_vt100_size(file_t *ttysfile);
+static void  refresh_tty(struct tty_data *tty, FILE *file);
+static void  get_vt100_size(FILE *ttysfile);
 static void  write_input_stream(struct tty_data *tty, char chr);
 static stdret_t read_input_stream(struct tty_data *tty, char *chr);
-static void  move_editline_to_stream(struct tty_data *tty, file_t *stream);
+static void  move_editline_to_stream(struct tty_data *tty, FILE *stream);
 
 /*==============================================================================
   Local object definitions
@@ -522,12 +522,12 @@ static void task_tty(void *arg)
 {
         (void) arg;
         char   *msg;
-        file_t *io_file;
+        FILE *io_file;
 
         set_priority(TTYD_PRIORITY);
 
         /* try open selected file */
-        while ((io_file = fopen(FILE, "r+")) == NULL) {
+        while ((io_file = fopen(TTYFILE, "r+")) == NULL) {
                 sleep_ms(250);
         }
 
@@ -565,7 +565,7 @@ static void task_tty(void *arg)
  * @param *stream       file
  */
 //==============================================================================
-static void stdout_service(struct tty_data *tty, file_t *stream)
+static void stdout_service(struct tty_data *tty, FILE *stream)
 {
         if (take_counting_semaphore(tty_ctrl->stdout_semcnt, 0) == OS_OK) {
                 if (tty->new_msg_counter > 0) {
@@ -588,7 +588,7 @@ static void stdout_service(struct tty_data *tty, file_t *stream)
  * @param *stream       file
  */
 //==============================================================================
-static void stdin_service(struct tty_data *tty, file_t *stream)
+static void stdin_service(struct tty_data *tty, FILE *stream)
 {
         char  chr;
         char *msg;
@@ -668,7 +668,7 @@ static void stdin_service(struct tty_data *tty, file_t *stream)
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void move_cursor_to_beginning_of_editline(struct tty_data *tty, file_t *stream)
+static void move_cursor_to_beginning_of_editline(struct tty_data *tty, FILE *stream)
 {
         char *msg = VT100_CURSOR_OFF;
         fwrite(msg, sizeof(char), strlen(msg), stream);
@@ -690,7 +690,7 @@ static void move_cursor_to_beginning_of_editline(struct tty_data *tty, file_t *s
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void move_cursor_to_end_of_editline(struct tty_data *tty, file_t *stream)
+static void move_cursor_to_end_of_editline(struct tty_data *tty, FILE *stream)
 {
         char *msg = VT100_CURSOR_OFF;
         fwrite(msg, sizeof(char), strlen(msg), stream);
@@ -713,7 +713,7 @@ static void move_cursor_to_end_of_editline(struct tty_data *tty, file_t *stream)
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void remove_character_from_editline(struct tty_data *tty, file_t *stream)
+static void remove_character_from_editline(struct tty_data *tty, FILE *stream)
 {
         if (tty->cursor_position == 0 || tty->edit_line_length == 0) {
                 return;
@@ -745,7 +745,7 @@ static void remove_character_from_editline(struct tty_data *tty, file_t *stream)
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void delete_character_from_editline(struct tty_data *tty, file_t *stream)
+static void delete_character_from_editline(struct tty_data *tty, FILE *stream)
 {
         if (tty->edit_line_length == 0) {
                 return;
@@ -780,7 +780,7 @@ static void delete_character_from_editline(struct tty_data *tty, file_t *stream)
  * @param *stream               required stream to refresh changes
  */
 //==============================================================================
-static void add_charater_to_editline(struct tty_data *tty, char chr, file_t *stream)
+static void add_charater_to_editline(struct tty_data *tty, char chr, FILE *stream)
 {
         char *msg;
 
@@ -821,7 +821,7 @@ static void add_charater_to_editline(struct tty_data *tty, char chr, file_t *str
  * @param *stream       required stream to refresh changed terminal
  */
 //==============================================================================
-static void switch_tty_if_requested(file_t *stream)
+static void switch_tty_if_requested(FILE *stream)
 {
         if (tty_ctrl->change_to_TTY >= TTY_DEV_COUNT) {
                 tty_ctrl->change_to_TTY = -1;
@@ -840,7 +840,7 @@ static void switch_tty_if_requested(file_t *stream)
  * @param *stream       required stream to refresh changed terminal
  */
 //==============================================================================
-static void switch_tty_immediately(u8_t tty_number, file_t *stream)
+static void switch_tty_immediately(u8_t tty_number, FILE *stream)
 {
         if (tty_number != tty_ctrl->current_TTY) {
                 tty_ctrl->current_TTY = tty_number;
@@ -859,7 +859,7 @@ static void switch_tty_immediately(u8_t tty_number, file_t *stream)
  * @param *stream       required stream to refresh new messages
  */
 //==============================================================================
-static void show_new_messages(struct tty_data *tty, file_t *stream)
+static void show_new_messages(struct tty_data *tty, FILE *stream)
 {
         while (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) != MUTEX_LOCKED);
 
@@ -890,7 +890,7 @@ static void show_new_messages(struct tty_data *tty, file_t *stream)
  * @param *stream       required stream to refresh new messages
  */
 //==============================================================================
-static void refresh_last_line(struct tty_data *tty, file_t *stream)
+static void refresh_last_line(struct tty_data *tty, FILE *stream)
 {
         while (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) != MUTEX_LOCKED);
 
@@ -1183,7 +1183,7 @@ static enum keycap capture_special_keys(char character)
  * @param *tty          terminal address
  */
 //==============================================================================
-static void refresh_tty(struct tty_data *tty, file_t *file)
+static void refresh_tty(struct tty_data *tty, FILE *file)
 {
         get_vt100_size(file);
 
@@ -1225,7 +1225,7 @@ static void refresh_tty(struct tty_data *tty, file_t *file)
  * @param *ttysfile     tty file
  */
 //==============================================================================
-static void get_vt100_size(file_t *ttysfile)
+static void get_vt100_size(FILE *ttysfile)
 {
         (void)ttysfile;
 
@@ -1388,7 +1388,7 @@ static stdret_t read_input_stream(struct tty_data *tty, char *chr)
  * @param[in] *stream           terminal control stream
  */
 //==============================================================================
-static void move_editline_to_stream(struct tty_data *tty, file_t *stream)
+static void move_editline_to_stream(struct tty_data *tty, FILE *stream)
 {
         char *msg;
 

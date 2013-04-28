@@ -33,6 +33,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <string.h>
+#include <stdarg.h>
 #include "config.h"
 #include "core/systypes.h"
 #include "core/memman.h"
@@ -44,8 +46,6 @@ extern "C" {
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "portable/cpuctl.h"
-#include <string.h>
-#include <stdarg.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -54,32 +54,6 @@ extern "C" {
 #define malloc(size)                            sysm_tskmalloc(size)
 #define calloc(nitems, isize)                   sysm_tskcalloc(nitems, isize)
 #define free(mem)                               sysm_tskfree(mem)
-
-/** FILE ACCESS MANAGEMENT */
-#define getmntentry(item, mntentPtr)            sysm_getmntentry(item, mntentPtr)
-#define mknod(path, drv_cfgPtr)                 sysm_mknod(path, drv_cfgPtr)
-#define mkdir(path)                             sysm_mkdir(path)
-#define opendir(path)                           sysm_opendir(path)
-#define closedir(dir)                           sysm_closedir(dir)
-#define readdir(dir)                            sysm_readdir(dir)
-#define remove(path)                            sysm_remove(path)
-#define rename(oldName, newName)                sysm_rename(oldName, newName)
-#define chmod(path, mode)                       sysm_chmod(path, mode)
-#define chown(path, owner, group)               sysm_chown(path, owner, group)
-#define stat(path, statPtr)                     sysm_stat(path, statPtr)
-#define statfs(path, statfsPtr)                 sysm_statfs(path, statfsPtr)
-#define fopen(path, mode)                       sysm_fopen(path, mode)
-#define freopen(path, mode, file)               sysm_freopen(path, mode, file)
-#define fclose(file)                            sysm_fclose(file)
-#define fwrite(ptr, isize, nitems, file)        sysm_fwrite(ptr, isize, nitems, file)
-#define fread(ptr, isize, nitems, file)         sysm_fread(ptr, isize, nitems, file)
-#define fseek(file, offset, mode)               sysm_fseek(file, offset, mode)
-#define ftell(file)                             sysm_ftell(file)
-#define ioctl(file, ...)                        sysm_ioctl(file, __VA_ARGS__)
-#define fstat(file, statPtr)                    sysm_fstat(file, stat)
-#define fflush(file)                            sysm_fflush(file)
-#define feof(file)                              sysm_feof(file)
-#define rewind(file)                            sysm_rewind(file)
 
 /** ENVIRONMENT DEFINITIONS */
 #define get_used_static_memory()                (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE)
@@ -94,7 +68,7 @@ extern "C" {
 #define reboot()                                cpuctl_restart_system()
 #define get_platform_name()                     CPUCTL_PLATFORM_NAME
 #define get_OS_name()                           "dnx"
-#define get_OS_version()                        "0.9.15"
+#define get_OS_version()                        "0.9.16"
 #define get_kernel_name()                       "FreeRTOS"
 #define get_kernel_version()                    tskKERNEL_VERSION_NUMBER
 #define get_host_name()                         CONFIG_HOSTNAME

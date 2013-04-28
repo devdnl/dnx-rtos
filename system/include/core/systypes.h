@@ -65,9 +65,6 @@ enum status_enum
 /** universal status type */
 typedef signed char stdret_t;
 
-/** file object */
-typedef struct vfs_file file_t;
-
 /** directory object */
 typedef struct vfs_dir dir_t;
 

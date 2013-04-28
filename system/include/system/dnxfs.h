@@ -45,38 +45,86 @@ extern "C" {
 #error "dnx.h and dnxfs.h cannot never included together!"
 #endif
 
-#ifndef calloc
-#define calloc(nmemb, msize)              sysm_syscalloc(nmemb, msize)
-#endif
+#undef  calloc
+#define calloc(nmemb, msize)                    sysm_syscalloc(nmemb, msize)
 
-#ifndef malloc
-#define malloc(size)                      sysm_sysmalloc(size)
-#endif
+#undef malloc
+#define malloc(size)                            sysm_sysmalloc(size)
 
-#ifndef free
-#define free(mem)                         sysm_sysfree(mem)
-#endif
+#undef free
+#define free(mem)                               sysm_sysfree(mem)
 
-#define mknod(path, drv_cfgPtr)           vfs_mknod(path, drv_cfgPtr)
-#define mkdir(path)                       vfs_mkdir(path)
-#define opendir(path)                     vfs_opendir(path)
-#define closedir(dir)                     vfs_closedir(dir)
-#define readdir(dir)                      vfs_readdir(dir)
-#define remove(path)                      vfs_remove(path)
-#define rename(oldName, newName)          vfs_rename(oldName, newName)
-#define chmod(path, mode)                 vfs_chmod(path, mode)
-#define chown(path, owner, group)         vfs_chown(path, owner, group)
-#define stat(path, statPtr)               vfs_stat(path, statPtr)
-#define statfs(path, statfsPtr)           vfs_statfs(path, statfsPtr)
-#define fopen(path, mode)                 vfs_fopen(path, mode)
-#define fclose(file)                      vfs_fclose(file)
-#define fwrite(ptr, isize, nitems, file)  vfs_fwrite(ptr, isize, nitems, file)
-#define fread(ptr, isize, nitems, file)   vfs_fread(ptr, isize, nitems, file)
-#define fseek(file, offset, mode)         vfs_fseek(file, offset, mode)
-#define ftell(file)                       vfs_ftell(file)
-#define ioctl(file, rq, data)             vfs_ioctl(file, rq, data)
-#define fstat(file, statPtr)              vfs_fstat(file, stat)
-#define fflush(file)                      vfs_fflush(file)
+#undef  mknod
+#define mknod(path, drv_cfgPtr)                 vfs_mknod(path, drv_cfgPtr)
+
+#undef  mkdir
+#define mkdir(path)                             vfs_mkdir(path)
+
+#undef  opendir
+#define opendir(path)                           vfs_opendir(path)
+
+#undef  closedir
+#define closedir(dir)                           vfs_closedir(dir)
+
+#undef  readdir
+#define readdir(dir)                            vfs_readdir(dir)
+
+#undef  remove
+#define remove(path)                            vfs_remove(path)
+
+#undef  rename
+#define rename(oldName, newName)                vfs_rename(oldName, newName)
+
+#undef  chmod
+#define chmod(path, mode)                       vfs_chmod(path, mode)
+
+#undef  chown
+#define chown(path, owner, group)               vfs_chown(path, owner, group)
+
+#undef  stat
+#define stat(path, statPtr)                     vfs_stat(path, statPtr)
+
+#undef  statfs
+#define statfs(path, statfsPtr)                 vfs_statfs(path, statfsPtr)
+
+#undef  fopen
+#define fopen(path, mode)                       vfs_fopen(path, mode)
+
+#undef  fclose
+#define fclose(file)                            vfs_fclose(file)
+
+#undef  fwrite
+#define fwrite(ptr, isize, nitems, file)        vfs_fwrite(ptr, isize, nitems, file)
+
+#undef  fread
+#define fread(ptr, isize, nitems, file)         vfs_fread(ptr, isize, nitems, file)
+
+#undef  fseek
+#define fseek(file, offset, mode)               vfs_fseek(file, offset, mode)
+
+#undef  ftell
+#define ftell(file)                             vfs_ftell(file)
+
+#undef  ioctl
+#define ioctl(file, rq, data)                   vfs_ioctl(file, rq, data)
+
+#undef  fstat
+#define fstat(file, statPtr)                    vfs_fstat(file, stat)
+
+#undef  fflush
+#define fflush(file)                            vfs_fflush(file)
+
+#undef  fstat
+#define fstat(file, statPtr)                    vfs_fstat(file, stat)
+
+#undef  fflush
+#define fflush(file)                            vfs_fflush(file)
+
+#undef  feof
+#define feof(file)                              vfs_feof(file)
+
+#undef  rewind
+#define rewind(file)                            vfs_rewind(file)
 
 #define FILE_SYSTEM_INTERFACE(fsname)                                                \
 extern stdret_t fsname##_init   (void**, const char*);                               \

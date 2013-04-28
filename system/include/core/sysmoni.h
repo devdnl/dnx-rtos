@@ -217,9 +217,9 @@ extern i32_t sysm_get_used_program_memory(void);
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-extern file_t  *sysm_fopen(const char*, const char*);
-extern file_t  *sysm_freopen(const char*, const char*, file_t*);
-extern stdret_t sysm_fclose(file_t*);
+extern FILE    *sysm_fopen(const char*, const char*);
+extern FILE    *sysm_freopen(const char*, const char*, FILE*);
+extern stdret_t sysm_fclose(FILE*);
 extern dir_t   *sysm_opendir(const char*);
 extern stdret_t sysm_closedir(dir_t*);
 #endif

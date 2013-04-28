@@ -159,6 +159,7 @@ HDRLOC_CORE = $(sort \
    system/config \
    system/portable \
    system/include \
+   system/include/stdlib \
    . \
 )
 
@@ -188,14 +189,14 @@ CPU_stm32f1       = cortex-m3
 MCU_stm32f1       = STM32F10X_CL
 
 CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -O$(OPT) -ffunction-sections -Wall \
-                  -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -Wparentheses\
+                  -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -Wparentheses \
                   -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
 
 CXXFLAGS_stm32f1  =
 
 LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles -Wl,--gc-sections -Wall \
                   -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                  -DGCC_ARMCM3 -DARCH_$(TARGET)
+                  -DGCC_ARMCM3 -DARCH_$(TARGET) -lm
 
 AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 -DARCH_$(TARGET)
 
@@ -221,7 +222,7 @@ CXXFLAGS_posix  =
 
 LFLAGS_posix    = -m32 -g -Wall -pthread -lrt \
                   -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                  -DARCH_$(TARGET)
+                  -DARCH_$(TARGET) -lm
 
 AFLAGS_posix    = -m32 -c -g -DARCH_$(TARGET)
 
@@ -388,7 +389,7 @@ linkobjects :
 	@echo "Linking..."
 	@$(MKDIR) $(TARGET_PATH)
 	@$(RM) $(TARGET_PATH)/*.*
-	@$(LINKER_$(TARGET)) $(LFLAGS_$(TARGET)) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) -o $(TARGET_PATH)/$(PROJECT).elf
+	@$(LINKER_$(TARGET)) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS_$(TARGET)) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
 # build objects

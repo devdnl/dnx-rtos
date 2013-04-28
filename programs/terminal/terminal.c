@@ -34,6 +34,7 @@ extern "C" {
 #include "terminal.h"
 #include "tty_def.h"
 #include <string.h>
+#include <stdio.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -482,7 +483,7 @@ static enum cmd_status cmd_touch(char *arg)
                 newpath = global->cwd;
         }
 
-        file_t *file = fopen(newpath, "a+");
+        FILE *file = fopen(newpath, "a+");
 
         if (file) {
                 fclose(file);

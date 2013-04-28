@@ -33,19 +33,13 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdio.h>
 #include <stdarg.h>
-#include "systypes.h"
 #include "config.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** stream values */
-#define EOF                                     (-1)
-
-/** stdio buffer size */
-#define BUFSIZ                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
-
 /** translate function to STDC */
 #define printf(...)                             io_fprintf(stdout, __VA_ARGS__)
 #define fprintf(...)                            io_fprintf(__VA_ARGS__)
@@ -152,27 +146,27 @@ extern "C" {
   Exported function prototypes
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-extern void   io_printk(const char *format, ...);
-extern void   io_enable_printk(char *filename);
+extern void   io_printk(const char*, ...);
+extern void   io_enable_printk(char*);
 extern void   io_disable_printk(void);
 #endif
 #if (CONFIG_PRINTF_ENABLE > 0)
-extern int    io_snprintf(char *buf, u32_t size, const char *format, ...);
-extern int    io_fprintf(file_t *file, const char *format, ...);
-extern int    io_vsnprintf(char *buf, size_t size, const char *format, va_list arg);
+extern int    io_snprintf(char*, u32_t, const char*, ...);
+extern int    io_fprintf(FILE*, const char*, ...);
+extern int    io_vsnprintf(char*, size_t, const char*, va_list);
 #endif
 #if (CONFIG_SCANF_ENABLE > 0)
-extern int    io_fscanf(file_t *buf, const char *format, ...);
-extern int    io_sscanf(const char *str, const char *format, ...);
-extern int    io_vsscanf(const char *str, const char *format, va_list args);
+extern int    io_fscanf(FILE*, const char*, ...);
+extern int    io_sscanf(const char*, const char*, ...);
+extern int    io_vsscanf(const char*, const char*, va_list);
 #endif
 extern double io_strtod(const char*, char**);
-extern char  *io_atoi(char *string, u8_t base, i32_t *value);
+extern char  *io_atoi(char*, u8_t, i32_t*);
 extern double io_atof(const char*);
-extern int    io_fputc(int c, file_t *buf);
-extern int    io_fputs(const char*, file_t*);
-extern int    io_getc(file_t *buf);
-extern char  *io_fgets(char *str, int size, file_t *stream);
+extern int    io_fputc(int, FILE*);
+extern int    io_fputs(const char*, FILE*);
+extern int    io_getc(FILE*);
+extern char  *io_fgets(char*, int, FILE *);
 
 #ifdef __cplusplus
 }

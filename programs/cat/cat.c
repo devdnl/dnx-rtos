@@ -31,9 +31,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdio.h>
+#include <string.h>
 #include "cat.h"
 #include "tty_def.h"
-#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -99,7 +100,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
                         strcat(global->filepath, argv[1]);
                 }
 
-                file_t *file = fopen(global->filepath, "r");
+                FILE *file = fopen(global->filepath, "r");
 
                 if (file) {
                         fseek(file, 0, SEEK_END);

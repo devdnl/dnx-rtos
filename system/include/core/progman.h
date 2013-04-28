@@ -33,7 +33,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "systypes.h"
+#include <stdio.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -73,6 +73,12 @@ extern "C" {
 #define create_fast_global(name) \
         struct __global_vars__*name = global
 
+#define exit(status) \
+        {(void)status; prgm_delete_program(get_task_handle());}
+
+#define abort() \
+        prgm_delete_program(get_task_handle())
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -93,7 +99,7 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *prgm_new_program(char*, char*, char*, file_t*, file_t*, enum prog_state*, int*);
+extern task_t *prgm_new_program(char*, char*, char*, FILE*, FILE*, enum prog_state*, int*);
 extern void    prgm_delete_program(task_t*);
 
 #ifdef __cplusplus

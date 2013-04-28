@@ -700,9 +700,9 @@ int vfs_statfs(const char *path, struct vfs_statfs *statfs)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-file_t *vfs_fopen(const char *path, const char *mode)
+FILE *vfs_fopen(const char *path, const char *mode)
 {
-        file_t *file;
+        FILE   *file;
         char   *external_path = NULL;
         struct FS_data *fs;
 
@@ -721,7 +721,7 @@ file_t *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if ((file = calloc(1, sizeof(file_t)))) {
+        if ((file = calloc(1, sizeof(FILE)))) {
                 force_lock_mutex(vfs_resource_mtx, MTX_BLOCK_TIME);
                 fs = find_base_FS(path, &external_path);
                 unlock_mutex(vfs_resource_mtx);
@@ -773,7 +773,7 @@ file_t *vfs_fopen(const char *path, const char *mode)
  * @retval NULL if file can't be created
  */
 //==============================================================================
-file_t *vfs_freopen(const char *name, const char *mode, file_t *file)
+FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
 {
         if (name || mode || file) {
                 if (vfs_fclose(file) == STD_RET_OK) {
@@ -793,7 +793,7 @@ file_t *vfs_freopen(const char *name, const char *mode, file_t *file)
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose(file_t *file)
+int vfs_fclose(FILE *file)
 {
         if (file) {
                 if (file->f_close) {
@@ -820,7 +820,7 @@ int vfs_fclose(file_t *file)
  *         end-of-file is reached, the return value is a short item count (or 0).
  */
 //==============================================================================
-size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, file_t *file)
+size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
 {
         size_t n = 0;
 
@@ -848,7 +848,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, file_t *file)
  *         end-of-file is reached, the return value is a short item count (or 0).
  */
 //==============================================================================
-size_t vfs_fread(void *ptr, size_t size, size_t nitems, file_t *file)
+size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
 {
         size_t n = 0;
 
@@ -874,7 +874,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, file_t *file)
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fseek(file_t *file, i32_t offset, int mode)
+int vfs_fseek(FILE *file, i32_t offset, int mode)
 {
         struct vfs_stat stat;
 
@@ -908,7 +908,7 @@ int vfs_fseek(file_t *file, i32_t offset, int mode)
  * @return -1 if error, otherwise correct value
  */
 //==============================================================================
-i32_t vfs_ftell(file_t *file)
+i32_t vfs_ftell(FILE *file)
 {
         if (file)
                 return file->f_seek;
@@ -927,7 +927,7 @@ i32_t vfs_ftell(file_t *file)
  * @return zero on success. On error, different from 0 is returned
  */
 //==============================================================================
-int vfs_ioctl(file_t *file, int rq, ...)
+int vfs_ioctl(FILE *file, int rq, ...)
 {
         va_list  args;
         stdret_t status;
@@ -957,7 +957,7 @@ int vfs_ioctl(file_t *file, int rq, ...)
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fstat(file_t *file, struct vfs_stat *stat)
+int vfs_fstat(FILE *file, struct vfs_stat *stat)
 {
         if (!file || !stat) {
                 return -1;
@@ -979,7 +979,7 @@ int vfs_fstat(file_t *file, struct vfs_stat *stat)
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fflush(file_t *file)
+int vfs_fflush(FILE *file)
 {
         if (!file) {
                 return -1;
@@ -1001,7 +1001,7 @@ int vfs_fflush(file_t *file)
  * @return 0 if there is not a file end, otherwise greather than 0
  */
 //==============================================================================
-int vfs_feof(file_t *file)
+int vfs_feof(FILE *file)
 {
         if (file) {
                 u32_t seek  = vfs_ftell(file);

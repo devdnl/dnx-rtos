@@ -33,11 +33,11 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "systypes.h"
 #include <stdarg.h>
+#include "systypes.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 /* set position equal to offset bytes */
 #define VFS_SEEK_SET            0
@@ -62,8 +62,11 @@ extern "C" {
 #endif
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
+/** file object */
+typedef struct vfs_file FILE;
+
 /** file descriptor */
 typedef uint fd_t;
 
@@ -157,7 +160,7 @@ struct vfs_FS_interface {
 };
 
 /*==============================================================================
-  Exported function prototypes
+  Exported API functions
 ==============================================================================*/
 extern stdret_t vfs_init(void);
 extern stdret_t vfs_mount(const char*, const char*, struct vfs_FS_interface*);
@@ -174,17 +177,17 @@ extern int      vfs_chmod(const char*, int);
 extern int      vfs_chown(const char*, u16_t, u16_t);
 extern int      vfs_stat(const char*, struct vfs_stat*);
 extern int      vfs_statfs(const char*, struct vfs_statfs*);
-extern file_t  *vfs_fopen(const char*, const char*);
-extern file_t  *vfs_freopen(const char*, const char*, file_t*);
-extern int      vfs_fclose(file_t*);
-extern size_t   vfs_fwrite(const void*, size_t, size_t, file_t*);
-extern size_t   vfs_fread(void*, size_t, size_t, file_t*);
-extern int      vfs_fseek(file_t*, i32_t, int);
-extern i32_t    vfs_ftell(file_t*);
-extern int      vfs_ioctl(file_t*, int, ...);
-extern int      vfs_fstat(file_t*, struct vfs_stat*);
-extern int      vfs_fflush(file_t*);
-extern int      vfs_feof(file_t*);
+extern FILE    *vfs_fopen(const char*, const char*);
+extern FILE    *vfs_freopen(const char*, const char*, FILE*);
+extern int      vfs_fclose(FILE*);
+extern size_t   vfs_fwrite(const void*, size_t, size_t, FILE*);
+extern size_t   vfs_fread(void*, size_t, size_t, FILE*);
+extern int      vfs_fseek(FILE*, i32_t, int);
+extern i32_t    vfs_ftell(FILE*);
+extern int      vfs_ioctl(FILE*, int, ...);
+extern int      vfs_fstat(FILE*, struct vfs_stat*);
+extern int      vfs_fflush(FILE*);
+extern int      vfs_feof(FILE*);
 #define         vfs_rewind(file) vfs_fseek(file, 0, 0)
 
 #ifdef __cplusplus
