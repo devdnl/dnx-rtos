@@ -31,6 +31,7 @@ extern "C" {
 /*==============================================================================
  Include files
  =============================================================================*/
+#include <ctype.h>
 #include "core/io.h"
 #include "core/vfs.h"
 #include "core/sysmoni.h"
@@ -138,6 +139,161 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
         itoa_exit:
         *buf = '\0';
         return buffer_copy;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function convert double to string
+ *
+ * @param[in]  value            input value
+ * @param[out] *str             string - result
+ * @param[in]  prec             precision
+ *
+ * @note used software: nickgsuperstar@gmail.com & nickg@client9.com
+ *                      https://code.google.com/p/stringencoders/
+ */
+//==============================================================================
+#if (CONFIG_PRINTF_ENABLE > 0)
+static int dtoa(double value, char* str, int prec, int n)
+{
+#define push_char(c) if (conv < n) {*wstr++ = c; conv++;}
+
+        const double pow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000,
+                                10000000, 100000000, 1000000000};
+
+        void strreverse(char* begin, char* end)
+        {
+                char aux;
+                while (end > begin) {
+                        aux = *end, *end-- = *begin, *begin++ = aux;
+                }
+        }
+
+        int  conv  = 0;
+        char *wstr = str;
+
+        /*
+         * Hacky test for NaN
+         * under -fast-math this won't work, but then you also won't
+         * have correct nan values anyways.  The alternative is
+         * to link with libmath (bad) or hack IEEE double bits (bad)
+         */
+        if (!(value == value)) {
+                push_char('n');
+                push_char('a');
+                push_char('n');
+                return conv;
+        }
+
+        /* if input is larger than thres_max, revert to exponential */
+        const double thres_max = (double) (0x7FFFFFFF);
+
+        double diff  = 0.0;
+
+        if (prec < 0) {
+                prec = 0;
+        } else if (prec > 9) {
+                /* precision of >= 10 can lead to overflow errors */
+                prec = 9;
+        }
+
+        /* we'll work in positive values and deal with the negative sign issue later */
+        int neg = 0;
+        if (value < 0) {
+                neg = 1;
+                value = -value;
+        }
+
+        int    whole = (int) value;
+        double tmp   = (value - whole) * pow10[prec];
+        u32_t  frac  = (u32_t)tmp;
+
+        diff = tmp - frac;
+
+        if (diff > 0.5) {
+                ++frac;
+
+                /* handle rollover, e.g.  case 0.99 with prec 1 is 1.0  */
+                if (frac >= pow10[prec]) {
+                        frac = 0;
+                        ++whole;
+                }
+        } else if (diff == 0.5 && ((frac == 0) || (frac & 1))) {
+                /* if halfway, round up if odd, OR if last digit is 0.  That last part is strange */
+                ++frac;
+        }
+
+        /* for very large numbers switch back to native sprintf for exponentials.
+         anyone want to write code to replace this? */
+        /*
+         normal printf behavior is to print EVERY whole number digit
+         which can be 100s of characters overflowing your buffers == bad
+         */
+        if (value > thres_max) {
+                push_char('E');
+                push_char('?');
+                return conv;
+        }
+
+        if (prec == 0) {
+                diff = value - whole;
+                if (diff > 0.5) {
+                        /* greater than 0.5, round up, e.g. 1.6 -> 2 */
+                        ++whole;
+                } else if (diff == 0.5 && (whole & 1)) {
+                        /* exactly 0.5 and ODD, then round up */
+                        /* 1.5 -> 2, but 2.5 -> 2 */
+                        ++whole;
+                }
+        } else {
+                int count = prec;
+
+                /* now do fractional part, as an unsigned number */
+                do {
+                        --count;
+                        push_char((char) (48 + (frac % 10)));
+                } while (frac /= 10);
+
+                /* add extra 0s */
+                while (count-- > 0) {
+                        push_char('0');
+                }
+
+                /* add decimal */
+                push_char('.');
+        }
+
+        /* Do whole part. Take care of sign. Conversion. Number is reversed. */
+        do {
+                push_char((char) (48 + (whole % 10)));
+        } while (whole /= 10);
+
+        if (neg) {
+                push_char('-');
+        }
+
+        /* remove ending zeros */
+        int m   = n < conv ? n : conv;
+        int del = 0;
+
+        for (int i = 0; i < m; i++) {
+                if (str[i] == '0' && m > 1) {
+                        str[i] = ' ';
+                        del++;
+                } else if (str[i] == '.') {
+                        str[i] = ' ';
+                        del++;
+                        break;
+                } else {
+                        break;
+                }
+        }
+        conv -= del;
+
+        strreverse(str, wstr - 1);
+
+        return conv;
 }
 #endif
 
@@ -274,6 +430,89 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
 
 //==============================================================================
 /**
+ * @brief Function convert string to double
+ *
+ * @param[in]  *str             string
+ * @param[out] **end            the pointer to the character when conversion was finished
+ *
+ * @return converted value
+ */
+//==============================================================================
+double io_strtod(const char *str, char **end)
+{
+        char num;
+        double sign = 1;
+        double div = 1;
+        double number = 0;
+        int i = 0;
+        int decimal = 0;
+        bool point = FALSE;
+
+        while (str[i] != '\0') {
+                num = str[i];
+
+                if (num >= '0' && num <= '9') {
+                        number *= 10;
+                        number += (double) (num - '0');
+                } else if (num == '.' && !point) {
+                        point = TRUE;
+                        i++;
+                        continue;
+                } else if (num == '-') {
+                        sign = -1;
+                        if (!isdigit((int)str[i + 1])) {
+                                i = 0;
+                                break;
+                        }
+                        i++;
+                        continue;
+                } else if (num == '+') {
+                        if (!isdigit((int)str[i + 1])) {
+                                i = 0;
+                                break;
+                        }
+                        i++;
+                        continue;
+                } else if (strchr(" \n\t+", num) == NULL) {
+                        break;
+                }
+
+                if (point) {
+                        decimal++;
+                }
+
+                i++;
+        }
+
+        if (point) {
+                for (int j = 0; j < decimal; j++) {
+                        div *= 10;
+                }
+        }
+
+        if (end)
+                *end = (char *) &str[i];
+
+        return sign * (number / div);
+}
+
+
+//==============================================================================
+/**
+ * @brief Function convert string to float
+ *
+ * @param[in] *str      string
+ *
+ * @return converted value
+ */
+//==============================================================================
+double io_atof(const char *str)
+{
+        return io_strtod(str, NULL);
+}
+
+//==============================================================================
+/**
  * @brief Enable printk functionality
  *
  * @param filename      path to file used to write kernel log
@@ -367,6 +606,25 @@ int io_fputc(int c, file_t *stream)
         } else {
                 return EOF;
         }
+}
+
+//==============================================================================
+/**
+ * @brief  TODO Enter function description
+ */
+//==============================================================================
+int io_fputs(const char *s, file_t *file)
+{
+        int n;
+
+        if (file) {
+                if ((n = vfs_fwrite(s, sizeof(char), strlen(s), file)) == 0)
+                        return EOF;
+                else
+                        return n;
+        }
+
+        return EOF;
 }
 
 //==============================================================================
@@ -576,6 +834,12 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
                         continue;
                 }
+
+                if (chr == 'f') {
+                        slen += dtoa(va_arg(arg, double), buf, 6, size - slen);
+                        buf  += slen;
+                        continue;
+                }
         }
 
         vsnprint_end:
@@ -663,13 +927,13 @@ int io_sscanf(const char *str, const char *format, ...)
 #if (CONFIG_SCANF_ENABLE > 0)
 int io_vsscanf(const char *str, const char *format, va_list args)
 {
-        int   read_fields = 0;
-        char  chr;
-        int   value;
-        char  *strs;
-        int   sign;
-        char  *string;
-        uint  bfr_size;
+        int    read_fields = 0;
+        char   chr;
+        int    value;
+        char   *strs;
+        int    sign;
+        char   *string;
+        uint   bfr_size;
 
         if (!str || !format) {
                 return EOF;
@@ -817,6 +1081,23 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                         read_fields++;
                                 }
                                 goto io_sscanf_end;
+
+                        case 'f':
+                        case 'F':
+                        case 'g':
+                        case 'G':
+                                if (str) {
+                                        double *value = va_arg(args, double*);
+                                        if (value) {
+                                                char *end;
+                                                *value = strtod(str, &end);
+                                                str += ((int)end - (int)str);
+
+                                                if (*end != '\0')
+                                                        str++;
+                                        }
+                                }
+                                break;
                         }
                 } else if (chr <= ' ') {
                         while (*str <= ' ' && *str != '\0') {
@@ -827,8 +1108,7 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                 break;
                         }
                 } else {
-                        while (  *str == chr && chr != '%'
-                              &&  chr > ' '  && chr != '\0') {
+                        while (*str == chr && chr != '%' && chr > ' ' && chr != '\0') {
                                 str++;
                                 chr = *format++;
                         }

@@ -595,7 +595,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_chmod(void *fshdl, const char *path, u32_t mode)
+stdret_t lfs_chmod(void *fshdl, const char *path, int mode)
 {
         struct LFS_data *lfs = fshdl;
 
@@ -664,7 +664,7 @@ stdret_t lfs_chown(void *fshdl, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_statf *stat)
+stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
         struct LFS_data *lfs = fshdl;
 
@@ -708,7 +708,7 @@ stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_statf *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_fstat(void *fshdl, fd_t fd, struct vfs_statf *stat)
+stdret_t lfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
 {
         struct LFS_data *lfs = fshdl;
         struct opened_file_info *opened_file;
@@ -987,7 +987,7 @@ stdret_t lfs_close(void *fshdl, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t lfs_write(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek)
 {
         struct LFS_data *lfs = fshdl;
         struct vfs_drv_interface *drv_if;
@@ -1149,7 +1149,7 @@ size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, siz
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, va_list args)
+stdret_t lfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
 {
         struct LFS_data *lfs = fshdl;
         struct opened_file_info  *opened_file;

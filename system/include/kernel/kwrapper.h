@@ -50,10 +50,13 @@ extern "C" {
 
 /** STANDART STACK SIZES */
 #define STACK_DEPTH_MINIMAL                             (1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_LOW                                 (2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_MEDIUM                              (4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_VERY_LOW                            (2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_LOW                                 (4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_MEDIUM                              (6  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 #define STACK_DEPTH_LARGE                               (8  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_HUGE                                (16 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_VERY_LARGE                          (10 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_HUGE                                (12 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_VERY_HUGE                           (14 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                                       NULL

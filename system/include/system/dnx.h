@@ -79,6 +79,7 @@ extern "C" {
 #define fstat(file, statPtr)                    sysm_fstat(file, stat)
 #define fflush(file)                            sysm_fflush(file)
 #define feof(file)                              sysm_feof(file)
+#define rewind(file)                            sysm_rewind(file)
 
 /** ENVIRONMENT DEFINITIONS */
 #define get_used_static_memory()                (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE)
@@ -93,7 +94,7 @@ extern "C" {
 #define reboot()                                cpuctl_restart_system()
 #define get_platform_name()                     CPUCTL_PLATFORM_NAME
 #define get_OS_name()                           "dnx"
-#define get_OS_version()                        "0.9.9"
+#define get_OS_version()                        "0.9.15"
 #define get_kernel_name()                       "FreeRTOS"
 #define get_kernel_version()                    tskKERNEL_VERSION_NUMBER
 #define get_host_name()                         CONFIG_HOSTNAME

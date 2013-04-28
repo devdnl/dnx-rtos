@@ -61,11 +61,14 @@ extern "C" {
 #define vsscanf(str, format, args)              io_vsscanf(str, format, args)
 #define putc(c, stream)                         io_fputc(c, stream)
 #define fputc(c, stream)                        io_fputc(c, stream)
+#define fputs(s, stream)                        io_fputs(s, stream)
 #define putchar(c)                              io_fputc(c, stdout)
 #define getchar()                               io_getc(stdin)
 #define getc(stream)                            io_getc(stream)
 #define fgets(str, size, stream)                io_fgets(str, size, stream)
 #define atoi(string, base, valuePtr)            io_atoi(string, base, valuePtr)
+#define atof(string)                            io_atof(string)
+#define strtod(string, end)                     io_strtod(string, end)
 
 /** VT100 terminal commands */
 #define ENABLE_LINE_WRAP                        "\e[?7h"
@@ -149,24 +152,27 @@ extern "C" {
   Exported function prototypes
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-extern void  io_printk(const char *format, ...);
-extern void  io_enable_printk(char *filename);
-extern void  io_disable_printk(void);
+extern void   io_printk(const char *format, ...);
+extern void   io_enable_printk(char *filename);
+extern void   io_disable_printk(void);
 #endif
 #if (CONFIG_PRINTF_ENABLE > 0)
-extern int   io_snprintf(char *buf, u32_t size, const char *format, ...);
-extern int   io_fprintf(file_t *file, const char *format, ...);
-extern int   io_vsnprintf(char *buf, size_t size, const char *format, va_list arg);
+extern int    io_snprintf(char *buf, u32_t size, const char *format, ...);
+extern int    io_fprintf(file_t *file, const char *format, ...);
+extern int    io_vsnprintf(char *buf, size_t size, const char *format, va_list arg);
 #endif
 #if (CONFIG_SCANF_ENABLE > 0)
-extern int   io_fscanf(file_t *buf, const char *format, ...);
-extern int   io_sscanf(const char *str, const char *format, ...);
-extern int   io_vsscanf(const char *str, const char *format, va_list args);
+extern int    io_fscanf(file_t *buf, const char *format, ...);
+extern int    io_sscanf(const char *str, const char *format, ...);
+extern int    io_vsscanf(const char *str, const char *format, va_list args);
 #endif
-extern char *io_atoi(char *string, u8_t base, i32_t *value);
-extern int   io_fputc(int c, file_t *buf);
-extern int   io_getc(file_t *buf);
-extern char *io_fgets(char *str, int size, file_t *stream);
+extern double io_strtod(const char*, char**);
+extern char  *io_atoi(char *string, u8_t base, i32_t *value);
+extern double io_atof(const char*);
+extern int    io_fputc(int c, file_t *buf);
+extern int    io_fputs(const char*, file_t*);
+extern int    io_getc(file_t *buf);
+extern char  *io_fgets(char *str, int size, file_t *stream);
 
 #ifdef __cplusplus
 }

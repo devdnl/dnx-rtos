@@ -154,7 +154,7 @@ stdret_t appfs_close(void *fshdl, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t appfs_write(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+size_t appfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek)
 {
         (void)fshdl;
         (void)fd;
@@ -205,7 +205,7 @@ size_t appfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, s
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, va_list args)
+stdret_t appfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
 {
         (void)fshdl;
         (void)fd;
@@ -246,7 +246,7 @@ stdret_t appfs_flush(void *fshdl, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_fstat(void *fshdl, fd_t fd, struct vfs_statf *stat)
+stdret_t appfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
 {
         (void)fshdl;
         (void)fd;
@@ -397,7 +397,7 @@ stdret_t appfs_rename(void *fshdl, const char *old_name, const char *new_name)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_chmod(void *fshdl, const char *path, u32_t mode)
+stdret_t appfs_chmod(void *fshdl, const char *path, int mode)
 {
         (void)fshdl;
         (void)path;
@@ -441,7 +441,7 @@ stdret_t appfs_chown(void *fshdl, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_stat(void *fshdl, const char *path, struct vfs_statf *stat)
+stdret_t appfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
         (void)fshdl;
 

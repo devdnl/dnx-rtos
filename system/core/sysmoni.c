@@ -41,7 +41,7 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define TASK_MEMORY_SLOTS               20
+#define TASK_MEMORY_SLOTS               24
 #define TASK_FILE_SLOTS                 8
 #define TASK_DIR_SLOTS                  4
 
@@ -51,11 +51,20 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
+typedef struct mem_slot_chain {
+        int    used_slots;
+        void   *mem_slot[TASK_MEMORY_SLOTS];
+        struct mem_slot_chain *prev;
+        struct mem_slot_chain *next;
+} mem_slot_chain_t ;
+#endif
+
 /* task information */
 struct task_monitor_data {
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
         u32_t used_memory;
-        void  *mem_slot[TASK_MEMORY_SLOTS];
+        mem_slot_chain_t mem_chain;
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
@@ -237,11 +246,24 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
         }
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-        for (uint slot = 0; slot < TASK_MEMORY_SLOTS; slot++) {
-                if (task_monitor_data->mem_slot[slot]) {
-                        memman_free(task_monitor_data->mem_slot[slot]);
-                }
+        mem_slot_chain_t *chain;
+        for (chain = &task_monitor_data->mem_chain; chain->next != NULL; chain = chain->next) {
+                /* go to the last memory slot chain */
         }
+
+        do {
+                if (chain->next) {
+                        memman_free(chain->next);
+                }
+
+                if (chain->used_slots > 0) {
+                        for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
+                                if (chain->mem_slot[i]) {
+                                        memman_free(chain->mem_slot[i]);
+                                }
+                        }
+                }
+        } while ((chain = chain->prev) != NULL);
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
@@ -642,9 +664,10 @@ i32_t sysm_get_module_used_memory(uint module_number)
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
 {
-        void *mem = NULL;
-        size_t allocated;
+        void                     *mem = NULL;
         struct task_monitor_data *task_monitor_data;
+        mem_slot_chain_t         *chain;
+        size_t                   allocated;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -660,19 +683,31 @@ void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
                 goto exit;
         }
 
-        for (uint slot = 0; slot < TASK_MEMORY_SLOTS; slot++) {
-                if (task_monitor_data->mem_slot[slot] == NULL) {
-                        if ((mem = memman_malloc(size, &allocated))) {
-                                task_monitor_data->mem_slot[slot] = mem;
-                                task_monitor_data->used_memory += allocated;
-                                sysm_programs_memory_usage     += allocated;
+        chain = &task_monitor_data->mem_chain;
+        do {
+                if (chain->used_slots < TASK_MEMORY_SLOTS) {
+                        for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
+                                if (chain->mem_slot[i] != NULL)
+                                        continue;
+
+                                if ((mem = memman_malloc(size, &allocated))) {
+                                        chain->mem_slot[i] = mem;
+                                        chain->used_slots++;
+                                        task_monitor_data->used_memory += allocated;
+                                        sysm_programs_memory_usage     += allocated;
+                                }
+
+                                goto exit;
                         }
-
-                        goto exit;
+                } else if (chain->next == NULL) {
+                        chain->next = memman_calloc(1, sizeof(mem_slot_chain_t), NULL);
+                        if (chain->next) {
+                                chain->next->prev = chain;
+                        }
                 }
-        }
+        } while ((chain = chain->next) != NULL);
 
-        printk("%s: Not enough free slots to allocate memory!\n", get_this_task_name());
+        printk("%s: malloc(): cannot create the next memory slot chain!\n", get_this_task_name());
 
         exit:
         unlock_recursive_mutex(sysm_resource_mtx);
@@ -755,7 +790,8 @@ void *sysm_tskcalloc(u32_t nmemb, u32_t msize)
 void sysm_tskfree_as(task_t *taskhdl, void *mem)
 {
         struct task_monitor_data *task_monitor_data;
-        size_t freed;
+        mem_slot_chain_t         *chain;
+        size_t                   freed;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -771,17 +807,31 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
                 goto exit;
         }
 
-        for (uint slot = 0; slot < TASK_MEMORY_SLOTS; slot++) {
-                if (task_monitor_data->mem_slot[slot] == mem) {
-                        freed = memman_free(mem);
-                        task_monitor_data->used_memory   -= freed;
-                        task_monitor_data->mem_slot[slot] = NULL;
-                        sysm_programs_memory_usage       -= freed;
-                        goto exit;
-                }
-        }
+        chain = &task_monitor_data->mem_chain;
+        do {
+                for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
+                        if (chain->mem_slot[i] == mem) {
+                                freed = memman_free(mem);
+                                chain->mem_slot[i] = NULL;
+                                task_monitor_data->used_memory -= freed;
+                                sysm_programs_memory_usage     -= freed;
+                                chain->used_slots--;
 
-        printk("%s: Address to free does not exist!\n", get_this_task_name());
+                                if (chain->used_slots == 0 && chain->prev != NULL) {
+                                        chain->prev->next = chain->next;
+
+                                        if (chain->next)
+                                                chain->next->prev = chain->prev;
+
+                                        memman_free(chain);
+                                }
+
+                                goto exit;
+                        }
+                }
+        } while ((chain = chain->next) != NULL);
+
+        printk("%s: free(): address does not exist!\n", get_this_task_name());
 
         exit:
         unlock_recursive_mutex(sysm_resource_mtx);

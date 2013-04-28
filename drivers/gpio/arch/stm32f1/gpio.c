@@ -359,7 +359,7 @@ stdret_t GPIO_close(void *drvhdl)
  * @retval number of written nitems
  */
 //==============================================================================
-size_t GPIO_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
+size_t GPIO_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
 {
         (void)drvhdl;
         (void)src;
@@ -405,7 +405,7 @@ size_t GPIO_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t GPIO_ioctl(void *drvhdl, iorq_t ioRq, va_list args)
+stdret_t GPIO_ioctl(void *drvhdl, int ioRq, va_list args)
 {
         (void)drvhdl;
         (void)ioRq;

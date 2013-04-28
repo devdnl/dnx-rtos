@@ -40,7 +40,7 @@ MODULE_NAME(TTY);
   Local symbolic constants/macros
 ==============================================================================*/
 #define TTYD_NAME                       "ttyworker"
-#define TTYD_STACK_DEPTH                STACK_DEPTH_LOW
+#define TTYD_STACK_DEPTH                STACK_DEPTH_VERY_LOW
 #define TTYD_PRIORITY                   0
 
 #define FILE                            "/dev/ttyS0"
@@ -138,9 +138,9 @@ static void  refresh_last_line(struct tty_data *tty, file_t *stream);
 static void  stdin_service(struct tty_data *tty, file_t *stream);
 static void  switch_tty_immediately(u8_t tty_number, file_t *stream);
 static void  clear_tty(struct tty_data *tty);
-static void  add_message(struct tty_data *tty, char *msg, uint msg_len);
-static char *merge_or_create_message(struct tty_data *tty, char *msg_src, uint msg_len);
-static void  strncpy_LF2CRLF(char *dst, char *src, uint n);
+static void  add_message(struct tty_data *tty, const char *msg, uint msg_len);
+static char *merge_or_create_message(struct tty_data *tty, const char *msg_src, uint msg_len);
+static void  strncpy_LF2CRLF(char *dst, const char *src, uint n);
 static void  link_message(struct tty_data *tty, char *msg);
 static void  inc_message_counter(struct tty_data *tty);
 static enum keycap capture_special_keys(char character);
@@ -333,7 +333,7 @@ stdret_t TTY_close(void *drvhdl)
  * @retval number of written nitems
  */
 //==============================================================================
-size_t TTY_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
+size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
 {
         (void)seek;
 
@@ -422,7 +422,7 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_ioctl(void *drvhdl, iorq_t iorq, va_list args)
+stdret_t TTY_ioctl(void *drvhdl, int iorq, va_list args)
 {
         struct tty_data *tty = drvhdl;
         int *out_ptr;
@@ -950,7 +950,7 @@ static void clear_tty(struct tty_data *tty)
  * @param  msgLen       message length
  */
 //==============================================================================
-static void add_message(struct tty_data *tty, char *msg, uint msg_len)
+static void add_message(struct tty_data *tty, const char *msg, uint msg_len)
 {
         char *new_msg;
 
@@ -980,7 +980,7 @@ static void add_message(struct tty_data *tty, char *msg, uint msg_len)
  * @return pointer to new message buffer
  */
 //==============================================================================
-static char *merge_or_create_message(struct tty_data *tty, char *msg_src, uint msg_len)
+static char *merge_or_create_message(struct tty_data *tty, const char *msg_src, uint msg_len)
 {
         char   *msg;
         char   *lst_msg     = tty->line[get_message_index(tty, 1)];
@@ -1012,9 +1012,9 @@ static char *merge_or_create_message(struct tty_data *tty, char *msg_src, uint m
                         strncpy_LF2CRLF(msg + strlen(msg), msg_src, msg_len + LF_count);
                 }
         } else {
-                msg = malloc(msg_len + (2 * LF_count));
+                msg = malloc(msg_len + (2 * LF_count) + 1);
                 if (msg) {
-                        strncpy_LF2CRLF(msg, msg_src, msg_len + (2 * LF_count));
+                        strncpy_LF2CRLF(msg, msg_src, msg_len + (2 * LF_count) + 1);
                         inc_message_counter(tty);
                 }
         }
@@ -1031,7 +1031,7 @@ static char *merge_or_create_message(struct tty_data *tty, char *msg_src, uint m
  * @param  n            destination length
  */
 //==============================================================================
-static void strncpy_LF2CRLF(char *dst, char *src, uint n)
+static void strncpy_LF2CRLF(char *dst, const char *src, uint n)
 {
         if (!dst || !src || !n) {
                 return;

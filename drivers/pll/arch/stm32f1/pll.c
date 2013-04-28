@@ -216,7 +216,7 @@ stdret_t PLL_close(void *drvhdl)
  * @retval number of written nitems
  */
 //==============================================================================
-size_t PLL_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
+size_t PLL_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
 {
         (void)drvhdl;
         (void)src;
@@ -262,7 +262,7 @@ size_t PLL_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t PLL_ioctl(void *drvhdl, iorq_t iorq, va_list args)
+stdret_t PLL_ioctl(void *drvhdl, int iorq, va_list args)
 {
         (void)drvhdl;
         (void)iorq;

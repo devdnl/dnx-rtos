@@ -345,7 +345,7 @@ stdret_t procfs_close(void *fshdl, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t procfs_write(void *fshdl, fd_t fd, void *src, size_t size, size_t nitems, size_t seek)
+size_t procfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek)
 {
         (void)fshdl;
         (void)fd;
@@ -465,7 +465,7 @@ size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, 
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_ioctl(void *fshdl, fd_t fd, iorq_t iorq, va_list args)
+stdret_t procfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
 {
         (void)fshdl;
         (void)fd;
@@ -506,7 +506,7 @@ stdret_t procfs_flush(void *fshdl, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_fstat(void *fshdl, fd_t fd, struct vfs_statf *stat)
+stdret_t procfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
 {
         struct procfs    *procmem = fshdl;
         struct file_info *fileInf;
@@ -779,7 +779,7 @@ stdret_t procfs_rename(void *fshdl, const char *old_name, const char *new_name)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_chmod(void *fshdl, const char *path, u32_t mode)
+stdret_t procfs_chmod(void *fshdl, const char *path, int mode)
 {
         (void)fshdl;
         (void)path;
@@ -823,7 +823,7 @@ stdret_t procfs_chown(void *fshdl, const char *path, u16_t owner, u16_t group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_stat(void *fshdl, const char *path, struct vfs_statf *stat)
+stdret_t procfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
       (void)fshdl;
 

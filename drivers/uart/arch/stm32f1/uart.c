@@ -92,8 +92,8 @@ struct USART_data {
         } Rx_FIFO;
 
         struct Tx_buffer {
-                u8_t   *src_ptr;
-                size_t data_size;
+                const u8_t *src_ptr;
+                size_t     data_size;
         } Tx_buffer;
 
         sem_t   *data_write_sem;
@@ -371,7 +371,7 @@ stdret_t UART_close(void *drvhdl)
  * @retval number of written nitems
  */
 //==============================================================================
-size_t UART_write(void *drvhdl, void *src, size_t size, size_t nitems, size_t seek)
+size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
 {
         (void)seek;
 
@@ -474,7 +474,7 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_ioctl(void *drvhdl, iorq_t iorq, va_list args)
+stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
 {
         struct USART_data *hdl = drvhdl;
         stdret_t status = STD_RET_OK;
