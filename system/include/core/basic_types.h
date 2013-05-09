@@ -35,6 +35,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -73,7 +74,8 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 /** define boolean type */
-typedef uint8_t bool;
+#undef bool
+typedef _Bool bool;
 
 /** define flag type */
 typedef uint8_t flag_t;
