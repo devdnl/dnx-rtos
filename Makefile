@@ -317,6 +317,14 @@ all :
 	@echo ""
 	@echo "Non-build targets:"
 	@echo "   flash               flashing uC (stm32) using openOCD debbuger"
+	@echo "   check               static code analyze for stm32f1 target"
+
+####################################################################################################
+# analisis
+####################################################################################################
+.PHONY : check
+check :
+	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive -DSTM32F10X_CL -DGCC_ARMCM3 -DARCH_stm32f1 $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
 
 ####################################################################################################
 # targets

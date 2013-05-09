@@ -126,14 +126,13 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
         }
 
         /* reverse buffer */
-        char  temp;
         char *begin = buffer_copy;
         char *end   = (buf - 1);
 
         while (end > begin) {
-                temp     = *end;
-                *end--   = *begin;
-                *begin++ = temp;
+                char temp = *end;
+                *end--    = *begin;
+                *begin++  = temp;
         }
 
         itoa_exit:
@@ -371,7 +370,7 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
 
         *value = 0;
 
-        if (base < 2 && base > 16) {
+        if (base < 2 || base > 16) {
                 goto atoi_end;
         }
 
@@ -440,16 +439,15 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
 //==============================================================================
 double io_strtod(const char *str, char **end)
 {
-        char num;
-        double sign = 1;
-        double div = 1;
-        double number = 0;
-        int i = 0;
-        int decimal = 0;
-        bool point = FALSE;
+        double sign    = 1;
+        double div     = 1;
+        double number  = 0;
+        int    i       = 0;
+        int    decimal = 0;
+        bool   point   = FALSE;
 
         while (str[i] != '\0') {
-                num = str[i];
+                char num = str[i];
 
                 if (num >= '0' && num <= '9') {
                         number *= 10;
@@ -615,10 +613,10 @@ int io_fputc(int c, FILE *stream)
 //==============================================================================
 int io_fputs(const char *s, FILE *file)
 {
-        int n;
-
         if (file) {
-                if ((n = vfs_fwrite(s, sizeof(char), strlen(s), file)) == 0)
+                int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
+
+                if (n == 0)
                         return EOF;
                 else
                         return n;
@@ -821,11 +819,11 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                         format--;
                                 }
 
-                                u8_t base = (chr == 'd' || chr == 'u' ? 10 : 16);
-                                bool uint = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
+                                u8_t base    = (chr == 'd' || chr == 'u' ? 10 : 16);
+                                bool uint_en = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
 
                                 resultPtr = itoa(va_arg(arg, i32_t), result,
-                                                 base, uint, zeros);
+                                                 base, uint_en, zeros);
                         }
 
                         while ((chr = *resultPtr++)) {

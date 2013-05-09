@@ -541,7 +541,7 @@ stdret_t lfs_rename(void *fshdl, const char *old_name, const char *new_name)
                 goto error;
         }
 
-        if (old_node_base != old_node_base) {
+        if (old_node_base != new_node_base) {
                 goto error;
         }
 

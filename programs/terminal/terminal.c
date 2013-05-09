@@ -412,8 +412,8 @@ static enum cmd_status cmd_ls(char *arg)
 //==============================================================================
 static enum cmd_status cmd_mkdir(char *arg)
 {
-        char  *newpath  = NULL;
-        bool   freePath = FALSE;
+        char *newpath  = NULL;
+        bool  freePath = FALSE;
 
         if (arg) {
                 if (arg[0] == '/') {
@@ -613,7 +613,7 @@ static enum cmd_status cmd_clear(char *arg)
 {
         (void)arg;
 
-        ioctl(stdout, TTY_IORQ_CLEAR_SCR, NULL);
+        ioctl(stdout, TTY_IORQ_CLEAR_SCR);
 
         return CMD_STATUS_EXECUTED;
 }
