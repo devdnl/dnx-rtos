@@ -19,6 +19,7 @@ if ! test ../target/$1; then
     exit 1
 fi
 
+echo "Waiting for target connection..."
 create_gdb_command
 arm-none-eabi-gdb --quiet --batch -x gdbcmd ../target/$1/main.elf
 rm -f gdbcmd
