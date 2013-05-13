@@ -316,7 +316,6 @@ all :
 	@echo "   cleanall            clean all non-project files"
 	@echo ""
 	@echo "Non-build targets:"
-	@echo "   flash               flashing uC (stm32) using openOCD debbuger"
 	@echo "   check               static code analyze for stm32f1 target"
 
 ####################################################################################################
@@ -462,14 +461,3 @@ cleanall:
 # include all dependencies
 ####################################################################################################
 -include $(BIN_LOC)/$(DEP_FILE)
-
-
-####################################################################################################
-# program Flash memory using openOCD and gdb
-####################################################################################################
-.PHONY : flash
-flash :
-	@echo -e "target remote localhost:3333\nmonitor reset halt\nload\nmonitor reset halt\nq\ny\n" > $(BIN_LOC)/gdbcmd
-	@arm-none-eabi-gdb $(BIN_LOC)/stm32f1/main.elf -x $(BIN_LOC)/gdbcmd
-	-@$(RM) $(BIN_LOC)/gdbcmd
-
