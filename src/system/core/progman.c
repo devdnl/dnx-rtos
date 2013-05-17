@@ -154,9 +154,10 @@ task_t *prgm_new_program(char *name, char *args, char *cwd, FILE *stdin,
  * @brief Function delete running program
  *
  * @param *taskhdl              task handle
+ * @param  exit_code            program exit value
  */
 //==============================================================================
-void prgm_delete_program(task_t *taskhdl)
+void prgm_delete_program(task_t *taskhdl, int exit_code)
 {
         struct task_data    *tdata;
         struct program_data *pdata;
@@ -177,7 +178,7 @@ void prgm_delete_program(task_t *taskhdl)
                         }
 
                         if (pdata->exit_code) {
-                                *pdata->exit_code = STD_RET_OK;
+                                *pdata->exit_code = exit_code;
                         }
 
                         if (pdata->status) {
@@ -190,6 +191,34 @@ void prgm_delete_program(task_t *taskhdl)
         }
 
         delete_task(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief Function close program immediately and set exit code
+ *
+ * @param status        exit value
+ */
+//==============================================================================
+void prgm_exit(int status)
+{
+        prgm_delete_program(get_task_handle(), status);
+
+        /* wait to kill program */
+        for (;;);
+}
+
+//==============================================================================
+/**
+ * @brief Function close program with error code
+ */
+//==============================================================================
+void prgm_abort(void)
+{
+        prgm_delete_program(get_task_handle(), -1);
+
+        /* wait to kill program */
+        for (;;);
 }
 
 //==============================================================================

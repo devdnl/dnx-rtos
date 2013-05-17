@@ -42,7 +42,7 @@ extern "C" {
         prgm_new_program(name, args, cwd, fstdin, fstdout, status, exit_code)
 
 #define delete_program(taskhdl) \
-        prgm_delete_program(taskhdl)
+        prgm_delete_program(taskhdl, EXIT_SUCCESS)
 
 #define GLOBAL_VARIABLES \
         struct __global_vars__
@@ -74,10 +74,10 @@ extern "C" {
         struct __global_vars__*name = global
 
 #define exit(status) \
-        {(void)status; prgm_delete_program(get_task_handle());}
+        prgm_exit(status)
 
 #define abort() \
-        prgm_delete_program(get_task_handle())
+        prgm_abort()
 
 /*==============================================================================
   Exported types, enums definitions
@@ -100,7 +100,9 @@ enum prog_state {
   Exported function prototypes
 ==============================================================================*/
 extern task_t *prgm_new_program(char*, char*, char*, FILE*, FILE*, enum prog_state*, int*);
-extern void    prgm_delete_program(task_t*);
+extern void    prgm_delete_program(task_t*, int);
+extern void    prgm_exit(int);
+extern void    prgm_abort(void);
 
 #ifdef __cplusplus
 }
