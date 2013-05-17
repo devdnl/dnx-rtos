@@ -3,7 +3,7 @@
 #
 # AUTHOR: DANIEL ZORYCHTA
 #
-# Version: 20120628
+# Version: 20130516
 #--------------------------------------------------------------------------------------------------
 #
 #
@@ -26,282 +26,129 @@
 #
 ####################################################################################################
 
-####################################################################################################
-# INSERT HERE PROGRAMS SOURCES
-####################################################################################################
-# C source files
-CSRC_PROGRAMS = $(sort \
-   programs/cat/cat.c \
-   programs/helloworld/helloworld.c \
-   programs/top/top.c \
-   programs/terminal/terminal.c \
-)
+include src/programs/Makefile.mk
+include src/system/Makefile.mk
 
-# C++ source files
-CXXSRC_PROGRAMS = $(sort \
-)
-
-# paths to headers
-HDRLOC_PROGRAMS = $(sort \
-)
-
-####################################################################################################
-# INSERT HERE SOURCES NOT ARCHITECTURE DEPENDED
-####################################################################################################
-# C source files
-CSRC_noarch = $(sort \
-   drivers/tty/arch/noarch/tty.c \
-)
-
-# C++ source files
-CXXSRC_noarch = $(sort \
-)
-
-# paths to headers
-HDRLOC_noarch = $(sort \
-   drivers/tty \
-)
-
-####################################################################################################
-# INSERT HERE SOURCES STM32F1 ARCHITECTURE DEPENDED
-####################################################################################################
-# C source files
-CSRC_stm32f1 = $(sort \
-   drivers/gpio/arch/stm32f1/gpio.c \
-   drivers/uart/arch/stm32f1/uart.c \
-   drivers/pll/arch/stm32f1/pll.c \
-   system/portable/stm32f1/cpuctl.c \
-   system/portable/stm32f1/cpuhooks.c \
-   system/portable/stm32f1/stm32f10x_vectors.c \
-   system/portable/stm32f1/lib/misc.c \
-   system/kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c \
-)
-
-# C++ source files
-CXXSRC_stm32f1 = $(sort \
-)
-
-# assembler source file
-ASRC_stm32f1 = $(sort \
-   system/portable/stm32f1/cmx_startup.s \
-)
-
-# paths to headers
-HDRLOC_stm32f1 = $(sort \
-   drivers/gpio \
-   drivers/gpio/arch/stm32f1 \
-   drivers/pll \
-   drivers/uart \
-   system/portable/lib/CMSIS \
-   system/portable/stm32f1 \
-)
-
-####################################################################################################
-# INSERT HERE SOURCES POSIX ARCHITECTURE DEPENDED
-####################################################################################################
-# C source files
-CSRC_posix = $(sort \
-   drivers/uart/arch/posix/uart.c \
-   drivers/pll/arch/posix/pll.c \
-   system/portable/posix/cpuctl.c \
-   system/kernel/FreeRTOS/Source/portable/GCC/Posix/port.c \
-)
-
-# C++ source files
-CXXSRC_posix = $(sort \
-)
-
-# assembler source file
-ASRC_posix = $(sort \
-)
-
-# paths to headers
-HDRLOC_posix = $(sort \
-   $(dir $(CSRC_posix)) \
-   $(dir $(CXXSRC_posix)) \
-   drivers/i2c \
-   drivers/uart \
-   drivers/pll \
-)
-
-####################################################################################################
-# CORE SOURCES
-####################################################################################################
-CSRC_CORE = $(sort \
-   system/core/dnx.c \
-   system/core/sysmoni.c \
-   system/core/progman.c \
-   system/core/list.c \
-   system/core/main.c \
-   system/core/memman.c \
-   system/core/io.c \
-   system/core/vfs.c \
-   system/fs/procfs.c \
-   system/fs/appfs.c \
-   system/fs/lfs.c \
-   system/user/initd.c \
-   system/user/regdrv.c \
-   system/user/regfs.c \
-   system/user/regprg.c \
-   system/kernel/khooks.c \
-   system/kernel/kwrapper.c \
-   system/kernel/FreeRTOS/Source/croutine.c \
-   system/kernel/FreeRTOS/Source/list.c \
-   system/kernel/FreeRTOS/Source/queue.c \
-   system/kernel/FreeRTOS/Source/tasks.c \
-   system/kernel/FreeRTOS/Source/timers.c \
-   system/kernel/FreeRTOS/Source/portable/MemMang/heap_3.c \
-)
-
-HDRLOC_CORE = $(sort \
-   system/kernel/FreeRTOS/Source/include \
-   system/kernel \
-   system/config \
-   system/portable \
-   system/include \
-   system/include/stdlib \
-   . \
-)
-
-####################################################################################################
-####################################################################################################
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
-PROJECT = main
-
-# optymalization
-OPT = s
+PROJECT = dnx
 
 #---------------------------------------------------------------------------------------------------
-# ARCHITECTURE CONFIG: STM32F1
+# ARCHITECTURE CONFIG: stm32f1
 #---------------------------------------------------------------------------------------------------
-CC_stm32f1        = arm-none-eabi-gcc
-CXX_stm32f1       = arm-none-eabi-g++
-LINKER_stm32f1    = arm-none-eabi-gcc
-AS_stm32f1        = arm-none-eabi-gcc -x assembler-with-cpp
-OBJCOPY_stm32f1   = arm-none-eabi-objcopy
-OBJDUMP_stm32f1   = arm-none-eabi-objdump
-SIZE_stm32f1      = arm-none-eabi-size
-LD_SCRIPT_stm32f1 = system/portable/stm32f1/stm32f107xx.ld
-CPU_stm32f1       = cortex-m3
-MCU_stm32f1       = STM32F10X_CL
-
-CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -O$(OPT) -ffunction-sections -Wall \
-                  -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -Wparentheses \
-                  -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
-
-CXXFLAGS_stm32f1  =
-
-LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles -Wl,--gc-sections -Wall \
-                  -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                  -DGCC_ARMCM3 -DARCH_$(TARGET) -lm
-
-AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 -DARCH_$(TARGET)
+       CC_stm32f1 = arm-none-eabi-gcc
+      CXX_stm32f1 = arm-none-eabi-g++
+   LINKER_stm32f1 = arm-none-eabi-gcc
+       AS_stm32f1 = arm-none-eabi-gcc -x assembler-with-cpp
+  OBJCOPY_stm32f1 = arm-none-eabi-objcopy
+  OBJDUMP_stm32f1 = arm-none-eabi-objdump
+     SIZE_stm32f1 = arm-none-eabi-size
+LD_SCRIPT_stm32f1 = src/system/portable/stm32f1/stm32f107xx.ld
+      CPU_stm32f1 = cortex-m3
+      MCU_stm32f1 = STM32F10X_CL
+  DEFINES_stm32f1 = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
+   CFLAGS_stm32f1 = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
+                    -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -Wparentheses $(DEFINES_stm32f1)
+ CXXFLAGS_stm32f1 =
+   LFLAGS_stm32f1 = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
+                    -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+                    $(DEFINES_stm32f1) -lm
+   AFLAGS_stm32f1 = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINES_stm32f1)
 
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: POSIX
 #---------------------------------------------------------------------------------------------------
-CC_posix        = gcc
-CXX_posix       = g++
-LINKER_posix    = gcc
-AS_posix        = gcc -x assembler-with-cpp
-OBJCOPY_posix   = 
-OBJDUMP_posix   = 
-SIZE_posix      = 
-LD_SCRIPT_posix = 
-CPU_posix       = 
-MCU_posix       = 
-
-CFLAGS_posix    = -m32 -c -O0 -Wall -Wstrict-prototypes -Wextra -std=gnu99 -g -Wparentheses\
-                  -DARCH_$(TARGET) -Wno-pointer-sign \
-                  -D__GCC_POSIX__=1 -DDEBUG_BUILD=1 -DUSE_STDIO=1 -fmessage-length=0 -pthread -lrt
-
-CXXFLAGS_posix  =
-
-LFLAGS_posix    = -m32 -g -Wall -pthread -lrt \
-                  -Wl,-Map=$(BIN_LOC)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                  -DARCH_$(TARGET) -lm
-
-AFLAGS_posix    = -m32 -c -g -DARCH_$(TARGET)
+         CC_posix = gcc
+        CXX_posix = g++
+     LINKER_posix = gcc
+         AS_posix = gcc -x assembler-with-cpp
+    DEFINES_posix = -D__GCC_POSIX__=1 -DDEBUG_BUILD=1 -DUSE_STDIO=1 -DARCH_$(TARGET)
+     CFLAGS_posix = -m32 -c -O0 -Wall -Wstrict-prototypes -Wextra -std=gnu99 -g -Wparentheses\
+                    -Wno-pointer-sign -fmessage-length=0 -pthread -lrt $(DEFINES_posix)
+   CXXFLAGS_posix =
+     LFLAGS_posix = -m32 -g -Wall -lrt -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+                    -pthread $(DEFINES_posix) -lm
+     AFLAGS_posix = -m32 -c -g $(DEFINES_posix)
 
 #---------------------------------------------------------------------------------------------------
+# FILE EXTENSIONS CONFIGURATION
 #---------------------------------------------------------------------------------------------------
-# object extension
 OBJ_EXT = o
-
-# c source extension
-C_EXT = c
-
-# C++ source extension
+C_EXT   = c
 CXX_EXT = cpp
+AS_EXT  = s
 
-# assembler extension
-AS_EXT = s
-
+#---------------------------------------------------------------------------------------------------
+# FILE AND DIRECTORY NAMES
 #---------------------------------------------------------------------------------------------------
 # defines project path with binaries
-BIN_LOC = target
-
-# defines project path with build info
-INFO_LOC = $(BIN_LOC)/info
+TARGET_DIR_NAME = target
 
 # defines object folder name
-OBJ_LOC = obj
+OBJ_DIR_NAME    = obj
 
 # dependencies file name
-DEP_FILE = dep.d
+DEP_FILE_NAME   = $(PROJECT).d
 
 #---------------------------------------------------------------------------------------------------
-# basic programs definitions
-SHELL   = sh
-RM      = rm -f
-MKDIR   = mkdir -p
-TEST    = test
-DATE    = date
-CAT     = cat
-DEPAPP  = makedepend
-WC      = wc
-GREP    = grep
-SIZEOF  = stat -c %s
+# BASIC PROGRAMS DEFINITIONS
+#---------------------------------------------------------------------------------------------------
+SHELL    = sh
+RM       = rm -f
+MKDIR    = mkdir -p
+TEST     = test
+DATE     = date
+CAT      = cat
+DEPAPP   = makedepend
+WC       = wc
+GREP     = grep
+SIZEOF   = stat -c %s
 
 #---------------------------------------------------------------------------------------------------
-# defines this makefile name (do not edit)
+# MAKEFILE CORE (do not edit)
+#---------------------------------------------------------------------------------------------------
+# defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
-# number of threads when objects are compiled (cpu count + 1) (do not edit)
+# number of threads used in compilation (cpu count + 1)
 THREAD = $(shell echo $$[ $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l) + 1 ])
 
-# sets header search path (adds -I flags to paths) (do not edit)
+# sets header search path (adds -I flags to paths)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
-# main target without defined prefixes (do not edit)
+# main target without defined prefixes
 TARGET = $(lastword $(subst _, ,$(MAKECMDGOALS)))
 
-# target path (do not edit)
-TARGET_PATH = $(BIN_LOC)/$(TARGET)
+# target path
+TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 
-# object path (do not edit)
-OBJ_PATH = $(BIN_LOC)/$(TARGET)/$(OBJ_LOC)
+# object path
+OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
-# defines objects localizations (do not edit)
-HDRLOC = $(HDRLOC_noarch) \
-         $(HDRLOC_$(TARGET)) \
-         $(HDRLOC_PROGRAMS) \
-         $(HDRLOC_CORE)
+# defines objects localizations
+HDRLOC  = $(foreach file, $(HDRLOC_noarch),src/system/$(file)) \
+          $(foreach file, $(HDRLOC_$(TARGET)),src/system/$(file)) \
+          $(foreach file, $(HDRLOC_PROGRAMS),src/programs/$(file)) \
+          $(foreach file, $(HDRLOC_CORE),src/system/$(file)) \
+          src/
 
-# defines objects names (do not edit)
-OBJECTS = $(ASRC_$(TARGET):.$(AS_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_$(TARGET):.$(C_EXT)=.$(OBJ_EXT)) \
-          $(CXXSRC_$(TARGET):.$(CXX_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_PROGRAMS:.$(C_EXT)=.$(OBJ_EXT)) \
-          $(CXXSRC_PROGRAMS:.$(CXX_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_noarch:.$(C_EXT)=.$(OBJ_EXT)) \
-          $(CXXSRC_noarch:.$(CXX_EXT)=.$(OBJ_EXT)) \
-          $(CSRC_CORE:.$(C_EXT)=.$(OBJ_EXT))
+# defines all C/C++ sources
+CSRC    = $(foreach file, $(CSRC_CORE),src/system/$(file)) \
+          $(foreach file, $(CSRC_$(TARGET)),src/system/$(file)) \
+          $(foreach file, $(CSRC_PROGRAMS),src/programs/$(file)) \
+          $(foreach file, $(CSRC_noarch),src/system/$(file)) \
+          $(foreach file, $(CXXSRC_$(TARGET)),src/system/$(file)) \
+          $(foreach file, $(CXXSRC_PROGRAMS),src/programs/$(file)) \
+          $(foreach file, $(CXXSRC_noarch),src/system/$(file))
+          
+# defines all assembler sources
+ASRC    = $(foreach file, $(ASRC_$(TARGET)),src/system/$(file))
+         
+# defines objects names
+OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT))
 
-####################################################################################################
 ####################################################################################################
 # default target
 ####################################################################################################
@@ -323,7 +170,7 @@ all :
 ####################################################################################################
 .PHONY : check
 check :
-	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive -DSTM32F10X_CL -DGCC_ARMCM3 -DARCH_stm32f1 $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
+	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive $(DEFINES_stm32f1) $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
 
 ####################################################################################################
 # targets
@@ -352,24 +199,16 @@ hex :
 	@echo 'Size of modules:'
 	@$(SIZE_$(TARGET)) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 
-	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) B\n"
+	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) bytes\n"
 
 ####################################################################################################
 # show compile status
 ####################################################################################################
 .PHONY : status
 status :
-	@$(MKDIR) $(INFO_LOC)
-	@if ! $(TEST) -f $(INFO_LOC)/build; then echo "0" > $(INFO_LOC)/build; fi
-	@echo $$(($$($(CAT) $(INFO_LOC)/build) + 1)) > $(INFO_LOC)/build
-
-	@echo '/* application version created automatically by $(THIS_MAKEFILE) */' > $(INFO_LOC)/version.h
-	@echo '#'ifndef VERSION >> $(INFO_LOC)/version.h
-	@echo '#'define VERSION `$(DATE) "+%Y%m%d"`UL >> $(INFO_LOC)/version.h
-	@echo '#'endif >> $(INFO_LOC)/version.h
-
-	@echo "Build: `$(CAT) $(INFO_LOC)/build` `$(DATE) "+completed: %k:%M:%S"`"
-
+	@echo "-----------------------------------"
+	@echo "| `$(DATE) "+Compilation completed: %k:%M:%S"` |"
+	@echo "-----------------------------------"
 
 ####################################################################################################
 ####################################################################################################
@@ -379,14 +218,11 @@ status :
 dependencies :
 	@echo "Creating dependencies for '$(TARGET)' target..."
 	@$(MKDIR) $(TARGET_PATH)
-	@echo "" > $(BIN_LOC)/$(DEP_FILE)
-	@$(DEPAPP) -f$(BIN_LOC)/$(DEP_FILE) -p$(OBJ_PATH)/ -o.$(OBJ_EXT) $(SEARCHPATH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >& /dev/null
-	@echo -e "$(foreach var,$(CSRC),\n$(OBJ_PATH)/$(var:.$(C_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
-	@echo -e "$(foreach var,$(CSRC_$(TARGET)),\n$(OBJ_PATH)/$(var:.$(C_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
-	@echo -e "$(foreach var,$(CXXSRC),\n$(OBJ_PATH)/$(var:.$(CXX_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
-	@echo -e "$(foreach var,$(CXXSRC_$(TARGET)),\n$(OBJ_PATH)/$(var:.$(CXX_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
-	@echo -e "$(foreach var,$(ASRC),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
-	@echo -e "$(foreach var,$(ASRC_$(TARGET)),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(BIN_LOC)/$(DEP_FILE)
+	@$(RM) $(TARGET_PATH)/*.*
+	@echo "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
+	@$(DEPAPP) -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >& /dev/null
+	@echo -e "$(foreach var,$(CSRC),\n$(OBJ_PATH)/$(var:.$(C_EXT )=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
+	@echo -e "$(foreach var,$(ASRC),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
 
 ####################################################################################################
 # linking rules
@@ -394,8 +230,6 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@echo "Linking..."
-	@$(MKDIR) $(TARGET_PATH)
-	@$(RM) $(TARGET_PATH)/*.*
 	@$(LINKER_$(TARGET)) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS_$(TARGET)) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
@@ -406,7 +240,7 @@ buildobjects :
 	@echo "Starting building objects on $(THREAD) threads..."
 	@$(MAKE) -s -j$(THREAD) -f$(THIS_MAKEFILE) buildobjects_$(TARGET)
 
-buildobjects_$(TARGET) : $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
+buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 
 ####################################################################################################
 # rule used to compile object files from c sources
@@ -430,7 +264,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	@$(AS_$(TARGET)) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	$(AS_$(TARGET)) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
 ####################################################################################################
 # clean target
@@ -439,7 +273,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT)
 cleantarget :
 	@echo "Cleaning target..."
 	-@$(RM) -r $(OBJ_PATH) $(LST_PATH)
-	-@$(RM) $(BIN_LOC)/*.*
+	-@$(RM) $(TARGET_DIR_NAME)/*.*
 
 ####################################################################################################
 # clean all targets
@@ -447,7 +281,7 @@ cleantarget :
 .PHONY : clean
 clean :
 	@echo "Deleting all build files..."
-	-@$(RM) -r $(BIN_LOC)/*
+	-@$(RM) -r $(TARGET_DIR_NAME)/*
 
 ####################################################################################################
 # clean up project (remove all files who arent project files!)
@@ -455,9 +289,9 @@ clean :
 .PHONY : cleanall
 cleanall:
 	@echo "Cleaning up project..."
-	-@$(RM) -r $(BIN_LOC) $(INFO_LOC)
+	-@$(RM) -r $(TARGET_DIR_NAME) $(INFO_LOC)
 
 ####################################################################################################
 # include all dependencies
 ####################################################################################################
--include $(BIN_LOC)/$(DEP_FILE)
+-include $(TARGET_PATH)/$(DEP_FILE_NAME)
