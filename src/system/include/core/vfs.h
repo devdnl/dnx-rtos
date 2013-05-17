@@ -34,7 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdarg.h>
-#include "systypes.h"
+#include "core/systypes.h"
 
 /*==============================================================================
   Exported macros
