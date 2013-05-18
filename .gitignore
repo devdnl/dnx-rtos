@@ -1,4 +1,4 @@
-target/
+build/
 .settings/
 .cproject
 .project
@@ -10,3 +10,7 @@ target/
 *.hex
 *.elf
 *.*~
+*.toc
+*.out
+*.log
+*.aux

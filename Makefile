@@ -84,7 +84,7 @@ AS_EXT  = s
 # FILE AND DIRECTORY NAMES
 #---------------------------------------------------------------------------------------------------
 # defines project path with binaries
-TARGET_DIR_NAME = target
+TARGET_DIR_NAME = build
 
 # defines object folder name
 OBJ_DIR_NAME    = obj
