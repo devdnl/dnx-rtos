@@ -809,6 +809,9 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
                         if (chr == 's') {
                                 resultPtr = va_arg(arg, char*);
+                                if (!resultPtr) {
+                                        resultPtr = "(null)";
+                                }
                         } else {
                                 u8_t zeros = *format++;
 

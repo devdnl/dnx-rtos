@@ -404,7 +404,7 @@ static char **new_argument_table(char *arg, const char *name, int *argc)
         }
 
 add_args_to_table:
-        if ((arg_table = sysm_syscalloc(arg_count, sizeof(char*))) == NULL) {
+        if ((arg_table = sysm_syscalloc(arg_count + 1, sizeof(char*))) == NULL) {
                 goto exit_error;
         }
 
