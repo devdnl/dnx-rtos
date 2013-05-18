@@ -1,0 +1,35 @@
+The dnx/FreeRTOS is a general purpose operating system based on FreeRTOS kernel.
+The dnx layer is modeled on well-known Unix architecture (everything is a file).
+Destination of the system are small microcontrollers supported by FreeRTOS kernel,
+especially 32-bit. System is easy scalable to user's needs, user can write own
+drivers, virtual devices, programs and so on. The programs layer is mostly
+compatibile with C standard.
+
+Minimal hardware requirements:
+- 32 KiB Flash memory,
+- 10 KiB RAM memory.
+Hardware requirements depends on user's configuration, so it's possible to
+run dnx/FreeRTOS on smaller systems.
+
+System features:
+- user's terminal (via UART interface in example configuration),
+- possibility to run many copies of the same program,
+- very simple PC programs porting (thanks to C standard compability e.g. lua,
+  codecs, etc),
+- very simple driver's layer,
+- support many file systems (VFS layer),
+- interrupts are not masked by system (RTOS feature),
+- dynamic memory allocation (garbage collector for programs),
+- supports many CPU architectures (FreeRTOS feature),
+- modular design.
+
+To compile project, type in terminal:
+
+    make <target>
+
+where <target> is supported architecture (if ported), e.g. stm32f1.
+
+To make sure about supported architectures, type:
+
+    make help
+    
