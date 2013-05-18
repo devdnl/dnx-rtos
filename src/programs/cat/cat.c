@@ -33,6 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "cat.h"
 #include "drivers/tty_def.h"
 
@@ -72,10 +73,7 @@ PROGRAM_PARAMS(cat, STACK_DEPTH_VERY_LOW);
 //==============================================================================
 int PROGRAM_MAIN(cat, int argc, char *argv[])
 {
-        (void) argc;
-        (void) argv;
-
-        stdret_t status = STD_RET_OK;
+        int status = EXIT_SUCCESS;
 
         if (argc == 1) {
                 printf("Usage: cat [file]\n");
@@ -129,13 +127,13 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
                 } else {
                         printf("No such file or file is protected\n");
 
-                        status = STD_RET_ERROR;
+                        status = EXIT_FAILURE;
                 }
 
         } else {
                 printf("Enough free memory\n");
 
-                status = STD_RET_ERROR;
+                status = EXIT_FAILURE;
         }
 
         if (data) {
