@@ -121,7 +121,7 @@
 #define SD_CS_BP                                4U                               /* pin name      */
 #define SD_CS_BM                                (1 << 4)                         /* pin mask      */
 #define SD_CS_PORT                              GPIOA                            /* port name     */
-#define GPIOA_PIN_04_MODE                       GPIO_ALT_OUT_PUSH_PULL_2MHZ      /* pin mode      */
+#define GPIOA_PIN_04_MODE                       GPIO_ALT_OUT_PUSH_PULL_50MHZ     /* pin mode      */
 #define GPIOA_PIN_04_DEFAULT_STATE              HIGH                             /* def. pin state*/
 
 #define ADC12_IN5_BP                            5U                               /* pin name      */

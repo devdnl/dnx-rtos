@@ -263,7 +263,8 @@ stdret_t UART_init(void **drvhdl, uint dev, uint part)
                 return STD_RET_OK;
         }
 
-        error: if (USART_data[dev]->data_write_sem) {
+error:
+        if (USART_data[dev]->data_write_sem) {
                 delete_semaphore(USART_data[dev]->data_write_sem);
         }
 
