@@ -1,13 +1,13 @@
-#ifndef GPIO_DEF_H_
-#define GPIO_DEF_H_
+#ifndef _SDSPI_DEF_H_
+#define _SDSPI_DEF_H_
 /*=========================================================================*//**
-@file    gpio_def.h
+@file    sdspi_def.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO definitions
+@brief   This file support statuses and requests for SD card in SPI mode
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,25 +33,19 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "core/systypes.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GPIO_PART_NONE       0
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** port names */
-enum GPIO_DEV_NUMBER {
-        GPIO_DEV_NONE,
-        GPIO_DEV_LAST
-};
+/** IO request for SDSPI driver */
+enum SDSPI_IORQ
+{
 
-/** ioctl commands */
-enum GPIO_IORQ {
-        GPIO_IORQ_SD_SELECT,
-        GPIO_IORQ_SD_DESELECT,
 };
 
 /*==============================================================================
@@ -59,14 +53,14 @@ enum GPIO_IORQ {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+ Exported function prototypes
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* GPIO_DEF_H_ */
+#endif /* _SDSPI_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

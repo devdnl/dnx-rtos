@@ -44,13 +44,19 @@ MODULE_NAME(GPIO);
   Local symbolic constants/macros
 ==============================================================================*/
 /** define pin configure size (CNF[1:0] + MODE[1:0]) */
-#define GPIO_PIN_CFG_SIZE                 4U
+#define GPIO_PIN_CFG_SIZE                       4U
 
 /** define CRL configuration macro */
-#define GPIO_SET_CRL(CFG, PIN)            ( CFG << (GPIO_PIN_CFG_SIZE * PIN) )
+#define GPIO_SET_CRL(CFG, PIN)                  ( CFG << (GPIO_PIN_CFG_SIZE * PIN) )
 
 /** define CRH configuration macro */
-#define GPIO_SET_CRH(CFG, PIN)            ( CFG << (GPIO_PIN_CFG_SIZE * (PIN - 8)) )
+#define GPIO_SET_CRH(CFG, PIN)                  ( CFG << (GPIO_PIN_CFG_SIZE * (PIN - 8)) )
+
+/** define macro used to set port's pins */
+#define SET_PIN(port, pin_mask)                 port->BSRR = pin_mask
+
+/** define macro used to clear port's pins */
+#define CLEAR_PIN(port, pin_mask)               port->BRR = pin_mask
 
 #if (GPIOA_EN != 0)
 /** CRL register value for GPIOA */
@@ -326,7 +332,7 @@ stdret_t GPIO_open(void *drvhdl)
 {
         (void)drvhdl;
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -344,7 +350,7 @@ stdret_t GPIO_close(void *drvhdl)
 {
         (void)drvhdl;
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -405,13 +411,25 @@ size_t GPIO_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t GPIO_ioctl(void *drvhdl, int ioRq, va_list args)
+stdret_t GPIO_ioctl(void *drvhdl, int iorq, va_list args)
 {
         (void)drvhdl;
-        (void)ioRq;
         (void)args;
 
-        return STD_RET_ERROR;
+        switch (iorq) {
+        case GPIO_IORQ_SD_SELECT:
+                CLEAR_PIN(SD_CS_PORT, SD_CS_BM);
+                break;
+
+        case GPIO_IORQ_SD_DESELECT:
+                SET_PIN(SD_CS_PORT, SD_CS_BM);
+                break;
+
+        default:
+                return STD_RET_ERROR;
+        }
+
+        return STD_RET_OK;
 }
 
 //==============================================================================

@@ -1,13 +1,13 @@
-#ifndef GPIO_DEF_H_
-#define GPIO_DEF_H_
+#ifndef _SDSPI_CFG_H_
+#define _SDSPI_CFG_H_
 /*=========================================================================*//**
-@file    gpio_def.h
+@file    sdspi_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO definitions
+@brief   This file support configuration for SD in SPI mode
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,26 +33,15 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GPIO_PART_NONE       0
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** port names */
-enum GPIO_DEV_NUMBER {
-        GPIO_DEV_NONE,
-        GPIO_DEV_LAST
-};
-
-/** ioctl commands */
-enum GPIO_IORQ {
-        GPIO_IORQ_SD_SELECT,
-        GPIO_IORQ_SD_DESELECT,
-};
 
 /*==============================================================================
   Exported object declarations
@@ -66,7 +55,7 @@ enum GPIO_IORQ {
 }
 #endif
 
-#endif /* GPIO_DEF_H_ */
+#endif /* _SDSPI_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

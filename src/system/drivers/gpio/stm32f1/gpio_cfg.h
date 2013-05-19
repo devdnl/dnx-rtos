@@ -118,9 +118,9 @@
 #define GPIOA_PIN_03_MODE                       GPIO_IN_FLOAT                    /* pin mode      */
 #define GPIOA_PIN_03_DEFAULT_STATE              FLOAT                            /* def. pin state*/
 
-#define SPI_SS_BP                               4U                               /* pin name      */
-#define SPI_SS_BM                               (1 << 4)                         /* pin mask      */
-#define SPI_SS_PORT                             GPIOA                            /* port name     */
+#define SD_CS_BP                                4U                               /* pin name      */
+#define SD_CS_BM                                (1 << 4)                         /* pin mask      */
+#define SD_CS_PORT                              GPIOA                            /* port name     */
 #define GPIOA_PIN_04_MODE                       GPIO_ALT_OUT_PUSH_PULL_2MHZ      /* pin mode      */
 #define GPIOA_PIN_04_DEFAULT_STATE              HIGH                             /* def. pin state*/
 
@@ -352,21 +352,21 @@
 #define GPIOC_PIN_09_MODE                       GPIO_IN_PULLED                   /* pin mode      */
 #define GPIOC_PIN_09_DEFAULT_STATE              DOWN                             /* def. pin state*/
 
-#define SPI_SCK_BP                              10U                              /* pin name      */
-#define SPI_SCK_BM                              (1 << 10)                        /* pin mask      */
-#define SPI_SCK_PORT                            GPIOC                            /* port name     */
+#define SD_SCK_BP                               10U                              /* pin name      */
+#define SD_SCK_BM                               (1 << 10)                        /* pin mask      */
+#define SD_SCK_PORT                             GPIOC                            /* port name     */
 #define GPIOC_PIN_10_MODE                       GPIO_ALT_OUT_PUSH_PULL_50MHZ     /* pin mode      */
 #define GPIOC_PIN_10_DEFAULT_STATE              LOW                              /* def. pin state*/
 
-#define SPI_MISO_BP                             11U                              /* pin name      */
-#define SPI_MISO_BM                             (1 << 11)                        /* pin mask      */
-#define SPI_MISO_PORT                           GPIOC                            /* port name     */
+#define SD_MISO_BP                              11U                              /* pin name      */
+#define SD_MISO_BM                              (1 << 11)                        /* pin mask      */
+#define SD_MISO_PORT                            GPIOC                            /* port name     */
 #define GPIOC_PIN_11_MODE                       GPIO_IN_PULLED                   /* pin mode      */
-#define GPIOC_PIN_11_DEFAULT_STATE              DOWN                             /* def. pin state*/
+#define GPIOC_PIN_11_DEFAULT_STATE              UP                               /* def. pin state*/
 
-#define SPI_MOSI_BP                             12U                              /* pin name      */
-#define SPI_MOSI_BM                             (1 << 12)                        /* pin mask      */
-#define SPI_MOSI_PORT                           GPIOC                            /* port name     */
+#define SD_MOSI_BP                              12U                              /* pin name      */
+#define SD_MOSI_BM                              (1 << 12)                        /* pin mask      */
+#define SD_MOSI_PORT                            GPIOC                            /* port name     */
 #define GPIOC_PIN_12_MODE                       GPIO_ALT_OUT_PUSH_PULL_50MHZ     /* pin mode      */
 #define GPIOC_PIN_12_DEFAULT_STATE              LOW                              /* def. pin state*/
 

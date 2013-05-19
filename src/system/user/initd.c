@@ -91,7 +91,7 @@ void task_initd(void *arg)
                 while (TRUE);
         }
 
-        init_driver("gpio", NULL);
+        init_driver("gpio", "/dev/gpio");
 
         /* early initialization - terminal support */
         init_driver("uart1", "/dev/ttyS0");
