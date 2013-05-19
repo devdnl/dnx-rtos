@@ -47,8 +47,8 @@ MODULE_NAME(SDSPI);
 #define disable_hardware_CRC_calculation()              SDSPI_PORT->CR1 &= ~SPI_CR1_CRCEN
 #define next_trasfer_is_CRC()                           SDSPI_PORT->CR1 |=  SPI_CR1_CRCNEXT
 #define next_trasfer_is_data()                          SDSPI_PORT->CR1 &= ~SPI_CR1_CRCNEXT
-#define set_8_bit_data_frame()                          SDSPI_PORT->CR1 &= ~SPI_CR1_DFF
-#define set_16_bit_data_frame()                         SDSPI_PORT->CR1 |=  SPI_CR1_DFF
+#define enable_8_bit_data_frame()                       SDSPI_PORT->CR1 &= ~SPI_CR1_DFF
+#define enable_16_bit_data_frame()                      SDSPI_PORT->CR1 |=  SPI_CR1_DFF
 #define enable_full_duplex()                            SDSPI_PORT->CR1 &= ~SPI_CR1_RXONLY
 #define enable_receive_only()                           SDSPI_PORT->CR1 |=  SPI_CR1_RXONLY
 #define enable_software_slave_management()              SDSPI_PORT->CR1 |=  SPI_CR1_SSM
@@ -67,13 +67,13 @@ MODULE_NAME(SDSPI);
 #define FPCKL_DIV_64                                    (SPI_CR1_BR_2 | SPI_CR1_BR_0)
 #define FPCKL_DIV_128                                   (SPI_CR1_BR_2 | SPI_CR1_BR_1)
 #define FPCKL_DIV_256                                   (SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0)
-#define set_baud_rate(baud)                             do{SDSPI_PORT->CR1 &= ~SPI_CR1_BR; SDSPI_PORT->CR1 |= baud}while(0)
-#define enable_master_configuration()                   SDSPI_PORT->CR1 |=  SPI_CR1_MSTR
-#define enable_slave_configuration()                    SDSPI_PORT->CR1 &= ~SPI_CR1_MSTR
+#define set_baud_rate(baud)                             do{SDSPI_PORT->CR1 &= ~SPI_CR1_BR; SDSPI_PORT->CR1 |= baud;}while(0)
+#define enable_master_mode()                            SDSPI_PORT->CR1 |=  SPI_CR1_MSTR
+#define enable_slave_mode()                             SDSPI_PORT->CR1 &= ~SPI_CR1_MSTR
 #define set_clock_polarity_to_0_when_idle()             SDSPI_PORT->CR1 &= ~SPI_CR1_CPOL
 #define set_clock_polarity_to_1_when_idle()             SDSPI_PORT->CR1 |=  SPI_CR1_CPOL
-#define set_transition_on_first_edge()                  SDSPI_PORT->CR1 &= ~SPI_CR1_CPHA
-#define set_transition_on_second_edge()                 SDSPI_PORT->CR1 |=  SPI_CR1_CPHA
+#define capture_on_first_edge()                         SDSPI_PORT->CR1 &= ~SPI_CR1_CPHA
+#define capture_on_second_edge()                        SDSPI_PORT->CR1 |=  SPI_CR1_CPHA
 
 #define enable_ISR_when_Tx_buffer_empty()               SDSPI_PORT->CR2 |=  SPI_CR2_TXEIE
 #define disbale_ISR_when_Tx_buffer_empty()              SDSPI_PORT->CR2 &= ~SPI_CR2_TXEIE
@@ -112,8 +112,8 @@ struct sdspi_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t turn_on_SPI(void);
-static stdret_t turn_off_SPI(void);
+static stdret_t turn_on_SPI_clock(void);
+static stdret_t turn_off_SPI_clock(void);
 
 /*==============================================================================
   Local object definitions
@@ -138,7 +138,7 @@ static stdret_t turn_off_SPI(void);
 //==============================================================================
 stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
 {
-        if (dev != 0 || part != 0 || !drvhdl) {
+        if (dev != SDSPI_DEV_NO || part != SDSPI_DEV_PART || !drvhdl) {
                 return STD_RET_ERROR;
         }
 
@@ -153,12 +153,22 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         }
 
         /* initialize SPI interface */
-        if (turn_on_SPI() != STD_RET_OK) {
+        if (turn_on_SPI_clock() != STD_RET_OK) {
                 goto error;
         }
 
-        SDSPI_PORT->CR1 = 0;
-        SPI3->CR1 |= SPI_CR1_BR;
+        set_baud_rate(FPCLK_DIV_2);
+        set_clock_polarity_to_0_when_idle();
+        capture_on_first_edge();
+        enable_8_bit_data_frame();
+        transmit_MSB_first();
+        enable_software_slave_management();
+        deselect_slave();
+        enable_SS_output_in_master_mode();
+        enable_master_mode();
+        enable_SPI_peripheral();
+
+        return STD_RET_OK;
 
 error:
         if (sdspi) {
@@ -292,7 +302,7 @@ stdret_t SDSPI_flush(void *drvhdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t turn_on_SPI(void)
+static stdret_t turn_on_SPI_clock(void)
 {
         switch ((u32_t)SDSPI_PORT) {
 #if defined(RCC_APB2ENR_SPI1EN)
@@ -323,7 +333,7 @@ static stdret_t turn_on_SPI(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t turn_off_SPI(void)
+static stdret_t turn_off_SPI_clock(void)
 {
         switch ((u32_t)SDSPI_PORT) {
 #if defined(RCC_APB2ENR_SPI1EN)

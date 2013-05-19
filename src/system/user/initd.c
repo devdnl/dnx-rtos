@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include "user/initd.h"
 #include "drivers/tty_def.h"
+#include "drivers/sdspi_def.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -108,6 +109,22 @@ void task_initd(void *arg)
         init_driver("tty1", "/dev/tty1");
         init_driver("tty2", "/dev/tty2");
         init_driver("tty3", "/dev/tty3");
+        init_driver("sdspi", "/dev/sda");
+
+
+        printk("Detecting SD card...\n");
+        FILE *sd = fopen("/dev/sda", "rw");
+        if (!sd) {
+                printk("Cannot open file!\n");
+        } else {
+                if (ioctl(sd, SDSPI_IORQ_DETECT_CARD) == STD_RET_OK) {
+                        printk("Card detected.\n");
+                } else {
+                        printk("Card not detected!\n");
+                }
+                fclose(sd);
+        }
+
 
         /* initd info about stack usage */
         printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());

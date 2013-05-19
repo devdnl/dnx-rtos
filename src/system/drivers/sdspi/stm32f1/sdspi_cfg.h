@@ -38,6 +38,10 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/* device numbers */
+#define SDSPI_DEV_NO            0
+#define SDSPI_DEV_PART          0
+
 /*
  * Supported SPI peripheral
  */
