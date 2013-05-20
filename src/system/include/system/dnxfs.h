@@ -106,7 +106,7 @@ extern "C" {
 #define ftell(file)                             vfs_ftell(file)
 
 #undef  ioctl
-#define ioctl(file, rq, data)                   vfs_ioctl(file, rq, data)
+#define ioctl(file, ...)                        vfs_ioctl(file, __VA_ARGS__)
 
 #undef  fstat
 #define fstat(file, statPtr)                    vfs_fstat(file, stat)

@@ -34,17 +34,19 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "stm32f1/stm32f10x.h"
+#include "drivers/gpio_def.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/* GPIO file */
+#define SDSPI_GPIO_FILE         "/dev/gpio"
+
 /* device numbers */
 #define SDSPI_DEV_NO            0
 #define SDSPI_DEV_PART          0
 
-/*
- * Supported SPI peripheral
- */
+/* supported SPI peripheral */
 #define SDSPI_PORT              SPI3
 
 /*==============================================================================

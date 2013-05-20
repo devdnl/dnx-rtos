@@ -45,7 +45,7 @@ extern "C" {
 /** IO request for SDSPI driver */
 enum SDSPI_IORQ
 {
-        SDSPI_IORQ_DETECT_CARD,
+        SDSPI_IORQ_INITIALIZE_CARD,
 };
 
 /*==============================================================================

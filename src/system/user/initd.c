@@ -113,15 +113,11 @@ void task_initd(void *arg)
 
 
         printk("Detecting SD card...\n");
-        FILE *sd = fopen("/dev/sda", "rw");
+        FILE *sd = fopen("/dev/sda", "r+");
         if (!sd) {
                 printk("Cannot open file!\n");
         } else {
-                if (ioctl(sd, SDSPI_IORQ_DETECT_CARD) == STD_RET_OK) {
-                        printk("Card detected.\n");
-                } else {
-                        printk("Card not detected!\n");
-                }
+                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD);
                 fclose(sd);
         }
 

@@ -39,6 +39,10 @@ MODULE_NAME(SDSPI);
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define MTX_BLOCK_TIME                                  0
+#define force_lock_recursive_mutex(mtx)                 while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
+
+/* SPI configuration macros */
 #define enable_bidirectional_data_mode()                SDSPI_PORT->CR1 |=  SPI_CR1_BIDIMODE
 #define enable_unidirectional_data_mode()               SDSPI_PORT->CR1 &= ~SPI_CR1_BIDIMODE
 #define enable_output_in_bidirectional_data_mode()      SDSPI_PORT->CR1 |=  SPI_CR1_BIDIOE
@@ -53,20 +57,20 @@ MODULE_NAME(SDSPI);
 #define enable_receive_only()                           SDSPI_PORT->CR1 |=  SPI_CR1_RXONLY
 #define enable_software_slave_management()              SDSPI_PORT->CR1 |=  SPI_CR1_SSM
 #define enable_hardware_slave_management()              SDSPI_PORT->CR1 &= ~SPI_CR1_SSM
-#define select_slave()                                  SDSPI_PORT->CR1 &= ~SPI_CR1_SSI
-#define deselect_slave()                                SDSPI_PORT->CR1 |=  SPI_CR1_SSI
+#define select_slave_internal()                         SDSPI_PORT->CR1 &= ~SPI_CR1_SSI
+#define deselect_slave_internal()                       SDSPI_PORT->CR1 |=  SPI_CR1_SSI
 #define transmit_MSB_first()                            SDSPI_PORT->CR1 &= ~SPI_CR1_LSBFIRST
 #define transmit_LSB_first()                            SDSPI_PORT->CR1 |=  SPI_CR1_LSBFIRST
 #define enable_SPI_peripheral()                         SDSPI_PORT->CR1 |=  SPI_CR1_SPE
 #define disable_SPI_peripheral()                        SDSPI_PORT->CR1 &= ~SPI_CR1_SPE
 #define FPCLK_DIV_2                                     (0)
 #define FPCLK_DIV_4                                     (SPI_CR1_BR_0)
-#define FPCKL_DIV_8                                     (SPI_CR1_BR_1)
-#define FPCKL_DIV_16                                    (SPI_CR1_BR_1 | SPI_CR1_BR_0)
-#define FPCKL_DIV_32                                    (SPI_CR1_BR_2)
-#define FPCKL_DIV_64                                    (SPI_CR1_BR_2 | SPI_CR1_BR_0)
-#define FPCKL_DIV_128                                   (SPI_CR1_BR_2 | SPI_CR1_BR_1)
-#define FPCKL_DIV_256                                   (SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0)
+#define FPCLK_DIV_8                                     (SPI_CR1_BR_1)
+#define FPCLK_DIV_16                                    (SPI_CR1_BR_1 | SPI_CR1_BR_0)
+#define FPCLK_DIV_32                                    (SPI_CR1_BR_2)
+#define FPCLK_DIV_64                                    (SPI_CR1_BR_2 | SPI_CR1_BR_0)
+#define FPCLK_DIV_128                                   (SPI_CR1_BR_2 | SPI_CR1_BR_1)
+#define FPCLK_DIV_256                                   (SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0)
 #define set_baud_rate(baud)                             do{SDSPI_PORT->CR1 &= ~SPI_CR1_BR; SDSPI_PORT->CR1 |= baud;}while(0)
 #define enable_master_mode()                            SDSPI_PORT->CR1 |=  SPI_CR1_MSTR
 #define enable_slave_mode()                             SDSPI_PORT->CR1 &= ~SPI_CR1_MSTR
@@ -95,7 +99,8 @@ MODULE_NAME(SDSPI);
 #define is_Tx_buffer_empty()                            (SDSPI_PORT->SR & SPI_SR_TXE)
 #define is_Rx_buffer_not_empty()                        (SDSPI_PORT->SR & SPI_SR_RXNE)
 
-#define transmit_data(data)                             SDSPI_PORT->DR = data
+#define send_data(data)                                 SDSPI_PORT->DR = data
+#define get_data()                                      SDSPI_PORT->DR
 #define set_CRC_polynominal(poly)                       SDSPI_PORT->CRCPR = poly
 #define get_Rx_CRC()                                    SDSPI_PORT->RXCRCR
 #define get_Tx_CRC()                                    SDSPI_PORT->TXCRCR
@@ -105,6 +110,7 @@ MODULE_NAME(SDSPI);
 ==============================================================================*/
 /** handling structure */
 struct sdspi_data {
+        FILE    *gpio_file;
         bool     card_detected;
         mutex_t *port_lock_mtx;
 };
@@ -152,20 +158,25 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
                 goto error;
         }
 
+        if (!(sdspi->gpio_file = fopen(SDSPI_GPIO_FILE, "r+"))) {
+                goto error;
+        }
+
         /* initialize SPI interface */
         if (turn_on_SPI_clock() != STD_RET_OK) {
                 goto error;
         }
 
-        set_baud_rate(FPCLK_DIV_2);
+        enable_SS_output_in_master_mode();
+        enable_unidirectional_data_mode();
+        disable_hardware_CRC_calculation();
+        enable_8_bit_data_frame();
+        enable_software_slave_management();
+        transmit_MSB_first();
+        set_baud_rate(FPCLK_DIV_128);
+        enable_master_mode();
         set_clock_polarity_to_0_when_idle();
         capture_on_first_edge();
-        enable_8_bit_data_frame();
-        transmit_MSB_first();
-        enable_software_slave_management();
-        deselect_slave();
-        enable_SS_output_in_master_mode();
-        enable_master_mode();
         enable_SPI_peripheral();
 
         return STD_RET_OK;
@@ -174,6 +185,10 @@ error:
         if (sdspi) {
                 if (sdspi->port_lock_mtx) {
                         delete_recursive_mutex(sdspi->port_lock_mtx);
+                }
+
+                if (sdspi->gpio_file) {
+                        fclose(sdspi->gpio_file);
                 }
 
                 free(sdspi);
@@ -193,6 +208,21 @@ error:
 //==============================================================================
 stdret_t SDSPI_release(void *drvhdl)
 {
+        struct sdspi_data *hdl = drvhdl;
+
+        if (!hdl) {
+                return STD_RET_ERROR;
+        }
+
+        force_lock_recursive_mutex(hdl->port_lock_mtx);
+        enter_critical();
+        unlock_recursive_mutex(hdl->port_lock_mtx);
+        delete_recursive_mutex(hdl->port_lock_mtx);
+        fclose(hdl->gpio_file);
+        turn_off_SPI_clock();
+        free(hdl);
+        exit_critical();
+
         return STD_RET_OK;
 }
 
@@ -208,7 +238,17 @@ stdret_t SDSPI_release(void *drvhdl)
 //==============================================================================
 stdret_t SDSPI_open(void *drvhdl)
 {
+        struct sdspi_data *hdl = drvhdl;
 
+        if (!hdl) {
+                return STD_RET_ERROR;
+        }
+
+        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -223,7 +263,19 @@ stdret_t SDSPI_open(void *drvhdl)
 //==============================================================================
 stdret_t SDSPI_close(void *drvhdl)
 {
+        struct sdspi_data *hdl = drvhdl;
 
+        if (!hdl) {
+                return STD_RET_ERROR;
+        }
+
+        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                unlock_recursive_mutex(hdl->port_lock_mtx);     /* give this mutex */
+                unlock_recursive_mutex(hdl->port_lock_mtx);     /* give mutex from open */
+                return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -240,7 +292,13 @@ stdret_t SDSPI_close(void *drvhdl)
 //==============================================================================
 size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
 {
+        (void) drvhdl;
+        (void) src;
+        (void) size;
+        (void) nitems;
+        (void) seek;
 
+        return 0;
 }
 
 //==============================================================================
@@ -257,7 +315,13 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, si
 //==============================================================================
 size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
 {
+        (void) drvhdl;
+        (void) dst;
+        (void) size;
+        (void) nitems;
+        (void) seek;
 
+        return 0;
 }
 
 //==============================================================================
@@ -274,7 +338,63 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t se
 //==============================================================================
 stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
 {
+        struct sdspi_data *hdl = drvhdl;
+        stdret_t status = STD_RET_OK;
 
+        if (!hdl) {
+                return STD_RET_ERROR;
+        }
+#include "core/io.h"
+        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                switch (iorq) {
+                case SDSPI_IORQ_INITIALIZE_CARD:
+                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_SELECT);
+                        printk("Select...\n");
+                        sleep_ms(1000);
+
+                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+                        printk("Deselect...\n");
+                        sleep_ms(1000);
+
+                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_SELECT);
+                        printk("Select...\n");
+                        sleep_ms(1000);
+
+                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+                        printk("Deselect...\n");
+
+                        printk("CR1 = 0x%x\n", SPI3->CR1);
+
+                        u8_t data = 0x00;
+                        int  to   = 100;
+                        if (is_Tx_buffer_empty()) {
+                                send_data(0xAA);
+                        }
+
+                        while (!is_Rx_buffer_not_empty());
+                        data = get_data();
+                        printk("Sended: 0x%x; received: 0x%x\n", 0xAA, data);
+
+                        to = 100;
+                        while (!is_Rx_buffer_not_empty()) {
+                                to--;
+                                if (to == 0) break;
+                                sleep_ms(10);
+                        }
+                        data = get_data();
+                        printk("Sended: 0x%x; received: 0x%x\n", 0xAA, data);
+
+                        break;
+
+                default:
+                        status = STD_RET_ERROR;
+                        break;
+                }
+        } else {
+                return STD_RET_ERROR;
+        }
+
+        return status;
 }
 
 //==============================================================================
