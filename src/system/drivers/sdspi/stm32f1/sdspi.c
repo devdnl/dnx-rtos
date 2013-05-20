@@ -316,7 +316,8 @@ stdret_t SDSPI_close(void *drvhdl)
  *
  * @param[in] *drvhdl           driver's memory handle
  * @param[in] *src              source
- * @param[in] size              size
+ * @param[in] size              size (block size)
+ * @param[in] nitems            n blocks to write
  * @param[in] seek              seek
  *
  * @retval number of written nitems
@@ -330,28 +331,71 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, si
         (void) nitems;
         (void) seek;
 
+
+
         return 0;
 }
 
 //==============================================================================
 /**
- * @brief Read data
+ * @brief Read data (read 512 byte sector)
  *
  * @param[in]  *drvhdl          driver's memory handle
  * @param[out] *dst             destination
- * @param[in]  size             size
- * @param[in]  seek             seek
+ * @param[in]  size             block size (must be always 1) FIXME
+ * @param[in]  nitems           n blocks to read FIXME
+ * @param[in]  seek             sector number FIXME
  *
  * @retval number of read nitems
  */
 //==============================================================================
 size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
 {
-        (void) drvhdl;
-        (void) dst;
-        (void) size;
-        (void) nitems;
-        (void) seek;
+        struct sdspi_data *hdl = drvhdl;
+        u32_t count  = nitems;
+        u32_t sector = seek;
+
+        if (!hdl || !dst || size != 1 || !nitems) {
+                return 0;
+        }
+
+        if (hdl->card_initialized == false) {
+                return 0;
+        }
+
+        if (!(hdl->card_type & CT_BLOCK)) {
+                size
+        }
+
+        /* TODO przemyslec to bo nie moze tak byc ze dziala inaczej niz wszystko -- 64b seek! */
+
+
+        if (drv || !count) return RES_PARERR;
+        if (Stat & STA_NOINIT) return RES_NOTRDY;
+
+        if (!(CardType & CT_BLOCK)) sector *= 512;      /* Convert to byte address if needed */
+
+        if (count == 1) {       /* Single block read */
+                if (send_cmd(CMD17, sector) == 0)       { /* READ_SINGLE_BLOCK */
+                        if (rcvr_datablock(buff, 512)) {
+                                count = 0;
+                        }
+                }
+        }
+        else {                          /* Multiple block read */
+                if (send_cmd(CMD18, sector) == 0) {     /* READ_MULTIPLE_BLOCK */
+                        do {
+                                if (!rcvr_datablock(buff, 512)) {
+                                        break;
+                                }
+                                buff += 512;
+                        } while (--count);
+                        send_cmd(CMD12, 0);                             /* STOP_TRANSMISSION */
+                }
+        }
+        release_spi();
+
+        return count ? RES_ERROR : RES_OK;
 
         return 0;
 }
@@ -434,7 +478,6 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
 
                                 if (timeout) {
                                         hdl->card_initialized = true;
-                                        printk("Card initialized. Card type: 0x%x\n", hdl->card_type);
                                 }
                         }
 
@@ -443,6 +486,8 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
 
                         if (hdl->card_initialized == false) {
                                 printk("Card not initialized...\n");
+                        } else {
+                                printk("Card initialized. Card type: 0x%x\n", hdl->card_type);
                         }
 
                         break;
@@ -511,7 +556,8 @@ static stdret_t partition_close(void *drvhdl)
  *
  * @param[in] *drvhdl           handler to partition description
  * @param[in] *src              source
- * @param[in] size              size
+ * @param[in] size              size (block size)
+ * @param[in] nitems            n blocks to write
  * @param[in] seek              seek
  *
  * @retval number of written nitems
@@ -528,7 +574,8 @@ static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t
  *
  * @param[in]  *drvhdl          handler to partition description
  * @param[out] *dst             destination
- * @param[in]  size             size
+ * @param[in]  size             size (block size)
+ * @param[in]  nitems           n blocks to read
  * @param[in]  seek             seek
  *
  * @retval number of written nitems

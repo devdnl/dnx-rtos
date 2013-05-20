@@ -367,6 +367,7 @@ stdret_t UART_close(void *drvhdl)
  * @param[in] *drvhdl           driver's memory handle
  * @param[in] *src              source
  * @param[in] size              size
+ * @param[in]  nitems           n items to read
  * @param[in] seek              seek
  *
  * @retval number of written nitems
@@ -409,6 +410,7 @@ size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, siz
  * @param[in]  *drvhdl          driver's memory handle
  * @param[out] *dst             destination
  * @param[in]  size             size
+ * @param[in]  nitems           n items to read
  * @param[in]  seek             seek
  *
  * @retval number of read nitems
