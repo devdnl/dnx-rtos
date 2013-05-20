@@ -324,6 +324,21 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t se
         return 0;
 }
 
+static void spi_send(u8_t data)
+{
+        while (!is_Tx_buffer_empty());
+        send_data(data);
+}
+
+static u8_t receive_data(void)
+{
+        while (!is_Tx_buffer_empty());
+        send_data(0xFF);
+
+        while (!is_Rx_buffer_not_empty());
+        return get_data();
+}
+
 //==============================================================================
 /**SDSPI_SPI
  * @brief Direct IO control
@@ -348,41 +363,78 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 switch (iorq) {
                 case SDSPI_IORQ_INITIALIZE_CARD:
-                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_SELECT);
-                        printk("Select...\n");
-                        sleep_ms(1000);
+//                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_SELECT);
+//                        printk("Select...\n");
+//                        sleep_ms(1000);
+//
+//                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+//                        printk("Deselect...\n");
+//                        sleep_ms(1000);
+//
+//                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_SELECT);
+//                        printk("Select...\n");
+//                        sleep_ms(1000);
+//
+//                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+//                        printk("Deselect...\n");
+//
+//                        printk("CR1 = 0x%x\n", SPI3->CR1);
+//
+//                        u8_t data = 0x00;
+//                        int  to   = 100;
+//                        if (is_Tx_buffer_empty()) {
+//                                send_data(0xAA);
+//                        }
+//
+//                        while (!is_Rx_buffer_not_empty());
+//                        data = get_data();
+//                        printk("Sended: 0x%x; received: 0x%x\n", 0xAA, data);
+//
+//                        to = 100;
+//                        while (!is_Rx_buffer_not_empty()) {
+//                                to--;
+//                                if (to == 0) break;
+//                                sleep_ms(10);
+//                        }
+//                        data = get_data();
+//                        printk("Sended: 0x%x; received: 0x%x\n", 0xAA, data);
+
+
+
 
                         ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
-                        printk("Deselect...\n");
-                        sleep_ms(1000);
-
+                        for (int n = 0; n < 10; n++) {
+                                spi_send(0xFF);
+                        }
                         ioctl(hdl->gpio_file, GPIO_IORQ_SD_SELECT);
-                        printk("Select...\n");
-                        sleep_ms(1000);
 
-                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
-                        printk("Deselect...\n");
 
-                        printk("CR1 = 0x%x\n", SPI3->CR1);
+                        u8_t cmd[6];
+                        cmd[0] = (0x00 | 0x40);
+                        cmd[1] = 0;
+                        cmd[2] = 0;
+                        cmd[3] = 0;
+                        cmd[4] = 0;
+                        cmd[5] = 0x95;
 
-                        u8_t data = 0x00;
-                        int  to   = 100;
-                        if (is_Tx_buffer_empty()) {
-                                send_data(0xAA);
+                        for (int i = 0; i < 6; i++) {
+                                spi_send(cmd[i]);
                         }
 
-                        while (!is_Rx_buffer_not_empty());
-                        data = get_data();
-                        printk("Sended: 0x%x; received: 0x%x\n", 0xAA, data);
 
-                        to = 100;
-                        while (!is_Rx_buffer_not_empty()) {
+                        int to = 100;
+                        while (receive_data() != 0x01 && to) {
                                 to--;
-                                if (to == 0) break;
-                                sleep_ms(10);
                         }
-                        data = get_data();
-                        printk("Sended: 0x%x; received: 0x%x\n", 0xAA, data);
+                        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+
+                        spi_send(0xFF);
+
+
+                        if (to == 0) {
+                                printk("No response...\n");
+                        }
+
 
                         break;
 
