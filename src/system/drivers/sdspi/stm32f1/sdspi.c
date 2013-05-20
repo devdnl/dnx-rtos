@@ -105,6 +105,25 @@ MODULE_NAME(SDSPI);
 #define get_Rx_CRC()                                    SDSPI_PORT->RXCRCR
 #define get_Tx_CRC()                                    SDSPI_PORT->TXCRCR
 
+/* card definitions */
+#define CMD0                                            (0x40+0 )       /* GO_IDLE_STATE */
+#define CMD1                                            (0x40+1 )       /* SEND_OP_COND (MMC) */
+#define ACMD41                                          (0xC0+41)       /* SEND_OP_COND (SDC) */
+#define CMD8                                            (0x40+8 )       /* SEND_IF_COND */
+#define CMD9                                            (0x40+9 )       /* SEND_CSD */
+#define CMD10                                           (0x40+10)       /* SEND_CID */
+#define CMD12                                           (0x40+12)       /* STOP_TRANSMISSION */
+#define ACMD13                                          (0xC0+13)       /* SD_STATUS (SDC) */
+#define CMD16                                           (0x40+16)       /* SET_BLOCKLEN */
+#define CMD17                                           (0x40+17)       /* READ_SINGLE_BLOCK */
+#define CMD18                                           (0x40+18)       /* READ_MULTIPLE_BLOCK */
+#define CMD23                                           (0x40+23)       /* SET_BLOCK_COUNT (MMC) */
+#define ACMD23                                          (0xC0+23)       /* SET_WR_BLK_ERASE_COUNT (SDC) */
+#define CMD24                                           (0x40+24)       /* WRITE_BLOCK */
+#define CMD25                                           (0x40+25)       /* WRITE_MULTIPLE_BLOCK */
+#define CMD55                                           (0x40+55)       /* APP_CMD */
+#define CMD58                                           (0x40+58)       /* READ_OCR */
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -120,6 +139,9 @@ struct sdspi_data {
 ==============================================================================*/
 static stdret_t turn_on_SPI_clock(void);
 static stdret_t turn_off_SPI_clock(void);
+static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
+static u8_t wait_ready(void);
+static u8_t spi_rw(u8_t out);
 
 /*==============================================================================
   Local object definitions
@@ -173,7 +195,7 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         enable_8_bit_data_frame();
         enable_software_slave_management();
         transmit_MSB_first();
-        set_baud_rate(FPCLK_DIV_128);
+        set_baud_rate(FPCLK_DIV_2);
         enable_master_mode();
         set_clock_polarity_to_0_when_idle();
         capture_on_first_edge();
@@ -344,7 +366,7 @@ static u8_t receive_data(void)
  * @brief Direct IO control
  *
  * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     iorq          IO reqest
+ * @param[in]     iorq          IO request
  * @param[in,out] args          additional arguments
  *
  * @retval STD_RET_OK
@@ -468,6 +490,102 @@ stdret_t SDSPI_flush(void *drvhdl)
 
 //==============================================================================
 /**
+ * @brief Function open new partiotion file
+ *
+ * @param[in] *drvhdl   handler to partiotion description
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t partition_open(void *drvhdl)
+{
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function close partition file
+ *
+ * @param[in] *drvhdl   handler to partition description
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t partition_close(void *drvhdl)
+{
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function write data to partition file
+ *
+ * @param[in] *drvhdl           handler to partition description
+ * @param[in] *src              source
+ * @param[in] size              size
+ * @param[in] seek              seek
+ *
+ * @retval number of written nitems
+ */
+//==============================================================================
+static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
+{
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function read data from partition file
+ *
+ * @param[in]  *drvhdl          handler to partition description
+ * @param[out] *dst             destination
+ * @param[in]  size             size
+ * @param[in]  seek             seek
+ *
+ * @retval number of written nitems
+ */
+//==============================================================================
+static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
+{
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function control partition
+ *
+ * @param[in]    *drvhdl        handler to partition description
+ * @param[in]     iorq          IO request
+ * @param[in,out] args          additional arguments
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t partition_ioctl(void *drvhdl, int iorq, va_list args)
+{
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function flush partition
+ *
+ * @param[in] *drvhdl           handler to partition description
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t partition_flush(void *drvhdl)
+{
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
  * @brief Function turn on SPI clock
  *
  * @retval STD_RET_OK
@@ -532,6 +650,102 @@ static stdret_t turn_off_SPI_clock(void)
         default:
                 return STD_RET_ERROR;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function transmit command to card
+ *
+ * @param[in] *sdspi    SD SPI interface data
+ * @param[in] cmd       card command
+ * @param[in] arg       command's argument
+ */
+//==============================================================================
+static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
+{
+        u8_t response;
+
+        /* ACMD<n> is the command sequence of CMD55-CMD<n> */
+        if (cmd & 0x80) {
+                cmd &= 0x7F;
+                response = send_cmd(CMD55, 0);
+                if (response > 1)
+                        return response;
+        }
+
+        /* select the card and wait for ready */
+        ioctl(sdspi->gpio_file, GPIO_IORQ_SD_DESELECT);
+        ioctl(sdspi->gpio_file, GPIO_IORQ_SD_SELECT);
+
+        if (wait_ready() != 0xFF) {
+                return 0xFF;
+        }
+
+        /* send command packet */
+        spi_rw(cmd);                    /* Start + Command index */
+        spi_rw(arg >> 24);              /* Argument[31..24]      */
+        spi_rw(arg >> 16);              /* Argument[23..16]      */
+        spi_rw(arg >> 8);               /* Argument[15..8]       */
+        spi_rw(arg);
+
+        if (cmd == CMD0)
+                spi_rw(0x95);           /* Valid CRC for CMD0(0) */
+        else if (cmd == CMD8)
+                spi_rw(0x87);           /* Valid CRC for CMD8(0x1AA) */
+        else
+                spi_rw(0x01);           /* Dummy CRC + Stop */
+
+        /* receive command response */
+        if (cmd == CMD12)
+                spi_rw(0xFF);           /* Skip a stuff byte when stop reading */
+
+        /* wait for a valid response in timeout of 10 attempts */
+        int n = 10;
+        do {
+                response = spi_rw(0xFF);
+        } while ((response & 0x80) && --n);
+
+        return response;
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for card ready
+ *
+ * @return card response
+ */
+//==============================================================================
+static u8_t wait_ready(void)
+{
+        int  timeout = SDSPI_WAIT_TIMEOUT;
+        u8_t response;
+
+        spi_rw(0xFF);
+
+        while ((response = spi_rw(0xFF)) != 0xFF) {
+                if (timeout == 0)
+                        break;
+
+                sleep_ms(1);
+        }
+
+        return response;
+}
+
+//==============================================================================
+/**
+ * @brief Function send byte by SPI peripheral
+ *
+ * @param[in] out       data to send
+ *
+ * @return received byte
+ */
+//==============================================================================
+static u8_t spi_rw(u8_t out)
+{
+        send_data(out);
+        while (!is_Rx_buffer_not_empty());
+        return get_data();
 }
 
 #ifdef __cplusplus

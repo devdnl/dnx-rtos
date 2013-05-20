@@ -42,6 +42,9 @@ extern "C" {
 /* GPIO file */
 #define SDSPI_GPIO_FILE         "/dev/gpio"
 
+/* card waiting timeout [ms] */
+#define SDSPI_WAIT_TIMEOUT      500
+
 /* device numbers */
 #define SDSPI_DEV_NO            0
 #define SDSPI_DEV_PART          0
