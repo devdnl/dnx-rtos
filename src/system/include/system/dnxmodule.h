@@ -134,8 +134,8 @@ extern stdret_t modname##_init   (void**, uint, uint);                          
 extern stdret_t modname##_release(void*);                                       \
 extern stdret_t modname##_open   (void*);                                       \
 extern stdret_t modname##_close  (void*);                                       \
-extern size_t   modname##_write  (void*, const void*, size_t, size_t, size_t);  \
-extern size_t   modname##_read   (void*, void*, size_t, size_t, size_t);        \
+extern size_t   modname##_write  (void*, const void*, size_t, size_t, u64_t);   \
+extern size_t   modname##_read   (void*, void*, size_t, size_t, u64_t);         \
 extern stdret_t modname##_ioctl  (void*, int, va_list);                         \
 extern stdret_t modname##_flush  (void*)
 

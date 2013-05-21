@@ -318,18 +318,18 @@ stdret_t SDSPI_close(void *drvhdl)
  * @param[in] *src              source
  * @param[in] size              size (block size)
  * @param[in] nitems            n blocks to write
- * @param[in] seek              seek
+ * @param[in] lseek             seek
  *
  * @retval number of written nitems
  */
 //==============================================================================
-size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
+size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void) drvhdl;
         (void) src;
         (void) size;
         (void) nitems;
-        (void) seek;
+        (void) lseek;
 
 
 
@@ -344,16 +344,16 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, si
  * @param[out] *dst             destination
  * @param[in]  size             block size (must be always 1) FIXME
  * @param[in]  nitems           n blocks to read FIXME
- * @param[in]  seek             sector number FIXME
+ * @param[in]  lseek            sector number FIXME
  *
  * @retval number of read nitems
  */
 //==============================================================================
-size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
+size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         struct sdspi_data *hdl = drvhdl;
         u32_t count  = nitems;
-        u32_t sector = seek;
+        u32_t sector = lseek;
 
         if (!hdl || !dst || size != 1 || !nitems) {
                 return 0;
@@ -363,39 +363,39 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t se
                 return 0;
         }
 
-        if (!(hdl->card_type & CT_BLOCK)) {
-                size
-        }
-
-        /* TODO przemyslec to bo nie moze tak byc ze dziala inaczej niz wszystko -- 64b seek! */
-
-
-        if (drv || !count) return RES_PARERR;
-        if (Stat & STA_NOINIT) return RES_NOTRDY;
-
-        if (!(CardType & CT_BLOCK)) sector *= 512;      /* Convert to byte address if needed */
-
-        if (count == 1) {       /* Single block read */
-                if (send_cmd(CMD17, sector) == 0)       { /* READ_SINGLE_BLOCK */
-                        if (rcvr_datablock(buff, 512)) {
-                                count = 0;
-                        }
-                }
-        }
-        else {                          /* Multiple block read */
-                if (send_cmd(CMD18, sector) == 0) {     /* READ_MULTIPLE_BLOCK */
-                        do {
-                                if (!rcvr_datablock(buff, 512)) {
-                                        break;
-                                }
-                                buff += 512;
-                        } while (--count);
-                        send_cmd(CMD12, 0);                             /* STOP_TRANSMISSION */
-                }
-        }
-        release_spi();
-
-        return count ? RES_ERROR : RES_OK;
+//        if (!(hdl->card_type & CT_BLOCK)) {
+//                size
+//        }
+//
+//        /* TODO przemyslec to bo nie moze tak byc ze dziala inaczej niz wszystko -- 64b seek! */
+//
+//
+//        if (drv || !count) return RES_PARERR;
+//        if (Stat & STA_NOINIT) return RES_NOTRDY;
+//
+//        if (!(CardType & CT_BLOCK)) sector *= 512;      /* Convert to byte address if needed */
+//
+//        if (count == 1) {       /* Single block read */
+//                if (send_cmd(CMD17, sector) == 0)       { /* READ_SINGLE_BLOCK */
+//                        if (rcvr_datablock(buff, 512)) {
+//                                count = 0;
+//                        }
+//                }
+//        }
+//        else {                          /* Multiple block read */
+//                if (send_cmd(CMD18, sector) == 0) {     /* READ_MULTIPLE_BLOCK */
+//                        do {
+//                                if (!rcvr_datablock(buff, 512)) {
+//                                        break;
+//                                }
+//                                buff += 512;
+//                        } while (--count);
+//                        send_cmd(CMD12, 0);                             /* STOP_TRANSMISSION */
+//                }
+//        }
+//        release_spi();
+//
+//        return count ? RES_ERROR : RES_OK;
 
         return 0;
 }

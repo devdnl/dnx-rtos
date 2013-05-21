@@ -654,16 +654,16 @@ static enum cmd_status cmd_df(char *arg)
         mnt.total = 0;
 
         if (mnt.mnt_dir && mnt.mnt_fsname) {
-                printf("File system\tTotal\tFree\t%%Used\tMount point\n");
+                printf("File system\tTotal\tFree\t%%Free\tMount point\n");
 
                 for (u32_t i = 0;; i++) {
                         if (getmntentry(i, &mnt) == STD_RET_OK) {
-                                printf("%s\t\t%u\t%u\t%u%%\t%s\n",
-                                       mnt.mnt_fsname,
-                                       mnt.total,
-                                       mnt.free,
-                                       ((mnt.total - mnt.free) * 100)/mnt.total,
-                                       mnt.mnt_dir);
+//                                printf("%s\t\t%u\t%u\t%u%%\t%s\n", FIXME -- obliczanie zajętości
+//                                       mnt.mnt_fsname,
+//                                       mnt.total,
+//                                       mnt.free,
+//                                       ((mnt.total - mnt.free) * 100)/mnt.total,
+//                                       mnt.mnt_dir);
 
                                 memset(mnt.mnt_dir, 0, 64);
                                 memset(mnt.mnt_fsname, 0, 64);

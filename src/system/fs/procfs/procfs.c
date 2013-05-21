@@ -176,7 +176,7 @@ stdret_t procfs_release(void *fshdl)
  *
  * @param[in]  *fshdl           FS handle
  * @param[out] *fd              file descriptor
- * @param[out] *seek            file position
+ * @param[out] *lseek           file position
  * @param[in]  *path            file path
  * @param[in]  *mode            file mode
  *
@@ -184,7 +184,7 @@ stdret_t procfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t procfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
         struct procfs    *procmem = fshdl;
         struct taskstat  taskdata;
@@ -244,7 +244,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
 
                 if (list_add_item(procmem->file_list, procmem->ID_counter, fileInf) == 0) {
                         *fd   = procmem->ID_counter++;
-                        *seek = 0;
+                        *lseek = 0;
 
                         unlock_mutex(procmem->resource_mtx);
                         return STD_RET_OK;
@@ -287,7 +287,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                                         procmem->ID_counter, fileInf) == 0) {
 
                                 *fd = procmem->ID_counter++;
-                                *seek = 0;
+                                *lseek = 0;
 
                                 unlock_mutex(procmem->resource_mtx);
                                 return STD_RET_OK;
@@ -340,19 +340,19 @@ stdret_t procfs_close(void *fshdl, fd_t fd)
  * @param[in] *src              data source
  * @param[in]  size             item size
  * @param[in]  nitems           number of items
- * @param[in]  seek             position in file
+ * @param[in]  lseek            position in file
  *
  * @return number of written items
  */
 //==============================================================================
-size_t procfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek)
+size_t procfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
         (void)fd;
         (void)src;
         (void)size;
         (void)nitems;
-        (void)seek;
+        (void)lseek;
 
         return 0;
 }
@@ -366,17 +366,18 @@ size_t procfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t n
  * @param[out] *dst             data destination
  * @param[in]   size            item size
  * @param[in]   nitems          number of items
- * @param[in]   seek            position in file
+ * @param[in]   lseek           position in file
  *
  * @return number of read items
  */
 //==============================================================================
-size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         struct procfs    *procmem = fshdl;
         struct file_info *fileInf;
-        struct taskstat  taskInfo;
-        size_t           n = 0;
+        struct taskstat   taskInfo;
+        size_t            n = 0;
+        size_t            seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
 
         if (!dst || !procmem) {
                 return 0;

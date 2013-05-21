@@ -102,7 +102,7 @@ stdret_t appfs_release(void *fshdl)
  *
  * @param[in]  *fshdl           FS handle
  * @param[out] *fd              file descriptor
- * @param[out] *seek            file position
+ * @param[out] *lseek           file position
  * @param[in]  *path            file path
  * @param[in]  *mode            file mode
  *
@@ -110,11 +110,11 @@ stdret_t appfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t appfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t appfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
         (void)fshdl;
         (void)fd;
-        (void)seek;
+        (void)lseek;
         (void)path;
         (void)mode;
 
@@ -149,19 +149,19 @@ stdret_t appfs_close(void *fshdl, fd_t fd)
  * @param[in] *src              data source
  * @param[in]  size             item size
  * @param[in]  nitems           number of items
- * @param[in]  seek             position in file
+ * @param[in]  lseek            position in file
  *
  * @return number of written items
  */
 //==============================================================================
-size_t appfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek)
+size_t appfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
         (void)fd;
         (void)src;
         (void)size;
         (void)nitems;
-        (void)seek;
+        (void)lseek;
 
         return STD_RET_ERROR;
 }
@@ -175,19 +175,19 @@ size_t appfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t ni
  * @param[out] *dst             data destination
  * @param[in]   size            item size
  * @param[in]   nitems          number of items
- * @param[in]   seek            position in file
+ * @param[in]   lseek           position in file
  *
  * @return number of read items
  */
 //==============================================================================
-size_t appfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t appfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
         (void)fd;
         (void)dst;
         (void)size;
         (void)nitems;
-        (void)seek;
+        (void)lseek;
 
         return STD_RET_ERROR;
 }

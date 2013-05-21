@@ -328,14 +328,14 @@ stdret_t TTY_close(void *drvhdl)
  * @param[in] *drvhdl           driver's memory handle
  * @param[in] *src              source
  * @param[in] size              size
- * @param[in] seek              seek
+ * @param[in] lseek             seek
  *
  * @retval number of written nitems
  */
 //==============================================================================
-size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
+size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)seek;
+        (void) lseek;
 
         struct tty_data *tty = drvhdl;
         size_t n = 0;
@@ -375,14 +375,14 @@ size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, size
  * @param[in]  *drvhdl          driver's memory handle
  * @param[out] *dst             destination
  * @param[in]  size             size
- * @param[in]  seek             seek
+ * @param[in]  lseek            seek
  *
  * @retval number of read nitems
  */
 //==============================================================================
-size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
+size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)seek;
+        (void)lseek;
 
         struct tty_data *tty = drvhdl;
         size_t n = 0;

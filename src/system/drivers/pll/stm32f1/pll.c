@@ -211,17 +211,17 @@ stdret_t PLL_close(void *drvhdl)
  * @param[in] *drvhdl           driver's memory handle
  * @param[in] *src              source
  * @param[in] size              size
- * @param[in] seek              seek
+ * @param[in] lseek             seek
  *
  * @retval number of written nitems
  */
 //==============================================================================
-size_t PLL_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
+size_t PLL_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void)drvhdl;
         (void)src;
         (void)size;
-        (void)seek;
+        (void)lseek;
         (void)nitems;
 
         return 0;
@@ -234,17 +234,17 @@ size_t PLL_write(void *drvhdl, const void *src, size_t size, size_t nitems, size
  * @param[in]  *drvhdl          driver's memory handle
  * @param[out] *dst             destination
  * @param[in]  size             size
- * @param[in]  seek             seek
+ * @param[in]  lseek            seek
  *
  * @retval number of read nitems
  */
 //==============================================================================
-size_t PLL_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
+size_t PLL_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         (void)drvhdl;
         (void)dst;
         (void)size;
-        (void)seek;
+        (void)lseek;
         (void)nitems;
 
         return 0;

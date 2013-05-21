@@ -55,13 +55,13 @@ struct vfs_file
 {
         void     *FS_hdl;
         stdret_t (*f_close)(void *FS_hdl, fd_t fd);
-        size_t   (*f_write)(void *FS_hdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek);
-        size_t   (*f_read )(void *FS_hdl, fd_t fd, void *dst, size_t size, size_t nitmes, size_t seek);
+        size_t   (*f_write)(void *FS_hdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
+        size_t   (*f_read )(void *FS_hdl, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
         stdret_t (*f_ioctl)(void *FS_hdl, fd_t fd, int iorq, va_list);
         stdret_t (*f_stat )(void *FS_hdl, fd_t fd, struct vfs_stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, fd_t fd);
         fd_t     fd;
-        size_t   f_seek;
+        u64_t    f_lseek;
 };
 
 struct FS_data {
@@ -734,7 +734,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                         goto vfs_open_error;
                 }
 
-                if (fs->interface.fs_open(fs->handle, &file->fd, &file->f_seek,
+                if (fs->interface.fs_open(fs->handle, &file->fd, &file->f_lseek,
                                           external_path, mode) == STD_RET_OK) {
 
                         file->FS_hdl  = fs->handle;
@@ -827,8 +827,8 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
         if (ptr && size && nitems && file) {
                 if (file->f_write) {
                         n = file->f_write(file->FS_hdl, file->fd, ptr, size,
-                                          nitems, file->f_seek);
-                        file->f_seek += n * size;
+                                          nitems, file->f_lseek);
+                        file->f_lseek += n * size;
                 }
         }
 
@@ -855,8 +855,8 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
         if (ptr && size && nitems && file) {
                 if (file->f_read) {
                         n = file->f_read(file->FS_hdl, file->fd, ptr, size,
-                                         nitems, file->f_seek);
-                        file->f_seek += n * size;
+                                         nitems, file->f_lseek);
+                        file->f_lseek += n * size;
                 }
         }
 
@@ -874,7 +874,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fseek(FILE *file, i32_t offset, int mode)
+int vfs_fseek(FILE *file, i64_t offset, int mode)
 {
         struct vfs_stat stat;
 
@@ -890,9 +890,9 @@ int vfs_fseek(FILE *file, i32_t offset, int mode)
         }
 
         switch (mode) {
-        case VFS_SEEK_SET: file->f_seek  = offset; break;
-        case VFS_SEEK_CUR: file->f_seek += offset; break;
-        case VFS_SEEK_END: file->f_seek  = stat.st_size + offset; break;
+        case VFS_SEEK_SET: file->f_lseek  = offset; break;
+        case VFS_SEEK_CUR: file->f_lseek += offset; break;
+        case VFS_SEEK_END: file->f_lseek  = stat.st_size + offset; break;
         default: return -1;
         }
 
@@ -908,10 +908,10 @@ int vfs_fseek(FILE *file, i32_t offset, int mode)
  * @return -1 if error, otherwise correct value
  */
 //==============================================================================
-i32_t vfs_ftell(FILE *file)
+i64_t vfs_ftell(FILE *file)
 {
         if (file)
-                return file->f_seek;
+                return file->f_lseek;
         else
                 return -1;
 }

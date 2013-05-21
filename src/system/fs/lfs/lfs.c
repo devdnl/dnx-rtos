@@ -772,7 +772,7 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
  *
  * @param[in]  *fshdl           FS handle
  * @param[out] *fd              file descriptor
- * @param[out] *seek            file position
+ * @param[out] *lseek           file position
  * @param[in]  *path            file path
  * @param[in]  *mode            file mode
  *
@@ -780,7 +780,7 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t lfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
         struct LFS_data *lfs = fshdl;
         node_t *node;
@@ -843,7 +843,7 @@ stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const c
                    || strncmp("r+", mode, 2) == 0
                    || strncmp("w",  mode, 2) == 0
                    || strncmp("w+", mode, 2) == 0 ) {
-                        *seek = 0;
+                        *lseek = 0;
                 }
 
                 /* set file size */
@@ -860,7 +860,7 @@ stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const c
 
                 /* set seek at file end */
                 if (strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) {
-                        *seek = node->size;
+                        *lseek = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
                 struct vfs_drv_interface *drv = node->data;
@@ -870,7 +870,7 @@ stdret_t lfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const c
                 }
 
                 if (drv->drv_open(drv->handle) == STD_RET_OK) {
-                        *seek = 0;
+                        *lseek = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);
                         goto error;
@@ -982,12 +982,12 @@ stdret_t lfs_close(void *fshdl, fd_t fd)
  * @param[in] *src              data source
  * @param[in]  size             item size
  * @param[in]  nitems           number of items
- * @param[in]  seek             position in file
+ * @param[in]  lseek            position in file
  *
  * @return number of written items
  */
 //==============================================================================
-size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek)
+size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         struct LFS_data *lfs = fshdl;
         struct vfs_drv_interface *drv_if;
@@ -997,7 +997,7 @@ size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nite
         size_t  write_size;
         size_t  file_length;
         size_t  n = 0;
-
+        size_t  seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
 
         if (!src || !size || !nitems || !lfs) {
                 return 0;
@@ -1068,12 +1068,12 @@ size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nite
  * @param[out] *dst             data destination
  * @param[in]   size            item size
  * @param[in]   nitems          number of items
- * @param[in]   seek            position in file
+ * @param[in]   lseek           position in file
  *
  * @return number of read items
  */
 //==============================================================================
-size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         struct LFS_data *lfs = fshdl;
         struct vfs_drv_interface *drv_if;
@@ -1082,7 +1082,7 @@ size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, siz
         size_t  file_length;
         size_t  items_to_read;
         size_t  n = 0;
-
+        size_t  seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
 
         if (!dst || !size || !nitems || !lfs) {
                 return 0;
