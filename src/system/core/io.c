@@ -608,7 +608,12 @@ int io_fputc(int c, FILE *stream)
 
 //==============================================================================
 /**
- * @brief  TODO Enter function description
+ * @brief Function puts string to selected file
+ *
+ * @param[in] *s        string
+ * @param[in] *file     file
+ *
+ * @return number of puts characters
  */
 //==============================================================================
 int io_fputs(const char *s, FILE *file)

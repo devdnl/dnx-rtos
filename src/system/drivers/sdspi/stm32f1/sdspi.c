@@ -152,6 +152,7 @@ static stdret_t turn_off_SPI_clock(void);
 static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
 static u8_t wait_ready(void);
 static u8_t spi_rw(u8_t out);
+static bool receive_data_block(u8_t *buff, uint count);
 
 /*==============================================================================
   Local object definitions
@@ -316,9 +317,9 @@ stdret_t SDSPI_close(void *drvhdl)
  *
  * @param[in] *drvhdl           driver's memory handle
  * @param[in] *src              source
- * @param[in] size              size (block size)
- * @param[in] nitems            n blocks to write
- * @param[in] lseek             seek
+ * @param[in]  size             item size
+ * @param[in]  nitems           n-items to write
+ * @param[in]  lseek            file index
  *
  * @retval number of written nitems
  */
@@ -342,9 +343,9 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u6
  *
  * @param[in]  *drvhdl          driver's memory handle
  * @param[out] *dst             destination
- * @param[in]  size             block size (must be always 1) FIXME
- * @param[in]  nitems           n blocks to read FIXME
- * @param[in]  lseek            sector number FIXME
+ * @param[in]   size            item size
+ * @param[in]   nitems          n-items to read
+ * @param[in]   lseek           file index
  *
  * @retval number of read nitems
  */
@@ -352,10 +353,9 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u6
 size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         struct sdspi_data *hdl = drvhdl;
-        u32_t count  = nitems;
-        u32_t sector = lseek;
+        size_t n = 0;
 
-        if (!hdl || !dst || size != 1 || !nitems) {
+        if (!hdl || !dst || !size || !nitems) {
                 return 0;
         }
 
@@ -363,11 +363,47 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lse
                 return 0;
         }
 
-//        if (!(hdl->card_type & CT_BLOCK)) {
-//                size
-//        }
-//
-//        /* TODO przemyslec to bo nie moze tak byc ze dziala inaczej niz wszystko -- 64b seek! */
+        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+
+                if (hdl->card_type & CT_BLOCK) {
+                        lseek >>= 8; /*/512 */
+                }
+
+                /* whole sector(s) read */
+                if ((size == 512) && (lseek % 512 == 0)) {
+                        if (nitems == 1) {
+                                if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
+                                        if (receive_data_block(dst, 512)) {
+                                                n = nitems;
+                                        }
+                                }
+                        } else {
+                                if (send_cmd(hdl, CMD18, (u32_t)lseek) == 0) {
+                                        do {
+                                                if (!receive_data_block(dst, 512)) {
+                                                        break;
+                                                }
+
+                                                dst += 512;
+                                        } while (++n >= nitems);
+
+                                        /* stop transmission */
+                                        send_cmd(hdl, CMD12, 0);
+                                }
+                        }
+                } else {
+
+                }
+
+                ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+                spi_rw(0xFF);
+
+                unlock_recursive_mutex(hdl->port_lock_mtx);
+        }
+
+        return n;
+
+
 //
 //
 //        if (drv || !count) return RES_PARERR;
@@ -414,6 +450,8 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lse
 //==============================================================================
 stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
 {
+        (void) args;
+
         struct sdspi_data *hdl = drvhdl;
         stdret_t status = STD_RET_OK;
 
@@ -496,6 +534,8 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
                         status = STD_RET_ERROR;
                         break;
                 }
+
+                unlock_recursive_mutex(hdl->port_lock_mtx);
         } else {
                 return STD_RET_ERROR;
         }
@@ -556,14 +596,14 @@ static stdret_t partition_close(void *drvhdl)
  *
  * @param[in] *drvhdl           handler to partition description
  * @param[in] *src              source
- * @param[in] size              size (block size)
- * @param[in] nitems            n blocks to write
- * @param[in] seek              seek
+ * @param[in]  size             item size
+ * @param[in]  nitems           n-items to write
+ * @param[in]  lseek            file index
  *
  * @retval number of written nitems
  */
 //==============================================================================
-static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
+static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         return 0;
 }
@@ -574,14 +614,14 @@ static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t
  *
  * @param[in]  *drvhdl          handler to partition description
  * @param[out] *dst             destination
- * @param[in]  size             size (block size)
- * @param[in]  nitems           n blocks to read
- * @param[in]  seek             seek
+ * @param[in]   size            item size
+ * @param[in]   nitems          n-items to read
+ * @param[in]   lseek           file index
  *
  * @retval number of written nitems
  */
 //==============================================================================
-static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
+static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         return 0;
 }
@@ -629,21 +669,21 @@ static stdret_t partition_flush(void *drvhdl)
 static stdret_t turn_on_SPI_clock(void)
 {
         switch ((u32_t)SDSPI_PORT) {
-#if defined(RCC_APB2ENR_SPI1EN)
+        #if defined(RCC_APB2ENR_SPI1EN)
         case SPI1_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
                 return STD_RET_OK;
-#endif
-#if defined(RCC_APB1ENR_SPI2EN)
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN)
         case SPI2_BASE:
                 RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
                 return STD_RET_OK;
-#endif
-#if defined(RCC_APB1ENR_SPI3EN)
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN)
         case SPI3_BASE:
                 RCC->APB1ENR |= RCC_APB1ENR_SPI3EN;
                 return STD_RET_OK;
-#endif
+        #endif
         default:
                 return STD_RET_ERROR;
         }
@@ -660,27 +700,27 @@ static stdret_t turn_on_SPI_clock(void)
 static stdret_t turn_off_SPI_clock(void)
 {
         switch ((u32_t)SDSPI_PORT) {
-#if defined(RCC_APB2ENR_SPI1EN)
+        #if defined(RCC_APB2ENR_SPI1EN)
         case SPI1_BASE:
                 RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
                 RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
                 RCC->APB2ENR  &= ~RCC_APB2ENR_SPI1EN;
                 return STD_RET_OK;
-#endif
-#if defined(RCC_APB1ENR_SPI2EN)
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN)
         case SPI2_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
                 RCC->APB1ENR  &= ~RCC_APB1ENR_SPI2EN;
                 return STD_RET_OK;
-#endif
-#if defined(RCC_APB1ENR_SPI3EN)
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN)
         case SPI3_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
                 RCC->APB1ENR  &= ~RCC_APB1ENR_SPI3EN;
                 return STD_RET_OK;
-#endif
+        #endif
         default:
                 return STD_RET_ERROR;
         }
@@ -780,6 +820,44 @@ static u8_t spi_rw(u8_t out)
         send_data(out);
         while (!is_Rx_buffer_not_empty());
         return get_data();
+}
+
+//==============================================================================
+/**
+ * @brief Function receive data block
+ *
+ * @param[out] *buff            data buffer
+ * @param[in]   count           buffer size
+ *
+ * @retval true if success
+ * @retval false if error
+ */
+//==============================================================================
+static bool receive_data_block(u8_t *buff, uint count)
+{
+        u8_t token;
+        uint timeout = 10;
+
+        while ((token = spi_rw(0xFF)) == 0xFF && timeout) {
+                sleep_ms(1);
+                --timeout;
+        }
+
+        if (token != 0xFE)
+                return false;
+
+        do {
+                *buff++ = spi_rw(0xFF);
+                *buff++ = spi_rw(0xFF);
+                *buff++ = spi_rw(0xFF);
+                *buff++ = spi_rw(0xFF);
+        } while (count -= 4);
+
+        /* discard CRC */
+        spi_rw(0xFF);
+        spi_rw(0xFF);
+
+        return true;
 }
 
 #ifdef __cplusplus
