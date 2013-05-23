@@ -642,17 +642,12 @@ static u8_t spi_rw(u8_t out)
 //==============================================================================
 static u8_t wait_ready(void)
 {
-        int  timeout = SDSPI_WAIT_TIMEOUT;
+        int  try = 10000;
         u8_t response;
 
         spi_rw(0xFF);
 
-        while ((response = spi_rw(0xFF)) != 0xFF) {
-                if (timeout == 0)
-                        break;
-
-                sleep_ms(1);
-        }
+        while ((response = spi_rw(0xFF)) != 0xFF && --try);
 
         return response;
 }
@@ -736,10 +731,7 @@ static bool receive_data_block(u8_t *buff, uint count)
 
         do {
                 *buff++ = spi_rw(0xFF);
-                *buff++ = spi_rw(0xFF);
-                *buff++ = spi_rw(0xFF);
-                *buff++ = spi_rw(0xFF);
-        } while (count -= 4);
+        } while (count--);
 
         /* discard CRC */
         spi_rw(0xFF);
