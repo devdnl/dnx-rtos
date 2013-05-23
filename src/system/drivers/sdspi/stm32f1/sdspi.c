@@ -141,19 +141,20 @@ struct sdspi_data {
         FILE      *gpio_file;
         card_type  card_type;
         bool       card_initialized;
+        mutex_t   *card_protect_mtx;
         mutex_t   *port_lock_mtx;
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek);
+static size_t   card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek);
 static stdret_t turn_on_SPI_clock(void);
 static stdret_t turn_off_SPI_clock(void);
-static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
-static u8_t wait_ready(void);
-static u8_t spi_rw(u8_t out);
-static bool receive_data_block(u8_t *buff, uint count);
+static u8_t     send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
+static u8_t     wait_ready(void);
+static u8_t     spi_rw(u8_t out);
+static bool     receive_data_block(u8_t *buff, uint count);
 static stdret_t initialize_card(struct sdspi_data *hdl);
 static stdret_t detect_partitions(struct sdspi_data *hdl);
 
@@ -194,6 +195,10 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
                 goto error;
         }
 
+        if (!(sdspi->card_protect_mtx = new_mutex())) {
+                goto error;
+        }
+
         if (!(sdspi->gpio_file = fopen(SDSPI_GPIO_FILE, "r+"))) {
                 goto error;
         }
@@ -221,6 +226,10 @@ error:
         if (sdspi) {
                 if (sdspi->port_lock_mtx) {
                         delete_recursive_mutex(sdspi->port_lock_mtx);
+                }
+
+                if (sdspi->card_protect_mtx) {
+                        delete_mutex(sdspi->card_protect_mtx);
                 }
 
                 if (sdspi->gpio_file) {
@@ -254,6 +263,7 @@ stdret_t SDSPI_release(void *drvhdl)
         enter_critical();
         unlock_recursive_mutex(hdl->port_lock_mtx);
         delete_recursive_mutex(hdl->port_lock_mtx);
+        delete_mutex(hdl->card_protect_mtx);
         fclose(hdl->gpio_file);
         turn_off_SPI_clock();
         free(hdl);
@@ -358,7 +368,7 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lse
         struct sdspi_data *hdl = drvhdl;
         size_t n = 0;
 
-        if (!hdl || !dst || !size || !nitems) {
+        if (!hdl) {
                 return 0;
         }
 
@@ -393,17 +403,21 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
                 return STD_RET_ERROR;
         }
 
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (lock_recursive_mutex(hdl->port_lock_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 switch (iorq) {
                 case SDSPI_IORQ_INITIALIZE_CARD:
-                        if (initialize_card(hdl) == STD_RET_OK) {
-//                                if (detect_partitions(hdl) == STD_RET_OK) {
-                                        /* success */
-//                                        break;
-//                                }
-                        }
+                        if (lock_mutex(hdl->card_protect_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                                if (initialize_card(hdl) == STD_RET_OK) {
+//                                     if (detect_partitions(hdl) == STD_RET_OK) {
+                                               /* success */
+//                                             break;
+//                                     }
+                                }
 
-                        /* error */
+                                unlock_mutex(hdl->card_protect_mtx);
+                        } else {
+                                status = STD_RET_ERROR;
+                        }
 
                         break;
 
@@ -713,12 +727,9 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
 static bool receive_data_block(u8_t *buff, uint count)
 {
         u8_t token;
-        uint timeout = 10;
+        uint try = 10000;
 
-        while ((token = spi_rw(0xFF)) == 0xFF && timeout) {
-                sleep_ms(1);
-                --timeout;
-        }
+        while ((token = spi_rw(0xFF)) == 0xFF && --try);
 
         if (token != 0xFE)
                 return false;
@@ -851,76 +862,49 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
 {
         size_t n = 0;
 
-        if (hdl->card_initialized == false) {
-                return 0;
-        }
+        if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
 
-        if (hdl->card_type & CT_BLOCK) {
-                lseek >>= 8;    /* divide by 512 */
-        }
+                if (hdl->card_initialized == false) {
+                        return 0;
+                }
 
-        /* whole sector(s) read */
-        if ((size == 512) && (lseek % 512 == 0)) {
-                if (nitems == 1) {
-                        if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
-                                if (receive_data_block(dst, 512)) {
-                                        n = nitems;
+                if (hdl->card_type & CT_BLOCK) {
+                        lseek >>= 8;    /* divide by 512 */
+                }
+
+                /* whole sector(s) read */
+                if ((size == 512) && (lseek % 512 == 0)) {
+                        if (nitems == 1) {
+                                if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
+                                        if (receive_data_block(dst, 512)) {
+                                                n = nitems;
+                                        }
+                                }
+                        } else {
+                                if (send_cmd(hdl, CMD18, (u32_t)lseek) == 0) {
+                                        do {
+                                                if (!receive_data_block(dst, 512)) {
+                                                        break;
+                                                }
+
+                                                dst += 512;
+                                        } while (++n >= nitems);
+
+                                        /* stop transmission */
+                                        send_cmd(hdl, CMD12, 0);
                                 }
                         }
                 } else {
-                        if (send_cmd(hdl, CMD18, (u32_t)lseek) == 0) {
-                                do {
-                                        if (!receive_data_block(dst, 512)) {
-                                                break;
-                                        }
-
-                                        dst += 512;
-                                } while (++n >= nitems);
-
-                                /* stop transmission */
-                                send_cmd(hdl, CMD12, 0);
-                        }
+                        /* TODO partial sector read */
                 }
-        } else {
-                /* TODO partial sector read */
+
+                ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+                spi_rw(0xFF);
+
+                unlock_mutex(hdl->card_protect_mtx);
         }
 
-        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
-        spi_rw(0xFF);
-
         return n;
-
-
-//
-//
-//        if (drv || !count) return RES_PARERR;
-//        if (Stat & STA_NOINIT) return RES_NOTRDY;
-//
-//        if (!(CardType & CT_BLOCK)) sector *= 512;      /* Convert to byte address if needed */
-//
-//        if (count == 1) {       /* Single block read */
-//                if (send_cmd(CMD17, sector) == 0)       { /* READ_SINGLE_BLOCK */
-//                        if (rcvr_datablock(buff, 512)) {
-//                                count = 0;
-//                        }
-//                }
-//        }
-//        else {                          /* Multiple block read */
-//                if (send_cmd(CMD18, sector) == 0) {     /* READ_MULTIPLE_BLOCK */
-//                        do {
-//                                if (!rcvr_datablock(buff, 512)) {
-//                                        break;
-//                                }
-//                                buff += 512;
-//                        } while (--count);
-//                        send_cmd(CMD12, 0);                             /* STOP_TRANSMISSION */
-//                }
-//        }
-//        release_spi();
-//
-//        return count ? RES_ERROR : RES_OK;
-
-        return 0;
 }
 
 #ifdef __cplusplus

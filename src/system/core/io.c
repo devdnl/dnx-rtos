@@ -322,6 +322,10 @@ static int calc_format_size(const char *format, va_list arg)
                 } else {
                         chr = *format++;
 
+                        while (chr >= '0' && chr <= '9') {
+                                chr = *format++;
+                        }
+
                         if (chr == '%' || chr == 'c') {
                                 if (chr == 'c') {
                                         chr = va_arg(arg, i32_t);
@@ -778,8 +782,7 @@ int io_fprintf(FILE *file, const char *format, ...)
 #if (CONFIG_PRINTF_ENABLE > 0)
 int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
-#define put_character(character)                \
-        {                                       \
+        #define put_character(character) {      \
                 if ((size_t)slen < size)  {     \
                         *buf++ = character;     \
                         slen++;                 \
@@ -790,6 +793,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
         char chr;
         int  slen = 1;
+        int  arg_size;
 
         while ((chr = *format++) != '\0') {
                 if (chr != '%') {
@@ -798,6 +802,13 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
 
                 chr = *format++;
+
+                arg_size = 0;
+                while (chr >= '0' && chr <= '9') {
+                        arg_size *= 10;
+                        arg_size += chr - '0';
+                        chr       = *format++;
+                }
 
                 if (chr == '%' || chr == 'c') {
                         if (chr == 'c') {
@@ -809,7 +820,8 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
 
                 if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u') {
-                        char result[11];
+                        char result[12];
+                        memset(result, 0, sizeof(result));
                         char *resultPtr;
 
                         if (chr == 's') {
@@ -818,20 +830,15 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                         resultPtr = "(null)";
                                 }
                         } else {
-                                u8_t zeros = *format++;
-
-                                if (zeros >= '0' && zeros <= '9') {
-                                        zeros -= '0';
-                                } else {
-                                        zeros = 0;
-                                        format--;
+                                if (arg_size > 9) {
+                                        arg_size = 9;
                                 }
 
                                 u8_t base    = (chr == 'd' || chr == 'u' ? 10 : 16);
                                 bool uint_en = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
 
                                 resultPtr = itoa(va_arg(arg, i32_t), result,
-                                                 base, uint_en, zeros);
+                                                 base, uint_en, arg_size);
                         }
 
                         while ((chr = *resultPtr++)) {
@@ -848,11 +855,10 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
         }
 
-        vsnprint_end:
+vsnprint_end:
         *buf = 0;
         return (slen - 1);
-
-#undef putChar
+        #undef put_character
 }
 #endif
 

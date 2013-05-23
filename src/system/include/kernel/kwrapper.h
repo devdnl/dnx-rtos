@@ -67,6 +67,7 @@ extern "C" {
 /** MUTEX AND SEMAPHORES DEFINITIONS */
 #define MUTEX_LOCKED                                    OS_OK
 #define SEMAPHORE_TAKEN                                 OS_OK
+#define MAX_DELAY                                       portMAX_DELAY
 
 /** OS kernel control functions */
 #define start_task_scheduler()                          vTaskStartScheduler()
