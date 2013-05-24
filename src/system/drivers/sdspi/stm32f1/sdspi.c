@@ -130,6 +130,8 @@ MODULE_NAME(SDSPI);
 #define CT_SDC                                          (CT_SD1|CT_SD2)
 #define CT_BLOCK                                        (1 << 3)
 
+#define SECTOR_SIZE                                     512
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -148,7 +150,6 @@ struct sdspi_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static size_t   card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek);
 static stdret_t turn_on_SPI_clock(void);
 static stdret_t turn_off_SPI_clock(void);
 static u8_t     send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
@@ -156,8 +157,11 @@ static u8_t     wait_ready(void);
 static u8_t     spi_rw(u8_t out);
 static bool     receive_data_block(u8_t *buff, uint size);
 static size_t   read_whole_sectors(struct sdspi_data *hdl, void *dst, size_t nsectors, u64_t lseek);
+static size_t   read_partial_sectors(struct sdspi_data *hdl, void *dst, size_t size, u64_t lseek);
 static stdret_t initialize_card(struct sdspi_data *hdl);
 static stdret_t detect_partitions(struct sdspi_data *hdl);
+static size_t   card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek);
+static size_t   card_write(struct sdspi_data *hdl, void *src, size_t size, size_t nitems, u64_t lseek);
 
 /*==============================================================================
   Local object definitions
@@ -342,15 +346,22 @@ stdret_t SDSPI_close(void *drvhdl)
 //==============================================================================
 size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void) drvhdl;
-        (void) src;
-        (void) size;
-        (void) nitems;
-        (void) lseek;
+        struct sdspi_data *hdl = drvhdl;
+        size_t n = 0;
 
+        if (!hdl) {
+                return 0;
+        }
 
+        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+                        n = card_write(hdl, src, size, nitems, lseek);
+                        unlock_mutex(hdl->card_protect_mtx);
+                }
+                unlock_recursive_mutex(hdl->port_lock_mtx);
+        }
 
-        return 0;
+        return n;
 }
 
 //==============================================================================
@@ -773,7 +784,7 @@ static size_t read_whole_sectors(struct sdspi_data *hdl, void *dst, size_t nsect
         /* 1 sector to read */
         if (nsectors == 1) {
                 if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
-                        if (receive_data_block(dst, 512)) {
+                        if (receive_data_block(dst, SECTOR_SIZE)) {
                                 n = 1;
                         }
                 }
@@ -784,7 +795,7 @@ static size_t read_whole_sectors(struct sdspi_data *hdl, void *dst, size_t nsect
                                         break;
                                 }
 
-                                dst += 512;
+                                dst += SECTOR_SIZE;
                         } while (++n < nsectors);
 
                         /* stop transmission */
@@ -795,6 +806,55 @@ static size_t read_whole_sectors(struct sdspi_data *hdl, void *dst, size_t nsect
         return n;
 }
 
+//==============================================================================
+/**
+ * @brief Function read only selected data from sectors
+ *
+ * @param[in]  *hdl             driver's memory handle
+ * @param[out] *dst             destination
+ * @param[in]   size            number of bytes to read
+ * @param[in]   lseek           file index
+ *
+ * @retval number of read bytes
+ */
+//==============================================================================
+static size_t read_partial_sectors(struct sdspi_data *hdl, void *dst, size_t size, u64_t lseek)
+{
+        u8_t *buffer = malloc(SECTOR_SIZE);
+        if (!buffer)
+                return 0;
+
+        u32_t recv_data  = 0;
+        while (recv_data < size) {
+                if (lseek % SECTOR_SIZE == 0 && (size - recv_data) / SECTOR_SIZE > 0) {
+                        size_t n = read_whole_sectors(hdl, dst, size / SECTOR_SIZE, lseek);
+                        if (n != size / SECTOR_SIZE)
+                                break;
+
+                        dst       += n * SECTOR_SIZE;
+                        lseek     += n * SECTOR_SIZE;
+                        recv_data += n * SECTOR_SIZE;
+                } else {
+                        if (read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF)) != 1)
+                                break;
+
+                        u32_t rest;
+                        if ((SECTOR_SIZE - (lseek % SECTOR_SIZE)) > (size - recv_data))
+                                rest = size - recv_data;
+                        else
+                                rest = SECTOR_SIZE - (lseek % SECTOR_SIZE);
+
+                        memcpy(dst, buffer + (lseek % SECTOR_SIZE), rest);
+                        dst       += rest;
+                        recv_data += rest;
+                        lseek     += rest;
+                }
+        }
+
+        free(buffer);
+
+        return recv_data;
+}
 
 //==============================================================================
 /**
@@ -856,7 +916,7 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
                         }
 
                         /* set R/W block length to 512 */
-                        if (!timeout || send_cmd(hdl, CMD16, 512) != 0) {
+                        if (!timeout || send_cmd(hdl, CMD16, SECTOR_SIZE) != 0) {
                                 hdl->card_type = 0;
                         }
                 }
@@ -895,7 +955,7 @@ static stdret_t detect_partitions(struct sdspi_data *hdl) /* TODO detect_partiti
 
 //==============================================================================
 /**
- * @brief Read data (read 512 byte sector)
+ * @brief Read data from card
  *
  * @param[in]  *hdl             driver's memory handle
  * @param[out] *dst             destination
@@ -915,55 +975,37 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
         }
 
         /* whole sector(s) read */
-        if (((size * nitems) % 512 == 0) && (lseek % 512 == 0)) {
+        if (((size * nitems) % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
 
-                n  = read_whole_sectors(hdl, dst, (size * nitems) / 512, lseek);
-                n *= 512 / size;
+                n  = read_whole_sectors(hdl, dst, (size * nitems) / SECTOR_SIZE, lseek);
+                n *= SECTOR_SIZE / size;
 
         } else {
-                u8_t *buffer = malloc(512);
-                if (!buffer)
-                        goto error;
-
-                u32_t data_to_read = size * nitems;
-                u32_t recv_data    = 0;
-
-                while (recv_data < data_to_read) {
-                        if (lseek % 512 == 0 && (data_to_read - recv_data) / 512 > 0) {
-                                n = read_whole_sectors(hdl, dst, data_to_read/512, lseek);
-                                if (n != data_to_read/512)
-                                        break;
-
-                                dst       += n * 512;
-                                lseek     += n * 512;
-                                recv_data += n * 512;
-                        } else {
-                                if (read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF)) != 1)
-                                        break;
-
-                                u32_t size;
-                                if ((512 - (lseek % 512)) > (data_to_read - recv_data))
-                                        size = data_to_read - recv_data;
-                                else
-                                        size = 512 - (lseek % 512);
-
-                                memcpy(dst, buffer + (lseek % 512), size);
-                                dst       += size;
-                                recv_data += size;
-                                lseek     += size;
-                        }
-                }
-
-                free(buffer);
-
-                n = recv_data / size;
+                n  = read_partial_sectors(hdl, dst, size * nitems, lseek);
+                n /= size;
         }
 
         ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         spi_rw(0xFF);
-
-error:
         return n;
+}
+
+//==============================================================================
+/**
+ * @brief Write data to card
+ *
+ * @param[in] *hdl              driver's memory handle
+ * @param[in] *src              source
+ * @param[in]  size             item size
+ * @param[in]  nitems           n-items to write
+ * @param[in]  lseek            file index
+ *
+ * @retval number of written nitems
+ */
+//==============================================================================
+static size_t card_write(struct sdspi_data *hdl, void *src, size_t size, size_t nitems, u64_t lseek)
+{
+
 }
 
 #ifdef __cplusplus
