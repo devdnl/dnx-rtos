@@ -154,7 +154,8 @@ static stdret_t turn_off_SPI_clock(void);
 static u8_t     send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
 static u8_t     wait_ready(void);
 static u8_t     spi_rw(u8_t out);
-static bool     receive_data_block(u8_t *buff, uint count);
+static bool     receive_data_block(u8_t *buff, uint size);
+static size_t   read_whole_sectors(struct sdspi_data *hdl, void *dst, size_t nsectors, u64_t lseek);
 static stdret_t initialize_card(struct sdspi_data *hdl);
 static stdret_t detect_partitions(struct sdspi_data *hdl);
 
@@ -375,7 +376,10 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lse
         }
 
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                n = card_read(hdl, dst, size, nitems, lseek);
+                if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+                        n = card_read(hdl, dst, size, nitems, lseek);
+                        unlock_mutex(hdl->card_protect_mtx);
+                }
                 unlock_recursive_mutex(hdl->port_lock_mtx);
         }
 
@@ -715,13 +719,13 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
  * @brief Function receive data block
  *
  * @param[out] *buff            data buffer
- * @param[in]   count           buffer size
+ * @param[in]   size            buffer size
  *
  * @retval true if success
  * @retval false if error
  */
 //==============================================================================
-static bool receive_data_block(u8_t *buff, uint count)
+static bool receive_data_block(u8_t *buff, uint size)
 {
         u8_t token;
         uint try = 10000;
@@ -737,7 +741,7 @@ static bool receive_data_block(u8_t *buff, uint count)
                 *buff++ = spi_rw(0xFF);
                 *buff++ = spi_rw(0xFF);
                 *buff++ = spi_rw(0xFF);
-        } while (count -= 4);
+        } while (size -= 4);
 
         /* discard CRC */
         spi_rw(0xFF);
@@ -745,6 +749,52 @@ static bool receive_data_block(u8_t *buff, uint count)
 
         return true;
 }
+
+//==============================================================================
+/**
+ * @brief Function read whole sectors
+ *
+ * @param[in]  *hdl             driver's memory handle
+ * @param[out] *dst             destination
+ * @param[in]   nsectors        sectors to read
+ * @param[in]   lseek           file index
+ *
+ * @retval number of read sectors
+ */
+//==============================================================================
+static size_t read_whole_sectors(struct sdspi_data *hdl, void *dst, size_t nsectors, u64_t lseek)
+{
+        size_t n = 0;
+
+        if (hdl->card_type & CT_BLOCK) {
+                lseek >>= 9;    /* divide by 512 */
+        }
+
+        /* 1 sector to read */
+        if (nsectors == 1) {
+                if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
+                        if (receive_data_block(dst, 512)) {
+                                n = 1;
+                        }
+                }
+        } else {
+                if (send_cmd(hdl, CMD18, (u32_t)lseek) == 0) {
+                        do {
+                                if (!receive_data_block(dst, 512)) {
+                                        break;
+                                }
+
+                                dst += 512;
+                        } while (++n < nsectors);
+
+                        /* stop transmission */
+                        send_cmd(hdl, CMD12, 0);
+                }
+        }
+
+        return n;
+}
+
 
 //==============================================================================
 /**
@@ -860,52 +910,34 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
 {
         size_t n = 0;
 
-        if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-
-                if (hdl->card_initialized == false) {
-                        return 0;
-                }
-
-                /* whole sector(s) read */
-                if (((size * nitems) % 512 == 0) && (lseek % 512 == 0)) {
-                        if (hdl->card_type & CT_BLOCK) {
-                                lseek >>= 9;    /* divide by 512 */
-                        }
-
-                        /* 1 sector to read */
-                        if ((size * nitems) / 512 == 1) {
-                                if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
-                                        if (receive_data_block(dst, 512)) {
-                                                n = nitems;
-                                        }
-                                }
-                        } else {
-                                if (send_cmd(hdl, CMD18, (u32_t)lseek) == 0) {
-                                        do {
-                                                if (!receive_data_block(dst, 512)) {
-                                                        break;
-                                                }
-
-                                                dst += 512;
-                                                n   += 512/size;
-                                        } while (n < nitems);
-
-                                        /* stop transmission */
-                                        send_cmd(hdl, CMD12, 0);
-                                }
-                        }
-                } else {
-//                        u8_t *buff = malloc(512);
-//                        if (buff) {
-//                                u32_t sector = ;
-//                        }
-                }
-
-                ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
-                spi_rw(0xFF);
-
-                unlock_mutex(hdl->card_protect_mtx);
+        if (hdl->card_initialized == false) {
+                return 0;
         }
+
+        /* whole sector(s) read */
+        if (((size * nitems) % 512 == 0) && (lseek % 512 == 0)) {
+
+                n  = read_whole_sectors(hdl, dst, (size * nitems) / 512, lseek);
+                n *= 512/size;
+
+        } else {
+//                u32_t data_size = size * nitems;
+//                u32_t sectors_to_read;
+//
+//                if (lseek % 512 == 0) {
+//                        sectors_to_read = data_size / 512;
+//
+//                } else {
+//
+//                }
+//
+//
+//
+//                u32_t offset    = lseek & 0x1FF;
+        }
+
+        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        spi_rw(0xFF);
 
         return n;
 }
