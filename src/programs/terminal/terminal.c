@@ -76,6 +76,7 @@ static enum cmd_status cmd_mount(char *arg);
 static enum cmd_status cmd_umount(char *arg);
 static enum cmd_status cmd_uname(char *arg);
 static enum cmd_status cmd_help(char *arg);
+static enum cmd_status cmd_sector(char *arg); /* TODO delete */
 
 /*==============================================================================
   Local object definitions
@@ -100,12 +101,13 @@ static const struct cmd_entry commands[] = {
         {"umount", cmd_umount},
         {"uname" , cmd_uname },
         {"help"  , cmd_help  },
+        {"sector", cmd_sector}, /* TODO delete */
 };
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(terminal, STACK_DEPTH_VERY_LOW);
+PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW); /* TODO FIX to STACK_DEPTH_VERY_LOW */
 
 /*==============================================================================
   Function definitions
@@ -821,6 +823,82 @@ static enum cmd_status cmd_help(char *arg)
 
         return CMD_STATUS_EXECUTED;
 }
+
+//==============================================================================
+/**
+ * @brief TODO Delete this function
+ */
+//==============================================================================
+static enum cmd_status cmd_sector(char *arg)
+{
+        u64_t sector = 0;
+        int   count  = 0;
+
+        while (*arg != ':' && *arg >= '0' && *arg <= '9' && *arg != '\0') {
+                sector *= 10;
+                sector += *arg++ - '0';
+        }
+
+        arg++;
+
+        while (*arg != ':' && *arg >= '0' && *arg <= '9' && *arg != '\0') {
+                count *= 10;
+                count += *arg++ - '0';
+        }
+
+        printf("Sector = %d; count = %d\n", (u32_t)sector, count);
+
+        if (count == 0) {
+                printf("Nothing to do. Exit.\n");
+                return CMD_STATUS_EXECUTED;
+        }
+
+        FILE *sd = fopen("/dev/sda", "r");
+        if (sd) {
+                u8_t *buff = calloc(512, count);
+                if (buff) {
+                        fseek(sd, sector * 512, SEEK_SET);
+
+                        int n;
+                        if ((n = fread(buff, 512, count, sd)) > 0) {
+                                printf("Readed: %d\n", n);
+
+                                u8_t *b = buff;
+
+                                int sec = 0;
+                                for (int c = 0; c < count; c++) {
+                                        printf(FONT_COLOR_GREEN"Sector: %d"RESET_ATTRIBUTES"\n", (u32_t)(sec + sector));
+
+                                        for (int row = 0; row < 32; row++) {
+                                                printf("%3x\t%2x %2x %2x %2x  %2x %2x %2x %2x  %2x %2x %2x %2x  %2x %2x %2x %2x\n",
+                                                       row * 16,
+                                                       b[0],  b[1],  b[2],  b[3],
+                                                       b[4],  b[5],  b[6],  b[7],
+                                                       b[8],  b[9],  b[10], b[11],
+                                                       b[12], b[13], b[14], b[15]);
+
+                                                b += 16;
+                                        }
+
+                                        sec++;
+                                }
+                        } else {
+                                printf("Read nothing!\n");
+                        }
+
+                        free(buff);
+                } else {
+                        printf("Not enough free memory.\n");
+                }
+
+                fclose(sd);
+                return CMD_STATUS_EXECUTED;
+        }
+
+        printf("Cannot open SD card.\n");
+        return CMD_STATUS_EXECUTED;
+}
+
 
 /*==============================================================================
   End of file

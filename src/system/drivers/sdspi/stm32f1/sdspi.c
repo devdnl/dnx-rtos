@@ -181,15 +181,17 @@ static stdret_t detect_partitions(struct sdspi_data *hdl);
 //==============================================================================
 stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
 {
+        struct sdspi_data *sdspi;
+
         if (dev != SDSPI_DEV_NO || part != SDSPI_DEV_PART || !drvhdl) {
                 return STD_RET_ERROR;
         }
 
-        if (!(*drvhdl = calloc(1, sizeof(struct sdspi_data)))) {
+        if (!(sdspi = calloc(1, sizeof(struct sdspi_data)))) {
                 return STD_RET_ERROR;
         }
 
-        struct sdspi_data *sdspi = *drvhdl;
+        *drvhdl = sdspi;
 
         if (!(sdspi->port_lock_mtx = new_recursive_mutex())) {
                 goto error;
@@ -729,9 +731,13 @@ static bool receive_data_block(u8_t *buff, uint count)
         if (token != 0xFE)
                 return false;
 
+        /* memory alignment */
         do {
                 *buff++ = spi_rw(0xFF);
-        } while (count--);
+                *buff++ = spi_rw(0xFF);
+                *buff++ = spi_rw(0xFF);
+                *buff++ = spi_rw(0xFF);
+        } while (count -= 4);
 
         /* discard CRC */
         spi_rw(0xFF);
@@ -814,7 +820,7 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
         spi_rw(0xFF);
 
         if (hdl->card_initialized == false) {
-                printk("Card not initialized...\n");
+                printk(FONT_COLOR_RED"Card not initialized...\n"RESET_ATTRIBUTES);
                 return STD_RET_ERROR;
         } else {
                 printk("Card initialized. Card type: 0x%x\n", hdl->card_type);
@@ -860,12 +866,12 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
                         return 0;
                 }
 
-                if (hdl->card_type & CT_BLOCK) {
-                        lseek >>= 8;    /* divide by 512 */
-                }
-
                 /* whole sector(s) read */
                 if ((size == 512) && (lseek % 512 == 0)) {
+                        if (hdl->card_type & CT_BLOCK) {
+                                lseek >>= 9;    /* divide by 512 */
+                        }
+
                         if (nitems == 1) {
                                 if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
                                         if (receive_data_block(dst, 512)) {
@@ -880,7 +886,7 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
                                                 }
 
                                                 dst += 512;
-                                        } while (++n >= nitems);
+                                        } while (++n < nitems);
 
                                         /* stop transmission */
                                         send_cmd(hdl, CMD12, 0);

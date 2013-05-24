@@ -757,7 +757,7 @@ int io_fprintf(FILE *file, const char *format, ...)
                         n = io_vsnprintf(str, size, format, args);
                         va_end(args);
 
-                        vfs_fwrite(str, sizeof(char), size, file);
+                        vfs_fwrite(str, sizeof(char), n + 1, file);
 
                         sysm_sysfree(str);
                 }

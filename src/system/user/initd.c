@@ -118,35 +118,8 @@ void task_initd(void *arg)
                 printk("Cannot open file!\n");
         } else {
                 ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD);
-
-                u8_t *buff = calloc(512, 1);
-                if (buff) {
-                        fseek(sd, 0, SEEK_SET);
-                        if (fread(buff, 512, 1, sd) > 0) {
-                                for (int n = 0; n < 32; n++) {
-                                        printk("%3x\t", n);
-
-                                        for (int i = 0; i < 4; i++) {
-                                                char *fmt;
-
-                                                if (i < 3) fmt = "%2x %2x %2x %2x  ";
-                                                else       fmt = "%2x %2x %2x %2x\n";
-
-                                                printk(fmt, buff[n*16 + i*4 + 0],
-                                                            buff[n*16 + i*4 + 1],
-                                                            buff[n*16 + i*4 + 2],
-                                                            buff[n*16 + i*4 + 3]);
-                                        }
-                                }
-                        } else {
-                                printk("Read error!\n");
-                        }
-
-                        free(buff);
-                }
-
-                fclose(sd);
         }
+        fclose(sd);
 
 
         /* initd info about stack usage */
