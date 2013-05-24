@@ -867,12 +867,13 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
                 }
 
                 /* whole sector(s) read */
-                if ((size == 512) && (lseek % 512 == 0)) {
+                if (((size * nitems) % 512 == 0) && (lseek % 512 == 0)) {
                         if (hdl->card_type & CT_BLOCK) {
                                 lseek >>= 9;    /* divide by 512 */
                         }
 
-                        if (nitems == 1) {
+                        /* 1 sector to read */
+                        if ((size * nitems) / 512 == 1) {
                                 if (send_cmd(hdl, CMD17, (u32_t)lseek) == 0) {
                                         if (receive_data_block(dst, 512)) {
                                                 n = nitems;
@@ -886,14 +887,18 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
                                                 }
 
                                                 dst += 512;
-                                        } while (++n < nitems);
+                                                n   += 512/size;
+                                        } while (n < nitems);
 
                                         /* stop transmission */
                                         send_cmd(hdl, CMD12, 0);
                                 }
                         }
                 } else {
-                        /* TODO partial sector read */
+//                        u8_t *buff = malloc(512);
+//                        if (buff) {
+//                                u32_t sector = ;
+//                        }
                 }
 
                 ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);

@@ -860,7 +860,7 @@ static enum cmd_status cmd_sector(char *arg)
                         fseek(sd, sector * 512, SEEK_SET);
 
                         int n;
-                        if ((n = fread(buff, 512, count, sd)) > 0) {
+                        if ((n = fread(buff, 128, count*4, sd)) > 0) {
                                 printf("Readed: %d\n", n);
 
                                 u8_t *b = buff;
