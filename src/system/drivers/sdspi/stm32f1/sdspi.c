@@ -918,27 +918,51 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
         if (((size * nitems) % 512 == 0) && (lseek % 512 == 0)) {
 
                 n  = read_whole_sectors(hdl, dst, (size * nitems) / 512, lseek);
-                n *= 512/size;
+                n *= 512 / size;
 
         } else {
-//                u32_t data_size = size * nitems;
-//                u32_t sectors_to_read;
-//
-//                if (lseek % 512 == 0) {
-//                        sectors_to_read = data_size / 512;
-//
-//                } else {
-//
-//                }
-//
-//
-//
-//                u32_t offset    = lseek & 0x1FF;
+                u8_t *buffer = malloc(512);
+                if (!buffer)
+                        goto error;
+
+                u32_t data_to_read = size * nitems;
+                u32_t recv_data    = 0;
+
+                while (recv_data < data_to_read) {
+                        if (lseek % 512 == 0 && (data_to_read - recv_data) / 512 > 0) {
+                                n = read_whole_sectors(hdl, dst, data_to_read/512, lseek);
+                                if (n != data_to_read/512)
+                                        break;
+
+                                dst       += n * 512;
+                                lseek     += n * 512;
+                                recv_data += n * 512;
+                        } else {
+                                if (read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF)) != 1)
+                                        break;
+
+                                u32_t size;
+                                if ((512 - (lseek % 512)) > (data_to_read - recv_data))
+                                        size = data_to_read - recv_data;
+                                else
+                                        size = 512 - (lseek % 512);
+
+                                memcpy(dst, buffer + (lseek % 512), size);
+                                dst       += size;
+                                recv_data += size;
+                                lseek     += size;
+                        }
+                }
+
+                free(buffer);
+
+                n = recv_data / size;
         }
 
         ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         spi_rw(0xFF);
 
+error:
         return n;
 }
 

@@ -77,6 +77,7 @@ static enum cmd_status cmd_umount(char *arg);
 static enum cmd_status cmd_uname(char *arg);
 static enum cmd_status cmd_help(char *arg);
 static enum cmd_status cmd_sector(char *arg); /* TODO delete */
+static enum cmd_status cmd_dsector(char *arg); /* TODO delete */
 
 /*==============================================================================
   Local object definitions
@@ -102,6 +103,7 @@ static const struct cmd_entry commands[] = {
         {"uname" , cmd_uname },
         {"help"  , cmd_help  },
         {"sector", cmd_sector}, /* TODO delete */
+        {"dsector", cmd_dsector}, /* TODO delete */
 };
 
 /*==============================================================================
@@ -896,6 +898,51 @@ static enum cmd_status cmd_sector(char *arg)
         }
 
         printf("Cannot open SD card.\n");
+        return CMD_STATUS_EXECUTED;
+}
+
+static enum cmd_status cmd_dsector(char *arg) /* TODO remove */
+{
+        if (arg[0] == '1') {
+                FILE *sd = fopen("/dev/sda", "r");
+                if (sd) {
+                        u8_t *buff = calloc(1024, 1);
+                        if (buff) {
+                                fseek(sd, 0x1F0, SEEK_SET);
+                                fread(buff, 544, 1, sd);
+                                free(buff);
+                        } else {
+                                printf("Not enough free memory.\n");
+                        }
+
+                        fclose(sd);
+                        return CMD_STATUS_EXECUTED;
+                }
+
+                printf("Cannot open file.\n");
+                return CMD_STATUS_EXECUTED;
+        }
+
+        if (arg[0] == '2') {
+                FILE *sd = fopen("/dev/sda", "r");
+                if (sd) {
+                        u8_t *buff = calloc(1024, 1);
+                        if (buff) {
+                                fseek(sd, 512 + 16, SEEK_SET);
+                                fread(buff, 1, 32, sd);
+                                free(buff);
+                        } else {
+                                printf("Not enough free memory.\n");
+                        }
+
+                        fclose(sd);
+                        return CMD_STATUS_EXECUTED;
+                }
+
+                printf("Cannot open file.\n");
+                return CMD_STATUS_EXECUTED;
+        }
+
         return CMD_STATUS_EXECUTED;
 }
 
