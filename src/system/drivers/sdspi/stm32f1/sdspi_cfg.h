@@ -40,27 +40,36 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* GPIO file */
-#define SDSPI_GPIO_FILE         "/dev/gpio"
+#define SDSPI_GPIO_FILE                 "/dev/gpio"
 
 /* card waiting timeout [ms] */
-#define SDSPI_WAIT_TIMEOUT      500
+#define SDSPI_WAIT_TIMEOUT              500
 
 /* device numbers */
-#define SDSPI_DEV_NO            0
-#define SDSPI_DEV_PART          0
+#define SDSPI_DEV_NO                    0
+#define SDSPI_DEV_PART                  0
 
 /* supported SPI peripheral */
-#define SDSPI_PORT              SPI3
+#define SDSPI_PORT                      SPI3
 
 /* enable (1) or disable (0) DMA support */
-#define SDSPI_ENABLE_DMA        0
+#define SDSPI_ENABLE_DMA                0
 
 #if (SDSPI_ENABLE_DMA != 0)
+/* DMA device */
+#define SDSPI_DMA                       DMA2
+
 /* Tx DMA channel */
-#define SDSPI_DMA_TX_CHANNEL    DMA2_Channel4
+#define SDSPI_DMA_TX_CHANNEL            DMA2_Channel2
+#define SDSPI_DMA_TX_CHANNEL_NO         2
 
 /* Rx DMA channel */
-#define SDSPI_DMA_RX_CHANNEL    DMA2_Channel5
+#define SDSPI_DMA_RX_CHANNEL            DMA2_Channel1
+#define SDSPI_DMA_RX_CHANNEL_NO         1
+
+/* Rx DMA finish interrupt routine */
+#define SDSPI_DMA_ISR                   DMA2_Channel1_IRQHandler
+#define SDSPI_DMA_IRQ                   DMA2_Channel1_IRQn
 #endif
 
 /*==============================================================================
