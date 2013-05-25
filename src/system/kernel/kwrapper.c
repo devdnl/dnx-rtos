@@ -73,7 +73,7 @@ extern "C" {
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *kwrap_new_task(void (*func)(void*), const char *name, u16_t stack_depth, void *argv)
+task_t *kwrap_new_task(void (*func)(void*), const char *name, uint stack_depth, void *argv)
 {
         task_t           *task          = NULL;
         uint             child_priority = PRIORITY(0);

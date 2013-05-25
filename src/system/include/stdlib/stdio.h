@@ -47,7 +47,7 @@ extern "C" {
 
 
 #define getmntentry(size_t__item, struct_vfs_mntent__pmntent)           sysm_getmntentry(size_t__item, struct_vfs_mntent__pmntent)
-#define mknod(const_char__ppath, struct_vfs_drv_interface__drv_cfg_ptr) sysm_mknod(const_char__ppath, struct_vfs_drv_interface__drv_cfg_ptr)
+#define mknod(const_char__ppath, struct_vfs_drv_interface__pdrv_cfg)    sysm_mknod(const_char__ppath, struct_vfs_drv_interface__pdrv_cfg)
 #define mkdir(const_char__ppath)                                        sysm_mkdir(const_char__ppath)
 #define opendir(const_char__ppath)                                      sysm_opendir(const_char__ppath)
 #define closedir(dir_t__pdir)                                           sysm_closedir(dir_t__pdir)
