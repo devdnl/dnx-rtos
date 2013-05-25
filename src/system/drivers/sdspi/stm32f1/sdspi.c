@@ -222,9 +222,6 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         } else if ((u32_t)SDSPI_DMA == DMA2_BASE) {
                 RCC->AHBENR |= RCC_AHBENR_DMA2EN;
         }
-
-        RCC->AHBENR |= RCC_AHBENR_DMA1EN;
-        RCC->AHBENR |= RCC_AHBENR_DMA2EN;
 #endif
 
         if (!(sdspi->port_lock_mtx = new_recursive_mutex())) {
@@ -787,17 +784,14 @@ static bool receive_data_block(u8_t *buff)
         SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
         SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)buff;
         SDSPI_DMA_RX_CHANNEL->CNDTR = SECTOR_SIZE;
-        SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE;
+        SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_EN;
         NVIC_EnableIRQ(SDSPI_DMA_IRQ);
 
         sdspi_data->DMA_data        = 0xFFFF;
         SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
         SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)&sdspi_data->DMA_data;
         SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
-        SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_DIR;
-
-        SDSPI_DMA_RX_CHANNEL->CCR |= DMA_CCR1_EN;
-        SDSPI_DMA_TX_CHANNEL->CCR |= DMA_CCR1_EN;
+        SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_DIR | DMA_CCR1_EN;
 
         enable_Tx_DMA();
         enable_Rx_DMA();
@@ -841,16 +835,16 @@ static bool transmit_data_block(const u8_t *buff, u8_t token)
 
         if (token != 0xFD) {
 #if (SDSPI_ENABLE_DMA != 0)
-                SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)buff;
-                SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
-                SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
-                SDSPI_DMA_TX_CHANNEL->CCR = DMA_CCR1_MINC | DMA_CCR1_DIR | DMA_CCR1_EN;
-
                 SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)&sdspi_data->DMA_data;
                 SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
                 SDSPI_DMA_RX_CHANNEL->CNDTR = SECTOR_SIZE;
-                SDSPI_DMA_RX_CHANNEL->CCR = DMA_CCR1_TCIE | DMA_CCR1_EN;
+                SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_TCIE | DMA_CCR1_EN;
                 NVIC_EnableIRQ(SDSPI_DMA_IRQ);
+
+                SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)buff;
+                SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
+                SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
+                SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_DIR | DMA_CCR1_EN;
 
                 enable_Tx_DMA();
                 enable_Rx_DMA();

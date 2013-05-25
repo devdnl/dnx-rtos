@@ -53,7 +53,7 @@ extern "C" {
 #define SDSPI_PORT                      SPI3
 
 /* enable (1) or disable (0) DMA support */
-#define SDSPI_ENABLE_DMA                0
+#define SDSPI_ENABLE_DMA                1
 
 #if (SDSPI_ENABLE_DMA != 0)
 /* DMA device */
