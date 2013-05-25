@@ -40,7 +40,6 @@ MODULE_NAME(SDSPI);
   Local symbolic constants/macros
 ==============================================================================*/
 #define MTX_BLOCK_TIME                                  0
-#define SEM_DMA_READY_WAIT                              2000
 #define force_lock_recursive_mutex(mtx)                 while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
 
 /* SPI configuration macros */
@@ -147,8 +146,7 @@ struct sdspi_data {
         mutex_t   *card_protect_mtx;
         mutex_t   *port_lock_mtx;
 #if (SDSPI_ENABLE_DMA != 0)
-        u16_t      DMA_data;
-        sem_t     *wait_for_ready_sem;
+        task_t    *DMA_host_task;
 #endif
 };
 
@@ -211,11 +209,6 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
 #if (SDSPI_ENABLE_DMA != 0)
         sdspi_data = sdspi;
 
-        if (!(sdspi->wait_for_ready_sem = new_semaphore())) {
-                goto error;
-        }
-        take_semaphore(sdspi->wait_for_ready_sem, 1);
-
         /* enable DMA clock */
         if ((u32_t)SDSPI_DMA == DMA1_BASE) {
                 RCC->AHBENR |= RCC_AHBENR_DMA1EN;
@@ -269,12 +262,6 @@ error:
                         fclose(sdspi->gpio_file);
                 }
 
-#if (SDSPI_ENABLE_DMA != 0)
-                if (sdspi->wait_for_ready_sem) {
-                        delete_semaphore(sdspi->wait_for_ready_sem);
-                }
-#endif
-
                 free(sdspi);
         }
         return STD_RET_ERROR;
@@ -303,9 +290,6 @@ stdret_t SDSPI_release(void *drvhdl)
         unlock_recursive_mutex(hdl->port_lock_mtx);
         delete_recursive_mutex(hdl->port_lock_mtx);
         delete_mutex(hdl->card_protect_mtx);
-#if (SDSPI_ENABLE_DMA != 0)
-        delete_semaphore(hdl->wait_for_ready_sem);
-#endif
         fclose(hdl->gpio_file);
         turn_off_SPI_clock();
         free(hdl);
@@ -787,16 +771,17 @@ static bool receive_data_block(u8_t *buff)
         SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_EN;
         NVIC_EnableIRQ(SDSPI_DMA_IRQ);
 
-        sdspi_data->DMA_data        = 0xFFFF;
+        u16_t dummy = 0xFFFF;
         SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
-        SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)&sdspi_data->DMA_data;
+        SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)&dummy;
         SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
         SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_DIR | DMA_CCR1_EN;
 
         enable_Tx_DMA();
         enable_Rx_DMA();
 
-        take_semaphore(sdspi_data->wait_for_ready_sem, SEM_DMA_READY_WAIT);
+        sdspi_data->DMA_host_task = get_task_handle();
+        suspend_this_task();
 #else
         /* memory alignment */
         int size = SECTOR_SIZE;
@@ -835,7 +820,8 @@ static bool transmit_data_block(const u8_t *buff, u8_t token)
 
         if (token != 0xFD) {
 #if (SDSPI_ENABLE_DMA != 0)
-                SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)&sdspi_data->DMA_data;
+                u16_t dummy;
+                SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)&dummy;
                 SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
                 SDSPI_DMA_RX_CHANNEL->CNDTR = SECTOR_SIZE;
                 SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_TCIE | DMA_CCR1_EN;
@@ -849,7 +835,8 @@ static bool transmit_data_block(const u8_t *buff, u8_t token)
                 enable_Tx_DMA();
                 enable_Rx_DMA();
 
-                take_semaphore(sdspi_data->wait_for_ready_sem, SEM_DMA_READY_WAIT);
+                sdspi_data->DMA_host_task = get_task_handle();
+                suspend_this_task();
 #else
                 int size = SECTOR_SIZE;
                 do {
@@ -1261,11 +1248,11 @@ void SDSPI_DMA_ISR(void)
 
         SDSPI_DMA->IFCR = DMA_IFCR_CTCIF1 << (4 * (SDSPI_DMA_RX_CHANNEL_NO - 1));
 
-        i32_t woke;
-        give_semaphore_from_ISR(sdspi_data->wait_for_ready_sem, &woke);
+        if (resume_task_from_ISR(sdspi_data->DMA_host_task) == pdTRUE) {
+                yield_task();
+        }
 }
 #endif
-
 
 #ifdef __cplusplus
 }

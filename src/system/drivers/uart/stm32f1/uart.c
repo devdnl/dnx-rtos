@@ -133,7 +133,7 @@ static USART_t *const USART_peripherals[UART_DEV_COUNT] = {
 };
 
 /* structure which identify USARTs data in the IRQs */
-struct USART_data *USART_data[UART_DEV_COUNT];
+static struct USART_data *USART_data[UART_DEV_COUNT];
 
 /*==============================================================================
   Function definitions
