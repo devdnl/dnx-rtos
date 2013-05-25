@@ -52,6 +52,17 @@ extern "C" {
 /* supported SPI peripheral */
 #define SDSPI_PORT              SPI3
 
+/* enable (1) or disable (0) DMA support */
+#define SDSPI_ENABLE_DMA        0
+
+#if (SDSPI_ENABLE_DMA != 0)
+/* Tx DMA channel */
+#define SDSPI_DMA_TX_CHANNEL    DMA2_Channel4
+
+/* Rx DMA channel */
+#define SDSPI_DMA_RX_CHANNEL    DMA2_Channel5
+#endif
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

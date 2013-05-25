@@ -80,6 +80,7 @@ static enum cmd_status cmd_sector(char *arg);  /* TODO delete */
 static enum cmd_status cmd_dsector(char *arg); /* TODO delete */
 static enum cmd_status cmd_wsector(char *arg); /* TODO delete */
 static enum cmd_status cmd_sdrate(char *arg);  /* TODO delete */
+static enum cmd_status cmd_pwrite(char *arg); /* TODO delete */
 
 /*==============================================================================
   Local object definitions
@@ -108,6 +109,7 @@ static const struct cmd_entry commands[] = {
         {"dsector", cmd_dsector}, /* TODO delete */
         {"wsector", cmd_wsector}, /* TODO delete */
         {"sdrate" , cmd_sdrate }, /* TODO delete */
+        {"pwrite" , cmd_pwrite }, /* TODO delete */
 };
 
 /*==============================================================================
@@ -980,7 +982,7 @@ static enum cmd_status cmd_wsector(char *arg)
                 pattern += *arg++ - '0';
         }
 
-        printf("Sector = %d; count = %d; pattern = 0x2x\n", (u32_t)sector, count, pattern);
+        printf("Sector = %d; count = %d; pattern = 0x%2x\n", (u32_t)sector, count, pattern);
 
         if (count == 0) {
                 printf("Nothing to do. Exit.\n");
@@ -1066,6 +1068,37 @@ static enum cmd_status cmd_sdrate(char *arg)
         return CMD_STATUS_EXECUTED;
 }
 
+static enum cmd_status cmd_pwrite(char *arg)
+{
+        u8_t *buffer = malloc(512 + 16 + 16);
+        FILE *sd     = fopen("/dev/sda", "r+");
+
+        if (buffer && sd) {
+                if (arg[0] == '1') {
+                        memset(buffer, 0xDA, 512 + 16 + 16);
+                        fseek(sd, 1024-16, SEEK_SET);
+                        fwrite(buffer, 512+16+16, 1, sd);
+                } else if (arg[0] == '2') {
+                        memset(buffer, 0xEE, 16);
+                        fseek(sd, 512+16, SEEK_SET);
+                        fwrite(buffer, 16, 1, sd);
+                }
+        }
+
+        if (buffer) {
+                free(buffer);
+        } else {
+                printf("Not enough free memory\n");
+        }
+
+        if (sd) {
+                fclose(sd);
+        } else {
+                printf("Cannot open file\n");
+        }
+
+        return CMD_STATUS_EXECUTED;
+}
 
 
 /*==============================================================================

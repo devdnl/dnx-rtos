@@ -662,7 +662,7 @@ static u8_t spi_rw(u8_t out)
 //==============================================================================
 static u8_t wait_ready(void)
 {
-        int  try = 10000;
+        int  try = 1000000;
         u8_t response;
 
         spi_rw(0xFF);
@@ -741,7 +741,7 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
 static bool receive_data_block(u8_t *buff)
 {
         u8_t token;
-        uint try = 10000;
+        uint try = 1000000;
 
         while ((token = spi_rw(0xFF)) == 0xFF && --try);
 
@@ -958,12 +958,49 @@ static size_t write_whole_sectors(struct sdspi_data *hdl, const void *src, size_
  * @param[in]   size            number of bytes to read
  * @param[in]   lseek           file index
  *
- * @retval number of read bytes
+ * @retval number of written bytes
  */
 //==============================================================================
 static size_t write_partial_sectors(struct sdspi_data *hdl, const void *src, size_t size, u64_t lseek)
 {
-        return 0;
+        u8_t *buffer = malloc(SECTOR_SIZE);
+        if (!buffer)
+                return 0;
+
+        u32_t transmit_data = 0;
+        while (transmit_data < size) {
+                if (lseek % SECTOR_SIZE == 0 && (size - transmit_data) / SECTOR_SIZE > 0) {
+                        size_t n = write_whole_sectors(hdl, src, size / SECTOR_SIZE, lseek);
+                        if (n != size / SECTOR_SIZE)
+                                break;
+
+                        src           += n * SECTOR_SIZE;
+                        lseek         += n * SECTOR_SIZE;
+                        transmit_data += n * SECTOR_SIZE;
+                } else {
+                        if (read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF)) != 1)
+                                break;
+
+                        u32_t rest;
+                        if ((SECTOR_SIZE - (lseek % SECTOR_SIZE)) > (size - transmit_data))
+                                rest = size - transmit_data;
+                        else
+                                rest = SECTOR_SIZE - (lseek % SECTOR_SIZE);
+
+                        memcpy(buffer + (lseek % SECTOR_SIZE), src, rest);
+
+                        if (write_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF)) != 1)
+                                break;
+
+                        src           += rest;
+                        transmit_data += rest;
+                        lseek         += rest;
+                }
+        }
+
+        free(buffer);
+
+        return transmit_data;
 }
 
 //==============================================================================
