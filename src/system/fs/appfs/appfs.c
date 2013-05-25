@@ -419,7 +419,7 @@ stdret_t appfs_chmod(void *fshdl, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_chown(void *fshdl, const char *path, u16_t owner, u16_t group)
+stdret_t appfs_chown(void *fshdl, const char *path, int owner, int group)
 {
         (void)fshdl;
         (void)path;

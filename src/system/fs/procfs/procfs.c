@@ -206,7 +206,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, cons
                 }
 
                 task_t *taskHdl = NULL;
-                path = atoi((char*)path, 16, (i32_t*)&taskHdl);
+                path = strtoi((char*)path, 16, (i32_t*)&taskHdl);
 
                 if (sysm_get_task_stat(taskHdl, &taskdata) != STD_RET_OK) {
                         return STD_RET_ERROR;
@@ -661,7 +661,7 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 }
 
                 task_t *taskHdl = NULL;
-                path = atoi((char*)path, 16, (i32_t*)&taskHdl);
+                path = strtoi((char*)path, 16, (i32_t*)&taskHdl);
 
                 if (!((*path == '/' && *(path + 1) == '\0') || *path == '\0')) {
                         return STD_RET_ERROR;
@@ -802,7 +802,7 @@ stdret_t procfs_chmod(void *fshdl, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_chown(void *fshdl, const char *path, u16_t owner, u16_t group)
+stdret_t procfs_chown(void *fshdl, const char *path, int owner, int group)
 {
         (void)fshdl;
         (void)path;

@@ -41,90 +41,90 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#ifdef SYSTEM_H_
+#ifdef DNX_H_
 #error "dnx.h and dnxfs.h cannot never included together!"
 #endif
 
 #undef  calloc
-#define calloc(nmemb, msize)                    sysm_syscalloc(nmemb, msize)
+#define calloc(size_t__nmemb, size_t__msize)                            sysm_syscalloc(size_t__nmemb, size_t__msize)
 
-#undef malloc
-#define malloc(size)                            sysm_sysmalloc(size)
+#undef  malloc
+#define malloc(size_t__size)                                            sysm_sysmalloc(size_t__size)
 
-#undef free
-#define free(mem)                               sysm_sysfree(mem)
+#undef  free
+#define free(void__pmem)                                                sysm_sysfree(void__pmem)
 
 #undef  mknod
-#define mknod(path, drv_cfgPtr)                 vfs_mknod(path, drv_cfgPtr)
+#define mknod(const_char__ppath, struct_vfs_drv_interface__pdrvif)      vfs_mknod(const_char__ppath, struct_vfs_drv_interface__pdrvif)
 
 #undef  mkdir
-#define mkdir(path)                             vfs_mkdir(path)
+#define mkdir(const_char__ppath)                                        vfs_mkdir(const_char__ppath)
 
 #undef  opendir
-#define opendir(path)                           vfs_opendir(path)
+#define opendir(const_char__ppath)                                      vfs_opendir(const_char__ppath)
 
 #undef  closedir
-#define closedir(dir)                           vfs_closedir(dir)
+#define closedir(dir_t__pdir)                                           vfs_closedir(dir_t__pdir)
 
 #undef  readdir
-#define readdir(dir)                            vfs_readdir(dir)
+#define readdir(dir_t__pdir)                                            vfs_readdir(dir_t__pdir)
 
 #undef  remove
-#define remove(path)                            vfs_remove(path)
+#define remove(const_char__ppath)                                       vfs_remove(const_char__ppath)
 
 #undef  rename
-#define rename(oldName, newName)                vfs_rename(oldName, newName)
+#define rename(const_char__pold_name, const_char__pnew_name)            vfs_rename(const_char__pold_name, const_char__pnew_name)
 
 #undef  chmod
-#define chmod(path, mode)                       vfs_chmod(path, mode)
+#define chmod(const_char__ppath, int__mode)                             vfs_chmod(const_char__ppath, int__mode)
 
 #undef  chown
-#define chown(path, owner, group)               vfs_chown(path, owner, group)
+#define chown(const_char__ppath, int__owner, int__group)                vfs_chown(const_char__ppath, int__owner, int__group)
 
 #undef  stat
-#define stat(path, statPtr)                     vfs_stat(path, statPtr)
+#define stat(const_char__ppath, struct_vfs_stat__pstat)                 vfs_stat(const_char__ppath, struct_vfs_stat__pstat)
 
 #undef  statfs
-#define statfs(path, statfsPtr)                 vfs_statfs(path, statfsPtr)
+#define statfs(const_char__ppath, struct_vfs_statfs__pstatfs)           vfs_statfs(const_char__ppath, struct_vfs_statfs__pstatfs)
 
 #undef  fopen
-#define fopen(path, mode)                       vfs_fopen(path, mode)
+#define fopen(const_char__ppath, const_char__pmode)                     vfs_fopen(const_char__ppath, const_char__pmode)
 
 #undef  fclose
-#define fclose(file)                            vfs_fclose(file)
+#define fclose(FILE__pfile)                                             vfs_fclose(FILE__pfile)
 
 #undef  fwrite
-#define fwrite(ptr, isize, nitems, file)        vfs_fwrite(ptr, isize, nitems, file)
+#define fwrite(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)   vfs_fwrite(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)
 
 #undef  fread
-#define fread(ptr, isize, nitems, file)         vfs_fread(ptr, isize, nitems, file)
+#define fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)    vfs_fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)
 
 #undef  fseek
-#define fseek(file, offset, mode)               vfs_fseek(file, offset, mode)
+#define fseek(FILE__pfile, i64_t__offset, int__mode)                    vfs_fseek(FILE__pfile, i64_t__offset, int__mode)
 
 #undef  ftell
-#define ftell(file)                             vfs_ftell(file)
+#define ftell(FILE__pfile)                                              vfs_ftell(FILE__pfile)
 
 #undef  ioctl
-#define ioctl(file, ...)                        vfs_ioctl(file, __VA_ARGS__)
+#define ioctl(FILE__pfile, ...)                                         vfs_ioctl(FILE__pfile, __VA_ARGS__)
 
 #undef  fstat
-#define fstat(file, statPtr)                    vfs_fstat(file, stat)
+#define fstat(FILE__pfile, statPtr)                                     vfs_fstat(FILE__pfile, stat)
 
 #undef  fflush
-#define fflush(file)                            vfs_fflush(file)
+#define fflush(FILE__pfile)                                             vfs_fflush(FILE__pfile)
 
 #undef  fstat
-#define fstat(file, statPtr)                    vfs_fstat(file, stat)
+#define fstat(FILE__pfile, struct_vfs_stat__pstat)                      vfs_fstat(FILE__pfile, struct_vfs_stat__pstat)
 
 #undef  fflush
-#define fflush(file)                            vfs_fflush(file)
+#define fflush(FILE__pfile)                                             vfs_fflush(FILE__pfile)
 
 #undef  feof
-#define feof(file)                              vfs_feof(file)
+#define feof(FILE__pfile)                                               vfs_feof(FILE__pfile)
 
 #undef  rewind
-#define rewind(file)                            vfs_rewind(file)
+#define rewind(FILE__pfile)                                             vfs_rewind(FILE__pfile)
 
 #define FILE_SYSTEM_INTERFACE(fsname)                                                \
 extern stdret_t fsname##_init   (void**, const char*);                               \
@@ -140,7 +140,7 @@ extern stdret_t fsname##_opendir(void*, const char*, dir_t*);                   
 extern stdret_t fsname##_remove (void*, const char*);                                \
 extern stdret_t fsname##_rename (void*, const char*, const char*);                   \
 extern stdret_t fsname##_chmod  (void*, const char*, int);                           \
-extern stdret_t fsname##_chown  (void*, const char*, u16_t, u16_t);                  \
+extern stdret_t fsname##_chown  (void*, const char*, int, int);                      \
 extern stdret_t fsname##_stat   (void*, const char*, struct vfs_stat*);              \
 extern stdret_t fsname##_fstat  (void*, fd_t, struct vfs_stat*);                     \
 extern stdret_t fsname##_flush  (void*, fd_t);                                       \

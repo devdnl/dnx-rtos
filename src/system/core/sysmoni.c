@@ -662,7 +662,7 @@ i32_t sysm_get_module_used_memory(uint module_number)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
+void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
 {
         void                     *mem = NULL;
         struct task_monitor_data *task_monitor_data;
@@ -725,7 +725,7 @@ void *sysm_tskmalloc_as(task_t *taskhdl, u32_t size)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_tskmalloc(u32_t size)
+void *sysm_tskmalloc(size_t size)
 {
         return sysm_tskmalloc_as(get_task_handle(), size);
 }
@@ -743,7 +743,7 @@ void *sysm_tskmalloc(u32_t size)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_tskcalloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
+void *sysm_tskcalloc_as(task_t *taskhdl, size_t nmemb, size_t msize)
 {
         void *ptr = sysm_tskmalloc_as(taskhdl, nmemb * msize);
 
@@ -766,7 +766,7 @@ void *sysm_tskcalloc_as(task_t *taskhdl, u32_t nmemb, u32_t msize)
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-void *sysm_tskcalloc(u32_t nmemb, u32_t msize)
+void *sysm_tskcalloc(size_t nmemb, size_t msize)
 {
         void *ptr = sysm_tskmalloc_as(get_task_handle(), nmemb * msize);
 

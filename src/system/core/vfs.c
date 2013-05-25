@@ -593,7 +593,7 @@ int vfs_chmod(const char *path, int mode)
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_chown(const char *path, u16_t owner, u16_t group)
+int vfs_chown(const char *path, int owner, int group)
 {
         char *external_path = NULL;
         struct FS_data *fs;

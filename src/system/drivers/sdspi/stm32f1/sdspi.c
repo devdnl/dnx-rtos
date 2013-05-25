@@ -224,7 +224,7 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         enable_8_bit_data_frame();
         enable_software_slave_management();
         transmit_MSB_first();
-        set_baud_rate(FPCLK_DIV_2);
+        set_baud_rate(FPCLK_DIV_4);
         enable_master_mode();
         set_clock_polarity_to_0_when_idle();
         capture_on_first_edge();

@@ -76,8 +76,10 @@ static enum cmd_status cmd_mount(char *arg);
 static enum cmd_status cmd_umount(char *arg);
 static enum cmd_status cmd_uname(char *arg);
 static enum cmd_status cmd_help(char *arg);
-static enum cmd_status cmd_sector(char *arg); /* TODO delete */
+static enum cmd_status cmd_sector(char *arg);  /* TODO delete */
 static enum cmd_status cmd_dsector(char *arg); /* TODO delete */
+static enum cmd_status cmd_wsector(char *arg); /* TODO delete */
+static enum cmd_status cmd_sdrate(char *arg);  /* TODO delete */
 
 /*==============================================================================
   Local object definitions
@@ -102,8 +104,10 @@ static const struct cmd_entry commands[] = {
         {"umount", cmd_umount},
         {"uname" , cmd_uname },
         {"help"  , cmd_help  },
-        {"sector", cmd_sector}, /* TODO delete */
+        {"sector", cmd_sector},   /* TODO delete */
         {"dsector", cmd_dsector}, /* TODO delete */
+        {"wsector", cmd_wsector}, /* TODO delete */
+        {"sdrate" , cmd_sdrate }, /* TODO delete */
 };
 
 /*==============================================================================
@@ -862,7 +866,7 @@ static enum cmd_status cmd_sector(char *arg)
                         fseek(sd, sector * 512, SEEK_SET);
 
                         int n;
-                        if ((n = fread(buff, 128, count*4, sd)) > 0) {
+                        if ((n = fread(buff, 512, count, sd)) > 0) {
                                 printf("Readed: %d\n", n);
 
                                 u8_t *b = buff;
@@ -945,6 +949,123 @@ static enum cmd_status cmd_dsector(char *arg) /* TODO remove */
 
         return CMD_STATUS_EXECUTED;
 }
+
+//==============================================================================
+/**
+ * @brief TODO Delete this function
+ */
+//==============================================================================
+static enum cmd_status cmd_wsector(char *arg)
+{
+        u64_t sector  = 0;
+        int   count   = 0;
+        int   pattern = 0;
+
+        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
+                sector *= 10;
+                sector += *arg++ - '0';
+        }
+
+        arg++;
+
+        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
+                count *= 10;
+                count += *arg++ - '0';
+        }
+
+        arg++;
+
+        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
+                pattern *= 10;
+                pattern += *arg++ - '0';
+        }
+
+        printf("Sector = %d; count = %d; pattern = 0x2x\n", (u32_t)sector, count, pattern);
+
+        if (count == 0) {
+                printf("Nothing to do. Exit.\n");
+                return CMD_STATUS_EXECUTED;
+        }
+
+        FILE *sd = fopen("/dev/sda", "r+");
+        if (sd) {
+                u8_t *buff = calloc(512, count);
+                if (buff) {
+                        u8_t *b = buff;
+                        for (int i = 0; i < count; i++) {
+                                for (int j = 0; j < 512; j++) {
+                                       *b++ = pattern + i;
+                                }
+                        }
+
+                        fseek(sd, sector * 512, SEEK_SET);
+
+                        int n;
+                        if ((n = fwrite(buff, 512, count, sd)) > 0) {
+                                printf("Written: %d\n", n);
+                        } else {
+                                printf("Write error.\n");
+                        }
+                        free(buff);
+                } else {
+                        printf("Not enough free memory.\n");
+                }
+
+                fclose(sd);
+                return CMD_STATUS_EXECUTED;
+        }
+
+        printf("Cannot open SD card.\n");
+        return CMD_STATUS_EXECUTED;
+}
+
+static enum cmd_status cmd_sdrate(char *arg)
+{
+        int count = 0;
+        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
+                count *= 10;
+                count += *arg++ - '0';
+        }
+
+        if (count == 0) {
+                printf("Nothing to do. Exit\n");
+                return CMD_STATUS_EXECUTED;
+        }
+
+        FILE *sd = fopen("/dev/sda", "r+");
+        if (!sd) {
+                printf("File open error\n");
+                return CMD_STATUS_EXECUTED;
+        }
+
+        u8_t *buff = malloc(512 * count);
+        if (buff) {
+                int n;
+
+                printf("Writting...\n");
+                fseek(sd, 1024, SEEK_SET);
+                memset(buff, 0xAA, 512 * count);
+                u32_t start_time = get_tick_counter();
+                n = fwrite(buff, 512, count, sd);
+                u32_t work_time = get_tick_counter() - start_time;
+                printf("Written: %d elements in %d ms\n", n, work_time);
+
+                printf("Reading...\n");
+                fseek(sd, 1024, SEEK_SET);
+                start_time = get_tick_counter();
+                n = fread(buff, 512, count, sd);
+                work_time = get_tick_counter() - start_time;
+                printf("Read: %d elements in %d ms\n", n, work_time);
+
+                free(buff);
+        } else {
+                printf("Not enough free memory\n");
+        }
+
+        fclose(sd);
+        return CMD_STATUS_EXECUTED;
+}
+
 
 
 /*==============================================================================

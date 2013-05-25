@@ -154,7 +154,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_remove )(void *fshdl, const char *path);
         stdret_t (*fs_rename )(void *fshdl, const char *old_name, const char *new_name);
         stdret_t (*fs_chmod  )(void *fshdl, const char *path, int mode);
-        stdret_t (*fs_chown  )(void *fshdl, const char *path, u16_t owner, u16_t group);
+        stdret_t (*fs_chown  )(void *fshdl, const char *path, int owner, int group);
         stdret_t (*fs_stat   )(void *fshdl, const char *path, struct vfs_stat *stat);
         stdret_t (*fs_statfs )(void *fshdl, struct vfs_statfs *statfs);
 };
@@ -174,7 +174,7 @@ extern dirent_t vfs_readdir(dir_t*);
 extern int      vfs_remove(const char*);
 extern int      vfs_rename(const char*, const char*);
 extern int      vfs_chmod(const char*, int);
-extern int      vfs_chown(const char*, u16_t, u16_t);
+extern int      vfs_chown(const char*, int, int);
 extern int      vfs_stat(const char*, struct vfs_stat*);
 extern int      vfs_statfs(const char*, struct vfs_statfs*);
 extern FILE    *vfs_fopen(const char*, const char*);

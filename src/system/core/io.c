@@ -366,7 +366,7 @@ static int calc_format_size(const char *format, va_list arg)
  * @return pointer in string when operation was finished
  */
 //==============================================================================
-char *io_atoi(char *string, u8_t base, i32_t *value)
+char *io_strtoi(const char *string, int base, i32_t *value)
 {
         char  character;
         i32_t sign = 1;
@@ -424,11 +424,27 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
                 string++;
         }
 
-        atoi_sign:
+atoi_sign:
         *value *= sign;
 
-        atoi_end:
-        return string;
+atoi_end:
+        return (char *)string;
+}
+
+//==============================================================================
+/**
+ * @brief Function convert string to integer
+ *
+ * @param[in] *str      string
+ *
+ * @return converted value
+ */
+//==============================================================================
+i32_t io_atoi(const char *str)
+{
+        i32_t result;
+        io_strtoi(str, 10, &result);
+        return result;
 }
 
 //==============================================================================
@@ -713,7 +729,7 @@ char *io_fgets(char *str, int size, FILE *stream)
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-int io_snprintf(char *bfr, u32_t size, const char *format, ...)
+int io_snprintf(char *bfr, size_t size, const char *format, ...)
 {
         va_list args;
         int n = 0;
