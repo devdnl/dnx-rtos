@@ -38,6 +38,7 @@ extern "C" {
 #include "fs/lfs.h"
 #include "fs/appfs.h"
 #include "fs/procfs.h"
+#include "fs/fatfs.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -84,6 +85,7 @@ static const struct FS_entry FS_table[] =
         USE_FILE_SYSTEM_INTERFACE(lfs),
         USE_FILE_SYSTEM_INTERFACE(appfs),
         USE_FILE_SYSTEM_INTERFACE(procfs),
+        USE_FILE_SYSTEM_INTERFACE(fatfs),
 };
 
 /*==============================================================================
