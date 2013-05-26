@@ -111,9 +111,6 @@ extern "C" {
 #undef  ioctl
 #define ioctl(FILE__pfile, ...)                                         vfs_ioctl(FILE__pfile, __VA_ARGS__)
 
-#undef  fstat
-#define fstat(FILE__pfile, statPtr)                                     vfs_fstat(FILE__pfile, stat)
-
 #undef  fflush
 #define fflush(FILE__pfile)                                             vfs_fflush(FILE__pfile)
 
@@ -137,7 +134,8 @@ extern stdret_t modname##_close  (void*);                                       
 extern size_t   modname##_write  (void*, const void*, size_t, size_t, u64_t);   \
 extern size_t   modname##_read   (void*, void*, size_t, size_t, u64_t);         \
 extern stdret_t modname##_ioctl  (void*, int, va_list);                         \
-extern stdret_t modname##_flush  (void*)
+extern stdret_t modname##_flush  (void*);                                       \
+extern stdret_t modname##_info   (void*, struct vfs_dev_info*);
 
 /*==============================================================================
   Exported types, enums definitions

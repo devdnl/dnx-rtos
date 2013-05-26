@@ -42,6 +42,13 @@ extern "C" {
 #define PROMPT_LINE_LEN                 100
 #define CWD_PATH_LEN                    128
 
+#define KiB                             (u32_t)(1024)
+#define MiB                             (u32_t)(1024*1024)
+#define GiB                             (u64_t)(1024*1024*1024)
+#define CONVERT_TO_KiB(_val)            (_val >> 10)
+#define CONVERT_TO_MiB(_val)            (_val >> 20)
+#define CONVERT_TO_GiB(_val)            (_val >> 30)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -396,10 +403,24 @@ static enum cmd_status cmd_ls(char *arg)
                         default: type = "?";
                         }
 
-                        printf("%s %u\t%s"RESET_ATTRIBUTES"\n",
-                               type,
-                               dirent.size,
-                               dirent.name);
+                        u32_t size;
+                        const char *unit;
+                        if (dirent.size >= (u64_t)(10*GiB)) {
+                                size = CONVERT_TO_GiB(dirent.size);
+                                unit = "GiB";
+                        } else if (dirent.size >= 10*MiB) {
+                                size = CONVERT_TO_MiB(dirent.size);
+                                unit = "MiB";
+                        } else if (dirent.size >= 10*KiB) {
+                                size = CONVERT_TO_KiB(dirent.size);
+                                unit = "KiB";
+                        } else {
+                                size = dirent.size;
+                                unit = "B";
+                        }
+
+                        printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(11)"%s"RESET_ATTRIBUTES"\n",
+                               type, size, unit, dirent.name);
                 }
 
                 closedir(dir);
@@ -664,16 +685,43 @@ static enum cmd_status cmd_df(char *arg)
         mnt.total = 0;
 
         if (mnt.mnt_dir && mnt.mnt_fsname) {
-                printf("File system\tTotal\tFree\t%%Free\tMount point\n");
+                printf("File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(6)
+                       "Free"CURSOR_FORWARD(7)"%Used  Mount point\n");
 
                 for (u32_t i = 0;; i++) {
                         if (getmntentry(i, &mnt) == STD_RET_OK) {
-//                                printf("%s\t\t%u\t%u\t%u%%\t%s\n", FIXME -- obliczanie zajętości
-//                                       mnt.mnt_fsname,
-//                                       mnt.total,
-//                                       mnt.free,
-//                                       ((mnt.total - mnt.free) * 100)/mnt.total,
-//                                       mnt.mnt_dir);
+                                u32_t dtotal;
+                                u32_t dfree;
+                                const char *unit;
+
+                                if (mnt.total > 10*GiB) {
+                                        dtotal = CONVERT_TO_GiB(mnt.total);
+                                        dfree  = CONVERT_TO_GiB(mnt.free);
+                                        unit   = "GiB";
+                                } else if (mnt.total > 10*MiB) {
+                                        dtotal = CONVERT_TO_MiB(mnt.total);
+                                        dfree  = CONVERT_TO_MiB(mnt.free);
+                                        unit   = "MiB";
+                                } else if (mnt.total > 10*KiB) {
+                                        dtotal = CONVERT_TO_KiB(mnt.total);
+                                        dfree  = CONVERT_TO_KiB(mnt.free);
+                                        unit   = "KiB";
+                                } else {
+                                        dtotal = mnt.total;
+                                        dfree  = mnt.free;
+                                        unit   = "B";
+                                }
+
+                                printf("%s"  CURSOR_BACKWARD(90)CURSOR_FORWARD(16)
+                                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(26)
+                                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(36)
+                                       "%u%%"CURSOR_BACKWARD(90)CURSOR_FORWARD(43)
+                                       "%s\n",
+                                       mnt.mnt_fsname,
+                                       dtotal, unit,
+                                       dfree, unit,
+                                       ((dtotal - dfree) * 100)/dtotal,
+                                       mnt.mnt_dir);
 
                                 memset(mnt.mnt_dir, 0, 64);
                                 memset(mnt.mnt_fsname, 0, 64);

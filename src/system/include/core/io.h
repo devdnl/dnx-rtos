@@ -73,6 +73,8 @@ extern "C" {
 #define ERASE_LINE                              "\e[2K"
 #define ERASE_LINE_END                          "\e[K"
 #define CURSOR_HOME                             "\e[H"
+#define CURSOR_FORWARD(n)                       "\e["#n"C"
+#define CURSOR_BACKWARD(n)                      "\e["#n"D"
 #if (CONFIG_COLOR_TERM_ENABLE > 0)
 #define RESET_ATTRIBUTES                        "\e[0m"
 #define FONT_BLINKING                           "\e[5m"

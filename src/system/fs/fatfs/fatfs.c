@@ -559,17 +559,29 @@ stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 //==============================================================================
 stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 {
-        (void)fshdl;
+        struct fatfs *hdl = fshdl;
 
-        if (statfs) {
-                statfs->f_bfree  = 0;
-                statfs->f_blocks = 0;
+        u32_t  free_clusters = 0;
+        FATFS *fatfs = &hdl->fatfs;
+        struct vfs_stat fstat;
+        fstat.st_size = 0;
+
+        fstat(hdl->fsfile, &fstat);
+
+        if (f_getfree("/", &free_clusters, &fatfs) == FR_OK) {
+                statfs->f_bsize  = _MAX_SS;
+                statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
+                statfs->f_blocks = fstat.st_size / _MAX_SS;
                 statfs->f_ffree  = 0;
                 statfs->f_files  = 0;
-                statfs->f_type   = 1;
-                statfs->fsname   = "appfs";
+                statfs->f_type   = hdl->fatfs.fs_type;
+                statfs->fsname   = "fatfs";
 
                 return STD_RET_OK;
+        }
+
+        if (statfs) {
+
         }
 
         return STD_RET_ERROR;

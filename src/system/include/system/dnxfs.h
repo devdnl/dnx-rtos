@@ -108,9 +108,6 @@ extern "C" {
 #undef  ioctl
 #define ioctl(FILE__pfile, ...)                                         vfs_ioctl(FILE__pfile, __VA_ARGS__)
 
-#undef  fstat
-#define fstat(FILE__pfile, statPtr)                                     vfs_fstat(FILE__pfile, stat)
-
 #undef  fflush
 #define fflush(FILE__pfile)                                             vfs_fflush(FILE__pfile)
 

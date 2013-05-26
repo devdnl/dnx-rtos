@@ -288,6 +288,24 @@ stdret_t PLL_flush(void *drvhdl)
         return STD_RET_OK;
 }
 
+//==============================================================================
+/**
+ * @brief Function returns device informations
+ *
+ * @param[in]  *drvhld          driver's memory handle
+ * @param[out] *info            device/file info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t PLL_info(void *drvhdl, struct vfs_dev_info *info)
+{
+        (void) drvhdl;
+        info->st_size = 0;
+        return STD_RET_OK;
+}
+
 #ifdef __cplusplus
 }
 #endif

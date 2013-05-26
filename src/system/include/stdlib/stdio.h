@@ -66,7 +66,7 @@ extern "C" {
 #define fseek(FILE__pfile, i64_t__offset, int__mode)                    sysm_fseek(FILE__pfile, i64_t__offset, int__mode)
 #define ftell(FILE__pfile)                                              sysm_ftell(FILE__pfile)
 #define ioctl(FILE__pfile, ...)                                         sysm_ioctl(FILE__pfile, __VA_ARGS__)
-#define fstat(FILE__pfile, struct_vfs_stat__stat_ptr)                   sysm_fstat(FILE__pfile, struct_vfs_stat__stat_ptr)
+#define fstat(FILE__pfile, struct_vfs_stat__pstat)                      sysm_fstat(FILE__pfile, struct_vfs_stat__pstat)
 #define fflush(FILE__pfile)                                             sysm_fflush(FILE__pfile)
 #define feof(FILE__pfile)                                               sysm_feof(FILE__pfile)
 #define rewind(FILE__pfile)                                             sysm_rewind(FILE__pfile)

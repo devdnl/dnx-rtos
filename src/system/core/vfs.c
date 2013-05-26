@@ -292,8 +292,8 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                                 }
 
                                 strcpy(mntent->mnt_fsname, stat_fs.fsname);
-                                mntent->free  = stat_fs.f_bfree;
-                                mntent->total = stat_fs.f_blocks;
+                                mntent->free  = stat_fs.f_bfree * stat_fs.f_bsize;
+                                mntent->total = stat_fs.f_blocks * stat_fs.f_bsize;
 
                                 return STD_RET_OK;
                         }

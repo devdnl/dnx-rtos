@@ -167,7 +167,7 @@ MODULE_NAME(SDSPI);
 struct partition {
         mutex_t *file_lock_mtx;
         u32_t    first_sector;
-        u32_t    size;
+        u32_t    size_in_sectors;
 };
 
 /** card types */
@@ -536,6 +536,57 @@ stdret_t SDSPI_flush(void *drvhdl)
 
 //==============================================================================
 /**
+ * @brief Function returns device informations
+ *
+ * @param[in]  *drvhld          driver's memory handle
+ * @param[out] *info            device/file info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t SDSPI_info(void *drvhdl, struct vfs_dev_info *info)
+{
+        struct sdspi_data *hdl = drvhdl;
+
+        /* size info */
+        if (send_cmd(hdl, CMD9, 0) == 0) {
+                u8_t  csd[16];
+                u8_t  token;
+                uint  try = 1000000;
+
+                while ((token = spi_rw(0xFF)) == 0xFF && --try);
+                if (token != 0xFE)
+                        return STD_RET_ERROR;
+
+                u8_t *ptr = &csd[0];
+                for (int i = 0; i < 4; i++) {
+                        *ptr++ = spi_rw(0xFF);
+                        *ptr++ = spi_rw(0xFF);
+                        *ptr++ = spi_rw(0xFF);
+                        *ptr++ = spi_rw(0xFF);
+                }
+                spi_rw(0xFF);
+                spi_rw(0xFF);
+
+                /* SDC version 2.00 */
+                info->st_size = 0;
+                if ((csd[0] >> 6) == 1) {
+                        int csize     = csd[9] + ((u16_t)csd[8] << 8) + 1;
+                        info->st_size = (u64_t)csize << 10;
+                } else { /* SDC version 1.XX or MMC*/
+                        int n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
+                        int csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
+                        info->st_size = (u64_t)csize << (n - 9);
+                }
+                info->st_size *= SECTOR_SIZE;
+        }
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
  * @brief Function open new partiotion file
  *
  * @param[in] *drvhdl   handler to partition description
@@ -689,6 +740,24 @@ static stdret_t partition_flush(void *drvhdl)
 {
         (void) drvhdl;
 
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns device informations
+ *
+ * @param[in]  *drvhld          driver's memory handle
+ * @param[out] *info            device/file info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t partition_info(void *drvhdl, struct vfs_dev_info *info)
+{
+        struct partition *hdl = drvhdl;
+        info->st_size = hdl->size_in_sectors * SECTOR_SIZE;
         return STD_RET_OK;
 }
 
@@ -1280,32 +1349,33 @@ static stdret_t detect_partitions(struct sdspi_data *hdl)
                 drvif.drv_read  = partition_read;
                 drvif.drv_ioctl = partition_ioctl;
                 drvif.drv_flush = partition_flush;
+                drvif.drv_info  = partition_info;
 
                 if (MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(MBR) > 0) {
-                        hdl->partition[0].first_sector = MBR_GET_PARTITION_1_LBA_FIRST_SECTOR(MBR);
-                        hdl->partition[0].size         = MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(MBR);
-                        drvif.handle                   = &hdl->partition[0];
+                        hdl->partition[0].first_sector    = MBR_GET_PARTITION_1_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[0].size_in_sectors = MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                      = &hdl->partition[0];
                         mknod(SDSPI_PARTITION_1_PATH, &drvif);
                 }
 
                 if (MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(MBR) > 0) {
-                        hdl->partition[1].first_sector = MBR_GET_PARTITION_2_LBA_FIRST_SECTOR(MBR);
-                        hdl->partition[1].size         = MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(MBR);
-                        drvif.handle                   = &hdl->partition[1];
+                        hdl->partition[1].first_sector    = MBR_GET_PARTITION_2_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[1].size_in_sectors = MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                      = &hdl->partition[1];
                         mknod(SDSPI_PARTITION_2_PATH, &drvif);
                 }
 
                 if (MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(MBR) > 0) {
-                        hdl->partition[2].first_sector = MBR_GET_PARTITION_3_LBA_FIRST_SECTOR(MBR);
-                        hdl->partition[2].size         = MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(MBR);
-                        drvif.handle                   = &hdl->partition[2];
+                        hdl->partition[2].first_sector    = MBR_GET_PARTITION_3_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[2].size_in_sectors = MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                      = &hdl->partition[2];
                         mknod(SDSPI_PARTITION_3_PATH, &drvif);
                 }
 
                 if (MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(MBR) > 0) {
-                        hdl->partition[3].first_sector = MBR_GET_PARTITION_4_LBA_FIRST_SECTOR(MBR);
-                        hdl->partition[3].size         = MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(MBR);
-                        drvif.handle                   = &hdl->partition[3];
+                        hdl->partition[3].first_sector    = MBR_GET_PARTITION_4_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[3].size_in_sectors = MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                      = &hdl->partition[3];
                         mknod(SDSPI_PARTITION_4_PATH, &drvif);
                 }
 
