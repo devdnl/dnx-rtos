@@ -84,10 +84,10 @@ typedef struct {
         WORD         id;                /* File system mount ID */
         WORD         n_rootdir;         /* Number of root directory entries (FAT12/16) */
 #if _MAX_SS != 512
-        WORD        ssize;              /* Bytes per sector (512, 1024, 2048 or 4096) */
+        WORD         ssize;             /* Bytes per sector (512, 1024, 2048 or 4096) */
 #endif
 #if _FS_REENTRANT
-        _SYNC_t        sobj;            /* Identifier of sync object */
+        _SYNC_t     sobj;               /* Identifier of sync object */
 #endif
 #if !_FS_READONLY
         DWORD        last_clust;        /* Last allocated cluster */
@@ -98,7 +98,7 @@ typedef struct {
         DWORD        cdir;              /* Current directory start cluster (0:root) */
 #endif
         DWORD        n_fatent;          /* Number of FAT entries (= number of clusters + 2) */
-        DWORD        fsize;                        /* Sectors per FAT */
+        DWORD        fsize;             /* Sectors per FAT */
         DWORD        volbase;           /* Volume start sector */
         DWORD        fatbase;           /* FAT start sector */
         DWORD        dirbase;           /* Root directory start sector (FAT32:Cluster#) */
@@ -112,7 +112,7 @@ typedef struct {
 /* File object structure (FIL) */
 
 typedef struct {
-        FATFS*        fs;               /* Pointer to the related file system object (**do not change order**) */
+        FATFS*       fs;                /* Pointer to the related file system object (**do not change order**) */
         WORD         id;                /* Owner file system mount ID (**do not change order**) */
         BYTE         flag;              /* File status flags */
         BYTE         pad1;

@@ -42,6 +42,10 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+struct fatfs {
+        FILE  *fsfile;
+        FATFS *fatfs;
+};
 
 /*==============================================================================
   Local function prototypes
@@ -72,9 +76,31 @@ extern "C" {
 //==============================================================================
 stdret_t fatfs_init(void **fshdl, const char *src_path)
 {
-        (void)fshdl;
-        (void)src_path;
+        if (!src_path) {
+                return STD_RET_ERROR;
+        }
 
+        struct fatfs *hdl = calloc(1, sizeof(struct fatfs));
+
+        if (hdl) {
+                *fshdl = hdl;
+
+                if (!(hdl->fsfile = fopen(src_path, "r+")))
+                        goto error;
+
+
+
+                return STD_RET_OK;
+        }
+
+error:
+        if (hdl) {
+                if (hdl->fsfile) {
+                        fclose(hdl->fsfile);
+                }
+
+                free(hdl);
+        }
         return STD_RET_OK;
 }
 

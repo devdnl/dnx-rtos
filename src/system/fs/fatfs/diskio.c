@@ -42,7 +42,7 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-        BYTE pdrv,                      /* Physical drive nmuber (0..) */
+        BYTE pdrv,                      /* Physical drive number (0..) */
         BYTE *buff,                     /* Data buffer to store read data */
         DWORD sector,                   /* Sector address (LBA) */
         BYTE count                      /* Number of sectors to read (1..128) */
