@@ -132,21 +132,57 @@ MODULE_NAME(SDSPI);
 
 #define SECTOR_SIZE                                     512
 
+/* MBR definitions */
+#define MBR_BOOTSTRAP_CODE_OFFSET                       0x000
+#define MBR_PARTITION_1_ENTRY_OFFSET                    0x1BE
+#define MBR_PARTITION_2_ENTRY_OFFSET                    0x1CE
+#define MBR_PARTITION_3_ENTRY_OFFSET                    0x1DE
+#define MBR_PARTITION_4_ENTRY_OFFSET                    0x1EE
+#define MBR_BOOT_SIGNATURE_OFFSET                       0x1FE
+
+#define MBR_PARITION_ENTRY_STATUS_OFFSET                0x00
+#define MBR_PARITION_ENTRY_CHS_FIRST_ADDR_OFFSET        0x01
+#define MBR_PARITION_ENTRY_PARTITION_TYPE_OFFSET        0x04
+#define MBR_PARITION_ENTRY_CHS_LAST_ADDR_OFFSET         0x05
+#define MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET        0x08
+#define MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET        0x0C
+
+#define LOAD_U32(buff, offset)  (u32_t)(((u32_t)buff[offset + 0]) | ((u32_t)buff[offset + 1] << 8) | ((u32_t)buff[offset + 2] << 16) | ((u32_t)buff[offset + 3] << 24))
+#define LOAD_U16(buff, offset)  (u16_t)(((u16_t)buff[offset + 0]) | ((u16_t)buff[offset + 1] << 8))
+
+#define MBR_GET_BOOT_SIGNATURE(sector)                  LOAD_U16(sector, MBR_BOOT_SIGNATURE_OFFSET)
+#define MBR_GET_PARTITION_1_LBA_FIRST_SECTOR(sector)    LOAD_U32(sector, MBR_PARTITION_1_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET)
+#define MBR_GET_PARTITION_2_LBA_FIRST_SECTOR(sector)    LOAD_U32(sector, MBR_PARTITION_2_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET)
+#define MBR_GET_PARTITION_3_LBA_FIRST_SECTOR(sector)    LOAD_U32(sector, MBR_PARTITION_3_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET)
+#define MBR_GET_PARTITION_4_LBA_FIRST_SECTOR(sector)    LOAD_U32(sector, MBR_PARTITION_4_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET)
+#define MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(sector)   LOAD_U32(sector, MBR_PARTITION_1_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET)
+#define MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(sector)   LOAD_U32(sector, MBR_PARTITION_2_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET)
+#define MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(sector)   LOAD_U32(sector, MBR_PARTITION_3_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET)
+#define MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(sector)   LOAD_U32(sector, MBR_PARTITION_4_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/* partition description */
+struct partition {
+        mutex_t *file_lock_mtx;
+        u32_t    first_sector;
+        u32_t    size;
+};
+
 /** card types */
 typedef u8_t card_type;
 
 /** handling structure */
 struct sdspi_data {
-        FILE      *gpio_file;
-        card_type  card_type;
-        bool       card_initialized;
-        mutex_t   *card_protect_mtx;
-        mutex_t   *port_lock_mtx;
+        FILE            *gpio_file;
+        card_type        card_type;
+        bool             card_initialized;
+        mutex_t         *card_protect_mtx;
+        mutex_t         *file_lock_mtx;
+        struct partition partition[4];
 #if (SDSPI_ENABLE_DMA != 0)
-        task_t    *DMA_host_task;
+        task_t          *DMA_host_task;
 #endif
 };
 
@@ -172,9 +208,7 @@ static size_t   card_write(struct sdspi_data *hdl, const void *src, size_t size,
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if (SDSPI_ENABLE_DMA != 0)
 static struct sdspi_data *sdspi_data;
-#endif
 
 /*==============================================================================
   Function definitions
@@ -205,11 +239,9 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         }
 
         *drvhdl = sdspi;
-
-#if (SDSPI_ENABLE_DMA != 0)
         sdspi_data = sdspi;
 
-        /* enable DMA clock */
+#if (SDSPI_ENABLE_DMA != 0)
         if ((u32_t)SDSPI_DMA == DMA1_BASE) {
                 RCC->AHBENR |= RCC_AHBENR_DMA1EN;
         } else if ((u32_t)SDSPI_DMA == DMA2_BASE) {
@@ -217,12 +249,18 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         }
 #endif
 
-        if (!(sdspi->port_lock_mtx = new_recursive_mutex())) {
+        if (!(sdspi->file_lock_mtx = new_recursive_mutex())) {
                 goto error;
         }
 
         if (!(sdspi->card_protect_mtx = new_mutex())) {
                 goto error;
+        }
+
+        for (int i = 0; i < 4; i++) {
+                sdspi->partition[i].file_lock_mtx = new_recursive_mutex();
+                if (!sdspi->partition[i].file_lock_mtx)
+                        goto error;
         }
 
         if (!(sdspi->gpio_file = fopen(SDSPI_GPIO_FILE, "r+"))) {
@@ -250,12 +288,18 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
 
 error:
         if (sdspi) {
-                if (sdspi->port_lock_mtx) {
-                        delete_recursive_mutex(sdspi->port_lock_mtx);
+                if (sdspi->file_lock_mtx) {
+                        delete_recursive_mutex(sdspi->file_lock_mtx);
                 }
 
                 if (sdspi->card_protect_mtx) {
                         delete_mutex(sdspi->card_protect_mtx);
+                }
+
+                for (int i = 0; i < 4; i++) {
+                        if (sdspi->partition[i].file_lock_mtx) {
+                                delete_recursive_mutex(sdspi->partition[i].file_lock_mtx);
+                        }
                 }
 
                 if (sdspi->gpio_file) {
@@ -285,10 +329,14 @@ stdret_t SDSPI_release(void *drvhdl)
                 return STD_RET_ERROR;
         }
 
-        force_lock_recursive_mutex(hdl->port_lock_mtx);
+        force_lock_recursive_mutex(hdl->file_lock_mtx);
         enter_critical();
-        unlock_recursive_mutex(hdl->port_lock_mtx);
-        delete_recursive_mutex(hdl->port_lock_mtx);
+        unlock_recursive_mutex(hdl->file_lock_mtx);
+        delete_recursive_mutex(hdl->file_lock_mtx);
+        delete_recursive_mutex(hdl->partition[0].file_lock_mtx);
+        delete_recursive_mutex(hdl->partition[1].file_lock_mtx);
+        delete_recursive_mutex(hdl->partition[2].file_lock_mtx);
+        delete_recursive_mutex(hdl->partition[3].file_lock_mtx);
         delete_mutex(hdl->card_protect_mtx);
         fclose(hdl->gpio_file);
         turn_off_SPI_clock();
@@ -316,7 +364,7 @@ stdret_t SDSPI_open(void *drvhdl)
                 return STD_RET_ERROR;
         }
 
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 return STD_RET_OK;
         } else {
                 return STD_RET_ERROR;
@@ -341,9 +389,9 @@ stdret_t SDSPI_close(void *drvhdl)
                 return STD_RET_ERROR;
         }
 
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                unlock_recursive_mutex(hdl->port_lock_mtx);     /* give this mutex */
-                unlock_recursive_mutex(hdl->port_lock_mtx);     /* give mutex from open */
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                unlock_recursive_mutex(hdl->file_lock_mtx);     /* give this mutex */
+                unlock_recursive_mutex(hdl->file_lock_mtx);     /* give mutex from open */
                 return STD_RET_OK;
         } else {
                 return STD_RET_ERROR;
@@ -372,12 +420,12 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u6
                 return 0;
         }
 
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                         n = card_write(hdl, src, size, nitems, lseek);
                         unlock_mutex(hdl->card_protect_mtx);
                 }
-                unlock_recursive_mutex(hdl->port_lock_mtx);
+                unlock_recursive_mutex(hdl->file_lock_mtx);
         }
 
         return n;
@@ -405,12 +453,12 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lse
                 return 0;
         }
 
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                         n = card_read(hdl, dst, size, nitems, lseek);
                         unlock_mutex(hdl->card_protect_mtx);
                 }
-                unlock_recursive_mutex(hdl->port_lock_mtx);
+                unlock_recursive_mutex(hdl->file_lock_mtx);
         }
 
         return n;
@@ -439,15 +487,14 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
                 return STD_RET_ERROR;
         }
 
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 switch (iorq) {
                 case SDSPI_IORQ_INITIALIZE_CARD:
                         if (lock_mutex(hdl->card_protect_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                                 if (initialize_card(hdl) == STD_RET_OK) {
-//                                     if (detect_partitions(hdl) == STD_RET_OK) {
-                                               /* success */
-//                                             break;
-//                                     }
+                                        if (detect_partitions(hdl) == STD_RET_OK) {
+                                                /* success */
+                                        }
                                 }
 
                                 unlock_mutex(hdl->card_protect_mtx);
@@ -462,7 +509,7 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
                         break;
                 }
 
-                unlock_recursive_mutex(hdl->port_lock_mtx);
+                unlock_recursive_mutex(hdl->file_lock_mtx);
         } else {
                 return STD_RET_ERROR;
         }
@@ -491,7 +538,7 @@ stdret_t SDSPI_flush(void *drvhdl)
 /**
  * @brief Function open new partiotion file
  *
- * @param[in] *drvhdl   handler to partiotion description
+ * @param[in] *drvhdl   handler to partition description
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -499,6 +546,18 @@ stdret_t SDSPI_flush(void *drvhdl)
 //==============================================================================
 static stdret_t partition_open(void *drvhdl)
 {
+        struct partition *hdl = drvhdl;
+
+        if (!hdl) {
+                return STD_RET_ERROR;
+        }
+
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -514,7 +573,19 @@ static stdret_t partition_open(void *drvhdl)
 //==============================================================================
 static stdret_t partition_close(void *drvhdl)
 {
-        return STD_RET_ERROR;
+        struct partition *hdl = drvhdl;
+
+        if (!hdl) {
+                return STD_RET_ERROR;
+        }
+
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                unlock_recursive_mutex(hdl->file_lock_mtx);     /* give this mutex */
+                unlock_recursive_mutex(hdl->file_lock_mtx);     /* give mutex from open */
+                return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -532,7 +603,22 @@ static stdret_t partition_close(void *drvhdl)
 //==============================================================================
 static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        return 0;
+        struct partition *hdl = drvhdl;
+        size_t n = 0;
+
+        if (!hdl) {
+                return 0;
+        }
+
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+                        n = card_write(sdspi_data, src, size, nitems, lseek + (hdl->first_sector * SECTOR_SIZE));
+                        unlock_mutex(sdspi_data->card_protect_mtx);
+                }
+                unlock_recursive_mutex(hdl->file_lock_mtx);
+        }
+
+        return n;
 }
 
 //==============================================================================
@@ -550,7 +636,22 @@ static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t
 //==============================================================================
 static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        return 0;
+        struct partition *hdl = drvhdl;
+        size_t n = 0;
+
+        if (!hdl) {
+                return 0;
+        }
+
+        if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+                        n = card_read(sdspi_data, dst, size, nitems, lseek + (hdl->first_sector * SECTOR_SIZE));
+                        unlock_mutex(sdspi_data->card_protect_mtx);
+                }
+                unlock_recursive_mutex(hdl->file_lock_mtx);
+        }
+
+        return n;
 }
 
 //==============================================================================
@@ -567,6 +668,10 @@ static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems
 //==============================================================================
 static stdret_t partition_ioctl(void *drvhdl, int iorq, va_list args)
 {
+        (void) drvhdl;
+        (void) iorq;
+        (void) args;
+
         return STD_RET_ERROR;
 }
 
@@ -582,6 +687,8 @@ static stdret_t partition_ioctl(void *drvhdl, int iorq, va_list args)
 //==============================================================================
 static stdret_t partition_flush(void *drvhdl)
 {
+        (void) drvhdl;
+
         return STD_RET_OK;
 }
 
@@ -1151,8 +1258,61 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t detect_partitions(struct sdspi_data *hdl) /* TODO detect_partitions */
+static stdret_t detect_partitions(struct sdspi_data *hdl)
 {
+        u8_t *MBR = malloc(SECTOR_SIZE);
+
+        if (MBR) {
+                if (card_read(hdl, MBR, SECTOR_SIZE, 1, 0) != 1) {
+                        goto error;
+                }
+
+                if (MBR_GET_BOOT_SIGNATURE(MBR) != 0xAA55) {
+                        goto error;
+                }
+
+                struct vfs_drv_interface drvif;
+                drvif.drv_open  = partition_open;
+                drvif.drv_close = partition_close;
+                drvif.drv_write = partition_write;
+                drvif.drv_read  = partition_read;
+                drvif.drv_ioctl = partition_ioctl;
+                drvif.drv_flush = partition_flush;
+
+                if (MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(MBR) > 0) {
+                        hdl->partition[0].first_sector = MBR_GET_PARTITION_1_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[0].size         = MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                   = &hdl->partition[0];
+                        mknod(SDSPI_PARTITION_1_PATH, &drvif);
+                }
+
+                if (MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(MBR) > 0) {
+                        hdl->partition[1].first_sector = MBR_GET_PARTITION_2_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[1].size         = MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                   = &hdl->partition[1];
+                        mknod(SDSPI_PARTITION_2_PATH, &drvif);
+                }
+
+                if (MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(MBR) > 0) {
+                        hdl->partition[2].first_sector = MBR_GET_PARTITION_3_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[2].size         = MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                   = &hdl->partition[2];
+                        mknod(SDSPI_PARTITION_3_PATH, &drvif);
+                }
+
+                if (MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(MBR) > 0) {
+                        hdl->partition[3].first_sector = MBR_GET_PARTITION_4_LBA_FIRST_SECTOR(MBR);
+                        hdl->partition[3].size         = MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(MBR);
+                        drvif.handle                   = &hdl->partition[3];
+                        mknod(SDSPI_PARTITION_4_PATH, &drvif);
+                }
+
+                return STD_RET_OK;
+
+error:
+                free(MBR);
+        }
+
         return STD_RET_ERROR;
 }
 

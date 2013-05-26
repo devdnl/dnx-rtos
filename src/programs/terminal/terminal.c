@@ -839,17 +839,25 @@ static enum cmd_status cmd_help(char *arg)
 //==============================================================================
 static enum cmd_status cmd_sector(char *arg)
 {
-        u64_t sector = 0;
-        int   count  = 0;
+        int   partition = 0;
+        u64_t sector    = 0;
+        int   count     = 0;
 
-        while (*arg != ':' && *arg >= '0' && *arg <= '9' && *arg != '\0') {
+        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
+                partition *= 10;
+                partition += *arg++ - '0';
+        }
+
+        arg++;
+
+        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
                 sector *= 10;
                 sector += *arg++ - '0';
         }
 
         arg++;
 
-        while (*arg != ':' && *arg >= '0' && *arg <= '9' && *arg != '\0') {
+        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
                 count *= 10;
                 count += *arg++ - '0';
         }
@@ -857,11 +865,21 @@ static enum cmd_status cmd_sector(char *arg)
         printf("Sector = %d; count = %d\n", (u32_t)sector, count);
 
         if (count == 0) {
+                printf("Usage: sector <partition> <sector> <count>\n");
                 printf("Nothing to do. Exit.\n");
                 return CMD_STATUS_EXECUTED;
         }
 
-        FILE *sd = fopen("/dev/sda", "r");
+        FILE *sd;
+        switch (partition) {
+        case 0:  sd = fopen("/dev/sda", "r"); break;
+        case 1:  sd = fopen("/dev/sda1", "r"); break;
+        case 2:  sd = fopen("/dev/sda2", "r"); break;
+        case 3:  sd = fopen("/dev/sda3", "r"); break;
+        case 4:  sd = fopen("/dev/sda4", "r"); break;
+        default: sd = NULL; break;
+        }
+
         if (sd) {
                 u8_t *buff = calloc(512, count);
                 if (buff) {
