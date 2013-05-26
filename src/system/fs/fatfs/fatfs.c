@@ -42,14 +42,21 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+struct fatdir {
+        FATDIR dir;
+        char name[14];
+};
+
 struct fatfs {
         FILE  *fsfile;
-        FATFS *fatfs;
+        FATFS  fatfs;
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static stdret_t fatfs_closedir(void *fshdl, dir_t *dir);
+static dirent_t fatfs_readdir(void *fshdl, dir_t *dir);
 
 /*==============================================================================
   Local object definitions
@@ -88,9 +95,8 @@ stdret_t fatfs_init(void **fshdl, const char *src_path)
                 if (!(hdl->fsfile = fopen(src_path, "r+")))
                         goto error;
 
-
-
-                return STD_RET_OK;
+                if (f_mount(hdl->fsfile, &hdl->fatfs) == FR_OK)
+                        return STD_RET_OK;
         }
 
 error:
@@ -293,10 +299,12 @@ stdret_t fatfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
 //==============================================================================
 stdret_t fatfs_mkdir(void *fshdl, const char *path)
 {
-        (void)fshdl;
-        (void)path;
+        struct fatfs *hdl = fshdl;
 
-        return STD_RET_ERROR;
+        if (f_mkdir(&hdl->fatfs, path) == FR_OK)
+                return STD_RET_OK;
+        else
+                return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -334,8 +342,33 @@ stdret_t fatfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
 //==============================================================================
 stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
 {
-        (void)fshdl;
+        struct fatfs *hdl     = fshdl;
+        char         *dospath = (char *)path;
 
+        if (strlen(path) > 1 && path[strlen(path) - 1] == '/') {
+                if (!(dospath = malloc(strlen(path + 1))))
+                        return STD_RET_ERROR;
+
+                strcpy(dospath, path);
+                dospath[strlen(path) - 1] = '\0';
+        }
+
+        dir->dd = calloc(1, sizeof(struct fatdir));
+        if (dir->dd) {
+                struct fatdir *fatdir = dir->dd;
+
+                dir->handle = hdl;
+                dir->cldir  = fatfs_closedir;
+                dir->rddir  = fatfs_readdir;
+                dir->seek   = 0;
+                dir->items  = 0;
+
+                if (f_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
+                        return STD_RET_OK;
+                }
+
+                free(dir->dd);
+        }
 
         return STD_RET_ERROR;
 }
@@ -353,10 +386,47 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
 //==============================================================================
 static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
 {
-        (void)fshdl;
-        (void)dir;
+        (void) fshdl;
+
+        if (dir->dd) {
+                free(dir->dd);
+        }
 
         return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Function read current directory
+ *
+ * @param[in] *fshdl            FS handle
+ * @param[in] *dir              directory info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
+{
+        (void) fshdl;
+
+        struct fatdir *fatdir = dir->dd;
+
+        dirent_t dirent;
+        dirent.name = NULL;
+        dirent.size = 0;
+
+        FILINFO fat_file_info;
+        if (f_readdir(&fatdir->dir, &fat_file_info) == FR_OK) {
+                if (fat_file_info.fname[0] != 0) {
+                        memcpy(fatdir->name, fat_file_info.fname, 13);
+                        dirent.filetype = fat_file_info.fattrib & AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                        dirent.name     = &fatdir->name[0];
+                        dirent.size     = fat_file_info.fsize;
+                }
+        }
+
+        return dirent;
 }
 
 //==============================================================================
@@ -372,10 +442,12 @@ static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
 //==============================================================================
 stdret_t fatfs_remove(void *fshdl, const char *path)
 {
-        (void)fshdl;
-        (void)path;
+        struct fatfs *hdl = fshdl;
 
-        return STD_RET_ERROR;
+        if (f_unlink(&hdl->fatfs, path) == FR_OK)
+                return STD_RET_OK;
+        else
+                return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -392,11 +464,12 @@ stdret_t fatfs_remove(void *fshdl, const char *path)
 //==============================================================================
 stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
 {
-        (void)fshdl;
-        (void)old_name;
-        (void)new_name;
+        struct fatfs *hdl = fshdl;
 
-        return STD_RET_ERROR;
+        if (f_rename(&hdl->fatfs, old_name, new_name) == FR_OK)
+                return STD_RET_OK;
+        else
+                return STD_RET_ERROR;
 }
 
 //==============================================================================

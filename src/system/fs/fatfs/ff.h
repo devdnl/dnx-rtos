@@ -23,6 +23,7 @@ extern "C" {
 
 #include "integer.h"                    /* Basic integer types */
 #include "ffconf.h"                     /* FatFs configuration options */
+#include "system/dnxfs.h"               /* dnx file system support */
 
 #if _FATFS != _FFCONF
 #error Wrong configuration file (ffconf.h).
@@ -76,7 +77,7 @@ typedef char TCHAR;
 
 typedef struct {
         BYTE         fs_type;           /* FAT sub-type (0:Not mounted) */
-        BYTE         drv;               /* Physical drive number */
+        FILE        *srcfile;           /* file system source file */
         BYTE         csize;             /* Sectors per cluster (1,2,4...128) */
         BYTE         n_fats;            /* Number of FAT copies (1,2) */
         BYTE         wflag;             /* win[] dirty flag (1:must be written back) */
@@ -153,7 +154,7 @@ typedef struct {
         WCHAR*        lfn;              /* Pointer to the LFN working buffer */
         WORD        lfn_idx;            /* Last matched LFN index number (0xFFFF:No LFN) */
 #endif
-} DIR;
+} FATDIR;
 
 
 
@@ -203,23 +204,23 @@ typedef enum {
 /*--------------------------------------------------------------*/
 /* FatFs module application interface                           */
 
-FRESULT f_mount (BYTE vol, FATFS* fs);                                          /* Mount/Unmount a logical drive */
-FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);                         /* Open or create a file */
-FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br);                       /* Read data from a file */
-FRESULT f_lseek (FIL* fp, DWORD ofs);                                           /* Move file pointer of a file object */
-FRESULT f_close (FIL* fp);                                                      /* Close an open file object */
-FRESULT f_opendir (DIR* dj, const TCHAR* path);                                 /* Open an existing directory */
-FRESULT f_readdir (DIR* dj, FILINFO* fno);                                      /* Read a directory item */
-FRESULT f_stat (const TCHAR* path, FILINFO* fno);                               /* Get file status */
-FRESULT f_write (FIL* fp, const void* buff, UINT btw, UINT* bw);                /* Write data to a file */
-FRESULT f_getfree (const TCHAR* path, DWORD* nclst, FATFS** fatfs);             /* Get number of free clusters on the drive */
-FRESULT f_truncate (FIL* fp);                                                   /* Truncate file */
-FRESULT f_sync (FIL* fp);                                                       /* Flush cached data of a writing file */
-FRESULT f_unlink (const TCHAR* path);                                           /* Delete an existing file or directory */
-FRESULT f_mkdir (const TCHAR* path);                                            /* Create a new directory */
-FRESULT f_chmod (const TCHAR* path, BYTE value, BYTE mask);                     /* Change attribute of the file/dir */
-FRESULT f_utime (const TCHAR* path, const FILINFO* fno);                        /* Change times-tamp of the file/dir */
-FRESULT f_rename (const TCHAR* path_old, const TCHAR* path_new);                /* Rename/Move a file or directory */
+FRESULT f_mount(FILE*, FATFS*);                                                 /* Mount/Unmount a logical drive */
+FRESULT f_open(FATFS*, FIL* fp, const TCHAR* path, BYTE mode);                  /* Open or create a file */
+FRESULT f_read(FIL* fp, void* buff, UINT btr, UINT* br);                        /* Read data from a file */
+FRESULT f_lseek(FIL* fp, DWORD ofs);                                            /* Move file pointer of a file object */
+FRESULT f_close(FIL* fp);                                                       /* Close an open file object */
+FRESULT f_opendir(FATFS*, FATDIR* dj, const TCHAR* path);                       /* Open an existing directory */
+FRESULT f_readdir(FATDIR* dj, FILINFO* fno);                                    /* Read a directory item */
+FRESULT f_stat(FATFS*, const TCHAR* path, FILINFO* fno);                        /* Get file status */
+FRESULT f_write(FIL* fp, const void* buff, UINT btw, UINT* bw);                 /* Write data to a file */
+FRESULT f_getfree(const TCHAR* path, DWORD* nclst, FATFS** fatfs);              /* Get number of free clusters on the drive */
+FRESULT f_truncate(FIL* fp);                                                    /* Truncate file */
+FRESULT f_sync(FIL* fp);                                                        /* Flush cached data of a writing file */
+FRESULT f_unlink(FATFS*, const TCHAR* path);                                    /* Delete an existing file or directory */
+FRESULT f_mkdir(FATFS*, const TCHAR* path);                                     /* Create a new directory */
+FRESULT f_chmod(FATFS*, const TCHAR* path, BYTE value, BYTE mask);              /* Change attribute of the file/dir */
+FRESULT f_utime(FATFS*, const TCHAR* path, const FILINFO* fno);                 /* Change times-tamp of the file/dir */
+FRESULT f_rename(FATFS*, const TCHAR* path_old, const TCHAR* path_new);         /* Rename/Move a file or directory */
 FRESULT f_chdrive (BYTE drv);                                                   /* Change current drive */
 FRESULT f_chdir (const TCHAR* path);                                            /* Change current directory */
 FRESULT f_getcwd (TCHAR* buff, UINT len);                                       /* Get current directory */

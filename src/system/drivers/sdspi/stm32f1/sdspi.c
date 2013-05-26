@@ -1260,6 +1260,8 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
 //==============================================================================
 static stdret_t detect_partitions(struct sdspi_data *hdl)
 {
+        stdret_t status = STD_RET_ERROR;
+
         u8_t *MBR = malloc(SECTOR_SIZE);
 
         if (MBR) {
@@ -1307,13 +1309,12 @@ static stdret_t detect_partitions(struct sdspi_data *hdl)
                         mknod(SDSPI_PARTITION_4_PATH, &drvif);
                 }
 
-                return STD_RET_OK;
-
+                status = STD_RET_OK;
 error:
                 free(MBR);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================

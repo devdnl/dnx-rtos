@@ -13,7 +13,7 @@ extern "C" {
 #define _USE_IOCTL        1             /* 1: Enable disk_ioctl function */
 
 #include "integer.h"
-
+#include "system/dnxfs.h"
 
 /* Status of Disk Functions */
 typedef BYTE        DSTATUS;
@@ -32,11 +32,11 @@ typedef enum {
 /* Prototypes for disk control functions */
 
 
-DSTATUS disk_initialize (BYTE pdrv);
-DSTATUS disk_status (BYTE pdrv);
-DRESULT disk_read (BYTE pdrv, BYTE*buff, DWORD sector, BYTE count);
-DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, BYTE count);
-DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
+DSTATUS disk_initialize(FILE*);
+DSTATUS disk_status(FILE*);
+DRESULT disk_read(FILE*, BYTE*, DWORD, BYTE);
+DRESULT disk_write(FILE*, const BYTE*, DWORD, BYTE);
+DRESULT disk_ioctl(FILE*, BYTE, void*);
 
 
 /* Disk Status Bits (DSTATUS) */

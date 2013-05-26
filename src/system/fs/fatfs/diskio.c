@@ -3,21 +3,20 @@
 /*-----------------------------------------------------------------------*/
 /* If a working storage control module is available, it should be        */
 /* attached to the FatFs via a glue function rather than modifying it.   */
-/* This is an example of glue functions to attach various exsisting      */
+/* This is an example of glue functions to attach various existing       */
 /* storage control module to the FatFs module with a defined API.        */
 /*-----------------------------------------------------------------------*/
 
 #include "diskio.h"
+#include "ffconf.h"
 
 /*-----------------------------------------------------------------------*/
 /* Initialize a Drive                                                    */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_initialize (
-        BYTE pdrv                                /* Physical drive number (0..) */
-)
+DSTATUS disk_initialize(FILE *srcfile)
 {
-        (void) pdrv;
+        (void) srcfile;
         return 0;
 }
 
@@ -27,11 +26,9 @@ DSTATUS disk_initialize (
 /* Get Disk Status                                                       */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_status (
-        BYTE pdrv                               /* Physical drive number (0..) */
-)
+DSTATUS disk_status(FILE *srcfile)
 {
-        (void) pdrv;
+        (void) srcfile;
         return 0;
 }
 
@@ -41,45 +38,14 @@ DSTATUS disk_status (
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-DRESULT disk_read (
-        BYTE pdrv,                      /* Physical drive number (0..) */
-        BYTE *buff,                     /* Data buffer to store read data */
-        DWORD sector,                   /* Sector address (LBA) */
-        BYTE count                      /* Number of sectors to read (1..128) */
-)
+DRESULT disk_read (FILE *srcfile, BYTE *buff, DWORD sector, BYTE count)
 {
-        DRESULT res;
-        int result;
-
-        switch (pdrv) {
-        case ATA :
-                // translate the arguments here
-
-                result = ATA_disk_read(buff, sector, count);
-
-                // translate the reslut code here
-
-                return res;
-
-        case MMC :
-                // translate the arguments here
-
-                result = MMC_disk_read(buff, sector, count);
-
-                // translate the reslut code here
-
-                return res;
-
-        case USB :
-                // translate the arguments here
-
-                result = USB_disk_read(buff, sector, count);
-
-                // translate the reslut code here
-
-                return res;
+        fseek(srcfile, sector * _MAX_SS, SEEK_SET);
+        if (fread(buff, _MAX_SS, count, srcfile) != count) {
+                return RES_ERROR;
+        } else {
+                return RES_OK;
         }
-        return RES_PARERR;
 }
 
 
@@ -89,45 +55,14 @@ DRESULT disk_read (
 /*-----------------------------------------------------------------------*/
 
 #if _USE_WRITE
-DRESULT disk_write (
-        BYTE pdrv,                        /* Physical drive nmuber (0..) */
-        const BYTE *buff,        /* Data to be written */
-        DWORD sector,                /* Sector address (LBA) */
-        BYTE count                        /* Number of sectors to write (1..128) */
-)
+DRESULT disk_write(FILE *srcfile, const BYTE *buff, DWORD sector, BYTE count)
 {
-        DRESULT res;
-        int result;
-
-        switch (pdrv) {
-        case ATA :
-                // translate the arguments here
-
-                result = ATA_disk_write(buff, sector, count);
-
-                // translate the reslut code here
-
-                return res;
-
-        case MMC :
-                // translate the arguments here
-
-                result = MMC_disk_write(buff, sector, count);
-
-                // translate the reslut code here
-
-                return res;
-
-        case USB :
-                // translate the arguments here
-
-                result = USB_disk_write(buff, sector, count);
-
-                // translate the reslut code here
-
-                return res;
+        fseek(srcfile, sector * _MAX_SS, SEEK_SET);
+        if (fwrite(buff, _MAX_SS, count, srcfile) != count) {
+                return RES_ERROR;
+        } else {
+                return RES_OK;
         }
-        return RES_PARERR;
 }
 #endif
 
@@ -137,43 +72,22 @@ DRESULT disk_write (
 /*-----------------------------------------------------------------------*/
 
 #if _USE_IOCTL
-DRESULT disk_ioctl (
-        BYTE pdrv,                /* Physical drive nmuber (0..) */
-        BYTE cmd,                /* Control code */
-        void *buff                /* Buffer to send/receive control data */
-)
+DRESULT disk_ioctl(FILE *srcfile, BYTE cmd, void *buff)
 {
-        DRESULT res;
-        int result;
-
-        switch (pdrv) {
-        case ATA :
-                // pre-process here
-
-                result = ATA_disk_ioctl(cmd, buff);
-
-                // post-process here
-
-                return res;
-
-        case MMC :
-                // pre-process here
-
-                result = MMC_disk_ioctl(cmd, buff);
-
-                // post-process here
-
-                return res;
-
-        case USB :
-                // pre-process here
-
-                result = USB_disk_ioctl(cmd, buff);
-
-                // post-process here
-
-                return res;
+        switch (cmd) {
+        case CTRL_SYNC: return RES_OK;
         }
+
         return RES_PARERR;
 }
 #endif
+
+
+/*-----------------------------------------------------------------------*/
+/* Get time                                                              */
+/*-----------------------------------------------------------------------*/
+
+DWORD get_fattime (void)
+{
+        return 0;
+}

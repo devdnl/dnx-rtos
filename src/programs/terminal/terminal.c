@@ -448,7 +448,7 @@ static enum cmd_status cmd_mkdir(char *arg)
                 newpath = global->cwd;
         }
 
-        if (mkdir(newpath) == STD_RET_ERROR) {
+        if (mkdir(newpath) != 0) {
                 printf("Cannot create directory \"%s\": no such file or directory\n", arg);
         }
 
@@ -542,7 +542,7 @@ static enum cmd_status cmd_rm(char *arg)
                 newpath = global->cwd;
         }
 
-        if (remove(newpath) == STD_RET_ERROR) {
+        if (remove(newpath) != 0) {
                 printf("Cannot remove \"%s\"\n", arg);
         }
 
