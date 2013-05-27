@@ -130,7 +130,7 @@ static i32_t sysm_programs_memory_usage;
     || (SYSM_MONITOR_CPU_LOAD > 0           ) )
 stdret_t sysm_init(void)
 {
-        cpuctl_init_CPU_load_timer();
+        _cpuctl_init_CPU_load_timer();
 
         sysm_task_list    = new_list();
         sysm_resource_mtx = new_recursive_mutex();
@@ -1097,7 +1097,7 @@ extern stdret_t sysm_closedir(dir_t *dir)
 #if (SYSM_MONITOR_CPU_LOAD > 0)
 u32_t sysm_get_total_CPU_usage(void)
 {
-        return cpuctl_get_CPU_total_time();
+        return _cpuctl_get_CPU_total_time();
 }
 #endif
 
@@ -1109,7 +1109,7 @@ u32_t sysm_get_total_CPU_usage(void)
 #if (SYSM_MONITOR_CPU_LOAD > 0)
 void sysm_clear_total_CPU_usage(void)
 {
-        cpuctl_clear_CPU_total_time();
+        _cpuctl_clear_CPU_total_time();
 }
 #endif
 
@@ -1121,7 +1121,7 @@ void sysm_clear_total_CPU_usage(void)
 #if (SYSM_MONITOR_CPU_LOAD > 0)
 void sysm_task_switched_in(void)
 {
-        cpuctl_clear_CPU_load_timer();
+        _cpuctl_clear_CPU_load_timer();
 }
 #endif
 
@@ -1134,7 +1134,7 @@ void sysm_task_switched_in(void)
 void sysm_task_switched_out(void)
 {
         struct task_data *tdata = _get_this_task_data();
-        u32_t             cnt   = cpuctl_get_CPU_load_timer();
+        u32_t             cnt   = _cpuctl_get_CPU_load_timer();
 
         if (tdata) {
                 tdata->f_cpu_usage += cnt;

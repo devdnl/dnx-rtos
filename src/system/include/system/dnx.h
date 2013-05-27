@@ -60,15 +60,15 @@ extern "C" {
 #define get_free_memory()                                       memman_get_free_heap()
 #define get_used_memory()                                       (get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()))
 #define get_memory_size()                                       CONFIG_RAM_SIZE
-#define get_uptime()                                            get_uptime_counter()
+#define get_uptime()                                            _get_uptime_counter()
 #define get_task_stat(i32_t__ntask, struct_taskstat__pstat)     sysm_get_ntask_stat(i32_t__ntask, struct_taskstat__pstat)
 #define get_number_of_monitored_tasks()                         sysm_get_number_of_monitored_tasks()
 #define get_total_CPU_usage()                                   sysm_get_total_CPU_usage()
 #define clear_total_CPU_usage()                                 sysm_clear_total_CPU_usage()
-#define reboot()                                                cpuctl_restart_system()
+#define restart()                                               _cpuctl_restart_system()
 #define get_platform_name()                                     CPUCTL_PLATFORM_NAME
 #define get_OS_name()                                           "dnx"
-#define get_OS_version()                                        "0.9.24"
+#define get_OS_version()                                        "0.9.25"
 #define get_kernel_name()                                       "FreeRTOS"
 #define get_kernel_version()                                    tskKERNEL_VERSION_NUMBER
 #define get_host_name()                                         CONFIG_HOSTNAME

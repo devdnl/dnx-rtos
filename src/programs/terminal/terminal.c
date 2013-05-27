@@ -662,7 +662,7 @@ static enum cmd_status cmd_reboot(char *arg)
 
         printf("Rebooting...\n");
         sleep_ms(500);
-        reboot();
+        restart();
 
         return CMD_STATUS_EXECUTED;
 }
@@ -685,8 +685,8 @@ static enum cmd_status cmd_df(char *arg)
         mnt.total = 0;
 
         if (mnt.mnt_dir && mnt.mnt_fsname) {
-                printf("File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(6)
-                       "Free"CURSOR_FORWARD(7)"%Used  Mount point\n");
+                printf("File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(5)
+                       "Free"CURSOR_FORWARD(6)"%%Used  Mount point\n");
 
                 for (u32_t i = 0;; i++) {
                         if (getmntentry(i, &mnt) == STD_RET_OK) {

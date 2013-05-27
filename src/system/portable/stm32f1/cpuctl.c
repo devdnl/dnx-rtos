@@ -63,7 +63,7 @@ static u32_t total_CPU_time;
  * @brief Basic (first) CPU/microcontroller configuration
  */
 //==============================================================================
-void cpuctl_init(void)
+void _cpuctl_init(void)
 {
         /* set interrupt vectors and NVIC priority */
         NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
@@ -75,7 +75,7 @@ void cpuctl_init(void)
  * @brief Restart CPU
  */
 //==============================================================================
-void cpuctl_restart_system(void)
+void _cpuctl_restart_system(void)
 {
         NVIC_SystemReset();
 }
@@ -85,7 +85,7 @@ void cpuctl_restart_system(void)
  * @brief Start counter used in CPU load measurement
  */
 //==============================================================================
-void cpuctl_init_CPU_load_timer(void)
+void _cpuctl_init_CPU_load_timer(void)
 {
         /* enable clock */
         RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
@@ -105,7 +105,7 @@ void cpuctl_init_CPU_load_timer(void)
  * @brief Function called after task go to ready state
  */
 //==============================================================================
-void cpuctl_clear_CPU_load_timer(void)
+void _cpuctl_clear_CPU_load_timer(void)
 {
         TIM2->CNT = 0;
 }
@@ -115,7 +115,7 @@ void cpuctl_clear_CPU_load_timer(void)
  * @brief Function called when task go out ready state
  */
 //==============================================================================
-u32_t cpuctl_get_CPU_load_timer(void)
+u32_t _cpuctl_get_CPU_load_timer(void)
 {
         u16_t cnt       = TIM2->CNT;
         total_CPU_time += cnt;
@@ -129,7 +129,7 @@ u32_t cpuctl_get_CPU_load_timer(void)
  * @return CPU total time
  */
 //==============================================================================
-u32_t cpuctl_get_CPU_total_time(void)
+u32_t _cpuctl_get_CPU_total_time(void)
 {
         return total_CPU_time;
 }
@@ -139,7 +139,7 @@ u32_t cpuctl_get_CPU_total_time(void)
  * @brief Function clear CPU total time
  */
 //==============================================================================
-void cpuctl_clear_CPU_total_time(void)
+void _cpuctl_clear_CPU_total_time(void)
 {
         total_CPU_time = 0;
 }
@@ -149,7 +149,7 @@ void cpuctl_clear_CPU_total_time(void)
  * @brief Function sleep CPU (is not a deep sleep, wake up by any IRQ)
  */
 //==============================================================================
-void cpuctl_sleep(void)
+void _cpuctl_sleep(void)
 {
         __WFI();
 }

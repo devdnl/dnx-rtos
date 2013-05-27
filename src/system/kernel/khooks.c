@@ -106,7 +106,7 @@ void vApplicationTickHook(void)
  * @return uptime counter
  */
 //==============================================================================
-u32_t get_uptime_counter(void)
+u32_t _get_uptime_counter(void)
 {
         return uptime_counter;
 }
