@@ -10,29 +10,6 @@
 #include "diskio.h"
 #include "ffconf.h"
 
-/*-----------------------------------------------------------------------*/
-/* Initialize a Drive                                                    */
-/*-----------------------------------------------------------------------*/
-
-DSTATUS disk_initialize(FILE *srcfile)
-{
-        (void) srcfile;
-        return 0;
-}
-
-
-
-/*-----------------------------------------------------------------------*/
-/* Get Disk Status                                                       */
-/*-----------------------------------------------------------------------*/
-
-DSTATUS disk_status(FILE *srcfile)
-{
-        (void) srcfile;
-        return 0;
-}
-
-
 
 /*-----------------------------------------------------------------------*/
 /* Read Sector(s)                                                        */
@@ -74,6 +51,9 @@ DRESULT disk_write(FILE *srcfile, const BYTE *buff, DWORD sector, BYTE count)
 #if _USE_IOCTL
 DRESULT disk_ioctl(FILE *srcfile, BYTE cmd, void *buff)
 {
+        (void) srcfile;
+        (void) buff;
+
         switch (cmd) {
         case CTRL_SYNC: return RES_OK;
         }

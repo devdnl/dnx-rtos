@@ -2067,15 +2067,15 @@ BYTE check_fs (	/* 0:FAT-VBR, 1:Any BR but not FAT, 2:Not a BR, 3:Disk error */
 
 static
 FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
-        FATFS *fs,
-	const TCHAR **path,	/* Pointer to pointer to the path name (drive number) */
-	FATFS **rfs,		/* Pointer to pointer to the found file system object */
-	BYTE wmode			/* !=0: Check write protection for write access */
+        FATFS *fs
+//	const TCHAR **path,	/* Pointer to pointer to the path name (drive number) */
+//	FATFS **rfs,		/* Pointer to pointer to the found file system object */
+//	BYTE wmode			/* !=0: Check write protection for write access */
 )
 {
 	BYTE fmt, b, pi, *tbl;
 //	UINT vol;
-	DSTATUS stat;
+//	DSTATUS stat;
 	DWORD bsect, fasize, tsect, sysect, nclst, szbfat;
 	WORD nrsv;
 //	const TCHAR *p = *path;
@@ -2116,13 +2116,13 @@ FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
 	/* The file system object is not valid. */
 	/* Following code attempts to mount the volume. (analyze BPB and initialize the fs object) */
 
-	fs->fs_type = 0;					/* Clear the file system object */
+//	fs->fs_type = 0;					/* Clear the file system object */
 //	fs->drv = LD2PD(vol);				/* Bind the logical drive and a physical drive */
-	stat = disk_initialize(fs->srcfile);	/* Initialize the physical drive */
+//	stat = disk_initialize(fs->srcfile);	/* Initialize the physical drive */
 //	if (stat & STA_NOINIT)				/* Check if the initialization succeeded */
 //		return FR_NOT_READY;			/* Failed to initialize due to no medium or hard error */
-	if (!_FS_READONLY && wmode && (stat & STA_PROTECT))	/* Check disk write protection if needed */
-		return FR_WRITE_PROTECTED;
+//	if (!_FS_READONLY && wmode && (stat & STA_PROTECT))	/* Check disk write protection if needed */
+//		return FR_WRITE_PROTECTED;
 #if _MAX_SS != 512						/* Get disk sector size (variable sector size cfg only) */
 	if (disk_ioctl(fs->drv, GET_SECTOR_SIZE, &fs->ssize) != RES_OK)
 		return FR_DISK_ERR;
@@ -2247,8 +2247,8 @@ FRESULT validate (	/* FR_OK(0): The object is valid, !=0: Invalid */
 
 	ENTER_FF(fil->fs);		/* Lock file system */
 
-	if (disk_status(fil->fs->srcfile) & STA_NOINIT)
-		return FR_NOT_READY;
+//	if (disk_status(fil->fs->srcfile) & STA_NOINIT)
+//		return FR_NOT_READY;
 
 	return FR_OK;
 }
@@ -2280,16 +2280,17 @@ FRESULT f_mount(FILE *fsfile, FATFS *fs)
 	if (fs) {
 	        fs->srcfile = fsfile;
 
-#if _FS_REENTRANT				/* Create sync object for the new volume */
+#if _FS_REENTRANT
+	        /* Create sync object for the new volume */
 		if (!ff_cre_syncobj(vol, &fs->sobj))
 		        return FR_INT_ERR;
 #endif
 
-		if (chk_mounted(fs, NULL, NULL, 0) == FR_OK)
+		if (chk_mounted(fs) == FR_OK)
 		        return FR_OK;
 	}
 
-	return FR_INVALID_DRIVE;
+	return FR_DISK_ERR;
 }
 
 
@@ -2317,12 +2318,13 @@ FRESULT f_open (
 
 #if !_FS_READONLY
 	mode &= FA_READ | FA_WRITE | FA_CREATE_ALWAYS | FA_OPEN_ALWAYS | FA_CREATE_NEW;
-	res = chk_mounted(fs, &path, &dj.fs, (BYTE)(mode & ~FA_READ));
+//	res = chk_mounted(fs, &path, &dj.fs, (BYTE)(mode & ~FA_READ));
+	dj.fs = fs;
 #else
 	mode &= FA_READ;
 	res = chk_mounted(&path, &dj.fs, 0);
 #endif
-	if (res == FR_OK) {
+//	if (res == FR_OK) {
 		INIT_BUF(dj);
 		res = follow_path(&dj, path);	/* Follow the file path */
 		dir = dj.dir;
@@ -2420,7 +2422,7 @@ FRESULT f_open (
 #endif
 			fp->fs = dj.fs; fp->id = dj.fs->id;	/* Validate file object */
 		}
-	}
+//	}
 
 	LEAVE_FF(dj.fs, res);
 }

@@ -569,12 +569,10 @@ stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 {
         struct fatfs *hdl = fshdl;
-
         u32_t  free_clusters = 0;
-//        FATFS *fatfs = &hdl->fatfs;
+
         struct vfs_stat fstat;
         fstat.st_size = 0;
-
         fstat(hdl->fsfile, &fstat);
 
         if (f_getfree("/", &free_clusters, &hdl->fatfs) == FR_OK) {
@@ -584,7 +582,15 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
                 statfs->f_ffree  = 0;
                 statfs->f_files  = 0;
                 statfs->f_type   = hdl->fatfs.fs_type;
-                statfs->fsname   = "fatfs";
+
+                if (hdl->fatfs.fs_type == FS_FAT12)
+                        statfs->fsname = "fatfs (FAT12)";
+                else if (hdl->fatfs.fs_type == FS_FAT16)
+                        statfs->fsname = "fatfs (FAT16)";
+                else if (hdl->fatfs.fs_type == FS_FAT32)
+                        statfs->fsname = "fatfs (FAT32)";
+                else
+                        statfs->fsname = "fatfs (FAT\?\?)";
 
                 return STD_RET_OK;
         }
