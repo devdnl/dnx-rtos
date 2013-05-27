@@ -63,7 +63,7 @@ typedef struct node {
         u32_t            gid;                   /* group ID of owner         */
         u64_t            size;                  /* file size                 */
         u32_t            mtime;                 /* time of last modification */
-        void           *data;                   /* file type specified data  */
+        void            *data;                  /* file type specified data  */
 } node_t;
 
 /** info of opened file */

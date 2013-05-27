@@ -168,6 +168,7 @@ struct partition {
         mutex_t *file_lock_mtx;
         u32_t    first_sector;
         u32_t    size_in_sectors;
+        bool     in_use;
 };
 
 /** card types */
@@ -325,8 +326,15 @@ stdret_t SDSPI_release(void *drvhdl)
 {
         struct sdspi_data *hdl = drvhdl;
 
-        if (!hdl) {
+        if (!hdl)
                 return STD_RET_ERROR;
+
+        /* wait for all partition are realeased */
+        while (  hdl->partition[0].in_use == true
+              || hdl->partition[1].in_use == true
+              || hdl->partition[2].in_use == true
+              || hdl->partition[3].in_use == true) {
+                sleep_ms(100);
         }
 
         force_lock_recursive_mutex(hdl->file_lock_mtx);
@@ -599,11 +607,14 @@ static stdret_t partition_open(void *drvhdl)
 {
         struct partition *hdl = drvhdl;
 
-        if (!hdl) {
+        if (!hdl)
                 return STD_RET_ERROR;
-        }
+
+        if (hdl->in_use == true)
+                return STD_RET_ERROR;
 
         if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                hdl->in_use = true;
                 return STD_RET_OK;
         } else {
                 return STD_RET_ERROR;
@@ -626,13 +637,13 @@ static stdret_t partition_close(void *drvhdl)
 {
         struct partition *hdl = drvhdl;
 
-        if (!hdl) {
+        if (!hdl)
                 return STD_RET_ERROR;
-        }
 
         if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 unlock_recursive_mutex(hdl->file_lock_mtx);     /* give this mutex */
                 unlock_recursive_mutex(hdl->file_lock_mtx);     /* give mutex from open */
+                hdl->in_use = false;
                 return STD_RET_OK;
         } else {
                 return STD_RET_ERROR;
@@ -663,7 +674,7 @@ static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t
 
         if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                        n = card_write(sdspi_data, src, size, nitems, lseek + (hdl->first_sector * SECTOR_SIZE));
+                        n = card_write(sdspi_data, src, size, nitems, lseek + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                         unlock_mutex(sdspi_data->card_protect_mtx);
                 }
                 unlock_recursive_mutex(hdl->file_lock_mtx);
@@ -696,7 +707,7 @@ static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems
 
         if (lock_recursive_mutex(hdl->file_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                        n = card_read(sdspi_data, dst, size, nitems, lseek + (hdl->first_sector * SECTOR_SIZE));
+                        n = card_read(sdspi_data, dst, size, nitems, lseek + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                         unlock_mutex(sdspi_data->card_protect_mtx);
                 }
                 unlock_recursive_mutex(hdl->file_lock_mtx);
@@ -757,7 +768,7 @@ static stdret_t partition_flush(void *drvhdl)
 stdret_t partition_info(void *drvhdl, struct vfs_dev_info *info)
 {
         struct partition *hdl = drvhdl;
-        info->st_size = hdl->size_in_sectors * SECTOR_SIZE;
+        info->st_size = (u64_t)hdl->size_in_sectors * SECTOR_SIZE;
         return STD_RET_OK;
 }
 

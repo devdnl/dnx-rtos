@@ -213,7 +213,7 @@ FRESULT f_opendir(FATFS*, FATDIR* dj, const TCHAR* path);                       
 FRESULT f_readdir(FATDIR* dj, FILINFO* fno);                                    /* Read a directory item */
 FRESULT f_stat(FATFS*, const TCHAR* path, FILINFO* fno);                        /* Get file status */
 FRESULT f_write(FIL* fp, const void* buff, UINT btw, UINT* bw);                 /* Write data to a file */
-FRESULT f_getfree(const TCHAR* path, DWORD* nclst, FATFS** fatfs);              /* Get number of free clusters on the drive */
+FRESULT f_getfree(const TCHAR* path, DWORD* nclst, FATFS *fatfs);               /* Get number of free clusters on the drive */
 FRESULT f_truncate(FIL* fp);                                                    /* Truncate file */
 FRESULT f_sync(FIL* fp);                                                        /* Flush cached data of a writing file */
 FRESULT f_unlink(FATFS*, const TCHAR* path);                                    /* Delete an existing file or directory */

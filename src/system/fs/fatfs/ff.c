@@ -2074,43 +2074,43 @@ FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
 )
 {
 	BYTE fmt, b, pi, *tbl;
-	UINT vol;
+//	UINT vol;
 	DSTATUS stat;
 	DWORD bsect, fasize, tsect, sysect, nclst, szbfat;
 	WORD nrsv;
-	const TCHAR *p = *path;
+//	const TCHAR *p = *path;
 //	FATFS *fs;
 
 
 	/* Get logical drive number from the path name */
-	vol = p[0] - '0';					/* Is there a drive number? */
-	if (vol <= 9 && p[1] == ':') {		/* Found a drive number, get and strip it */
-		p += 2; *path = p;				/* Return pointer to the path name */
-	} else {							/* No drive number, use default drive */
-#if _FS_RPATH
-		vol = CurrVol;					/* Use current drive */
-#else
-		vol = 0;						/* Use drive 0 */
-#endif
-	}
+//	vol = p[0] - '0';					/* Is there a drive number? */
+//	if (vol <= 9 && p[1] == ':') {		/* Found a drive number, get and strip it */
+//		p += 2; *path = p;				/* Return pointer to the path name */
+//	} else {							/* No drive number, use default drive */
+//#if _FS_RPATH
+//		vol = CurrVol;					/* Use current drive */
+//#else
+//		vol = 0;						/* Use drive 0 */
+//#endif
+//	}
 
 	/* Check if the file system object is valid or not */
-	*rfs = 0;
-	if (vol >= _VOLUMES) 				/* Is the drive number valid? */
-		return FR_INVALID_DRIVE;
+//	*rfs = 0;
+//	if (vol >= _VOLUMES) 				/* Is the drive number valid? */
+//		return FR_INVALID_DRIVE;
 //	fs = FatFs[vol];					/* Get corresponding file system object */
-	if (!fs) return FR_NOT_ENABLED;		/* Is the file system object available? */
+//	if (!fs) return FR_NOT_ENABLED;		/* Is the file system object available? */
 
 	ENTER_FF(fs);						/* Lock volume */
 
-	*rfs = fs;							/* Return pointer to the corresponding file system object */
+//	*rfs = fs;							/* Return pointer to the corresponding file system object */
 	if (fs->fs_type) {					/* If the volume has been mounted */
-		stat = disk_status(fs->srcfile);
-		if (!(stat & STA_NOINIT)) {		/* and the physical drive is kept initialized (has not been changed), */
-			if (!_FS_READONLY && wmode && (stat & STA_PROTECT))	/* Check write protection if needed */
-				return FR_WRITE_PROTECTED;
+//		stat = disk_status(fs->srcfile);
+//		if (!(stat & STA_NOINIT)) {		/* and the physical drive is kept initialized (has not been changed), */
+//			if (!_FS_READONLY && wmode && (stat & STA_PROTECT))	/* Check write protection if needed */
+//				return FR_WRITE_PROTECTED;
 			return FR_OK;				/* The file system object is valid */
-		}
+//		}
 	}
 
 	/* The file system object is not valid. */
@@ -2119,8 +2119,8 @@ FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
 	fs->fs_type = 0;					/* Clear the file system object */
 //	fs->drv = LD2PD(vol);				/* Bind the logical drive and a physical drive */
 	stat = disk_initialize(fs->srcfile);	/* Initialize the physical drive */
-	if (stat & STA_NOINIT)				/* Check if the initialization succeeded */
-		return FR_NOT_READY;			/* Failed to initialize due to no medium or hard error */
+//	if (stat & STA_NOINIT)				/* Check if the initialization succeeded */
+//		return FR_NOT_READY;			/* Failed to initialize due to no medium or hard error */
 	if (!_FS_READONLY && wmode && (stat & STA_PROTECT))	/* Check disk write protection if needed */
 		return FR_WRITE_PROTECTED;
 #if _MAX_SS != 512						/* Get disk sector size (variable sector size cfg only) */
@@ -2279,12 +2279,14 @@ FRESULT f_mount(FILE *fsfile, FATFS *fs)
 {
 	if (fs) {
 	        fs->srcfile = fsfile;
-		fs->fs_type = 0;		/* Clear new fs object */
+
 #if _FS_REENTRANT				/* Create sync object for the new volume */
 		if (!ff_cre_syncobj(vol, &fs->sobj))
 		        return FR_INT_ERR;
 #endif
-	        return FR_OK;
+
+		if (chk_mounted(fs, NULL, NULL, 0) == FR_OK)
+		        return FR_OK;
 	}
 
 	return FR_INVALID_DRIVE;
@@ -3038,9 +3040,9 @@ FRESULT f_opendir (
 
 	if (!dj) return FR_INVALID_OBJECT;
 
-	res = chk_mounted(fs, &path, &dj->fs, 0);
-//	fs = dj->fs;
-	if (res == FR_OK) {
+//	res = chk_mounted(fs, &path, &dj->fs, 0);
+	dj->fs = fs;
+//	if (res == FR_OK) {
 		INIT_BUF(*dj);
 		res = follow_path(dj, path);			/* Follow the path to the directory */
 		FREE_BUF();
@@ -3059,9 +3061,9 @@ FRESULT f_opendir (
 		}
 		if (res == FR_NO_FILE) res = FR_NO_PATH;
 		if (res != FR_OK) dj->fs = 0;			/* Invalidate the dir object if function faild */
-	} else {
-		dj->fs = 0;
-	}
+//	} else {
+//		dj->fs = 0;
+//	}
 
 	LEAVE_FF(fs, res);
 }
@@ -3126,8 +3128,9 @@ FRESULT f_stat (
 	DEF_NAMEBUF;
 
 
-	res = chk_mounted(fs, &path, &dj.fs, 0);
-	if (res == FR_OK) {
+//	res = chk_mounted(fs, &path, &dj.fs, 0);
+	dj.fs = fs;
+//	if (res == FR_OK) {
 		INIT_BUF(dj);
 		res = follow_path(&dj, path);	/* Follow the file path */
 		if (res == FR_OK) {				/* Follow completed */
@@ -3137,7 +3140,7 @@ FRESULT f_stat (
 				res = FR_INVALID_NAME;
 		}
 		FREE_BUF();
-	}
+//	}
 
 	LEAVE_FF(dj.fs, res);
 }
@@ -3152,21 +3155,21 @@ FRESULT f_stat (
 FRESULT f_getfree (
 	const TCHAR *path,	/* Path name of the logical drive number */
 	DWORD *nclst,		/* Pointer to a variable to return number of free clusters */
-	FATFS **fatfs		/* Pointer to return pointer to corresponding file system object */
+	FATFS *fs		/* Pointer to return pointer to corresponding file system object */
 )
 {
-	FRESULT res;
-	FATFS *fs;
+	FRESULT res = FR_OK;
+//	FATFS *fs;
 	DWORD n, clst, sect, stat;
 	UINT i;
 	BYTE fat, *p;
 
 
 	/* Get drive number */
-	res = chk_mounted(*fatfs, &path, fatfs, 0);
+//	res = chk_mounted(*fatfs, &path, fatfs, 0);
 //	res = FR_OK;
-	fs = *fatfs;
-	if (res == FR_OK) {
+
+//	if (res == FR_OK) {
 		/* If free_clust is valid, return it without full cluster scan */
 		if (fs->free_clust <= fs->n_fatent - 2) {
 			*nclst = fs->free_clust;
@@ -3206,7 +3209,7 @@ FRESULT f_getfree (
 			if (fat == FS_FAT32) fs->fsi_flag = 1;
 			*nclst = n;
 		}
-	}
+//	}
 	LEAVE_FF(fs, res);
 }
 
@@ -3276,8 +3279,9 @@ FRESULT f_unlink (
 	DWORD dclst;
 	DEF_NAMEBUF;
 
-	res = chk_mounted(fs, &path, &dj.fs, 1);
-	if (res == FR_OK) {
+//	res = chk_mounted(fs, &path, &dj.fs, 1);
+	dj.fs = fs;
+//	if (res == FR_OK) {
 		INIT_BUF(dj);
 		res = follow_path(&dj, path);		/* Follow the file path */
 		if (_FS_RPATH && res == FR_OK && (dj.fn[NS] & NS_DOT))
@@ -3322,7 +3326,7 @@ FRESULT f_unlink (
 			}
 		}
 		FREE_BUF();
-	}
+//	}
 
 	LEAVE_FF(dj.fs, res);
 }
@@ -3345,8 +3349,9 @@ FRESULT f_mkdir(
 	DWORD dsc, dcl, pcl, tm = get_fattime();
 	DEF_NAMEBUF;
 
-	res = chk_mounted(fs, &path, &dj.fs, 1);
-	if (res == FR_OK) {
+//	res = chk_mounted(fs, &path, &dj.fs, 1);
+	dj.fs = fs;
+//	if (res == FR_OK) {
 		INIT_BUF(dj);
 		res = follow_path(&dj, path);			/* Follow the file path */
 		if (res == FR_OK) res = FR_EXIST;		/* Any object with same name is already existing */
@@ -3395,7 +3400,7 @@ FRESULT f_mkdir(
 			}
 		}
 		FREE_BUF();
-	}
+//	}
 
 	LEAVE_FF(dj.fs, res);
 }
@@ -3419,8 +3424,9 @@ FRESULT f_chmod (
 	BYTE *dir;
 	DEF_NAMEBUF;
 
-	res = chk_mounted(fs, &path, &dj.fs, 1);
-	if (res == FR_OK) {
+//	res = chk_mounted(fs, &path, &dj.fs, 1);
+	dj.fs = fs;
+//	if (res == FR_OK) {
 		INIT_BUF(dj);
 		res = follow_path(&dj, path);		/* Follow the file path */
 		FREE_BUF();
@@ -3437,7 +3443,7 @@ FRESULT f_chmod (
 				res = sync_fs(dj.fs);
 			}
 		}
-	}
+//	}
 
 	LEAVE_FF(dj.fs, res);
 }
@@ -3461,8 +3467,9 @@ FRESULT f_utime (
 	DEF_NAMEBUF;
 
 
-	res = chk_mounted(fs, &path, &dj.fs, 1);
-	if (res == FR_OK) {
+//	res = chk_mounted(fs, &path, &dj.fs, 1);
+	dj.fs = fs;
+//	if (res == FR_OK) {
 		INIT_BUF(dj);
 		res = follow_path(&dj, path);	/* Follow the file path */
 		FREE_BUF();
@@ -3479,7 +3486,7 @@ FRESULT f_utime (
 				res = sync_fs(dj.fs);
 			}
 		}
-	}
+//	}
 
 	LEAVE_FF(dj.fs, res);
 }
@@ -3504,8 +3511,9 @@ FRESULT f_rename (
 	DEF_NAMEBUF;
 
 
-	res = chk_mounted(fs, &path_old, &djo.fs, 1);
-	if (res == FR_OK) {
+//	res = chk_mounted(fs, &path_old, &djo.fs, 1);
+	djo.fs = fs;
+//	if (res == FR_OK) {
 		djn.fs = djo.fs;
 		INIT_BUF(djo);
 		res = follow_path(&djo, path_old);		/* Check old object */
@@ -3555,7 +3563,7 @@ FRESULT f_rename (
 			}
 		}
 		FREE_BUF();
-	}
+//	}
 
 	LEAVE_FF(djo.fs, res);
 }

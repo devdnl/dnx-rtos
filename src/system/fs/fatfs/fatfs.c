@@ -50,6 +50,8 @@ struct fatdir {
 struct fatfs {
         FILE  *fsfile;
         FATFS  fatfs;
+        int    opened_files;
+        int    opened_dirs;
 };
 
 /*==============================================================================
@@ -97,17 +99,16 @@ stdret_t fatfs_init(void **fshdl, const char *src_path)
 
                 if (f_mount(hdl->fsfile, &hdl->fatfs) == FR_OK)
                         return STD_RET_OK;
-        }
 
 error:
-        if (hdl) {
                 if (hdl->fsfile) {
                         fclose(hdl->fsfile);
                 }
 
                 free(hdl);
         }
-        return STD_RET_OK;
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -122,7 +123,13 @@ error:
 //==============================================================================
 stdret_t fatfs_release(void *fshdl)
 {
-        (void)fshdl;
+        struct fatfs *hdl = fshdl;
+
+        if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
+                fclose(hdl->fsfile);
+                free(hdl);
+                return STD_RET_OK;
+        }
 
         return STD_RET_ERROR;
 }
@@ -364,6 +371,7 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 dir->items  = 0;
 
                 if (f_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
+                        hdl->opened_dirs++;
                         return STD_RET_OK;
                 }
 
@@ -386,10 +394,11 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
 //==============================================================================
 static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
 {
-        (void) fshdl;
+        struct fatfs *hdl = fshdl;
 
         if (dir->dd) {
                 free(dir->dd);
+                hdl->opened_dirs--;
         }
 
         return STD_RET_OK;
@@ -562,13 +571,13 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
         struct fatfs *hdl = fshdl;
 
         u32_t  free_clusters = 0;
-        FATFS *fatfs = &hdl->fatfs;
+//        FATFS *fatfs = &hdl->fatfs;
         struct vfs_stat fstat;
         fstat.st_size = 0;
 
         fstat(hdl->fsfile, &fstat);
 
-        if (f_getfree("/", &free_clusters, &fatfs) == FR_OK) {
+        if (f_getfree("/", &free_clusters, &hdl->fatfs) == FR_OK) {
                 statfs->f_bsize  = _MAX_SS;
                 statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
                 statfs->f_blocks = fstat.st_size / _MAX_SS;
@@ -578,10 +587,6 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
                 statfs->fsname   = "fatfs";
 
                 return STD_RET_OK;
-        }
-
-        if (statfs) {
-
         }
 
         return STD_RET_ERROR;

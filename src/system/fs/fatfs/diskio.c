@@ -40,7 +40,7 @@ DSTATUS disk_status(FILE *srcfile)
 
 DRESULT disk_read (FILE *srcfile, BYTE *buff, DWORD sector, BYTE count)
 {
-        fseek(srcfile, sector * _MAX_SS, SEEK_SET);
+        fseek(srcfile, (u64_t)sector * _MAX_SS, SEEK_SET);
         if (fread(buff, _MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {
