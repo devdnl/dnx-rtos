@@ -2073,7 +2073,10 @@ FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
 //	BYTE wmode			/* !=0: Check write protection for write access */
 )
 {
-	BYTE fmt, b, pi, *tbl;
+	BYTE fmt;
+	BYTE b;
+	BYTE pi;
+	BYTE *tbl;
 //	UINT vol;
 //	DSTATUS stat;
 	DWORD bsect, fasize, tsect, sysect, nclst, szbfat;
@@ -2129,16 +2132,17 @@ FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
 #endif
 	/* Search FAT partition on the drive. Supports only generic partitions, FDISK and SFD. */
 	fmt = check_fs(fs, bsect = 0);		/* Load sector 0 and check if it is an FAT-VBR (in SFD) */
-	if (LD2PT(vol) && !fmt) fmt = 1;	/* Force non-SFD if the volume is forced partition */
+//	if (LD2PT(vol) && !fmt) fmt = 1;	/* Force non-SFD if the volume is forced partition */
 	if (fmt == 1) {						/* Not an FAT-VBR, the physical drive can be partitioned */
-		/* Check the partition listed in the partition table */
-		pi = LD2PT(vol);
-		if (pi) pi--;
-		tbl = &fs->win[MBR_Table + pi * SZ_PTE];/* Partition table */
-		if (tbl[4]) {						/* Is the partition existing? */
-			bsect = LD_DWORD(&tbl[8]);		/* Partition offset in LBA */
-			fmt = check_fs(fs, bsect);		/* Check the partition */
-		}
+//		/* Check the partition listed in the partition table */
+//		pi = LD2PT(vol);
+//		if (pi) pi--;
+//		tbl = &fs->win[MBR_Table + pi * SZ_PTE];/* Partition table */
+//		if (tbl[4]) {						/* Is the partition existing? */
+//			bsect = LD_DWORD(&tbl[8]);		/* Partition offset in LBA */
+//			fmt = check_fs(fs, bsect);		/* Check the partition */
+//		}
+	        return FR_NO_FILESYSTEM;
 	}
 	if (fmt == 3) return FR_DISK_ERR;
 	if (fmt) return FR_NO_FILESYSTEM;		/* No FAT volume is found */
