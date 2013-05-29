@@ -150,11 +150,29 @@ stdret_t fatfs_release(void *fshdl)
 //==============================================================================
 stdret_t fatfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
-        (void)fshdl;
-        (void)fd;
-        (void)lseek;
-        (void)path;
-        (void)mode;
+        struct fatfs *hdl = fshdl;
+
+//        if (  strncmp("r", mode, 2) != 0 && strncmp("r+", mode, 2) != 0
+//           && strncmp("w", mode, 2) != 0 && strncmp("w+", mode, 2) != 0
+//           && strncmp("a", mode, 2) != 0 && strncmp("a+", mode, 2) != 0) {
+
+
+        BYTE fat_mode = 0;
+        if (strncmp("r",  mode, 2) == 0) {
+                fat_mode = FA_READ | FA_OPEN_EXISTING;
+        } else if (strncmp("r+", mode, 2) == 0) {
+                fat_mode = FA_READ | FA_WRITE | FA_OPEN_EXISTING;
+        } else if (strncmp("w",  mode, 2) == 0) {
+                fat_mode = FA_WRITE | FA_CREATE_ALWAYS;
+        } else if (strncmp("w+", mode, 2) == 0) {
+                fat_mode = FA_WRITE | FA_READ | FA_CREATE_ALWAYS;
+        } else if (strncmp("a",  mode, 2) == 0) {
+
+        } else if (strncmp("a+", mode, 2) == 0) {
+
+        }
+
+        f_open(&hdl->fatfs );
 
         return STD_RET_ERROR;
 }
@@ -174,6 +192,8 @@ stdret_t fatfs_close(void *fshdl, fd_t fd)
 {
         (void)fshdl;
         (void)fd;
+
+        /* TODO */
 
         return STD_RET_ERROR;
 }
@@ -201,6 +221,8 @@ size_t fatfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t ni
         (void)nitems;
         (void)lseek;
 
+        /* TODO */
+
         return STD_RET_ERROR;
 }
 
@@ -227,6 +249,8 @@ size_t fatfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u
         (void)nitems;
         (void)lseek;
 
+        /* TODO */
+
         return STD_RET_ERROR;
 }
 
@@ -250,6 +274,8 @@ stdret_t fatfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
         (void)iorq;
         (void)args;
 
+        /* not supported by this file system */
+
         return STD_RET_ERROR;
 }
 
@@ -268,6 +294,8 @@ stdret_t fatfs_flush(void *fshdl, fd_t fd)
 {
         (void)fshdl;
         (void)fd;
+
+        /* TODO */
 
         return STD_RET_ERROR;
 }
@@ -289,6 +317,8 @@ stdret_t fatfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
         (void)fshdl;
         (void)fd;
         (void)stat;
+
+        /* TODO */
 
         return STD_RET_ERROR;
 }
@@ -331,6 +361,8 @@ stdret_t fatfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
         (void)fshdl;
         (void)path;
         (void)drv_if;
+
+        /* not supported by this file system */
 
         return STD_RET_ERROR;
 }
@@ -499,6 +531,8 @@ stdret_t fatfs_chmod(void *fshdl, const char *path, int mode)
         (void)path;
         (void)mode;
 
+        /* TODO */
+
         return STD_RET_ERROR;
 }
 
@@ -521,6 +555,8 @@ stdret_t fatfs_chown(void *fshdl, const char *path, int owner, int group)
         (void)path;
         (void)owner;
         (void)group;
+
+        /* not supported by this file system */
 
         return STD_RET_ERROR;
 }
