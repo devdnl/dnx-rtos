@@ -182,7 +182,11 @@ stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
         if (strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) {
                 f_lseek(fat_file, f_size(fat_file));
                 *lseek = f_size(fat_file);
+        } else {
+                *lseek = 0;
         }
+
+        hdl->opened_files++;
 
         return STD_RET_OK;
 }
@@ -201,11 +205,15 @@ stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
 //==============================================================================
 stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
 {
-        (void)fshdl;
-        (void)extra;
         (void)fd;
 
-        /* TODO */
+        struct fatfs *hdl = fshdl;
+
+        FIL *fat_file = extra;
+        if (f_close(fat_file) == FR_OK) {
+                hdl->opened_files--;
+                return STD_RET_OK;
+        }
 
         return STD_RET_ERROR;
 }
@@ -228,16 +236,13 @@ stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
 size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
-        (void)extra;
         (void)fd;
-        (void)src;
-        (void)size;
-        (void)nitems;
-        (void)lseek;
 
-        /* TODO */
-
-        return STD_RET_ERROR;
+        FIL *fat_file = extra;
+        UINT n        = 0;
+        f_lseek(fat_file, (DWORD)lseek);
+        f_write(fat_file, src, size * nitems, &n);
+        return n;
 }
 
 //==============================================================================
@@ -258,16 +263,13 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
 size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
-        (void)extra;
         (void)fd;
-        (void)dst;
-        (void)size;
-        (void)nitems;
-        (void)lseek;
 
-        /* TODO */
-
-        return STD_RET_ERROR;
+        FIL *fat_file = extra;
+        UINT n        = 0;
+        f_lseek(fat_file, (DWORD)lseek);
+        f_read(fat_file, dst, size * nitems, &n);
+        return n;
 }
 
 //==============================================================================
@@ -312,12 +314,13 @@ stdret_t fatfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
 {
         (void)fshdl;
-        (void)extra;
         (void)fd;
 
-        /* TODO */
-
-        return STD_RET_ERROR;
+        FIL *fat_file = extra;
+        if (f_sync(fat_file) == FR_OK)
+                return STD_RET_OK;
+        else
+                return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -336,11 +339,15 @@ stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
 stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         (void)fshdl;
-        (void)extra;
         (void)fd;
-        (void)stat;
 
-        /* TODO */
+        FIL *fat_file  = extra;
+        stat->st_dev   = 0;
+        stat->st_gid   = 0;
+        stat->st_mode  = 0777;
+        stat->st_mtime = 0;
+        stat->st_size  = fat_file->fsize;
+        stat->st_uid   = 0;
 
         return STD_RET_ERROR;
 }
@@ -553,7 +560,7 @@ stdret_t fatfs_chmod(void *fshdl, const char *path, int mode)
         (void)path;
         (void)mode;
 
-        /* TODO */
+        /* not supported by this file system */
 
         return STD_RET_ERROR;
 }
@@ -597,14 +604,15 @@ stdret_t fatfs_chown(void *fshdl, const char *path, int owner, int group)
 //==============================================================================
 stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
-        (void)fshdl;
+        struct fatfs *hdl = fshdl;
 
-        if (path && stat) {
+        FILINFO file_info;
+        if (f_stat(&hdl->fatfs, path, &file_info) == FR_OK) {
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
-                stat->st_mode  = 0444;
-                stat->st_mtime = 0;
-                stat->st_size  = 0;
+                stat->st_mode  = 0777;
+                stat->st_mtime = file_info.ftime;
+                stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
 
                 return STD_RET_OK;
