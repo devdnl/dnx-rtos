@@ -176,8 +176,10 @@ stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
                 fat_mode = FA_WRITE | FA_READ | FA_OPEN_ALWAYS;
         }
 
-        if (f_open(&hdl->fatfs, fat_file, path, fat_mode) != FR_OK)
+        if (f_open(&hdl->fatfs, fat_file, path, fat_mode) != FR_OK) {
+                free(fat_file);
                 return STD_RET_ERROR;
+        }
 
         if (strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) {
                 f_lseek(fat_file, f_size(fat_file));
