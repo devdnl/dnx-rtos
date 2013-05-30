@@ -148,13 +148,13 @@ struct vfs_drv_interface {
 struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
-        stdret_t (*fs_open   )(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode);
-        stdret_t (*fs_close  )(void *fshdl, fd_t fd);
-        size_t   (*fs_write  )(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
-        size_t   (*fs_read   )(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek);
-        stdret_t (*fs_ioctl  )(void *fshdl, fd_t fd, int iroq, va_list args);
-        stdret_t (*fs_fstat  )(void *fshdl, fd_t fd, struct vfs_stat *stat);
-        stdret_t (*fs_flush  )(void *fshdl, fd_t fd);
+        stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, const char *mode);
+        stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd);
+        size_t   (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
+        size_t   (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek);
+        stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, va_list args);
+        stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct vfs_stat *stat);
+        stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path);
         stdret_t (*fs_mknod  )(void *fshdl, const char *path, struct vfs_drv_interface *drv_if);
         stdret_t (*fs_opendir)(void *fshdl, const char *path, dir_t *dir);

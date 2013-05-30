@@ -101,6 +101,7 @@ stdret_t appfs_release(void *fshdl)
  * @brief Function open selected file
  *
  * @param[in]  *fshdl           FS handle
+ * @param[out] **extra          file extra data (useful in FS wrappers)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
  * @param[in]  *path            file path
@@ -110,9 +111,10 @@ stdret_t appfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t appfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t appfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)lseek;
         (void)path;
@@ -126,15 +128,17 @@ stdret_t appfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const
  * @brief Function close file in LFS
  *
  * @param[in] *fshdl            FS handle
- * @param[in] fd                file descriptor
+ * @param[in] *extra            file extra data (useful in FS wrappers)
+ * @param[in]  fd               file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_close(void *fshdl, fd_t fd)
+stdret_t appfs_close(void *fshdl, void *extra, fd_t fd)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
 
         return STD_RET_ERROR;
@@ -145,6 +149,7 @@ stdret_t appfs_close(void *fshdl, fd_t fd)
  * @brief Function write data to the file
  *
  * @param[in] *fshdl            FS handle
+ * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
  * @param[in]  size             item size
@@ -154,9 +159,10 @@ stdret_t appfs_close(void *fshdl, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t appfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t appfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)src;
         (void)size;
@@ -171,6 +177,7 @@ size_t appfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t ni
  * @brief Function read from file data
  *
  * @param[in]  *fshdl           FS handle
+ * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
  * @param[in]   size            item size
@@ -180,9 +187,10 @@ size_t appfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t ni
  * @return number of read items
  */
 //==============================================================================
-size_t appfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t appfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)dst;
         (void)size;
@@ -197,6 +205,7 @@ size_t appfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u
  * @brief IO operations on files
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
  * @param[in,out]  args         additional arguments
@@ -205,9 +214,10 @@ size_t appfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
+stdret_t appfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)iorq;
         (void)args;
@@ -220,15 +230,17 @@ stdret_t appfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
  * @brief Function flush file data
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)`
  * @param[in]      fd           file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_flush(void *fshdl, fd_t fd)
+stdret_t appfs_flush(void *fshdl, void *extra, fd_t fd)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
 
         return STD_RET_ERROR;
@@ -239,16 +251,18 @@ stdret_t appfs_flush(void *fshdl, fd_t fd)
  * @brief Function returns file status
  *
  * @param[in]  *fshdl                FS handle
- * @param[in]  fd                    file descriptor
+ * @param[in]  *extra                file extra data (useful in FS wrappers)
+ * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
+stdret_t appfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)stat;
 

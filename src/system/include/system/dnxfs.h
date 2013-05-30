@@ -123,24 +123,24 @@ extern "C" {
 #undef  rewind
 #define rewind(FILE__pfile)                                             vfs_rewind(FILE__pfile)
 
-#define FILE_SYSTEM_INTERFACE(fsname)                                                \
-extern stdret_t fsname##_init   (void**, const char*);                               \
-extern stdret_t fsname##_release(void*);                                             \
-extern stdret_t fsname##_open   (void*, fd_t*, u64_t*, const char*, const char*);    \
-extern stdret_t fsname##_close  (void*, fd_t);                                       \
-extern size_t   fsname##_write  (void*, fd_t, const void*, size_t, size_t, u64_t);   \
-extern size_t   fsname##_read   (void*, fd_t, void*, size_t, size_t, u64_t);         \
-extern stdret_t fsname##_ioctl  (void*, fd_t, int, va_list);                         \
-extern stdret_t fsname##_mkdir  (void*, const char*);                                \
-extern stdret_t fsname##_mknod  (void*, const char*, struct vfs_drv_interface*);     \
-extern stdret_t fsname##_opendir(void*, const char*, dir_t*);                        \
-extern stdret_t fsname##_remove (void*, const char*);                                \
-extern stdret_t fsname##_rename (void*, const char*, const char*);                   \
-extern stdret_t fsname##_chmod  (void*, const char*, int);                           \
-extern stdret_t fsname##_chown  (void*, const char*, int, int);                      \
-extern stdret_t fsname##_stat   (void*, const char*, struct vfs_stat*);              \
-extern stdret_t fsname##_fstat  (void*, fd_t, struct vfs_stat*);                     \
-extern stdret_t fsname##_flush  (void*, fd_t);                                       \
+#define FILE_SYSTEM_INTERFACE(fsname)                                                    \
+extern stdret_t fsname##_init   (void**, const char*);                                   \
+extern stdret_t fsname##_release(void*);                                                 \
+extern stdret_t fsname##_open   (void*, void**, fd_t*, u64_t*, const char*, const char*);\
+extern stdret_t fsname##_close  (void*, void*, fd_t);                                    \
+extern size_t   fsname##_write  (void*, void*, fd_t, const void*, size_t, size_t, u64_t);\
+extern size_t   fsname##_read   (void*, void*, fd_t, void*, size_t, size_t, u64_t);      \
+extern stdret_t fsname##_ioctl  (void*, void*, fd_t, int, va_list);                      \
+extern stdret_t fsname##_fstat  (void*, void*, fd_t, struct vfs_stat*);                  \
+extern stdret_t fsname##_flush  (void*, void*, fd_t);                                    \
+extern stdret_t fsname##_mkdir  (void*, const char*);                                    \
+extern stdret_t fsname##_mknod  (void*, const char*, struct vfs_drv_interface*);         \
+extern stdret_t fsname##_opendir(void*, const char*, dir_t*);                            \
+extern stdret_t fsname##_remove (void*, const char*);                                    \
+extern stdret_t fsname##_rename (void*, const char*, const char*);                       \
+extern stdret_t fsname##_chmod  (void*, const char*, int);                               \
+extern stdret_t fsname##_chown  (void*, const char*, int, int);                          \
+extern stdret_t fsname##_stat   (void*, const char*, struct vfs_stat*);                  \
 extern stdret_t fsname##_statfs (void*, struct vfs_statfs*)
 
 /*==============================================================================

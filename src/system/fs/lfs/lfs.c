@@ -717,15 +717,18 @@ stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
  * @brief Function returns file status
  *
  * @param[in]  *fshdl                FS handle
- * @param[in]  fd                    file descriptor
+ * @param[in]  *extra                file extra data (useful in FS wrappers)
+ * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
+stdret_t lfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
+        (void)extra;
+
         struct LFS_data *lfs = fshdl;
         struct opened_file_info *opened_file;
 
@@ -795,6 +798,7 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
  * @brief Function open selected file
  *
  * @param[in]  *fshdl           FS handle
+ * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
  * @param[in]  *path            file path
@@ -804,8 +808,10 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t lfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t lfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
+        (void) extra;
+
         struct LFS_data *lfs = fshdl;
         node_t *node;
         node_t *base_node;
@@ -917,14 +923,17 @@ error:
  * @brief Function close file in LFS
  *
  * @param[in] *fshdl            FS handle
- * @param[in] fd                file descriptor
+ * @param[in] *extra            file extra data (useful in FS wrappers)
+ * @param[in]  fd               file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_close(void *fshdl, fd_t fd)
+stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
 {
+        (void) extra;
+
         struct LFS_data          *lfs   = fshdl;
         stdret_t                 status = STD_RET_ERROR;
         node_t                   *node;
@@ -1002,6 +1011,7 @@ stdret_t lfs_close(void *fshdl, fd_t fd)
  * @brief Function write data to the file
  *
  * @param[in] *fshdl            FS handle
+ * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
  * @param[in]  size             item size
@@ -1011,8 +1021,10 @@ stdret_t lfs_close(void *fshdl, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t lfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
+        (void) extra;
+
         struct LFS_data *lfs = fshdl;
         struct vfs_drv_interface *drv_if;
         struct opened_file_info  *opened_file;
@@ -1088,6 +1100,7 @@ size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nite
  * @brief Function read from file data
  *
  * @param[in]  *fshdl           FS handle
+ * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
  * @param[in]   size            item size
@@ -1097,8 +1110,10 @@ size_t lfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nite
  * @return number of read items
  */
 //==============================================================================
-size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t lfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
+        (void) extra;
+
         struct LFS_data *lfs = fshdl;
         struct vfs_drv_interface *drv_if;
         struct opened_file_info  *opened_file;
@@ -1165,6 +1180,7 @@ size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64
  * @brief IO operations on files
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
  * @param[in,out]  args         additional arguments
@@ -1173,8 +1189,10 @@ size_t lfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
+stdret_t lfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 {
+        (void) extra;
+
         struct LFS_data *lfs = fshdl;
         struct opened_file_info  *opened_file;
         struct vfs_drv_interface *drv_if;
@@ -1214,14 +1232,17 @@ stdret_t lfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
  * @brief Function flush file data
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_flush(void *fshdl, fd_t fd)
+stdret_t lfs_flush(void *fshdl, void *extra, fd_t fd)
 {
+        (void)extra;
+
         struct LFS_data *lfs = fshdl;
         struct opened_file_info  *opened_file;
         struct vfs_drv_interface *drv_if;

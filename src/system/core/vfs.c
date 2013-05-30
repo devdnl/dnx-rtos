@@ -53,23 +53,24 @@ extern "C" {
 /** file type */
 struct vfs_file
 {
-        void     *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, fd_t fd);
-        size_t   (*f_write)(void *FS_hdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
-        size_t   (*f_read )(void *FS_hdl, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
-        stdret_t (*f_ioctl)(void *FS_hdl, fd_t fd, int iorq, va_list);
-        stdret_t (*f_stat )(void *FS_hdl, fd_t fd, struct vfs_stat *stat);
-        stdret_t (*f_flush)(void *FS_hdl, fd_t fd);
-        fd_t     fd;
-        u64_t    f_lseek;
+        void      *FS_hdl;
+        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd);
+        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
+        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
+        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, va_list);
+        stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
+        stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
+        void      *f_extra_data;
+        fd_t       fd;
+        u64_t      f_lseek;
 };
 
 struct FS_data {
           char                          *mount_point;
           struct FS_data                *base_FS;
           void                          *handle;
-          struct vfs_FS_interface       interface;
-          u8_t                          mounted_FS_counter;
+          struct vfs_FS_interface        interface;
+          u8_t                           mounted_FS_counter;
 };
 
 enum path_correction {
@@ -734,7 +735,8 @@ FILE *vfs_fopen(const char *path, const char *mode)
                         goto vfs_open_error;
                 }
 
-                if (fs->interface.fs_open(fs->handle, &file->fd, &file->f_lseek,
+                if (fs->interface.fs_open(fs->handle, &file->f_extra_data,
+                                          &file->fd,  &file->f_lseek,
                                           external_path, mode) == STD_RET_OK) {
 
                         file->FS_hdl  = fs->handle;
@@ -797,7 +799,7 @@ int vfs_fclose(FILE *file)
 {
         if (file) {
                 if (file->f_close) {
-                        if (file->f_close(file->FS_hdl, file->fd) == STD_RET_OK) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK) {
                                 free(file);
                                 return 0;
                         }
@@ -826,7 +828,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_write) {
-                        n = file->f_write(file->FS_hdl, file->fd, ptr, size,
+                        n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
                                           nitems, file->f_lseek);
                         file->f_lseek += n * size;
                 }
@@ -854,7 +856,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_read) {
-                        n = file->f_read(file->FS_hdl, file->fd, ptr, size,
+                        n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
                                          nitems, file->f_lseek);
                         file->f_lseek += n * size;
                 }
@@ -941,7 +943,7 @@ int vfs_ioctl(FILE *file, int rq, ...)
         }
 
         va_start(args, rq);
-        status = file->f_ioctl(file->FS_hdl, file->fd, rq, args);
+        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, args);
         va_end(args);
 
         return status;
@@ -967,7 +969,7 @@ int vfs_fstat(FILE *file, struct vfs_stat *stat)
                 return -1;
         }
 
-        return file->f_stat(file->FS_hdl, file->fd, stat) == STD_RET_OK ? 0 : -1;
+        return file->f_stat(file->FS_hdl, file->f_extra_data, file->fd, stat) == STD_RET_OK ? 0 : -1;
 }
 
 //==============================================================================
@@ -989,7 +991,7 @@ int vfs_fflush(FILE *file)
                 return -1;
         }
 
-        return file->f_flush(file->FS_hdl, file->fd) == STD_RET_OK ? 0 : -1;
+        return file->f_flush(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK ? 0 : -1;
 }
 
 //==============================================================================

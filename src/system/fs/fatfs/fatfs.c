@@ -139,6 +139,7 @@ stdret_t fatfs_release(void *fshdl)
  * @brief Function open selected file
  *
  * @param[in]  *fshdl           FS handle
+ * @param[out] *extra           file extra data (useful in FS wrappers)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
  * @param[in]  *path            file path
@@ -148,14 +149,17 @@ stdret_t fatfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t fatfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
+        (void)fd;
+
         struct fatfs *hdl = fshdl;
 
-//        if (  strncmp("r", mode, 2) != 0 && strncmp("r+", mode, 2) != 0
-//           && strncmp("w", mode, 2) != 0 && strncmp("w+", mode, 2) != 0
-//           && strncmp("a", mode, 2) != 0 && strncmp("a+", mode, 2) != 0) {
+        FIL *fat_file = calloc(1, sizeof(FIL));
+        if (!fat_file)
+                return STD_RET_ERROR;
 
+        *extra = fat_file;
 
         BYTE fat_mode = 0;
         if (strncmp("r",  mode, 2) == 0) {
@@ -167,14 +171,20 @@ stdret_t fatfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const
         } else if (strncmp("w+", mode, 2) == 0) {
                 fat_mode = FA_WRITE | FA_READ | FA_CREATE_ALWAYS;
         } else if (strncmp("a",  mode, 2) == 0) {
-
+                fat_mode = FA_WRITE | FA_OPEN_ALWAYS;
         } else if (strncmp("a+", mode, 2) == 0) {
-
+                fat_mode = FA_WRITE | FA_READ | FA_OPEN_ALWAYS;
         }
 
-        f_open(&hdl->fatfs );
+        if (f_open(&hdl->fatfs, fat_file, path, fat_mode) != FR_OK)
+                return STD_RET_ERROR;
 
-        return STD_RET_ERROR;
+        if (strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) {
+                f_lseek(fat_file, f_size(fat_file));
+                *lseek = f_size(fat_file);
+        }
+
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -182,15 +192,17 @@ stdret_t fatfs_open(void *fshdl, fd_t *fd, u64_t *lseek, const char *path, const
  * @brief Function close file in LFS
  *
  * @param[in] *fshdl            FS handle
- * @param[in] fd                file descriptor
+ * @param[in] *extra            file extra data (useful in FS wrappers)
+ * @param[in]  fd               file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_close(void *fshdl, fd_t fd)
+stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
 
         /* TODO */
@@ -203,6 +215,7 @@ stdret_t fatfs_close(void *fshdl, fd_t fd)
  * @brief Function write data to the file
  *
  * @param[in] *fshdl            FS handle
+ * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
  * @param[in]  size             item size
@@ -212,9 +225,10 @@ stdret_t fatfs_close(void *fshdl, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t fatfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)src;
         (void)size;
@@ -231,6 +245,7 @@ size_t fatfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t ni
  * @brief Function read from file data
  *
  * @param[in]  *fshdl           FS handle
+ * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
  * @param[in]   size            item size
@@ -240,9 +255,10 @@ size_t fatfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t ni
  * @return number of read items
  */
 //==============================================================================
-size_t fatfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)dst;
         (void)size;
@@ -259,6 +275,7 @@ size_t fatfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u
  * @brief IO operations on files
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
  * @param[in,out]  args         additional arguments
@@ -267,9 +284,10 @@ size_t fatfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, u
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
+stdret_t fatfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)iorq;
         (void)args;
@@ -284,15 +302,17 @@ stdret_t fatfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
  * @brief Function flush file data
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_flush(void *fshdl, fd_t fd)
+stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
 
         /* TODO */
@@ -305,16 +325,18 @@ stdret_t fatfs_flush(void *fshdl, fd_t fd)
  * @brief Function returns file status
  *
  * @param[in]  *fshdl                FS handle
- * @param[in]  fd                    file descriptor
+ * @param[in]  *extra                file extra data (useful in FS wrappers)
+ * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
+stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)stat;
 
