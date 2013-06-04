@@ -60,7 +60,7 @@ GLOBAL_VARIABLES {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(cat, STACK_DEPTH_VERY_LOW);
+PROGRAM_PARAMS(cat, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -112,7 +112,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
                                         break;
                                 }
 
-                                if (strchr(data, '\n') != NULL) {
+                                if (data[n - 1] == '\n') {
                                         printf("%s", data);
                                 } else {
                                         printf("%s\n", data);

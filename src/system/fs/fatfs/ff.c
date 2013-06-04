@@ -2318,7 +2318,8 @@ FRESULT f_open (
 
 
 	if (!fp) return FR_INVALID_OBJECT;
-	fp->fs = 0;			/* Clear file object */
+//	fp->fs = 0;			/* Clear file object */
+	fp->fs = fs;
 
 #if !_FS_READONLY
 	mode &= FA_READ | FA_WRITE | FA_CREATE_ALWAYS | FA_OPEN_ALWAYS | FA_CREATE_NEW;
@@ -2424,7 +2425,9 @@ FRESULT f_open (
 #if _USE_FASTSEEK
 			fp->cltbl = 0;						/* Normal seek mode */
 #endif
-			fp->fs = dj.fs; fp->id = dj.fs->id;	/* Validate file object */
+			/* Validate file object */
+			fp->fs = dj.fs;
+			fp->id = dj.fs->id;
 		}
 //	}
 

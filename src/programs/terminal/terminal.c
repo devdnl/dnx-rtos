@@ -628,7 +628,7 @@ static enum cmd_status cmd_uptime(char *arg)
         u32_t uhrs   = (uptime / 3600) % 24;
         u32_t umins  = (uptime / 60) % 60;
 
-        printf("up %ud %u2:%u2\n", udays, uhrs, umins);
+        printf("up %ud %2u:%2u\n", udays, uhrs, umins);
 
         return CMD_STATUS_EXECUTED;
 }

@@ -351,7 +351,7 @@ stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
         stat->st_size  = fat_file->fsize;
         stat->st_uid   = 0;
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
