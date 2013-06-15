@@ -79,7 +79,7 @@ extern "C" {
 #define get_used_memory_by_programs()                           sysm_get_used_program_memory()
 #define get_module_memory_usage(uint__modid)                    sysm_get_module_used_memory(uint__modid)
 #define get_module_name(uint__modid)                            regdrv_get_module_name(uint__modid)
-#define get_module_count()                                      REGDRV_NUMBER_OF_REGISTERED_MODULES
+#define get_number_of_modules()                                 REGDRV_NUMBER_OF_REGISTERED_MODULES
 
 /*==============================================================================
   Exported types, enums definitions

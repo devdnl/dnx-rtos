@@ -76,8 +76,8 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
         int status = EXIT_SUCCESS;
 
         if (argc == 1) {
-                printf("Usage: cat [file]\n");
-                return STD_RET_ERROR;
+                printf("Usage: %s <file>\n", argv[0]);
+                return EXIT_FAILURE;
         }
 
         u32_t col = 80;
@@ -101,28 +101,15 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
                 FILE *file = fopen(global->filepath, "r");
 
                 if (file) {
-                        fseek(file, 0, SEEK_END);
-                        i32_t filesize = ftell(file);
-                        fseek(file, 0, SEEK_SET);
-
-                        while (filesize > 0) {
-                                i32_t n = fread(data, sizeof(char), col, file);
-
-                                if (n == 0) {
-                                        break;
+                        while (fgets(data, col, file)) {
+                                for (uint i = 0; i < strlen(data); i++) {
+                                        if (data[i] < ' ' && data[i] != '\n') {
+                                                data[i] = ' ';
+                                        }
                                 }
 
-                                if (data[n - 1] == '\n') {
-                                        printf("%s", data);
-                                } else {
-                                        printf("%s\n", data);
-                                }
-
-                                memset(data, 0, col + 1);
-
-                                filesize -= n;
+                                fputs(data, stdout);
                         }
-
                         fclose(file);
                 } else {
                         printf("No such file or file is protected\n");

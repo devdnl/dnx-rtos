@@ -50,31 +50,33 @@ extern "C" {
 #undef malloc
 
 /** STANDART STACK SIZES */
-#define STACK_DEPTH_MINIMAL                             (1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_VERY_LOW                            (2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_LOW                                 (4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_MEDIUM                              (6  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_LARGE                               (8  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_VERY_LARGE                          (10 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_HUGE                                (12 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
-#define STACK_DEPTH_VERY_HUGE                           (14 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_MINIMAL                                     (1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_VERY_LOW                                    (2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_LOW                                         (4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_MEDIUM                                      (6  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_LARGE                                       (8  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_VERY_LARGE                                  (10 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_HUGE                                        (12 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_VERY_HUGE                                   (14 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 
 /** OS BASIC DEFINITIONS */
-#define THIS_TASK                                       NULL
-#define OS_OK                                           pdTRUE
-#define OS_NOT_OK                                       pdFALSE
+#define THIS_TASK                                               NULL
+#define OS_OK                                                   pdTRUE
+#define OS_NOT_OK                                               pdFALSE
 
 /** MUTEX AND SEMAPHORES DEFINITIONS */
-#define MUTEX_LOCKED                                    OS_OK
-#define SEMAPHORE_TAKEN                                 OS_OK
-#define MAX_DELAY                                       portMAX_DELAY
+#define MUTEX_LOCKED                                            OS_OK
+#define SEMAPHORE_TAKEN                                         OS_OK
+#define MAX_DELAY                                               portMAX_DELAY
 
 /** OS kernel control functions */
-#define start_task_scheduler()                          vTaskStartScheduler()
+#define start_task_scheduler()                                  vTaskStartScheduler()
 
 /** CALCULATIONS */
-#define PRIORITY(prio)                                  (prio + (configMAX_PRIORITIES / 2))
-#define MS2TICK(ms)                                     ms <= (configTICK_RATE_HZ/1000) ? 1 : ms/(configTICK_RATE_HZ/1000)
+#define PRIORITY(prio)                                          (prio + (configMAX_PRIORITIES / 2))
+#define MS2TICK(ms)                                             ms <= (configTICK_RATE_HZ/1000) ? 1 : ms/(configTICK_RATE_HZ/1000)
+#define LOWEST_PRIORITY                                         (-(int)(configMAX_PRIORITIES / 2))
+#define HIGHEST_PRIORITY                                        (configMAX_PRIORITIES / 2)
 
 /** TASK LEVEL DEFINITIONS */
 #define new_task(void__pfunc, const_char__pname, uint__stack_depth, void__pargv) kwrap_new_task(void__pfunc, const_char__pname, uint__stack_depth, void__pargv)
@@ -90,17 +92,18 @@ extern "C" {
 #define resume_task(task_t__ptaskhdl)                           vTaskResume(task_t__ptaskhdl)
 #define resume_task_from_ISR(task_t__ptaskhdl)                  xTaskResumeFromISR(task_t__ptaskhdl)
 #define yield_task()                                            taskYIELD()
-#define enter_critical()                                        taskENTER_CRITICAL()
-#define exit_critical()                                         taskEXIT_CRITICAL()
+#define enter_critical_section()                                taskENTER_CRITICAL()
+#define exit_critical_section()                                 taskEXIT_CRITICAL()
 #define disable_ISR()                                           taskDISABLE_INTERRUPTS()
 #define enable_ISR()                                            taskENABLE_INTERRUPTS()
 #define get_tick_counter()                                      xTaskGetTickCount()
 #define get_task_name(task_t__ptaskhdl)                         (char*)pcTaskGetTaskName(task_t__ptaskhdl)
 #define get_this_task_name()                                    (char*)pcTaskGetTaskName(THIS_TASK)
 #define get_task_handle()                                       xTaskGetCurrentTaskHandle()
-#define get_task_priority(task_t__ptaskhdl)                     (i16_t)(uxTaskPriorityGet(task_t__ptaskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
+#define get_task_priority(task_t__ptaskhdl)                     (int)(uxTaskPriorityGet(task_t__ptaskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
 #define set_task_priority(task_t__ptaskhdl, int__priority)      vTaskPrioritySet(task_t__ptaskhdl, PRIORITY(int__priority))
 #define set_priority(int__priority)                             vTaskPrioritySet(THIS_TASK, PRIORITY(int__priority))
+#define get_priority()                                          (int)(uxTaskPriorityGet(THIS_TASK) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2))
 #define get_free_stack()                                        uxTaskGetStackHighWaterMark(THIS_TASK)
 #define get_task_free_stack(task_t__ptaskhdl)                   uxTaskGetStackHighWaterMark(task_t__ptaskhdl)
 #define get_number_of_tasks()                                   uxTaskGetNumberOfTasks()

@@ -99,7 +99,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                 u32_t uhrs   = (uptime / 3600) % 24;
                 u32_t umins  = (uptime / 60) % 60;
 
-                printf("Up time: %ud %u2:%u2\n", udays, uhrs, umins);
+                printf("Up time: %ud %2u:%2u\n", udays, uhrs, umins);
 
                 printf("Memory:\t%u total,\t%u used,\t%u free\n",
                        get_memory_size(),

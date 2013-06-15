@@ -87,10 +87,8 @@ MODULE_NAME(SDSPI);
 #define disbale_ISR_when_error()                        SDSPI_PORT->CR2 &= ~SPI_CR2_ERRIE
 #define enable_SS_output_in_master_mode()               SDSPI_PORT->CR2 |=  SPI_CR2_SSOE
 #define disable_SS_output_in_master_mode()              SDSPI_PORT->CR2 &= ~SPI_CR2_SSOE
-#define enable_Tx_DMA()                                 SDSPI_PORT->CR2 |=  SPI_CR2_TXDMAEN
-#define disable_Tx_DMA()                                SDSPI_PORT->CR2 &= ~SPI_CR2_TXDMAEN
-#define enable_Rx_DMA()                                 SDSPI_PORT->CR2 |=  SPI_CR2_RXDMAEN
-#define disable_Rx_DMA()                                SDSPI_PORT->CR2 &= ~SPI_CR2_RXDMAEN
+#define enable_Tx_Rx_DMA()                              SDSPI_PORT->CR2 |=  SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN
+#define disable_Tx_Rx_DMA()                             SDSPI_PORT->CR2 &= ~(SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN)
 
 #define is_busy()                                       (SDSPI_PORT->SR & SPI_SR_BSY)
 #define is_overrun()                                    (SDSPI_PORT->SR & SPI_SR_OVR)
@@ -181,7 +179,7 @@ struct sdspi_data {
         mutex_t         *card_protect_mtx;
         struct partition partition[4];
 #if (SDSPI_ENABLE_DMA != 0)
-        task_t          *DMA_host_task;
+        volatile bool    DMA_tansaction_finished;
 #endif
 };
 
@@ -267,7 +265,25 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         enable_8_bit_data_frame();
         enable_software_slave_management();
         transmit_MSB_first();
+
+#if   (SDSPI_PERIPERAL_DIVIDER <=   2)
+        set_baud_rate(FPCLK_DIV_2);
+#elif (SDSPI_PERIPERAL_DIVIDER <=   4)
         set_baud_rate(FPCLK_DIV_4);
+#elif (SDSPI_PERIPERAL_DIVIDER <=   8)
+        set_baud_rate(FPCLK_DIV_8);
+#elif (SDSPI_PERIPERAL_DIVIDER <=  16)
+        set_baud_rate(FPCLK_DIV_16);
+#elif (SDSPI_PERIPERAL_DIVIDER <=  32)
+        set_baud_rate(FPCLK_DIV_32);
+#elif (SDSPI_PERIPERAL_DIVIDER <=  64)
+        set_baud_rate(FPCLK_DIV_64);
+#elif (SDSPI_PERIPERAL_DIVIDER <= 128)
+        set_baud_rate(FPCLK_DIV_128);
+#else
+        set_baud_rate(FPCLK_DIV_256);
+#endif
+
         enable_master_mode();
         set_clock_polarity_to_0_when_idle();
         capture_on_first_edge();
@@ -316,13 +332,13 @@ stdret_t SDSPI_release(void *drvhdl)
         }
 
         lock_mutex(hdl->card_protect_mtx, MAX_DELAY);
-        enter_critical();
+        enter_critical_section();
         unlock_mutex(hdl->card_protect_mtx);
         delete_mutex(hdl->card_protect_mtx);
         fclose(hdl->gpio_file);
         turn_off_SPI_clock();
         free(hdl);
-        exit_critical();
+        exit_critical_section();
 
         return STD_RET_OK;
 }
@@ -896,11 +912,12 @@ static bool receive_data_block(u8_t *buff)
         SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
         SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_DIR | DMA_CCR1_EN;
 
-        enable_Tx_DMA();
-        enable_Rx_DMA();
+        sdspi_data->DMA_tansaction_finished = false;
 
-        sdspi_data->DMA_host_task = get_task_handle();
-        suspend_this_task();
+        enable_Tx_Rx_DMA();
+
+        while (sdspi_data->DMA_tansaction_finished == false);
+
 #else
         /* memory alignment */
         int size = SECTOR_SIZE;
@@ -951,11 +968,12 @@ static bool transmit_data_block(const u8_t *buff, u8_t token)
                 SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
                 SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_DIR | DMA_CCR1_EN;
 
-                enable_Tx_DMA();
-                enable_Rx_DMA();
+                sdspi_data->DMA_tansaction_finished = false;
 
-                sdspi_data->DMA_host_task = get_task_handle();
-                suspend_this_task();
+                enable_Tx_Rx_DMA();
+
+                while (sdspi_data->DMA_tansaction_finished == false);
+
 #else
                 int size = SECTOR_SIZE;
                 do {
@@ -1190,7 +1208,7 @@ static size_t write_partial_sectors(struct sdspi_data *hdl, const void *src, siz
 //==============================================================================
 static stdret_t initialize_card(struct sdspi_data *hdl)
 {
-#include "core/io.h" /* FIXME -- niepotrzebne */
+#include "core/io.h" /* DNLFIXME -- niepotrzebne */
         ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         for (int n = 0; n < 10; n++) {
                 spi_rw(0xFF);
@@ -1412,9 +1430,7 @@ static size_t card_write(struct sdspi_data *hdl, const void *src, size_t size, s
 #if (SDSPI_ENABLE_DMA != 0)
 void SDSPI_DMA_ISR(void)
 {
-        disable_Rx_DMA();
-        disable_Tx_DMA();
-
+        disable_Tx_Rx_DMA();
         SDSPI_DMA_RX_CHANNEL->CCR = 0x00;
         SDSPI_DMA_TX_CHANNEL->CCR = 0x00;
 
@@ -1422,9 +1438,7 @@ void SDSPI_DMA_ISR(void)
 
         SDSPI_DMA->IFCR = DMA_IFCR_CTCIF1 << (4 * (SDSPI_DMA_RX_CHANNEL_NO - 1));
 
-        if (resume_task_from_ISR(sdspi_data->DMA_host_task) == pdTRUE) {
-                yield_task();
-        }
+        sdspi_data->DMA_tansaction_finished = true;
 }
 #endif
 

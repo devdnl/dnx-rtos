@@ -668,7 +668,7 @@ int io_getc(FILE *stream)
                 return EOF;
         }
 
-        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
+        while (!vfs_feof(stream) && vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
                 if (dcnt >= 60000) {
                         sleep_ms(200);
                 } else if (dcnt >= 5000) {
@@ -705,8 +705,11 @@ char *io_fgets(char *str, int size, FILE *stream)
 
                 if (str[i] == (char)EOF && i == 0) {
                         return NULL;
-                } else if (str[i] == '\n' || str[i] == (char)EOF) {
+                } else if (str[i] == '\n') {
                         str[i + 1] = '\0';
+                        break;
+                } else if (str[i] == (char)EOF) {
+                        str[i] = '\0';
                         break;
                 }
         }

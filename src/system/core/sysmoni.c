@@ -324,10 +324,10 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
                 goto exit_error;
         }
 
-        enter_critical();
+        enter_critical_section();
         stat->cpu_usage = _get_task_data(taskhdl)->f_cpu_usage;
         _get_task_data(taskhdl)->f_cpu_usage = 0;
-        exit_critical();
+        exit_critical_section();
 
         stat->free_stack   = get_task_free_stack(taskhdl);
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)

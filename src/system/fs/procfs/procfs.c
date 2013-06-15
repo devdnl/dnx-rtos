@@ -160,12 +160,12 @@ stdret_t procfs_release(void *fshdl)
         }
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
-        enter_critical();
+        enter_critical_section();
         unlock_mutex(procmem->resource_mtx);
         delete_mutex(procmem->resource_mtx);
         delete_list(procmem->file_list);
         free(procmem);
-        exit_critical();
+        exit_critical_section();
 
         return STD_RET_OK;
 }

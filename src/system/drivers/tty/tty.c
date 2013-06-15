@@ -72,11 +72,11 @@ MODULE_NAME(TTY);
 /* independent TTY device */
 struct tty_data {
         char    *line[TTY_MAX_LINES];
-        u8_t    write_index;
-        u8_t    new_msg_counter;
-        flag_t  refresh_last_line;
+        u8_t     write_index;
+        u8_t     new_msg_counter;
+        flag_t   refresh_last_line;
         mutex_t *secure_resources_mtx;
-        flag_t  echo_enabled;
+        flag_t   echo_enabled;
 
         /* FIFO for keyboard read */
         struct input_stream {
@@ -86,9 +86,10 @@ struct tty_data {
                 u16_t rxidx;
         } input;
 
-        char edit_line[TTY_EDIT_LINE_LEN + 1];
-        uint edit_line_length;
-        uint cursor_position;
+        char  edit_line[TTY_EDIT_LINE_LEN + 1];
+        uint  edit_line_length;
+        uint  cursor_position;
+        u32_t file_size;
 
         u8_t device_number;
 };
@@ -138,8 +139,9 @@ static void  refresh_last_line(struct tty_data *tty, FILE *stream);
 static void  stdin_service(struct tty_data *tty, FILE *stream);
 static void  switch_tty_immediately(u8_t tty_number, FILE *stream);
 static void  clear_tty(struct tty_data *tty);
+static char *new_CRLF_message(const char *msg, uint msg_len);
+static char *merge_or_create_message(struct tty_data *tty, const char *msg_src);
 static void  add_message(struct tty_data *tty, const char *msg, uint msg_len);
-static char *merge_or_create_message(struct tty_data *tty, const char *msg_src, uint msg_len);
 static void  strncpy_LF2CRLF(char *dst, const char *src, uint n);
 static void  link_message(struct tty_data *tty, char *msg);
 static void  inc_message_counter(struct tty_data *tty);
@@ -216,6 +218,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
         tty->echo_enabled  = SET;
         tty_ctrl->tty[dev] = tty;
         tty->device_number = dev;
+        tty->file_size     = 1;
         *drvhdl            = tty;
         return STD_RET_OK;
 
@@ -267,11 +270,11 @@ stdret_t TTY_release(void *drvhdl)
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 clear_tty(tty);
-                enter_critical();
+                enter_critical_section();
                 unlock_recursive_mutex(tty->secure_resources_mtx);
                 delete_recursive_mutex(tty->secure_resources_mtx);
                 tty_ctrl->tty[tty->device_number] = NULL;
-                exit_critical();
+                exit_critical_section();
                 free(tty);
                 return STD_RET_OK;
         } else {
@@ -361,6 +364,7 @@ size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_
                 add_message(tty, src, nitems);
 
                 n = nitems;
+                tty->file_size += n;
 
                 unlock_recursive_mutex(tty->secure_resources_mtx);
         }
@@ -403,6 +407,7 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek
                 }
 
                 n /= size;
+                tty->file_size += n;
 
                 unlock_recursive_mutex(tty->secure_resources_mtx);
         }
@@ -526,8 +531,9 @@ stdret_t TTY_flush(void *drvhdl)
 //==============================================================================
 stdret_t TTY_info(void *drvhdl, struct vfs_dev_info *info)
 {
-        (void) drvhdl;
-        info->st_size = 0;
+        struct tty_data *tty = drvhdl;
+
+        info->st_size = tty->file_size;
         return STD_RET_OK;
 }
 
@@ -961,6 +967,34 @@ static void clear_tty(struct tty_data *tty)
 
 //==============================================================================
 /**
+ * @brief Convert \n to \r\n in the message
+ *
+ * @param[in] *msg      message data
+ * @param[in]  msg_len  message length
+ *
+ * @return pointer to corrected message
+ */
+//==============================================================================
+static char *new_CRLF_message(const char *msg, uint msg_len)
+{
+        /* calculate how many '\n' exist in string */
+        uint LF_count = 0;
+        for (uint i = 0; i < msg_len; i++) {
+                if (msg[i] == '\n') {
+                        LF_count++;
+                }
+        }
+
+        char *new_msg = malloc(msg_len + (2 * LF_count) + 1);
+        if (new_msg) {
+                strncpy_LF2CRLF(new_msg, msg, msg_len + (2 * LF_count) + 1);
+        }
+
+        return new_msg;
+}
+
+//==============================================================================
+/**
  * @brief Add new message or modify existing
  *
  * @param *tty          terminal address
@@ -970,14 +1004,16 @@ static void clear_tty(struct tty_data *tty)
 //==============================================================================
 static void add_message(struct tty_data *tty, const char *msg, uint msg_len)
 {
-        char *new_msg;
-
         if (!msg_len || !msg) {
                 return;
         }
 
-        new_msg = merge_or_create_message(tty, msg, msg_len);
-        link_message(tty, new_msg);
+        char *crlf_msg = new_CRLF_message(msg, msg_len);
+        if (crlf_msg) {
+                char *new_msg = merge_or_create_message(tty, crlf_msg);
+                link_message(tty, new_msg);
+                free(crlf_msg);
+        }
 
         give_counting_semaphore(tty_ctrl->stdout_semcnt);
 }
@@ -998,24 +1034,21 @@ static void add_message(struct tty_data *tty, const char *msg, uint msg_len)
  * @return pointer to new message buffer
  */
 //==============================================================================
-static char *merge_or_create_message(struct tty_data *tty, const char *msg_src, uint msg_len)
+static char *merge_or_create_message(struct tty_data *tty, const char *msg_src)
 {
-        char   *msg;
+        char   *msg         = NULL;
         char   *lst_msg     = tty->line[get_message_index(tty, 1)];
         size_t  lst_msg_len = strlen(lst_msg);
-        uint    LF_count    = 0;
-
-        /* calculate how many '\n' exist in string */
-        for (uint i = 0; i < msg_len; i++) {
-                if (msg_src[i] == '\n') {
-                        LF_count++;
-                }
-        }
 
         if (lst_msg && (*(lst_msg + lst_msg_len - 1) != '\n')) {
                 lst_msg_len += 1;
 
-                msg = malloc(lst_msg_len + msg_len + (2 * LF_count));
+                if (msg_src[0] == '\r') {
+                        msg = malloc(strlen(msg_src + 1) + 1);
+                } else {
+                        msg = malloc(lst_msg_len + strlen(msg_src) + 1);
+                }
+
                 if (msg) {
                         if (tty->write_index == 0)
                                 tty->write_index = TTY_MAX_LINES - 1;
@@ -1026,13 +1059,17 @@ static char *merge_or_create_message(struct tty_data *tty, const char *msg_src, 
                                 tty->refresh_last_line = SET;
                         }
 
-                        strcpy(msg, lst_msg);
-                        strncpy_LF2CRLF(msg + strlen(msg), msg_src, msg_len + LF_count);
+                        if (msg_src[0] == '\r') {
+                                strcpy(msg, msg_src + 1);
+                        } else {
+                                strcpy(msg, lst_msg);
+                                strcat(msg, msg_src);
+                        }
                 }
         } else {
-                msg = malloc(msg_len + (2 * LF_count) + 1);
+                msg = malloc(strlen(msg_src) + 1);
                 if (msg) {
-                        strncpy_LF2CRLF(msg, msg_src, msg_len + (2 * LF_count) + 1);
+                        strcpy(msg, msg_src);
                         inc_message_counter(tty);
                 }
         }

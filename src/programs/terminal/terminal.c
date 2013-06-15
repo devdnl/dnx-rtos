@@ -586,7 +586,7 @@ static enum cmd_status cmd_free(char *arg)
 
         u32_t free      = get_free_memory();
         u32_t used      = get_used_memory();
-        uint  drv_count = get_module_count();
+        uint  drv_count = get_number_of_modules();
 
         printf("Total: %d\n", get_memory_size());
         printf("Free : %d\n", free);
@@ -817,10 +817,6 @@ static enum cmd_status cmd_mount(char *arg)
 
         return CMD_STATUS_EXECUTED;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 //==============================================================================
 /**
@@ -1166,6 +1162,9 @@ static enum cmd_status cmd_pwrite(char *arg)
         return CMD_STATUS_EXECUTED;
 }
 
+#ifdef __cplusplus
+}
+#endif
 
 /*==============================================================================
   End of file

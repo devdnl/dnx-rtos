@@ -59,7 +59,7 @@ extern "C" {
 #define putchar(int__c)                                                 io_fputc(int__c, stdout)
 #define getchar()                                                       io_getc(stdin)
 #define getc(FILE__stream)                                              io_getc(FILE__stream)
-#define fgets(char__str, int__size, FILE__stream)                       io_fgets(char__str, int__size, FILE__stream)
+#define fgets(char__pstr, int__size, FILE__stream)                      io_fgets(char__pstr, int__size, FILE__stream)
 #define atoi(const_char__str)                                           io_atoi(const_char__str)
 #define strtoi(const_char__str, int__base, i32_t__presult)              io_strtoi(const_char__str, int__base, i32_t__presult)
 #define atof(const_char__str)                                           io_atof(const_char__str)

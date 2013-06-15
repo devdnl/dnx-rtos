@@ -295,13 +295,13 @@ stdret_t UART_release(void *drvhdl)
         }
 
         force_lock_recursive_mutex(hdl->port_lock_mtx);
-        enter_critical();
+        enter_critical_section();
         unlock_recursive_mutex(hdl->port_lock_mtx);
         delete_recursive_mutex(hdl->port_lock_mtx);
         delete_semaphore(hdl->data_write_sem);
         turn_off_USART(hdl->USART);
         free(hdl);
-        exit_critical();
+        exit_critical_section();
 
         return STD_RET_OK;
 }
@@ -438,7 +438,7 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
                 data_size = nitems * size;
 
                 do {
-                        enter_critical();
+                        enter_critical_section();
 
                         if (hdl->Rx_FIFO.buffer_level > 0) {
                                 *dst_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
@@ -450,9 +450,9 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
                                 data_size--;
                                 n++;
 
-                                exit_critical();
+                                exit_critical_section();
                         } else {
-                                exit_critical();
+                                exit_critical_section();
                                 suspend_this_task();
                         }
                 } while (data_size);
@@ -566,10 +566,10 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
                         break;
 
                 case UART_IORQ_GET_BYTE:
-                        enter_critical();
+                        enter_critical_section();
 
                         if (!(out_ptr = va_arg(args, u8_t*))) {
-                                exit_critical();
+                                exit_critical_section();
                                 status = STD_RET_ERROR;
                                 break;
                         }
@@ -585,15 +585,15 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
                                 status = STD_RET_ERROR;
                         }
 
-                        exit_critical();
+                        exit_critical_section();
                         break;
 
                 case UART_IORQ_GET_BYTE_BLOCKING:
                         while (TRUE) {
-                                enter_critical();
+                                enter_critical_section();
 
                                 if (!(out_ptr = va_arg(args, u8_t*))) {
-                                        exit_critical();
+                                        exit_critical_section();
                                         status = STD_RET_ERROR;
                                         break;
                                 }
@@ -606,10 +606,10 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
 
                                         hdl->Rx_FIFO.buffer_level--;
 
-                                        exit_critical();
+                                        exit_critical_section();
                                         break;
                                 } else {
-                                        exit_critical();
+                                        exit_critical_section();
                                         suspend_this_task();
                                 }
                         }
