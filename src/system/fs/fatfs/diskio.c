@@ -10,10 +10,20 @@
 #include "diskio.h"
 #include "ffconf.h"
 
-/*-----------------------------------------------------------------------*/
-/* Read Sector(s)                                                        */
-/*-----------------------------------------------------------------------*/
-DRESULT disk_read(FILE *srcfile, BYTE *buff, DWORD sector, BYTE count)
+//==============================================================================
+/**
+ * @brief Read Sector(s)
+ *
+ * @param[in]  *srcfile         source file object
+ * @param[out] *buff            destination buffer
+ * @param[in]   sector          sector number
+ * @param[in]   count           sector to read
+ *
+ * @retval RES_OK read successful
+ * @retval RES_ERROR read error
+ */
+//==============================================================================
+DRESULT disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
         fseek(srcfile, (u64_t)sector * _MAX_SS, SEEK_SET);
         if (fread(buff, _MAX_SS, count, srcfile) != count) {
@@ -23,13 +33,20 @@ DRESULT disk_read(FILE *srcfile, BYTE *buff, DWORD sector, BYTE count)
         }
 }
 
-
-
-/*-----------------------------------------------------------------------*/
-/* Write Sector(s)                                                       */
-/*-----------------------------------------------------------------------*/
-#if _USE_WRITE
-DRESULT disk_write(FILE *srcfile, const BYTE *buff, DWORD sector, BYTE count)
+//==============================================================================
+/**
+ * @brief Write Sector(s)
+ *
+ * @param[in]  *srcfile         source file object
+ * @param[in]  *buff            source buffer
+ * @param[in]   sector          sector number
+ * @param[in]   count           sector to write
+ *
+ * @retval RES_OK write successful
+ * @retval RES_ERROR write error
+ */
+//==============================================================================
+DRESULT disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
         fseek(srcfile, sector * _MAX_SS, SEEK_SET);
         if (fwrite(buff, _MAX_SS, count, srcfile) != count) {
@@ -38,31 +55,45 @@ DRESULT disk_write(FILE *srcfile, const BYTE *buff, DWORD sector, BYTE count)
                 return RES_OK;
         }
 }
-#endif
 
-
-/*-----------------------------------------------------------------------*/
-/* Miscellaneous Functions                                               */
-/*-----------------------------------------------------------------------*/
-#if _USE_IOCTL
-DRESULT disk_ioctl(FILE *srcfile, BYTE cmd, void *buff)
+//==============================================================================
+/**
+ * @brief Miscellaneous Functions
+ *
+ * @param[in]     *srcfile      source file object
+ * @param[in]      cmd          command
+ * @param[in/out] *buff         input/output buffer
+ *
+ * @retval RES_OK write successful
+ * @retval RES_PARERR argument error
+ */
+//==============================================================================
+DRESULT disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 {
         (void) srcfile;
         (void) buff;
 
         switch (cmd) {
-        case CTRL_SYNC: return RES_OK;
+        case CTRL_SYNC:
+                return RES_OK;
         }
 
         return RES_PARERR;
 }
-#endif
-
-
-/*-----------------------------------------------------------------------*/
-/* Get time                                                              */
-/*-----------------------------------------------------------------------*/
-DWORD get_fattime(void)
+//==============================================================================
+/**
+ * @brief Get time in FAT format
+ *
+ * @return Current time is returned packed. The bit field is as follows:
+ *      bit31:25        Year from 1980 (0..127)
+ *      bit24:21        Month (1..12)
+ *      bit20:16        Day in month(1..31)
+ *      bit15:11        Hour (0..23)
+ *      bit10:5         Minute (0..59)
+ *      bit4:0          Second / 2 (0..29)
+ */
+//==============================================================================
+uint32_t get_fattime(void)
 {
         return 0;
 }
@@ -144,4 +175,8 @@ void ff_rel_grant(_SYNC_t sobj)
                 unlock_mutex(sobj);
         }
 }
+
+/*==============================================================================
+  End of file
+==============================================================================*/
 

@@ -9,14 +9,11 @@
 extern "C" {
 #endif
 
-#define _USE_WRITE        1             /* 1: Enable disk_write function */
-#define _USE_IOCTL        1             /* 1: Enable disk_ioctl function */
-
-#include "integer.h"
+#include "ffconf.h"
 #include "system/dnxfs.h"
 
 /* Status of Disk Functions */
-typedef BYTE        DSTATUS;
+typedef uint8_t DSTATUS;
 
 /* Results of Disk Functions */
 typedef enum {
@@ -32,12 +29,20 @@ typedef enum {
 /* Prototypes for disk control functions */
 
 
-DSTATUS disk_initialize(FILE*);
-DSTATUS disk_status(FILE*);
-DRESULT disk_read(FILE*, BYTE*, DWORD, BYTE);
-DRESULT disk_write(FILE*, const BYTE*, DWORD, BYTE);
-DRESULT disk_ioctl(FILE*, BYTE, void*);
+extern DSTATUS disk_initialize(FILE*);
+extern DSTATUS disk_status(FILE*);
+extern DRESULT disk_read(FILE*, uint8_t*, uint32_t, uint8_t);
+extern DRESULT disk_write(FILE*, const uint8_t*, uint32_t, uint8_t);
+extern DRESULT disk_ioctl(FILE*, uint8_t, void*);
 
+#if _FS_REENTRANT
+extern int  ff_cre_syncobj(_SYNC_t* sobj);             /* Create a sync object */
+extern int  ff_req_grant(_SYNC_t sobj);                /* Lock sync object */
+extern void ff_rel_grant(_SYNC_t sobj);                /* Unlock sync object */
+extern int  ff_del_syncobj(_SYNC_t sobj);              /* Delete a sync object */
+#endif
+
+extern uint32_t get_fattime (void);
 
 /* Disk Status Bits (DSTATUS) */
 #define STA_NOINIT              0x01    /* Drive not initialized */
@@ -45,8 +50,7 @@ DRESULT disk_ioctl(FILE*, BYTE, void*);
 #define STA_PROTECT             0x04    /* Write protected */
 
 
-/* Command code for disk_ioctrl fucntion */
-
+/* Command code for disk_ioctrl function */
 /* Generic command (used by FatFs) */
 #define CTRL_SYNC               0        /* Flush disk cache (for write functions) */
 #define GET_SECTOR_COUNT        1        /* Get media size (for only f_mkfs()) */
@@ -72,7 +76,6 @@ DRESULT disk_ioctl(FILE*, BYTE, void*);
 #define ATA_GET_MODEL           21        /* Get model name */
 #define ATA_GET_SN              22        /* Get serial number */
 
-
 /* MMC card type flags (MMC_GET_TYPE) */
 #define CT_MMC                  0x01                /* MMC ver 3 */
 #define CT_SD1                  0x02                /* SD ver 1 */
@@ -86,3 +89,7 @@ DRESULT disk_ioctl(FILE*, BYTE, void*);
 #endif
 
 #endif
+
+/*==============================================================================
+  End of file
+==============================================================================*/

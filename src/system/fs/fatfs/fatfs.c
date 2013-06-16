@@ -156,13 +156,13 @@ stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
 
         struct fatfs *hdl = fshdl;
 
-        FIL *fat_file = calloc(1, sizeof(FIL));
+        FATFILE *fat_file = calloc(1, sizeof(FATFILE));
         if (!fat_file)
                 return STD_RET_ERROR;
 
         *extra = fat_file;
 
-        BYTE fat_mode = 0;
+        u8_t fat_mode = 0;
         if (strncmp("r",  mode, 2) == 0) {
                 fat_mode = FA_READ | FA_OPEN_EXISTING;
         } else if (strncmp("r+", mode, 2) == 0) {
@@ -212,7 +212,7 @@ stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
 
         struct fatfs *hdl = fshdl;
 
-        FIL *fat_file = extra;
+        FATFILE *fat_file = extra;
         if (f_close(fat_file) == FR_OK) {
                 hdl->opened_files--;
                 return STD_RET_OK;
@@ -241,9 +241,9 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
         (void)fshdl;
         (void)fd;
 
-        FIL *fat_file = extra;
-        UINT n        = 0;
-        f_lseek(fat_file, (DWORD)lseek);
+        FATFILE *fat_file = extra;
+        uint n        = 0;
+        f_lseek(fat_file, (u32_t)lseek);
         f_write(fat_file, src, size * nitems, &n);
         return n;
 }
@@ -268,9 +268,9 @@ size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
         (void)fshdl;
         (void)fd;
 
-        FIL *fat_file = extra;
-        UINT n        = 0;
-        f_lseek(fat_file, (DWORD)lseek);
+        FATFILE *fat_file = extra;
+        uint n        = 0;
+        f_lseek(fat_file, (u32_t)lseek);
         f_read(fat_file, dst, size * nitems, &n);
         return n;
 }
@@ -319,7 +319,7 @@ stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
         (void)fshdl;
         (void)fd;
 
-        FIL *fat_file = extra;
+        FATFILE *fat_file = extra;
         if (f_sync(fat_file) == FR_OK)
                 return STD_RET_OK;
         else
@@ -344,7 +344,7 @@ stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
         (void)fshdl;
         (void)fd;
 
-        FIL *fat_file  = extra;
+        FATFILE *fat_file  = extra;
         stat->st_dev   = 0;
         stat->st_gid   = 0;
         stat->st_mode  = 0777;
@@ -644,7 +644,7 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
         fstat.st_size = 0;
         fstat(hdl->fsfile, &fstat);
 
-        if (f_getfree("/", &free_clusters, &hdl->fatfs) == FR_OK) {
+        if (f_getfree(&free_clusters, &hdl->fatfs) == FR_OK) {
                 statfs->f_bsize  = _MAX_SS;
                 statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
                 statfs->f_blocks = fstat.st_size / _MAX_SS;
