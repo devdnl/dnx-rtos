@@ -127,7 +127,7 @@
 / Physical Drive Configurations
 /----------------------------------------------------------------------------*/
 
-#define _VOLUMES                1
+//#define _VOLUMES                1
 /* Number of volumes (logical drives) to be used. */
 
 
@@ -139,7 +139,7 @@
 /  and GET_SECTOR_SIZE command must be implemented to the disk_ioctl function. */
 
 
-#define _MULTI_PARTITION        0    /* 0:Single partition, 1:Enable multiple partition */
+//#define _MULTI_PARTITION        0    /* 0:Single partition, 1:Enable multiple partition */
 /* When set to 0, each volume is bound to the same physical drive number and
 / it can mount only first primary partition. When it is set to 1, each volume
 / is tied to the partitions listed in VolToPart[]. */
@@ -172,9 +172,9 @@
 /* A header file that defines sync object types on the O/S, such as
 /  windows.h, ucos_ii.h and semphr.h, must be included prior to ff.h. */
 
-#define _FS_REENTRANT           0         /* 0:Disable or 1:Enable */
-#define _FS_TIMEOUT             1000      /* Timeout period in unit of time ticks */
-#define _SYNC_t                 HANDLE    /* O/S dependent type of sync object. e.g. HANDLE, OS_EVENT*, ID and etc.. */
+#define _FS_REENTRANT           1         /* 0:Disable or 1:Enable */
+#define _FS_TIMEOUT             10000     /* Timeout period in unit of time ticks */
+#define _SYNC_t                 mutex_t*  /* O/S dependent type of sync object. e.g. HANDLE, OS_EVENT*, ID and etc.. */
 
 /* The _FS_REENTRANT option switches the reentrancy (thread safe) of the FatFs module.
 /

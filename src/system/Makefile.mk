@@ -69,7 +69,6 @@ CSRC_CORE += fs/fatfs/fatfs.c
 CSRC_CORE += fs/fatfs/diskio.c
 CSRC_CORE += fs/fatfs/ff.c
 CSRC_CORE += fs/fatfs/option/unicode.c
-CSRC_CORE += fs/fatfs/option/syscall.c
 CSRC_CORE += user/initd.c
 CSRC_CORE += user/regdrv.c
 CSRC_CORE += user/regfs.c

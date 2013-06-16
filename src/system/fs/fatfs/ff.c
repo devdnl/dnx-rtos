@@ -781,36 +781,34 @@ FRESULT move_window (
 /* Synchronize file system and strage device                             */
 /*-----------------------------------------------------------------------*/
 #if !_FS_READONLY
-static
-FRESULT sync_fs (	/* FR_OK: successful, FR_DISK_ERR: failed */
-	FATFS *fs		/* File system object */
+static FRESULT sync_fs( /* FR_OK: successful, FR_DISK_ERR: failed */
+FATFS *fs /* File system object */
 )
 {
-	FRESULT res;
+        FRESULT res;
 
+        res = sync_window(fs);
+        if (res == FR_OK) {
+                /* Update FSInfo sector if needed */
+                if (fs->fs_type == FS_FAT32 && fs->fsi_flag) {
+                        fs->winsect = 0;
+                        /* Create FSInfo structure */
+                        mem_set(fs->win, 0, 512);
+                        ST_WORD(fs->win+BS_55AA, 0xAA55);
+                        ST_DWORD(fs->win+FSI_LeadSig, 0x41615252);
+                        ST_DWORD(fs->win+FSI_StrucSig, 0x61417272);
+                        ST_DWORD(fs->win+FSI_Free_Count, fs->free_clust);
+                        ST_DWORD(fs->win+FSI_Nxt_Free, fs->last_clust);
+                        /* Write it into the FSInfo sector */
+                        disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1);
+                        fs->fsi_flag = 0;
+                }
+                /* Make sure that no pending write process in the physical drive */
+                if (disk_ioctl(fs->srcfile, CTRL_SYNC, 0) != RES_OK)
+                        res = FR_DISK_ERR;
+        }
 
-	res = sync_window(fs);
-	if (res == FR_OK) {
-		/* Update FSInfo sector if needed */
-		if (fs->fs_type == FS_FAT32 && fs->fsi_flag) {
-			fs->winsect = 0;
-			/* Create FSInfo structure */
-			mem_set(fs->win, 0, 512);
-			ST_WORD(fs->win+BS_55AA, 0xAA55);
-			ST_DWORD(fs->win+FSI_LeadSig, 0x41615252);
-			ST_DWORD(fs->win+FSI_StrucSig, 0x61417272);
-			ST_DWORD(fs->win+FSI_Free_Count, fs->free_clust);
-			ST_DWORD(fs->win+FSI_Nxt_Free, fs->last_clust);
-			/* Write it into the FSInfo sector */
-			disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1);
-			fs->fsi_flag = 0;
-		}
-		/* Make sure that no pending write process in the physical drive */
-		if (disk_ioctl(fs->srcfile, CTRL_SYNC, 0) != RES_OK)
-			res = FR_DISK_ERR;
-	}
-
-	return res;
+        return res;
 }
 #endif
 
@@ -2075,8 +2073,8 @@ FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
 {
 	BYTE fmt;
 	BYTE b;
-	BYTE pi;
-	BYTE *tbl;
+//	BYTE pi;
+//	BYTE *tbl;
 //	UINT vol;
 //	DSTATUS stat;
 	DWORD bsect, fasize, tsect, sysect, nclst, szbfat;
@@ -2104,17 +2102,17 @@ FRESULT chk_mounted (	/* FR_OK(0): successful, !=0: any error occurred */
 //	fs = FatFs[vol];					/* Get corresponding file system object */
 //	if (!fs) return FR_NOT_ENABLED;		/* Is the file system object available? */
 
-	ENTER_FF(fs);						/* Lock volume */
+//	ENTER_FF(fs);						/* Lock volume */
 
 //	*rfs = fs;							/* Return pointer to the corresponding file system object */
-	if (fs->fs_type) {					/* If the volume has been mounted */
+//	if (fs->fs_type) {					/* If the volume has been mounted */
 //		stat = disk_status(fs->srcfile);
 //		if (!(stat & STA_NOINIT)) {		/* and the physical drive is kept initialized (has not been changed), */
 //			if (!_FS_READONLY && wmode && (stat & STA_PROTECT))	/* Check write protection if needed */
 //				return FR_WRITE_PROTECTED;
-			return FR_OK;				/* The file system object is valid */
+//			return FR_OK;				/* The file system object is valid */
 //		}
-	}
+//	}
 
 	/* The file system object is not valid. */
 	/* Following code attempts to mount the volume. (analyze BPB and initialize the fs object) */
@@ -2273,7 +2271,7 @@ FRESULT validate (	/* FR_OK(0): The object is valid, !=0: Invalid */
 /*-----------------------------------------------------------------------*/
 //==============================================================================
 /**
- * @brief Mount/Unmount a Logical Drive
+ * @brief Mount a Logical Drive
  *
  * @param[in] *fsfile           pointer to opened source file
  * @param[in] *fs               pointer to existing library instance
@@ -2286,7 +2284,7 @@ FRESULT f_mount(FILE *fsfile, FATFS *fs)
 
 #if _FS_REENTRANT
 	        /* Create sync object for the new volume */
-		if (!ff_cre_syncobj(vol, &fs->sobj))
+		if (!ff_cre_syncobj(&fs->sobj))
 		        return FR_INT_ERR;
 #endif
 
@@ -2297,7 +2295,24 @@ FRESULT f_mount(FILE *fsfile, FATFS *fs)
 	return FR_DISK_ERR;
 }
 
+//==============================================================================
+/**
+ * @brief Function unmount drive
+ *
+ * @param[in] *fs               pointer to existing library instance
+ */
+//==============================================================================
+FRESULT f_umount(FATFS *fs)
+{
+        if (fs) {
+#if _FS_REENTRANT
+                ff_del_syncobj(fs->sobj);
+#endif
+                return FR_OK;
+        }
 
+        return FR_DISK_ERR;
+}
 
 
 /*-----------------------------------------------------------------------*/
@@ -2324,6 +2339,7 @@ FRESULT f_open (
 #if !_FS_READONLY
 	mode &= FA_READ | FA_WRITE | FA_CREATE_ALWAYS | FA_OPEN_ALWAYS | FA_CREATE_NEW;
 //	res = chk_mounted(fs, &path, &dj.fs, (BYTE)(mode & ~FA_READ));
+	ENTER_FF(fs);
 	dj.fs = fs;
 #else
 	mode &= FA_READ;
@@ -3050,6 +3066,7 @@ FRESULT f_opendir (
 	if (!dj) return FR_INVALID_OBJECT;
 
 //	res = chk_mounted(fs, &path, &dj->fs, 0);
+	ENTER_FF(fs);
 	dj->fs = fs;
 //	if (res == FR_OK) {
 		INIT_BUF(*dj);
@@ -3138,6 +3155,7 @@ FRESULT f_stat (
 
 
 //	res = chk_mounted(fs, &path, &dj.fs, 0);
+	ENTER_FF(fs);
 	dj.fs = fs;
 //	if (res == FR_OK) {
 		INIT_BUF(dj);
@@ -3176,6 +3194,7 @@ FRESULT f_getfree (
 
 	/* Get drive number */
 //	res = chk_mounted(*fatfs, &path, fatfs, 0);
+	ENTER_FF(fs);
 //	res = FR_OK;
 
 //	if (res == FR_OK) {
@@ -3289,6 +3308,7 @@ FRESULT f_unlink (
 	DEF_NAMEBUF;
 
 //	res = chk_mounted(fs, &path, &dj.fs, 1);
+	ENTER_FF(fs);
 	dj.fs = fs;
 //	if (res == FR_OK) {
 		INIT_BUF(dj);
@@ -3359,6 +3379,7 @@ FRESULT f_mkdir(
 	DEF_NAMEBUF;
 
 //	res = chk_mounted(fs, &path, &dj.fs, 1);
+	ENTER_FF(fs);
 	dj.fs = fs;
 //	if (res == FR_OK) {
 		INIT_BUF(dj);
@@ -3434,6 +3455,7 @@ FRESULT f_chmod (
 	DEF_NAMEBUF;
 
 //	res = chk_mounted(fs, &path, &dj.fs, 1);
+        ENTER_FF(fs);
 	dj.fs = fs;
 //	if (res == FR_OK) {
 		INIT_BUF(dj);
@@ -3477,6 +3499,7 @@ FRESULT f_utime (
 
 
 //	res = chk_mounted(fs, &path, &dj.fs, 1);
+        ENTER_FF(fs);
 	dj.fs = fs;
 //	if (res == FR_OK) {
 		INIT_BUF(dj);
@@ -3521,6 +3544,7 @@ FRESULT f_rename (
 
 
 //	res = chk_mounted(fs, &path_old, &djo.fs, 1);
+        ENTER_FF(fs);
 	djo.fs = fs;
 //	if (res == FR_OK) {
 		djn.fs = djo.fs;

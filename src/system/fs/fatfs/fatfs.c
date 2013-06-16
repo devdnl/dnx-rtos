@@ -126,6 +126,7 @@ stdret_t fatfs_release(void *fshdl)
         struct fatfs *hdl = fshdl;
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
+                f_umount(&hdl->fatfs);
                 fclose(hdl->fsfile);
                 free(hdl);
                 return STD_RET_OK;

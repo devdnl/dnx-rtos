@@ -390,7 +390,7 @@ static enum cmd_status cmd_ls(char *arg)
                 char *lcolor = FONT_COLOR_CYAN"l";
                 char *dcolor = FONT_COLOR_GREEN"d";
 
-                printf("Total %u\n", dir->items);
+//                printf("Total %u\n", dir->items);
 
                 while ((dirent = readdir(dir)).name != NULL) {
                         char *type = NULL;

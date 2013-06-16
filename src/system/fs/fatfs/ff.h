@@ -88,7 +88,7 @@ typedef struct {
         WORD         ssize;             /* Bytes per sector (512, 1024, 2048 or 4096) */
 #endif
 #if _FS_REENTRANT
-        _SYNC_t     sobj;               /* Identifier of sync object */
+        _SYNC_t      sobj;              /* Identifier of sync object */
 #endif
 #if !_FS_READONLY
         DWORD        last_clust;        /* Last allocated cluster */
@@ -204,35 +204,36 @@ typedef enum {
 /*--------------------------------------------------------------*/
 /* FatFs module application interface                           */
 
-FRESULT f_mount(FILE*, FATFS*);                                                 /* Mount/Unmount a logical drive */
-FRESULT f_open(FATFS*, FIL* fp, const TCHAR* path, BYTE mode);                  /* Open or create a file */
-FRESULT f_read(FIL* fp, void* buff, UINT btr, UINT* br);                        /* Read data from a file */
-FRESULT f_lseek(FIL* fp, DWORD ofs);                                            /* Move file pointer of a file object */
-FRESULT f_close(FIL* fp);                                                       /* Close an open file object */
-FRESULT f_opendir(FATFS*, FATDIR* dj, const TCHAR* path);                       /* Open an existing directory */
-FRESULT f_readdir(FATDIR* dj, FILINFO* fno);                                    /* Read a directory item */
-FRESULT f_stat(FATFS*, const TCHAR* path, FILINFO* fno);                        /* Get file status */
-FRESULT f_write(FIL* fp, const void* buff, UINT btw, UINT* bw);                 /* Write data to a file */
-FRESULT f_getfree(const TCHAR* path, DWORD* nclst, FATFS *fatfs);               /* Get number of free clusters on the drive */
-FRESULT f_truncate(FIL* fp);                                                    /* Truncate file */
-FRESULT f_sync(FIL* fp);                                                        /* Flush cached data of a writing file */
-FRESULT f_unlink(FATFS*, const TCHAR* path);                                    /* Delete an existing file or directory */
-FRESULT f_mkdir(FATFS*, const TCHAR* path);                                     /* Create a new directory */
-FRESULT f_chmod(FATFS*, const TCHAR* path, BYTE value, BYTE mask);              /* Change attribute of the file/dir */
-FRESULT f_utime(FATFS*, const TCHAR* path, const FILINFO* fno);                 /* Change times-tamp of the file/dir */
-FRESULT f_rename(FATFS*, const TCHAR* path_old, const TCHAR* path_new);         /* Rename/Move a file or directory */
-FRESULT f_chdrive (BYTE drv);                                                   /* Change current drive */
-FRESULT f_chdir (const TCHAR* path);                                            /* Change current directory */
-FRESULT f_getcwd (TCHAR* buff, UINT len);                                       /* Get current directory */
-FRESULT f_getlabel (const TCHAR* path, TCHAR* label, DWORD* sn);                /* Get volume label */
-FRESULT f_setlabel (const TCHAR* label);                                        /* Set volume label */
-FRESULT f_forward (FIL* fp, UINT(*func)(const BYTE*,UINT), UINT btf, UINT* bf); /* Forward data to the stream */
-FRESULT f_mkfs (BYTE vol, BYTE sfd, UINT au);                                   /* Create a file system on the drive */
-FRESULT f_fdisk (BYTE pdrv, const DWORD szt[], void* work);                     /* Divide a physical drive into some partitions */
-int     f_putc (TCHAR c, FIL* fp);                                              /* Put a character to the file */
-int     f_puts (const TCHAR* str, FIL* cp);                                     /* Put a string to the file */
-int     f_printf (FIL* fp, const TCHAR* str, ...);                              /* Put a formatted string to the file */
-TCHAR*  f_gets (TCHAR* buff, int len, FIL* fp);                                 /* Get a string from the file */
+extern FRESULT f_mount(FILE*, FATFS*);                                                 /* Mount a logical drive */
+extern FRESULT f_umount(FATFS *fs);                                                    /* Unmount a logical drive */
+extern FRESULT f_open(FATFS*, FIL* fp, const TCHAR* path, BYTE mode);                  /* Open or create a file */
+extern FRESULT f_read(FIL* fp, void* buff, UINT btr, UINT* br);                        /* Read data from a file */
+extern FRESULT f_lseek(FIL* fp, DWORD ofs);                                            /* Move file pointer of a file object */
+extern FRESULT f_close(FIL* fp);                                                       /* Close an open file object */
+extern FRESULT f_opendir(FATFS*, FATDIR* dj, const TCHAR* path);                       /* Open an existing directory */
+extern FRESULT f_readdir(FATDIR* dj, FILINFO* fno);                                    /* Read a directory item */
+extern FRESULT f_stat(FATFS*, const TCHAR* path, FILINFO* fno);                        /* Get file status */
+extern FRESULT f_write(FIL* fp, const void* buff, UINT btw, UINT* bw);                 /* Write data to a file */
+extern FRESULT f_getfree(const TCHAR* path, DWORD* nclst, FATFS *fatfs);               /* Get number of free clusters on the drive */
+extern FRESULT f_truncate(FIL* fp);                                                    /* Truncate file */
+extern FRESULT f_sync(FIL* fp);                                                        /* Flush cached data of a writing file */
+extern FRESULT f_unlink(FATFS*, const TCHAR* path);                                    /* Delete an existing file or directory */
+extern FRESULT f_mkdir(FATFS*, const TCHAR* path);                                     /* Create a new directory */
+extern FRESULT f_chmod(FATFS*, const TCHAR* path, BYTE value, BYTE mask);              /* Change attribute of the file/dir */
+extern FRESULT f_utime(FATFS*, const TCHAR* path, const FILINFO* fno);                 /* Change times-tamp of the file/dir */
+extern FRESULT f_rename(FATFS*, const TCHAR* path_old, const TCHAR* path_new);         /* Rename/Move a file or directory */
+extern FRESULT f_chdrive (BYTE drv);                                                   /* Change current drive */
+extern FRESULT f_chdir (const TCHAR* path);                                            /* Change current directory */
+extern FRESULT f_getcwd (TCHAR* buff, UINT len);                                       /* Get current directory */
+extern FRESULT f_getlabel (const TCHAR* path, TCHAR* label, DWORD* sn);                /* Get volume label */
+extern FRESULT f_setlabel (const TCHAR* label);                                        /* Set volume label */
+extern FRESULT f_forward (FIL* fp, UINT(*func)(const BYTE*,UINT), UINT btf, UINT* bf); /* Forward data to the stream */
+extern FRESULT f_mkfs (BYTE vol, BYTE sfd, UINT au);                                   /* Create a file system on the drive */
+extern FRESULT f_fdisk (BYTE pdrv, const DWORD szt[], void* work);                     /* Divide a physical drive into some partitions */
+extern int     f_putc (TCHAR c, FIL* fp);                                              /* Put a character to the file */
+extern int     f_puts (const TCHAR* str, FIL* cp);                                     /* Put a string to the file */
+extern int     f_printf (FIL* fp, const TCHAR* str, ...);                              /* Put a formatted string to the file */
+extern TCHAR*  f_gets (TCHAR* buff, int len, FIL* fp);                                 /* Get a string from the file */
 
 #define f_eof(fp) (((fp)->fptr == (fp)->fsize) ? 1 : 0)
 #define f_error(fp) (((fp)->flag & FA__ERROR) ? 1 : 0)
@@ -266,10 +267,10 @@ void ff_memfree (void* mblock);                 /* Free memory block */
 
 /* Sync functions */
 #if _FS_REENTRANT
-int ff_cre_syncobj (BYTE vol, _SYNC_t* sobj);   /* Create a sync object */
-int ff_req_grant (_SYNC_t sobj);                /* Lock sync object */
-void ff_rel_grant (_SYNC_t sobj);               /* Unlock sync object */
-int ff_del_syncobj (_SYNC_t sobj);              /* Delete a sync object */
+extern int  ff_cre_syncobj(_SYNC_t* sobj);             /* Create a sync object */
+extern int  ff_req_grant(_SYNC_t sobj);                /* Lock sync object */
+extern void ff_rel_grant(_SYNC_t sobj);                /* Unlock sync object */
+extern int  ff_del_syncobj(_SYNC_t sobj);              /* Delete a sync object */
 #endif
 
 

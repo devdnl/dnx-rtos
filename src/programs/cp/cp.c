@@ -39,7 +39,7 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BUFFER_MAX_SIZE                 65536
+#define BUFFER_MAX_SIZE                 32768
 #define INFO_REFRESH_TIME_MS            1000
 #define PATH_MAX_SIZE                   128
 
