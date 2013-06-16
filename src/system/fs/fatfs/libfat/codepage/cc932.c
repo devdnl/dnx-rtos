@@ -4,7 +4,7 @@
 /* CP932 (Japanese Shift-JIS)                                             */
 /*------------------------------------------------------------------------*/
 
-#include "../ff.h"
+#include "../libfat.h"
 
 #define _TINY_TABLE	0
 

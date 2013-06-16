@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "ffconf.h"                     /* FatFs configuration options */
+#include "libfat_conf.h"                     /* FatFs configuration options */
 #include "system/dnxfs.h"               /* dnx file system support */
 
 #if _FATFS != _FFCONF

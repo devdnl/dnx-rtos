@@ -7,8 +7,8 @@
 /* storage control module to the FatFs module with a defined API.        */
 /*-----------------------------------------------------------------------*/
 
-#include "diskio.h"
-#include "ffconf.h"
+#include "libfat_user.h"
+#include "libfat_conf.h"
 
 //==============================================================================
 /**

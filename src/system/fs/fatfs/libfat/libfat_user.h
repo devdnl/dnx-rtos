@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#include "ffconf.h"
+#include "libfat_conf.h"
 #include "system/dnxfs.h"
 
 /* Status of Disk Functions */

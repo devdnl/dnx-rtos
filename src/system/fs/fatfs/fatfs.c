@@ -33,7 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include "fs/fatfs.h"
 #include "user/regprg.h"
-#include "ff.h"
+#include "libfat/libfat.h"
 
 /*==============================================================================
   Local symbolic constants/macros

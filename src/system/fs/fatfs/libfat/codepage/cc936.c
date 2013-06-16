@@ -4,7 +4,7 @@
 /* CP936 (Simplified Chinese GBK)                                         */
 /*------------------------------------------------------------------------*/
 
-#include "../ff.h"
+#include "../libfat.h"
 
 
 #if !_USE_LFN || _CODE_PAGE != 936
