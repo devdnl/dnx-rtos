@@ -14,8 +14,8 @@
 /
 /----------------------------------------------------------------------------*/
 
-#ifndef _FATFS
-#define _FATFS        82786             /* Revision ID */
+#ifndef _LIBFAT_
+#define _LIBFAT_        82786             /* Revision ID */
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,29 +25,9 @@ extern "C" {
 #include "libfat_conf.h"                     /* FatFs configuration options */
 #include "system/dnxfs.h"               /* dnx file system support */
 
-#if _FATFS != _FFCONF
-#error Wrong configuration file (ffconf.h).
+#if _LIBFAT_ != _FFCONF
+#error Wrong configuration file (libfat_conf.h).
 #endif
-
-
-
-/* Definitions of volume management */
-
-#if _MULTI_PARTITION                    /* Multiple partition configuration */
-typedef struct {
-        uint8_t pd;                        /* Physical drive number */
-        uint8_t pt;                        /* Partition: 0:Auto detect, 1-4:Forced partition) */
-} PARTITION;
-extern PARTITION VolToPart[];           /* Volume - Partition resolution table */
-#define LD2PD(vol) (VolToPart[vol].pd)  /* Get physical drive number */
-#define LD2PT(vol) (VolToPart[vol].pt)  /* Get partition index */
-
-#else                                   /* Single partition configuration */
-#define LD2PD(vol) (uint8_t)(vol)          /* Each logical drive is bound to the same physical drive number */
-#define LD2PT(vol) 0                    /* Always mounts the 1st partition or in SFD */
-
-#endif
-
 
 
 /* Type of path name strings on FatFs API */
@@ -299,4 +279,4 @@ wchar_t ff_wtoupper (wchar_t chr);                  /* Unicode upper-case conver
 }
 #endif
 
-#endif /* _FATFS */
+#endif /* _LIBFAT_ */
