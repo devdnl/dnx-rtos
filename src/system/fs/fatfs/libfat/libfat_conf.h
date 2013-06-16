@@ -1,44 +1,46 @@
-/*---------------------------------------------------------------------------/
+/*=========================================================================*//**
+@file    libfat_conf.c
+
+@author  Daniel Zorychta
+
+@brief   FAT file system library based od ChaN's code.
+
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+*//*==========================================================================*/
+/*-----------------------------------------------------------------------------/
 /  FatFs - FAT file system module configuration file  R0.09b (C)ChaN, 2013
-/----------------------------------------------------------------------------/
-/
-/ CAUTION! Do not forget to make clean the project after any changes to
-/ the configuration options.
-/
-/----------------------------------------------------------------------------*/
+/-----------------------------------------------------------------------------*/
+
 #ifndef _FFCONF
 #define _FFCONF 82786    /* Revision ID */
 
-
-/*---------------------------------------------------------------------------/
+/*-----------------------------------------------------------------------------/
 / Functions and Buffer Configurations
-/----------------------------------------------------------------------------*/
-
-#define _FS_TINY                0    /* 0:Normal or 1:Tiny */
+/-----------------------------------------------------------------------------*/
 /* When _FS_TINY is set to 1, FatFs uses the sector buffer in the file system
 /  object instead of the sector buffer in the individual file object for file
 /  data transfer. This reduces memory consumption 512 bytes each file object. */
-
-
-#define _FS_READONLY            0    /* 0:Read/Write or 1:Read only */
-/* Setting _FS_READONLY to 1 defines read only configuration. This removes
-/  writing functions, f_write, f_sync, f_unlink, f_mkdir, f_chmod, f_rename,
-/  f_truncate and useless f_getfree. */
-
-
-#define _FS_MINIMIZE            0    /* 0 to 3 */
-/* The _FS_MINIMIZE option defines minimization level to remove some functions.
-/
-/   0: Full function.
-/   1: f_stat, f_getfree, f_unlink, f_mkdir, f_chmod, f_truncate and f_rename
-/      are removed.
-/   2: f_opendir and f_readdir are removed in addition to 1.
-/   3: f_lseek is removed in addition to 2. */
+#define _FS_TINY                0    /* 0:Normal or 1:Tiny */
 
 /*---------------------------------------------------------------------------/
 / Locale and Namespace Configurations
 /----------------------------------------------------------------------------*/
-#define _CODE_PAGE              852
 /* The _CODE_PAGE specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
@@ -69,10 +71,8 @@
 /   874  - Thai (OEM, Windows)
 /    1    - ASCII only (Valid for non LFN cfg.)
 */
+#define _CODE_PAGE              852
 
-
-#define _USE_LFN                3        /* 0 to 3 */
-#define _MAX_LFN                255      /* Maximum LFN length to handle (12 to 255) */
 /* The _USE_LFN option switches the LFN support.
 /
 /   0: Disable LFN feature. _MAX_LFN and _LFN_UNICODE have no effect.
@@ -84,14 +84,13 @@
 /  Unicode handling functions ff_convert() and ff_wtoupper() must be added
 /  to the project. When enable to use heap, memory control functions
 /  ff_memalloc() and ff_memfree() must be added to the project. */
+#define _USE_LFN                3        /* 0 to 3 */
+#define _MAX_LFN                255      /* Maximum LFN length to handle (12 to 255) */
 
-
-#define _LFN_UNICODE            0    /* 0:ANSI/OEM or 1:Unicode */
 /* To switch the character code set on FatFs API to Unicode,
 /  enable LFN feature and set _LFN_UNICODE to 1. */
+#define _LFN_UNICODE            0    /* 0:ANSI/OEM or 1:Unicode */
 
-
-#define _FS_RPATH               0    /* 0 to 2 */
 /* The _FS_RPATH option configures relative path feature.
 /
 /   0: Disable relative path feature and remove related functions.
@@ -99,7 +98,7 @@
 /   2: f_getcwd() is available in addition to 1.
 /
 /  Note that output of the f_readdir fnction is affected by this option. */
-
+#define _FS_RPATH               0    /* 0 to 2 */
 
 /*---------------------------------------------------------------------------/
 / Physical Drive Configurations

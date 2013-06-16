@@ -1,6 +1,31 @@
-/*---------------------------------------------------------------------------/
+/*=========================================================================*//**
+@file    libfat.h
+
+@author  Daniel Zorychta
+
+@brief   FAT file system library based od ChaN's code.
+
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+*//*==========================================================================*/
+/*-----------------------------------------------------------------------------/
 /  FatFs - FAT file system module include file  R0.09b    (C)ChaN, 2013
-/----------------------------------------------------------------------------/
+/------------------------------------------------------------------------------/
 / FatFs module is a generic FAT file system module for small embedded systems.
 / This is a free software that opened for education, research and commercial
 / developments under license policy of following terms.
@@ -12,7 +37,7 @@
 /   personal, non-profit or commercial product UNDER YOUR RESPONSIBILITY.
 / * Redistributions of source code must retain the above copyright notice.
 /
-/----------------------------------------------------------------------------*/
+/-----------------------------------------------------------------------------*/
 
 #ifndef _LIBFAT_
 #define _LIBFAT_        82786             /* Revision ID */
@@ -70,11 +95,9 @@ typedef struct {
 #if _FS_REENTRANT
         _SYNC_t      sobj;              /* Identifier of sync object */
 #endif
-#if !_FS_READONLY
         uint32_t        last_clust;        /* Last allocated cluster */
         uint32_t        free_clust;        /* Number of free clusters */
         uint32_t        fsi_sector;        /* fsinfo sector (FAT32) */
-#endif
 #if _FS_RPATH
         uint32_t        cdir;              /* Current directory start cluster (0:root) */
 #endif
@@ -101,11 +124,8 @@ typedef struct {
         uint32_t        sclust;            /* File data start cluster (0:no data cluster, always 0 when fsize is 0) */
         uint32_t        clust;             /* Current cluster of fpter */
         uint32_t        dsect;             /* Current data sector of fpter */
-#if !_FS_READONLY
         uint32_t        dir_sect;          /* Sector containing the directory entry */
         uint8_t*        dir_ptr;           /* Pointer to the directory entry in the window */
-#endif
-
 #if _FS_LOCK
         uint         lockid;            /* File lock ID (index of file semaphore table Files[]) */
 #endif
@@ -225,15 +245,12 @@ wchar_t ff_wtoupper (wchar_t chr);                  /* Unicode upper-case conver
 #define FA_READ                 0x01
 #define FA_OPEN_EXISTING        0x00
 #define FA__ERROR               0x80
-
-#if !_FS_READONLY
 #define FA_WRITE                0x02
 #define FA_CREATE_NEW           0x04
 #define FA_CREATE_ALWAYS        0x08
 #define FA_OPEN_ALWAYS          0x10
 #define FA__WRITTEN             0x20
 #define FA__DIRTY               0x40
-#endif
 
 
 /* FAT sub type (FATFS.fs_type) */
