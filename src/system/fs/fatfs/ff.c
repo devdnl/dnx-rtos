@@ -12,89 +12,7 @@
 /   personal, non-profit or commercial products UNDER YOUR RESPONSIBILITY.
 / * Redistributions of source code must retain the above copyright notice.
 /
-/-----------------------------------------------------------------------------/
-/ Feb 26,'06 R0.00  Prototype.
-/
-/ Apr 29,'06 R0.01  First stable version.
-/
-/ Jun 01,'06 R0.02  Added FAT12 support.
-/                   Removed unbuffered mode.
-/                   Fixed a problem on small (<32M) partition.
-/ Jun 10,'06 R0.02a Added a configuration option (_FS_MINIMUM).
-/
-/ Sep 22,'06 R0.03  Added f_rename().
-/                   Changed option _FS_MINIMUM to _FS_MINIMIZE.
-/ Dec 11,'06 R0.03a Improved cluster scan algorithm to write files fast.
-/                   Fixed f_mkdir() creates incorrect directory on FAT32.
-/
-/ Feb 04,'07 R0.04  Supported multiple drive system.
-/                   Changed some interfaces for multiple drive system.
-/                   Changed f_mountdrv() to f_mount().
-/                   Added f_mkfs().
-/ Apr 01,'07 R0.04a Supported multiple partitions on a physical drive.
-/                   Added a capability of extending file size to f_lseek().
-/                   Added minimization level 3.
-/                   Fixed an endian sensitive code in f_mkfs().
-/ May 05,'07 R0.04b Added a configuration option _USE_NTFLAG.
-/                   Added FSInfo support.
-/                   Fixed DBCS name can result FR_INVALID_NAME.
-/                   Fixed short seek (<= csize) collapses the file object.
-/
-/ Aug 25,'07 R0.05  Changed arguments of f_read(), f_write() and f_mkfs().
-/                   Fixed f_mkfs() on FAT32 creates incorrect FSInfo.
-/                   Fixed f_mkdir() on FAT32 creates incorrect directory.
-/ Feb 03,'08 R0.05a Added f_truncate() and f_utime().
-/                   Fixed off by one error at FAT sub-type determination.
-/                   Fixed btr in f_read() can be mistruncated.
-/                   Fixed cached sector is not flushed when create and close without write.
-/
-/ Apr 01,'08 R0.06  Added fputc(), fputs(), fprintf() and fgets().
-/                   Improved performance of f_lseek() on moving to the same or following cluster.
-/
-/ Apr 01,'09 R0.07  Merged Tiny-FatFs as a configuration option. (_FS_TINY)
-/                   Added long file name feature.
-/                   Added multiple code page feature.
-/                   Added re-entrancy for multitask operation.
-/                   Added auto cluster size selection to f_mkfs().
-/                   Added rewind option to f_readdir().
-/                   Changed result code of critical errors.
-/                   Renamed string functions to avoid name collision.
-/ Apr 14,'09 R0.07a Separated out OS dependent code on reentrant cfg.
-/                   Added multiple sector size feature.
-/ Jun 21,'09 R0.07c Fixed f_unlink() can return FR_OK on error.
-/                   Fixed wrong cache control in f_lseek().
-/                   Added relative path feature.
-/                   Added f_chdir() and f_chdrive().
-/                   Added proper case conversion to extended char.
-/ Nov 03,'09 R0.07e Separated out configuration options from ff.h to ffconf.h.
-/                   Fixed f_unlink() fails to remove a sub-dir on _FS_RPATH.
-/                   Fixed name matching error on the 13 char boundary.
-/                   Added a configuration option, _LFN_UNICODE.
-/                   Changed f_readdir() to return the SFN with always upper case on non-LFN cfg.
-/
-/ May 15,'10 R0.08  Added a memory configuration option. (_USE_LFN = 3)
-/                   Added file lock feature. (_FS_SHARE)
-/                   Added fast seek feature. (_USE_FASTSEEK)
-/                   Changed some types on the API, XCHAR->TCHAR.
-/                   Changed fname member in the FILINFO structure on Unicode cfg.
-/                   String functions support UTF-8 encoding files on Unicode cfg.
-/ Aug 16,'10 R0.08a Added f_getcwd(). (_FS_RPATH = 2)
-/                   Added sector erase feature. (_USE_ERASE)
-/                   Moved file lock semaphore table from fs object to the bss.
-/                   Fixed a wrong directory entry is created on non-LFN cfg when the given name contains ';'.
-/                   Fixed f_mkfs() creates wrong FAT32 volume.
-/ Jan 15,'11 R0.08b Fast seek feature is also applied to f_read() and f_write().
-/                   f_lseek() reports required table size on creating CLMP.
-/                   Extended format syntax of f_printf function.
-/                   Ignores duplicated directory separators in given path name.
-/
-/ Sep 06,'11 R0.09  f_mkfs() supports multiple partition to finish the multiple partition feature.
-/                   Added f_fdisk(). (_MULTI_PARTITION = 2)
-/ Aug 27,'12 R0.09a Fixed assertion failure due to OS/2 EA on FAT12/16 volume.
-/                   Changed f_open() and f_opendir reject null object pointer to avoid crash.
-/                   Changed option name _FS_SHARE to _FS_LOCK.
-/ Jan 24,'13 R0.09b Added f_setlabel() and f_getlabel(). (_USE_LABEL = 1)
-/---------------------------------------------------------------------------*/
+/----------------------------------------------------------------------------*/
 
 #include "ff.h"			/* FatFs configurations and declarations */
 #include "diskio.h"		/* Declarations of low level disk I/O functions */
@@ -1048,36 +966,6 @@ uint32_t create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:Disk 
 	return ncl;		/* Return new cluster number or error code */
 }
 #endif /* !_FS_READONLY */
-
-
-
-/*-----------------------------------------------------------------------*/
-/* FAT handling - Convert offset into cluster with link map table        */
-/*-----------------------------------------------------------------------*/
-
-#if _USE_FASTSEEK
-static
-uint32_t clmt_clust (	/* <2:Error, >=2:Cluster number */
-	FATFILE* fp,		/* Pointer to the file object */
-	uint32_t ofs		/* File offset to be converted to cluster# */
-)
-{
-	uint32_t cl, ncl, *tbl;
-
-
-	tbl = fp->cltbl + 1;	/* Top of CLMT */
-	cl = ofs / SS(fp->fs) / fp->fs->csize;	/* Cluster order from top of the file */
-	for (;;) {
-		ncl = *tbl++;			/* Number of cluters in the fragment */
-		if (!ncl) return 0;		/* End of table? (error) */
-		if (cl < ncl) break;	/* In this fragment? */
-		cl -= ncl; tbl++;		/* Next fragment */
-	}
-	return cl + *tbl;	/* Return the cluster number */
-}
-#endif	/* _USE_FASTSEEK */
-
-
 
 /*-----------------------------------------------------------------------*/
 /* Directory handling - Set directory index                              */
@@ -2438,9 +2326,7 @@ FRESULT f_open (
 			fp->fsize = LD_DWORD(dir+DIR_FileSize);	/* File size */
 			fp->fptr = 0;						/* File pointer */
 			fp->dsect = 0;
-#if _USE_FASTSEEK
-			fp->cltbl = 0;						/* Normal seek mode */
-#endif
+
 			/* Validate file object */
 			fp->fs = dj.fs;
 			fp->id = dj.fs->id;
@@ -2489,12 +2375,7 @@ FRESULT f_read (
 				if (fp->fptr == 0) {			/* On the top of the file? */
 					clst = fp->sclust;			/* Follow from the origin */
 				} else {						/* Middle or end of the file */
-#if _USE_FASTSEEK
-					if (fp->cltbl)
-						clst = clmt_clust(fp, fp->fptr);	/* Get cluster# from the CLMT */
-					else
-#endif
-						clst = get_fat(fp->fs, fp->clust);	/* Follow cluster chain on the FAT */
+				        clst = get_fat(fp->fs, fp->clust);	/* Follow cluster chain on the FAT */
 				}
 				if (clst < 2) ABORT(fp->fs, FR_INT_ERR);
 				if (clst == 0xFFFFFFFF) ABORT(fp->fs, FR_DISK_ERR);
@@ -2592,12 +2473,7 @@ FRESULT f_write (
 					if (clst == 0)			/* When no cluster is allocated, */
 						fp->sclust = clst = create_chain(fp->fs, 0);	/* Create a new cluster chain */
 				} else {					/* Middle or end of the file */
-#if _USE_FASTSEEK
-					if (fp->cltbl)
-						clst = clmt_clust(fp, fp->fptr);	/* Get cluster# from the CLMT */
-					else
-#endif
-						clst = create_chain(fp->fs, fp->clust);	/* Follow or stretch cluster chain on the FAT */
+					clst = create_chain(fp->fs, fp->clust);	/* Follow or stretch cluster chain on the FAT */
 				}
 				if (clst == 0) break;		/* Could not allocate a new cluster (disk full) */
 				if (clst == 1) ABORT(fp->fs, FR_INT_ERR);
@@ -2907,65 +2783,6 @@ FRESULT f_lseek (
 	if (fp->flag & FA__ERROR)			/* Check abort flag */
 		LEAVE_FF(fp->fs, FR_INT_ERR);
 
-#if _USE_FASTSEEK
-	if (fp->cltbl) {	/* Fast seek */
-		uint32_t cl, pcl, ncl, tcl, dsc, tlen, ulen, *tbl;
-
-		if (ofs == CREATE_LINKMAP) {	/* Create CLMT */
-			tbl = fp->cltbl;
-			tlen = *tbl++; ulen = 2;	/* Given table size and required table size */
-			cl = fp->sclust;			/* Top of the chain */
-			if (cl) {
-				do {
-					/* Get a fragment */
-					tcl = cl; ncl = 0; ulen += 2;	/* Top, length and used items */
-					do {
-						pcl = cl; ncl++;
-						cl = get_fat(fp->fs, cl);
-						if (cl <= 1) ABORT(fp->fs, FR_INT_ERR);
-						if (cl == 0xFFFFFFFF) ABORT(fp->fs, FR_DISK_ERR);
-					} while (cl == pcl + 1);
-					if (ulen <= tlen) {		/* Store the length and top of the fragment */
-						*tbl++ = ncl; *tbl++ = tcl;
-					}
-				} while (cl < fp->fs->n_fatent);	/* Repeat until end of chain */
-			}
-			*fp->cltbl = ulen;	/* Number of items used */
-			if (ulen <= tlen)
-				*tbl = 0;		/* Terminate table */
-			else
-				res = FR_NOT_ENOUGH_CORE;	/* Given table size is smaller than required */
-
-		} else {						/* Fast seek */
-			if (ofs > fp->fsize)		/* Clip offset at the file size */
-				ofs = fp->fsize;
-			fp->fptr = ofs;				/* Set file pointer */
-			if (ofs) {
-				fp->clust = clmt_clust(fp, ofs - 1);
-				dsc = clust2sect(fp->fs, fp->clust);
-				if (!dsc) ABORT(fp->fs, FR_INT_ERR);
-				dsc += (ofs - 1) / SS(fp->fs) & (fp->fs->csize - 1);
-				if (fp->fptr % SS(fp->fs) && dsc != fp->dsect) {	/* Refill sector cache if needed */
-#if !_FS_TINY
-#if !_FS_READONLY
-					if (fp->flag & FA__DIRTY) {		/* Write-back dirty sector cache */
-						if (disk_write(fp->fs->drv, fp->buf, fp->dsect, 1) != RES_OK)
-							ABORT(fp->fs, FR_DISK_ERR);
-						fp->flag &= ~FA__DIRTY;
-					}
-#endif
-					if (disk_read(fp->fs->drv, fp->buf, dsc, 1) != RES_OK)	/* Load current sector */
-						ABORT(fp->fs, FR_DISK_ERR);
-#endif
-					fp->dsect = dsc;
-				}
-			}
-		}
-	} else
-#endif
-
-	/* Normal Seek */
-	{
 		uint32_t clst, bcs, nsect, ifptr;
 
 		if (ofs > fp->fsize					/* In read-only mode, clip offset with the file size */
@@ -3040,7 +2857,6 @@ FRESULT f_lseek (
 			fp->flag |= FA__WRITTEN;
 		}
 #endif
-	}
 
 	LEAVE_FF(fp->fs, res);
 }

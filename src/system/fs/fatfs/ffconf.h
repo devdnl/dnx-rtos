@@ -35,9 +35,6 @@
 /   2: f_opendir and f_readdir are removed in addition to 1.
 /   3: f_lseek is removed in addition to 2. */
 
-#define _USE_FASTSEEK           0    /* 0:Disable or 1:Enable */
-/* To enable fast seek feature, set _USE_FASTSEEK to 1. */
-
 /*---------------------------------------------------------------------------/
 / Locale and Namespace Configurations
 /----------------------------------------------------------------------------*/

@@ -125,9 +125,7 @@ typedef struct {
         uint32_t        dir_sect;          /* Sector containing the directory entry */
         uint8_t*        dir_ptr;           /* Pointer to the directory entry in the window */
 #endif
-#if _USE_FASTSEEK
-        uint32_t*       cltbl;             /* Pointer to the cluster link map table (null on file open) */
-#endif
+
 #if _FS_LOCK
         UINT         lockid;            /* File lock ID (index of file semaphore table Files[]) */
 #endif
