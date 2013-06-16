@@ -44,7 +44,11 @@ extern "C" {
 ==============================================================================*/
 struct fatdir {
         FATDIR dir;
+#if _USE_LFN == 0
         char name[14];
+#else
+        char name[(_MAX_LFN + 1) * sizeof(TCHAR)];
+#endif
 };
 
 struct fatfs {
@@ -490,11 +494,21 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
         dirent.size = 0;
 
         FILINFO fat_file_info;
+#if _USE_LFN != 0
+        fat_file_info.lfname = &fatdir->name[0];
+        fat_file_info.lfsize = _MAX_LFN;
+#endif
         if (f_readdir(&fatdir->dir, &fat_file_info) == FR_OK) {
                 if (fat_file_info.fname[0] != 0) {
+#if _USE_LFN != 0
+                        if (fat_file_info.lfname[0] == 0) {
+                                memcpy(fatdir->name, fat_file_info.fname, 13);
+                        }
+#else
                         memcpy(fatdir->name, fat_file_info.fname, 13);
-                        dirent.filetype = fat_file_info.fattrib & AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+#endif
                         dirent.name     = &fatdir->name[0];
+                        dirent.filetype = fat_file_info.fattrib & AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
                         dirent.size     = fat_file_info.fsize;
                 }
         }

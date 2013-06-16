@@ -38,8 +38,7 @@
 /*---------------------------------------------------------------------------/
 / Locale and Namespace Configurations
 /----------------------------------------------------------------------------*/
-
-#define _CODE_PAGE              850
+#define _CODE_PAGE              852
 /* The _CODE_PAGE specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
@@ -72,7 +71,7 @@
 */
 
 
-#define _USE_LFN                0        /* 0 to 3 */
+#define _USE_LFN                3        /* 0 to 3 */
 #define _MAX_LFN                255      /* Maximum LFN length to handle (12 to 255) */
 /* The _USE_LFN option switches the LFN support.
 /
@@ -106,10 +105,6 @@
 / Physical Drive Configurations
 /----------------------------------------------------------------------------*/
 
-//#define _VOLUMES                1
-/* Number of volumes (logical drives) to be used. */
-
-
 #define _MAX_SS                 512        /* 512, 1024, 2048 or 4096 */
 /* Maximum sector size to be handled.
 /  Always set 512 for memory card and hard disk but a larger value may be
@@ -117,18 +112,9 @@
 /  When _MAX_SS is larger than 512, it configures FatFs to variable sector size
 /  and GET_SECTOR_SIZE command must be implemented to the disk_ioctl function. */
 
-
-//#define _MULTI_PARTITION        0    /* 0:Single partition, 1:Enable multiple partition */
-/* When set to 0, each volume is bound to the same physical drive number and
-/ it can mount only first primary partition. When it is set to 1, each volume
-/ is tied to the partitions listed in VolToPart[]. */
-
-
 #define _USE_ERASE              0    /* 0:Disable or 1:Enable */
 /* To enable sector erase feature, set _USE_ERASE to 1. CTRL_ERASE_SECTOR command
 /  should be added to the disk_ioctl function. */
-
-
 
 /*---------------------------------------------------------------------------/
 / System Configurations
@@ -152,7 +138,7 @@
 /  windows.h, ucos_ii.h and semphr.h, must be included prior to ff.h. */
 
 #define _FS_REENTRANT           1         /* 0:Disable or 1:Enable */
-#define _FS_TIMEOUT             10000     /* Timeout period in unit of time ticks */
+#define _FS_TIMEOUT             15000     /* Timeout period in unit of time ticks */
 #define _SYNC_t                 mutex_t*  /* O/S dependent type of sync object. e.g. HANDLE, OS_EVENT*, ID and etc.. */
 
 /* The _FS_REENTRANT option switches the reentrancy (thread safe) of the FatFs module.

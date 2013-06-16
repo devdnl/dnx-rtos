@@ -396,18 +396,18 @@ FILESEM	Files[_FS_LOCK];	/* File lock semaphores */
 #define	FREE_BUF()
 
 #elif _USE_LFN == 1			/* LFN feature with static working buffer */
-static WCHAR LfnBuf[_MAX_LFN+1];
+static wchar_t LfnBuf[_MAX_LFN+1];
 #define	DEF_NAMEBUF			uint8_t sfn[12]
 #define INIT_BUF(dobj)		{ (dobj).fn = sfn; (dobj).lfn = LfnBuf; }
 #define	FREE_BUF()
 
 #elif _USE_LFN == 2 		/* LFN feature with dynamic working buffer on the stack */
-#define	DEF_NAMEBUF			uint8_t sfn[12]; WCHAR lbuf[_MAX_LFN+1]
+#define	DEF_NAMEBUF			uint8_t sfn[12]; wchar_t lbuf[_MAX_LFN+1]
 #define INIT_BUF(dobj)		{ (dobj).fn = sfn; (dobj).lfn = lbuf; }
 #define	FREE_BUF()
 
 #elif _USE_LFN == 3 		/* LFN feature with dynamic working buffer on the heap */
-#define	DEF_NAMEBUF			uint8_t sfn[12]; WCHAR *lfn
+#define	DEF_NAMEBUF			uint8_t sfn[12]; wchar_t *lfn
 #define INIT_BUF(dobj)		{ lfn = ff_memalloc((_MAX_LFN + 1) * 2); \
 							  if (!lfn) LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE); \
 							  (dobj).lfn = lfn;	(dobj).fn = sfn; }
@@ -1099,12 +1099,12 @@ const uint8_t LfnOfs[] = {1,3,5,7,9,14,16,18,20,22,24,28,30};	/* Offset of LFN c
 
 static
 int cmp_lfn (			/* 1:Matched, 0:Not matched */
-	WCHAR *lfnbuf,		/* Pointer to the LFN to be compared */
+	wchar_t *lfnbuf,		/* Pointer to the LFN to be compared */
 	uint8_t *dir			/* Pointer to the directory entry containing a part of LFN */
 )
 {
 	uint i, s;
-	WCHAR wc, uc;
+	wchar_t wc, uc;
 
 
 	i = ((dir[LDIR_Ord] & ~LLE) - 1) * 13;	/* Get offset in the LFN buffer */
@@ -1130,12 +1130,12 @@ int cmp_lfn (			/* 1:Matched, 0:Not matched */
 
 static
 int pick_lfn (			/* 1:Succeeded, 0:Buffer overflow */
-	WCHAR *lfnbuf,		/* Pointer to the Unicode-LFN buffer */
+	wchar_t *lfnbuf,		/* Pointer to the Unicode-LFN buffer */
 	uint8_t *dir			/* Pointer to the directory entry */
 )
 {
 	uint i, s;
-	WCHAR wc, uc;
+	wchar_t wc, uc;
 
 
 	i = ((dir[LDIR_Ord] & 0x3F) - 1) * 13;	/* Offset in the LFN buffer */
@@ -1163,14 +1163,14 @@ int pick_lfn (			/* 1:Succeeded, 0:Buffer overflow */
 #if !_FS_READONLY
 static
 void fit_lfn (
-	const WCHAR *lfnbuf,	/* Pointer to the LFN buffer */
+	const wchar_t *lfnbuf,	/* Pointer to the LFN buffer */
 	uint8_t *dir,				/* Pointer to the directory entry */
 	uint8_t ord,				/* LFN order (1-20) */
 	uint8_t sum				/* SFN sum */
 )
 {
 	uint i, s;
-	WCHAR wc;
+	wchar_t wc;
 
 
 	dir[LDIR_Chksum] = sum;			/* Set check sum */
@@ -1201,7 +1201,7 @@ void fit_lfn (
 void gen_numname (
 	uint8_t *dst,			/* Pointer to generated SFN */
 	const uint8_t *src,	/* Pointer to source SFN to be modified */
-	const WCHAR *lfn,	/* Pointer to LFN */
+	const wchar_t *lfn,	/* Pointer to LFN */
 	uint16_t seq			/* Sequence number */
 )
 {
@@ -1393,7 +1393,7 @@ FRESULT dir_register (	/* FR_OK:Successful, FR_DENIED:No free entry or too many 
 #if _USE_LFN	/* LFN configuration */
 	uint16_t n, ne;
 	uint8_t sn[12], *fn, sum;
-	WCHAR *lfn;
+	wchar_t *lfn;
 
 
 	fn = dj->fn; lfn = dj->lfn;
@@ -1515,7 +1515,7 @@ FRESULT create_name (
 {
 #if _USE_LFN	/* LFN configuration */
 	uint8_t b, cf;
-	WCHAR w, *lfn;
+	wchar_t w, *lfn;
 	uint i, ni, si, di;
 	const TCHAR *p;
 
@@ -1770,7 +1770,7 @@ void get_fileinfo (		/* No return code */
 #if _USE_LFN
 	if (fno->lfname && fno->lfsize) {
 		TCHAR *tp = fno->lfname;
-		WCHAR w, *lfn;
+		wchar_t w, *lfn;
 
 		i = 0;
 		if (dj->sect && dj->lfn_idx != 0xFFFF) {/* Get LFN if available */

@@ -57,7 +57,7 @@ extern PARTITION VolToPart[];           /* Volume - Partition resolution table *
 #error _LFN_UNICODE must be 0 in non-LFN cfg.
 #endif
 #ifndef _INC_TCHAR
-typedef WCHAR TCHAR;
+typedef wchar_t TCHAR;
 #define _T(x) L ## x
 #define _TEXT(x) L ## x
 #endif
@@ -127,7 +127,7 @@ typedef struct {
 #endif
 
 #if _FS_LOCK
-        UINT         lockid;            /* File lock ID (index of file semaphore table Files[]) */
+        uint         lockid;            /* File lock ID (index of file semaphore table Files[]) */
 #endif
 #if !_FS_TINY
         uint8_t         buf[_MAX_SS];      /* File data read/write buffer */
@@ -148,7 +148,7 @@ typedef struct {
         uint8_t*        dir;               /* Pointer to the current SFN entry in the win[] */
         uint8_t*        fn;                /* Pointer to the SFN (in/out) {file[8],ext[3],status[1]} */
 #if _USE_LFN
-        WCHAR*        lfn;              /* Pointer to the LFN working buffer */
+        wchar_t*        lfn;              /* Pointer to the LFN working buffer */
         uint16_t        lfn_idx;            /* Last matched LFN index number (0xFFFF:No LFN) */
 #endif
 } FATDIR;
@@ -165,7 +165,7 @@ typedef struct {
         TCHAR        fname[13];         /* Short file name (8.3 format) */
 #if _USE_LFN
         TCHAR*       lfname;            /* Pointer to the LFN buffer */
-        UINT         lfsize;            /* Size of LFN buffer in TCHAR */
+        uint         lfsize;            /* Size of LFN buffer in TCHAR */
 #endif
 } FILINFO;
 
@@ -231,12 +231,8 @@ extern FRESULT f_rename(FATFS*, const TCHAR* path_old, const TCHAR* path_new);  
 
 /* Unicode support functions */
 #if _USE_LFN                                    /* Unicode - OEM code conversion */
-WCHAR ff_convert (WCHAR chr, UINT dir);         /* OEM-Unicode bidirectional conversion */
-WCHAR ff_wtoupper (WCHAR chr);                  /* Unicode upper-case conversion */
-#if _USE_LFN == 3                               /* Memory functions */
-void* ff_memalloc (UINT msize);                 /* Allocate memory block */
-void ff_memfree (void* mblock);                 /* Free memory block */
-#endif
+wchar_t ff_convert (wchar_t chr, uint dir);         /* OEM-Unicode bidirectional conversion */
+wchar_t ff_wtoupper (wchar_t chr);                  /* Unicode upper-case conversion */
 #endif
 
 

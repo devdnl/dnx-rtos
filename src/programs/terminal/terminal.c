@@ -470,7 +470,7 @@ static enum cmd_status cmd_mkdir(char *arg)
         }
 
         if (mkdir(newpath) != 0) {
-                printf("Cannot create directory \"%s\": no such file or directory\n", arg);
+                printf("Cannot create directory \"%s\"\n", arg);
         }
 
         if (freePath)

@@ -44,6 +44,12 @@ extern int  ff_del_syncobj(_SYNC_t sobj);              /* Delete a sync object *
 
 extern uint32_t get_fattime (void);
 
+
+#if _USE_LFN == 3                               /* Memory functions */
+extern void *ff_memalloc(uint msize);                 /* Allocate memory block */
+extern void  ff_memfree(void *mblock);                 /* Free memory block */
+#endif
+
 /* Disk Status Bits (DSTATUS) */
 #define STA_NOINIT              0x01    /* Drive not initialized */
 #define STA_NODISK              0x02    /* No medium in the drive */
