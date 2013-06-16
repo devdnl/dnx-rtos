@@ -1329,7 +1329,7 @@ FRESULT dir_read (
                 if (c == 0) { res = FR_NO_FILE; break; }        /* Reached to end of table */
                 a = dir[DIR_Attr] & AM_MASK;
 #if _USE_LFN        /* LFN configuration */
-                if (c == DDE || (!_FS_RPATH && c == '.') || (a == AM_VOL) != vol) {        /* An entry without valid data */
+                if (c == DDE || (/*!_FS_RPATH && */c == '.') || (a == AM_VOL) != vol) {        /* An entry without valid data */
                         ord = 0xFF;
                 } else {
                         if (a == AM_LFN) {                        /* An LFN entry is found */
@@ -1378,8 +1378,8 @@ FRESULT dir_register (        /* FR_OK:Successful, FR_DENIED:No free entry or to
         fn = dj->fn; lfn = dj->lfn;
         memcpy(sn, fn, 12);
 
-        if (_FS_RPATH && (sn[NS] & NS_DOT))                /* Cannot create dot entry */
-                return FR_INVALID_NAME;
+//        if (_FS_RPATH && (sn[NS] & NS_DOT))                /* Cannot create dot entry */
+//                return FR_INVALID_NAME;
 
         if (sn[NS] & NS_LOSS) {                        /* When LFN is out of 8.3 format, generate a numbered name */
                 fn[NS] = 0; dj->lfn = 0;                        /* Find only SFN */
@@ -1518,16 +1518,7 @@ FRESULT create_name (
         }
         *path = &p[si];                                                /* Return pointer to the next segment */
         cf = (w < ' ') ? NS_LAST : 0;                /* Set last segment flag if end of path */
-#if _FS_RPATH
-        if ((di == 1 && lfn[di-1] == '.') || /* Is this a dot entry? */
-                (di == 2 && lfn[di-1] == '.' && lfn[di-2] == '.')) {
-                lfn[di] = 0;
-                for (i = 0; i < 11; i++)
-                        dj->fn[i] = (i < di) ? '.' : ' ';
-                dj->fn[i] = cf | NS_DOT;                /* This is a dot entry */
-                return FR_OK;
-        }
-#endif
+
         while (di) {                                                /* Strip trailing spaces and dots */
                 w = lfn[di-1];
                 if (w != ' ' && w != '.') break;
@@ -1777,18 +1768,9 @@ FRESULT follow_path (        /* FR_OK(0): successful, !=0: error code */
         FRESULT res;
         uint8_t *dir, ns;
 
-
-#if _FS_RPATH
-        if (*path == '/' || *path == '\\') { /* There is a heading separator */
-                path++;        dj->sclust = 0;                /* Strip it and start from the root dir */
-        } else {                                                        /* No heading separator */
-                dj->sclust = dj->fs->cdir;        /* Start from the current dir */
-        }
-#else
         if (*path == '/' || *path == '\\')        /* Strip heading separator if exist */
                 path++;
         dj->sclust = 0;                                                /* Start from the root dir */
-#endif
 
         if ((uint)*path < ' ') {                        /* Nul path means the start directory itself */
                 res = dir_sdi(dj, 0);
@@ -1802,13 +1784,13 @@ FRESULT follow_path (        /* FR_OK(0): successful, !=0: error code */
                         if (res != FR_OK) {                                /* Failed to find the object */
                                 if (res != FR_NO_FILE) break;        /* Abort if any hard error occurred */
                                 /* Object not found */
-                                if (_FS_RPATH && (ns & NS_DOT)) {        /* If dot entry is not exit */
-                                        dj->sclust = 0; dj->dir = 0;        /* It is the root dir */
-                                        res = FR_OK;
-                                        if (!(ns & NS_LAST)) continue;
-                                } else {                                                        /* Could not find the object */
+//                                if (_FS_RPATH && (ns & NS_DOT)) {        /* If dot entry is not exit */
+//                                        dj->sclust = 0; dj->dir = 0;        /* It is the root dir */
+//                                        res = FR_OK;
+//                                        if (!(ns & NS_LAST)) continue;
+//                                } else {                                                        /* Could not find the object */
                                         if (!(ns & NS_LAST)) res = FR_NO_PATH;
-                                }
+//                                }
                                 break;
                         }
                         if (ns & NS_LAST) break;                        /* Last segment match. Function completed. */
@@ -1952,9 +1934,6 @@ FRESULT chk_mounted (        /* FR_OK(0): successful, !=0: any error occurred */
         fs->fs_type = fmt;                /* FAT sub-type */
         fs->winsect = 0;                /* Invalidate sector cache */
         fs->wflag = 0;
-#if _FS_RPATH
-        fs->cdir = 0;                        /* Current directory (root dir) */
-#endif
 #if _FS_LOCK                                /* Clear file lock semaphores */
         clear_lock(fs);
 #endif
@@ -2794,8 +2773,8 @@ FRESULT f_unlink (
 //        if (res == FR_OK) {
                 INIT_BUF(dj);
                 res = follow_path(&dj, path);                /* Follow the file path */
-                if (_FS_RPATH && res == FR_OK && (dj.fn[NS] & NS_DOT))
-                        res = FR_INVALID_NAME;                        /* Cannot remove dot entry */
+//                if (_FS_RPATH && res == FR_OK && (dj.fn[NS] & NS_DOT))
+//                        res = FR_INVALID_NAME;                        /* Cannot remove dot entry */
 #if _FS_LOCK
                 if (res == FR_OK) res = chk_lock(&dj, 2);        /* Cannot remove open file */
 #endif
@@ -2818,9 +2797,6 @@ FRESULT f_unlink (
                                         if (res == FR_OK) {
                                                 res = dir_read(&sdj, 0);        /* Read an item */
                                                 if (res == FR_OK                /* Not empty dir */
-#if _FS_RPATH
-                                                || dclst == dj.fs->cdir        /* Current dir */
-#endif
                                                 ) res = FR_DENIED;
                                                 if (res == FR_NO_FILE) res = FR_OK;        /* Empty */
                                         }
@@ -2866,8 +2842,8 @@ FRESULT f_mkdir(
                 INIT_BUF(dj);
                 res = follow_path(&dj, path);                        /* Follow the file path */
                 if (res == FR_OK) res = FR_EXIST;                /* Any object with same name is already existing */
-                if (_FS_RPATH && res == FR_NO_FILE && (dj.fn[NS] & NS_DOT))
-                        res = FR_INVALID_NAME;
+//                if (_FS_RPATH && res == FR_NO_FILE && (dj.fn[NS] & NS_DOT))
+//                        res = FR_INVALID_NAME;
                 if (res == FR_NO_FILE) {                                /* Can create a new directory */
                         dcl = create_chain(dj.fs, 0);                /* Allocate a cluster for the new directory table */
                         res = FR_OK;
@@ -2942,8 +2918,8 @@ FRESULT f_chmod (
                 INIT_BUF(dj);
                 res = follow_path(&dj, path);                /* Follow the file path */
                 FREE_BUF();
-                if (_FS_RPATH && res == FR_OK && (dj.fn[NS] & NS_DOT))
-                        res = FR_INVALID_NAME;
+//                if (_FS_RPATH && res == FR_OK && (dj.fn[NS] & NS_DOT))
+//                        res = FR_INVALID_NAME;
                 if (res == FR_OK) {
                         dir = dj.dir;
                         if (!dir) {                                                /* Is it a root directory? */
@@ -2986,8 +2962,8 @@ FRESULT f_utime (
                 INIT_BUF(dj);
                 res = follow_path(&dj, path);        /* Follow the file path */
                 FREE_BUF();
-                if (_FS_RPATH && res == FR_OK && (dj.fn[NS] & NS_DOT))
-                        res = FR_INVALID_NAME;
+//                if (_FS_RPATH && res == FR_OK && (dj.fn[NS] & NS_DOT))
+//                        res = FR_INVALID_NAME;
                 if (res == FR_OK) {
                         dir = dj.dir;
                         if (!dir) {                                        /* Root directory */
@@ -3031,8 +3007,8 @@ FRESULT f_rename (
                 djn.fs = djo.fs;
                 INIT_BUF(djo);
                 res = follow_path(&djo, path_old);                /* Check old object */
-                if (_FS_RPATH && res == FR_OK && (djo.fn[NS] & NS_DOT))
-                        res = FR_INVALID_NAME;
+//                if (_FS_RPATH && res == FR_OK && (djo.fn[NS] & NS_DOT))
+//                        res = FR_INVALID_NAME;
 #if _FS_LOCK
                 if (res == FR_OK) res = chk_lock(&djo, 2);
 #endif

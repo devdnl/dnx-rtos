@@ -91,15 +91,6 @@
 /  enable LFN feature and set _LFN_UNICODE to 1. */
 #define _LFN_UNICODE            0    /* 0:ANSI/OEM or 1:Unicode */
 
-/* The _FS_RPATH option configures relative path feature.
-/
-/   0: Disable relative path feature and remove related functions.
-/   1: Enable relative path. f_chdrive() and f_chdir() are available.
-/   2: f_getcwd() is available in addition to 1.
-/
-/  Note that output of the f_readdir fnction is affected by this option. */
-#define _FS_RPATH               0    /* 0 to 2 */
-
 /*---------------------------------------------------------------------------/
 / Physical Drive Configurations
 /----------------------------------------------------------------------------*/
@@ -118,20 +109,6 @@
 /*---------------------------------------------------------------------------/
 / System Configurations
 /----------------------------------------------------------------------------*/
-
-#define _WORD_ACCESS            0    /* 0 or 1 */
-/* Set 0 first and it is always compatible with all platforms. The _WORD_ACCESS
-/  option defines which access method is used to the word data on the FAT volume.
-/
-/   0: Byte-by-byte access.
-/   1: Word access. Do not choose this unless following condition is met.
-/
-/  When the byte order on the memory is big-endian or address miss-aligned word
-/  access results incorrect behavior, the _WORD_ACCESS must be set to 0.
-/  If it is not the case, the value can also be set to 1 to improve the
-/  performance and code size.
-*/
-
 
 /* A header file that defines sync object types on the O/S, such as
 /  windows.h, ucos_ii.h and semphr.h, must be included prior to ff.h. */

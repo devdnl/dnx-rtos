@@ -98,9 +98,6 @@ typedef struct {
         uint32_t        last_clust;        /* Last allocated cluster */
         uint32_t        free_clust;        /* Number of free clusters */
         uint32_t        fsi_sector;        /* fsinfo sector (FAT32) */
-#if _FS_RPATH
-        uint32_t        cdir;              /* Current directory start cluster (0:root) */
-#endif
         uint32_t        n_fatent;          /* Number of FAT entries (= number of clusters + 2) */
         uint32_t        fsize;             /* Sectors per FAT */
         uint32_t        volbase;           /* Volume start sector */
@@ -280,17 +277,10 @@ wchar_t ff_wtoupper (wchar_t chr);                  /* Unicode upper-case conver
 /*--------------------------------*/
 /* Multi-byte word access macros  */
 
-#if _WORD_ACCESS == 1        /* Enable word access to the FAT structure */
-#define LD_WORD(ptr)         (uint16_t)(*(uint16_t*)(uint8_t*)(ptr))
-#define LD_DWORD(ptr)        (uint32_t)(*(uint32_t*)(uint8_t*)(ptr))
-#define ST_WORD(ptr,val)     *(uint16_t*)(uint8_t*)(ptr)=(uint16_t)(val)
-#define ST_DWORD(ptr,val)    *(uint32_t*)(uint8_t*)(ptr)=(uint32_t)(val)
-#else /* Use byte-by-byte access to the FAT structure */
 #define LD_WORD(ptr)         (uint16_t)(((uint16_t)*((uint8_t*)(ptr)+1)<<8)|(uint16_t)*(uint8_t*)(ptr))
 #define LD_DWORD(ptr)        (uint32_t)(((uint32_t)*((uint8_t*)(ptr)+3)<<24)|((uint32_t)*((uint8_t*)(ptr)+2)<<16)|((uint16_t)*((uint8_t*)(ptr)+1)<<8)|*(uint8_t*)(ptr))
 #define ST_WORD(ptr,val)     *(uint8_t*)(ptr)=(uint8_t)(val); *((uint8_t*)(ptr)+1)=(uint8_t)((uint16_t)(val)>>8)
 #define ST_DWORD(ptr,val)    *(uint8_t*)(ptr)=(uint8_t)(val); *((uint8_t*)(ptr)+1)=(uint8_t)((uint16_t)(val)>>8); *((uint8_t*)(ptr)+2)=(uint8_t)((uint32_t)(val)>>16); *((uint8_t*)(ptr)+3)=(uint8_t)((uint32_t)(val)>>24)
-#endif
 
 #ifdef __cplusplus
 }
