@@ -28,7 +28,7 @@
 #include "../libfat.h"
 
 
-#if _CODE_PAGE == 437
+#if _LIBFAT_CODE_PAGE == 437
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP437(0x80-0xFF) to Unicode conversion table */
@@ -50,7 +50,7 @@ const wchar_t Tbl[] = {	/*  CP437(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 720
+#elif _LIBFAT_CODE_PAGE == 720
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP720(0x80-0xFF) to Unicode conversion table */
@@ -72,7 +72,7 @@ const wchar_t Tbl[] = {	/*  CP720(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 737
+#elif _LIBFAT_CODE_PAGE == 737
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP737(0x80-0xFF) to Unicode conversion table */
@@ -94,7 +94,7 @@ const wchar_t Tbl[] = {	/*  CP737(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 775
+#elif _LIBFAT_CODE_PAGE == 775
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP775(0x80-0xFF) to Unicode conversion table */
@@ -116,7 +116,7 @@ const wchar_t Tbl[] = {	/*  CP775(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x2219, 0x00B7, 0x00B9, 0x00B3, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 850
+#elif _LIBFAT_CODE_PAGE == 850
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP850(0x80-0xFF) to Unicode conversion table */
@@ -138,7 +138,7 @@ const wchar_t Tbl[] = {	/*  CP850(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x00A8, 0x00B7, 0x00B9, 0x00B3, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 852
+#elif _LIBFAT_CODE_PAGE == 852
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP852(0x80-0xFF) to Unicode conversion table */
@@ -160,7 +160,7 @@ const wchar_t Tbl[] = {	/*  CP852(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x00A8, 0x02D9, 0x0171, 0x0158, 0x0159, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 855
+#elif _LIBFAT_CODE_PAGE == 855
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP855(0x80-0xFF) to Unicode conversion table */
@@ -182,7 +182,7 @@ const wchar_t Tbl[] = {	/*  CP855(0x80-0xFF) to Unicode conversion table */
 	0x042D, 0x0449, 0x0429, 0x0447, 0x0427, 0x00A7, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 857
+#elif _LIBFAT_CODE_PAGE == 857
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP857(0x80-0xFF) to Unicode conversion table */
@@ -204,7 +204,7 @@ const wchar_t Tbl[] = {	/*  CP857(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x00A8, 0x00B7, 0x00B9, 0x00B3, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 858
+#elif _LIBFAT_CODE_PAGE == 858
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP858(0x80-0xFF) to Unicode conversion table */
@@ -226,7 +226,7 @@ const wchar_t Tbl[] = {	/*  CP858(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x00A8, 0x00B7, 0x00B9, 0x00B3, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 862
+#elif _LIBFAT_CODE_PAGE == 862
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP862(0x80-0xFF) to Unicode conversion table */
@@ -248,7 +248,7 @@ const wchar_t Tbl[] = {	/*  CP862(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 866
+#elif _LIBFAT_CODE_PAGE == 866
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP866(0x80-0xFF) to Unicode conversion table */
@@ -270,7 +270,7 @@ const wchar_t Tbl[] = {	/*  CP866(0x80-0xFF) to Unicode conversion table */
 	0x00B0, 0x2219, 0x00B7, 0x221A, 0x2116, 0x00A4, 0x25A0, 0x00A0
 };
 
-#elif _CODE_PAGE == 874
+#elif _LIBFAT_CODE_PAGE == 874
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP874(0x80-0xFF) to Unicode conversion table */
@@ -292,7 +292,7 @@ const wchar_t Tbl[] = {	/*  CP874(0x80-0xFF) to Unicode conversion table */
 	0x0E58, 0x0E59, 0x0E5A, 0x0E5B, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-#elif _CODE_PAGE == 1250
+#elif _LIBFAT_CODE_PAGE == 1250
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1250(0x80-0xFF) to Unicode conversion table */
@@ -314,7 +314,7 @@ const wchar_t Tbl[] = {	/*  CP1250(0x80-0xFF) to Unicode conversion table */
 	0x0159, 0x016F, 0x00FA, 0x0171, 0x00FC, 0x00FD, 0x0163, 0x02D9
 };
 
-#elif _CODE_PAGE == 1251
+#elif _LIBFAT_CODE_PAGE == 1251
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1251(0x80-0xFF) to Unicode conversion table */
@@ -336,7 +336,7 @@ const wchar_t Tbl[] = {	/*  CP1251(0x80-0xFF) to Unicode conversion table */
 	0x0448, 0x0449, 0x044A, 0x044B, 0x044C, 0x044D, 0x044E, 0x044F
 };
 
-#elif _CODE_PAGE == 1252
+#elif _LIBFAT_CODE_PAGE == 1252
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1252(0x80-0xFF) to Unicode conversion table */
@@ -358,7 +358,7 @@ const wchar_t Tbl[] = {	/*  CP1252(0x80-0xFF) to Unicode conversion table */
 	0x00F8, 0x00F9, 0x00FA, 0x00FB, 0x00FC, 0x00FD, 0x00FE, 0x00FF
 };
 
-#elif _CODE_PAGE == 1253
+#elif _LIBFAT_CODE_PAGE == 1253
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1253(0x80-0xFF) to Unicode conversion table */
@@ -380,7 +380,7 @@ const wchar_t Tbl[] = {	/*  CP1253(0x80-0xFF) to Unicode conversion table */
 	0x03C8, 0x03C9, 0x03CA, 0x03CB, 0x03CC, 0x03CD, 0x03CE, 0x0000
 };
 
-#elif _CODE_PAGE == 1254
+#elif _LIBFAT_CODE_PAGE == 1254
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1254(0x80-0xFF) to Unicode conversion table */
@@ -402,7 +402,7 @@ const wchar_t Tbl[] = {	/*  CP1254(0x80-0xFF) to Unicode conversion table */
 	0x00F8, 0x00F9, 0x00FA, 0x00FB, 0x00FC, 0x0131, 0x015F, 0x00FF
 };
 
-#elif _CODE_PAGE == 1255
+#elif _LIBFAT_CODE_PAGE == 1255
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1255(0x80-0xFF) to Unicode conversion table */
@@ -424,7 +424,7 @@ const wchar_t Tbl[] = {	/*  CP1255(0x80-0xFF) to Unicode conversion table */
 	0x05E8, 0x05E9, 0x05EA, 0x0000, 0x0000, 0x200E, 0x200F, 0x0000
 };
 
-#elif _CODE_PAGE == 1256
+#elif _LIBFAT_CODE_PAGE == 1256
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1256(0x80-0xFF) to Unicode conversion table */
@@ -446,7 +446,7 @@ const wchar_t Tbl[] = {	/*  CP1256(0x80-0xFF) to Unicode conversion table */
 	0x0651, 0x00F9, 0x0652, 0x00FB, 0x00FC, 0x200E, 0x200F, 0x06D2
 }
 
-#elif _CODE_PAGE == 1257
+#elif _LIBFAT_CODE_PAGE == 1257
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1257(0x80-0xFF) to Unicode conversion table */
@@ -468,7 +468,7 @@ const wchar_t Tbl[] = {	/*  CP1257(0x80-0xFF) to Unicode conversion table */
 	0x0173, 0x014E, 0x015B, 0x016B, 0x00FC, 0x017C, 0x017E, 0x02D9
 };
 
-#elif _CODE_PAGE == 1258
+#elif _LIBFAT_CODE_PAGE == 1258
 #define _TBLDEF 1
 static
 const wchar_t Tbl[] = {	/*  CP1258(0x80-0xFF) to Unicode conversion table */
@@ -493,7 +493,7 @@ const wchar_t Tbl[] = {	/*  CP1258(0x80-0xFF) to Unicode conversion table */
 #endif
 
 
-#if !_TBLDEF || !_USE_LFN
+#if !_TBLDEF || !_LIBFAT_USE_LFN
 #error This file is not needed in current configuration. Remove from the project.
 #endif
 

@@ -7,7 +7,7 @@
 #include "../libfat.h"
 
 
-#if !_USE_LFN || _CODE_PAGE != 936
+#if !_LIBFAT_USE_LFN || _LIBFAT_CODE_PAGE != 936
 #error This file is not needed in current configuration. Remove from the project.
 #endif
 

@@ -44,10 +44,10 @@ extern "C" {
 ==============================================================================*/
 struct fatdir {
         FATDIR dir;
-#if _USE_LFN == 0
+#if _LIBFAT_USE_LFN == 0
         char name[14];
 #else
-        char name[(_MAX_LFN + 1) * sizeof(TCHAR)];
+        char name[(_LIBFAT_MAX_LFN + 1) * sizeof(TCHAR)];
 #endif
 };
 
@@ -494,13 +494,13 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
         dirent.size = 0;
 
         FILINFO fat_file_info;
-#if _USE_LFN != 0
+#if _LIBFAT_USE_LFN != 0
         fat_file_info.lfname = &fatdir->name[0];
-        fat_file_info.lfsize = _MAX_LFN;
+        fat_file_info.lfsize = _LIBFAT_MAX_LFN;
 #endif
         if (f_readdir(&fatdir->dir, &fat_file_info) == FR_OK) {
                 if (fat_file_info.fname[0] != 0) {
-#if _USE_LFN != 0
+#if _LIBFAT_USE_LFN != 0
                         if (fat_file_info.lfname[0] == 0) {
                                 memcpy(fatdir->name, fat_file_info.fname, 13);
                         }
@@ -659,9 +659,9 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
         fstat(hdl->fsfile, &fstat);
 
         if (f_getfree(&free_clusters, &hdl->fatfs) == FR_OK) {
-                statfs->f_bsize  = _MAX_SS;
+                statfs->f_bsize  = _LIBFAT_MAX_SS;
                 statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
-                statfs->f_blocks = fstat.st_size / _MAX_SS;
+                statfs->f_blocks = fstat.st_size / _LIBFAT_MAX_SS;
                 statfs->f_ffree  = 0;
                 statfs->f_files  = 0;
                 statfs->f_type   = hdl->fatfs.fs_type;

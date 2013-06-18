@@ -1,3 +1,5 @@
+#ifndef _LIBFAT_
+#define _LIBFAT_
 /*=========================================================================*//**
 @file    libfat.h
 
@@ -39,8 +41,6 @@
 /
 /-----------------------------------------------------------------------------*/
 
-#ifndef _LIBFAT_
-#define _LIBFAT_        82786             /* Revision ID */
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,16 +50,12 @@ extern "C" {
 #include "libfat_conf.h"                     /* FatFs configuration options */
 #include "system/dnxfs.h"               /* dnx file system support */
 
-#if _LIBFAT_ != _FFCONF
-#error Wrong configuration file (libfat_conf.h).
-#endif
-
 
 /* Type of path name strings on FatFs API */
 
-#if _LFN_UNICODE                        /* Unicode string */
-#if !_USE_LFN
-#error _LFN_UNICODE must be 0 in non-LFN cfg.
+#if _LIBFAT_LFN_UNICODE                        /* Unicode string */
+#if !_LIBFAT_USE_LFN
+#error _LIBFAT_LFN_UNICODE must be 0 in non-LFN cfg.
 #endif
 #ifndef _INC_TCHAR
 typedef wchar_t TCHAR;
@@ -89,12 +85,10 @@ typedef struct {
         uint8_t         fsi_flag;          /* fsinfo dirty flag (1:must be written back) */
         uint16_t         id;                /* File system mount ID */
         uint16_t         n_rootdir;         /* Number of root directory entries (FAT12/16) */
-#if _MAX_SS != 512
+#if _LIBFAT_MAX_SS != 512
         uint16_t         ssize;             /* Bytes per sector (512, 1024, 2048 or 4096) */
 #endif
-#if _FS_REENTRANT
-        _SYNC_t      sobj;              /* Identifier of sync object */
-#endif
+        _LIBFAT_SYNC_t      sobj;              /* Identifier of sync object */
         uint32_t        last_clust;        /* Last allocated cluster */
         uint32_t        free_clust;        /* Number of free clusters */
         uint32_t        fsi_sector;        /* fsinfo sector (FAT32) */
@@ -105,7 +99,7 @@ typedef struct {
         uint32_t        dirbase;           /* Root directory start sector (FAT32:Cluster#) */
         uint32_t        database;          /* Data start sector */
         uint32_t        winsect;           /* Current sector appearing in the win[] */
-        uint8_t         win[_MAX_SS];      /* Disk access window for Directory, FAT (and Data on tiny cfg) */
+        uint8_t         win[_LIBFAT_MAX_SS];      /* Disk access window for Directory, FAT (and Data on tiny cfg) */
 } FATFS;
 
 
@@ -123,11 +117,11 @@ typedef struct {
         uint32_t        dsect;             /* Current data sector of fpter */
         uint32_t        dir_sect;          /* Sector containing the directory entry */
         uint8_t*        dir_ptr;           /* Pointer to the directory entry in the window */
-#if _FS_LOCK
+#if _LIBFAT_FS_LOCK
         uint         lockid;            /* File lock ID (index of file semaphore table Files[]) */
 #endif
 #if !_FS_TINY
-        uint8_t         buf[_MAX_SS];      /* File data read/write buffer */
+        uint8_t         buf[_LIBFAT_MAX_SS];      /* File data read/write buffer */
 #endif
 } FATFILE;
 
@@ -144,7 +138,7 @@ typedef struct {
         uint32_t        sect;              /* Current sector */
         uint8_t*        dir;               /* Pointer to the current SFN entry in the win[] */
         uint8_t*        fn;                /* Pointer to the SFN (in/out) {file[8],ext[3],status[1]} */
-#if _USE_LFN
+#if _LIBFAT_USE_LFN
         wchar_t*        lfn;              /* Pointer to the LFN working buffer */
         uint16_t        lfn_idx;            /* Last matched LFN index number (0xFFFF:No LFN) */
 #endif
@@ -160,7 +154,7 @@ typedef struct {
         uint16_t         ftime;             /* Last modified time */
         uint8_t         fattrib;           /* Attribute */
         TCHAR        fname[13];         /* Short file name (8.3 format) */
-#if _USE_LFN
+#if _LIBFAT_USE_LFN
         TCHAR*       lfname;            /* Pointer to the LFN buffer */
         uint         lfsize;            /* Size of LFN buffer in TCHAR */
 #endif
@@ -227,7 +221,7 @@ extern FRESULT f_rename(FATFS*, const TCHAR* path_old, const TCHAR* path_new);  
 
 
 /* Unicode support functions */
-#if _USE_LFN                                    /* Unicode - OEM code conversion */
+#if _LIBFAT_USE_LFN                                    /* Unicode - OEM code conversion */
 wchar_t ff_convert (wchar_t chr, uint dir);         /* OEM-Unicode bidirectional conversion */
 wchar_t ff_wtoupper (wchar_t chr);                  /* Unicode upper-case conversion */
 #endif

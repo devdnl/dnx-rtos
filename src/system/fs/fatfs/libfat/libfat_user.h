@@ -34,18 +34,14 @@ extern DSTATUS disk_status(FILE*);
 extern DRESULT disk_read(FILE*, uint8_t*, uint32_t, uint8_t);
 extern DRESULT disk_write(FILE*, const uint8_t*, uint32_t, uint8_t);
 extern DRESULT disk_ioctl(FILE*, uint8_t, void*);
-
-#if _FS_REENTRANT
-extern int  ff_cre_syncobj(_SYNC_t* sobj);             /* Create a sync object */
-extern int  ff_req_grant(_SYNC_t sobj);                /* Lock sync object */
-extern void ff_rel_grant(_SYNC_t sobj);                /* Unlock sync object */
-extern int  ff_del_syncobj(_SYNC_t sobj);              /* Delete a sync object */
-#endif
-
+extern int  ff_cre_syncobj(_LIBFAT_SYNC_t* sobj);             /* Create a sync object */
+extern int  ff_req_grant(_LIBFAT_SYNC_t sobj);                /* Lock sync object */
+extern void ff_rel_grant(_LIBFAT_SYNC_t sobj);                /* Unlock sync object */
+extern int  ff_del_syncobj(_LIBFAT_SYNC_t sobj);              /* Delete a sync object */
 extern uint32_t get_fattime (void);
 
 
-#if _USE_LFN == 3                               /* Memory functions */
+#if _LIBFAT_USE_LFN == 3                               /* Memory functions */
 extern void *ff_memalloc(uint msize);                 /* Allocate memory block */
 extern void  ff_memfree(void *mblock);                 /* Free memory block */
 #endif

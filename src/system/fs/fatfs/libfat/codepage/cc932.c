@@ -8,7 +8,7 @@
 
 #define _TINY_TABLE        0
 
-#if !_USE_LFN || _CODE_PAGE != 932
+#if !_LIBFAT_USE_LFN || _LIBFAT_CODE_PAGE != 932
 #error This file is not needed in current configuration. Remove from the project.
 #endif
 

@@ -25,8 +25,8 @@
 //==============================================================================
 DRESULT disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        fseek(srcfile, (u64_t)sector * _MAX_SS, SEEK_SET);
-        if (fread(buff, _MAX_SS, count, srcfile) != count) {
+        fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (fread(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {
                 return RES_OK;
@@ -48,8 +48,8 @@ DRESULT disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 //==============================================================================
 DRESULT disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        fseek(srcfile, sector * _MAX_SS, SEEK_SET);
-        if (fwrite(buff, _MAX_SS, count, srcfile) != count) {
+        fseek(srcfile, sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {
                 return RES_OK;
@@ -108,10 +108,10 @@ uint32_t get_fattime(void)
  * @retval 0: Could not create due to any error
  */
 //==============================================================================
-int ff_cre_syncobj(_SYNC_t* sobj)
+int ff_cre_syncobj(_LIBFAT_SYNC_t* sobj)
 {
         if (sobj) {
-                _SYNC_t mtx = new_mutex();
+                _LIBFAT_SYNC_t mtx = new_mutex();
                 if (mtx) {
                         *sobj = mtx;
                         return 1;
@@ -131,7 +131,7 @@ int ff_cre_syncobj(_SYNC_t* sobj)
  * @retval 0: Could not create due to any error
  */
 //==============================================================================
-int ff_del_syncobj (_SYNC_t sobj)
+int ff_del_syncobj (_LIBFAT_SYNC_t sobj)
 {
         if (sobj) {
                 delete_mutex(sobj);
@@ -151,10 +151,10 @@ int ff_del_syncobj (_SYNC_t sobj)
  * @retval 0: Could not create due to any error
  */
 //==============================================================================
-int ff_req_grant(_SYNC_t sobj)
+int ff_req_grant(_LIBFAT_SYNC_t sobj)
 {
         if (sobj) {
-                if (lock_mutex(sobj, _FS_TIMEOUT) == MUTEX_LOCKED) {
+                if (lock_mutex(sobj, _LIBFAT_FS_TIMEOUT) == MUTEX_LOCKED) {
                         return 1;
                 }
         }
@@ -169,7 +169,7 @@ int ff_req_grant(_SYNC_t sobj)
  * @param[in] sobj      Sync object to be signaled
  */
 //==============================================================================
-void ff_rel_grant(_SYNC_t sobj)
+void ff_rel_grant(_LIBFAT_SYNC_t sobj)
 {
         if (sobj) {
                 unlock_mutex(sobj);
