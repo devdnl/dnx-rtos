@@ -59,9 +59,6 @@
 #endif
 
 /* Reentrancy related */
-#if _LIBFAT_USE_LFN == 1
-#error Static LFN work area must not be used in re-entrant configuration.
-#endif
 #define        ENTER_FF(fs)                { if (!lock_fs(fs)) return FR_TIMEOUT; }
 #define        LEAVE_FF(fs, res)        { unlock_fs(fs, res); return res; }
 
@@ -71,9 +68,6 @@
 
 /* File access control feature */
 #if _LIBFAT_FS_LOCK
-#if _FS_READONLY
-#error _LIBFAT_FS_LOCK must be 0 on read-only cfg.
-#endif
 typedef struct {
         FATFS *fs;                                /* File ID 1, volume (NULL:blank entry) */
         uint32_t clu;                                /* File ID 2, directory */
@@ -402,18 +396,12 @@ FILESEM        Files[_LIBFAT_FS_LOCK];        /* File lock semaphores */
 #define INIT_BUF(dobj)                (dobj).fn = sfn
 #define        FREE_BUF()
 
-#elif _LIBFAT_USE_LFN == 1                        /* LFN feature with static working buffer */
-static wchar_t LfnBuf[_LIBFAT_MAX_LFN+1];
-#define        DEF_NAMEBUF                        uint8_t sfn[12]
-#define INIT_BUF(dobj)                { (dobj).fn = sfn; (dobj).lfn = LfnBuf; }
-#define        FREE_BUF()
-
-#elif _LIBFAT_USE_LFN == 2                 /* LFN feature with dynamic working buffer on the stack */
+#elif _LIBFAT_USE_LFN == 1                 /* LFN feature with dynamic working buffer on the stack */
 #define        DEF_NAMEBUF                        uint8_t sfn[12]; wchar_t lbuf[_LIBFAT_MAX_LFN+1]
 #define INIT_BUF(dobj)                { (dobj).fn = sfn; (dobj).lfn = lbuf; }
 #define        FREE_BUF()
 
-#elif _LIBFAT_USE_LFN == 3                 /* LFN feature with dynamic working buffer on the heap */
+#elif _LIBFAT_USE_LFN == 2                 /* LFN feature with dynamic working buffer on the heap */
 #define        DEF_NAMEBUF                        uint8_t sfn[12]; wchar_t *lfn
 #define INIT_BUF(dobj)                { lfn = ff_memalloc((_LIBFAT_MAX_LFN + 1) * 2); \
                                                           if (!lfn) LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE); \
@@ -1335,7 +1323,7 @@ FRESULT dir_read (
                         }
                 }
 #else                /* Non LFN configuration */
-                if (c != DDE && (_FS_RPATH || c != '.') && a != AM_LFN && (a == AM_VOL) == vol)        /* Is it a valid entry? */
+                if (c != DDE && (/*_FS_RPATH || */c != '.') && a != AM_LFN && (a == AM_VOL) == vol)        /* Is it a valid entry? */
                         break;
 #endif
                 res = dir_next(dj, 0);                                /* Next entry */

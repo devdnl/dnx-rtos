@@ -1,7 +1,7 @@
 #ifndef _LIBFAT_CONF_H_
 #define _LIBFAT_CONF_H_
 /*=========================================================================*//**
-@file    libfat_conf.c
+@file    libfat_conf.h
 
 @author  Daniel Zorychta
 
@@ -77,15 +77,14 @@
 /* The _USE_LFN option switches the LFN support.
  *
  * 0: Disable LFN feature. _LIBFAT_MAX_LFN and _LIBFAT_LFN_UNICODE have no effect.
- * 1: Enable LFN with static working buffer on the BSS. Always NOT reentrant.
- * 2: Enable LFN with dynamic working buffer on the STACK.
- * 3: Enable LFN with dynamic working buffer on the HEAP.
+ * 1: Enable LFN with dynamic working buffer on the STACK.
+ * 2: Enable LFN with dynamic working buffer on the HEAP.
  *
  * The LFN working buffer occupies (_LIBFAT_MAX_LFN + 1) * 2 bytes. To enable LFN,
  * Unicode handling functions ff_convert() and ff_wtoupper() must be added
  * to the project. When enable to use heap, memory control functions
  * ff_memalloc() and ff_memfree() must be added to the project. */
-#define _LIBFAT_USE_LFN         3       /* 0 to 3 */
+#define _LIBFAT_USE_LFN         2       /* 0 to 2 */
 #define _LIBFAT_MAX_LFN         255     /* Maximum LFN length to handle (12 to 255) */
 
 
