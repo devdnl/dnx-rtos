@@ -101,7 +101,7 @@ stdret_t fatfs_init(void **fshdl, const char *src_path)
                 if (!(hdl->fsfile = fopen(src_path, "r+")))
                         goto error;
 
-                if (f_mount(hdl->fsfile, &hdl->fatfs) == FR_OK)
+                if (libfat_mount(hdl->fsfile, &hdl->fatfs) == FR_OK)
                         return STD_RET_OK;
 
 error:
@@ -130,7 +130,7 @@ stdret_t fatfs_release(void *fshdl)
         struct fatfs *hdl = fshdl;
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
-                f_umount(&hdl->fatfs);
+                libfat_umount(&hdl->fatfs);
                 fclose(hdl->fsfile);
                 free(hdl);
                 return STD_RET_OK;
@@ -168,27 +168,27 @@ stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
 
         u8_t fat_mode = 0;
         if (strncmp("r",  mode, 2) == 0) {
-                fat_mode = FA_READ | FA_OPEN_EXISTING;
+                fat_mode = LIBFAT_FA_READ | LIBFAT_FA_OPEN_EXISTING;
         } else if (strncmp("r+", mode, 2) == 0) {
-                fat_mode = FA_READ | FA_WRITE | FA_OPEN_EXISTING;
+                fat_mode = LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_EXISTING;
         } else if (strncmp("w",  mode, 2) == 0) {
-                fat_mode = FA_WRITE | FA_CREATE_ALWAYS;
+                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS;
         } else if (strncmp("w+", mode, 2) == 0) {
-                fat_mode = FA_WRITE | FA_READ | FA_CREATE_ALWAYS;
+                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_CREATE_ALWAYS;
         } else if (strncmp("a",  mode, 2) == 0) {
-                fat_mode = FA_WRITE | FA_OPEN_ALWAYS;
+                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_ALWAYS;
         } else if (strncmp("a+", mode, 2) == 0) {
-                fat_mode = FA_WRITE | FA_READ | FA_OPEN_ALWAYS;
+                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_OPEN_ALWAYS;
         }
 
-        if (f_open(&hdl->fatfs, fat_file, path, fat_mode) != FR_OK) {
+        if (libfat_open(&hdl->fatfs, fat_file, path, fat_mode) != FR_OK) {
                 free(fat_file);
                 return STD_RET_ERROR;
         }
 
         if (strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) {
-                f_lseek(fat_file, f_size(fat_file));
-                *lseek = f_size(fat_file);
+                libfat_lseek(fat_file, libfat_size(fat_file));
+                *lseek = libfat_size(fat_file);
         } else {
                 *lseek = 0;
         }
@@ -217,7 +217,7 @@ stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
         struct fatfs *hdl = fshdl;
 
         FATFILE *fat_file = extra;
-        if (f_close(fat_file) == FR_OK) {
+        if (libfat_close(fat_file) == FR_OK) {
                 hdl->opened_files--;
                 return STD_RET_OK;
         }
@@ -247,8 +247,8 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
 
         FATFILE *fat_file = extra;
         uint n        = 0;
-        f_lseek(fat_file, (u32_t)lseek);
-        f_write(fat_file, src, size * nitems, &n);
+        libfat_lseek(fat_file, (u32_t)lseek);
+        libfat_write(fat_file, src, size * nitems, &n);
         return n;
 }
 
@@ -274,8 +274,8 @@ size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
 
         FATFILE *fat_file = extra;
         uint n        = 0;
-        f_lseek(fat_file, (u32_t)lseek);
-        f_read(fat_file, dst, size * nitems, &n);
+        libfat_lseek(fat_file, (u32_t)lseek);
+        libfat_read(fat_file, dst, size * nitems, &n);
         return n;
 }
 
@@ -324,7 +324,7 @@ stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
         (void)fd;
 
         FATFILE *fat_file = extra;
-        if (f_sync(fat_file) == FR_OK)
+        if (libfat_sync(fat_file) == FR_OK)
                 return STD_RET_OK;
         else
                 return STD_RET_ERROR;
@@ -374,7 +374,7 @@ stdret_t fatfs_mkdir(void *fshdl, const char *path)
 {
         struct fatfs *hdl = fshdl;
 
-        if (f_mkdir(&hdl->fatfs, path) == FR_OK)
+        if (libfat_mkdir(&hdl->fatfs, path) == FR_OK)
                 return STD_RET_OK;
         else
                 return STD_RET_ERROR;
@@ -438,7 +438,7 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 dir->seek   = 0;
                 dir->items  = 0;
 
-                if (f_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
+                if (libfat_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
                         hdl->opened_dirs++;
                         return STD_RET_OK;
                 }
@@ -498,7 +498,7 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
         fat_file_info.lfname = &fatdir->name[0];
         fat_file_info.lfsize = _LIBFAT_MAX_LFN;
 #endif
-        if (f_readdir(&fatdir->dir, &fat_file_info) == FR_OK) {
+        if (libfat_readdir(&fatdir->dir, &fat_file_info) == FR_OK) {
                 if (fat_file_info.fname[0] != 0) {
 #if _LIBFAT_USE_LFN != 0
                         if (fat_file_info.lfname[0] == 0) {
@@ -508,7 +508,7 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
                         memcpy(fatdir->name, fat_file_info.fname, 13);
 #endif
                         dirent.name     = &fatdir->name[0];
-                        dirent.filetype = fat_file_info.fattrib & AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                        dirent.filetype = fat_file_info.fattrib & LIBFAT_AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
                         dirent.size     = fat_file_info.fsize;
                 }
         }
@@ -531,7 +531,7 @@ stdret_t fatfs_remove(void *fshdl, const char *path)
 {
         struct fatfs *hdl = fshdl;
 
-        if (f_unlink(&hdl->fatfs, path) == FR_OK)
+        if (libfat_unlink(&hdl->fatfs, path) == FR_OK)
                 return STD_RET_OK;
         else
                 return STD_RET_ERROR;
@@ -553,7 +553,7 @@ stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
 {
         struct fatfs *hdl = fshdl;
 
-        if (f_rename(&hdl->fatfs, old_name, new_name) == FR_OK)
+        if (libfat_rename(&hdl->fatfs, old_name, new_name) == FR_OK)
                 return STD_RET_OK;
         else
                 return STD_RET_ERROR;
@@ -624,7 +624,7 @@ stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
         struct fatfs *hdl = fshdl;
 
         FILINFO file_info;
-        if (f_stat(&hdl->fatfs, path, &file_info) == FR_OK) {
+        if (libfat_stat(&hdl->fatfs, path, &file_info) == FR_OK) {
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
                 stat->st_mode  = 0777;
@@ -658,7 +658,7 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
         fstat.st_size = 0;
         fstat(hdl->fsfile, &fstat);
 
-        if (f_getfree(&free_clusters, &hdl->fatfs) == FR_OK) {
+        if (libfat_getfree(&free_clusters, &hdl->fatfs) == FR_OK) {
                 statfs->f_bsize  = _LIBFAT_MAX_SS;
                 statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
                 statfs->f_blocks = fstat.st_size / _LIBFAT_MAX_SS;
@@ -666,11 +666,11 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
                 statfs->f_files  = 0;
                 statfs->f_type   = hdl->fatfs.fs_type;
 
-                if (hdl->fatfs.fs_type == FS_FAT12)
+                if (hdl->fatfs.fs_type == LIBFAT_FS_FAT12)
                         statfs->fsname = "fatfs (FAT12)";
-                else if (hdl->fatfs.fs_type == FS_FAT16)
+                else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT16)
                         statfs->fsname = "fatfs (FAT16)";
-                else if (hdl->fatfs.fs_type == FS_FAT32)
+                else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT32)
                         statfs->fsname = "fatfs (FAT32)";
                 else
                         statfs->fsname = "fatfs (FAT\?\?)";

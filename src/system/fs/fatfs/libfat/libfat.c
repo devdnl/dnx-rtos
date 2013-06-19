@@ -63,7 +63,7 @@
 #define        LEAVE_FF(fs, res)        { unlock_fs(fs, res); return res; }
 
 
-#define        ABORT(fs, res)                { fp->flag |= FA__ERROR; LEAVE_FF(fs, res); }
+#define        ABORT(fs, res)                { fp->flag |= LIBFAT_FA__ERROR; LEAVE_FF(fs, res); }
 
 
 /* File access control feature */
@@ -382,6 +382,15 @@ typedef struct {
 #define        NDDE                                0x05        /* Replacement of the character collides with DDE */
 
 
+
+#define LD_WORD(ptr)         (uint16_t)(((uint16_t)*((uint8_t*)(ptr)+1)<<8)|(uint16_t)*(uint8_t*)(ptr))
+#define LD_DWORD(ptr)        (uint32_t)(((uint32_t)*((uint8_t*)(ptr)+3)<<24)|((uint32_t)*((uint8_t*)(ptr)+2)<<16)|((uint16_t)*((uint8_t*)(ptr)+1)<<8)|*(uint8_t*)(ptr))
+#define ST_WORD(ptr,val)     *(uint8_t*)(ptr)=(uint8_t)(val); *((uint8_t*)(ptr)+1)=(uint8_t)((uint16_t)(val)>>8)
+#define ST_DWORD(ptr,val)    *(uint8_t*)(ptr)=(uint8_t)(val); *((uint8_t*)(ptr)+1)=(uint8_t)((uint16_t)(val)>>8); *((uint8_t*)(ptr)+2)=(uint8_t)((uint32_t)(val)>>16); *((uint8_t*)(ptr)+3)=(uint8_t)((uint32_t)(val)>>24)
+
+
+
+
 /*------------------------------------------------------------*/
 /* Module private work area                                   */
 /*------------------------------------------------------------*/
@@ -403,10 +412,10 @@ FILESEM        Files[_LIBFAT_FS_LOCK];        /* File lock semaphores */
 
 #elif _LIBFAT_USE_LFN == 2                 /* LFN feature with dynamic working buffer on the heap */
 #define        DEF_NAMEBUF                        uint8_t sfn[12]; wchar_t *lfn
-#define INIT_BUF(dobj)                { lfn = ff_memalloc((_LIBFAT_MAX_LFN + 1) * 2); \
+#define INIT_BUF(dobj)                { lfn = _libfat_malloc((_LIBFAT_MAX_LFN + 1) * 2); \
                                                           if (!lfn) LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE); \
                                                           (dobj).lfn = lfn;        (dobj).fn = sfn; }
-#define        FREE_BUF()                        ff_memfree(lfn)
+#define        FREE_BUF()                        _libfat_free(lfn)
 
 #else
 #error Wrong LFN configuration.
@@ -421,6 +430,10 @@ const uint8_t ExCvt[] = _EXCVT;        /* Upper conversion table for extended ch
 
 
 
+#if _LIBFAT_USE_LFN                                    /* Unicode - OEM code conversion */
+extern wchar_t ff_convert (wchar_t chr, uint dir);         /* OEM-Unicode bidirectional conversion */
+extern wchar_t ff_wtoupper (wchar_t chr);                  /* Unicode upper-case conversion */
+#endif
 
 
 /*--------------------------------------------------------------------------
@@ -437,7 +450,7 @@ int lock_fs (
         FATFS *fs                /* File system object */
 )
 {
-        return ff_req_grant(fs->sobj);
+        return _libfat_lock_access(fs->sobj);
 }
 
 
@@ -452,7 +465,7 @@ void unlock_fs (
                 res != FR_INVALID_DRIVE &&
                 res != FR_INVALID_OBJECT &&
                 res != FR_TIMEOUT) {
-                ff_rel_grant(fs->sobj);
+                _libfat_unlock_access(fs->sobj);
         }
 }
 
@@ -583,13 +596,13 @@ FRESULT sync_window (
 
         if (fs->wflag) {        /* Write back the sector if it is dirty */
                 wsect = fs->winsect;        /* Current sector number */
-                if (disk_write(fs->srcfile, fs->win, wsect, 1) != RES_OK)
+                if (_libfat_disk_write(fs->srcfile, fs->win, wsect, 1) != RES_OK)
                         return FR_DISK_ERR;
                 fs->wflag = 0;
                 if (wsect >= fs->fatbase && wsect < (fs->fatbase + fs->fsize)) {        /* In FAT area? */
                         for (nf = fs->n_fats; nf >= 2; nf--) {        /* Reflect the change to all FAT copies */
                                 wsect += fs->fsize;
-                                disk_write(fs->srcfile, fs->win, wsect, 1);
+                                _libfat_disk_write(fs->srcfile, fs->win, wsect, 1);
                         }
                 }
         }
@@ -606,7 +619,7 @@ FRESULT move_window (
                 if (sync_window(fs) != FR_OK)
                         return FR_DISK_ERR;
 
-                if (disk_read(fs->srcfile, fs->win, sector, 1) != RES_OK)
+                if (_libfat_disk_read(fs->srcfile, fs->win, sector, 1) != RES_OK)
                         return FR_DISK_ERR;
                 fs->winsect = sector;
         }
@@ -629,7 +642,7 @@ FATFS *fs /* File system object */
         res = sync_window(fs);
         if (res == FR_OK) {
                 /* Update FSInfo sector if needed */
-                if (fs->fs_type == FS_FAT32 && fs->fsi_flag) {
+                if (fs->fs_type == LIBFAT_FS_FAT32 && fs->fsi_flag) {
                         fs->winsect = 0;
                         /* Create FSInfo structure */
                         memset(fs->win, 0, 512);
@@ -639,11 +652,11 @@ FATFS *fs /* File system object */
                         ST_DWORD(fs->win+FSI_Free_Count, fs->free_clust);
                         ST_DWORD(fs->win+FSI_Nxt_Free, fs->last_clust);
                         /* Write it into the FSInfo sector */
-                        disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1);
+                        _libfat_disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1);
                         fs->fsi_flag = 0;
                 }
                 /* Make sure that no pending write process in the physical drive */
-                if (disk_ioctl(fs->srcfile, CTRL_SYNC, 0) != RES_OK)
+                if (_libfat_disk_ioctl(fs->srcfile, CTRL_SYNC, 0) != RES_OK)
                         res = FR_DISK_ERR;
         }
 
@@ -685,7 +698,7 @@ uint32_t get_fat (        /* 0xFFFFFFFF:Disk error, 1:Internal error, Else:Clust
                 return 1;
 
         switch (fs->fs_type) {
-        case FS_FAT12 :
+        case LIBFAT_FS_FAT12 :
                 bc = (uint)clst; bc += bc / 2;
                 if (move_window(fs, fs->fatbase + (bc / SS(fs)))) break;
                 wc = fs->win[bc % SS(fs)]; bc++;
@@ -693,12 +706,12 @@ uint32_t get_fat (        /* 0xFFFFFFFF:Disk error, 1:Internal error, Else:Clust
                 wc |= fs->win[bc % SS(fs)] << 8;
                 return (clst & 1) ? (wc >> 4) : (wc & 0xFFF);
 
-        case FS_FAT16 :
+        case LIBFAT_FS_FAT16 :
                 if (move_window(fs, fs->fatbase + (clst / (SS(fs) / 2)))) break;
                 p = &fs->win[clst * 2 % SS(fs)];
                 return LD_WORD(p);
 
-        case FS_FAT32 :
+        case LIBFAT_FS_FAT32 :
                 if (move_window(fs, fs->fatbase + (clst / (SS(fs) / 4)))) break;
                 p = &fs->win[clst * 4 % SS(fs)];
                 return LD_DWORD(p) & 0x0FFFFFFF;
@@ -729,7 +742,7 @@ FRESULT put_fat (
 
         } else {
                 switch (fs->fs_type) {
-                case FS_FAT12 :
+                case LIBFAT_FS_FAT12 :
                         bc = (uint)clst; bc += bc / 2;
                         res = move_window(fs, fs->fatbase + (bc / SS(fs)));
                         if (res != FR_OK) break;
@@ -743,14 +756,14 @@ FRESULT put_fat (
                         *p = (clst & 1) ? (uint8_t)(val >> 4) : ((*p & 0xF0) | ((uint8_t)(val >> 8) & 0x0F));
                         break;
 
-                case FS_FAT16 :
+                case LIBFAT_FS_FAT16 :
                         res = move_window(fs, fs->fatbase + (clst / (SS(fs) / 2)));
                         if (res != FR_OK) break;
                         p = &fs->win[clst * 2 % SS(fs)];
                         ST_WORD(p, (uint16_t)val);
                         break;
 
-                case FS_FAT32 :
+                case LIBFAT_FS_FAT32 :
                         res = move_window(fs, fs->fatbase + (clst / (SS(fs) / 4)));
                         if (res != FR_OK) break;
                         p = &fs->win[clst * 4 % SS(fs)];
@@ -806,7 +819,7 @@ FRESULT remove_chain (
                         } else {                                /* End of contiguous clusters */
                                 rt[0] = clust2sect(fs, scl);                                        /* Start sector */
                                 rt[1] = clust2sect(fs, ecl) + fs->csize - 1;        /* End sector */
-                                disk_ioctl(fs->drv, CTRL_ERASE_SECTOR, rt);                /* Erase the block */
+                                _libfat_disk_ioctl(fs->drv, CTRL_ERASE_SECTOR, rt);                /* Erase the block */
                                 scl = ecl = nxt;
                         }
 #endif
@@ -892,7 +905,7 @@ FRESULT dir_sdi (
         clst = dj->sclust;
         if (clst == 1 || clst >= dj->fs->n_fatent)        /* Check start cluster range */
                 return FR_INT_ERR;
-        if (!clst && dj->fs->fs_type == FS_FAT32)        /* Replace cluster# 0 with root cluster# if in FAT32 */
+        if (!clst && dj->fs->fs_type == LIBFAT_FS_FAT32)        /* Replace cluster# 0 with root cluster# if in FAT32 */
                 clst = dj->fs->dirbase;
 
         if (clst == 0) {        /* Static table (root-dir in FAT12/16) */
@@ -1031,7 +1044,7 @@ uint32_t ld_clust (
         uint32_t cl;
 
         cl = LD_WORD(dir+DIR_FstClusLO);
-        if (fs->fs_type == FS_FAT32)
+        if (fs->fs_type == LIBFAT_FS_FAT32)
                 cl |= (uint32_t)LD_WORD(dir+DIR_FstClusHI) << 16;
 
         return cl;
@@ -1135,7 +1148,7 @@ void fit_lfn (
 
 
         dir[LDIR_Chksum] = sum;                        /* Set check sum */
-        dir[LDIR_Attr] = AM_LFN;                /* Set attribute. LFN entry */
+        dir[LDIR_Attr] = LIBFAT_AM_LFN;                /* Set attribute. LFN entry */
         dir[LDIR_Type] = 0;
         ST_WORD(dir+LDIR_FstClusLO, 0);
 
@@ -1248,11 +1261,11 @@ FRESULT dir_find (
                 c = dir[DIR_Name];
                 if (c == 0) { res = FR_NO_FILE; break; }        /* Reached to end of table */
 #if _LIBFAT_USE_LFN        /* LFN configuration */
-                a = dir[DIR_Attr] & AM_MASK;
-                if (c == DDE || ((a & AM_VOL) && a != AM_LFN)) {        /* An entry without valid data */
+                a = dir[DIR_Attr] & LIBFAT_AM_MASK;
+                if (c == DDE || ((a & LIBFAT_AM_VOL) && a != LIBFAT_AM_LFN)) {        /* An entry without valid data */
                         ord = 0xFF;
                 } else {
-                        if (a == AM_LFN) {                        /* An LFN entry is found */
+                        if (a == LIBFAT_AM_LFN) {                        /* An LFN entry is found */
                                 if (dj->lfn) {
                                         if (c & LLE) {                /* Is it start of LFN sequence? */
                                                 sum = dir[LDIR_Chksum];
@@ -1269,7 +1282,7 @@ FRESULT dir_find (
                         }
                 }
 #else                /* Non LFN configuration */
-                if (!(dir[DIR_Attr] & AM_VOL) && !memcmp(dir, dj->fn, 11)) /* Is it a valid entry? */
+                if (!(dir[DIR_Attr] & LIBFAT_AM_VOL) && !memcmp(dir, dj->fn, 11)) /* Is it a valid entry? */
                         break;
 #endif
                 res = dir_next(dj, 0);                /* Next entry */
@@ -1303,12 +1316,12 @@ FRESULT dir_read (
                 dir = dj->dir;                                        /* Ptr to the directory entry of current index */
                 c = dir[DIR_Name];
                 if (c == 0) { res = FR_NO_FILE; break; }        /* Reached to end of table */
-                a = dir[DIR_Attr] & AM_MASK;
+                a = dir[DIR_Attr] & LIBFAT_AM_MASK;
 #if _LIBFAT_USE_LFN        /* LFN configuration */
-                if (c == DDE || (/*!_FS_RPATH && */c == '.') || (a == AM_VOL) != vol) {        /* An entry without valid data */
+                if (c == DDE || (/*!_FS_RPATH && */c == '.') || (a == LIBFAT_AM_VOL) != vol) {        /* An entry without valid data */
                         ord = 0xFF;
                 } else {
-                        if (a == AM_LFN) {                        /* An LFN entry is found */
+                        if (a == LIBFAT_AM_LFN) {                        /* An LFN entry is found */
                                 if (c & LLE) {                        /* Is it start of LFN sequence? */
                                         sum = dir[LDIR_Chksum];
                                         c &= ~LLE; ord = c;
@@ -1323,7 +1336,7 @@ FRESULT dir_read (
                         }
                 }
 #else                /* Non LFN configuration */
-                if (c != DDE && (/*_FS_RPATH || */c != '.') && a != AM_LFN && (a == AM_VOL) == vol)        /* Is it a valid entry? */
+                if (c != DDE && (/*_FS_RPATH || */c != '.') && a != LIBFAT_AM_LFN && (a == LIBFAT_AM_VOL) == vol)        /* Is it a valid entry? */
                         break;
 #endif
                 res = dir_next(dj, 0);                                /* Next entry */
@@ -1771,7 +1784,7 @@ FRESULT follow_path (        /* FR_OK(0): successful, !=0: error code */
                         }
                         if (ns & NS_LAST) break;                        /* Last segment match. Function completed. */
                         dir = dj->dir;                                                /* There is next segment. Follow the sub directory */
-                        if (!(dir[DIR_Attr] & AM_DIR)) {        /* Cannot follow because it is a file */
+                        if (!(dir[DIR_Attr] & LIBFAT_AM_DIR)) {        /* Cannot follow because it is a file */
                                 res = FR_NO_PATH; break;
                         }
                         dj->sclust = ld_clust(dj->fs, dir);
@@ -1794,7 +1807,7 @@ uint8_t check_fs (        /* 0:FAT-VBR, 1:Any BR but not FAT, 2:Not a BR, 3:Disk
         uint32_t sect        /* Sector# (lba) to check if it is an FAT boot record or not */
 )
 {
-        if (disk_read(fs->srcfile, fs->win, sect, 1) != RES_OK)        /* Load boot record */
+        if (_libfat_disk_read(fs->srcfile, fs->win, sect, 1) != RES_OK)        /* Load boot record */
                 return 3;
         if (LD_WORD(&fs->win[BS_55AA]) != 0xAA55)                /* Check record signature (always placed at offset 510 even if the sector size is >512) */
                 return 2;
@@ -1825,7 +1838,7 @@ FRESULT chk_mounted (        /* FR_OK(0): successful, !=0: any error occurred */
         uint16_t nrsv;
 
 #if _LIBFAT_MAX_SS != 512                                                /* Get disk sector size (variable sector size cfg only) */
-        if (disk_ioctl(fs->drv, GET_SECTOR_SIZE, &fs->ssize) != RES_OK)
+        if (_libfat_disk_ioctl(fs->drv, GET_SECTOR_SIZE, &fs->ssize) != RES_OK)
                 return FR_DISK_ERR;
 #endif
 
@@ -1868,23 +1881,23 @@ FRESULT chk_mounted (        /* FR_OK(0): successful, !=0: any error occurred */
         if (tsect < sysect) return FR_NO_FILESYSTEM;                /* (Invalid volume size) */
         nclst = (tsect - sysect) / fs->csize;                                /* Number of clusters */
         if (!nclst) return FR_NO_FILESYSTEM;                                /* (Invalid volume size) */
-        fmt = FS_FAT12;
-        if (nclst >= MIN_FAT16) fmt = FS_FAT16;
-        if (nclst >= MIN_FAT32) fmt = FS_FAT32;
+        fmt = LIBFAT_FS_FAT12;
+        if (nclst >= MIN_FAT16) fmt = LIBFAT_FS_FAT16;
+        if (nclst >= MIN_FAT32) fmt = LIBFAT_FS_FAT32;
 
         /* Boundaries and Limits */
         fs->n_fatent = nclst + 2;                                                        /* Number of FAT entries */
         fs->volbase = bsect;                                                                /* Volume start sector */
         fs->fatbase = bsect + nrsv;                                                 /* FAT start sector */
         fs->database = bsect + sysect;                                                /* Data start sector */
-        if (fmt == FS_FAT32) {
+        if (fmt == LIBFAT_FS_FAT32) {
                 if (fs->n_rootdir) return FR_NO_FILESYSTEM;                /* (BPB_RootEntCnt must be 0) */
                 fs->dirbase = LD_DWORD(fs->win+BPB_RootClus);        /* Root directory start cluster */
                 szbfat = fs->n_fatent * 4;                                                /* (Required FAT size) */
         } else {
                 if (!fs->n_rootdir)        return FR_NO_FILESYSTEM;        /* (BPB_RootEntCnt must not be 0) */
                 fs->dirbase = fs->fatbase + fasize;                                /* Root directory start sector */
-                szbfat = (fmt == FS_FAT16) ?                                        /* (Required FAT size) */
+                szbfat = (fmt == LIBFAT_FS_FAT16) ?                                        /* (Required FAT size) */
                         fs->n_fatent * 2 : fs->n_fatent * 3 / 2 + (fs->n_fatent & 1);
         }
         if (fs->fsize < (szbfat + (SS(fs) - 1)) / SS(fs))        /* (BPB_FATSz must not be less than required) */
@@ -1895,10 +1908,10 @@ FRESULT chk_mounted (        /* FR_OK(0): successful, !=0: any error occurred */
         fs->last_clust = 0;
 
         /* Get fsinfo if available */
-        if (fmt == FS_FAT32) {
+        if (fmt == LIBFAT_FS_FAT32) {
                  fs->fsi_flag = 0;
                 fs->fsi_sector = bsect + LD_WORD(fs->win+BPB_FSInfo);
-                if (disk_read(fs->srcfile, fs->win, fs->fsi_sector, 1) == RES_OK &&
+                if (_libfat_disk_read(fs->srcfile, fs->win, fs->fsi_sector, 1) == RES_OK &&
                         LD_WORD(fs->win+BS_55AA) == 0xAA55 &&
                         LD_DWORD(fs->win+FSI_LeadSig) == 0x41615252 &&
                         LD_DWORD(fs->win+FSI_StrucSig) == 0x61417272) {
@@ -1962,13 +1975,13 @@ FRESULT validate (        /* FR_OK(0): The object is valid, !=0: Invalid */
  * @param[in] *fs               pointer to existing library instance
  */
 //==============================================================================
-FRESULT f_mount(FILE *fsfile, FATFS *fs)
+FRESULT libfat_mount(FILE *fsfile, FATFS *fs)
 {
         if (fs) {
                 fs->srcfile = fsfile;
 
                 /* Create sync object for the new volume */
-                if (!ff_cre_syncobj(&fs->sobj))
+                if (!_libfat_create_mutex(&fs->sobj))
                         return FR_INT_ERR;
 
                 if (chk_mounted(fs) == FR_OK)
@@ -1985,10 +1998,10 @@ FRESULT f_mount(FILE *fsfile, FATFS *fs)
  * @param[in] *fs               pointer to existing library instance
  */
 //==============================================================================
-FRESULT f_umount(FATFS *fs)
+FRESULT libfat_umount(FATFS *fs)
 {
         if (fs) {
-                ff_del_syncobj(fs->sobj);
+                _libfat_delete_mutex(fs->sobj);
                 return FR_OK;
         }
 
@@ -2000,7 +2013,7 @@ FRESULT f_umount(FATFS *fs)
 /* Open or Create a File                                                 */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_open (
+FRESULT libfat_open (
         FATFS *fs,
         FATFILE *fp,                        /* Pointer to the blank file object */
         const TCHAR *path,        /* Pointer to the file name */
@@ -2016,7 +2029,7 @@ FRESULT f_open (
         if (!fp) return FR_INVALID_OBJECT;
         fp->fs = fs;
 
-        mode &= FA_READ | FA_WRITE | FA_CREATE_ALWAYS | FA_OPEN_ALWAYS | FA_CREATE_NEW;
+        mode &= LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS | LIBFAT_FA_OPEN_ALWAYS | LIBFAT_FA_CREATE_NEW;
 
         ENTER_FF(fs);
         dj.fs = fs;
@@ -2031,11 +2044,11 @@ FRESULT f_open (
                                 res = FR_INVALID_NAME;
 #if _LIBFAT_FS_LOCK
                         else
-                                res = chk_lock(&dj, (mode & ~FA_READ) ? 1 : 0);
+                                res = chk_lock(&dj, (mode & ~LIBFAT_FA_READ) ? 1 : 0);
 #endif
                 }
                 /* Create or Open a file */
-                if (mode & (FA_CREATE_ALWAYS | FA_OPEN_ALWAYS | FA_CREATE_NEW)) {
+                if (mode & (LIBFAT_FA_CREATE_ALWAYS | LIBFAT_FA_OPEN_ALWAYS | LIBFAT_FA_CREATE_NEW)) {
                         uint32_t dw, cl;
 
                         if (res != FR_OK) {                                        /* No file, create new */
@@ -2045,19 +2058,19 @@ FRESULT f_open (
 #else
                                         res = dir_register(&dj);
 #endif
-                                mode |= FA_CREATE_ALWAYS;                /* File is created */
+                                mode |= LIBFAT_FA_CREATE_ALWAYS;                /* File is created */
                                 dir = dj.dir;                                        /* New entry */
                         }
                         else {                                                                /* Any object is already existing */
-                                if (dir[DIR_Attr] & (AM_RDO | AM_DIR)) {        /* Cannot overwrite it (R/O or DIR) */
+                                if (dir[DIR_Attr] & (LIBFAT_AM_RDO | LIBFAT_AM_DIR)) {        /* Cannot overwrite it (R/O or DIR) */
                                         res = FR_DENIED;
                                 } else {
-                                        if (mode & FA_CREATE_NEW)        /* Cannot create as new file */
+                                        if (mode & LIBFAT_FA_CREATE_NEW)        /* Cannot create as new file */
                                                 res = FR_EXIST;
                                 }
                         }
-                        if (res == FR_OK && (mode & FA_CREATE_ALWAYS)) {        /* Truncate it if overwrite mode */
-                                dw = get_fattime();                                        /* Created time */
+                        if (res == FR_OK && (mode & LIBFAT_FA_CREATE_ALWAYS)) {        /* Truncate it if overwrite mode */
+                                dw = _libfat_get_fattime();                                        /* Created time */
                                 ST_DWORD(dir+DIR_CrtTime, dw);
                                 dir[DIR_Attr] = 0;                                        /* Reset attribute */
                                 ST_DWORD(dir+DIR_FileSize, 0);                /* size = 0 */
@@ -2076,21 +2089,21 @@ FRESULT f_open (
                 }
                 else {        /* Open an existing file */
                         if (res == FR_OK) {                                                /* Follow succeeded */
-                                if (dir[DIR_Attr] & AM_DIR) {                /* It is a directory */
+                                if (dir[DIR_Attr] & LIBFAT_AM_DIR) {                /* It is a directory */
                                         res = FR_NO_FILE;
                                 } else {
-                                        if ((mode & FA_WRITE) && (dir[DIR_Attr] & AM_RDO)) /* R/O violation */
+                                        if ((mode & LIBFAT_FA_WRITE) && (dir[DIR_Attr] & LIBFAT_AM_RDO)) /* R/O violation */
                                                 res = FR_DENIED;
                                 }
                         }
                 }
                 if (res == FR_OK) {
-                        if (mode & FA_CREATE_ALWAYS)                        /* Set file change flag if created or overwritten */
-                                mode |= FA__WRITTEN;
+                        if (mode & LIBFAT_FA_CREATE_ALWAYS)                        /* Set file change flag if created or overwritten */
+                                mode |= LIBFAT_FA__WRITTEN;
                         fp->dir_sect = dj.fs->winsect;                        /* Pointer to the directory entry */
                         fp->dir_ptr = dir;
 #if _LIBFAT_FS_LOCK
-                        fp->lockid = inc_lock(&dj, (mode & ~FA_READ) ? 1 : 0);
+                        fp->lockid = inc_lock(&dj, (mode & ~LIBFAT_FA_READ) ? 1 : 0);
                         if (!fp->lockid) res = FR_INT_ERR;
 #endif
                 }
@@ -2119,7 +2132,7 @@ FRESULT f_open (
 /* Read File                                                             */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_read (
+FRESULT libfat_read (
         FATFILE *fp,                 /* Pointer to the file object */
         void *buff,                /* Pointer to data buffer */
         uint btr,                /* Number of bytes to read */
@@ -2136,9 +2149,9 @@ FRESULT f_read (
 
         res = validate(fp);                                                        /* Check validity */
         if (res != FR_OK) LEAVE_FF(fp->fs, res);
-        if (fp->flag & FA__ERROR)                                        /* Aborted file? */
+        if (fp->flag & LIBFAT_FA__ERROR)                                        /* Aborted file? */
                 LEAVE_FF(fp->fs, FR_INT_ERR);
-        if (!(fp->flag & FA_READ))                                         /* Check access mode */
+        if (!(fp->flag & LIBFAT_FA_READ))                                         /* Check access mode */
                 LEAVE_FF(fp->fs, FR_DENIED);
         remain = fp->fsize - fp->fptr;
         if (btr > remain) btr = (uint)remain;                /* Truncate btr by remaining bytes */
@@ -2164,13 +2177,13 @@ FRESULT f_read (
                         if (cc) {                                                        /* Read maximum contiguous sectors directly */
                                 if (csect + cc > fp->fs->csize)        /* Clip at cluster boundary */
                                         cc = fp->fs->csize - csect;
-                                if (disk_read(fp->fs->srcfile, rbuff, sect, (uint8_t)cc) != RES_OK)
+                                if (_libfat_disk_read(fp->fs->srcfile, rbuff, sect, (uint8_t)cc) != RES_OK)
                                         ABORT(fp->fs, FR_DISK_ERR);
 #if _LIBFAT_FS_TINY
                                 if (fp->fs->wflag && fp->fs->winsect - sect < cc)
                                         memcpy(rbuff + ((fp->fs->winsect - sect) * SS(fp->fs)), fp->fs->win, SS(fp->fs));
 #else
-                                if ((fp->flag & FA__DIRTY) && fp->dsect - sect < cc)
+                                if ((fp->flag & LIBFAT_FA__DIRTY) && fp->dsect - sect < cc)
                                         memcpy(rbuff + ((fp->dsect - sect) * SS(fp->fs)), fp->buf, SS(fp->fs));
 #endif
                                 rcnt = SS(fp->fs) * cc;                        /* Number of bytes transferred */
@@ -2179,13 +2192,13 @@ FRESULT f_read (
 #if !_LIBFAT_FS_TINY
                         if (fp->dsect != sect) {                        /* Load data sector if not in cache */
 
-                                if (fp->flag & FA__DIRTY) {                /* Write-back dirty sector cache */
-                                        if (disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
+                                if (fp->flag & LIBFAT_FA__DIRTY) {                /* Write-back dirty sector cache */
+                                        if (_libfat_disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
                                                 ABORT(fp->fs, FR_DISK_ERR);
-                                        fp->flag &= ~FA__DIRTY;
+                                        fp->flag &= ~LIBFAT_FA__DIRTY;
                                 }
 
-                                if (disk_read(fp->fs->srcfile, fp->buf, sect, 1) != RES_OK)        /* Fill sector cache */
+                                if (_libfat_disk_read(fp->fs->srcfile, fp->buf, sect, 1) != RES_OK)        /* Fill sector cache */
                                         ABORT(fp->fs, FR_DISK_ERR);
                         }
 #endif
@@ -2213,7 +2226,7 @@ FRESULT f_read (
 /* Write File                                                            */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_write (
+FRESULT libfat_write (
         FATFILE *fp,                        /* Pointer to the file object */
         const void *buff,        /* Pointer to the data to be written */
         uint btw,                        /* Number of bytes to write */
@@ -2231,9 +2244,9 @@ FRESULT f_write (
 
         res = validate(fp);                                                /* Check validity */
         if (res != FR_OK) LEAVE_FF(fp->fs, res);
-        if (fp->flag & FA__ERROR)                                /* Aborted file? */
+        if (fp->flag & LIBFAT_FA__ERROR)                                /* Aborted file? */
                 LEAVE_FF(fp->fs, FR_INT_ERR);
-        if (!(fp->flag & FA_WRITE))                                /* Check access mode */
+        if (!(fp->flag & LIBFAT_FA_WRITE))                                /* Check access mode */
                 LEAVE_FF(fp->fs, FR_DENIED);
         if ((uint32_t)(fp->fsize + btw) < fp->fsize) btw = 0;        /* File size cannot reach 4GB */
 
@@ -2258,10 +2271,10 @@ FRESULT f_write (
                         if (fp->fs->winsect == fp->dsect && sync_window(fp->fs))        /* Write-back sector cache */
                                 ABORT(fp->fs, FR_DISK_ERR);
 #else
-                        if (fp->flag & FA__DIRTY) {                /* Write-back sector cache */
-                                if (disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
+                        if (fp->flag & LIBFAT_FA__DIRTY) {                /* Write-back sector cache */
+                                if (_libfat_disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
                                         ABORT(fp->fs, FR_DISK_ERR);
-                                fp->flag &= ~FA__DIRTY;
+                                fp->flag &= ~LIBFAT_FA__DIRTY;
                         }
 #endif
                         sect = clust2sect(fp->fs, fp->clust);        /* Get current sector */
@@ -2271,7 +2284,7 @@ FRESULT f_write (
                         if (cc) {                                                /* Write maximum contiguous sectors directly */
                                 if (csect + cc > fp->fs->csize)        /* Clip at cluster boundary */
                                         cc = fp->fs->csize - csect;
-                                if (disk_write(fp->fs->srcfile, wbuff, sect, (uint8_t)cc) != RES_OK)
+                                if (_libfat_disk_write(fp->fs->srcfile, wbuff, sect, (uint8_t)cc) != RES_OK)
                                         ABORT(fp->fs, FR_DISK_ERR);
 #if _LIBFAT_FS_TINY
                                 if (fp->fs->winsect - sect < cc) {        /* Refill sector cache if it gets invalidated by the direct write */
@@ -2281,7 +2294,7 @@ FRESULT f_write (
 #else
                                 if (fp->dsect - sect < cc) { /* Refill sector cache if it gets invalidated by the direct write */
                                         memcpy(fp->buf, wbuff + ((fp->dsect - sect) * SS(fp->fs)), SS(fp->fs));
-                                        fp->flag &= ~FA__DIRTY;
+                                        fp->flag &= ~LIBFAT_FA__DIRTY;
                                 }
 #endif
                                 wcnt = SS(fp->fs) * cc;                /* Number of bytes transferred */
@@ -2295,7 +2308,7 @@ FRESULT f_write (
 #else
                         if (fp->dsect != sect) {                /* Fill sector cache with file data */
                                 if (fp->fptr < fp->fsize &&
-                                        disk_read(fp->fs->srcfile, fp->buf, sect, 1) != RES_OK)
+                                        _libfat_disk_read(fp->fs->srcfile, fp->buf, sect, 1) != RES_OK)
                                                 ABORT(fp->fs, FR_DISK_ERR);
                         }
 #endif
@@ -2310,12 +2323,12 @@ FRESULT f_write (
                 fp->fs->wflag = 1;
 #else
                 memcpy(&fp->buf[fp->fptr % SS(fp->fs)], wbuff, wcnt);        /* Fit partial sector */
-                fp->flag |= FA__DIRTY;
+                fp->flag |= LIBFAT_FA__DIRTY;
 #endif
         }
 
         if (fp->fptr > fp->fsize) fp->fsize = fp->fptr;        /* Update file size if needed */
-        fp->flag |= FA__WRITTEN;                                                /* Set file change flag */
+        fp->flag |= LIBFAT_FA__WRITTEN;                                                /* Set file change flag */
 
         LEAVE_FF(fp->fs, FR_OK);
 }
@@ -2327,7 +2340,7 @@ FRESULT f_write (
 /* Synchronize the File Object                                           */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_sync (
+FRESULT libfat_sync (
         FATFILE *fp                /* Pointer to the file object */
 )
 {
@@ -2338,25 +2351,25 @@ FRESULT f_sync (
 
         res = validate(fp);                                        /* Check validity of the object */
         if (res == FR_OK) {
-                if (fp->flag & FA__WRITTEN) {        /* Has the file been written? */
+                if (fp->flag & LIBFAT_FA__WRITTEN) {        /* Has the file been written? */
 #if !_LIBFAT_FS_TINY        /* Write-back dirty buffer */
-                        if (fp->flag & FA__DIRTY) {
-                                if (disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
+                        if (fp->flag & LIBFAT_FA__DIRTY) {
+                                if (_libfat_disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
                                         LEAVE_FF(fp->fs, FR_DISK_ERR);
-                                fp->flag &= ~FA__DIRTY;
+                                fp->flag &= ~LIBFAT_FA__DIRTY;
                         }
 #endif
                         /* Update the directory entry */
                         res = move_window(fp->fs, fp->dir_sect);
                         if (res == FR_OK) {
                                 dir = fp->dir_ptr;
-                                dir[DIR_Attr] |= AM_ARC;                                        /* Set archive bit */
+                                dir[DIR_Attr] |= LIBFAT_AM_ARC;                                        /* Set archive bit */
                                 ST_DWORD(dir+DIR_FileSize, fp->fsize);                /* Update file size */
                                 st_clust(dir, fp->sclust);                                        /* Update start cluster */
-                                tm = get_fattime();                                                        /* Update updated time */
+                                tm = _libfat_get_fattime();                                                        /* Update updated time */
                                 ST_DWORD(dir+DIR_WrtTime, tm);
                                 ST_WORD(dir+DIR_LstAccDate, 0);
-                                fp->flag &= ~FA__WRITTEN;
+                                fp->flag &= ~LIBFAT_FA__WRITTEN;
                                 fp->fs->wflag = 1;
                                 res = sync_fs(fp->fs);
                         }
@@ -2371,13 +2384,13 @@ FRESULT f_sync (
 /* Close File                                                            */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_close (
+FRESULT libfat_close (
         FATFILE *fp                /* Pointer to the file object to be closed */
 )
 {
         FRESULT res;
 
-        res = f_sync(fp);                /* Flush cached data */
+        res = libfat_sync(fp);                /* Flush cached data */
 #if _LIBFAT_FS_LOCK
         if (res == FR_OK) {                /* Decrement open counter */
                 FATFS *fs = fp->fs;;
@@ -2396,7 +2409,7 @@ FRESULT f_close (
 /*-----------------------------------------------------------------------*/
 /* Seek File R/W Pointer                                                 */
 /*-----------------------------------------------------------------------*/
-FRESULT f_lseek (
+FRESULT libfat_lseek (
         FATFILE *fp,                /* Pointer to the file object */
         uint32_t ofs                /* File pointer from top of file */
 )
@@ -2406,13 +2419,13 @@ FRESULT f_lseek (
 
         res = validate(fp);                                        /* Check validity of the object */
         if (res != FR_OK) LEAVE_FF(fp->fs, res);
-        if (fp->flag & FA__ERROR)                        /* Check abort flag */
+        if (fp->flag & LIBFAT_FA__ERROR)                        /* Check abort flag */
                 LEAVE_FF(fp->fs, FR_INT_ERR);
 
                 uint32_t clst, bcs, nsect, ifptr;
 
                 if (ofs > fp->fsize                                        /* In read-only mode, clip offset with the file size */
-                         && !(fp->flag & FA_WRITE)
+                         && !(fp->flag & LIBFAT_FA_WRITE)
                         ) ofs = fp->fsize;
 
                 ifptr = fp->fptr;
@@ -2439,7 +2452,7 @@ FRESULT f_lseek (
                         if (clst != 0) {
                                 while (ofs > bcs) {                                                /* Cluster following loop */
 
-                                        if (fp->flag & FA_WRITE) {                        /* Check if in write mode or not */
+                                        if (fp->flag & LIBFAT_FA_WRITE) {                        /* Check if in write mode or not */
                                                 clst = create_chain(fp->fs, clst);        /* Force stretch if in write mode */
                                                 if (clst == 0) {                                /* When disk gets full, clip file size */
                                                         ofs = bcs; break;
@@ -2464,13 +2477,13 @@ FRESULT f_lseek (
                 if (fp->fptr % SS(fp->fs) && nsect != fp->dsect) {        /* Fill sector cache if needed */
 #if !_LIBFAT_FS_TINY
 
-                        if (fp->flag & FA__DIRTY) {                        /* Write-back dirty sector cache */
-                                if (disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
+                        if (fp->flag & LIBFAT_FA__DIRTY) {                        /* Write-back dirty sector cache */
+                                if (_libfat_disk_write(fp->fs->srcfile, fp->buf, fp->dsect, 1) != RES_OK)
                                         ABORT(fp->fs, FR_DISK_ERR);
-                                fp->flag &= ~FA__DIRTY;
+                                fp->flag &= ~LIBFAT_FA__DIRTY;
                         }
 
-                        if (disk_read(fp->fs->srcfile, fp->buf, nsect, 1) != RES_OK)        /* Fill sector cache */
+                        if (_libfat_disk_read(fp->fs->srcfile, fp->buf, nsect, 1) != RES_OK)        /* Fill sector cache */
                                 ABORT(fp->fs, FR_DISK_ERR);
 #endif
                         fp->dsect = nsect;
@@ -2478,7 +2491,7 @@ FRESULT f_lseek (
 
                 if (fp->fptr > fp->fsize) {                        /* Set file change flag if the file size is extended */
                         fp->fsize = fp->fptr;
-                        fp->flag |= FA__WRITTEN;
+                        fp->flag |= LIBFAT_FA__WRITTEN;
                 }
 
         LEAVE_FF(fp->fs, res);
@@ -2489,7 +2502,7 @@ FRESULT f_lseek (
 /* Create a Directory Object                                             */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_opendir (
+FRESULT libfat_opendir (
         FATFS *fs,
         FATDIR *dj,                        /* Pointer to directory object to create */
         const TCHAR *path        /* Pointer to the directory path */
@@ -2510,7 +2523,7 @@ FRESULT f_opendir (
                 FREE_BUF();
                 if (res == FR_OK) {                                                /* Follow completed */
                         if (dj->dir) {                                                /* It is not the root dir */
-                                if (dj->dir[DIR_Attr] & AM_DIR) {        /* The object is a directory */
+                                if (dj->dir[DIR_Attr] & LIBFAT_AM_DIR) {        /* The object is a directory */
                                         dj->sclust = ld_clust(fs, dj->dir);
                                 } else {                                                /* The object is not a directory */
                                         res = FR_NO_PATH;
@@ -2534,7 +2547,7 @@ FRESULT f_opendir (
 /* Read Directory Entry in Sequence                                      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_readdir (
+FRESULT libfat_readdir (
         FATDIR *dj,                        /* Pointer to the open directory object */
         FILINFO *fno                /* Pointer to file information to return */
 )
@@ -2574,7 +2587,7 @@ FRESULT f_readdir (
 /* Get File Status                                                       */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_stat (
+FRESULT libfat_stat (
         FATFS *fs,
         const TCHAR *path,        /* Pointer to the file path */
         FILINFO *fno                /* Pointer to file information to return */
@@ -2608,7 +2621,7 @@ FRESULT f_stat (
 /* Get Number of Free Clusters                                           */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_getfree (
+FRESULT libfat_getfree (
         uint32_t *nclst,                /* Pointer to a variable to return number of free clusters */
         FATFS *fs                /* Pointer to return pointer to corresponding file system object */
 )
@@ -2633,7 +2646,7 @@ FRESULT f_getfree (
                         /* Get number of free clusters */
                         fat = fs->fs_type;
                         n = 0;
-                        if (fat == FS_FAT12) {
+                        if (fat == LIBFAT_FS_FAT12) {
                                 clst = 2;
                                 do {
                                         stat = get_fat(fs, clst);
@@ -2652,7 +2665,7 @@ FRESULT f_getfree (
                                                 p = fs->win;
                                                 i = SS(fs);
                                         }
-                                        if (fat == FS_FAT16) {
+                                        if (fat == LIBFAT_FS_FAT16) {
                                                 if (LD_WORD(p) == 0) n++;
                                                 p += 2; i -= 2;
                                         } else {
@@ -2662,7 +2675,7 @@ FRESULT f_getfree (
                                 } while (--clst);
                         }
                         fs->free_clust = n;
-                        if (fat == FS_FAT32) fs->fsi_flag = 1;
+                        if (fat == LIBFAT_FS_FAT32) fs->fsi_flag = 1;
                         *nclst = n;
                 }
 //        }
@@ -2676,7 +2689,7 @@ FRESULT f_getfree (
 /* Truncate File                                                         */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_truncate (
+FRESULT libfat_truncate (
         FATFILE *fp                /* Pointer to the file object */
 )
 {
@@ -2686,17 +2699,17 @@ FRESULT f_truncate (
 
         res = validate(fp);                                                /* Check validity of the object */
         if (res == FR_OK) {
-                if (fp->flag & FA__ERROR) {                        /* Check abort flag */
+                if (fp->flag & LIBFAT_FA__ERROR) {                        /* Check abort flag */
                         res = FR_INT_ERR;
                 } else {
-                        if (!(fp->flag & FA_WRITE))                /* Check access mode */
+                        if (!(fp->flag & LIBFAT_FA_WRITE))                /* Check access mode */
                                 res = FR_DENIED;
                 }
         }
         if (res == FR_OK) {
                 if (fp->fsize > fp->fptr) {
                         fp->fsize = fp->fptr;        /* Set file size to current R/W point */
-                        fp->flag |= FA__WRITTEN;
+                        fp->flag |= LIBFAT_FA__WRITTEN;
                         if (fp->fptr == 0) {        /* When set file size to zero, remove entire cluster chain */
                                 res = remove_chain(fp->fs, fp->sclust);
                                 fp->sclust = 0;
@@ -2711,7 +2724,7 @@ FRESULT f_truncate (
                                 }
                         }
                 }
-                if (res != FR_OK) fp->flag |= FA__ERROR;
+                if (res != FR_OK) fp->flag |= LIBFAT_FA__ERROR;
         }
 
         LEAVE_FF(fp->fs, res);
@@ -2724,7 +2737,7 @@ FRESULT f_truncate (
 /* Delete a File or Directory                                            */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_unlink (
+FRESULT libfat_unlink (
         FATFS *fs,
         const TCHAR *path                /* Pointer to the file or directory path */
 )
@@ -2751,11 +2764,11 @@ FRESULT f_unlink (
                         if (!dir) {
                                 res = FR_INVALID_NAME;                /* Cannot remove the start directory */
                         } else {
-                                if (dir[DIR_Attr] & AM_RDO)
+                                if (dir[DIR_Attr] & LIBFAT_AM_RDO)
                                         res = FR_DENIED;                /* Cannot remove R/O object */
                         }
                         dclst = ld_clust(dj.fs, dir);
-                        if (res == FR_OK && (dir[DIR_Attr] & AM_DIR)) {        /* Is it a sub-dir? */
+                        if (res == FR_OK && (dir[DIR_Attr] & LIBFAT_AM_DIR)) {        /* Is it a sub-dir? */
                                 if (dclst < 2) {
                                         res = FR_INT_ERR;
                                 } else {
@@ -2792,7 +2805,7 @@ FRESULT f_unlink (
 /* Create a Directory                                                    */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_mkdir(
+FRESULT libfat_mkdir(
         FATFS *fs,
         const TCHAR *path                /* Pointer to the directory path */
 )
@@ -2800,7 +2813,7 @@ FRESULT f_mkdir(
         FRESULT res;
         FATDIR dj;
         uint8_t *dir, n;
-        uint32_t dsc, dcl, pcl, tm = get_fattime();
+        uint32_t dsc, dcl, pcl, tm = _libfat_get_fattime();
         DEF_NAMEBUF;
 
 //        res = chk_mounted(fs, &path, &dj.fs, 1);
@@ -2826,12 +2839,12 @@ FRESULT f_mkdir(
                                 memset(dir, 0, SS(dj.fs));
                                 memset(dir+DIR_Name, ' ', 11);        /* Create "." entry */
                                 dir[DIR_Name] = '.';
-                                dir[DIR_Attr] = AM_DIR;
+                                dir[DIR_Attr] = LIBFAT_AM_DIR;
                                 ST_DWORD(dir+DIR_WrtTime, tm);
                                 st_clust(dir, dcl);
                                 memcpy(dir+SZ_DIR, dir, SZ_DIR);         /* Create ".." entry */
                                 dir[33] = '.'; pcl = dj.sclust;
-                                if (dj.fs->fs_type == FS_FAT32 && pcl == dj.fs->dirbase)
+                                if (dj.fs->fs_type == LIBFAT_FS_FAT32 && pcl == dj.fs->dirbase)
                                         pcl = 0;
                                 st_clust(dir+SZ_DIR, pcl);
                                 for (n = dj.fs->csize; n; n--) {        /* Write dot entries and clear following sectors */
@@ -2847,7 +2860,7 @@ FRESULT f_mkdir(
                                 remove_chain(dj.fs, dcl);                        /* Could not register, remove cluster chain */
                         } else {
                                 dir = dj.dir;
-                                dir[DIR_Attr] = AM_DIR;                                /* Attribute */
+                                dir[DIR_Attr] = LIBFAT_AM_DIR;                                /* Attribute */
                                 ST_DWORD(dir+DIR_WrtTime, tm);                /* Created time */
                                 st_clust(dir, dcl);                                        /* Table start cluster */
                                 dj.fs->wflag = 1;
@@ -2867,7 +2880,7 @@ FRESULT f_mkdir(
 /* Change Attribute                                                      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_chmod (
+FRESULT libfat_chmod (
         FATFS *fs,
         const TCHAR *path,        /* Pointer to the file path */
         uint8_t value,                        /* Attribute bits */
@@ -2893,7 +2906,7 @@ FRESULT f_chmod (
                         if (!dir) {                                                /* Is it a root directory? */
                                 res = FR_INVALID_NAME;
                         } else {                                                /* File or sub directory */
-                                mask &= AM_RDO|AM_HID|AM_SYS|AM_ARC;        /* Valid attribute mask */
+                                mask &= LIBFAT_AM_RDO|LIBFAT_AM_HID|LIBFAT_AM_SYS|LIBFAT_AM_ARC;        /* Valid attribute mask */
                                 dir[DIR_Attr] = (value & mask) | (dir[DIR_Attr] & (uint8_t)~mask);        /* Apply attribute change */
                                 dj.fs->wflag = 1;
                                 res = sync_fs(dj.fs);
@@ -2911,7 +2924,7 @@ FRESULT f_chmod (
 /* Change Timestamp                                                      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_utime (
+FRESULT libfat_utime (
         FATFS *fs,
         const TCHAR *path,        /* Pointer to the file/directory name */
         const FILINFO *fno        /* Pointer to the time stamp to be set */
@@ -2955,7 +2968,7 @@ FRESULT f_utime (
 /* Rename File/Directory                                                 */
 /*-----------------------------------------------------------------------*/
 
-FRESULT f_rename (
+FRESULT libfat_rename (
         FATFS *fs,
         const TCHAR *path_old,        /* Pointer to the old name */
         const TCHAR *path_new        /* Pointer to the new name */
@@ -2994,9 +3007,9 @@ FRESULT f_rename (
                                         if (res == FR_OK) {
                                                 dir = djn.dir;                                        /* Copy object information except for name */
                                                 memcpy(dir+13, buf+2, 19);
-                                                dir[DIR_Attr] = buf[0] | AM_ARC;
+                                                dir[DIR_Attr] = buf[0] | LIBFAT_AM_ARC;
                                                 djo.fs->wflag = 1;
-                                                if (djo.sclust != djn.sclust && (dir[DIR_Attr] & AM_DIR)) {                /* Update .. entry in the directory if needed */
+                                                if (djo.sclust != djn.sclust && (dir[DIR_Attr] & LIBFAT_AM_DIR)) {                /* Update .. entry in the directory if needed */
                                                         dw = clust2sect(djo.fs, ld_clust(djo.fs, dir));
                                                         if (!dw) {
                                                                 res = FR_INT_ERR;
@@ -3004,7 +3017,7 @@ FRESULT f_rename (
                                                                 res = move_window(djo.fs, dw);
                                                                 dir = djo.fs->win+SZ_DIR;        /* .. entry */
                                                                 if (res == FR_OK && dir[1] == '.') {
-                                                                        dw = (djo.fs->fs_type == FS_FAT32 && djn.sclust == djo.fs->dirbase) ? 0 : djn.sclust;
+                                                                        dw = (djo.fs->fs_type == LIBFAT_FS_FAT32 && djn.sclust == djo.fs->dirbase) ? 0 : djn.sclust;
                                                                         st_clust(dir, dw);
                                                                         djo.fs->wflag = 1;
                                                                 }

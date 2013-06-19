@@ -119,7 +119,7 @@
  * windows.h, ucos_ii.h and semphr.h, must be included prior to libfat.h.
  */
 #define _LIBFAT_FS_TIMEOUT      15000   /* Timeout period in unit of time ticks */
-#define _LIBFAT_SYNC_t          mutex_t*/* O/S dependent type of sync object. e.g. HANDLE, OS_EVENT*, ID and etc.. */
+#define _LIBFAT_MUTEX_t         mutex_t*/* O/S dependent type of sync object. e.g. HANDLE, OS_EVENT*, ID and etc.. */
 
 
 /* To enable file lock control feature, set _LIBFAT_FS_LOCK to 1 or greater.

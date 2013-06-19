@@ -1,9 +1,33 @@
+#ifndef _LIBFAT_USER_H_
+#define _LIBFAT_USER_H_
+/*=========================================================================*//**
+@file    libfat_user.h
+
+@author  Daniel Zorychta
+
+@brief   FAT file system library based od ChaN's code.
+
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+*//*==========================================================================*/
 /*-----------------------------------------------------------------------
 /  Low level disk interface modlue include file   (C)ChaN, 2013
 /-----------------------------------------------------------------------*/
-
-#ifndef _DISKIO_DEFINED
-#define _DISKIO_DEFINED
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,21 +53,21 @@ typedef enum {
 /* Prototypes for disk control functions */
 
 
-extern DSTATUS  disk_initialize (FILE*);
-extern DSTATUS  disk_status     (FILE*);
-extern DRESULT  disk_read       (FILE*, uint8_t*, uint32_t, uint8_t);
-extern DRESULT  disk_write      (FILE*, const uint8_t*, uint32_t, uint8_t);
-extern DRESULT  disk_ioctl      (FILE*, uint8_t, void*);
-extern int      ff_cre_syncobj  (_LIBFAT_SYNC_t*);              /* Create a sync object */
-extern int      ff_req_grant    (_LIBFAT_SYNC_t);               /* Lock sync object */
-extern void     ff_rel_grant    (_LIBFAT_SYNC_t);               /* Unlock sync object */
-extern int      ff_del_syncobj  (_LIBFAT_SYNC_t);               /* Delete a sync object */
-extern uint32_t get_fattime     (void);
+extern DSTATUS  _libfat_disk_initialize (FILE*);
+extern DSTATUS  _libfat_disk_status     (FILE*);
+extern DRESULT  _libfat_disk_read       (FILE*, uint8_t*, uint32_t, uint8_t);
+extern DRESULT  _libfat_disk_write      (FILE*, const uint8_t*, uint32_t, uint8_t);
+extern DRESULT  _libfat_disk_ioctl      (FILE*, uint8_t, void*);
+extern int      _libfat_create_mutex    (_LIBFAT_MUTEX_t*);              /* Create a sync object */
+extern int      _libfat_lock_access    (_LIBFAT_MUTEX_t);               /* Lock sync object */
+extern void     _libfat_unlock_access    (_LIBFAT_MUTEX_t);               /* Unlock sync object */
+extern int      _libfat_delete_mutex  (_LIBFAT_MUTEX_t);               /* Delete a sync object */
+extern uint32_t _libfat_get_fattime     (void);
 
 
 #if _LIBFAT_USE_LFN == 2                               /* Memory functions */
-extern void *ff_memalloc(uint msize);                 /* Allocate memory block */
-extern void  ff_memfree(void *mblock);                 /* Free memory block */
+extern void *_libfat_malloc(uint msize);                 /* Allocate memory block */
+extern void  _libfat_free(void *mblock);                 /* Free memory block */
 #endif
 
 /* Disk Status Bits (DSTATUS) */
