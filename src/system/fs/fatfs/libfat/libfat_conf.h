@@ -30,7 +30,7 @@
  * Functions and Buffer Configurations
  * ---------------------------------------------------------------------------*/
 
-/* When _LIBFAT_FS_TINY is set to 1, FatFs uses the sector buffer in the file system
+/* When _LIBFAT_FS_TINY is set to 1, libfat uses the sector buffer in the file system
  * object instead of the sector buffer in the individual file object for file
  * data transfer. This reduces memory consumption 512 bytes each file object.
  */
@@ -81,9 +81,9 @@
  * 2: Enable LFN with dynamic working buffer on the HEAP.
  *
  * The LFN working buffer occupies (_LIBFAT_MAX_LFN + 1) * 2 bytes. To enable LFN,
- * Unicode handling functions ff_convert() and ff_wtoupper() must be added
+ * Unicode handling functions _libfat_convert() and _libfat_wtoupper() must be added
  * to the project. When enable to use heap, memory control functions
- * ff_memalloc() and ff_memfree() must be added to the project. */
+ * _libfat_malloc() and _libfat_free() must be added to the project. */
 #define _LIBFAT_USE_LFN         2       /* 0 to 2 */
 #define _LIBFAT_MAX_LFN         255     /* Maximum LFN length to handle (12 to 255) */
 

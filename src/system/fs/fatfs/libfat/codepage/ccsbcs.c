@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    cc932.c
+@file    ccsbcs.c
 
 @author  Daniel Zorychta
 
@@ -58,10 +58,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "../libfat.h"
-
-#if !_TBLDEF || !_LIBFAT_USE_LFN
-#error This file is not needed in current configuration. Remove from the project.
-#endif
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -543,6 +539,10 @@ static const wchar_t Tbl[] = {
         0x0111, 0x00F1, 0x0323, 0x00F3, 0x00F4, 0x01A1, 0x00F6, 0x00F7,
         0x00F8, 0x00F9, 0x00FA, 0x00FB, 0x00FC, 0x01B0, 0x20AB, 0x00FF
 };
+#endif
+
+#if !_TBLDEF || !_LIBFAT_USE_LFN
+#error This file is not needed in current configuration. Remove from the project.
 #endif
 
 /*==============================================================================
