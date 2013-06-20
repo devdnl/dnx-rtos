@@ -431,8 +431,8 @@ const uint8_t ExCvt[] = _EXCVT;        /* Upper conversion table for extended ch
 
 
 #if _LIBFAT_USE_LFN                                    /* Unicode - OEM code conversion */
-extern wchar_t ff_convert (wchar_t chr, uint dir);         /* OEM-Unicode bidirectional conversion */
-extern wchar_t ff_wtoupper (wchar_t chr);                  /* Unicode upper-case conversion */
+extern wchar_t _libfat_convert (wchar_t chr, uint dir);         /* OEM-Unicode bidirectional conversion */
+extern wchar_t _libfat_wtoupper (wchar_t chr);                  /* Unicode upper-case conversion */
 #endif
 
 
@@ -1087,8 +1087,8 @@ int cmp_lfn (                        /* 1:Matched, 0:Not matched */
         do {
                 uc = LD_WORD(dir+LfnOfs[s]);        /* Pick an LFN character from the entry */
                 if (wc) {        /* Last char has not been processed */
-                        wc = ff_wtoupper(uc);                /* Convert it to upper case */
-                        if (i >= _LIBFAT_MAX_LFN || wc != ff_wtoupper(lfnbuf[i++]))        /* Compare it */
+                        wc = _libfat_wtoupper(uc);                /* Convert it to upper case */
+                        if (i >= _LIBFAT_MAX_LFN || wc != _libfat_wtoupper(lfnbuf[i++]))        /* Compare it */
                                 return 0;                                /* Not matched */
                 } else {
                         if (uc != 0xFFFF) return 0;        /* Check filler */
@@ -1498,7 +1498,7 @@ FRESULT create_name (
                                 return FR_INVALID_NAME;        /* Reject invalid sequence */
                         w = (w << 8) + b;                        /* Create a DBC */
                 }
-                w = ff_convert(w, 1);                        /* Convert ANSI/OEM to Unicode */
+                w = _libfat_convert(w, 1);                        /* Convert ANSI/OEM to Unicode */
                 if (!w) return FR_INVALID_NAME;        /* Reject invalid code */
 #endif
                 if (w < 0x80 && strchr("\"*:<>\?|\x7F", w)) /* Reject illegal chars for LFN */
@@ -1543,10 +1543,10 @@ FRESULT create_name (
 
                 if (w >= 0x80) {                                /* Non ASCII char */
 #ifdef _EXCVT
-                        w = ff_convert(w, 0);                /* Unicode -> OEM code */
+                        w = _libfat_convert(w, 0);                /* Unicode -> OEM code */
                         if (w) w = ExCvt[w - 0x80];        /* Convert extended char to upper (SBCS) */
 #else
-                        w = ff_convert(ff_wtoupper(w), 0);        /* Upper converted Unicode -> OEM code */
+                        w = _libfat_convert(_libfat_wtoupper(w), 0);        /* Upper converted Unicode -> OEM code */
 #endif
                         cf |= NS_LFN;                                /* Force create LFN entry */
                 }
@@ -1692,7 +1692,7 @@ void get_fileinfo (                /* No return code */
 #if _LIBFAT_LFN_UNICODE
                         if (IsDBCS1(c) && i < 7 && IsDBCS2(dir[i+1]))
                                 c = (c << 8) | dir[++i];
-                        c = ff_convert(c, 1);
+                        c = _libfat_convert(c, 1);
                         if (!c) c = '?';
 #endif
                         *p++ = c;
@@ -1706,7 +1706,7 @@ void get_fileinfo (                /* No return code */
 #if _LIBFAT_LFN_UNICODE
                                 if (IsDBCS1(c) && i < 10 && IsDBCS2(dir[i+1]))
                                         c = (c << 8) | dir[++i];
-                                c = ff_convert(c, 1);
+                                c = _libfat_convert(c, 1);
                                 if (!c) c = '?';
 #endif
                                 *p++ = c;
@@ -1729,7 +1729,7 @@ void get_fileinfo (                /* No return code */
                         lfn = dj->lfn;
                         while ((w = *lfn++) != 0) {                        /* Get an LFN char */
 #if !_LIBFAT_LFN_UNICODE
-                                w = ff_convert(w, 0);                        /* Unicode -> OEM conversion */
+                                w = _libfat_convert(w, 0);                        /* Unicode -> OEM conversion */
                                 if (!w) { i = 0; break; }                /* Could not convert, no LFN */
                                 if (_DF1S && w >= 0x100)                /* Put 1st byte if it is a DBC (always false on SBCS cfg) */
                                         tp[i++] = (TCHAR)(w >> 8);

@@ -5,7 +5,7 @@
 
 @author  Daniel Zorychta
 
-@brief   FAT file system library based od ChaN's code.
+@brief   FAT file system library based on ChaN's code.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 

@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   FAT file system library based od ChaN's code.
+@brief   FAT file system library based on ChaN's code.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -23,17 +23,48 @@
 
 
 *//*==========================================================================*/
-/*-----------------------------------------------------------------------*/
-/* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2013        */
-/*-----------------------------------------------------------------------*/
-/* If a working storage control module is available, it should be        */
-/* attached to the FatFs via a glue function rather than modifying it.   */
-/* This is an example of glue functions to attach various existing       */
-/* storage control module to the FatFs module with a defined API.        */
-/*-----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
+/* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2013             */
+/*----------------------------------------------------------------------------*/
+/* If a working storage control module is available, it should be             */
+/* attached to the FatFs via a glue function rather than modifying it.        */
+/* This is an example of glue functions to attach various existing            */
+/* storage control module to the FatFs module with a defined API.             */
+/*----------------------------------------------------------------------------*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*==============================================================================
+  Include files
+==============================================================================*/
 #include "libfat_user.h"
 #include "libfat_conf.h"
+
+/*==============================================================================
+  Local symbolic constants/macros
+==============================================================================*/
+
+/*==============================================================================
+  Local types, enums definitions
+==============================================================================*/
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
+
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
 //==============================================================================
 /**
@@ -226,6 +257,10 @@ void _libfat_free(void *mblock)
 {
         free(mblock);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 /*==============================================================================
   End of file
