@@ -164,7 +164,7 @@ uint32_t _libfat_get_fattime(void)
  * @retval 0: Could not create due to any error
  */
 //==============================================================================
-int _libfat_create_mutex(_LIBFAT_MUTEX_t* sobj)
+int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
         if (sobj) {
                 _LIBFAT_MUTEX_t mtx = new_mutex();

@@ -666,7 +666,7 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
         fstat.st_size = 0;
         fstat(hdl->fsfile, &fstat);
 
-        if (libfat_getfree(&free_clusters, &hdl->fatfs) == FR_OK) {
+        if (libfat_getfree(&hdl->fatfs, &free_clusters) == FR_OK) {
                 statfs->f_bsize  = _LIBFAT_MAX_SS;
                 statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
                 statfs->f_blocks = fstat.st_size / _LIBFAT_MAX_SS;

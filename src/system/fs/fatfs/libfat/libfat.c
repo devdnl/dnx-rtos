@@ -424,11 +424,13 @@ static FRESULT  dir_next        (FATDIR *dj, int stretch);
 static FRESULT  dir_alloc       (FATDIR *dj, uint nent);
 static uint32_t ld_clust        (FATFS *fs, uint8_t *dir);
 static void     st_clust        (uint8_t *dir, uint32_t cl);
+#if _LIBFAT_USE_LFN
 static int      cmp_lfn         (wchar_t *lfnbuf, uint8_t *dir);
 static int      pick_lfn        (wchar_t *lfnbuf, uint8_t *dir);
 static void     fit_lfn         (const wchar_t *lfnbuf, uint8_t *dir, uint8_t ord, uint8_t sum);
 static void     gen_numname     (uint8_t *dst, const uint8_t *src, const wchar_t *lfn, uint16_t seq);
 static uint8_t  sum_sfn         (const uint8_t *dir);
+#endif
 static FRESULT  dir_find        (FATDIR *dj);
 static FRESULT  dir_read        (FATDIR *dj, int vol);
 static FRESULT  dir_register    (FATDIR *dj);
@@ -1969,72 +1971,97 @@ static FRESULT create_name(FATDIR *dj, const TCHAR **path)
         uint ni, si, i;
         const char *p;
 
-        /* Create file name in directory form */
-        for (p = *path; *p == '/' || *p == '\\'; p++) ;        /* Strip duplicated separator */
+        /* Create file name in directory form, Strip duplicated separator */
+        for (p = *path; *p == '/' || *p == '\\'; p++);
         sfn = dj->fn;
         memset(sfn, ' ', 11);
         si = i = b = 0; ni = 8;
-#if _FS_RPATH
-        if (p[si] == '.') { /* Is this a dot entry? */
-                for (;;) {
-                        c = (uint8_t)p[si++];
-                        if (c != '.' || si >= 3) break;
-                        sfn[i++] = c;
-                }
-                if (c != '/' && c != '\\' && c > ' ') return FR_INVALID_NAME;
-                *path = &p[si];                                                                        /* Return pointer to the next segment */
-                sfn[NS] = (c <= ' ') ? NS_LAST | NS_DOT : NS_DOT;        /* Set last segment flag if end of path */
-                return FR_OK;
-        }
-#endif
+
         for (;;) {
                 c = (uint8_t)p[si++];
-                if (c <= ' ' || c == '/' || c == '\\') break;        /* Break on end of segment */
+
+                /* Break on end of segment */
+                if (c <= ' ' || c == '/' || c == '\\')
+                        break;
+
                 if (c == '.' || i >= ni) {
-                        if (ni != 8 || c != '.') return FR_INVALID_NAME;
-                        i = 8; ni = 11;
-                        b <<= 2; continue;
+                        if (ni != 8 || c != '.')
+                                return FR_INVALID_NAME;
+
+                        i = 8;
+                        ni = 11;
+                        b <<= 2;
+                        continue;
                 }
-                if (c >= 0x80) {                                /* Extended char? */
-                        b |= 3;                                                /* Eliminate NT flag */
+
+                if (c >= 0x80) {
+                        /* Eliminate NT flag */
+                        b |= 3;
 #ifdef _EXCVT
-                        c = ExCvt[c - 0x80];                /* To upper extended chars (SBCS cfg) */
+                        /* To upper extended chars (SBCS cfg) */
+                        c = ExCvt[c - 0x80];
 #else
 #if !_DF1S
-                        return FR_INVALID_NAME;                /* Reject extended chars (ASCII cfg) */
+                        /* Reject extended chars (ASCII cfg) */
+                        return FR_INVALID_NAME;
 #endif
 #endif
                 }
-                if (IsDBCS1(c)) {                                /* Check if it is a DBC 1st byte (always false on SBCS cfg) */
-                        d = (uint8_t)p[si++];                        /* Get 2nd byte */
-                        if (!IsDBCS2(d) || i >= ni - 1)        /* Reject invalid DBC */
+
+                /* Check if it is a DBC 1st byte (always false on SBCS cfg) */
+                if (IsDBCS1(c)) {
+                        /* Get 2nd byte */
+                        d = (uint8_t)p[si++];
+
+                        /* Reject invalid DBC */
+                        if (!IsDBCS2(d) || i >= ni - 1)
                                 return FR_INVALID_NAME;
+
                         sfn[i++] = c;
                         sfn[i++] = d;
-                } else {                                                /* Single byte code */
-                        if (strchr("\"*+,:;<=>\?[]|\x7F", c))        /* Reject illegal chrs for SFN */
+                } else {
+                        /* Reject illegal chrs for SFN */
+                        if (strchr("\"*+,:;<=>\?[]|\x7F", c))
                                 return FR_INVALID_NAME;
-                        if (IsUpper(c)) {                        /* ASCII large capital? */
+
+                        if (IsUpper(c)) {
                                 b |= 2;
                         } else {
-                                if (IsLower(c)) {                /* ASCII small capital? */
+                                if (IsLower(c)) {
                                         b |= 1; c -= 0x20;
                                 }
                         }
+
                         sfn[i++] = c;
                 }
         }
-        *path = &p[si];                                                /* Return pointer to the next segment */
-        c = (c <= ' ') ? NS_LAST : 0;                /* Set last segment flag if end of path */
 
-        if (!i) return FR_INVALID_NAME;                /* Reject nul string */
-        if (sfn[0] == DDE) sfn[0] = NDDE;        /* When first char collides with DDE, replace it with 0x05 */
+        /* Return pointer to the next segment */
+        *path = &p[si];
 
-        if (ni == 8) b <<= 2;
-        if ((b & 0x03) == 0x01) c |= NS_EXT;        /* NT flag (Name extension has only small capital) */
-        if ((b & 0x0C) == 0x04) c |= NS_BODY;        /* NT flag (Name body has only small capital) */
+        /* Set last segment flag if end of path */
+        c = (c <= ' ') ? NS_LAST : 0;
 
-        sfn[NS] = c;                /* Store NT flag, File name is created */
+        /* Reject null string */
+        if (!i)
+                return FR_INVALID_NAME;
+
+        /* When first char collides with DDE, replace it with 0x05 */
+        if (sfn[0] == DDE)
+                sfn[0] = NDDE;
+
+        if (ni == 8)
+                b <<= 2;
+
+        /* NT flag (Name extension has only small capital) */
+        if ((b & 0x03) == 0x01)
+                c |= NS_EXT;
+
+        /* NT flag (Name body has only small capital) */
+        if ((b & 0x0C) == 0x04) c |= NS_BODY;
+
+        /* Store NT flag, File name is created */
+        sfn[NS] = c;
 
         return FR_OK;
 #endif

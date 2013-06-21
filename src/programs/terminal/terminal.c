@@ -122,7 +122,7 @@ static const struct cmd_entry commands[] = {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW); /* TODO FIX to STACK_DEPTH_VERY_LOW */
+PROGRAM_PARAMS(terminal, STACK_DEPTH_LARGE); /* TODO FIX to STACK_DEPTH_VERY_LOW */
 
 /*==============================================================================
   Function definitions
