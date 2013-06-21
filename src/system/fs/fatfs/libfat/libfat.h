@@ -185,7 +185,7 @@ typedef struct {
         TCHAR          *lfname;                 /* Pointer to the LFN buffer */
         uint            lfsize;                 /* Size of LFN buffer in TCHAR */
 #endif
-} FILINFO;
+} FILEINFO;
 
 
 /* File function return code (FRESULT) */
@@ -226,16 +226,16 @@ extern FRESULT  libfat_read      (FATFILE*, void*, uint, uint*);
 extern FRESULT  libfat_lseek     (FATFILE*, uint32_t);
 extern FRESULT  libfat_close     (FATFILE*);
 extern FRESULT  libfat_opendir   (FATFS*, FATDIR*, const TCHAR*);
-extern FRESULT  libfat_readdir   (FATDIR*, FILINFO*);
-extern FRESULT  libfat_stat      (FATFS*, const TCHAR*, FILINFO*);
+extern FRESULT  libfat_readdir   (FATDIR*, FILEINFO*);
+extern FRESULT  libfat_stat      (FATFS*, const TCHAR*, FILEINFO*);
 extern FRESULT  libfat_write     (FATFILE*, const void*, uint, uint*);
-extern FRESULT  libfat_getfree   (uint32_t*, FATFS*);
+extern FRESULT  libfat_getfree   (FATFS *fs, uint32_t *nclst);
 extern FRESULT  libfat_truncate  (FATFILE*);
 extern FRESULT  libfat_sync      (FATFILE*);
 extern FRESULT  libfat_unlink    (FATFS*, const TCHAR*);
 extern FRESULT  libfat_mkdir     (FATFS*, const TCHAR*);
 extern FRESULT  libfat_chmod     (FATFS*, const TCHAR*, uint8_t, uint8_t);
-extern FRESULT  libfat_utime     (FATFS*, const TCHAR*, const FILINFO*);
+extern FRESULT  libfat_utime     (FATFS*, const TCHAR*, const FILEINFO*);
 extern FRESULT  libfat_rename    (FATFS*, const TCHAR*, const TCHAR*);
 #define         libfat_eof(fp)   (((fp)->fptr == (fp)->fsize) ? 1 : 0)
 #define         libfat_error(fp) (((fp)->flag & FA__ERROR) ? 1 : 0)

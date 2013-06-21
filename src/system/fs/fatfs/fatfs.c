@@ -247,7 +247,11 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
 
         FATFILE *fat_file = extra;
         uint n        = 0;
-        libfat_lseek(fat_file, (u32_t)lseek);
+
+        if (libfat_tell(fat_file) != (u32_t)lseek) {
+                libfat_lseek(fat_file, (u32_t)lseek);
+        }
+
         libfat_write(fat_file, src, size * nitems, &n);
         return n;
 }
@@ -274,7 +278,11 @@ size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
 
         FATFILE *fat_file = extra;
         uint n        = 0;
-        libfat_lseek(fat_file, (u32_t)lseek);
+
+        if (libfat_tell(fat_file) != (u32_t)lseek) {
+                libfat_lseek(fat_file, (u32_t)lseek);
+        }
+
         libfat_read(fat_file, dst, size * nitems, &n);
         return n;
 }
@@ -493,7 +501,7 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
         dirent.name = NULL;
         dirent.size = 0;
 
-        FILINFO fat_file_info;
+        FILEINFO fat_file_info;
 #if _LIBFAT_USE_LFN != 0
         fat_file_info.lfname = &fatdir->name[0];
         fat_file_info.lfsize = _LIBFAT_MAX_LFN;
@@ -623,7 +631,7 @@ stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
         struct fatfs *hdl = fshdl;
 
-        FILINFO file_info;
+        FILEINFO file_info;
         if (libfat_stat(&hdl->fatfs, path, &file_info) == FR_OK) {
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
