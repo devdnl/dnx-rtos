@@ -104,7 +104,7 @@ DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t
 //==============================================================================
 DRESULT _libfat_disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        fseek(srcfile, sector * _LIBFAT_MAX_SS, SEEK_SET);
+        fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
         if (fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {

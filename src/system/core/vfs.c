@@ -830,7 +830,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
                 if (file->f_write) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
                                           nitems, file->f_lseek);
-                        file->f_lseek += n * size;
+                        file->f_lseek += (u64_t)n * size;
                 }
         }
 
@@ -858,7 +858,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
                 if (file->f_read) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
                                          nitems, file->f_lseek);
-                        file->f_lseek += n * size;
+                        file->f_lseek += (u64_t)n * size;
                 }
         }
 

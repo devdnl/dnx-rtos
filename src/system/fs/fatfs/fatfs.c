@@ -253,7 +253,7 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
         }
 
         libfat_write(fat_file, src, size * nitems, &n);
-        return n;
+        return n / size;
 }
 
 //==============================================================================
@@ -284,7 +284,7 @@ size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
         }
 
         libfat_read(fat_file, dst, size * nitems, &n);
-        return n;
+        return n / size;
 }
 
 //==============================================================================
@@ -432,7 +432,7 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 return STD_RET_ERROR;
         }
 
-        dir->dd = calloc(1, sizeof(struct fatdir));
+        dir->dd = malloc(sizeof(struct fatdir));
         if (!dir->dd) {
                 free(dospath);
                 return STD_RET_ERROR;
@@ -441,7 +441,7 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
         if (strlen(path) == 1) {
                 strcpy(dospath, path);
         } else {
-                memcpy(dospath, path, strlen(path) - 1);
+                strncpy(dospath, path, strlen(path) - 1);
         }
 
         dir->handle = hdl;

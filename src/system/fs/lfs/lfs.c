@@ -1057,7 +1057,7 @@ size_t lfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size
                 if (drv_if->drv_write) {
                         unlock_recursive_mutex(lfs->resource_mtx);
 
-                        return drv_if->drv_write(drv_if->handle, src, size, nitems, seek);
+                        return drv_if->drv_write(drv_if->handle, src, size, nitems, lseek);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
                 write_size  = size * nitems;
@@ -1144,7 +1144,7 @@ size_t lfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_
 
                 if (drv_if->drv_read) {
                         unlock_recursive_mutex(lfs->resource_mtx);
-                        return drv_if->drv_read(drv_if->handle, dst, size, nitems, seek);
+                        return drv_if->drv_read(drv_if->handle, dst, size, nitems, lseek);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
                 file_length = node->size;
