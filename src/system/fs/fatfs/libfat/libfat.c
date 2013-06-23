@@ -386,15 +386,6 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-/* File access control feature */
-#if _LIBFAT_FS_LOCK
-typedef struct {
-        FATFS   *fs;    /* File ID 1, volume (NULL:blank entry) */
-        uint32_t clu;   /* File ID 2, directory */
-        uint16_t idx;   /* File ID 3, directory index */
-        uint16_t ctr;   /* File open counter, 0:none, 0x01..0xFF:read open count, 0x100:write mode */
-} FILESEM;
-#endif
 
 /*==============================================================================
   Local function prototypes
@@ -407,9 +398,9 @@ static int      lock_fs         (FATFS *fs);
 static void     unlock_fs       (FATFS *fs, FRESULT res);
 #if _LIBFAT_FS_LOCK
 static FRESULT  chk_lock        (FATDIR *dj, int acc);
-static int      enq_lock        (void);
+static int      enq_lock        (FATFS *fs);
 static uint     inc_lock        (FATDIR *dj, int acc);
-static FRESULT  dec_lock        (uint i)
+static FRESULT  dec_lock        (FATFS *fs, uint i);
 static void     clear_lock      (FATFS *fs);
 #endif
 static FRESULT  sync_window     (FATFS *fs);
@@ -445,10 +436,6 @@ static FRESULT  validate        (void *obj);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if _LIBFAT_FS_LOCK /* FIXME this shall be inserted in the FAT container */
-static FILESEM Files[_LIBFAT_FS_LOCK];        /* File lock semaphores */
-#endif
-
 #ifdef _EXCVT
 /* Upper conversion table for extended chars */
 static const uint8_t ExCvt[] = _EXCVT;
@@ -462,7 +449,6 @@ static const uint8_t LfnOfs[] = {1,3,5,7,9,14,16,18,20,22,24,28,30};
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-/* FIXME remove commented _FS_RPATH from code after tests */
 
 /*==============================================================================
   Function definitions
@@ -520,10 +506,14 @@ static FRESULT chk_lock(FATDIR *dj, int acc)
         /* Search file semaphore table */
         for (i = be = 0; i < _LIBFAT_FS_LOCK; i++) {
                 /* Existing entry */
-                if (Files[i].fs) {
+                if (dj->fs->files[i].fs) {
                         /* Check if the file matched with an open file */
-                        if (Files[i].fs == dj->fs && Files[i].clu == dj->sclust && Files[i].idx == dj->index)
+                        if (  dj->fs->files[i].fs  == dj->fs
+                           && dj->fs->files[i].clu == dj->sclust
+                           && dj->fs->files[i].idx == dj->index) {
+
                                 break;
+                        }
                 } else { /* Blank entry */
                         be++;
                 }
@@ -536,7 +526,7 @@ static FRESULT chk_lock(FATDIR *dj, int acc)
         }
 
         /* The file has been opened. Reject any open against writing file and all write mode open */
-        return (acc || Files[i].ctr == 0x100) ? FR_LOCKED : FR_OK;
+        return (acc || dj->fs->files[i].ctr == 0x100) ? FR_LOCKED : FR_OK;
 }
 
 //==============================================================================
@@ -547,11 +537,11 @@ static FRESULT chk_lock(FATDIR *dj, int acc)
  * @retval 1 locked
  */
 //==============================================================================
-static int enq_lock(void)
+static int enq_lock(FATFS *fs)
 {
         uint i;
 
-        for (i = 0; i < _LIBFAT_FS_LOCK && Files[i].fs; i++);
+        for (i = 0; i < _LIBFAT_FS_LOCK && fs->files[i].fs; i++);
 
         return (i == _LIBFAT_FS_LOCK) ? 0 : 1;
 }
@@ -572,30 +562,34 @@ static uint inc_lock(FATDIR *dj, int acc)
 
         /* Find the file */
         for (i = 0; i < _LIBFAT_FS_LOCK; i++) {
-                if (Files[i].fs == dj->fs && Files[i].clu == dj->sclust && Files[i].idx == dj->index)
+                if (  dj->fs->files[i].fs  == dj->fs
+                   && dj->fs->files[i].clu == dj->sclust
+                   && dj->fs->files[i].idx == dj->index) {
+
                         break;
+                }
         }
 
         /* Not opened. Register it as new. */
         if (i == _LIBFAT_FS_LOCK) {
-                for (i = 0; i < _LIBFAT_FS_LOCK && Files[i].fs; i++);
+                for (i = 0; i < _LIBFAT_FS_LOCK && dj->fs->files[i].fs; i++);
 
                 /* No space to register (int err) */
                 if (i == _LIBFAT_FS_LOCK)
                         return 0;
 
-                Files[i].fs  = dj->fs;
-                Files[i].clu = dj->sclust;
-                Files[i].idx = dj->index;
-                Files[i].ctr = 0;
+                dj->fs->files[i].fs  = dj->fs;
+                dj->fs->files[i].clu = dj->sclust;
+                dj->fs->files[i].idx = dj->index;
+                dj->fs->files[i].ctr = 0;
         }
 
         /* Access violation (int err) */
-        if (acc && Files[i].ctr)
+        if (acc && dj->fs->files[i].ctr)
                 return 0;
 
         /* Set semaphore value */
-        Files[i].ctr = acc ? 0x100 : Files[i].ctr + 1;
+        dj->fs->files[i].ctr = acc ? 0x100 : dj->fs->files[i].ctr + 1;
 
         return i + 1;
 }
@@ -610,13 +604,13 @@ static uint inc_lock(FATDIR *dj, int acc)
  * @retval FR_INT_ERR
  */
 //==============================================================================
-static FRESULT dec_lock(uint i)
+static FRESULT dec_lock(FATFS *fs, uint i)
 {
         uint16_t n;
         FRESULT res;
 
         if (--i < _LIBFAT_FS_LOCK) {
-                n = Files[i].ctr;
+                n = fs->files[i].ctr;
 
                 if (n == 0x100)
                         n = 0;
@@ -624,10 +618,11 @@ static FRESULT dec_lock(uint i)
                 if (n)
                         n--;
 
-                Files[i].ctr = n;
+                fs->files[i].ctr = n;
 
-                if (!n)
-                        Files[i].fs = 0;
+                if (!n) {
+                        fs->files[i].fs = 0;
+                }
 
                 res = FR_OK;
         } else {
@@ -648,8 +643,9 @@ static void clear_lock(FATFS *fs)
         uint i;
 
         for (i = 0; i < _LIBFAT_FS_LOCK; i++) {
-                if (Files[i].fs == fs)
-                        Files[i].fs = 0;
+                if (fs->files[i].fs == fs) {
+                        fs->files[i].fs = 0;
+                }
         }
 }
 #endif
@@ -1581,7 +1577,7 @@ static FRESULT dir_read(FATDIR *dj, int vol)
                 a = dir[DIR_Attr] & LIBFAT_AM_MASK;
 #if _LIBFAT_USE_LFN
                 /* An entry without valid data */
-                if (c == DDE || (/*!_FS_RPATH && */c == '.') || (a == LIBFAT_AM_VOL) != vol) {
+                if (c == DDE || (c == '.') || (a == LIBFAT_AM_VOL) != vol) {
                         ord = 0xFF;
                 } else {
                         if (a == LIBFAT_AM_LFN) {
@@ -1602,7 +1598,7 @@ static FRESULT dir_read(FATDIR *dj, int vol)
                 }
 #else
                 /* Is it a valid entry? */
-                if (c != DDE && (/*_FS_RPATH || */c != '.') && a != LIBFAT_AM_LFN && (a == LIBFAT_AM_VOL) == vol)
+                if (c != DDE && (c != '.') && a != LIBFAT_AM_LFN && (a == LIBFAT_AM_VOL) == vol)
                         break;
 #endif
                 res = dir_next(dj, 0);
@@ -2585,7 +2581,7 @@ FRESULT libfat_open(FATFS *fs, FATFILE *fp, const TCHAR *path, uint8_t mode)
                 if (res != FR_OK) {
                         if (res == FR_NO_FILE) {
 #if _LIBFAT_FS_LOCK
-                                res = enq_lock() ? dir_register(&dj) : FR_TOO_MANY_OPEN_FILES;
+                                res = enq_lock(fs) ? dir_register(&dj) : FR_TOO_MANY_OPEN_FILES;
                         }
 #else
                                 res = dir_register(&dj);
@@ -3102,7 +3098,7 @@ FRESULT libfat_close(FATFILE *fp)
                 FATFS *fs = fp->fs;;
                 res = validate(fp);
                 if (res == FR_OK) {
-                        res = dec_lock(fp->lockid);
+                        res = dec_lock(fp->fs, fp->lockid);
                         unlock_fs(fs, FR_OK);
                 }
         }
@@ -3278,7 +3274,8 @@ FRESULT libfat_opendir(FATFS *fs, FATDIR *dj, const TCHAR *path)
 
         DEF_NAMEBUF;
 
-        if (!dj) return FR_INVALID_OBJECT;
+        if (!dj)
+                return FR_INVALID_OBJECT;
 
         ENTER_FF(fs);
         dj->fs = fs;

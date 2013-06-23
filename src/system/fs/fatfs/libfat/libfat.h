@@ -108,7 +108,7 @@ extern "C" {
 
 
 /* File system object structure (FATFS) */
-typedef struct {
+typedef struct FATFS {
         uint8_t         fs_type;                /* FAT sub-type (0:Not mounted) */
         FILE           *srcfile;                /* file system source file */
         uint8_t         csize;                  /* Sectors per cluster (1,2,4...128) */
@@ -132,8 +132,16 @@ typedef struct {
         uint32_t        database;               /* Data start sector */
         uint32_t        winsect;                /* Current sector appearing in the win[] */
         uint8_t         win[_LIBFAT_MAX_SS];    /* Disk access window for Directory, FAT (and Data on tiny cfg) */
+        /* File access control feature */
+#if _LIBFAT_FS_LOCK
+        struct FILESEM {
+                struct FATFS   *fs;             /* File ID 1, volume (NULL:blank entry) */
+                uint32_t        clu;            /* File ID 2, directory */
+                uint16_t        idx;            /* File ID 3, directory index */
+                uint16_t        ctr;            /* File open counter, 0:none, 0x01..0xFF:read open count, 0x100:write mode */
+        } files[_LIBFAT_FS_LOCK];
+#endif
 } FATFS;
-
 
 /* File object structure */
 typedef struct {
