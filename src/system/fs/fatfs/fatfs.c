@@ -425,34 +425,40 @@ stdret_t fatfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
 //==============================================================================
 stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
 {
-        struct fatfs *hdl     = fshdl;
-        char         *dospath = (char *)path;
+        struct fatfs *hdl = fshdl;
 
-        if (strlen(path) > 1 && path[strlen(path) - 1] == '/') {
-                if (!(dospath = malloc(strlen(path + 1))))
-                        return STD_RET_ERROR;
-
-                strcpy(dospath, path);
-                dospath[strlen(path) - 1] = '\0';
+        char *dospath = calloc(strlen(path) + 1, 1);
+        if (!dospath) {
+                return STD_RET_ERROR;
         }
 
         dir->dd = calloc(1, sizeof(struct fatdir));
-        if (dir->dd) {
-                struct fatdir *fatdir = dir->dd;
-
-                dir->handle = hdl;
-                dir->cldir  = fatfs_closedir;
-                dir->rddir  = fatfs_readdir;
-                dir->seek   = 0;
-                dir->items  = 0;
-
-                if (libfat_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
-                        hdl->opened_dirs++;
-                        return STD_RET_OK;
-                }
-
-                free(dir->dd);
+        if (!dir->dd) {
+                free(dospath);
+                return STD_RET_ERROR;
         }
+
+        if (strlen(path) == 1) {
+                strcpy(dospath, path);
+        } else {
+                memcpy(dospath, path, strlen(path) - 1);
+        }
+
+        dir->handle = hdl;
+        dir->cldir  = fatfs_closedir;
+        dir->rddir  = fatfs_readdir;
+        dir->seek   = 0;
+        dir->items  = 0;
+
+        struct fatdir *fatdir = dir->dd;
+        if (libfat_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
+                free(dospath);
+                hdl->opened_dirs++;
+                return STD_RET_OK;
+        }
+
+        free(dospath);
+        free(dir->dd);
 
         return STD_RET_ERROR;
 }
@@ -581,11 +587,12 @@ stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
 //==============================================================================
 stdret_t fatfs_chmod(void *fshdl, const char *path, int mode)
 {
-        (void)fshdl;
-        (void)path;
-        (void)mode;
+        struct fatfs *hdl = fshdl;
 
-        /* not supported by this file system */
+        uint8_t dosmode = mode & OWNER_MODE(MODE_W) ? 0 : LIBFAT_AM_RDO;
+        if (libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO) == FR_OK) {
+                return STD_RET_OK;
+        }
 
         return STD_RET_ERROR;
 }

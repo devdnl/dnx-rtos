@@ -61,6 +61,14 @@ extern "C" {
 #define SEEK_END                VFS_SEEK_END
 #endif
 
+/* modes */
+#define OWNER_MODE(mode)        ((mode) << 0)
+#define GROUP_MODE(mode)        ((mode) << 3)
+#define OTHER_MODE(mode)        ((mode) << 6)
+#define MODE_R                  4
+#define MODE_W                  2
+#define MODE_X                  1
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
