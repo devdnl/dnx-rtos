@@ -842,8 +842,6 @@ static uint32_t get_fat(FATFS *fs, uint32_t clst)
 //==============================================================================
 static FRESULT put_fat(FATFS *fs, uint32_t clst, uint32_t val)
 {
-        uint bc;
-        uint8_t *p;
         FRESULT res;
 
         if (clst < 2 || clst >= fs->n_fatent) {
@@ -851,13 +849,14 @@ static FRESULT put_fat(FATFS *fs, uint32_t clst, uint32_t val)
 
         } else {
                 switch (fs->fs_type) {
-                case LIBFAT_FS_FAT12:
-                        bc = (uint)clst; bc += bc / 2;
+                case LIBFAT_FS_FAT12: {
+                        uint bc  = (uint)clst;
+                        bc += bc / 2;
                         res = move_window(fs, fs->fatbase + (bc / SS(fs)));
                         if (res != FR_OK)
                                 break;
 
-                        p = &fs->win[bc % SS(fs)];
+                        uint8_t *p = &fs->win[bc % SS(fs)];
                         *p = (clst & 1) ? ((*p & 0x0F) | ((uint8_t)val << 4)) : (uint8_t)val;
                         bc++;
                         fs->wflag = 1;
@@ -866,16 +865,17 @@ static FRESULT put_fat(FATFS *fs, uint32_t clst, uint32_t val)
                         if (res != FR_OK)
                                 break;
 
-                        p = &fs->win[bc % SS(fs)];
+                        p  = &fs->win[bc % SS(fs)];
                         *p = (clst & 1) ? (uint8_t)(val >> 4) : ((*p & 0xF0) | ((uint8_t)(val >> 8) & 0x0F));
                         break;
+                }
 
                 case LIBFAT_FS_FAT16:
                         res = move_window(fs, fs->fatbase + (clst / (SS(fs) / 2)));
                         if (res != FR_OK)
                                 break;
 
-                        p = &fs->win[clst * 2 % SS(fs)];
+                        uint8_t *p = &fs->win[clst * 2 % SS(fs)];
                         STORE_UINT16(p, (uint16_t)val);
                         break;
 

@@ -66,7 +66,7 @@ struct cmd_entry {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void print_prompt(void);
+static void            print_prompt(void);
 static enum cmd_status find_internal_command(char *cmd, char *arg);
 static enum cmd_status find_external_command(char *cmd, char *arg);
 static enum cmd_status cmd_cd(char *arg);
@@ -82,12 +82,8 @@ static enum cmd_status cmd_df(char *arg);
 static enum cmd_status cmd_mount(char *arg);
 static enum cmd_status cmd_umount(char *arg);
 static enum cmd_status cmd_uname(char *arg);
+static enum cmd_status cmd_detect_card(char *arg);
 static enum cmd_status cmd_help(char *arg);
-static enum cmd_status cmd_sector(char *arg);  /* TODO delete */
-static enum cmd_status cmd_dsector(char *arg); /* TODO delete */
-static enum cmd_status cmd_wsector(char *arg); /* TODO delete */
-static enum cmd_status cmd_sdrate(char *arg);  /* TODO delete */
-static enum cmd_status cmd_pwrite(char *arg); /* TODO delete */
 
 /*==============================================================================
   Local object definitions
@@ -98,31 +94,27 @@ GLOBAL_VARIABLES {
 };
 
 static const struct cmd_entry commands[] = {
-        {"cd"    , cmd_cd    },
-        {"ls"    , cmd_ls    },
-        {"mkdir" , cmd_mkdir },
-        {"touch" , cmd_touch },
-        {"rm"    , cmd_rm    },
-        {"free"  , cmd_free  },
-        {"uptime", cmd_uptime},
-        {"clear" , cmd_clear },
-        {"reboot", cmd_reboot},
-        {"df"    , cmd_df    },
-        {"mount" , cmd_mount },
-        {"umount", cmd_umount},
-        {"uname" , cmd_uname },
-        {"help"  , cmd_help  },
-        {"sector", cmd_sector},   /* TODO delete */
-        {"dsector", cmd_dsector}, /* TODO delete */
-        {"wsector", cmd_wsector}, /* TODO delete */
-        {"sdrate" , cmd_sdrate }, /* TODO delete */
-        {"pwrite" , cmd_pwrite }, /* TODO delete */
+        {"cd"    , cmd_cd         },
+        {"ls"    , cmd_ls         },
+        {"mkdir" , cmd_mkdir      },
+        {"touch" , cmd_touch      },
+        {"rm"    , cmd_rm         },
+        {"free"  , cmd_free       },
+        {"uptime", cmd_uptime     },
+        {"clear" , cmd_clear      },
+        {"reboot", cmd_reboot     },
+        {"df"    , cmd_df         },
+        {"mount" , cmd_mount      },
+        {"umount", cmd_umount     },
+        {"uname" , cmd_uname      },
+        {"detect", cmd_detect_card},
+        {"help"  , cmd_help       },
 };
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(terminal, STACK_DEPTH_LARGE); /* TODO FIX to STACK_DEPTH_VERY_LOW */
+PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -288,7 +280,6 @@ static enum cmd_status find_internal_command(char *cmd, char *arg)
 static enum cmd_status cmd_cd(char *arg)
 {
         char  *newpath  = NULL;
-        dir_t *dir      = NULL;
         bool   freePath = FALSE;
 
         if (strcmp(arg, "..") == 0) {
@@ -322,7 +313,7 @@ static enum cmd_status cmd_cd(char *arg)
         }
 
         if (newpath) {
-                dir = opendir(newpath);
+                dir_t *dir = opendir(newpath);
 
                 if (dir) {
                         closedir(dir);
@@ -749,72 +740,63 @@ static enum cmd_status cmd_df(char *arg)
 //==============================================================================
 static enum cmd_status cmd_mount(char *arg)
 {
-        char *strb   = NULL;
-        char *stre   = NULL;
-        char *fstype = NULL;
-        char *fssrc  = NULL;
-        char *fsmntp = NULL;
-        i8_t  len    = 0;
+        char *arg1 = arg;
+        if (!arg1) {
+                goto usage;
+        }
 
-        strb = arg;
-        stre = strchr(strb, ' ');
-        len  = stre - strb;
+        char *arg2 = strchr(arg1, ' ');
+        if (!arg2) {
+                goto usage;
+        }
+        arg2++;
 
-        if (arg[0] == '\0') {
-                printf("Usage: mount [file system name] [source path|-] [mount point]\n");
+        char *arg3 = strchr(arg2, ' ');
+        if (!arg3) {
+                goto usage;
+        }
+        arg3++;
+
+        char *fstype  = calloc(arg2 - arg1, 1);
+        char *srcfile = calloc(arg3 - arg2, 1);
+        char *mntpt   = calloc(strlen(arg3) + 1, 1);
+
+        if (!fstype || !srcfile || !mntpt) {
+                if (fstype) {
+                        free(fstype);
+                }
+
+                if (srcfile) {
+                        free(srcfile);
+                }
+
+                if (mntpt) {
+                        free(mntpt);
+                }
+
+                printf("Bad arguments!\n");
                 return CMD_STATUS_EXECUTED;
         }
 
-        if ((fstype = calloc(len + 1, sizeof(char))) != NULL) {
-                strncpy(fstype, strb, stre - strb);
-        } else {
-                goto exit;
-        }
+        strncpy(fstype , arg1, arg2 - arg1 - 1);
+        strncpy(srcfile, arg2, arg3 - arg2 - 1);
+        strcpy(mntpt, arg3);
 
-        strb = stre + 1;
-        stre = strchr(strb, ' ');
-        len  = stre - strb;
-
-        if ((fssrc = calloc(len + 1, sizeof(char))) != NULL) {
-                strncpy(fssrc, strb, stre - strb);
-        } else {
-                goto exit;
-        }
-
-        strb = stre + 1;
-        len  = strlen(strb);
-
-        if ((fsmntp = calloc(len + 1, sizeof(char))) != NULL) {
-                strcpy(fsmntp, strb);
-        } else {
-                goto exit;
-        }
-
-        exit:
-        if (!fstype || !fssrc || !fsmntp) {
-                printf("Bad arguments!\n");
-        } else {
-                if (fssrc[0] == '/' || fssrc[0] == '-') {
-                        if (mount(fstype, fssrc, fsmntp) != STD_RET_OK) {
-                                printf("Error while mounting file system!\n");
-                        }
-                } else {
-                        printf("Typed path is not correct!\n");
+        if (srcfile[0] == '/' || srcfile[0] == '-') {
+                if (mount(fstype, srcfile, mntpt) != STD_RET_OK) {
+                        printf("Error while mounting file system!\n");
                 }
+        } else {
+                printf("Typed path is not correct!\n");
         }
 
-        if (fstype) {
-                free(fstype);
-        }
+        free(fstype);
+        free(srcfile);
+        free(mntpt);
+        return CMD_STATUS_EXECUTED;
 
-        if (fssrc) {
-                free(fssrc);
-        }
-
-        if (fsmntp) {
-                free(fsmntp);
-        }
-
+usage:
+        printf("Usage: mount [file system name] [source path|-] [mount point]\n");
         return CMD_STATUS_EXECUTED;
 }
 
@@ -860,6 +842,32 @@ static enum cmd_status cmd_uname(char *arg)
 
 //==============================================================================
 /**
+ * @brief Function initialize and detect partitions on selected file (e.g. SD card)
+ */
+//==============================================================================
+static enum cmd_status cmd_detect_card(char *arg)
+{
+#include "drivers/sdspi_def.h"
+
+        FILE *sd = fopen(arg, "r");
+        if (sd) {
+                bool status = false;
+                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
+
+                if (status == true) {
+                        printf("Card initialized.\n");
+                } else {
+                        printf("Card not detected.\n");
+                }
+        } else {
+                printf("Cannot open file specified.\n");
+        }
+
+        return CMD_STATUS_EXECUTED;
+}
+
+//==============================================================================
+/**
  * @brief Function listing all internal supported commands
  *
  * @param *arg          arguments
@@ -871,292 +879,6 @@ static enum cmd_status cmd_help(char *arg)
 
         for (uint cmd = 0; cmd < ARRAY_SIZE(commands); cmd++) {
                 printf("%s\n", commands[cmd].name);
-        }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief TODO Delete this function
- */
-//==============================================================================
-static enum cmd_status cmd_sector(char *arg)
-{
-        int   partition = 0;
-        u64_t sector    = 0;
-        int   count     = 0;
-
-        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
-                partition *= 10;
-                partition += *arg++ - '0';
-        }
-
-        arg++;
-
-        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
-                sector *= 10;
-                sector += *arg++ - '0';
-        }
-
-        arg++;
-
-        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
-                count *= 10;
-                count += *arg++ - '0';
-        }
-
-        printf("Sector = %d; count = %d\n", (u32_t)sector, count);
-
-        if (count == 0) {
-                printf("Usage: sector <partition> <sector> <count>\n");
-                printf("Nothing to do. Exit.\n");
-                return CMD_STATUS_EXECUTED;
-        }
-
-        FILE *sd;
-        switch (partition) {
-        case 0:  sd = fopen("/dev/sda", "r"); break;
-        case 1:  sd = fopen("/dev/sda1", "r"); break;
-        case 2:  sd = fopen("/dev/sda2", "r"); break;
-        case 3:  sd = fopen("/dev/sda3", "r"); break;
-        case 4:  sd = fopen("/dev/sda4", "r"); break;
-        default: sd = NULL; break;
-        }
-
-        if (sd) {
-                u8_t *buff = calloc(512, count);
-                if (buff) {
-                        fseek(sd, sector * 512, SEEK_SET);
-
-                        int n;
-                        if ((n = fread(buff, 512, count, sd)) > 0) {
-                                printf("Readed: %d\n", n);
-
-                                u8_t *b = buff;
-
-                                int sec = 0;
-                                for (int c = 0; c < count; c++) {
-                                        printf(FONT_COLOR_GREEN"Sector: %d"RESET_ATTRIBUTES"\n", (u32_t)(sec + sector));
-
-                                        for (int row = 0; row < 32; row++) {
-                                                printf("%3x\t%2x %2x %2x %2x  %2x %2x %2x %2x  %2x %2x %2x %2x  %2x %2x %2x %2x\n",
-                                                       row * 16,
-                                                       b[0],  b[1],  b[2],  b[3],
-                                                       b[4],  b[5],  b[6],  b[7],
-                                                       b[8],  b[9],  b[10], b[11],
-                                                       b[12], b[13], b[14], b[15]);
-
-                                                b += 16;
-                                        }
-
-                                        sec++;
-                                }
-                        } else {
-                                printf("Read nothing!\n");
-                        }
-
-                        free(buff);
-                } else {
-                        printf("Not enough free memory.\n");
-                }
-
-                fclose(sd);
-                return CMD_STATUS_EXECUTED;
-        }
-
-        printf("Cannot open SD card.\n");
-        return CMD_STATUS_EXECUTED;
-}
-
-static enum cmd_status cmd_dsector(char *arg) /* TODO remove */
-{
-        if (arg[0] == '1') {
-                FILE *sd = fopen("/dev/sda", "r");
-                if (sd) {
-                        u8_t *buff = calloc(1024, 1);
-                        if (buff) {
-                                fseek(sd, 0x1F0, SEEK_SET);
-                                fread(buff, 544, 1, sd);
-                                free(buff);
-                        } else {
-                                printf("Not enough free memory.\n");
-                        }
-
-                        fclose(sd);
-                        return CMD_STATUS_EXECUTED;
-                }
-
-                printf("Cannot open file.\n");
-                return CMD_STATUS_EXECUTED;
-        }
-
-        if (arg[0] == '2') {
-                FILE *sd = fopen("/dev/sda", "r");
-                if (sd) {
-                        u8_t *buff = calloc(1024, 1);
-                        if (buff) {
-                                fseek(sd, 512 + 16, SEEK_SET);
-                                fread(buff, 1, 32, sd);
-                                free(buff);
-                        } else {
-                                printf("Not enough free memory.\n");
-                        }
-
-                        fclose(sd);
-                        return CMD_STATUS_EXECUTED;
-                }
-
-                printf("Cannot open file.\n");
-                return CMD_STATUS_EXECUTED;
-        }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief TODO Delete this function
- */
-//==============================================================================
-static enum cmd_status cmd_wsector(char *arg)
-{
-        u64_t sector  = 0;
-        int   count   = 0;
-        int   pattern = 0;
-
-        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
-                sector *= 10;
-                sector += *arg++ - '0';
-        }
-
-        arg++;
-
-        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
-                count *= 10;
-                count += *arg++ - '0';
-        }
-
-        arg++;
-
-        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
-                pattern *= 10;
-                pattern += *arg++ - '0';
-        }
-
-        printf("Sector = %d; count = %d; pattern = 0x%2x\n", (u32_t)sector, count, pattern);
-
-        if (count == 0) {
-                printf("Nothing to do. Exit.\n");
-                return CMD_STATUS_EXECUTED;
-        }
-
-        FILE *sd = fopen("/dev/sda", "r+");
-        if (sd) {
-                u8_t *buff = calloc(512, count);
-                if (buff) {
-                        u8_t *b = buff;
-                        for (int i = 0; i < count; i++) {
-                                for (int j = 0; j < 512; j++) {
-                                       *b++ = pattern + i;
-                                }
-                        }
-
-                        fseek(sd, sector * 512, SEEK_SET);
-
-                        int n;
-                        if ((n = fwrite(buff, 512, count, sd)) > 0) {
-                                printf("Written: %d\n", n);
-                        } else {
-                                printf("Write error.\n");
-                        }
-                        free(buff);
-                } else {
-                        printf("Not enough free memory.\n");
-                }
-
-                fclose(sd);
-                return CMD_STATUS_EXECUTED;
-        }
-
-        printf("Cannot open SD card.\n");
-        return CMD_STATUS_EXECUTED;
-}
-
-static enum cmd_status cmd_sdrate(char *arg)
-{
-        int count = 0;
-        while (*arg >= '0' && *arg <= '9' && *arg != '\0') {
-                count *= 10;
-                count += *arg++ - '0';
-        }
-
-        if (count == 0) {
-                printf("Nothing to do. Exit\n");
-                return CMD_STATUS_EXECUTED;
-        }
-
-        FILE *sd = fopen("/dev/sda", "r+");
-        if (!sd) {
-                printf("File open error\n");
-                return CMD_STATUS_EXECUTED;
-        }
-
-        u8_t *buff = malloc(512 * count);
-        if (buff) {
-                int n;
-
-                printf("Writting...\n");
-                fseek(sd, 1024, SEEK_SET);
-                memset(buff, 0xAA, 512 * count);
-                u32_t start_time = get_tick_counter();
-                n = fwrite(buff, 512, count, sd);
-                u32_t work_time = get_tick_counter() - start_time;
-                printf("Written: %d elements in %d ms\n", n, work_time);
-
-                printf("Reading...\n");
-                fseek(sd, 1024, SEEK_SET);
-                start_time = get_tick_counter();
-                n = fread(buff, 512, count, sd);
-                work_time = get_tick_counter() - start_time;
-                printf("Read: %d elements in %d ms\n", n, work_time);
-
-                free(buff);
-        } else {
-                printf("Not enough free memory\n");
-        }
-
-        fclose(sd);
-        return CMD_STATUS_EXECUTED;
-}
-
-static enum cmd_status cmd_pwrite(char *arg)
-{
-        u8_t *buffer = malloc(512 + 16 + 16);
-        FILE *sd     = fopen("/dev/sda", "r+");
-
-        if (buffer && sd) {
-                if (arg[0] == '1') {
-                        memset(buffer, 0xDA, 512 + 16 + 16);
-                        fseek(sd, 1024-16, SEEK_SET);
-                        fwrite(buffer, 512+16+16, 1, sd);
-                } else if (arg[0] == '2') {
-                        memset(buffer, 0xEE, 16);
-                        fseek(sd, 512+16, SEEK_SET);
-                        fwrite(buffer, 16, 1, sd);
-                }
-        }
-
-        if (buffer) {
-                free(buffer);
-        } else {
-                printf("Not enough free memory\n");
-        }
-
-        if (sd) {
-                fclose(sd);
-        } else {
-                printf("Cannot open file\n");
         }
 
         return CMD_STATUS_EXECUTED;

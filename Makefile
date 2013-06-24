@@ -38,39 +38,39 @@ PROJECT = dnx
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: stm32f1
 #---------------------------------------------------------------------------------------------------
-       CC_stm32f1 = arm-none-eabi-gcc
-      CXX_stm32f1 = arm-none-eabi-g++
-   LINKER_stm32f1 = arm-none-eabi-gcc
-       AS_stm32f1 = arm-none-eabi-gcc -x assembler-with-cpp
-  OBJCOPY_stm32f1 = arm-none-eabi-objcopy
-  OBJDUMP_stm32f1 = arm-none-eabi-objdump
-     SIZE_stm32f1 = arm-none-eabi-size
+CC_stm32f1        = arm-none-eabi-gcc
+CXX_stm32f1       = arm-none-eabi-g++
+LINKER_stm32f1    = arm-none-eabi-gcc
+AS_stm32f1        = arm-none-eabi-gcc -x assembler-with-cpp
+OBJCOPY_stm32f1   = arm-none-eabi-objcopy
+OBJDUMP_stm32f1   = arm-none-eabi-objdump
+SIZE_stm32f1      = arm-none-eabi-size
 LD_SCRIPT_stm32f1 = src/system/portable/stm32f1/stm32f107xx.ld
-      CPU_stm32f1 = cortex-m3
-      MCU_stm32f1 = STM32F10X_CL
-  DEFINES_stm32f1 = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
-   CFLAGS_stm32f1 = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
+CPU_stm32f1       = cortex-m3
+MCU_stm32f1       = STM32F10X_CL
+DEFINES_stm32f1   = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
+CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
                     -Wstrict-prototypes -Wextra -std=gnu99 -g -ggdb3 -Wparentheses $(DEFINES_stm32f1)
- CXXFLAGS_stm32f1 =
-   LFLAGS_stm32f1 = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
+CXXFLAGS_stm32f1  =
+LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
                     -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
                     $(DEFINES_stm32f1) -lm
-   AFLAGS_stm32f1 = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINES_stm32f1)
+AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINES_stm32f1)
 
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: POSIX
 #---------------------------------------------------------------------------------------------------
-         CC_posix = gcc
-        CXX_posix = g++
-     LINKER_posix = gcc
-         AS_posix = gcc -x assembler-with-cpp
-    DEFINES_posix = -D__GCC_POSIX__=1 -DDEBUG_BUILD=1 -DUSE_STDIO=1 -DARCH_$(TARGET)
-     CFLAGS_posix = -m32 -c -O0 -Wall -Wstrict-prototypes -Wextra -std=gnu99 -g -Wparentheses\
-                    -Wno-pointer-sign -fmessage-length=0 -pthread -lrt $(DEFINES_posix)
-   CXXFLAGS_posix =
-     LFLAGS_posix = -m32 -g -Wall -lrt -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                    -pthread $(DEFINES_posix) -lm
-     AFLAGS_posix = -m32 -c -g $(DEFINES_posix)
+CC_posix       = gcc
+CXX_posix      = g++
+LINKER_posix   = gcc
+AS_posix       = gcc -x assembler-with-cpp
+DEFINES_posix  = -D__GCC_POSIX__=1 -DDEBUG_BUILD=1 -DUSE_STDIO=1 -DARCH_$(TARGET)
+CFLAGS_posix   = -m32 -c -O0 -Wall -Wstrict-prototypes -Wextra -std=gnu99 -g -Wparentheses\
+                 -Wno-pointer-sign -fmessage-length=0 -pthread -lrt $(DEFINES_posix)
+CXXFLAGS_posix =
+LFLAGS_posix   = -m32 -g -Wall -lrt -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+                 -pthread $(DEFINES_posix) -lm
+AFLAGS_posix   = -m32 -c -g $(DEFINES_posix)
 
 #---------------------------------------------------------------------------------------------------
 # FILE EXTENSIONS CONFIGURATION
@@ -245,7 +245,7 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 ####################################################################################################
 # rule used to compile object files from c sources
 ####################################################################################################
-$(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT)
+$(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
 	$(CC_$(TARGET)) $(CFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
@@ -253,7 +253,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT)
 ####################################################################################################
 # rule used to compile object files from C++ sources
 ####################################################################################################
-$(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT)
+$(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
 	$(CXX_$(TARGET)) $(CXXFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
@@ -261,7 +261,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT)
 ####################################################################################################
 # rule used to compile object files from assembler sources
 ####################################################################################################
-$(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT)
+$(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
 	$(AS_$(TARGET)) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@

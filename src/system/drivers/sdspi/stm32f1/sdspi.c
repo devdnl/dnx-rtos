@@ -186,21 +186,21 @@ struct sdspi_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t turn_on_SPI_clock(void);
-static stdret_t turn_off_SPI_clock(void);
-static u8_t     send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
-static u8_t     wait_ready(void);
-static u8_t     spi_rw(u8_t out);
-static bool     receive_data_block(u8_t *buff);
-static bool     transmit_data_block(const u8_t *buff, u8_t token);
-static size_t   read_whole_sectors(struct sdspi_data *hdl, void *dst, size_t nsectors, u64_t lseek);
-static size_t   read_partial_sectors(struct sdspi_data *hdl, void *dst, size_t size, u64_t lseek);
-static size_t   write_whole_sectors(struct sdspi_data *hdl, const void *src, size_t nsectors, u64_t lseek);
-static size_t   write_partial_sectors(struct sdspi_data *hdl, const void *src, size_t size, u64_t lseek);
-static stdret_t initialize_card(struct sdspi_data *hdl);
-static stdret_t detect_partitions(struct sdspi_data *hdl);
-static size_t   card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek);
-static size_t   card_write(struct sdspi_data *hdl, const void *src, size_t size, size_t nitems, u64_t lseek);
+static stdret_t         turn_on_SPI_clock       (void);
+static stdret_t         turn_off_SPI_clock      (void);
+static u8_t             send_cmd                (struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
+static u8_t             wait_ready              (void);
+static u8_t             spi_rw                  (u8_t out);
+static bool             receive_data_block      (u8_t *buff);
+static bool             transmit_data_block     (const u8_t *buff, u8_t token);
+static size_t           read_whole_sectors      (struct sdspi_data *hdl, void *dst, size_t nsectors, u64_t lseek);
+static size_t           read_partial_sectors    (struct sdspi_data *hdl, void *dst, size_t size, u64_t lseek);
+static size_t           write_whole_sectors     (struct sdspi_data *hdl, const void *src, size_t nsectors, u64_t lseek);
+static size_t           write_partial_sectors   (struct sdspi_data *hdl, const void *src, size_t size, u64_t lseek);
+static stdret_t         initialize_card         (struct sdspi_data *hdl);
+static stdret_t         detect_partitions       (struct sdspi_data *hdl);
+static size_t           card_read               (struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek);
+static size_t           card_write              (struct sdspi_data *hdl, const void *src, size_t size, size_t nitems, u64_t lseek);
 
 /*==============================================================================
   Local object definitions
@@ -235,7 +235,7 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
                 return STD_RET_ERROR;
         }
 
-        *drvhdl = sdspi;
+        *drvhdl    = sdspi;
         sdspi_data = sdspi;
 
 #if (SDSPI_ENABLE_DMA != 0)
@@ -323,7 +323,7 @@ stdret_t SDSPI_release(void *drvhdl)
         if (!hdl)
                 return STD_RET_ERROR;
 
-        /* wait for all partition are realeased */
+        /* wait for all partition are released */
         while (  hdl->partition[0].in_use == true
               || hdl->partition[1].in_use == true
               || hdl->partition[2].in_use == true
@@ -471,9 +471,17 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
         switch (iorq) {
         case SDSPI_IORQ_INITIALIZE_CARD:
                 if (lock_mutex(hdl->card_protect_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                        bool *result = va_arg(args, bool*);
+                        *result      = false;
+
+                        remove(SDSPI_PARTITION_1_PATH);
+                        remove(SDSPI_PARTITION_2_PATH);
+                        remove(SDSPI_PARTITION_3_PATH);
+                        remove(SDSPI_PARTITION_4_PATH);
+
                         if (initialize_card(hdl) == STD_RET_OK) {
                                 if (detect_partitions(hdl) == STD_RET_OK) {
-                                        /* success */
+                                        *result = true;
                                 }
                         }
 
@@ -1208,7 +1216,6 @@ static size_t write_partial_sectors(struct sdspi_data *hdl, const void *src, siz
 //==============================================================================
 static stdret_t initialize_card(struct sdspi_data *hdl)
 {
-#include "core/io.h" /* DNLFIXME -- niepotrzebne */
         ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         for (int n = 0; n < 10; n++) {
                 spi_rw(0xFF);
@@ -1270,10 +1277,8 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
         spi_rw(0xFF);
 
         if (hdl->card_initialized == false) {
-                printk(FONT_COLOR_RED"Card not initialized...\n"RESET_ATTRIBUTES);
                 return STD_RET_ERROR;
         } else {
-                printk("Card initialized. Card type: 0x%x\n", hdl->card_type);
                 return STD_RET_OK;
         }
 }

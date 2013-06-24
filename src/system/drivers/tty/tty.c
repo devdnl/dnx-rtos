@@ -614,8 +614,7 @@ static void stdout_service(struct tty_data *tty, FILE *stream)
 //==============================================================================
 static void stdin_service(struct tty_data *tty, FILE *stream)
 {
-        char  chr;
-        char *msg;
+        char chr;
         enum keycap keydec;
 
         if (ioctl(stream, UART_IORQ_GET_BYTE, &chr) != STD_RET_OK) {
@@ -661,7 +660,7 @@ static void stdin_service(struct tty_data *tty, FILE *stream)
 
         case ARROW_RIGHT_KEY:
                 if (tty->cursor_position < tty->edit_line_length) {
-                        msg = VT100_SHIFT_CURSOR_RIGHT(1);
+                        const char *msg = VT100_SHIFT_CURSOR_RIGHT(1);
                         fwrite(msg, sizeof(char), strlen(msg), stream);
                         tty->cursor_position++;
                 }
@@ -806,8 +805,6 @@ static void delete_character_from_editline(struct tty_data *tty, FILE *stream)
 //==============================================================================
 static void add_charater_to_editline(struct tty_data *tty, char chr, FILE *stream)
 {
-        char *msg;
-
         if (tty->edit_line_length >= TTY_EDIT_LINE_LEN - 1) {
                 return;
         }
@@ -820,7 +817,7 @@ static void add_charater_to_editline(struct tty_data *tty, char chr, FILE *strea
                 tty->edit_line[tty->cursor_position++] = chr;
                 tty->edit_line_length++;
 
-                msg = VT100_SAVE_CURSOR_POSITION;
+                const char *msg = VT100_SAVE_CURSOR_POSITION;
                 fwrite(msg, sizeof(char), strlen(msg), stream);
 
                 msg = &tty->edit_line[tty->cursor_position - 1];

@@ -112,12 +112,20 @@ void task_initd(void *arg)
         init_driver("sdspi", "/dev/sda");
 
 
-        printk("Detecting SD card...\n");
+        /* initializing SD card and detecting partitions */
+        printk("Detecting SD card... ");
         FILE *sd = fopen("/dev/sda", "r+");
         if (!sd) {
-                printk("Cannot open file!\n");
+                printk(FONT_COLOR_RED"Cannot open file!"RESET_ATTRIBUTES"\n");
         } else {
-                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD);
+                bool status;
+                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
+
+                if (status == true) {
+                        printk(FONT_COLOR_GREEN"Initialized."RESET_ATTRIBUTES"\n");
+                } else {
+                        printk(FONT_COLOR_RED"Fail\n"RESET_ATTRIBUTES);
+                }
         }
         fclose(sd);
 

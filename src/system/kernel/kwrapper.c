@@ -123,12 +123,11 @@ task_t *kwrap_new_task(void (*func)(void*), const char *name, uint stack_depth, 
 //==============================================================================
 void kwrap_delete_task(task_t *taskHdl)
 {
-        struct task_data *data;
-
         if (sysm_is_task_exist(taskHdl)) {
                 (void)sysm_stop_task_monitoring(taskHdl);
 
                 taskENTER_CRITICAL();
+                struct task_data *data;
                 if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
 
                         vTaskSetApplicationTaskTag(taskHdl, NULL);

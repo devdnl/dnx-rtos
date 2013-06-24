@@ -206,7 +206,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
 //==============================================================================
 stdret_t vfs_umount(const char *path)
 {
-        u32_t          item_id;
+        u32_t           item_id;
         char           *new_path;
         struct FS_data *mount_fs;
 
@@ -269,16 +269,13 @@ stdret_t vfs_umount(const char *path)
 //==============================================================================
 stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
 {
-        struct FS_data    *fs = NULL;
-        struct vfs_statfs  stat_fs;
-
         if (mntent) {
                 force_lock_recursive_mutex(vfs_resource_mtx);
-                fs = list_get_nitem_data(vfs_mnt_list, item);
+                struct FS_data *fs = list_get_nitem_data(vfs_mnt_list, item);
                 unlock_recursive_mutex(vfs_resource_mtx);
 
                 if (fs) {
-                        stat_fs.fsname = NULL;
+                        struct vfs_statfs stat_fs = {.fsname = NULL};
 
                         if (fs->interface.fs_statfs) {
                                 fs->interface.fs_statfs(fs->handle, &stat_fs);
@@ -349,18 +346,17 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
 //==============================================================================
 int vfs_mkdir(const char *path)
 {
-        stdret_t       status = -1;
-        char           *new_path;
-        char           *external_path = NULL;
-        struct FS_data *fs;
+        stdret_t status = -1;
 
         if (path) {
-                if (!(new_path = new_corrected_path(path, SUB_SLASH))) {
+                char *new_path = new_corrected_path(path, SUB_SLASH);
+                if (!new_path) {
                        return -1;
                 }
 
                 force_lock_recursive_mutex(vfs_resource_mtx);
-                fs = find_base_FS(new_path, &external_path);
+                char *external_path = NULL;
+                struct FS_data *fs  = find_base_FS(new_path, &external_path);
                 unlock_recursive_mutex(vfs_resource_mtx);
 
                 if (fs) {
@@ -386,20 +382,19 @@ int vfs_mkdir(const char *path)
 //==============================================================================
 dir_t *vfs_opendir(const char *path)
 {
-        stdret_t       status         = STD_RET_ERROR;
-        dir_t          *dir           = NULL;
-        char           *external_path = NULL;
-        char           *new_path;
-        struct FS_data *fs;
-
         if (!path) {
                 return NULL;
         }
 
-        if ((dir = malloc(sizeof(dir_t)))) {
-                if ((new_path = new_corrected_path(path, ADD_SLASH))) {
+        dir_t *dir = malloc(sizeof(dir_t));
+        if (dir) {
+                stdret_t status = STD_RET_ERROR;
+
+                char *new_path = new_corrected_path(path, ADD_SLASH);
+                if (new_path) {
                         force_lock_recursive_mutex(vfs_resource_mtx);
-                        fs = find_base_FS(new_path, &external_path);
+                        char *external_path = NULL;
+                        struct FS_data *fs  = find_base_FS(new_path, &external_path);
                         unlock_recursive_mutex(vfs_resource_mtx);
 
                         if (fs) {
@@ -479,20 +474,18 @@ dirent_t vfs_readdir(dir_t *dir)
 //==============================================================================
 int vfs_remove(const char *path)
 {
-        stdret_t       status         = -1;
-        char           *external_path = NULL;
-        char           *new_path;
-        struct FS_data *mount_fs;
-        struct FS_data *base_fs;
+        stdret_t status = -1;
 
         if (path) {
-                if (!(new_path = new_corrected_path(path, ADD_SLASH))) {
+                char *new_path = new_corrected_path(path, ADD_SLASH);
+                if (!new_path) {
                         return -1;
                 }
 
                 force_lock_recursive_mutex(vfs_resource_mtx);
-                mount_fs = find_mounted_FS(new_path, -1, NULL);
-                base_fs  = find_base_FS(path, &external_path);
+                char *external_path      = NULL;
+                struct FS_data *mount_fs = find_mounted_FS(new_path, -1, NULL);
+                struct FS_data *base_fs  = find_base_FS(path, &external_path);
                 unlock_recursive_mutex(vfs_resource_mtx);
 
                 if (base_fs && !mount_fs) {
@@ -522,18 +515,15 @@ int vfs_remove(const char *path)
 //==============================================================================
 int vfs_rename(const char *old_name, const char *new_name)
 {
-        char *old_extern_path = NULL;
-        char *new_extern_path = NULL;
-        struct FS_data *old_fs;
-        struct FS_data *new_fs;
-
         if (!old_name || !new_name) {
                 return -1;
         }
 
         force_lock_recursive_mutex(vfs_resource_mtx);
-        old_fs = find_base_FS(old_name, &old_extern_path);
-        new_fs = find_base_FS(new_name, &new_extern_path);
+        char *old_extern_path  = NULL;
+        char *new_extern_path  = NULL;
+        struct FS_data *old_fs = find_base_FS(old_name, &old_extern_path);
+        struct FS_data *new_fs = find_base_FS(new_name, &new_extern_path);
         unlock_recursive_mutex(vfs_resource_mtx);
 
         if (!old_fs || !new_fs || old_fs != new_fs) {
@@ -544,8 +534,7 @@ int vfs_rename(const char *old_name, const char *new_name)
                 return -1;
         }
 
-        return old_fs->interface.fs_rename(old_fs->handle,
-                                           old_extern_path,
+        return old_fs->interface.fs_rename(old_fs->handle, old_extern_path,
                                            new_extern_path) == STD_RET_OK ? 0 : -1;
 }
 

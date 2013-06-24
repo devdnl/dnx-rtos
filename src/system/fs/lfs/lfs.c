@@ -1326,11 +1326,10 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
 //==============================================================================
 static uint get_path_deep(const char *path)
 {
-        uint       deep       = 0;
-        const char *last_path = NULL;
+        uint deep = 0;
 
         if (path[0] == '/') {
-                last_path = path++;
+                const char *last_path = path++;
 
                 while ((path = strchr(path, '/'))) {
                         last_path = path;
@@ -1361,14 +1360,6 @@ static uint get_path_deep(const char *path)
 //==============================================================================
 static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item)
 {
-        node_t *current_node;
-        node_t *next_node;
-        char   *path_end;
-        int    dir_deep;
-        uint   path_length;
-        int    list_size;
-
-
         if (!path || !startnode) {
                 return NULL;
         }
@@ -1377,8 +1368,8 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
                 return NULL;
         }
 
-        current_node = startnode;
-        dir_deep = get_path_deep(path);
+        node_t *current_node = startnode;
+        int     dir_deep     = get_path_deep(path);
 
         /* go to selected node -----------------------------------------------*/
         while (dir_deep + deep > 0) {
@@ -1389,6 +1380,8 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
                         path++;
                 }
 
+                uint  path_length;
+                char *path_end;
                 if ((path_end = strchr(path, '/')) == NULL) {
                         path_length = strlen(path);
                 } else {
@@ -1396,12 +1389,12 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
                 }
 
                 /* get number of list items */
-                list_size = list_get_item_count(current_node->data);
+                int list_size = list_get_item_count(current_node->data);
 
                 /* find that object exist ------------------------------------*/
                 int i = 0;
                 while (list_size > 0) {
-                        next_node = list_get_nitem_data(current_node->data, i++);
+                        node_t *next_node = list_get_nitem_data(current_node->data, i++);
 
                         if (next_node == NULL) {
                                 dir_deep = 1 - deep;
