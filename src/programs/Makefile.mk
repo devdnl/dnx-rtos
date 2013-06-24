@@ -1,14 +1,11 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS += $(sort \
-   cat/cat.c \
-   helloworld/helloworld.c \
-   top/top.c \
-   terminal/terminal.c \
-)
+CSRC_PROGRAMS += cat/cat.c
+CSRC_PROGRAMS += cp/cp.c
+CSRC_PROGRAMS += helloworld/helloworld.c
+CSRC_PROGRAMS += top/top.c
+CSRC_PROGRAMS += terminal/terminal.c
 
-CXXSRC_PROGRAMS += $(sort \
-)
+CXXSRC_PROGRAMS += 
 
-HDRLOC_PROGRAMS += $(sort \
-)
+HDRLOC_PROGRAMS += 

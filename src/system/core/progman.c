@@ -49,7 +49,7 @@ extern "C" {
 ==============================================================================*/
 struct program_data {
         int (*main)(int, char**);
-        char            *cwd;
+        const char      *cwd;
         enum prog_state *status;
         int             *exit_code;
         FILE            *stdin;
@@ -64,7 +64,7 @@ struct program_data {
   Local function prototypes
 ==============================================================================*/
 static void   set_status(enum prog_state *status_ptr, enum prog_state status);
-static char **new_argument_table(char *arg, const char *name, int *argc);
+static char **new_argument_table(const char *arg, const char *name, int *argc);
 static void   delete_argument_table(char **argv, int argc);
 static void   task_program_startup(void *argv);
 
@@ -93,7 +93,7 @@ static void   task_program_startup(void *argv);
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *prgm_new_program(char *name, char *args, char *cwd, FILE *stdin,
+task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FILE *stdin,
                          FILE *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
@@ -309,7 +309,7 @@ static void set_status(enum prog_state *status_ptr, enum prog_state status)
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static char **new_argument_table(char *arg, const char *name, int *argc)
+static char **new_argument_table(const char *arg, const char *name, int *argc)
 {
         int     arg_count  = 0;
         char  **arg_table  = NULL;

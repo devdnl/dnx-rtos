@@ -133,7 +133,7 @@ static USART_t *const USART_peripherals[UART_DEV_COUNT] = {
 };
 
 /* structure which identify USARTs data in the IRQs */
-struct USART_data *USART_data[UART_DEV_COUNT];
+static struct USART_data *USART_data[UART_DEV_COUNT];
 
 /*==============================================================================
   Function definitions
@@ -263,7 +263,8 @@ stdret_t UART_init(void **drvhdl, uint dev, uint part)
                 return STD_RET_OK;
         }
 
-        error: if (USART_data[dev]->data_write_sem) {
+error:
+        if (USART_data[dev]->data_write_sem) {
                 delete_semaphore(USART_data[dev]->data_write_sem);
         }
 
@@ -294,13 +295,13 @@ stdret_t UART_release(void *drvhdl)
         }
 
         force_lock_recursive_mutex(hdl->port_lock_mtx);
-        enter_critical();
+        enter_critical_section();
         unlock_recursive_mutex(hdl->port_lock_mtx);
         delete_recursive_mutex(hdl->port_lock_mtx);
         delete_semaphore(hdl->data_write_sem);
         turn_off_USART(hdl->USART);
         free(hdl);
-        exit_critical();
+        exit_critical_section();
 
         return STD_RET_OK;
 }
@@ -366,14 +367,15 @@ stdret_t UART_close(void *drvhdl)
  * @param[in] *drvhdl           driver's memory handle
  * @param[in] *src              source
  * @param[in] size              size
- * @param[in] seek              seek
+ * @param[in] nitems            n items to read
+ * @param[in] lseek             lseek
  *
  * @retval number of written nitems
  */
 //==============================================================================
-size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, size_t seek)
+size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)seek;
+        (void) lseek;
 
         struct USART_data *hdl = drvhdl;
         size_t n = 0;
@@ -408,14 +410,15 @@ size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, siz
  * @param[in]  *drvhdl          driver's memory handle
  * @param[out] *dst             destination
  * @param[in]  size             size
- * @param[in]  seek             seek
+ * @param[in]  nitems           n items to read
+ * @param[in]  lseek            seek
  *
  * @retval number of read nitems
  */
 //==============================================================================
-size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t seek)
+size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)seek;
+        (void) lseek;
 
         struct USART_data *hdl = drvhdl;
         size_t n = 0;
@@ -435,7 +438,7 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
                 data_size = nitems * size;
 
                 do {
-                        enter_critical();
+                        enter_critical_section();
 
                         if (hdl->Rx_FIFO.buffer_level > 0) {
                                 *dst_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
@@ -447,9 +450,9 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, size_t see
                                 data_size--;
                                 n++;
 
-                                exit_critical();
+                                exit_critical_section();
                         } else {
-                                exit_critical();
+                                exit_critical_section();
                                 suspend_this_task();
                         }
                 } while (data_size);
@@ -563,10 +566,10 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
                         break;
 
                 case UART_IORQ_GET_BYTE:
-                        enter_critical();
+                        enter_critical_section();
 
                         if (!(out_ptr = va_arg(args, u8_t*))) {
-                                exit_critical();
+                                exit_critical_section();
                                 status = STD_RET_ERROR;
                                 break;
                         }
@@ -582,15 +585,15 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
                                 status = STD_RET_ERROR;
                         }
 
-                        exit_critical();
+                        exit_critical_section();
                         break;
 
                 case UART_IORQ_GET_BYTE_BLOCKING:
                         while (TRUE) {
-                                enter_critical();
+                                enter_critical_section();
 
                                 if (!(out_ptr = va_arg(args, u8_t*))) {
-                                        exit_critical();
+                                        exit_critical_section();
                                         status = STD_RET_ERROR;
                                         break;
                                 }
@@ -603,10 +606,10 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
 
                                         hdl->Rx_FIFO.buffer_level--;
 
-                                        exit_critical();
+                                        exit_critical_section();
                                         break;
                                 } else {
-                                        exit_critical();
+                                        exit_critical_section();
                                         suspend_this_task();
                                 }
                         }
@@ -655,6 +658,24 @@ stdret_t UART_flush(void *drvhdl)
 {
         (void)drvhdl;
 
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns device informations
+ *
+ * @param[in]  *drvhld          driver's memory handle
+ * @param[out] *info            device/file info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t UART_info(void *drvhdl, struct vfs_dev_info *info)
+{
+        (void) drvhdl;
+        info->st_size = 0;
         return STD_RET_OK;
 }
 

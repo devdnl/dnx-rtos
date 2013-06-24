@@ -42,6 +42,13 @@ extern "C" {
 #define PROMPT_LINE_LEN                 100
 #define CWD_PATH_LEN                    128
 
+#define KiB                             (u32_t)(1024)
+#define MiB                             (u32_t)(1024*1024)
+#define GiB                             (u64_t)(1024*1024*1024)
+#define CONVERT_TO_KiB(_val)            (_val >> 10)
+#define CONVERT_TO_MiB(_val)            (_val >> 20)
+#define CONVERT_TO_GiB(_val)            (_val >> 30)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -59,7 +66,7 @@ struct cmd_entry {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void print_prompt(void);
+static void            print_prompt(void);
 static enum cmd_status find_internal_command(char *cmd, char *arg);
 static enum cmd_status find_external_command(char *cmd, char *arg);
 static enum cmd_status cmd_cd(char *arg);
@@ -75,6 +82,7 @@ static enum cmd_status cmd_df(char *arg);
 static enum cmd_status cmd_mount(char *arg);
 static enum cmd_status cmd_umount(char *arg);
 static enum cmd_status cmd_uname(char *arg);
+static enum cmd_status cmd_detect_card(char *arg);
 static enum cmd_status cmd_help(char *arg);
 
 /*==============================================================================
@@ -86,26 +94,27 @@ GLOBAL_VARIABLES {
 };
 
 static const struct cmd_entry commands[] = {
-        {"cd"    , cmd_cd    },
-        {"ls"    , cmd_ls    },
-        {"mkdir" , cmd_mkdir },
-        {"touch" , cmd_touch },
-        {"rm"    , cmd_rm    },
-        {"free"  , cmd_free  },
-        {"uptime", cmd_uptime},
-        {"clear" , cmd_clear },
-        {"reboot", cmd_reboot},
-        {"df"    , cmd_df    },
-        {"mount" , cmd_mount },
-        {"umount", cmd_umount},
-        {"uname" , cmd_uname },
-        {"help"  , cmd_help  },
+        {"cd"    , cmd_cd         },
+        {"ls"    , cmd_ls         },
+        {"mkdir" , cmd_mkdir      },
+        {"touch" , cmd_touch      },
+        {"rm"    , cmd_rm         },
+        {"free"  , cmd_free       },
+        {"uptime", cmd_uptime     },
+        {"clear" , cmd_clear      },
+        {"reboot", cmd_reboot     },
+        {"df"    , cmd_df         },
+        {"mount" , cmd_mount      },
+        {"umount", cmd_umount     },
+        {"uname" , cmd_uname      },
+        {"detect", cmd_detect_card},
+        {"help"  , cmd_help       },
 };
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(terminal, STACK_DEPTH_VERY_LOW);
+PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -271,7 +280,6 @@ static enum cmd_status find_internal_command(char *cmd, char *arg)
 static enum cmd_status cmd_cd(char *arg)
 {
         char  *newpath  = NULL;
-        dir_t *dir      = NULL;
         bool   freePath = FALSE;
 
         if (strcmp(arg, "..") == 0) {
@@ -305,7 +313,7 @@ static enum cmd_status cmd_cd(char *arg)
         }
 
         if (newpath) {
-                dir = opendir(newpath);
+                dir_t *dir = opendir(newpath);
 
                 if (dir) {
                         closedir(dir);
@@ -373,7 +381,7 @@ static enum cmd_status cmd_ls(char *arg)
                 char *lcolor = FONT_COLOR_CYAN"l";
                 char *dcolor = FONT_COLOR_GREEN"d";
 
-                printf("Total %u\n", dir->items);
+//                printf("Total %u\n", dir->items);
 
                 while ((dirent = readdir(dir)).name != NULL) {
                         char *type = NULL;
@@ -386,10 +394,24 @@ static enum cmd_status cmd_ls(char *arg)
                         default: type = "?";
                         }
 
-                        printf("%s %u\t%s"RESET_ATTRIBUTES"\n",
-                               type,
-                               dirent.size,
-                               dirent.name);
+                        u32_t size;
+                        const char *unit;
+                        if (dirent.size >= (u64_t)(10*GiB)) {
+                                size = CONVERT_TO_GiB(dirent.size);
+                                unit = "GiB";
+                        } else if (dirent.size >= 10*MiB) {
+                                size = CONVERT_TO_MiB(dirent.size);
+                                unit = "MiB";
+                        } else if (dirent.size >= 10*KiB) {
+                                size = CONVERT_TO_KiB(dirent.size);
+                                unit = "KiB";
+                        } else {
+                                size = dirent.size;
+                                unit = "B";
+                        }
+
+                        printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(11)"%s"RESET_ATTRIBUTES"\n",
+                               type, size, unit, dirent.name);
                 }
 
                 closedir(dir);
@@ -438,8 +460,8 @@ static enum cmd_status cmd_mkdir(char *arg)
                 newpath = global->cwd;
         }
 
-        if (mkdir(newpath) == STD_RET_ERROR) {
-                printf("Cannot create directory \"%s\": no such file or directory\n", arg);
+        if (mkdir(newpath) != 0) {
+                printf("Cannot create directory \"%s\"\n", arg);
         }
 
         if (freePath)
@@ -532,7 +554,7 @@ static enum cmd_status cmd_rm(char *arg)
                 newpath = global->cwd;
         }
 
-        if (remove(newpath) == STD_RET_ERROR) {
+        if (remove(newpath) != 0) {
                 printf("Cannot remove \"%s\"\n", arg);
         }
 
@@ -555,7 +577,7 @@ static enum cmd_status cmd_free(char *arg)
 
         u32_t free      = get_free_memory();
         u32_t used      = get_used_memory();
-        uint  drv_count = get_module_count();
+        uint  drv_count = get_number_of_modules();
 
         printf("Total: %d\n", get_memory_size());
         printf("Free : %d\n", free);
@@ -597,7 +619,7 @@ static enum cmd_status cmd_uptime(char *arg)
         u32_t uhrs   = (uptime / 3600) % 24;
         u32_t umins  = (uptime / 60) % 60;
 
-        printf("up %ud %u2:%u2\n", udays, uhrs, umins);
+        printf("up %ud %2u:%2u\n", udays, uhrs, umins);
 
         return CMD_STATUS_EXECUTED;
 }
@@ -631,7 +653,7 @@ static enum cmd_status cmd_reboot(char *arg)
 
         printf("Rebooting...\n");
         sleep_ms(500);
-        reboot();
+        restart();
 
         return CMD_STATUS_EXECUTED;
 }
@@ -654,15 +676,42 @@ static enum cmd_status cmd_df(char *arg)
         mnt.total = 0;
 
         if (mnt.mnt_dir && mnt.mnt_fsname) {
-                printf("File system\tTotal\tFree\t%%Used\tMount point\n");
+                printf("File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(5)
+                       "Free"CURSOR_FORWARD(6)"%%Used  Mount point\n");
 
                 for (u32_t i = 0;; i++) {
                         if (getmntentry(i, &mnt) == STD_RET_OK) {
-                                printf("%s\t\t%u\t%u\t%u%%\t%s\n",
+                                u32_t dtotal;
+                                u32_t dfree;
+                                const char *unit;
+
+                                if (mnt.total > 10*GiB) {
+                                        dtotal = CONVERT_TO_GiB(mnt.total);
+                                        dfree  = CONVERT_TO_GiB(mnt.free);
+                                        unit   = "GiB";
+                                } else if (mnt.total > 10*MiB) {
+                                        dtotal = CONVERT_TO_MiB(mnt.total);
+                                        dfree  = CONVERT_TO_MiB(mnt.free);
+                                        unit   = "MiB";
+                                } else if (mnt.total > 10*KiB) {
+                                        dtotal = CONVERT_TO_KiB(mnt.total);
+                                        dfree  = CONVERT_TO_KiB(mnt.free);
+                                        unit   = "KiB";
+                                } else {
+                                        dtotal = mnt.total;
+                                        dfree  = mnt.free;
+                                        unit   = "B";
+                                }
+
+                                printf("%s"  CURSOR_BACKWARD(90)CURSOR_FORWARD(16)
+                                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(26)
+                                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(36)
+                                       "%u%%"CURSOR_BACKWARD(90)CURSOR_FORWARD(43)
+                                       "%s\n",
                                        mnt.mnt_fsname,
-                                       mnt.total,
-                                       mnt.free,
-                                       ((mnt.total - mnt.free) * 100)/mnt.total,
+                                       dtotal, unit,
+                                       dfree, unit,
+                                       ((dtotal - dfree) * 100)/dtotal,
                                        mnt.mnt_dir);
 
                                 memset(mnt.mnt_dir, 0, 64);
@@ -691,78 +740,65 @@ static enum cmd_status cmd_df(char *arg)
 //==============================================================================
 static enum cmd_status cmd_mount(char *arg)
 {
-        char *strb   = NULL;
-        char *stre   = NULL;
-        char *fstype = NULL;
-        char *fssrc  = NULL;
-        char *fsmntp = NULL;
-        i8_t  len    = 0;
+        char *arg1 = arg;
+        if (!arg1) {
+                goto usage;
+        }
 
-        strb = arg;
-        stre = strchr(strb, ' ');
-        len  = stre - strb;
+        char *arg2 = strchr(arg1, ' ');
+        if (!arg2) {
+                goto usage;
+        }
+        arg2++;
 
-        if (arg[0] == '\0') {
-                printf("Usage: mount [file system name] [source path|-] [mount point]\n");
+        char *arg3 = strchr(arg2, ' ');
+        if (!arg3) {
+                goto usage;
+        }
+        arg3++;
+
+        char *fstype  = calloc(arg2 - arg1, 1);
+        char *srcfile = calloc(arg3 - arg2, 1);
+        char *mntpt   = calloc(strlen(arg3) + 1, 1);
+
+        if (!fstype || !srcfile || !mntpt) {
+                if (fstype) {
+                        free(fstype);
+                }
+
+                if (srcfile) {
+                        free(srcfile);
+                }
+
+                if (mntpt) {
+                        free(mntpt);
+                }
+
+                printf("Bad arguments!\n");
                 return CMD_STATUS_EXECUTED;
         }
 
-        if ((fstype = calloc(len + 1, sizeof(char))) != NULL) {
-                strncpy(fstype, strb, stre - strb);
-        } else {
-                goto exit;
-        }
+        strncpy(fstype , arg1, arg2 - arg1 - 1);
+        strncpy(srcfile, arg2, arg3 - arg2 - 1);
+        strcpy(mntpt, arg3);
 
-        strb = stre + 1;
-        stre = strchr(strb, ' ');
-        len  = stre - strb;
-
-        if ((fssrc = calloc(len + 1, sizeof(char))) != NULL) {
-                strncpy(fssrc, strb, stre - strb);
-        } else {
-                goto exit;
-        }
-
-        strb = stre + 1;
-        len  = strlen(strb);
-
-        if ((fsmntp = calloc(len + 1, sizeof(char))) != NULL) {
-                strcpy(fsmntp, strb);
-        } else {
-                goto exit;
-        }
-
-        exit:
-        if (!fstype || !fssrc || !fsmntp) {
-                printf("Bad arguments!\n");
-        } else {
-                if (fssrc[0] == '/' || fssrc[0] == '-') {
-                        if (mount(fstype, fssrc, fsmntp) != STD_RET_OK) {
-                                printf("Error while mounting file system!\n");
-                        }
-                } else {
-                        printf("Typed path is not correct!\n");
+        if (srcfile[0] == '/' || srcfile[0] == '-') {
+                if (mount(fstype, srcfile, mntpt) != STD_RET_OK) {
+                        printf("Error while mounting file system!\n");
                 }
+        } else {
+                printf("Typed path is not correct!\n");
         }
 
-        if (fstype) {
-                free(fstype);
-        }
+        free(fstype);
+        free(srcfile);
+        free(mntpt);
+        return CMD_STATUS_EXECUTED;
 
-        if (fssrc) {
-                free(fssrc);
-        }
-
-        if (fsmntp) {
-                free(fsmntp);
-        }
-
+usage:
+        printf("Usage: mount [file system name] [source path|-] [mount point]\n");
         return CMD_STATUS_EXECUTED;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 //==============================================================================
 /**
@@ -806,6 +842,32 @@ static enum cmd_status cmd_uname(char *arg)
 
 //==============================================================================
 /**
+ * @brief Function initialize and detect partitions on selected file (e.g. SD card)
+ */
+//==============================================================================
+static enum cmd_status cmd_detect_card(char *arg)
+{
+#include "drivers/sdspi_def.h"
+
+        FILE *sd = fopen(arg, "r");
+        if (sd) {
+                bool status = false;
+                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
+
+                if (status == true) {
+                        printf("Card initialized.\n");
+                } else {
+                        printf("Card not detected.\n");
+                }
+        } else {
+                printf("Cannot open file specified.\n");
+        }
+
+        return CMD_STATUS_EXECUTED;
+}
+
+//==============================================================================
+/**
  * @brief Function listing all internal supported commands
  *
  * @param *arg          arguments
@@ -821,6 +883,10 @@ static enum cmd_status cmd_help(char *arg)
 
         return CMD_STATUS_EXECUTED;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 /*==============================================================================
   End of file

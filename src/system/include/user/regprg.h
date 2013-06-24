@@ -56,7 +56,7 @@ struct regprg_pdata {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdret_t regprg_get_program_data(char*, struct regprg_pdata*);
+extern stdret_t regprg_get_program_data(const char*, struct regprg_pdata*);
 extern int regprg_get_program_count(void);
 extern struct regprg_pdata *regprg_get_pointer_to_program_list(void);
 

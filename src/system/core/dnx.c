@@ -64,7 +64,7 @@ extern "C" {
 //==============================================================================
 void dnx_init(void)
 {
-        cpuctl_init();
+        _cpuctl_init();
         memman_init();
 
         if (vfs_init() != STD_RET_OK) {

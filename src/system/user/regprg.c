@@ -38,6 +38,7 @@ extern "C" {
 #include "programs/top/top.h"
 #include "programs/terminal/terminal.h"
 #include "programs/cat/cat.h"
+#include "programs/cp/cp.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -64,6 +65,7 @@ static const struct regprg_pdata prog_table[] = {
         IMPORT_PROGRAM(top),
         IMPORT_PROGRAM(terminal),
         IMPORT_PROGRAM(cat),
+        IMPORT_PROGRAM(cp),
 };
 
 /*==============================================================================
@@ -85,7 +87,7 @@ static const struct regprg_pdata prog_table[] = {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t regprg_get_program_data(char *name, struct regprg_pdata *prg_data)
+stdret_t regprg_get_program_data(const char *name, struct regprg_pdata *prg_data)
 {
         if (!prg_data || !name) {
                 return STD_RET_ERROR;

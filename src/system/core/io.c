@@ -322,6 +322,10 @@ static int calc_format_size(const char *format, va_list arg)
                 } else {
                         chr = *format++;
 
+                        while (chr >= '0' && chr <= '9') {
+                                chr = *format++;
+                        }
+
                         if (chr == '%' || chr == 'c') {
                                 if (chr == 'c') {
                                         chr = va_arg(arg, i32_t);
@@ -362,7 +366,7 @@ static int calc_format_size(const char *format, va_list arg)
  * @return pointer in string when operation was finished
  */
 //==============================================================================
-char *io_atoi(char *string, u8_t base, i32_t *value)
+char *io_strtoi(const char *string, int base, i32_t *value)
 {
         char  character;
         i32_t sign = 1;
@@ -420,11 +424,27 @@ char *io_atoi(char *string, u8_t base, i32_t *value)
                 string++;
         }
 
-        atoi_sign:
+atoi_sign:
         *value *= sign;
 
-        atoi_end:
-        return string;
+atoi_end:
+        return (char *)string;
+}
+
+//==============================================================================
+/**
+ * @brief Function convert string to integer
+ *
+ * @param[in] *str      string
+ *
+ * @return converted value
+ */
+//==============================================================================
+i32_t io_atoi(const char *str)
+{
+        i32_t result;
+        io_strtoi(str, 10, &result);
+        return result;
 }
 
 //==============================================================================
@@ -608,7 +628,12 @@ int io_fputc(int c, FILE *stream)
 
 //==============================================================================
 /**
- * @brief  TODO Enter function description
+ * @brief Function puts string to selected file
+ *
+ * @param[in] *s        string
+ * @param[in] *file     file
+ *
+ * @return number of puts characters
  */
 //==============================================================================
 int io_fputs(const char *s, FILE *file)
@@ -643,7 +668,7 @@ int io_getc(FILE *stream)
                 return EOF;
         }
 
-        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
+        while (!vfs_feof(stream) && vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
                 if (dcnt >= 60000) {
                         sleep_ms(200);
                 } else if (dcnt >= 5000) {
@@ -680,8 +705,11 @@ char *io_fgets(char *str, int size, FILE *stream)
 
                 if (str[i] == (char)EOF && i == 0) {
                         return NULL;
-                } else if (str[i] == '\n' || str[i] == (char)EOF) {
+                } else if (str[i] == '\n') {
                         str[i + 1] = '\0';
+                        break;
+                } else if (str[i] == (char)EOF) {
+                        str[i] = '\0';
                         break;
                 }
         }
@@ -704,7 +732,7 @@ char *io_fgets(char *str, int size, FILE *stream)
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
-int io_snprintf(char *bfr, u32_t size, const char *format, ...)
+int io_snprintf(char *bfr, size_t size, const char *format, ...)
 {
         va_list args;
         int n = 0;
@@ -748,7 +776,7 @@ int io_fprintf(FILE *file, const char *format, ...)
                         n = io_vsnprintf(str, size, format, args);
                         va_end(args);
 
-                        vfs_fwrite(str, sizeof(char), size, file);
+                        vfs_fwrite(str, sizeof(char), n + 1, file);
 
                         sysm_sysfree(str);
                 }
@@ -773,8 +801,7 @@ int io_fprintf(FILE *file, const char *format, ...)
 #if (CONFIG_PRINTF_ENABLE > 0)
 int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
-#define put_character(character)                \
-        {                                       \
+        #define put_character(character) {      \
                 if ((size_t)slen < size)  {     \
                         *buf++ = character;     \
                         slen++;                 \
@@ -785,6 +812,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
         char chr;
         int  slen = 1;
+        int  arg_size;
 
         while ((chr = *format++) != '\0') {
                 if (chr != '%') {
@@ -793,6 +821,13 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
 
                 chr = *format++;
+
+                arg_size = 0;
+                while (chr >= '0' && chr <= '9') {
+                        arg_size *= 10;
+                        arg_size += chr - '0';
+                        chr       = *format++;
+                }
 
                 if (chr == '%' || chr == 'c') {
                         if (chr == 'c') {
@@ -804,7 +839,8 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
 
                 if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u') {
-                        char result[11];
+                        char result[12];
+                        memset(result, 0, sizeof(result));
                         char *resultPtr;
 
                         if (chr == 's') {
@@ -813,20 +849,15 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                         resultPtr = "(null)";
                                 }
                         } else {
-                                u8_t zeros = *format++;
-
-                                if (zeros >= '0' && zeros <= '9') {
-                                        zeros -= '0';
-                                } else {
-                                        zeros = 0;
-                                        format--;
+                                if (arg_size > 9) {
+                                        arg_size = 9;
                                 }
 
                                 u8_t base    = (chr == 'd' || chr == 'u' ? 10 : 16);
                                 bool uint_en = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
 
                                 resultPtr = itoa(va_arg(arg, i32_t), result,
-                                                 base, uint_en, zeros);
+                                                 base, uint_en, arg_size);
                         }
 
                         while ((chr = *resultPtr++)) {
@@ -843,11 +874,10 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                 }
         }
 
-        vsnprint_end:
+vsnprint_end:
         *buf = 0;
         return (slen - 1);
-
-#undef putChar
+        #undef put_character
 }
 #endif
 

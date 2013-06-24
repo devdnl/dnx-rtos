@@ -160,12 +160,12 @@ stdret_t procfs_release(void *fshdl)
         }
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
-        enter_critical();
+        enter_critical_section();
         unlock_mutex(procmem->resource_mtx);
         delete_mutex(procmem->resource_mtx);
         delete_list(procmem->file_list);
         free(procmem);
-        exit_critical();
+        exit_critical_section();
 
         return STD_RET_OK;
 }
@@ -175,8 +175,9 @@ stdret_t procfs_release(void *fshdl)
  * @brief Function open selected file
  *
  * @param[in]  *fshdl           FS handle
+ * @param[out] *extra           file extra data
  * @param[out] *fd              file descriptor
- * @param[out] *seek            file position
+ * @param[out] *lseek           file position
  * @param[in]  *path            file path
  * @param[in]  *mode            file mode
  *
@@ -184,8 +185,10 @@ stdret_t procfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, const char *mode)
+stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
+        (void) extra;
+
         struct procfs    *procmem = fshdl;
         struct taskstat  taskdata;
         struct file_info *fileInf;
@@ -206,7 +209,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                 }
 
                 task_t *taskHdl = NULL;
-                path = atoi((char*)path, 16, (i32_t*)&taskHdl);
+                path = strtoi((char*)path, 16, (i32_t*)&taskHdl);
 
                 if (sysm_get_task_stat(taskHdl, &taskdata) != STD_RET_OK) {
                         return STD_RET_ERROR;
@@ -244,7 +247,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
 
                 if (list_add_item(procmem->file_list, procmem->ID_counter, fileInf) == 0) {
                         *fd   = procmem->ID_counter++;
-                        *seek = 0;
+                        *lseek = 0;
 
                         unlock_mutex(procmem->resource_mtx);
                         return STD_RET_OK;
@@ -287,7 +290,7 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
                                         procmem->ID_counter, fileInf) == 0) {
 
                                 *fd = procmem->ID_counter++;
-                                *seek = 0;
+                                *lseek = 0;
 
                                 unlock_mutex(procmem->resource_mtx);
                                 return STD_RET_OK;
@@ -307,14 +310,17 @@ stdret_t procfs_open(void *fshdl, fd_t *fd, size_t *seek, const char *path, cons
  * @brief Function close file in LFS
  *
  * @param[in] *fshdl            FS handle
+ * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in] fd                file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_close(void *fshdl, fd_t fd)
+stdret_t procfs_close(void *fshdl, void *extra, fd_t fd)
 {
+        (void) extra;
+
         struct procfs *procmem = fshdl;
 
         if (procmem) {
@@ -336,23 +342,25 @@ stdret_t procfs_close(void *fshdl, fd_t fd)
  * @brief Function write data to the file
  *
  * @param[in] *fshdl            FS handle
+ * @param[in] *extra            file extra data (useful in FS wrappers)v
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
  * @param[in]  size             item size
  * @param[in]  nitems           number of items
- * @param[in]  seek             position in file
+ * @param[in]  lseek            position in file
  *
  * @return number of written items
  */
 //==============================================================================
-size_t procfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t nitems, size_t seek)
+size_t procfs_write(void *fshdl,void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)src;
         (void)size;
         (void)nitems;
-        (void)seek;
+        (void)lseek;
 
         return 0;
 }
@@ -362,21 +370,25 @@ size_t procfs_write(void *fshdl, fd_t fd, const void *src, size_t size, size_t n
  * @brief Function read from file data
  *
  * @param[in]  *fshdl           FS handle
+ * @param[in]  *extra            file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
  * @param[in]   size            item size
  * @param[in]   nitems          number of items
- * @param[in]   seek            position in file
+ * @param[in]   lseek           position in file
  *
  * @return number of read items
  */
 //==============================================================================
-size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, size_t seek)
+size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
+        (void)extra;
+
         struct procfs    *procmem = fshdl;
         struct file_info *fileInf;
-        struct taskstat  taskInfo;
-        size_t           n = 0;
+        struct taskstat   taskInfo;
+        size_t            n = 0;
+        size_t            seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
 
         if (!dst || !procmem) {
                 return 0;
@@ -457,6 +469,7 @@ size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, 
  * @brief IO operations on files
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
  * @param[in,out]  args         additional arguments
@@ -465,9 +478,10 @@ size_t procfs_read(void *fshdl, fd_t fd, void *dst, size_t size, size_t nitems, 
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
+stdret_t procfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
         (void)iorq;
         (void)args;
@@ -480,15 +494,17 @@ stdret_t procfs_ioctl(void *fshdl, fd_t fd, int iorq, va_list args)
  * @brief Function flush file data
  *
  * @param[in]     *fshdl        FS handle
+ * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_flush(void *fshdl, fd_t fd)
+stdret_t procfs_flush(void *fshdl, void *extra, fd_t fd)
 {
         (void)fshdl;
+        (void)extra;
         (void)fd;
 
         return STD_RET_ERROR;
@@ -499,15 +515,18 @@ stdret_t procfs_flush(void *fshdl, fd_t fd)
  * @brief Function returns file status
  *
  * @param[in]  *fshdl                FS handle
- * @param[in]  fd                    file descriptor
+ * @param[in]  *extra                file extra data (useful in FS wrappers)
+ * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_fstat(void *fshdl, fd_t fd, struct vfs_stat *stat)
+stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
+        (void)extra;
+
         struct procfs    *procmem = fshdl;
         struct file_info *fileInf;
         struct taskstat  taskInfo;
@@ -660,7 +679,7 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 }
 
                 task_t *taskHdl = NULL;
-                path = atoi((char*)path, 16, (i32_t*)&taskHdl);
+                path = strtoi((char*)path, 16, (i32_t*)&taskHdl);
 
                 if (!((*path == '/' && *(path + 1) == '\0') || *path == '\0')) {
                         return STD_RET_ERROR;
@@ -801,7 +820,7 @@ stdret_t procfs_chmod(void *fshdl, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_chown(void *fshdl, const char *path, u16_t owner, u16_t group)
+stdret_t procfs_chown(void *fshdl, const char *path, int owner, int group)
 {
         (void)fshdl;
         (void)path;

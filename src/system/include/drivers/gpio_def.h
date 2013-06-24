@@ -43,10 +43,15 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 /** port names */
-enum GPIO_DEV_NUMBER
-{
-   GPIO_DEV_NONE,
-   GPIO_DEV_LAST
+enum GPIO_DEV_NUMBER {
+        GPIO_DEV_NONE,
+        GPIO_DEV_LAST
+};
+
+/** ioctl commands */
+enum GPIO_IORQ {
+        GPIO_IORQ_SD_SELECT,
+        GPIO_IORQ_SD_DESELECT,
 };
 
 /*==============================================================================

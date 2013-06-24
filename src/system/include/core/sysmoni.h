@@ -207,11 +207,11 @@ extern i32_t sysm_get_module_used_memory(uint);
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-extern void *sysm_tskmalloc_as(task_t*, u32_t);
-extern void *sysm_tskcalloc_as(task_t*, u32_t, u32_t);
+extern void *sysm_tskmalloc_as(task_t*, size_t);
+extern void *sysm_tskcalloc_as(task_t*, size_t, size_t);
 extern void  sysm_tskfree_as(task_t*, void*);
-extern void *sysm_tskmalloc(u32_t);
-extern void *sysm_tskcalloc(u32_t, u32_t);
+extern void *sysm_tskmalloc(size_t);
+extern void *sysm_tskcalloc(size_t, size_t);
 extern void  sysm_tskfree(void*);
 extern i32_t sysm_get_used_program_memory(void);
 #endif

@@ -41,28 +41,29 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** translate function to STDC */
-#define printf(...)                             io_fprintf(stdout, __VA_ARGS__)
-#define fprintf(...)                            io_fprintf(__VA_ARGS__)
-#define snprintf(bfr, size, ...)                io_snprintf(bfr, size, __VA_ARGS__)
-#define sprintf(bfr, ...)                       io_snprintf(bfr, UINT16_MAX, __VA_ARGS__)
-#define vsnprintf(bfr, size, args)              io_vsnprintf(bfr, size, args)
-#define printk(...)                             io_printk(__VA_ARGS__)
-#define enable_printk(path)                     io_enable_printk(path)
-#define disable_printk()                        io_disable_printk()
-#define scanf(format, ...)                      io_fscanf(stdin, format, __VA_ARGS__)
-#define fscanf(stream, format, ...)             io_fscanf(stream, format, __VA_ARGS__)
-#define sscanf(str, format, ...)                io_sscanf(str, format, __VA_ARGS__)
-#define vsscanf(str, format, args)              io_vsscanf(str, format, args)
-#define putc(c, stream)                         io_fputc(c, stream)
-#define fputc(c, stream)                        io_fputc(c, stream)
-#define fputs(s, stream)                        io_fputs(s, stream)
-#define putchar(c)                              io_fputc(c, stdout)
-#define getchar()                               io_getc(stdin)
-#define getc(stream)                            io_getc(stream)
-#define fgets(str, size, stream)                io_fgets(str, size, stream)
-#define atoi(string, base, valuePtr)            io_atoi(string, base, valuePtr)
-#define atof(string)                            io_atof(string)
-#define strtod(string, end)                     io_strtod(string, end)
+#define printf(...)                                                     io_fprintf(stdout, __VA_ARGS__)
+#define fprintf(...)                                                    io_fprintf(__VA_ARGS__)
+#define snprintf(char__bfr, size_t__size, ...)                          io_snprintf(char__bfr, size_t__size, __VA_ARGS__)
+#define sprintf(char__bfr, ...)                                         io_snprintf(char__bfr, UINT16_MAX, __VA_ARGS__)
+#define vsnprintf(char__bfr, size_t__size, va_list__args)               io_vsnprintf(char__bfr, size_t__size, va_list__args)
+#define printk(...)                                                     io_printk(__VA_ARGS__)
+#define enable_printk(char__path)                                       io_enable_printk(char__path)
+#define disable_printk()                                                io_disable_printk()
+#define scanf(const_char__format, ...)                                  io_fscanf(stdin, const_char__format, __VA_ARGS__)
+#define fscanf(FILE__stream, const_char__format, ...)                   io_fscanf(FILE__stream, const_char__format, __VA_ARGS__)
+#define sscanf(const_char__str, const_char__format, ...)                io_sscanf(const_char__str, const_char__format, __VA_ARGS__)
+#define vsscanf(const_char__str, const_char__format, va_list__args)     io_vsscanf(const_char__str, const_char__format, va_list__args)
+#define putc(int__c, FILE__stream)                                      io_fputc(int__c, FILE__stream)
+#define fputc(int__c, FILE__stream)                                     io_fputc(int__c, FILE__stream)
+#define fputs(const_char__s, FILE__stream)                              io_fputs(const_char__s, FILE__stream)
+#define putchar(int__c)                                                 io_fputc(int__c, stdout)
+#define getchar()                                                       io_getc(stdin)
+#define getc(FILE__stream)                                              io_getc(FILE__stream)
+#define fgets(char__pstr, int__size, FILE__stream)                      io_fgets(char__pstr, int__size, FILE__stream)
+#define atoi(const_char__str)                                           io_atoi(const_char__str)
+#define strtoi(const_char__str, int__base, i32_t__presult)              io_strtoi(const_char__str, int__base, i32_t__presult)
+#define atof(const_char__str)                                           io_atof(const_char__str)
+#define strtod(const_char__pstr, char__ppend)                           io_strtod(const_char__pstr, char__ppend)
 
 /** VT100 terminal commands */
 #define ENABLE_LINE_WRAP                        "\e[?7h"
@@ -72,6 +73,8 @@ extern "C" {
 #define ERASE_LINE                              "\e[2K"
 #define ERASE_LINE_END                          "\e[K"
 #define CURSOR_HOME                             "\e[H"
+#define CURSOR_FORWARD(n)                       "\e["#n"C"
+#define CURSOR_BACKWARD(n)                      "\e["#n"D"
 #if (CONFIG_COLOR_TERM_ENABLE > 0)
 #define RESET_ATTRIBUTES                        "\e[0m"
 #define FONT_BLINKING                           "\e[5m"
@@ -151,7 +154,7 @@ extern void   io_enable_printk(char*);
 extern void   io_disable_printk(void);
 #endif
 #if (CONFIG_PRINTF_ENABLE > 0)
-extern int    io_snprintf(char*, u32_t, const char*, ...);
+extern int    io_snprintf(char*, size_t, const char*, ...);
 extern int    io_fprintf(FILE*, const char*, ...);
 extern int    io_vsnprintf(char*, size_t, const char*, va_list);
 #endif
@@ -161,7 +164,8 @@ extern int    io_sscanf(const char*, const char*, ...);
 extern int    io_vsscanf(const char*, const char*, va_list);
 #endif
 extern double io_strtod(const char*, char**);
-extern char  *io_atoi(char*, u8_t, i32_t*);
+extern i32_t  io_atoi(const char *str);
+extern char  *io_strtoi(const char*, int, i32_t*);
 extern double io_atof(const char*);
 extern int    io_fputc(int, FILE*);
 extern int    io_fputs(const char*, FILE*);

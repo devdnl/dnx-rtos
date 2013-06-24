@@ -52,7 +52,7 @@
 ==============================================================================*/
 extern void  vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName);
 extern void  vApplicationTickHook(void);
-extern u32_t get_uptime_counter(void);
+extern u32_t _get_uptime_counter(void);
 
 #ifdef __cplusplus
    }

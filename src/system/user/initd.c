@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include "user/initd.h"
 #include "drivers/tty_def.h"
+#include "drivers/sdspi_def.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -91,7 +92,7 @@ void task_initd(void *arg)
                 while (TRUE);
         }
 
-        init_driver("gpio", NULL);
+        init_driver("gpio", "/dev/gpio");
 
         /* early initialization - terminal support */
         init_driver("uart1", "/dev/ttyS0");
@@ -108,6 +109,26 @@ void task_initd(void *arg)
         init_driver("tty1", "/dev/tty1");
         init_driver("tty2", "/dev/tty2");
         init_driver("tty3", "/dev/tty3");
+        init_driver("sdspi", "/dev/sda");
+
+
+        /* initializing SD card and detecting partitions */
+        printk("Detecting SD card... ");
+        FILE *sd = fopen("/dev/sda", "r+");
+        if (!sd) {
+                printk(FONT_COLOR_RED"Cannot open file!"RESET_ATTRIBUTES"\n");
+        } else {
+                bool status;
+                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
+
+                if (status == true) {
+                        printk(FONT_COLOR_GREEN"Initialized."RESET_ATTRIBUTES"\n");
+                } else {
+                        printk(FONT_COLOR_RED"Fail\n"RESET_ATTRIBUTES);
+                }
+        }
+        fclose(sd);
+
 
         /* initd info about stack usage */
         printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());

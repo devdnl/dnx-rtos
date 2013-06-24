@@ -38,11 +38,13 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define new_program(name, args, cwd, fstdin, fstdout, status, exit_code) \
-        prgm_new_program(name, args, cwd, fstdin, fstdout, status, exit_code)
+#define new_program(const_char__pname, const_char__pargs, const_char__pcwd,\
+                    FILE__pfstdin, FILE__pfstdout, enum_prog_state__pstatus, int__pexit_code) \
+        prgm_new_program(const_char__pname, const_char__pargs, const_char__pcwd, FILE__pfstdin,\
+                         FILE__pfstdout, enum_prog_state__pstatus, int__pexit_code)
 
-#define delete_program(taskhdl) \
-        prgm_delete_program(taskhdl, EXIT_SUCCESS)
+#define delete_program(task_t__ptaskhdl) \
+        prgm_delete_program(task_t__ptaskhdl, EXIT_SUCCESS)
 
 #define GLOBAL_VARIABLES \
         struct __global_vars__
@@ -73,8 +75,8 @@ extern "C" {
 #define create_fast_global(name) \
         struct __global_vars__*name = global
 
-#define exit(status) \
-        prgm_exit(status)
+#define exit(int__status) \
+        prgm_exit(int__status)
 
 #define abort() \
         prgm_abort()
@@ -99,7 +101,7 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *prgm_new_program(char*, char*, char*, FILE*, FILE*, enum prog_state*, int*);
+extern task_t *prgm_new_program(const char*, const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
 extern void    prgm_delete_program(task_t*, int);
 extern void    prgm_exit(int);
 extern void    prgm_abort(void);
