@@ -38,10 +38,8 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#if CONFIG_ASSERT_USAGE > 0
+#if !defined(NDEBUG)
 #       define assert(ignore) do{if ((ignore)) break; printf("Assertion failed: %s, file %s, line %d\n", #ignore, __FILE__, __LINE__); abort();}while(0)
-#else
-#       define assert(ignore)
 #endif
 
 /*==============================================================================

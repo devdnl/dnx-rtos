@@ -161,9 +161,9 @@ extern "C" {
 
 /**=== PROGRAMING OPTIONS ====================================================*/
 /**
- * Enable (1) or disable (0) assert macros
+ * Enable (1) or disable (0) system assert macro
  */
-#define CONFIG_ASSERT_USAGE                             (0)
+#define CONFIG_SYSTEM_ASSERT_USAGE                      (1)
 
 #ifdef __cplusplus
 }

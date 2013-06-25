@@ -41,6 +41,13 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/* macro used by internal modules to stop system if condition is equal (!assert) */
+#if CONFIG_SYSTEM_ASSERT_USAGE > 0
+#define _stop_if(stop_condition)                if ((stop_condition)) {while(1);}
+#else
+#define _stop_if(stop_condition)
+#endif
+
 /* USER CFG: enable (1) or disable (0) kernel memory usage monitoring */
 #define SYSM_MONITOR_KERNEL_MEMORY_USAGE        CONFIG_MONITOR_KERNEL_MEMORY_USAGE
 
