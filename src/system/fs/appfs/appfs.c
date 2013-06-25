@@ -93,7 +93,7 @@ stdret_t appfs_release(void *fshdl)
 {
         (void)fshdl;
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================

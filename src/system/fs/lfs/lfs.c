@@ -1394,9 +1394,6 @@ static node_t *get_node(const char *path, node_t *startnode, i32_t deep, i32_t *
 //==============================================================================
 static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, i32_t *item)
 {
-        node_t *node;
-        i32_t   node_number;
-
         if (!nodebase || !filename) {
                 return NULL;
         }
@@ -1405,6 +1402,7 @@ static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, 
                 return NULL;
         }
 
+        node_t *node;
         if ((node = calloc(1, sizeof(node_t))) == NULL) {
                 return NULL;
         }
@@ -1418,6 +1416,7 @@ static node_t *new_node(struct LFS_data *lfs, node_t *nodebase, char *filename, 
         node->type  = NODE_TYPE_FILE;
         node->uid   = 0;
 
+        i32_t   node_number;
         if ((node_number = list_add_item(nodebase->data, lfs->id_counter++, node)) < 0) {
                 free(node);
                 return NULL;
@@ -1445,10 +1444,6 @@ static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *bas
                                                node_t *node, i32_t *item)
 {
         struct opened_file_info *opened_file_info;
-        struct opened_file_info *opened_file;
-        i32_t open_file_count;
-        i32_t open_file_list_position;
-
         if (!(opened_file_info = calloc(1, sizeof(struct opened_file_info)))) {
                 return STD_RET_ERROR;
         }
@@ -1462,10 +1457,10 @@ static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *bas
         }
 
         /* find if file shall be removed */
-        open_file_count = list_get_item_count(lfs->list_of_opended_files);
+        i32_t open_file_count = list_get_item_count(lfs->list_of_opended_files);
 
         for (i32_t i = 0; i < open_file_count; i++) {
-                opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
+                struct opened_file_info *opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
 
                 if (opened_file->node != node) {
                         continue;
@@ -1478,9 +1473,9 @@ static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *bas
         }
 
         /* add open file info to list */
-        open_file_list_position = list_add_item(lfs->list_of_opended_files,
-                                                lfs->id_counter++,
-                                                opened_file_info);
+        i32_t open_file_list_position = list_add_item(lfs->list_of_opended_files,
+                                                      lfs->id_counter++,
+                                                      opened_file_info);
 
         if (open_file_list_position >= 0) {
                 *item = open_file_list_position;

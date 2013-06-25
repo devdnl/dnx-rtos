@@ -161,6 +161,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
 
                                 new_fs = calloc(1, sizeof(struct FS_data));
                                 base_fs->mounted_FS_counter++;
+                                dir.cldir(dir.handle, &dir);
                         }
                 }
         } else if (  list_get_item_count(vfs_mnt_list) == 0
