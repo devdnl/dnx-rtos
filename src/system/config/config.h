@@ -159,6 +159,12 @@ extern "C" {
  */
 #define CONFIG_HOSTNAME                                 "localhost"
 
+/**=== PROGRAMING OPTIONS ====================================================*/
+/**
+ * Enable (1) or disable (0) system assert macro
+ */
+#define CONFIG_SYSTEM_ASSERT_USAGE                      (1)
+
 #ifdef __cplusplus
 }
 #endif
