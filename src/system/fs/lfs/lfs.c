@@ -114,14 +114,11 @@ static stdret_t  add_node_to_list_of_open_files(struct LFS_data*, node_t*, node_
 //==============================================================================
 stdret_t lfs_init(void **fshdl, const char *src_path)
 {
-        (void) src_path;
+        (void)src_path;
+
+        _stop_if(!fshdl);
 
         struct LFS_data *lfs;
-
-        if (!fshdl) {
-                return STD_RET_ERROR;
-        }
-
         if (!(lfs = calloc(1, sizeof(struct LFS_data)))) {
                 return STD_RET_ERROR;
         }
@@ -191,26 +188,19 @@ stdret_t lfs_release(void *fshdl)
 //==============================================================================
 stdret_t lfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_if)
 {
-        struct LFS_data *lfs = fshdl;
-        node_t *node;
-        node_t *drv_node;
-        node_t *drv_file;
-        char   *drv_name;
-        char   *drv_file_name;
-        uint    drv_name_len;
-        struct vfs_drv_interface *drv_interface;
+        _stop_if(!fshdl);
+        _stop_if(!path);
+        _stop_if(!drv_if);
 
-        if (!path || !drv_if || !lfs) {
-                return STD_RET_ERROR;
-        }
+        struct LFS_data *lfs = fshdl;
 
         if (path[0] != '/') {
                 return STD_RET_ERROR;
         }
 
         force_lock_recursive_mutex(lfs->resource_mtx);
-        node     = get_node(path, &lfs->root_dir, -1, NULL);
-        drv_node = get_node(strrchr(path, '/'), node, 0, NULL);
+        node_t *node     = get_node(path, &lfs->root_dir, -1, NULL);
+        node_t *drv_node = get_node(strrchr(path, '/'), node, 0, NULL);
 
         /* directory must exist and driver's file not */
         if (!node || drv_node) {
@@ -221,14 +211,15 @@ stdret_t lfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_
                 goto error;
         }
 
-        drv_name     = strrchr(path, '/') + 1;
-        drv_name_len = strlen(drv_name);
+        char *drv_name     = strrchr(path, '/') + 1;
+        uint  drv_name_len = strlen(drv_name);
 
+        char *drv_file_name;
         if ((drv_file_name = calloc(drv_name_len + 1, sizeof(char)))) {
                 strcpy(drv_file_name, drv_name);
 
-                drv_file      = calloc(1, sizeof(node_t));
-                drv_interface = calloc(1, sizeof(struct vfs_drv_interface));
+                node_t                   *drv_file      = calloc(1, sizeof(node_t));
+                struct vfs_drv_interface *drv_interface = calloc(1, sizeof(struct vfs_drv_interface));
 
                 if (drv_file && drv_interface) {
                         memcpy(drv_interface, drv_if, sizeof(struct vfs_drv_interface));
@@ -276,25 +267,19 @@ error:
 //==============================================================================
 stdret_t lfs_mkdir(void *fshdl, const char *path)
 {
-        struct LFS_data *lfs = fshdl;
-        node_t *base_node;
-        node_t *file_node;
-        node_t *new_dir;
-        char   *dir_name_ptr;
-        char   *new_dir_name = NULL;
-        uint   dir_name_len;
+        _stop_if(!fshdl);
+        _stop_if(!path);
 
-        if (!path || !lfs) {
-                return STD_RET_ERROR;
-        }
+        struct LFS_data *lfs = fshdl;
+        char *new_dir_name   = NULL;
 
         if (path[0] != '/') {
                 return STD_RET_ERROR;
         }
 
         force_lock_recursive_mutex(lfs->resource_mtx);
-        base_node = get_node(path, &lfs->root_dir, -1, NULL);
-        file_node = get_node(strrchr(path, '/'), base_node, 0, NULL);
+        node_t *base_node = get_node(path, &lfs->root_dir, -1, NULL);
+        node_t *file_node = get_node(strrchr(path, '/'), base_node, 0, NULL);
 
         /* base node must exist and created node not */
         if (base_node == NULL || file_node != NULL) {
@@ -305,12 +290,13 @@ stdret_t lfs_mkdir(void *fshdl, const char *path)
                 goto error;
         }
 
-        dir_name_ptr = strrchr(path, '/') + 1;
-        dir_name_len = strlen(dir_name_ptr);
+        char *dir_name_ptr = strrchr(path, '/') + 1;
+        uint  dir_name_len = strlen(dir_name_ptr);
 
         if ((new_dir_name = calloc(dir_name_len + 1, sizeof(char)))) {
                 strcpy(new_dir_name, dir_name_ptr);
 
+                node_t *new_dir;
                 if (!(new_dir = calloc(1, sizeof(node_t)))) {
                         goto error;
                 }
@@ -355,31 +341,29 @@ error:
 //==============================================================================
 stdret_t lfs_opendir(void *fshdl, const char *path, dir_t *dir)
 {
+        _stop_if(!fshdl);
+        _stop_if(!path);
+        _stop_if(!dir);
+
         struct LFS_data *lfs = fshdl;
+        force_lock_recursive_mutex(lfs->resource_mtx);
+
+        /* go to target dir */
         node_t *node;
+        if ((node = get_node(path, &lfs->root_dir, 0, NULL))) {
+                if (node->type == NODE_TYPE_DIR) {
+                        dir->items = list_get_item_count(node->data);
+                        dir->rddir = lfs_readdir;
+                        dir->cldir = lfs_closedir;
+                        dir->seek  = 0;
+                        dir->dd    = node;
 
-        if (path && lfs) {
-                force_lock_recursive_mutex(lfs->resource_mtx);
-
-                /* go to target dir */
-                if ((node = get_node(path, &lfs->root_dir, 0, NULL))) {
-                        if (node->type == NODE_TYPE_DIR) {
-                                if (dir) {
-                                        dir->items = list_get_item_count(node->data);
-                                        dir->rddir = lfs_readdir;
-                                        dir->cldir = lfs_closedir;
-                                        dir->seek  = 0;
-                                        dir->dd    = node;
-                                }
-
-                                unlock_recursive_mutex(lfs->resource_mtx);
-                                return STD_RET_OK;
-                        }
+                        unlock_recursive_mutex(lfs->resource_mtx);
+                        return STD_RET_OK;
                 }
-
-                unlock_recursive_mutex(lfs->resource_mtx);
         }
 
+        unlock_recursive_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -414,34 +398,35 @@ static stdret_t lfs_closedir(void *fshdl, dir_t *dir)
 //==============================================================================
 static dirent_t lfs_readdir(void *fshdl, dir_t *dir)
 {
+        _stop_if(!fshdl);
+        _stop_if(!dir);
+
         struct LFS_data *lfs = fshdl;
 
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir && lfs) {
-                force_lock_recursive_mutex(lfs->resource_mtx);
+        force_lock_recursive_mutex(lfs->resource_mtx);
 
-                node_t *from = dir->dd;
-                node_t *node = list_get_nitem_data(from->data, dir->seek++);
+        node_t *from = dir->dd;
+        node_t *node = list_get_nitem_data(from->data, dir->seek++);
 
-                if (node) {
-                        if (node->type == NODE_TYPE_DRV) {
-                                struct vfs_drv_interface *drv_if = node->data;
-                                struct vfs_dev_info dev_info;
-                                dev_info.st_size = 0;
-                                drv_if->drv_info(drv_if->handle, &dev_info);
-                                node->size = dev_info.st_size;
-                        }
-
-                        dirent.filetype = node->type;
-                        dirent.name     = node->name;
-                        dirent.size     = node->size;
+        if (node) {
+                if (node->type == NODE_TYPE_DRV) {
+                        struct vfs_drv_interface *drv_if = node->data;
+                        struct vfs_dev_info dev_info;
+                        dev_info.st_size = 0;
+                        drv_if->drv_info(drv_if->handle, &dev_info);
+                        node->size = dev_info.st_size;
                 }
 
-                unlock_recursive_mutex(lfs->resource_mtx);
+                dirent.filetype = node->type;
+                dirent.name     = node->name;
+                dirent.size     = node->size;
         }
+
+        unlock_recursive_mutex(lfs->resource_mtx);
 
         return dirent;
 }
@@ -459,23 +444,16 @@ static dirent_t lfs_readdir(void *fshdl, dir_t *dir)
 //==============================================================================
 stdret_t lfs_remove(void *fshdl, const char *path)
 {
-        struct LFS_data *lfs = fshdl;
-        struct opened_file_info *opened_file;
-        i32_t   item;
-        bool    remove_file;
-        u32_t   item_ID;
-        node_t *base_node;
-        node_t *obj_node;
+        _stop_if(!fshdl);
+        _stop_if(!path);
 
-        if (!path || !lfs) {
-                return STD_RET_ERROR;
-        }
+        struct LFS_data *lfs = fshdl;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
-
-        remove_file = TRUE;
-        base_node   = get_node(path, &lfs->root_dir, -1, NULL);
-        obj_node    = get_node(path, &lfs->root_dir, 0, &item);
+        i32_t   item;
+        bool    remove_file = TRUE;
+        node_t *base_node   = get_node(path, &lfs->root_dir, -1, NULL);
+        node_t *obj_node    = get_node(path, &lfs->root_dir, 0, &item);
 
         if (!base_node || !obj_node || obj_node == &lfs->root_dir) {
                 goto error;
@@ -493,7 +471,7 @@ stdret_t lfs_remove(void *fshdl, const char *path)
                 i32_t n = list_get_item_count(lfs->list_of_opended_files);
 
                 for (int i = 0; i < n; i++) {
-                        opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
+                        struct opened_file_info *opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
                         if (opened_file->node == obj_node) {
                                 opened_file->remove_at_close = TRUE;
                                 remove_file = FALSE;
@@ -503,6 +481,7 @@ stdret_t lfs_remove(void *fshdl, const char *path)
 
         /* remove node if possible */
         if (remove_file == TRUE) {
+                u32_t item_ID;
                 if (list_get_nitem_ID(base_node->data, item, &item_ID) == STD_RET_OK) {
                         unlock_recursive_mutex(lfs->resource_mtx);
                         return delete_node(base_node, obj_node, item_ID);
@@ -531,19 +510,16 @@ error:
 //==============================================================================
 stdret_t lfs_rename(void *fshdl, const char *old_name, const char *new_name)
 {
-        struct LFS_data *lfs = fshdl;
-        node_t *old_node_base;
-        node_t *new_node_base;
-        node_t *node;
-        char   *new_node_name = NULL;
+        _stop_if(!fshdl);
+        _stop_if(!old_name);
+        _stop_if(!new_name);
 
-        if (!old_name || !new_name || !lfs) {
-                return STD_RET_ERROR;
-        }
+        struct LFS_data *lfs = fshdl;
+        char *new_node_name  = NULL;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
-        old_node_base = get_node(old_name, &lfs->root_dir, -1, NULL);
-        new_node_base = get_node(new_name, &lfs->root_dir, -1, NULL);
+        node_t *old_node_base = get_node(old_name, &lfs->root_dir, -1, NULL);
+        node_t *new_node_base = get_node(new_name, &lfs->root_dir, -1, NULL);
 
         if (!old_node_base || !new_node_base) {
                 goto error;
@@ -563,7 +539,7 @@ stdret_t lfs_rename(void *fshdl, const char *old_name, const char *new_name)
         }
 
         new_node_name = calloc(1, strlen(strrchr(new_name, '/') + 1));
-        node = get_node(old_name, &lfs->root_dir, 0, NULL);
+        node_t *node  = get_node(old_name, &lfs->root_dir, 0, NULL);
 
         if (new_node_name && node) {
                 strcpy(new_node_name, strrchr(new_name, '/') + 1);
@@ -605,21 +581,21 @@ error:
 //==============================================================================
 stdret_t lfs_chmod(void *fshdl, const char *path, int mode)
 {
+        _stop_if(!fshdl);
+        _stop_if(!path);
+
         struct LFS_data *lfs = fshdl;
 
-        if (path && lfs) {
-                force_lock_recursive_mutex(lfs->resource_mtx);
+        force_lock_recursive_mutex(lfs->resource_mtx);
 
-                node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
-
-                if (node) {
-                        node->mode = mode;
-                        unlock_recursive_mutex(lfs->resource_mtx);
-                        return STD_RET_OK;
-                }
-
+        node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
+        if (node) {
+                node->mode = mode;
                 unlock_recursive_mutex(lfs->resource_mtx);
+                return STD_RET_OK;
         }
+
+        unlock_recursive_mutex(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -639,23 +615,23 @@ stdret_t lfs_chmod(void *fshdl, const char *path, int mode)
 //==============================================================================
 stdret_t lfs_chown(void *fshdl, const char *path, int owner, int group)
 {
+        _stop_if(!fshdl);
+        _stop_if(!path);
+
         struct LFS_data *lfs = fshdl;
 
-        if (path && lfs) {
-                force_lock_recursive_mutex(lfs->resource_mtx);
+        force_lock_recursive_mutex(lfs->resource_mtx);
 
-                node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
-
-                if (node) {
-                        node->uid = owner;
-                        node->gid = group;
-
-                        unlock_recursive_mutex(lfs->resource_mtx);
-                        return STD_RET_OK;
-                }
+        node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
+        if (node) {
+                node->uid = owner;
+                node->gid = group;
 
                 unlock_recursive_mutex(lfs->resource_mtx);
+                return STD_RET_OK;
         }
+
+        unlock_recursive_mutex(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -674,11 +650,11 @@ stdret_t lfs_chown(void *fshdl, const char *path, int owner, int group)
 //==============================================================================
 stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
-        struct LFS_data *lfs = fshdl;
+        _stop_if(!fshdl);
+        _stop_if(!path);
+        _stop_if(!stat);
 
-        if (!path || !stat || !lfs) {
-                return STD_RET_ERROR;
-        }
+        struct LFS_data *lfs = fshdl;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
@@ -729,37 +705,37 @@ stdret_t lfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         (void)extra;
 
+        _stop_if(!fshdl);
+        _stop_if(!stat);
+
         struct LFS_data *lfs = fshdl;
-        struct opened_file_info *opened_file;
 
-        if (stat && lfs) {
-                force_lock_recursive_mutex(lfs->resource_mtx);
+        force_lock_recursive_mutex(lfs->resource_mtx);
 
-                opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
-                if (opened_file) {
-                        if (opened_file->node) {
-                                if (opened_file->node->type == NODE_TYPE_DRV) {
-                                        struct vfs_drv_interface *drv_if = opened_file->node->data;
-                                        struct vfs_dev_info dev_info;
-                                        dev_info.st_size = 0;
-                                        drv_if->drv_info(drv_if->handle, &dev_info);
-                                        opened_file->node->size = dev_info.st_size;
-                                }
-
-                                stat->st_dev   = opened_file->node->fd;
-                                stat->st_gid   = opened_file->node->gid;
-                                stat->st_mode  = opened_file->node->mode;
-                                stat->st_mtime = opened_file->node->mtime;
-                                stat->st_size  = opened_file->node->size;
-                                stat->st_uid   = opened_file->node->uid;
-
-                                unlock_recursive_mutex(lfs->resource_mtx);
-                                return STD_RET_OK;
+        struct opened_file_info *opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        if (opened_file) {
+                if (opened_file->node) {
+                        if (opened_file->node->type == NODE_TYPE_DRV) {
+                                struct vfs_drv_interface *drv_if = opened_file->node->data;
+                                struct vfs_dev_info dev_info;
+                                dev_info.st_size = 0;
+                                drv_if->drv_info(drv_if->handle, &dev_info);
+                                opened_file->node->size = dev_info.st_size;
                         }
-                }
 
-                unlock_recursive_mutex(lfs->resource_mtx);
+                        stat->st_dev   = opened_file->node->fd;
+                        stat->st_gid   = opened_file->node->gid;
+                        stat->st_mode  = opened_file->node->mode;
+                        stat->st_mtime = opened_file->node->mtime;
+                        stat->st_size  = opened_file->node->size;
+                        stat->st_uid   = opened_file->node->uid;
+
+                        unlock_recursive_mutex(lfs->resource_mtx);
+                        return STD_RET_OK;
+                }
         }
+
+        unlock_recursive_mutex(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -779,18 +755,16 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 {
         (void)fshdl;
 
-        if (statfs) {
-                statfs->f_bfree  = 0;
-                statfs->f_blocks = 0;
-                statfs->f_ffree  = 0;
-                statfs->f_files  = 0;
-                statfs->f_type   = 0x01;
-                statfs->fsname   = "lfs";
+        _stop_if(!statfs);
 
-                return STD_RET_OK;
-        }
+        statfs->f_bfree  = 0;
+        statfs->f_blocks = 0;
+        statfs->f_ffree  = 0;
+        statfs->f_files  = 0;
+        statfs->f_type   = 0x01;
+        statfs->fsname   = "lfs";
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -810,34 +784,32 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 //==============================================================================
 stdret_t lfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
-        (void) extra;
+        (void)extra;
+
+        _stop_if(!fshdl);
+        _stop_if(!fd);
+        _stop_if(!lseek);
+        _stop_if(!path);
+        _stop_if(!mode);
 
         struct LFS_data *lfs = fshdl;
-        node_t *node;
-        node_t *base_node;
-        char   *file_name;
-        i32_t   item;
-        u32_t   cfd;
-
-        if (!fd || !path || !mode || !lfs) {
-                return STD_RET_ERROR;
-        }
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
-        node      = get_node(path, &lfs->root_dir, 0, &item);
-        base_node = get_node(path, &lfs->root_dir, -1, NULL);
+        i32_t   item;
+        node_t *node      = get_node(path, &lfs->root_dir, 0, &item);
+        node_t *base_node = get_node(path, &lfs->root_dir, -1, NULL);
 
         /* create new file when necessary */
         if (base_node && node == NULL) {
-                if (   (strncmp("w",  mode, 2) != 0)
-                    && (strncmp("w+", mode, 2) != 0)
-                    && (strncmp("a",  mode, 2) != 0)
-                    && (strncmp("a+", mode, 2) != 0) ) {
+                if (  (strncmp("w",  mode, 2) != 0)
+                   && (strncmp("w+", mode, 2) != 0)
+                   && (strncmp("a",  mode, 2) != 0)
+                   && (strncmp("a+", mode, 2) != 0) ) {
                         goto error;
                 }
 
-                file_name = calloc(1, strlen(strrchr(path, '/')));
+                char *file_name = calloc(1, strlen(strrchr(path, '/')));
                 if (file_name == NULL) {
                         goto error;
                 }
@@ -908,6 +880,7 @@ stdret_t lfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char 
         }
 
         /* everything success - load FD */
+        u32_t cfd;
         list_get_nitem_ID(lfs->list_of_opended_files, item, &cfd);
         *fd = (fd_t)cfd;
         unlock_recursive_mutex(lfs->resource_mtx);
@@ -932,53 +905,47 @@ error:
 //==============================================================================
 stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
 {
-        (void) extra;
+        (void)extra;
 
-        struct LFS_data          *lfs   = fshdl;
-        stdret_t                 status = STD_RET_ERROR;
-        node_t                   *node;
-        struct opened_file_info  *opened_file;
-        struct vfs_drv_interface *drv_if;
-        struct opened_file_info  opened_file_data;
+        _stop_if(!fshdl);
 
-        if (!lfs) {
-                return STD_RET_ERROR;
-        }
+        struct LFS_data *lfs = fshdl;
+        stdret_t status      = STD_RET_ERROR;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
-        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        struct opened_file_info *opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
         if (opened_file == NULL) {
-                goto lfs_close_end;
+                goto exit;
         }
 
-        node = opened_file->node;
+        node_t *node = opened_file->node;
         if (node == NULL) {
-                goto lfs_close_end;
+                goto exit;
         }
 
         /* close device if file is driver type */
         if (node->type == NODE_TYPE_DRV) {
                 if (node->data == NULL) {
-                        goto lfs_close_end;
+                        goto exit;
                 }
 
-                drv_if = node->data;
+                struct vfs_drv_interface *drv_if = node->data;
                 if (!drv_if->drv_close) {
-                        goto lfs_close_end;
+                        goto exit;
                 }
 
                 if ((status = drv_if->drv_close(drv_if->handle)) != STD_RET_OK) {
-                        goto lfs_close_end;
+                        goto exit;
                 }
         }
 
         /* delete file from open list */
-        opened_file_data = *opened_file;
+        struct opened_file_info opened_file_data = *opened_file;
 
         if (list_rm_iditem(lfs->list_of_opended_files, fd) != STD_RET_OK) {
                 /* critical error! */
-                goto lfs_close_end;
+                goto exit;
         }
 
         /* file to remove, check if other task does not opens this file */
@@ -991,7 +958,7 @@ stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
                         opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
 
                         if (opened_file->node == node) {
-                                goto lfs_close_end;
+                                goto exit;
                         }
                 }
 
@@ -1001,7 +968,7 @@ stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
                                      opened_file_data.item_ID);
         }
 
-        lfs_close_end:
+        exit:
         unlock_recursive_mutex(lfs->resource_mtx);
         return status;
 }
@@ -1023,36 +990,30 @@ stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
 //==============================================================================
 size_t lfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void) extra;
+        (void)extra;
+
+        _stop_if(!fshdl);
+        _stop_if(!src);
+        _stop_if(!size);
+        _stop_if(!nitems);
 
         struct LFS_data *lfs = fshdl;
-        struct vfs_drv_interface *drv_if;
-        struct opened_file_info  *opened_file;
-        node_t *node;
-        char   *new_data;
-        size_t  write_size;
-        size_t  file_length;
-        size_t  n = 0;
-        size_t  seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
-
-        if (!src || !size || !nitems || !lfs) {
-                return 0;
-        }
+        size_t           n   = 0;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
-        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
 
+        struct opened_file_info *opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
         if (!opened_file) {
-                goto lfs_write_end;
+                goto exit;
         }
 
-        node = opened_file->node;
+        node_t *node = opened_file->node;
         if (!node) {
-                goto lfs_write_end;
+                goto exit;
         }
 
         if (node->type == NODE_TYPE_DRV && node->data) {
-                drv_if = node->data;
+                struct vfs_drv_interface *drv_if = node->data;
 
                 if (drv_if->drv_write) {
                         unlock_recursive_mutex(lfs->resource_mtx);
@@ -1060,17 +1021,18 @@ size_t lfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size
                         return drv_if->drv_write(drv_if->handle, src, size, nitems, lseek);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
-                write_size  = size * nitems;
-                file_length = node->size;
+                size_t write_size  = size * nitems;
+                size_t file_length = node->size;
+                size_t seek        = lseek > SIZE_MAX ? SIZE_MAX : lseek;
 
                 if (seek > file_length) {
                         seek = file_length;
                 }
 
                 if ((seek + write_size) > file_length || node->data == NULL) {
-                        new_data = malloc(file_length + write_size);
+                        char *new_data = malloc(file_length + write_size);
                         if (new_data == NULL) {
-                                goto lfs_write_end;
+                                goto exit;
                         }
 
                         if (node->data) {
@@ -1090,7 +1052,7 @@ size_t lfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size
                 }
         }
 
-        lfs_write_end:
+exit:
         unlock_recursive_mutex(lfs->resource_mtx);
         return n;
 }
@@ -1112,42 +1074,38 @@ size_t lfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size
 //==============================================================================
 size_t lfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void) extra;
+        (void)extra;
+
+        _stop_if(!fshdl);
+        _stop_if(!dst);
+        _stop_if(!size);
+        _stop_if(!nitems);
 
         struct LFS_data *lfs = fshdl;
-        struct vfs_drv_interface *drv_if;
-        struct opened_file_info  *opened_file;
-        node_t *node;
-        size_t  file_length;
-        size_t  items_to_read;
-        size_t  n = 0;
-        size_t  seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
-
-        if (!dst || !size || !nitems || !lfs) {
-                return 0;
-        }
+        size_t           n   = 0;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
-        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        struct opened_file_info *opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
         if (opened_file == NULL) {
-                goto lfs_read_end;
+                goto exit;
         }
 
-        node = opened_file->node;
+        node_t *node = opened_file->node;
         if (node == NULL) {
-                goto lfs_read_end;
+                goto exit;
         }
 
         if (node->type == NODE_TYPE_DRV && node->data) {
-                drv_if = node->data;
+                struct vfs_drv_interface *drv_if = node->data;
 
                 if (drv_if->drv_read) {
                         unlock_recursive_mutex(lfs->resource_mtx);
                         return drv_if->drv_read(drv_if->handle, dst, size, nitems, lseek);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
-                file_length = node->size;
+                size_t file_length = node->size;
+                size_t seek        = lseek > SIZE_MAX ? SIZE_MAX : lseek;
 
                 /* check if seek is not bigger than file length */
                 if (seek > file_length) {
@@ -1155,6 +1113,7 @@ size_t lfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_
                 }
 
                 /* check how many items to read is on current file position */
+                size_t items_to_read;
                 if (((file_length - seek) / size) >= nitems) {
                         items_to_read = nitems;
                 } else {
@@ -1170,7 +1129,7 @@ size_t lfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_
                 }
         }
 
-        lfs_read_end:
+exit:
         unlock_recursive_mutex(lfs->resource_mtx);
         return n;
 }
@@ -1191,30 +1150,25 @@ size_t lfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_
 //==============================================================================
 stdret_t lfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 {
-        (void) extra;
+        (void)extra;
+
+        _stop_if(!fshdl);
 
         struct LFS_data *lfs = fshdl;
-        struct opened_file_info  *opened_file;
-        struct vfs_drv_interface *drv_if;
-
-
-        if (lfs == NULL) {
-                return STD_RET_ERROR;
-        }
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
-        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        struct opened_file_info *opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
         if (opened_file == NULL) {
-                goto lfs_ioctl_end;
+                goto error;
         }
 
         if (opened_file->node == NULL) {
-                goto lfs_ioctl_end;
+                goto error;
         }
 
         if (opened_file->node->type == NODE_TYPE_DRV && opened_file->node->data) {
-                drv_if = opened_file->node->data;
+                struct vfs_drv_interface *drv_if = opened_file->node->data;
 
                 if (drv_if->drv_ioctl) {
                         unlock_recursive_mutex(lfs->resource_mtx);
@@ -1222,7 +1176,7 @@ stdret_t lfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
                 }
         }
 
-        lfs_ioctl_end:
+error:
         unlock_recursive_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
@@ -1243,17 +1197,13 @@ stdret_t lfs_flush(void *fshdl, void *extra, fd_t fd)
 {
         (void)extra;
 
-        struct LFS_data *lfs = fshdl;
-        struct opened_file_info  *opened_file;
-        struct vfs_drv_interface *drv_if;
+        _stop_if(!fshdl);
 
-        if (lfs == NULL) {
-                return STD_RET_ERROR;
-        }
+        struct LFS_data *lfs = fshdl;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
-        opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
+        struct opened_file_info *opened_file = list_get_iditem_data(lfs->list_of_opended_files, fd);
         if (opened_file == NULL) {
                 goto error;
         }
@@ -1263,7 +1213,7 @@ stdret_t lfs_flush(void *fshdl, void *extra, fd_t fd)
         }
 
         if (opened_file->node->type == NODE_TYPE_DRV && opened_file->node->data) {
-                drv_if = opened_file->node->data;
+                struct vfs_drv_interface *drv_if = opened_file->node->data;
 
                 if (drv_if->drv_flush) {
                         unlock_recursive_mutex(lfs->resource_mtx);
@@ -1271,7 +1221,7 @@ stdret_t lfs_flush(void *fshdl, void *extra, fd_t fd)
                 }
         }
 
-        error:
+error:
         unlock_recursive_mutex(lfs->resource_mtx);
         return STD_RET_ERROR;
 }

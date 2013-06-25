@@ -325,16 +325,17 @@ stdret_t appfs_opendir(void *fshdl, const char *path, dir_t *dir)
 {
         (void)fshdl;
 
-        if (path && dir) {
-                if (path[0] == '/' && strlen(path) == 1) {
-                        dir->dd    = 0;
-                        dir->items = regprg_get_program_count();
-                        dir->rddir = appfs_readrootdir;
-                        dir->cldir = appfs_closedir;
-                        dir->seek  = 0;
+        _stop_if(!path);
+        _stop_if(!dir);
 
-                        return STD_RET_OK;
-                }
+        if (path[0] == '/' && strlen(path) == 1) {
+                dir->dd    = 0;
+                dir->items = regprg_get_program_count();
+                dir->rddir = appfs_readrootdir;
+                dir->cldir = appfs_closedir;
+                dir->seek  = 0;
+
+                return STD_RET_OK;
         }
 
         return STD_RET_ERROR;
@@ -458,19 +459,18 @@ stdret_t appfs_chown(void *fshdl, const char *path, int owner, int group)
 stdret_t appfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
         (void)fshdl;
+        (void)path;
 
-        if (path && stat) {
-                stat->st_dev   = 0;
-                stat->st_gid   = 0;
-                stat->st_mode  = 0444;
-                stat->st_mtime = 0;
-                stat->st_size  = 0;
-                stat->st_uid   = 0;
+        _stop_if(!stat);
 
-                return STD_RET_OK;
-        }
+        stat->st_dev   = 0;
+        stat->st_gid   = 0;
+        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
+        stat->st_mtime = 0;
+        stat->st_size  = 0;
+        stat->st_uid   = 0;
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -488,18 +488,16 @@ stdret_t appfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 {
         (void)fshdl;
 
-        if (statfs) {
-                statfs->f_bfree  = 0;
-                statfs->f_blocks = 0;
-                statfs->f_ffree  = 0;
-                statfs->f_files  = 0;
-                statfs->f_type   = 1;
-                statfs->fsname   = "appfs";
+        _stop_if(!statfs);
 
-                return STD_RET_OK;
-        }
+        statfs->f_bfree  = 0;
+        statfs->f_blocks = 0;
+        statfs->f_ffree  = 0;
+        statfs->f_files  = 0;
+        statfs->f_type   = 1;
+        statfs->fsname   = "appfs";
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -516,17 +514,17 @@ static dirent_t appfs_readrootdir(void *fshdl, dir_t *dir)
 {
         (void)fshdl;
 
+        _stop_if(!dir);
+
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir) {
-                if (dir->seek < (size_t)regprg_get_program_count()) {
-                        dirent.filetype = FILE_TYPE_REGULAR;
-                        dirent.name     = (char*)regprg_get_pointer_to_program_list()[dir->seek].program_name;
-                        dirent.size     = 0;
-                        dir->seek++;
-                }
+        if (dir->seek < (size_t)regprg_get_program_count()) {
+                dirent.filetype = FILE_TYPE_REGULAR;
+                dirent.name     = (char*)regprg_get_pointer_to_program_list()[dir->seek].program_name;
+                dirent.size     = 0;
+                dir->seek++;
         }
 
         return dirent;

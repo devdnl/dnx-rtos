@@ -111,12 +111,10 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir);
 stdret_t procfs_init(void **fshdl, const char *src_path)
 {
         (void)src_path;
+
+        _stop_if(!fshdl);
+
         struct procfs *procmem;
-
-        if (!fshdl) {
-                return STD_RET_ERROR;
-        }
-
         if (!(procmem = calloc(1, sizeof(struct procfs)))) {
                 return STD_RET_ERROR;
         }
@@ -153,11 +151,9 @@ stdret_t procfs_init(void **fshdl, const char *src_path)
 //==============================================================================
 stdret_t procfs_release(void *fshdl)
 {
-        struct procfs *procmem = fshdl;
+        _stop_if(!fshdl);
 
-        if (!procmem) {
-                return STD_RET_ERROR;
-        }
+        struct procfs *procmem = fshdl;
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
         enter_critical_section();
@@ -187,15 +183,17 @@ stdret_t procfs_release(void *fshdl)
 //==============================================================================
 stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
-        (void) extra;
+        (void)extra;
+
+        _stop_if(!fshdl);
+        _stop_if(!fd);
+        _stop_if(!lseek);
+        _stop_if(!path);
+        _stop_if(!mode);
 
         struct procfs    *procmem = fshdl;
-        struct taskstat  taskdata;
+        struct taskstat   taskdata;
         struct file_info *fileInf;
-
-        if (!path || !mode || !procmem) {
-                return STD_RET_ERROR;
-        }
 
         if (strncmp(mode, "r", 2) != 0) {
                 return STD_RET_ERROR;
@@ -246,7 +244,7 @@ stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const ch
                 while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
                 if (list_add_item(procmem->file_list, procmem->ID_counter, fileInf) == 0) {
-                        *fd   = procmem->ID_counter++;
+                        *fd    = procmem->ID_counter++;
                         *lseek = 0;
 
                         unlock_mutex(procmem->resource_mtx);
@@ -319,10 +317,11 @@ stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const ch
 //==============================================================================
 stdret_t procfs_close(void *fshdl, void *extra, fd_t fd)
 {
-        (void) extra;
+        (void)extra;
+
+        _stop_if(!fshdl);
 
         struct procfs *procmem = fshdl;
-
         if (procmem) {
                 while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
@@ -384,18 +383,15 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
 {
         (void)extra;
 
-        struct procfs    *procmem = fshdl;
-        struct file_info *fileInf;
-        struct taskstat   taskInfo;
-        size_t            n = 0;
-        size_t            seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
+        _stop_if(!fshdl);
+        _stop_if(!dst);
+        _stop_if(!size);
+        _stop_if(!nitems);
 
-        if (!dst || !procmem) {
-                return 0;
-        }
+        struct procfs *procmem = fshdl;
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
-        fileInf = list_get_iditem_data(procmem->file_list, fd);
+        struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
         unlock_mutex(procmem->resource_mtx);
 
         if (fileInf == NULL) {
@@ -406,6 +402,7 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
                 return 0;
         }
 
+        struct taskstat taskInfo;
         taskInfo.cpu_usage    = 1000;
         taskInfo.free_stack   = 0;
         taskInfo.task_handle  = 0;
@@ -424,8 +421,7 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
 
         switch (fileInf->task_file) {
         case TASK_FILE_FREESTACK:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.free_stack);
+                dataSize = snprintf(data, ARRAY_SIZE(data), "%u\n", taskInfo.free_stack);
                 break;
 
         case TASK_FILE_NAME:
@@ -434,21 +430,20 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
                 break;
 
         case TASK_FILE_OPENFILES:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.opened_files);
+                dataSize = snprintf(data, ARRAY_SIZE(data), "%u\n", taskInfo.opened_files);
                 break;
 
         case TASK_FILE_PRIO:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%d",
-                                    taskInfo.priority);
+                dataSize = snprintf(data, ARRAY_SIZE(data), "%d\n", taskInfo.priority);
                 break;
 
         case TASK_FILE_USEDMEM:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.memory_usage);
+                dataSize = snprintf(data, ARRAY_SIZE(data), "%u\n", taskInfo.memory_usage);
                 break;
         }
 
+        size_t n;
+        size_t seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
         if (seek > dataSize) {
                 n = 0;
         } else {
@@ -527,16 +522,13 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         (void)extra;
 
-        struct procfs    *procmem = fshdl;
-        struct file_info *fileInf;
-        struct taskstat  taskInfo;
+        _stop_if(!fshdl);
+        _stop_if(!stat);
 
-        if (!stat || !procmem) {
-                return STD_RET_ERROR;
-        }
+        struct procfs *procmem = fshdl;
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
-        fileInf = list_get_iditem_data(procmem->file_list, fd);
+        struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
         unlock_mutex(procmem->resource_mtx);
 
         if (fileInf == NULL) {
@@ -547,12 +539,13 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
                 return STD_RET_ERROR;
         }
 
+        struct taskstat taskInfo;
         if (sysm_get_task_stat(fileInf->taskhdl, &taskInfo) != STD_RET_OK) {
                 return STD_RET_ERROR;
         }
 
         stat->st_dev   = 0;
-        stat->st_mode  = 0444;
+        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
         stat->st_mtime = 0;
         stat->st_size  = 0;
         stat->st_gid   = 0;
@@ -562,8 +555,7 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 
         switch (fileInf->task_file) {
         case TASK_FILE_FREESTACK:
-                stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.free_stack);
+                stat->st_size = snprintf(data, sizeof(data), "%u\n", taskInfo.free_stack);
                 break;
 
         case TASK_FILE_NAME:
@@ -571,18 +563,15 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
                 break;
 
         case TASK_FILE_OPENFILES:
-                stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.opened_files);
+                stat->st_size = snprintf(data, sizeof(data), "%u\n", taskInfo.opened_files);
                 break;
 
         case TASK_FILE_PRIO:
-                stat->st_size = snprintf(data, sizeof(data), "%d",
-                                         taskInfo.priority);
+                stat->st_size = snprintf(data, sizeof(data), "%d\n", taskInfo.priority);
                 break;
 
         case TASK_FILE_USEDMEM:
-                stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.memory_usage);
+                stat->st_size = snprintf(data, sizeof(data), "%u\n", taskInfo.memory_usage);
                 break;
         }
 
@@ -645,9 +634,8 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
 {
         (void)fshdl;
 
-        if (!path || !dir) {
-                return STD_RET_ERROR;
-        }
+        _stop_if(!path);
+        _stop_if(!dir);
 
         dir->seek = 0;
 
@@ -669,8 +657,7 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 dir->rddir = procfs_readdir_taskid;
                 dir->cldir = procfs_closedir_freedd;
                 return STD_RET_OK;
-        } else if (strncmp(path, "/"DIR_TASKID_STR"/",
-                           strlen(DIR_TASKID_STR) + 2) == 0) {
+        } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
 
                 path = strchr(path + 1, '/') + 1;
 
@@ -686,7 +673,6 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 }
 
                 struct taskstat taskdata;
-
                 if (sysm_get_task_stat(taskHdl, &taskdata) == STD_RET_OK) {
                         dir->dd    = (void*)taskHdl;
                         dir->items = TASK_FILE_COUNT;
@@ -715,12 +701,12 @@ static stdret_t procfs_closedir_freedd(void *fshdl, dir_t *dir)
 {
         (void)fshdl;
 
-        if (dir) {
-                if (dir->dd) {
-                        free(dir->dd);
-                        dir->dd = NULL;
-                        return STD_RET_OK;
-                }
+        _stop_if(!dir);
+
+        if (dir->dd) {
+                free(dir->dd);
+                dir->dd = NULL;
+                return STD_RET_OK;
         }
 
         return STD_RET_ERROR;
@@ -844,20 +830,19 @@ stdret_t procfs_chown(void *fshdl, const char *path, int owner, int group)
 //==============================================================================
 stdret_t procfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
-      (void)fshdl;
+        (void)fshdl;
+        (void)path;
 
-      if (path && stat) {
-            stat->st_dev   = 0;
-            stat->st_gid   = 0;
-            stat->st_mode  = 0444;
-            stat->st_mtime = 0;
-            stat->st_size  = 0;
-            stat->st_uid   = 0;
+        _stop_if(!stat);
 
-            return STD_RET_OK;
-      }
+        stat->st_dev   = 0;
+        stat->st_gid   = 0;
+        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
+        stat->st_mtime = 0;
+        stat->st_size  = 0;
+        stat->st_uid   = 0;
 
-      return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -875,18 +860,16 @@ stdret_t procfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 {
         (void)fshdl;
 
-        if (statfs) {
-                statfs->f_bfree  = 0;
-                statfs->f_blocks = 0;
-                statfs->f_ffree  = 0;
-                statfs->f_files  = 0;
-                statfs->f_type   = 1;
-                statfs->fsname   = "procfs";
+        _stop_if(!statfs);
 
-                return STD_RET_OK;
-        }
+        statfs->f_bfree  = 0;
+        statfs->f_blocks = 0;
+        statfs->f_ffree  = 0;
+        statfs->f_files  = 0;
+        statfs->f_type   = 1;
+        statfs->fsname   = "procfs";
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -903,24 +886,23 @@ static dirent_t procfs_readdir_root(void *fshdl, dir_t *dir)
 {
         (void)fshdl;
 
+        _stop_if(!dir);
+
         dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent.name     = NULL;
+        dirent.size     = 0;
+        dirent.filetype = FILE_TYPE_DIR;
+        dirent.size     = 0;
 
-        if (dir) {
-                dirent.filetype = FILE_TYPE_DIR;
-                dirent.size = 0;
-
-                switch (dir->seek++) {
-                case 0:
-                        dirent.name = DIR_TASKID_STR;
-                        break;
-                case 1:
-                        dirent.name = DIR_TASKNAME_STR;
-                        break;
-                default:
-                        break;
-                }
+        switch (dir->seek++) {
+        case 0:
+                dirent.name = DIR_TASKID_STR;
+                break;
+        case 1:
+                dirent.name = DIR_TASKNAME_STR;
+                break;
+        default:
+                break;
         }
 
         return dirent;
@@ -940,20 +922,19 @@ static dirent_t procfs_readdir_taskname(void *fshdl, dir_t *dir)
 {
         (void)fshdl;
 
+        _stop_if(!dir);
+
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
         struct taskstat taskdata;
+        if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
+                dirent.filetype = FILE_TYPE_REGULAR;
+                dirent.name     = taskdata.task_name;
+                dirent.size     = 0;
 
-        if (dir) {
-                if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
-                        dirent.filetype = FILE_TYPE_REGULAR;
-                        dirent.name     = taskdata.task_name;
-                        dirent.size     = 0;
-
-                        dir->seek++;
-                }
+                dir->seek++;
         }
 
         return dirent;
@@ -973,17 +954,14 @@ static dirent_t procfs_readdir_taskid(void *fshdl, dir_t *dir)
 {
         (void)fshdl;
 
+        _stop_if(!dir);
+
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
-        struct taskstat taskdata;
-
-        if (dir == NULL) {
-                return dirent;
-        }
-
         if (dir->dd && dir->seek < (size_t)sysm_get_number_of_monitored_tasks()) {
+                struct taskstat taskdata;
                 if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
                         snprintf(dir->dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
 
@@ -1012,20 +990,17 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir)
 {
         (void)fshdl;
 
-        struct taskstat taskdata;
+        _stop_if(!dir);
 
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir == NULL) {
-                return dirent;
-        }
-
         if (dir->seek >= TASK_FILE_COUNT) {
                 return dirent;
         }
 
+        struct taskstat taskdata;
         if (sysm_get_task_stat((task_t*)dir->dd, &taskdata) != STD_RET_OK) {
                 return dirent;
         }
@@ -1041,26 +1016,22 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir)
 
         case TASK_FILE_PRIO:
                 dirent.name = TASK_FILE_PRIO_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.priority);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.priority);
                 break;
 
         case TASK_FILE_FREESTACK:
                 dirent.name = TASK_FILE_FREESTACK_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%u",
-                                       taskdata.free_stack);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%u\n", taskdata.free_stack);
                 break;
 
         case TASK_FILE_USEDMEM:
                 dirent.name = TASK_FILE_USEDMEM_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.memory_usage);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.memory_usage);
                 break;
 
         case TASK_FILE_OPENFILES:
                 dirent.name = TASK_FILE_OPENFILES_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.opened_files);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.opened_files);
                 break;
         }
 
