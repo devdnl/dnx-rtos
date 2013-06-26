@@ -659,7 +659,7 @@ int io_fputs(const char *s, FILE *file)
  * @retval character
  */
 //==============================================================================
-int io_getc(FILE *stream)
+int io_getc(FILE *stream) /* DNLFIXME getc shall be fixed (delete sleep()) */
 {
         int chr    = EOF;
         u16_t dcnt = 0;
@@ -700,23 +700,29 @@ char *io_fgets(char *str, int size, FILE *stream)
                 return NULL;
         }
 
-        for (int i = 0; i < size - 1; i++) {
-                str[i] = io_getc(stream);
+        if (vfs_feof(stream) == 0) {
+                int n;
+                u64_t lseek = vfs_ftell(stream);
+                while ((n = fread(str, sizeof(char), size - 1, stream)) == 0);
 
-                if (str[i] == (char)EOF && i == 0) {
-                        return NULL;
-                } else if (str[i] == '\n') {
-                        str[i + 1] = '\0';
-                        break;
-                } else if (str[i] == (char)EOF) {
-                        str[i] = '\0';
-                        break;
+                char *end;
+                if ((end = strchr(str, '\n'))) {
+                        end++;
+                        *end = '\0';
+                } else if ((end = strchr(str, EOF))) {
+                        *end = '\0';
+                } else {
+                        str[n] = '\0';
                 }
+
+                int len = strlen(str);
+
+                vfs_fseek(stream, lseek + len, SEEK_SET);
+
+                return str;
         }
 
-        str[size - 1] = '\0';
-
-        return str;
+        return NULL;
 }
 
 //==============================================================================

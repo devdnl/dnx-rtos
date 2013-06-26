@@ -1002,6 +1002,9 @@ static void add_message(struct tty_data *tty, const char *msg, uint msg_len)
                 return;
         }
 
+
+//        char *crlf_msg;
+//        while (!(crlf_msg = new_CRLF_message(msg, msg_len)));
         char *crlf_msg = new_CRLF_message(msg, msg_len);
         if (crlf_msg) {
                 char *new_msg = merge_or_create_message(tty, crlf_msg);
