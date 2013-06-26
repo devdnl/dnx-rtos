@@ -411,34 +411,42 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
         taskInfo.opened_files = 0;
         taskInfo.priority     = 0;
 
-        char  data[12] = {0};
-        char *dataPtr  = data;
-        u8_t  dataSize = 0;
 
         if (sysm_get_task_stat(fileInf->taskhdl, &taskInfo) != STD_RET_OK) {
                 return 0;
         }
 
+        u8_t dataSize;
+        if (CONFIG_RTOS_TASK_NAME_LEN > 12) {
+                dataSize = CONFIG_RTOS_TASK_NAME_LEN + 1;
+        } else {
+                dataSize = 12;
+        }
+
+        char *data = calloc(dataSize + 1, 1);
+        if (!data) {
+                return 0;
+        }
+
         switch (fileInf->task_file) {
         case TASK_FILE_FREESTACK:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u\n", taskInfo.free_stack);
+                dataSize = snprintf(data, dataSize, "%u\n", taskInfo.free_stack);
                 break;
 
         case TASK_FILE_NAME:
-                dataSize = strlen(taskInfo.task_name);
-                dataPtr  = taskInfo.task_name;
+                dataSize = snprintf(data, dataSize, "%s\n", taskInfo.task_name);
                 break;
 
         case TASK_FILE_OPENFILES:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u\n", taskInfo.opened_files);
+                dataSize = snprintf(data, dataSize, "%u\n", taskInfo.opened_files);
                 break;
 
         case TASK_FILE_PRIO:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%d\n", taskInfo.priority);
+                dataSize = snprintf(data, dataSize, "%d\n", taskInfo.priority);
                 break;
 
         case TASK_FILE_USEDMEM:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u\n", taskInfo.memory_usage);
+                dataSize = snprintf(data, dataSize, "%u\n", taskInfo.memory_usage);
                 break;
         }
 
@@ -447,15 +455,16 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
         if (seek > dataSize) {
                 n = 0;
         } else {
-                if (dataSize - seek < size * nitems) {
+                if (dataSize - seek <= size * nitems) {
                         n = dataSize - seek;
-                        strncpy(dst, dataPtr + seek, n);
+                        strncpy(dst, data + seek, n);
                 } else {
                         n = size * nitems;
-                        strncpy(dst, dataPtr + seek, n);
+                        strncpy(dst, data + seek, n);
                 }
         }
 
+        free(data);
         return n;
 }
 
@@ -559,7 +568,7 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
                 break;
 
         case TASK_FILE_NAME:
-                stat->st_size = strlen(taskInfo.task_name);
+                stat->st_size = strlen(taskInfo.task_name) + 1;
                 break;
 
         case TASK_FILE_OPENFILES:
@@ -1011,7 +1020,7 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir)
         switch (dir->seek) {
         case TASK_FILE_NAME:
                 dirent.name = TASK_FILE_NAME_STR;
-                dirent.size = strlen(taskdata.task_name);
+                dirent.size = strlen(taskdata.task_name) + 1;
                 break;
 
         case TASK_FILE_PRIO:
