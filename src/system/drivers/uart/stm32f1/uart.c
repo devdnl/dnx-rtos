@@ -155,7 +155,9 @@ stdret_t UART_init(void **drvhdl, uint dev, uint part)
 {
         (void)part;
 
-        if (!drvhdl || dev >= UART_DEV_COUNT) {
+        _stop_if(!drvhdl);
+
+        if (dev >= UART_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
 
@@ -165,9 +167,9 @@ stdret_t UART_init(void **drvhdl, uint dev, uint part)
 
         *drvhdl = USART_data[dev];
 
-        USART_data[dev]->USART = USART_peripherals[dev];
+        USART_data[dev]->USART          = USART_peripherals[dev];
         USART_data[dev]->data_write_sem = new_semaphore();
-        USART_data[dev]->port_lock_mtx = new_recursive_mutex();
+        USART_data[dev]->port_lock_mtx  = new_recursive_mutex();
 
         if (!USART_data[dev]->data_write_sem || !USART_data[dev]->port_lock_mtx) {
                 goto error;
@@ -288,11 +290,9 @@ error:
 //==============================================================================
 stdret_t UART_release(void *drvhdl)
 {
-        struct USART_data *hdl = drvhdl;
+        _stop_if(!drvhdl);
 
-        if (!hdl) {
-                return STD_RET_ERROR;
-        }
+        struct USART_data *hdl = drvhdl;
 
         force_lock_recursive_mutex(hdl->port_lock_mtx);
         enter_critical_section();
@@ -318,11 +318,9 @@ stdret_t UART_release(void *drvhdl)
 //==============================================================================
 stdret_t UART_open(void *drvhdl)
 {
-        struct USART_data *hdl = drvhdl;
+        _stop_if(!drvhdl);
 
-        if (!hdl) {
-                return STD_RET_ERROR;
-        }
+        struct USART_data *hdl = drvhdl;
 
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->task = get_task_handle();
@@ -344,11 +342,9 @@ stdret_t UART_open(void *drvhdl)
 //==============================================================================
 stdret_t UART_close(void *drvhdl)
 {
-        struct USART_data *hdl = drvhdl;
+        _stop_if(!drvhdl);
 
-        if (!hdl) {
-                return STD_RET_ERROR;
-        }
+        struct USART_data *hdl = drvhdl;
 
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->task = NULL;
@@ -375,19 +371,16 @@ stdret_t UART_close(void *drvhdl)
 //==============================================================================
 size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void) lseek;
+        (void)lseek;
+
+        _stop_if(!drvhdl);
+        _stop_if(!src);
+        _stop_if(!size);
+        _stop_if(!nitems);
 
         struct USART_data *hdl = drvhdl;
+
         size_t n = 0;
-
-        if (!hdl) {
-                return n;
-        }
-
-        if (!src || !size || !nitems) {
-                return n;
-        }
-
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = size * nitems;
@@ -418,24 +411,19 @@ size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64
 //==============================================================================
 size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void) lseek;
+        (void)lseek;
+
+        _stop_if(!drvhdl);
+        _stop_if(!dst);
+        _stop_if(!size);
+        _stop_if(!nitems);
 
         struct USART_data *hdl = drvhdl;
+
         size_t n = 0;
-        size_t data_size;
-        u8_t   *dst_ptr;
-
-        if (!hdl) {
-                return n;
-        }
-
-        if (!dst || !size || !nitems) {
-                return n;
-        }
-
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                dst_ptr   = (u8_t *)dst;
-                data_size = nitems * size;
+                u8_t  *dst_ptr   = (u8_t *)dst;
+                size_t data_size = nitems * size;
 
                 do {
                         enter_critical_section();
@@ -479,13 +467,11 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
 //==============================================================================
 stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
 {
+        _stop_if(!drvhdl);
+
         struct USART_data *hdl = drvhdl;
         stdret_t status = STD_RET_OK;
         u8_t *out_ptr;
-
-        if (!hdl) {
-                return STD_RET_ERROR;
-        }
 
         if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 switch (iorq) {
@@ -656,7 +642,7 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
 //==============================================================================
 stdret_t UART_flush(void *drvhdl)
 {
-        (void)drvhdl;
+        _stop_if(drvhdl);
 
         return STD_RET_OK;
 }
@@ -674,8 +660,11 @@ stdret_t UART_flush(void *drvhdl)
 //==============================================================================
 stdret_t UART_info(void *drvhdl, struct vfs_dev_info *info)
 {
-        (void) drvhdl;
+        _stop_if(drvhdl);
+        _stop_if(!info);
+
         info->st_size = 0;
+
         return STD_RET_OK;
 }
 

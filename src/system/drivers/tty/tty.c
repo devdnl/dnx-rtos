@@ -179,12 +179,11 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 {
         (void)part;
 
-        struct tty_data *tty;
+        _stop_if(!drvhdl);
 
         if (dev >= TTY_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
-
 
         /* initialize control structure */
         if (!tty_ctrl) {
@@ -207,6 +206,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
 
 
         /* initialize driver data */
+        struct tty_data *tty;
         if (!(tty = calloc(1, sizeof(struct tty_data)))) {
                 goto drv_error;
         }
@@ -262,11 +262,10 @@ ctrl_error:
 //==============================================================================
 stdret_t TTY_release(void *drvhdl)
 {
-        struct tty_data *tty = drvhdl;
+        _stop_if(!drvhdl);
+        _stop_if(!tty_ctrl);
 
-        if (!tty_ctrl || !tty) {
-                return STD_RET_ERROR;
-        }
+        struct tty_data *tty = drvhdl;
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 clear_tty(tty);
@@ -294,13 +293,10 @@ stdret_t TTY_release(void *drvhdl)
 //==============================================================================
 stdret_t TTY_open(void *drvhdl)
 {
-        struct tty_data *tty = drvhdl;
+        _stop_if(!drvhdl);
+        _stop_if(!tty_ctrl);
 
-        if (!tty_ctrl || !tty) {
-                return STD_RET_ERROR;
-        } else {
-                return STD_RET_OK;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -315,13 +311,10 @@ stdret_t TTY_open(void *drvhdl)
 //==============================================================================
 stdret_t TTY_close(void *drvhdl)
 {
-        struct tty_data *tty = drvhdl;
+        _stop_if(!drvhdl);
+        _stop_if(!tty_ctrl);
 
-        if (!tty_ctrl || !tty) {
-                return STD_RET_ERROR;
-        } else {
-                return STD_RET_OK;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -338,14 +331,15 @@ stdret_t TTY_close(void *drvhdl)
 //==============================================================================
 size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void) lseek;
+        (void)lseek;
+
+        _stop_if(!drvhdl);
+        _stop_if(!src);
+        _stop_if(!size);
+        _stop_if(!nitems);
+        _stop_if(!tty_ctrl);
 
         struct tty_data *tty = drvhdl;
-        size_t n = 0;
-
-        if (!tty_ctrl || !tty || !src || !size || !nitems) {
-                return n;
-        }
 
         /* if current TTY is showing wait to show refreshed line */
         while (  tty_ctrl->tty[tty_ctrl->current_TTY]->refresh_last_line
@@ -355,6 +349,7 @@ size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_
         }
 
         /* wait for secure access to data */
+        size_t n = 0;
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 /* check if screen is cleared */
                 if (strncmp(VT100_CLEAR_SCREEN, src, 4) == 0) {
@@ -388,13 +383,15 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek
 {
         (void)lseek;
 
+        _stop_if(!drvhdl);
+        _stop_if(!dst);
+        _stop_if(!size);
+        _stop_if(!nitems);
+        _stop_if(!tty_ctrl);
+
         struct tty_data *tty = drvhdl;
+
         size_t n = 0;
-
-        if (!tty_ctrl || !tty || !dst || !size || !nitems) {
-                return n;
-        }
-
         if (lock_recursive_mutex(tty->secure_resources_mtx, 0) == MUTEX_LOCKED) {
                 while (nitems > 0) {
                         if (read_input_stream(tty, dst) != STD_RET_OK) {
@@ -429,12 +426,11 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek
 //==============================================================================
 stdret_t TTY_ioctl(void *drvhdl, int iorq, va_list args)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!tty_ctrl);
+
         struct tty_data *tty = drvhdl;
         int *out_ptr;
-
-        if (!tty_ctrl || !tty) {
-                return STD_RET_ERROR;
-        }
 
         switch (iorq) {
         /* return current TTY */
@@ -509,11 +505,8 @@ stdret_t TTY_ioctl(void *drvhdl, int iorq, va_list args)
 //==============================================================================
 stdret_t TTY_flush(void *drvhdl)
 {
-        struct tty_data *tty = drvhdl;
-
-        if (!tty_ctrl || !tty) {
-                return STD_RET_ERROR;
-        }
+        _stop_if(!drvhdl);
+        _stop_if(!tty_ctrl);
 
         return STD_RET_OK;
 }
@@ -531,6 +524,10 @@ stdret_t TTY_flush(void *drvhdl)
 //==============================================================================
 stdret_t TTY_info(void *drvhdl, struct vfs_dev_info *info)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!info);
+        _stop_if(!tty_ctrl);
+
         struct tty_data *tty = drvhdl;
 
         info->st_size = tty->file_size;
@@ -546,7 +543,7 @@ static void task_tty(void *arg)
 {
         (void) arg;
         char   *msg;
-        FILE *io_file;
+        FILE   *io_file;
 
         set_priority(TTYD_PRIORITY);
 

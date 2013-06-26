@@ -86,9 +86,11 @@ static void   task_program_startup(void *argv);
  *
  * @param *name         program name
  * @param *args         program argument string
- * @param *fstdin       stdin file
- * @param *fstdout      stdout file
- * @oaram *cwd          current working path
+ * @param *cwd          current working dir
+ * @param *stdin        stdin file
+ * @param *stdout       stdout file
+ * @param *status       program status
+ * @param *exit_code    exit code
  *
  * @return NULL if error, otherwise task handle
  */

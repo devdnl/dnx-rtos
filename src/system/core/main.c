@@ -32,7 +32,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnx.h"
-#include "user/initd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,9 +65,7 @@ extern "C" {
 int main(void)
 {
         dnx_init();
-        new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
         start_task_scheduler();
-
         return 0;
 }
 

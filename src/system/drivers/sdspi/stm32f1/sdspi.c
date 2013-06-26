@@ -225,12 +225,13 @@ static struct sdspi_data *sdspi_data;
 //==============================================================================
 stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
 {
-        struct sdspi_data *sdspi;
+        _stop_if(!drvhdl);
 
-        if (dev != SDSPI_DEV_NO || part != SDSPI_DEV_PART || !drvhdl) {
+        if (dev != SDSPI_DEV_NO || part != SDSPI_DEV_PART) {
                 return STD_RET_ERROR;
         }
 
+        struct sdspi_data *sdspi;
         if (!(sdspi = calloc(1, sizeof(struct sdspi_data)))) {
                 return STD_RET_ERROR;
         }
@@ -318,16 +319,20 @@ error:
 //==============================================================================
 stdret_t SDSPI_release(void *drvhdl)
 {
+        _stop_if(!drvhdl);
+
         struct sdspi_data *hdl = drvhdl;
 
-        if (!hdl)
-                return STD_RET_ERROR;
-
         /* wait for all partition are released */
+        int timeout = 50;
         while (  hdl->partition[0].in_use == true
               || hdl->partition[1].in_use == true
               || hdl->partition[2].in_use == true
               || hdl->partition[3].in_use == true) {
+
+                if (--timeout == 0)
+                        return STD_RET_ERROR;
+
                 sleep_ms(100);
         }
 
@@ -355,13 +360,9 @@ stdret_t SDSPI_release(void *drvhdl)
 //==============================================================================
 stdret_t SDSPI_open(void *drvhdl)
 {
-        struct sdspi_data *hdl = drvhdl;
+        _stop_if(!drvhdl);
 
-        if (!hdl) {
-                return STD_RET_ERROR;
-        } else {
-                return STD_RET_OK;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -376,13 +377,9 @@ stdret_t SDSPI_open(void *drvhdl)
 //==============================================================================
 stdret_t SDSPI_close(void *drvhdl)
 {
-        struct sdspi_data *hdl = drvhdl;
+        _stop_if(!drvhdl);
 
-        if (!hdl) {
-                return STD_RET_ERROR;
-        } else {
-                return STD_RET_OK;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -400,13 +397,14 @@ stdret_t SDSPI_close(void *drvhdl)
 //==============================================================================
 size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!src);
+        _stop_if(!size);
+        _stop_if(!nitems);
+
         struct sdspi_data *hdl = drvhdl;
+
         size_t n = 0;
-
-        if (!hdl) {
-                return 0;
-        }
-
         if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_write(hdl, src, size, nitems, lseek);
                 unlock_mutex(hdl->card_protect_mtx);
@@ -430,13 +428,14 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u6
 //==============================================================================
 size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!dst);
+        _stop_if(!size);
+        _stop_if(!nitems);
+
         struct sdspi_data *hdl = drvhdl;
+
         size_t n = 0;
-
-        if (!hdl) {
-                return 0;
-        }
-
         if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_read(hdl, dst, size, nitems, lseek);
                 unlock_mutex(hdl->card_protect_mtx);
@@ -459,14 +458,11 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lse
 //==============================================================================
 stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
 {
-        (void) args;
+        _stop_if(!drvhdl);
 
         struct sdspi_data *hdl = drvhdl;
-        stdret_t status = STD_RET_OK;
 
-        if (!hdl) {
-                return STD_RET_ERROR;
-        }
+        stdret_t status = STD_RET_OK;
 
         switch (iorq) {
         case SDSPI_IORQ_INITIALIZE_CARD:
@@ -511,7 +507,7 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
 //==============================================================================
 stdret_t SDSPI_flush(void *drvhdl)
 {
-        (void) drvhdl;
+        (void)drvhdl;
 
         return STD_RET_OK;
 }
@@ -529,6 +525,9 @@ stdret_t SDSPI_flush(void *drvhdl)
 //==============================================================================
 stdret_t SDSPI_info(void *drvhdl, struct vfs_dev_info *info)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!info);
+
         struct sdspi_data *hdl = drvhdl;
 
         /* size info */
@@ -579,10 +578,9 @@ stdret_t SDSPI_info(void *drvhdl, struct vfs_dev_info *info)
 //==============================================================================
 static stdret_t partition_open(void *drvhdl)
 {
-        struct partition *hdl = drvhdl;
+        _stop_if(!drvhdl);
 
-        if (!hdl)
-                return STD_RET_ERROR;
+        struct partition *hdl = drvhdl;
 
         if (hdl->in_use == true)
                 return STD_RET_ERROR;
@@ -602,14 +600,12 @@ static stdret_t partition_open(void *drvhdl)
 //==============================================================================
 static stdret_t partition_close(void *drvhdl)
 {
+        _stop_if(!drvhdl);
+
         struct partition *hdl = drvhdl;
 
-        if (!hdl) {
-                return STD_RET_ERROR;
-        } else {
-                hdl->in_use = false;
-                return STD_RET_OK;
-        }
+        hdl->in_use = false;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -627,13 +623,14 @@ static stdret_t partition_close(void *drvhdl)
 //==============================================================================
 static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!src);
+        _stop_if(!size);
+        _stop_if(!nitems);
+
         struct partition *hdl = drvhdl;
+
         size_t n = 0;
-
-        if (!hdl) {
-                return 0;
-        }
-
         if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_write(sdspi_data, src, size, nitems, lseek + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 unlock_mutex(sdspi_data->card_protect_mtx);
@@ -657,13 +654,14 @@ static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t
 //==============================================================================
 static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!dst);
+        _stop_if(!size);
+        _stop_if(!nitems);
+
         struct partition *hdl = drvhdl;
+
         size_t n = 0;
-
-        if (!hdl) {
-                return 0;
-        }
-
         if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_read(sdspi_data, dst, size, nitems, lseek + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 unlock_mutex(sdspi_data->card_protect_mtx);
@@ -723,6 +721,9 @@ static stdret_t partition_flush(void *drvhdl)
 //==============================================================================
 stdret_t partition_info(void *drvhdl, struct vfs_dev_info *info)
 {
+        _stop_if(!drvhdl);
+        _stop_if(!info);
+
         struct partition *hdl = drvhdl;
         info->st_size = (u64_t)hdl->size_in_sectors * SECTOR_SIZE;
         return STD_RET_OK;

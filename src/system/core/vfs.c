@@ -135,7 +135,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
         char           *new_path = NULL;
         char           *external_path;
 
-        if (!mount_point || !fs_interface) {
+        if (!mount_point || !fs_interface || !src_path) {
                 return STD_RET_ERROR;
         }
 
@@ -154,12 +154,14 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
         if (base_fs && mount_fs == NULL) {
                 if (base_fs->interface.fs_opendir && external_path) {
 
+                        dir_t dir;
                         if (base_fs->interface.fs_opendir(base_fs->handle,
                                                          external_path,
-                                                         NULL) == STD_RET_OK) {
+                                                         &dir) == STD_RET_OK) {
 
                                 new_fs = calloc(1, sizeof(struct FS_data));
                                 base_fs->mounted_FS_counter++;
+                                dir.cldir(dir.handle, &dir);
                         }
                 }
         } else if (  list_get_item_count(vfs_mnt_list) == 0

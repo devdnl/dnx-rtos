@@ -62,7 +62,7 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief Initialise devices and programs
+ * @brief Initialize devices and programs
  * User program which provide basic system functionality e.g. STDIO handle
  * (joining TTY driver with program), basic program starting and etc. This task
  * is an example to show how this can be implemented.
@@ -75,7 +75,7 @@ void task_initd(void *arg)
         set_priority(INITD_PRIORITY);
 
         /* mount main file system */
-        mount("lfs", NULL, "/");
+        mount("lfs", "", "/");
 
         mkdir("/bin");
         mkdir("/dev");
@@ -85,7 +85,7 @@ void task_initd(void *arg)
         mkdir("/proc");
         mkdir("/tmp");
 
-        mount("procfs", NULL, "/proc");
+        mount("procfs", "", "/proc");
 
         /* early initialization - basic drivers start */
         if (init_driver("pll", NULL) != STD_RET_OK) {

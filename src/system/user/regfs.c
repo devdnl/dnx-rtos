@@ -110,7 +110,7 @@ static const struct FS_entry FS_table[] =
 //==============================================================================
 stdret_t mount(const char *FS_name, const char *src_path, const char *mount_point)
 {
-        if (!FS_name || !mount_point) {
+        if (!FS_name || !mount_point || !src_path) {
                 return STD_RET_ERROR;
         }
 

@@ -89,22 +89,21 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir);
 //==============================================================================
 stdret_t fatfs_init(void **fshdl, const char *src_path)
 {
-        if (!src_path) {
-                return STD_RET_ERROR;
-        }
+        _stop_if(!fshdl);
+        _stop_if(!src_path);
 
         struct fatfs *hdl = calloc(1, sizeof(struct fatfs));
 
         if (hdl) {
                 *fshdl = hdl;
 
-                if (!(hdl->fsfile = fopen(src_path, "r+")))
-                        goto error;
+                if ((hdl->fsfile = fopen(src_path, "r+"))) {
+                        if (libfat_mount(hdl->fsfile, &hdl->fatfs) == FR_OK) {
+                                return STD_RET_OK;
+                        }
+                }
 
-                if (libfat_mount(hdl->fsfile, &hdl->fatfs) == FR_OK)
-                        return STD_RET_OK;
-
-error:
+                /* error */
                 if (hdl->fsfile) {
                         fclose(hdl->fsfile);
                 }
@@ -127,6 +126,8 @@ error:
 //==============================================================================
 stdret_t fatfs_release(void *fshdl)
 {
+        _stop_if(!fshdl);
+
         struct fatfs *hdl = fshdl;
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
@@ -157,6 +158,12 @@ stdret_t fatfs_release(void *fshdl)
 stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
         (void)fd;
+
+        _stop_if(!fshdl);
+        _stop_if(!extra);
+        _stop_if(!lseek);
+        _stop_if(!path);
+        _stop_if(!mode);
 
         struct fatfs *hdl = fshdl;
 
@@ -214,6 +221,9 @@ stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
 {
         (void)fd;
 
+        _stop_if(!fshdl);
+        _stop_if(!extra);
+
         struct fatfs *hdl = fshdl;
 
         FATFILE *fat_file = extra;
@@ -245,8 +255,13 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
         (void)fshdl;
         (void)fd;
 
+        _stop_if(!extra);
+        _stop_if(!src);
+        _stop_if(!size);
+        _stop_if(!nitems);
+
         FATFILE *fat_file = extra;
-        uint n        = 0;
+        uint     n        = 0;
 
         if (libfat_tell(fat_file) != (u32_t)lseek) {
                 libfat_lseek(fat_file, (u32_t)lseek);
@@ -276,8 +291,13 @@ size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
         (void)fshdl;
         (void)fd;
 
+        _stop_if(!extra);
+        _stop_if(!dst);
+        _stop_if(!size);
+        _stop_if(!nitems);
+
         FATFILE *fat_file = extra;
-        uint n        = 0;
+        uint     n        = 0;
 
         if (libfat_tell(fat_file) != (u32_t)lseek) {
                 libfat_lseek(fat_file, (u32_t)lseek);
@@ -331,6 +351,8 @@ stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
         (void)fshdl;
         (void)fd;
 
+        _stop_if(!extra);
+
         FATFILE *fat_file = extra;
         if (libfat_sync(fat_file) == FR_OK)
                 return STD_RET_OK;
@@ -355,6 +377,9 @@ stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         (void)fshdl;
         (void)fd;
+
+        _stop_if(!extra);
+        _stop_if(!stat);
 
         FATFILE *fat_file  = extra;
         stat->st_dev   = 0;
@@ -381,6 +406,8 @@ stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 stdret_t fatfs_mkdir(void *fshdl, const char *path)
 {
         struct fatfs *hdl = fshdl;
+
+        _stop_if(!path);
 
         if (libfat_mkdir(&hdl->fatfs, path) == FR_OK)
                 return STD_RET_OK;
@@ -425,6 +452,10 @@ stdret_t fatfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
 //==============================================================================
 stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
 {
+        _stop_if(!fshdl);
+        _stop_if(!path);
+        _stop_if(!dir);
+
         struct fatfs *hdl = fshdl;
 
         char *dospath = calloc(strlen(path) + 1, 1);
@@ -476,6 +507,9 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
 //==============================================================================
 static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
 {
+        _stop_if(!fshdl);
+        _stop_if(!dir);
+
         struct fatfs *hdl = fshdl;
 
         if (dir->dd) {
@@ -500,6 +534,8 @@ static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
 static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
 {
         (void) fshdl;
+
+        _stop_if(!dir);
 
         struct fatdir *fatdir = dir->dd;
 
@@ -543,6 +579,9 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
 //==============================================================================
 stdret_t fatfs_remove(void *fshdl, const char *path)
 {
+        _stop_if(!fshdl);
+        _stop_if(!path);
+
         struct fatfs *hdl = fshdl;
 
         if (libfat_unlink(&hdl->fatfs, path) == FR_OK)
@@ -565,6 +604,10 @@ stdret_t fatfs_remove(void *fshdl, const char *path)
 //==============================================================================
 stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
 {
+        _stop_if(!fshdl);
+        _stop_if(!old_name);
+        _stop_if(!new_name);
+
         struct fatfs *hdl = fshdl;
 
         if (libfat_rename(&hdl->fatfs, old_name, new_name) == FR_OK)
@@ -587,6 +630,9 @@ stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
 //==============================================================================
 stdret_t fatfs_chmod(void *fshdl, const char *path, int mode)
 {
+        _stop_if(!fshdl);
+        _stop_if(!path);
+
         struct fatfs *hdl = fshdl;
 
         uint8_t dosmode = mode & OWNER_MODE(MODE_W) ? 0 : LIBFAT_AM_RDO;
@@ -636,6 +682,10 @@ stdret_t fatfs_chown(void *fshdl, const char *path, int owner, int group)
 //==============================================================================
 stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 {
+        _stop_if(!fshdl);
+        _stop_if(!path);
+        _stop_if(!stat);
+
         struct fatfs *hdl = fshdl;
 
         FILEINFO file_info;
@@ -666,6 +716,9 @@ stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 //==============================================================================
 stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 {
+        _stop_if(!fshdl);
+        _stop_if(!statfs);
+
         struct fatfs *hdl = fshdl;
         u32_t  free_clusters = 0;
 

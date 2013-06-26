@@ -102,8 +102,8 @@ struct vfs_dir
         stdret_t (*cldir)(void *fshdl, struct vfs_dir *dir);
         void      *dd;
         void      *handle;
-        size_t    items;
-        size_t    seek;
+        size_t     items;
+        size_t     seek;
 };
 
 /** file statistics */
