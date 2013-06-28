@@ -659,25 +659,19 @@ int io_fputs(const char *s, FILE *file)
  * @retval character
  */
 //==============================================================================
-int io_getc(FILE *stream) /* DNLFIXME getc shall be fixed (delete sleep()) */
+int io_getc(FILE *stream)
 {
-        int chr    = EOF;
-        u16_t dcnt = 0;
-
         if (!stream) {
                 return EOF;
         }
 
-        while (!vfs_feof(stream) && vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                if (dcnt >= 60000) {
-                        sleep_ms(200);
-                } else if (dcnt >= 5000) {
-                        dcnt += 100;
-                        sleep_ms(100);
-                } else {
-                        dcnt += 20;
-                        sleep_ms(20);
-                }
+        if (vfs_feof(stream)) {
+                return EOF;
+        }
+
+        int chr = 0;
+        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
+                sleep_ms(10);
         }
 
         return chr;
@@ -696,7 +690,7 @@ int io_getc(FILE *stream) /* DNLFIXME getc shall be fixed (delete sleep()) */
 //==============================================================================
 char *io_fgets(char *str, int size, FILE *stream)
 {
-        if (!str || !size || !stream) {
+        if (!str || size < 2 || !stream) {
                 return NULL;
         }
 

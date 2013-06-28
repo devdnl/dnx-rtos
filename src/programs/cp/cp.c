@@ -164,6 +164,12 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
                ((copy_size / stop_time) * 1000) / 1024,
                ((copy_size / stop_time) * 1000) % 1024);
 
+        fclose(src_file);
+        fclose(dst_file);
+        free(src_path);
+        free(dst_path);
+        free(buffer);
+
         return EXIT_SUCCESS;
 
 exit_error:

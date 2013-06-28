@@ -101,21 +101,28 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                 printf("Up time: %ud %2u:%2u\n", udays, uhrs, umins);
 
+                struct sysmoni_used_memory mem;
+                get_detailed_memory_usage(&mem);
+
+                int mem_total = get_memory_size();
+                int mem_used  = get_used_memory();
+                int mem_free  = get_free_memory();
+
                 printf("Memory:\t%u total,\t%u used,\t%u free\n",
-                       get_memory_size(),
-                       get_used_memory(),
-                       get_free_memory());
+                       mem_total,
+                       mem_used,
+                       mem_free);
 
                 printf("Kernel  : %d\nSystem  : %d\nModules : %d\nPrograms: %d\n\n",
-                       get_used_memory_by_kernel(),
-                       get_used_memory_by_system(),
-                       get_used_memory_by_modules(),
-                       get_used_memory_by_programs());
+                       mem.used_kernel_memory,
+                       mem.used_system_memory,
+                       mem.used_modules_memory,
+                       mem.used_programs_memory);
 
                 printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
                 for (int i = 0; i < n; i++) {
-                        struct taskstat taskinfo;
+                        struct sysmoni_taskstat taskinfo;
                         u32_t total_cpu_load = get_total_CPU_usage();
 
                         if (get_task_stat(i, &taskinfo) == STD_RET_OK) {

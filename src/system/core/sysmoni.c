@@ -53,8 +53,8 @@ extern "C" {
 ==============================================================================*/
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 typedef struct mem_slot_chain {
-        int    used_slots;
-        void   *mem_slot[TASK_MEMORY_SLOTS];
+        int                    used_slots;
+        void                  *mem_slot[TASK_MEMORY_SLOTS];
         struct mem_slot_chain *prev;
         struct mem_slot_chain *next;
 } mem_slot_chain_t ;
@@ -63,12 +63,12 @@ typedef struct mem_slot_chain {
 /* task information */
 struct task_monitor_data {
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-        u32_t used_memory;
+        u32_t            used_memory;
         mem_slot_chain_t mem_chain;
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-        uint  opened_files;
+        uint   opened_files;
         FILE  *file_slot[TASK_FILE_SLOTS];
         dir_t *dir_slot[TASK_DIR_SLOTS];
 #endif
@@ -220,7 +220,7 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Function stops task monitoring
+ * @brief Function stops task monitoring (free all resources)
  *
  * @param *taskhdl      task handle
  *
@@ -251,6 +251,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
                 /* go to the last memory slot chain */
         }
 
+        int to_free = 0;
         do {
                 if (chain->next) {
                         memman_free(chain->next);
@@ -259,11 +260,15 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
                 if (chain->used_slots > 0) {
                         for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
                                 if (chain->mem_slot[i]) {
-                                        memman_free(chain->mem_slot[i]);
+                                        to_free += memman_free(chain->mem_slot[i]);
                                 }
                         }
                 }
         } while ((chain = chain->prev) != NULL);
+
+        if (_get_this_task_data()->f_program) {
+                sysm_programs_memory_usage -= to_free;
+        }
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
@@ -286,7 +291,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_OK;
 
-        exit_error:
+exit_error:
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_ERROR;
 }
@@ -306,7 +311,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
-stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
+stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
 {
         struct task_monitor_data *tmdata;
 
@@ -367,7 +372,7 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct taskstat *stat)
 #if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
     || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
-stdret_t sysm_get_ntask_stat(i32_t item, struct taskstat *stat)
+stdret_t sysm_get_ntask_stat(i32_t item, struct sysmoni_taskstat *stat)
 {
         task_t *task;
 
@@ -387,6 +392,32 @@ stdret_t sysm_get_ntask_stat(i32_t item, struct taskstat *stat)
         exit_error:
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_ERROR;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function gets information about used memory
+ *
+ * @param[out] *mem_info        memory information
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#if (  (SYSM_MONITOR_TASK_MEMORY_USAGE > 0) \
+    || (SYSM_MONITOR_TASK_FILE_USAGE > 0  ) \
+    || (SYSM_MONITOR_CPU_LOAD > 0         ) )
+stdret_t sysm_get_used_memory(struct sysmoni_used_memory *mem_info)
+{
+        if (!mem_info)
+                return STD_RET_ERROR;
+
+        mem_info->used_kernel_memory   = sysm_kernel_memory_usage;
+        mem_info->used_modules_memory  = sysm_modules_memory_usage;
+        mem_info->used_programs_memory = sysm_programs_memory_usage;
+        mem_info->used_system_memory   = sysm_system_memory_usage;
+        return STD_RET_OK;
 }
 #endif
 
@@ -467,20 +498,6 @@ void sysm_kfree(void *mem)
 
 //==============================================================================
 /**
- * @brief Function returns used memory by kernel
- *
- * @return used memory by kernel
- */
-//==============================================================================
-#if (SYSM_MONITOR_KERNEL_MEMORY_USAGE > 0)
-i32_t sysm_get_used_kernel_memory(void)
-{
-        return sysm_kernel_memory_usage;
-}
-#endif
-
-//==============================================================================
-/**
  * @brief Function monitor memory usage of system
  *
  * @param  size         block size
@@ -529,20 +546,6 @@ void *sysm_syscalloc(size_t count, size_t size)
 void sysm_sysfree(void *mem)
 {
         sysm_system_memory_usage -= memman_free(mem);
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function returns used memory by system
- *
- * @return used memory by kernel
- */
-//==============================================================================
-#if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
-i32_t sysm_get_used_system_memory(void)
-{
-        return sysm_system_memory_usage;
 }
 #endif
 
@@ -620,20 +623,6 @@ void sysm_modfree(void *mem, uint module_number)
 
 //==============================================================================
 /**
- * @brief Function returns used memory by modules
- *
- * @return used memory by drivers in total
- */
-//==============================================================================
-#if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
-i32_t sysm_get_used_modules_memory(void)
-{
-        return sysm_modules_memory_usage;
-}
-#endif
-
-//==============================================================================
-/**
  * @brief Function return memory usage of selected driver
  *
  * @param  module_number        module number
@@ -642,7 +631,7 @@ i32_t sysm_get_used_modules_memory(void)
  */
 //==============================================================================
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
-i32_t sysm_get_module_used_memory(uint module_number)
+i32_t sysm_get_used_memory_by_module(uint module_number)
 {
         if (module_number >= REGDRV_NUMBER_OF_REGISTERED_MODULES)
                 return 0;
@@ -650,6 +639,7 @@ i32_t sysm_get_module_used_memory(uint module_number)
                 return sysm_module_memory_usage[module_number];
 }
 #endif
+
 
 //==============================================================================
 /**
@@ -849,20 +839,6 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
 void sysm_tskfree(void *mem)
 {
         sysm_tskfree_as(get_task_handle(), mem);
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function returns used memory by programs
- *
- * @return used memory by programs
- */
-//==============================================================================
-#if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
-i32_t sysm_get_used_program_memory(void)
-{
-        return sysm_programs_memory_usage;
 }
 #endif
 

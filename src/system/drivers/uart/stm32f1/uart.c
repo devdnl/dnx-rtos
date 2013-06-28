@@ -642,7 +642,7 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
 //==============================================================================
 stdret_t UART_flush(void *drvhdl)
 {
-        _stop_if(drvhdl);
+        _stop_if(!drvhdl);
 
         return STD_RET_OK;
 }
@@ -660,7 +660,7 @@ stdret_t UART_flush(void *drvhdl)
 //==============================================================================
 stdret_t UART_info(void *drvhdl, struct vfs_dev_info *info)
 {
-        _stop_if(drvhdl);
+        _stop_if(!drvhdl);
         _stop_if(!info);
 
         info->st_size = 0;
