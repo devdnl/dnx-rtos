@@ -43,21 +43,15 @@ extern "C" {
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-struct thread_data {
-        FILE *input;
-        void *main_mem;
-};
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void read_keyboard_task(void *arg);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES {
-        int key;
 };
 
 /*==============================================================================
@@ -79,14 +73,23 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        struct thread_data main_data = {stdin, global};
-        task_t *kbrd_task = new_task(read_keyboard_task, "top:1", STACK_DEPTH_LOW, &main_data);
-        if (!kbrd_task) {
-                printf("Cannot create child task\n");
-                return EXIT_FAILURE;
-        }
+        int key     = 0;
+        int divider = 0;
 
-        while (global->key != 'q') {
+        ioctl(stdin, TTY_IORQ_ECHO_OFF);
+
+        while (key != 'q') {
+                fflush(stdin);
+                key = getchar();
+
+                if (divider != 0) {
+                        divider--;
+                        sleep_ms(100);
+                        continue;
+                } else {
+                        divider = 10;
+                }
+
                 u8_t n = get_number_of_monitored_tasks();
 
                 printf(CLEAR_SCREEN"Press q to quit\n");
@@ -140,44 +143,11 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                 }
 
                 clear_total_CPU_usage();
-
-                sleep_ms(2000);
-        }
-
-        return EXIT_SUCCESS;
-}
-
-//==============================================================================
-/**
- * @brief Task used to read keyboard in background to main program
- *
- * @param[in] *arg              pointer to main task memory
- */
-//==============================================================================
-static void read_keyboard_task(void *arg)
-{
-        /* connecting main thread with children */
-        struct thread_data *main_data = arg;
-        set_stdin(main_data->input);
-        set_global_variables(main_data->main_mem);
-
-        ioctl(stdin, TTY_IORQ_ECHO_OFF);
-
-        for (;;) {
-                fflush(stdin);
-                global->key = getchar();
-                if (global->key == 'q')
-                        break;
-                else
-                        sleep_ms(100);
         }
 
         ioctl(stdin, TTY_IORQ_ECHO_ON);
 
-        suspend_task(get_parent_handle());
-        resume_task(get_parent_handle());
-
-        task_exit();
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
