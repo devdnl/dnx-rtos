@@ -474,85 +474,108 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
         stdret_t status = STD_RET_OK;
         u8_t *out_ptr;
 
-//        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                switch (iorq) {
-                case UART_IORQ_ENABLE_WAKEUP_IDLE:
-                        wakeup_USART_on_idle_line(hdl->USART);
-                        break;
+        switch (iorq) {
+        case UART_IORQ_ENABLE_WAKEUP_IDLE:
+                wakeup_USART_on_idle_line(hdl->USART);
+                break;
 
-                case UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK:
-                        wakeup_USART_on_address_mark(hdl->USART);
-                        break;
+        case UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK:
+                wakeup_USART_on_address_mark(hdl->USART);
+                break;
 
-                case UART_IORQ_ENABLE_PARITY_CHECK:
-                        enable_parity_check(hdl->USART);
-                        break;
+        case UART_IORQ_ENABLE_PARITY_CHECK:
+                enable_parity_check(hdl->USART);
+                break;
 
-                case UART_IORQ_DISABLE_PARITY_CHECK:
-                        disable_parity_check(hdl->USART);
-                        break;
+        case UART_IORQ_DISABLE_PARITY_CHECK:
+                disable_parity_check(hdl->USART);
+                break;
 
-                case UART_IORQ_SET_ODD_PARITY:
-                        enable_odd_parity(hdl->USART);
-                        break;
+        case UART_IORQ_SET_ODD_PARITY:
+                enable_odd_parity(hdl->USART);
+                break;
 
-                case UART_IORQ_SET_EVEN_PARITY:
-                        enable_even_parity(hdl->USART);
-                        break;
+        case UART_IORQ_SET_EVEN_PARITY:
+                enable_even_parity(hdl->USART);
+                break;
 
-                case UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE:
-                        receiver_wakeup_in_mute_mode(hdl->USART);
-                        break;
+        case UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE:
+                receiver_wakeup_in_mute_mode(hdl->USART);
+                break;
 
-                case UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE:
-                        receiver_wakeup_in_active_mode(hdl->USART);
-                        break;
+        case UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE:
+                receiver_wakeup_in_active_mode(hdl->USART);
+                break;
 
-                case UART_IORQ_ENABLE_LIN_MODE:
-                        enable_LIN_mode(hdl->USART);
-                        break;
+        case UART_IORQ_ENABLE_LIN_MODE:
+                enable_LIN_mode(hdl->USART);
+                break;
 
-                case UART_IORQ_DISABLE_LIN_MODE:
-                        disable_LIN_mode(hdl->USART);
-                        break;
+        case UART_IORQ_DISABLE_LIN_MODE:
+                disable_LIN_mode(hdl->USART);
+                break;
 
-                case UART_IORQ_SET_1_STOP_BIT:
-                        set_1_stop_bit(hdl->USART);
-                        break;
+        case UART_IORQ_SET_1_STOP_BIT:
+                set_1_stop_bit(hdl->USART);
+                break;
 
-                case UART_IORQ_SET_2_STOP_BITS:
-                        set_2_stop_bits(hdl->USART);
-                        break;
+        case UART_IORQ_SET_2_STOP_BITS:
+                set_2_stop_bits(hdl->USART);
+                break;
 
-                case UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS:
-                        detect_11_bit_LIN_break(hdl->USART);
-                        break;
+        case UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS:
+                detect_11_bit_LIN_break(hdl->USART);
+                break;
 
-                case UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS:
-                        detect_10_bit_LIN_break(hdl->USART);
-                        break;
+        case UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS:
+                detect_10_bit_LIN_break(hdl->USART);
+                break;
 
-                case UART_IORQ_SET_ADDRESS_NODE:
-                        set_address_node(hdl->USART, va_arg(args, int));
-                        break;
+        case UART_IORQ_SET_ADDRESS_NODE:
+                set_address_node(hdl->USART, va_arg(args, int));
+                break;
 
-                case UART_IORQ_ENABLE_CTS:
-                        enable_CTS(hdl->USART);
-                        break;
+        case UART_IORQ_ENABLE_CTS:
+                enable_CTS(hdl->USART);
+                break;
 
-                case UART_IORQ_DISABLE_CTS:
-                        disable_CTS(hdl->USART);
-                        break;
+        case UART_IORQ_DISABLE_CTS:
+                disable_CTS(hdl->USART);
+                break;
 
-                case UART_IORQ_ENABLE_RTS:
-                        enable_RTS(hdl->USART);
-                        break;
+        case UART_IORQ_ENABLE_RTS:
+                enable_RTS(hdl->USART);
+                break;
 
-                case UART_IORQ_DISABLE_RTS:
-                        disable_RTS(hdl->USART);
-                        break;
+        case UART_IORQ_DISABLE_RTS:
+                disable_RTS(hdl->USART);
+                break;
 
-                case UART_IORQ_GET_BYTE:
+        case UART_IORQ_GET_BYTE:
+                enter_critical_section();
+
+                if (!(out_ptr = va_arg(args, u8_t*))) {
+                        exit_critical_section();
+                        status = STD_RET_ERROR;
+                        break;
+                }
+
+                if (hdl->Rx_FIFO.buffer_level > 0) {
+                        *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+
+                        if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
+                                hdl->Rx_FIFO.read_index = 0;
+
+                        hdl->Rx_FIFO.buffer_level--;
+                } else {
+                        status = STD_RET_ERROR;
+                }
+
+                exit_critical_section();
+                break;
+
+        case UART_IORQ_GET_BYTE_BLOCKING:
+                while (TRUE) {
                         enter_critical_section();
 
                         if (!(out_ptr = va_arg(args, u8_t*))) {
@@ -568,65 +591,36 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
                                         hdl->Rx_FIFO.read_index = 0;
 
                                 hdl->Rx_FIFO.buffer_level--;
+
+                                exit_critical_section();
+                                break;
                         } else {
-                                status = STD_RET_ERROR;
+                                exit_critical_section();
+                                suspend_this_task();
                         }
+                }
+                break;
 
-                        exit_critical_section();
-                        break;
-
-                case UART_IORQ_GET_BYTE_BLOCKING:
-                        while (TRUE) {
-                                enter_critical_section();
-
-                                if (!(out_ptr = va_arg(args, u8_t*))) {
-                                        exit_critical_section();
-                                        status = STD_RET_ERROR;
-                                        break;
-                                }
-
-                                if (hdl->Rx_FIFO.buffer_level > 0) {
-                                        *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
-
-                                        if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
-                                                hdl->Rx_FIFO.read_index = 0;
-
-                                        hdl->Rx_FIFO.buffer_level--;
-
-                                        exit_critical_section();
-                                        break;
-                                } else {
-                                        exit_critical_section();
-                                        suspend_this_task();
-                                }
-                        }
-                        break;
-
-                case UART_IORQ_SEND_BYTE:
-                        while (!(hdl->USART->SR & USART_SR_TXE)) {
-                                sleep_ms(1);
-                        }
-
-                        hdl->USART->DR = va_arg(args, int);
-                        break;
-
-                case UART_IORQ_SET_BAUDRATE:
-                        if ((u32_t)hdl->USART == USART1_BASE) {
-                                set_baud_rate(hdl->USART, UART_PCLK2_FREQ, va_arg(args, int));
-                        } else {
-                                set_baud_rate(hdl->USART, UART_PCLK1_FREQ, va_arg(args, int));
-                        }
-                        break;
-
-                default:
-                        status = STD_RET_ERROR;
-                        break;
+        case UART_IORQ_SEND_BYTE:
+                while (!(hdl->USART->SR & USART_SR_TXE)) {
+                        sleep_ms(1);
                 }
 
-//                unlock_recursive_mutex(hdl->port_lock_mtx);
-//        } else {
-//                return STD_RET_ERROR;
-//        }
+                hdl->USART->DR = va_arg(args, int);
+                break;
+
+        case UART_IORQ_SET_BAUDRATE:
+                if ((u32_t)hdl->USART == USART1_BASE) {
+                        set_baud_rate(hdl->USART, UART_PCLK2_FREQ, va_arg(args, int));
+                } else {
+                        set_baud_rate(hdl->USART, UART_PCLK1_FREQ, va_arg(args, int));
+                }
+                break;
+
+        default:
+                status = STD_RET_ERROR;
+                break;
+        }
 
         return status;
 }
