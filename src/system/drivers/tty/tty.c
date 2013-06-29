@@ -155,6 +155,7 @@ static void          refresh_last_line                    (struct tty_data *tty)
 static void          switch_tty_to                        (int tty_number);
 static void          clear_tty                            (struct tty_data *tty);
 static char         *new_CRLF_message                     (const char *msg, uint msg_len);
+static stdret_t      free_the_oldest_line                 (struct tty_data *tty);
 static char         *merge_or_create_message              (struct tty_data *tty, const char *msg_src);
 static void          add_message                          (struct tty_data *tty, const char *msg, uint msg_len);
 static void          strncpy_LF2CRLF                      (char *dst, const char *src, uint n);
@@ -1000,30 +1001,26 @@ static char *new_CRLF_message(const char *msg, uint msg_len)
 
 //==============================================================================
 /**
- * @brief Add new message or modify existing
+ * @brief Function free the oldest line in terminal
  *
- * @param *tty          terminal address
- * @param *msg          message
- * @param  msgLen       message length
+ * @param [in] *tty             terminal address
+ *
+ * @retval STD_RET_OK           successfully freed the oldest line
+ * @retval STD_RET_ERROR        freeing not possible
  */
 //==============================================================================
-static void add_message(struct tty_data *tty, const char *msg, uint msg_len)
+static stdret_t free_the_oldest_line(struct tty_data *tty)
 {
-        if (!msg_len || !msg) {
-                return;
+        for (int i = TTY_MAX_LINES - 1; i >= 0; i--) {
+                int line_index = get_message_index(tty, i);
+                if (tty->line[line_index]) {
+                        free(tty->line[line_index]);
+                        tty->line[line_index] = NULL;
+                        return STD_RET_OK;
+                }
         }
 
-
-//        char *crlf_msg; /* FIXME implement force message insert, free old messages if not enough free memory */
-//        while (!(crlf_msg = new_CRLF_message(msg, msg_len)));
-        char *crlf_msg = new_CRLF_message(msg, msg_len);
-        if (crlf_msg) {
-                char *new_msg = merge_or_create_message(tty, crlf_msg);
-                link_message(tty, new_msg);
-                free(crlf_msg);
-        }
-
-        give_counting_semaphore(tty_ctrl->do_stdout_semcnt);
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -1134,6 +1131,37 @@ static void link_message(struct tty_data *tty, char *msg)
         if (tty->write_index >= TTY_MAX_LINES) {
                 tty->write_index = 0;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Add new message or modify existing
+ *
+ * @param *tty          terminal address
+ * @param *msg          message
+ * @param  msgLen       message length
+ */
+//==============================================================================
+static void add_message(struct tty_data *tty, const char *msg, uint msg_len)
+{
+        if (!msg_len || !msg) {
+                return;
+        }
+
+        char *crlf_msg;
+        while (!(crlf_msg = new_CRLF_message(msg, msg_len))) {
+                if (free_the_oldest_line(tty) == STD_RET_ERROR) {
+                        break;
+                }
+        }
+
+        if (crlf_msg) {
+                char *new_msg = merge_or_create_message(tty, crlf_msg);
+                link_message(tty, new_msg);
+                free(crlf_msg);
+        }
+
+        give_counting_semaphore(tty_ctrl->do_stdout_semcnt);
 }
 
 //==============================================================================
