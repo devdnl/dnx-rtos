@@ -57,7 +57,7 @@ GLOBAL_VARIABLES {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW);
+PROGRAM_PARAMS(top, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions

@@ -108,7 +108,7 @@ struct tty_ctrl {
         struct tty_data *tty[TTY_DEV_COUNT];            /* pointer to started TTYs */
         task_t          *input_service_handle;
         task_t          *output_service_handle;
-        sem_t           *process_output_semcnt;         /* semaphore used to trigger output service */
+        sem_t           *process_output_sem;            /* semaphore used to trigger output service */
         FILE            *io_stream;                     /* IO stream used to read/write data from/to VT100 */
         bool             tty_size_updated;
         u16_t            column_count;
@@ -117,9 +117,9 @@ struct tty_ctrl {
         i8_t             change_to_TTY;
 
         struct VT100_cmd_capture_struct {
-                bool     is_pending;                    /* VT100 cmd capture enabled */
-                u8_t     buffer_index;                  /* VT100 cmd capture buffer index */
-                char     buffer[12];                    /* VT100 cmd capture buffer */
+                bool            is_pending;             /* VT100 cmd capture enabled */
+                u8_t            buffer_index;           /* VT100 cmd capture buffer index */
+                char            buffer[12];             /* VT100 cmd capture buffer */
         } VT100_cmd_capture;
 };
 
@@ -212,7 +212,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
                         goto ctrl_error;
                 }
 
-                if (!(tty_ctrl->process_output_semcnt = new_counting_semaphore(4, 0))) {
+                if (!(tty_ctrl->process_output_sem = new_semaphore())) {
                         goto ctrl_error;
                 }
 
@@ -270,8 +270,8 @@ drv_error:
 
 ctrl_error:
         if (tty_ctrl) {
-                if (tty_ctrl->process_output_semcnt) {
-                        delete_counting_semaphore(tty_ctrl->process_output_semcnt);
+                if (tty_ctrl->process_output_sem) {
+                        delete_semaphore(tty_ctrl->process_output_sem);
                 }
 
                 if (tty_ctrl->input_service_handle) {
@@ -314,7 +314,7 @@ stdret_t TTY_release(void *drvhdl)
 
                 enter_critical_section();
 
-                delete_counting_semaphore(tty_ctrl->process_output_semcnt);
+                delete_semaphore(tty_ctrl->process_output_sem);
                 delete_task(tty_ctrl->input_service_handle);
                 delete_task(tty_ctrl->output_service_handle);
                 fclose(tty_ctrl->io_stream);
@@ -396,7 +396,7 @@ size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_
         while (  tty_ctrl->tty[tty_ctrl->current_TTY]->screen.refresh_last_line
               && tty_ctrl->current_TTY == tty->device_number) {
 
-                give_counting_semaphore(tty_ctrl->process_output_semcnt);
+                give_semaphore(tty_ctrl->process_output_sem);
                 sleep_ms(10);
         }
 
@@ -716,7 +716,7 @@ static void output_service_task(void *arg)
                         continue;
                 }
 
-                if (take_counting_semaphore(tty_ctrl->process_output_semcnt, MAX_DELAY) == OS_OK) {
+                if (take_semaphore(tty_ctrl->process_output_sem, MAX_DELAY) == OS_OK) {
                         struct tty_data *tty = current_tty_handle();
 
                         if (tty->screen.new_line_counter > 0) {
@@ -910,7 +910,7 @@ static void switch_tty_to(int tty_number)
 {
         if (tty_number < TTY_DEV_COUNT && tty_ctrl->current_TTY != tty_number) {
                 tty_ctrl->change_to_TTY = tty_number;
-                give_counting_semaphore(tty_ctrl->process_output_semcnt);
+                give_semaphore(tty_ctrl->process_output_sem);
         }
 }
 
@@ -998,7 +998,7 @@ static void clear_tty(struct tty_data *tty)
                 tty->screen.write_index       = 0;
                 tty->screen.refresh_last_line = RESET;
 
-                give_counting_semaphore(tty_ctrl->process_output_semcnt);
+                give_semaphore(tty_ctrl->process_output_sem);
 
                 unlock_recursive_mutex(tty->secure_resources_mtx);
         }
@@ -1193,7 +1193,7 @@ static void add_line(struct tty_data *tty, const char *line, uint line_len)
                 free(crlf_line);
         }
 
-        give_counting_semaphore(tty_ctrl->process_output_semcnt);
+        give_semaphore(tty_ctrl->process_output_sem);
 }
 
 //==============================================================================
