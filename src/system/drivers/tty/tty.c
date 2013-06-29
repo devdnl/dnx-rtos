@@ -131,11 +131,14 @@ enum vt100cmd {
         F4_KEY,
         ARROW_LEFT_KEY,
         ARROW_RIGHT_KEY,
+        ARROW_UP_KEY,
+        ARROW_DOWN_KEY,
         KEY_CAPTURE_PENDING,
         END_KEY,
         HOME_KEY,
         DEL_KEY,
-        TERMINAL_SIZE,
+        ESC_KEY,
+        TERMINAL_SIZE_CMD,
         END_OF_TEXT,
         END_OF_TRANSMISSION,
         NORMAL_KEY
@@ -618,7 +621,7 @@ static void input_service_task(void *arg)
                 case NORMAL_KEY:
                         switch (chr) {
                         case '\r':
-                        case '\n': move_editline_to_streams(tty);        break;
+                        case '\n': move_editline_to_streams(tty);       break;
                         case '\b': remove_character_from_editline(tty); break;
                         default  : add_charater_to_editline(tty, chr);  break;
                         }
@@ -637,6 +640,20 @@ static void input_service_task(void *arg)
                                 fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
                                 tty->edit_line.cursor_position++;
                         }
+                        break;
+
+                case ARROW_UP_KEY:
+                        add_charater_to_editline(tty, '^');
+                        add_charater_to_editline(tty, 'O');
+                        add_charater_to_editline(tty, 'A');
+                        move_editline_to_streams(tty);
+                        break;
+
+                case ARROW_DOWN_KEY:
+                        add_charater_to_editline(tty, '^');
+                        add_charater_to_editline(tty, '0');
+                        add_charater_to_editline(tty, 'B');
+                        move_editline_to_streams(tty);
                         break;
 
                 case HOME_KEY:
@@ -1213,7 +1230,7 @@ static enum vt100cmd capture_VT100_commands(char chr)
 {
         enum vt100cmd vt100cmd = KEY_CAPTURE_PENDING;
 
-        if (strchr("cnRPQSDCF~", chr) != NULL && tty_ctrl->VT100_cmd_capture.is_pending == true) {
+        if (strchr("\ecnRPQSDCFAB~", chr) != NULL && tty_ctrl->VT100_cmd_capture.is_pending == true) {
                 tty_ctrl->VT100_cmd_capture.is_pending = false;
 
                 if (  tty_ctrl->VT100_cmd_capture.buffer[tty_ctrl->VT100_cmd_capture.buffer_index - 1] == 'O'
@@ -1225,10 +1242,16 @@ static enum vt100cmd capture_VT100_commands(char chr)
                         case 'S': vt100cmd = F4_KEY; break;
                         case 'D': vt100cmd = ARROW_LEFT_KEY; break;
                         case 'C': vt100cmd = ARROW_RIGHT_KEY; break;
+                        case 'A': vt100cmd = ARROW_UP_KEY; break;
+                        case 'B': vt100cmd = ARROW_DOWN_KEY; break;
                         case 'F': vt100cmd = END_KEY; break;
                         }
                 } else {
                         switch (chr) {
+                        case '\e':
+                                vt100cmd = ESC_KEY;
+                                break;
+
                         /* calculate terminal size */
                         case 'R': {
                                 const char *data = strchr(tty_ctrl->VT100_cmd_capture.buffer, '[');
