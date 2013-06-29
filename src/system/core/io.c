@@ -616,14 +616,12 @@ int io_fputc(int c, FILE *stream)
 {
         if (stream) {
                 char ch = (char)c;
-                if (vfs_fwrite(&ch, sizeof(char), 1, stream) < 1) {
-                        return EOF;
-                } else {
+                if (vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
                         return c;
                 }
-        } else {
-                return EOF;
         }
+
+        return EOF;
 }
 
 //==============================================================================
@@ -639,11 +637,8 @@ int io_fputc(int c, FILE *stream)
 int io_fputs(const char *s, FILE *file)
 {
         if (file) {
-                int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
-
-                if (n == 0)
-                        return EOF;
-                else
+                int n;
+                if ((n = vfs_fwrite(s, sizeof(char), strlen(s), file)) != 0)
                         return n;
         }
 
@@ -695,9 +690,10 @@ char *io_fgets(char *str, int size, FILE *stream)
         }
 
         if (vfs_feof(stream) == 0) {
-                int n;
                 u64_t lseek = vfs_ftell(stream);
-                while ((n = fread(str, sizeof(char), size - 1, stream)) == 0);
+
+                int n;
+                while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0);
 
                 char *end;
                 if ((end = strchr(str, '\n'))) {
@@ -895,23 +891,18 @@ vsnprint_end:
 #if (CONFIG_SCANF_ENABLE > 0)
 int io_fscanf(FILE *stream, const char *format, ...)
 {
-        int n = 0;
-        va_list args;
-
         char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
-
-        if (str == NULL) {
+        if (!str)
                 return 0;
-        }
 
+        int n = 0;
         if (io_fgets(str, BUFSIZ, stream) == str) {
-                for(uint i = 0; i < strlen(str); i++) {
-                        if (str[i] == '\n') {
-                                str[i] = '\0';
-                                break;
-                        }
+                char *lf;
+                if ((lf = strchr(str, '\n')) != NULL) {
+                        *lf = '\0';
                 }
 
+                va_list args;
                 va_start(args, format);
                 n = io_vsscanf(str, format, args);
                 va_end(args);

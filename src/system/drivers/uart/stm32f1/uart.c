@@ -39,10 +39,11 @@ MODULE_NAME(UART);
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define MTX_BLOCK_TIME                          0
+#define MTX_BLOCK_TIME                          MAX_DELAY
 #define TXC_WAIT_TIME                           60000
 
 #define force_lock_recursive_mutex(mtx)         while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
+#define force_lock_mutex(mtx)                   while (lock_mutex(mtx, 10) != MUTEX_LOCKED)
 
 /** IRQ priorities */
 #define IRQ_PRIORITY                            0xDF
@@ -97,8 +98,9 @@ struct USART_data {
         } Tx_buffer;
 
         sem_t   *data_write_sem;
-        mutex_t *port_lock_mtx;
-        task_t  *task;
+        mutex_t *port_lock_rx_mtx;
+        mutex_t *port_lock_tx_mtx;
+        task_t  *task_rx;
         USART_t *USART;
 };
 
@@ -167,11 +169,14 @@ stdret_t UART_init(void **drvhdl, uint dev, uint part)
 
         *drvhdl = USART_data[dev];
 
-        USART_data[dev]->USART          = USART_peripherals[dev];
-        USART_data[dev]->data_write_sem = new_semaphore();
-        USART_data[dev]->port_lock_mtx  = new_recursive_mutex();
+        USART_data[dev]->USART            = USART_peripherals[dev];
+        USART_data[dev]->data_write_sem   = new_semaphore();
+        USART_data[dev]->port_lock_rx_mtx = new_mutex();
+        USART_data[dev]->port_lock_tx_mtx = new_mutex();
 
-        if (!USART_data[dev]->data_write_sem || !USART_data[dev]->port_lock_mtx) {
+        if (  !USART_data[dev]->data_write_sem
+           || !USART_data[dev]->port_lock_rx_mtx
+           || !USART_data[dev]->port_lock_tx_mtx) {
                 goto error;
         } else {
                 take_semaphore(USART_data[dev]->data_write_sem, 1);
@@ -270,8 +275,12 @@ error:
                 delete_semaphore(USART_data[dev]->data_write_sem);
         }
 
-        if (USART_data[dev]->port_lock_mtx) {
-                delete_recursive_mutex(USART_data[dev]->port_lock_mtx);
+        if (USART_data[dev]->port_lock_rx_mtx) {
+                delete_recursive_mutex(USART_data[dev]->port_lock_rx_mtx);
+        }
+
+        if (USART_data[dev]->port_lock_tx_mtx) {
+                delete_recursive_mutex(USART_data[dev]->port_lock_tx_mtx);
         }
 
         free(USART_data[dev]);
@@ -294,10 +303,17 @@ stdret_t UART_release(void *drvhdl)
 
         struct USART_data *hdl = drvhdl;
 
-        force_lock_recursive_mutex(hdl->port_lock_mtx);
+        force_lock_mutex(hdl->port_lock_rx_mtx);
+        force_lock_mutex(hdl->port_lock_tx_mtx);
+
         enter_critical_section();
-        unlock_recursive_mutex(hdl->port_lock_mtx);
-        delete_recursive_mutex(hdl->port_lock_mtx);
+
+        unlock_mutex(hdl->port_lock_rx_mtx);
+        unlock_mutex(hdl->port_lock_tx_mtx);
+
+        delete_mutex(hdl->port_lock_rx_mtx);
+        delete_mutex(hdl->port_lock_tx_mtx);
+
         delete_semaphore(hdl->data_write_sem);
         turn_off_USART(hdl->USART);
         free(hdl);
@@ -320,14 +336,7 @@ stdret_t UART_open(void *drvhdl)
 {
         _stop_if(!drvhdl);
 
-        struct USART_data *hdl = drvhdl;
-
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                hdl->task = get_task_handle();
-                return STD_RET_OK;
-        } else {
-                return STD_RET_ERROR;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -344,16 +353,7 @@ stdret_t UART_close(void *drvhdl)
 {
         _stop_if(!drvhdl);
 
-        struct USART_data *hdl = drvhdl;
-
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                hdl->task = NULL;
-                unlock_recursive_mutex(hdl->port_lock_mtx);     /* give this mutex */
-                unlock_recursive_mutex(hdl->port_lock_mtx);     /* give mutex from open */
-                return STD_RET_OK;
-        } else {
-                return STD_RET_ERROR;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -381,7 +381,7 @@ size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64
         struct USART_data *hdl = drvhdl;
 
         size_t n = 0;
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (lock_mutex(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = size * nitems;
 
@@ -390,7 +390,7 @@ size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64
 
                 n = nitems;
 
-                unlock_recursive_mutex(hdl->port_lock_mtx);
+                unlock_mutex(hdl->port_lock_tx_mtx);
         }
 
         return n;
@@ -421,9 +421,10 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
         struct USART_data *hdl = drvhdl;
 
         size_t n = 0;
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (lock_mutex(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 u8_t  *dst_ptr   = (u8_t *)dst;
                 size_t data_size = nitems * size;
+                hdl->task_rx     = get_task_handle();
 
                 do {
                         enter_critical_section();
@@ -447,7 +448,7 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
 
                 n /= size;
 
-                unlock_recursive_mutex(hdl->port_lock_mtx);
+                unlock_mutex(hdl->port_lock_rx_mtx);
         }
 
         return n;
@@ -473,7 +474,7 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
         stdret_t status = STD_RET_OK;
         u8_t *out_ptr;
 
-        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+//        if (lock_recursive_mutex(hdl->port_lock_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 switch (iorq) {
                 case UART_IORQ_ENABLE_WAKEUP_IDLE:
                         wakeup_USART_on_idle_line(hdl->USART);
@@ -622,10 +623,10 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
                         break;
                 }
 
-                unlock_recursive_mutex(hdl->port_lock_mtx);
-        } else {
-                return STD_RET_ERROR;
-        }
+//                unlock_recursive_mutex(hdl->port_lock_mtx);
+//        } else {
+//                return STD_RET_ERROR;
+//        }
 
         return status;
 }
@@ -709,8 +710,8 @@ static void IRQ_handler(struct USART_data *USART_data)
                         USART_data->Rx_FIFO.buffer_level++;
                   }
 
-                  if (USART_data->task) {
-                        if (resume_task_from_ISR(USART_data->task) == pdTRUE) {
+                  if (USART_data->task_rx) {
+                        if (resume_task_from_ISR(USART_data->task_rx) == OS_TRUE) {
                                 yield_task();
                         }
                   }
