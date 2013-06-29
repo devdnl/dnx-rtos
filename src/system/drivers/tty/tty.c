@@ -172,7 +172,7 @@ static void          refresh_tty                          (struct tty_data *tty)
 static void          read_vt100_size                      (void);
 static void          write_key_stream                     (struct tty_data *tty, char chr);
 static stdret_t      read_key_stream                      (struct tty_data *tty, char *chr);
-static void          move_editline_to_streams             (struct tty_data *tty);
+static void          move_editline_to_streams             (struct tty_data *tty, bool flush);
 
 /*==============================================================================
   Local object definitions
@@ -212,7 +212,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
                         goto ctrl_error;
                 }
 
-                if (!(tty_ctrl->process_output_semcnt = new_counting_semaphore(256, 0))) {
+                if (!(tty_ctrl->process_output_semcnt = new_counting_semaphore(4, 0))) {
                         goto ctrl_error;
                 }
 
@@ -443,21 +443,19 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek
 
         struct tty_data *tty = drvhdl;
 
-        size_t n = 0;
+        size_t n   = 0;
+        char  *str = dst;
         while (nitems > 0) {
-                if (read_key_stream(tty, dst) != STD_RET_OK) {
+                while (read_key_stream(tty, str) != STD_RET_OK);
+
+                n++;
+
+                if (*str == '\n') {
                         break;
                 }
 
                 nitems--;
-                n++;
-
-                const char chr = *(char *)dst;
-                if (chr == '\n') {
-                        break;
-                }
-
-                dst += size;
+                str++;
         }
 
         n /= size;
@@ -562,6 +560,16 @@ stdret_t TTY_flush(void *drvhdl)
         _stop_if(!drvhdl);
         _stop_if(!tty_ctrl);
 
+        struct tty_data *tty = drvhdl;
+
+        if (lock_recursive_mutex(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+                tty->key_stream.level       = 0;
+                tty->key_stream.read_index  = 0;
+                tty->key_stream.write_index = 0;
+                move_editline_to_streams(tty, true);
+                unlock_recursive_mutex(tty->secure_resources_mtx);
+        }
+
         return STD_RET_OK;
 }
 
@@ -621,9 +629,9 @@ static void input_service_task(void *arg)
                 case NORMAL_KEY:
                         switch (chr) {
                         case '\r':
-                        case '\n': move_editline_to_streams(tty);       break;
+                        case '\n': move_editline_to_streams(tty, false); break;
                         case '\b': remove_character_from_editline(tty); break;
-                        default  : add_charater_to_editline(tty, chr);  break;
+                        default  : add_charater_to_editline(tty, chr); break;
                         }
                         break;
 
@@ -646,14 +654,14 @@ static void input_service_task(void *arg)
                         add_charater_to_editline(tty, '^');
                         add_charater_to_editline(tty, 'O');
                         add_charater_to_editline(tty, 'A');
-                        move_editline_to_streams(tty);
+                        move_editline_to_streams(tty, false);
                         break;
 
                 case ARROW_DOWN_KEY:
                         add_charater_to_editline(tty, '^');
                         add_charater_to_editline(tty, '0');
                         add_charater_to_editline(tty, 'B');
-                        move_editline_to_streams(tty);
+                        move_editline_to_streams(tty, false);
                         break;
 
                 case HOME_KEY:
@@ -666,6 +674,9 @@ static void input_service_task(void *arg)
 
                 case DEL_KEY:
                         delete_character_from_editline(tty);
+                        break;
+
+                case END_OF_TEXT:
                         break;
 
                 default:
@@ -852,14 +863,16 @@ static void add_charater_to_editline(struct tty_data *tty, char chr)
                 tty->edit_line.buffer[tty->edit_line.cursor_position++] = chr;
                 tty->edit_line.length++;
 
-                const char *cmd = VT100_SAVE_CURSOR_POSITION;
-                fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+                if (tty->edit_line.echo_enabled == SET) {
+                        const char *cmd = VT100_SAVE_CURSOR_POSITION;
+                        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
-                cmd = &tty->edit_line.buffer[tty->edit_line.cursor_position - 1];
-                fwrite(cmd, sizeof(char), tty->edit_line.length - (tty->edit_line.cursor_position - 1), tty_ctrl->io_stream);
+                        cmd = &tty->edit_line.buffer[tty->edit_line.cursor_position - 1];
+                        fwrite(cmd, sizeof(char), tty->edit_line.length - (tty->edit_line.cursor_position - 1), tty_ctrl->io_stream);
 
-                cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
-                fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+                        cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
+                        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+                }
         } else {
                 tty->edit_line.buffer[tty->edit_line.cursor_position++] = chr;
                 tty->edit_line.length++;
@@ -1444,6 +1457,8 @@ static void write_key_stream(struct tty_data *tty, char chr)
 static stdret_t read_key_stream(struct tty_data *tty, char *chr)
 {
         if (take_counting_semaphore(tty->edit_line.read_sem, MAX_DELAY) == OS_OK) {
+                if (tty->key_stream.level == 0)
+                        return STD_RET_ERROR;
 
                 if (lock_recursive_mutex(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                         *chr = tty->key_stream.buffer[tty->key_stream.read_index++];
@@ -1467,36 +1482,39 @@ static stdret_t read_key_stream(struct tty_data *tty, char *chr)
  * @brief Function move edit line to output and key stream
  *
  * @param[in] *tty              terminal address
+ * @param[in]  flush            move editline to streams at file flush
  */
 //==============================================================================
-static void move_editline_to_streams(struct tty_data *tty)
+static void move_editline_to_streams(struct tty_data *tty, bool flush)
 {
-        tty->edit_line.buffer[tty->edit_line.length++] = '\n';
-
-        uint line_len = tty->edit_line.length;
-
-        for (uint i = 0; i < line_len; i++) {
-                write_key_stream(tty, tty->edit_line.buffer[i]);
-        }
-
         if (lock_recursive_mutex(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                add_line(tty, tty->edit_line.buffer, line_len);
-                tty->screen.refresh_last_line = RESET;
+                tty->edit_line.buffer[tty->edit_line.length++] = flush ? ' ' : '\n';
+
+                uint line_len = tty->edit_line.length;
+                for (uint i = 0; i < line_len; i++) {
+                        write_key_stream(tty, tty->edit_line.buffer[i]);
+                }
+
+                if (tty->edit_line.echo_enabled == SET) {
+                        add_line(tty, tty->edit_line.buffer, line_len);
+                        tty->screen.refresh_last_line = RESET;
+
+                        const char *data;
+                        if (tty->screen.new_line_counter == 0) {
+                                data = "\r\n";
+                        } else {
+                                data = "\r"VT100_ERASE_LINE_FROM_CUR;
+                        }
+
+                        fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+                }
+
+                memset(tty->edit_line.buffer, '\0', TTY_EDIT_LINE_LEN);
+                tty->edit_line.length = 0;
+                tty->edit_line.cursor_position = 0;
+
                 unlock_recursive_mutex(tty->secure_resources_mtx);
         }
-
-        memset(tty->edit_line.buffer, '\0', TTY_EDIT_LINE_LEN);
-        tty->edit_line.length = 0;
-        tty->edit_line.cursor_position = 0;
-
-        const char *data;
-        if (tty->screen.new_line_counter == 0) {
-                data = "\r\n";
-        } else {
-                data = "\r"VT100_ERASE_LINE_FROM_CUR;
-        }
-
-        fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 }
 
 #ifdef __cplusplus

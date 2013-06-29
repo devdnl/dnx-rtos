@@ -34,7 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include "top.h"
-
+#include "drivers/tty_def.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -80,7 +80,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
         (void) argv;
 
         struct thread_data main_data = {stdin, global};
-        task_t *kbrd_task = new_task(read_keyboard_task, "top:1", STACK_DEPTH_USER(80), &main_data);
+        task_t *kbrd_task = new_task(read_keyboard_task, "top:1", STACK_DEPTH_LOW, &main_data);
         if (!kbrd_task) {
                 printf("Cannot create child task\n");
                 return EXIT_FAILURE;
@@ -161,11 +161,18 @@ static void read_keyboard_task(void *arg)
         set_stdin(main_data->input);
         set_global_variables(main_data->main_mem);
 
+        ioctl(stdin, TTY_IORQ_ECHO_OFF);
+
         for (;;) {
+                fflush(stdin);
                 global->key = getchar();
                 if (global->key == 'q')
                         break;
+                else
+                        sleep_ms(100);
         }
+
+        ioctl(stdin, TTY_IORQ_ECHO_ON);
 
         suspend_task(get_parent_handle());
         resume_task(get_parent_handle());
