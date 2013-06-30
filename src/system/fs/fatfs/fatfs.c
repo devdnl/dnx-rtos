@@ -228,6 +228,7 @@ stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
 
         FATFILE *fat_file = extra;
         if (libfat_close(fat_file) == FR_OK) {
+                free(fat_file);
                 hdl->opened_files--;
                 return STD_RET_OK;
         }
