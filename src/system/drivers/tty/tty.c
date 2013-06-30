@@ -69,6 +69,8 @@ MODULE_NAME(TTY);
 #define DEFAULT_COLUMN_NUMBER                   80
 #define DEFAULT_ROW_NUMBER                      24
 
+#define VT100_CMD_TIMEOUT                       5
+
 #define current_tty_handle()                    tty_ctrl->tty[tty_ctrl->current_TTY]
 
 /*==============================================================================
@@ -120,6 +122,7 @@ struct tty_ctrl {
                 bool            is_pending;             /* VT100 cmd capture enabled */
                 u8_t            buffer_index;           /* VT100 cmd capture buffer index */
                 char            buffer[12];             /* VT100 cmd capture buffer */
+                int             timer;                  /* VT100 cmd capture timeout */
         } VT100_cmd_capture;
 };
 
@@ -626,6 +629,7 @@ static void input_service_task(void *arg)
                         switch_tty_to(cmd - F1_KEY);
                         break;
 
+                case ESC_KEY:
                 case NORMAL_KEY:
                         switch (chr) {
                         case '\r':
@@ -1243,7 +1247,25 @@ static enum vt100cmd capture_VT100_commands(char chr)
 {
         enum vt100cmd vt100cmd = KEY_CAPTURE_PENDING;
 
+        if (  get_tick_counter() - tty_ctrl->VT100_cmd_capture.timer >= VT100_CMD_TIMEOUT
+           && tty_ctrl->VT100_cmd_capture.is_pending == true) {
+
+                if (  tty_ctrl->VT100_cmd_capture.buffer_index == 1
+                   && tty_ctrl->VT100_cmd_capture.buffer[0] == '\e') {
+
+                        vt100cmd = ESC_KEY;
+                }
+
+                tty_ctrl->VT100_cmd_capture.is_pending = false;
+                memset(tty_ctrl->VT100_cmd_capture.buffer, 0, sizeof(tty_ctrl->VT100_cmd_capture.buffer));
+
+                if (vt100cmd != KEY_CAPTURE_PENDING) {
+                        return vt100cmd;
+                }
+        }
+
         if (strchr("\ecnRPQSDCFAB~", chr) != NULL && tty_ctrl->VT100_cmd_capture.is_pending == true) {
+
                 tty_ctrl->VT100_cmd_capture.is_pending = false;
 
                 if (  tty_ctrl->VT100_cmd_capture.buffer[tty_ctrl->VT100_cmd_capture.buffer_index - 1] == 'O'
@@ -1261,10 +1283,6 @@ static enum vt100cmd capture_VT100_commands(char chr)
                         }
                 } else {
                         switch (chr) {
-                        case '\e':
-                                vt100cmd = ESC_KEY;
-                                break;
-
                         /* calculate terminal size */
                         case 'R': {
                                 const char *data = strchr(tty_ctrl->VT100_cmd_capture.buffer, '[');
@@ -1313,6 +1331,7 @@ static enum vt100cmd capture_VT100_commands(char chr)
                 if (chr == '\e') {
                         tty_ctrl->VT100_cmd_capture.is_pending   = true;
                         tty_ctrl->VT100_cmd_capture.buffer_index = 0;
+                        tty_ctrl->VT100_cmd_capture.timer        = get_tick_counter();
                 }
 
                 if (tty_ctrl->VT100_cmd_capture.is_pending == false) {
