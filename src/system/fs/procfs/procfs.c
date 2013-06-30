@@ -191,9 +191,9 @@ stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const ch
         _stop_if(!path);
         _stop_if(!mode);
 
-        struct procfs    *procmem = fshdl;
-        struct taskstat   taskdata;
-        struct file_info *fileInf;
+        struct procfs          *procmem = fshdl;
+        struct sysmoni_taskstat taskdata;
+        struct file_info       *fileInf;
 
         if (strncmp(mode, "r", 2) != 0) {
                 return STD_RET_ERROR;
@@ -402,7 +402,7 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
                 return 0;
         }
 
-        struct taskstat taskInfo;
+        struct sysmoni_taskstat taskInfo;
         taskInfo.cpu_usage    = 1000;
         taskInfo.free_stack   = 0;
         taskInfo.task_handle  = 0;
@@ -548,7 +548,7 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
                 return STD_RET_ERROR;
         }
 
-        struct taskstat taskInfo;
+        struct sysmoni_taskstat taskInfo;
         if (sysm_get_task_stat(fileInf->taskhdl, &taskInfo) != STD_RET_OK) {
                 return STD_RET_ERROR;
         }
@@ -681,7 +681,7 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
                         return STD_RET_ERROR;
                 }
 
-                struct taskstat taskdata;
+                struct sysmoni_taskstat taskdata;
                 if (sysm_get_task_stat(taskHdl, &taskdata) == STD_RET_OK) {
                         dir->dd    = (void*)taskHdl;
                         dir->items = TASK_FILE_COUNT;
@@ -937,7 +937,7 @@ static dirent_t procfs_readdir_taskname(void *fshdl, dir_t *dir)
         dirent.name = NULL;
         dirent.size = 0;
 
-        struct taskstat taskdata;
+        struct sysmoni_taskstat taskdata;
         if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
                 dirent.filetype = FILE_TYPE_REGULAR;
                 dirent.name     = taskdata.task_name;
@@ -970,7 +970,7 @@ static dirent_t procfs_readdir_taskid(void *fshdl, dir_t *dir)
         dirent.size = 0;
 
         if (dir->dd && dir->seek < (size_t)sysm_get_number_of_monitored_tasks()) {
-                struct taskstat taskdata;
+                struct sysmoni_taskstat taskdata;
                 if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
                         snprintf(dir->dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
 
@@ -1009,7 +1009,7 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir)
                 return dirent;
         }
 
-        struct taskstat taskdata;
+        struct sysmoni_taskstat taskdata;
         if (sysm_get_task_stat((task_t*)dir->dd, &taskdata) != STD_RET_OK) {
                 return dirent;
         }

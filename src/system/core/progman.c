@@ -243,11 +243,12 @@ static void task_program_startup(void *argv)
                 task_exit();
         }
 
-        task_data->f_user   = prog_data;
-        task_data->f_stdin  = prog_data->stdin;
-        task_data->f_stdout = prog_data->stdout;
-        task_data->f_stderr = prog_data->stdout;
-        task_data->f_cwd    = prog_data->cwd;
+        task_data->f_user    = prog_data;
+        task_data->f_stdin   = prog_data->stdin;
+        task_data->f_stdout  = prog_data->stdout;
+        task_data->f_stderr  = prog_data->stdout;
+        task_data->f_cwd     = prog_data->cwd;
+        task_data->f_program = true;
 
         if (prog_data->globals_size) {
                 if (!(task_mem = sysm_tskcalloc(1, prog_data->globals_size))) {

@@ -58,11 +58,14 @@ extern "C" {
 #define STACK_DEPTH_VERY_LARGE                                  (10 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 #define STACK_DEPTH_HUGE                                        (12 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 #define STACK_DEPTH_VERY_HUGE                                   (14 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_USER(depth)                                 (depth)
 
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                                               NULL
 #define OS_OK                                                   pdTRUE
 #define OS_NOT_OK                                               pdFALSE
+#define OS_TRUE                                                 pdTRUE
+#define OS_FALSE                                                pdFALSE
 
 /** MUTEX AND SEMAPHORES DEFINITIONS */
 #define MUTEX_LOCKED                                            OS_OK
@@ -156,6 +159,7 @@ struct task_data {
         void       *f_monitor;      /* pointer to task monitor data       */
         task_t     *f_parent_task;  /* program's parent task              */
         u32_t       f_cpu_usage;    /* counter used to calculate CPU load */
+        bool        f_program;      /* true if task is complex program    */
 };
 
 /*==============================================================================

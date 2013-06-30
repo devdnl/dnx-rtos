@@ -246,6 +246,9 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
                 break;
         }
 
+        /* enable echo if disabled by program */
+        ioctl(stdin, TTY_IORQ_ECHO_ON);
+
         return status;
 }
 
@@ -575,9 +578,23 @@ static enum cmd_status cmd_free(char *arg)
 {
         (void) arg;
 
-        u32_t free      = get_free_memory();
-        u32_t used      = get_used_memory();
         uint  drv_count = get_number_of_modules();
+        int *modmem = malloc(drv_count * sizeof(int));
+        if (!modmem) {
+                printf("Not enough free memory.\n");
+                return CMD_STATUS_EXECUTED;
+        }
+
+        struct sysmoni_used_memory sysmem;
+        get_detailed_memory_usage(&sysmem);
+
+        for (uint module = 0; module < drv_count; module++) {
+                modmem[module] = get_module_memory_usage(module);
+        }
+
+        u32_t free = get_free_memory();
+        u32_t used = get_used_memory();
+
 
         printf("Total: %d\n", get_memory_size());
         printf("Free : %d\n", free);
@@ -590,15 +607,17 @@ static enum cmd_status cmd_free(char *arg)
                "  System  : %d\n"
                "  Programs: %d\n"
                "  Modules : %d\n\n",
-               get_used_memory_by_kernel(),
-               get_used_memory_by_system(),
-               get_used_memory_by_programs(),
-               get_used_memory_by_modules());
+               sysmem.used_kernel_memory,
+               sysmem.used_system_memory,
+               sysmem.used_programs_memory,
+               sysmem.used_modules_memory);
 
         printf("Detailed modules memory usage:\n");
         for (uint module = 0; module < drv_count; module++) {
-                printf("  %s\t: %d\n", get_module_name(module), get_module_memory_usage(module));
+                printf("  %s\t: %d\n", get_module_name(module), modmem[module]);
         }
+
+        free(modmem);
 
         return CMD_STATUS_EXECUTED;
 }

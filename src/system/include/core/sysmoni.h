@@ -157,7 +157,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-struct taskstat {
+struct sysmoni_taskstat {
         u32_t   memory_usage;
         u32_t   opened_files;
         u32_t   cpu_usage;
@@ -165,6 +165,13 @@ struct taskstat {
         task_t *task_handle;
         u32_t   free_stack;
         i16_t   priority;
+};
+
+struct sysmoni_used_memory {
+        int used_kernel_memory;
+        int used_system_memory;
+        int used_modules_memory;
+        int used_programs_memory;
 };
 
 /*==============================================================================
@@ -186,8 +193,9 @@ extern stdret_t sysm_init(void);
 extern bool     sysm_is_task_exist(task_t*);
 extern stdret_t sysm_start_task_monitoring(task_t*);
 extern stdret_t sysm_stop_task_monitoring(task_t*);
-extern stdret_t sysm_get_task_stat(task_t*, struct taskstat*);
-extern stdret_t sysm_get_ntask_stat(i32_t, struct taskstat*);
+extern stdret_t sysm_get_task_stat(task_t*, struct sysmoni_taskstat*);
+extern stdret_t sysm_get_ntask_stat(i32_t, struct sysmoni_taskstat*);
+extern stdret_t sysm_get_used_memory(struct sysmoni_used_memory*);
 extern int      sysm_get_number_of_monitored_tasks(void);
 #endif
 
@@ -195,22 +203,19 @@ extern int      sysm_get_number_of_monitored_tasks(void);
 extern void *sysm_kmalloc(size_t);
 extern void *sysm_kcalloc(size_t, size_t);
 extern void  sysm_kfree(void*);
-extern i32_t sysm_get_used_kernel_memory(void);
 #endif
 
 #if (SYSM_MONITOR_SYSTEM_MEMORY_USAGE > 0)
 extern void *sysm_sysmalloc(size_t);
 extern void *sysm_syscalloc(size_t, size_t);
 extern void  sysm_sysfree(void*);
-extern i32_t sysm_get_used_system_memory(void);
 #endif
 
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 extern void *sysm_modmalloc(size_t, uint);
 extern void *sysm_modcalloc(size_t, size_t, uint);
 extern void  sysm_modfree(void*, uint);
-extern i32_t sysm_get_used_modules_memory(void);
-extern i32_t sysm_get_module_used_memory(uint);
+extern i32_t sysm_get_used_memory_by_module(uint);
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
@@ -220,7 +225,6 @@ extern void  sysm_tskfree_as(task_t*, void*);
 extern void *sysm_tskmalloc(size_t);
 extern void *sysm_tskcalloc(size_t, size_t);
 extern void  sysm_tskfree(void*);
-extern i32_t sysm_get_used_program_memory(void);
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)

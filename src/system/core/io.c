@@ -616,14 +616,12 @@ int io_fputc(int c, FILE *stream)
 {
         if (stream) {
                 char ch = (char)c;
-                if (vfs_fwrite(&ch, sizeof(char), 1, stream) < 1) {
-                        return EOF;
-                } else {
+                if (vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
                         return c;
                 }
-        } else {
-                return EOF;
         }
+
+        return EOF;
 }
 
 //==============================================================================
@@ -639,11 +637,8 @@ int io_fputc(int c, FILE *stream)
 int io_fputs(const char *s, FILE *file)
 {
         if (file) {
-                int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
-
-                if (n == 0)
-                        return EOF;
-                else
+                int n;
+                if ((n = vfs_fwrite(s, sizeof(char), strlen(s), file)) != 0)
                         return n;
         }
 
@@ -661,23 +656,17 @@ int io_fputs(const char *s, FILE *file)
 //==============================================================================
 int io_getc(FILE *stream)
 {
-        int chr    = EOF;
-        u16_t dcnt = 0;
-
         if (!stream) {
                 return EOF;
         }
 
-        while (!vfs_feof(stream) && vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                if (dcnt >= 60000) {
-                        sleep_ms(200);
-                } else if (dcnt >= 5000) {
-                        dcnt += 100;
-                        sleep_ms(100);
-                } else {
-                        dcnt += 20;
-                        sleep_ms(20);
-                }
+        if (vfs_feof(stream)) {
+                return EOF;
+        }
+
+        int chr = 0;
+        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
+                sleep_ms(10);
         }
 
         return chr;
@@ -696,27 +685,34 @@ int io_getc(FILE *stream)
 //==============================================================================
 char *io_fgets(char *str, int size, FILE *stream)
 {
-        if (!str || !size || !stream) {
+        if (!str || size < 2 || !stream) {
                 return NULL;
         }
 
-        for (int i = 0; i < size - 1; i++) {
-                str[i] = io_getc(stream);
+        if (vfs_feof(stream) == 0) {
+                u64_t lseek = vfs_ftell(stream);
 
-                if (str[i] == (char)EOF && i == 0) {
-                        return NULL;
-                } else if (str[i] == '\n') {
-                        str[i + 1] = '\0';
-                        break;
-                } else if (str[i] == (char)EOF) {
-                        str[i] = '\0';
-                        break;
+                int n;
+                while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0);
+
+                char *end;
+                if ((end = strchr(str, '\n'))) {
+                        end++;
+                        *end = '\0';
+                } else if ((end = strchr(str, EOF))) {
+                        *end = '\0';
+                } else {
+                        str[n] = '\0';
                 }
+
+                int len = strlen(str);
+
+                vfs_fseek(stream, lseek + len, SEEK_SET);
+
+                return str;
         }
 
-        str[size - 1] = '\0';
-
-        return str;
+        return NULL;
 }
 
 //==============================================================================
@@ -895,23 +891,18 @@ vsnprint_end:
 #if (CONFIG_SCANF_ENABLE > 0)
 int io_fscanf(FILE *stream, const char *format, ...)
 {
-        int n = 0;
-        va_list args;
-
         char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
-
-        if (str == NULL) {
+        if (!str)
                 return 0;
-        }
 
+        int n = 0;
         if (io_fgets(str, BUFSIZ, stream) == str) {
-                for(uint i = 0; i < strlen(str); i++) {
-                        if (str[i] == '\n') {
-                                str[i] = '\0';
-                                break;
-                        }
+                char *lf;
+                if ((lf = strchr(str, '\n')) != NULL) {
+                        *lf = '\0';
                 }
 
+                va_list args;
                 va_start(args, format);
                 n = io_vsscanf(str, format, args);
                 va_end(args);
@@ -961,9 +952,9 @@ int io_vsscanf(const char *str, const char *format, va_list args)
         int    read_fields = 0;
         char   chr;
         int    value;
-        char   *strs;
+        char  *strs;
         int    sign;
-        char   *string;
+        char  *string;
         uint   bfr_size;
 
         if (!str || !format) {
@@ -1000,6 +991,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                 value = 0;
                                 sign  = 1;
 
+                                while (*str == ' ') {
+                                        str++;
+                                }
+
                                 if (*str == '-') {
                                         sign = -1;
                                         str++;
@@ -1027,6 +1022,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'X':
                                 value = 0;
                                 sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
 
                                 if (*str == '-') {
                                         sign = -1;
@@ -1069,6 +1068,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'o':
                                 value = 0;
                                 sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
 
                                 if (*str == '-') {
                                         sign = -1;
@@ -1118,10 +1121,14 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'g':
                         case 'G':
                                 if (str) {
+                                        while (*str == ' ') {
+                                                str++;
+                                        }
+
                                         double *value = va_arg(args, double*);
                                         if (value) {
                                                 char *end;
-                                                *value = strtod(str, &end);
+                                                *value = io_strtod(str, &end);
                                                 str += ((int)end - (int)str);
 
                                                 if (*end != '\0')
