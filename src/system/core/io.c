@@ -952,9 +952,9 @@ int io_vsscanf(const char *str, const char *format, va_list args)
         int    read_fields = 0;
         char   chr;
         int    value;
-        char   *strs;
+        char  *strs;
         int    sign;
-        char   *string;
+        char  *string;
         uint   bfr_size;
 
         if (!str || !format) {
@@ -991,6 +991,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                 value = 0;
                                 sign  = 1;
 
+                                while (*str == ' ') {
+                                        str++;
+                                }
+
                                 if (*str == '-') {
                                         sign = -1;
                                         str++;
@@ -1018,6 +1022,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'X':
                                 value = 0;
                                 sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
 
                                 if (*str == '-') {
                                         sign = -1;
@@ -1060,6 +1068,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'o':
                                 value = 0;
                                 sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
 
                                 if (*str == '-') {
                                         sign = -1;
@@ -1109,10 +1121,14 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'g':
                         case 'G':
                                 if (str) {
+                                        while (*str == ' ') {
+                                                str++;
+                                        }
+
                                         double *value = va_arg(args, double*);
                                         if (value) {
                                                 char *end;
-                                                *value = strtod(str, &end);
+                                                *value = io_strtod(str, &end);
                                                 str += ((int)end - (int)str);
 
                                                 if (*end != '\0')

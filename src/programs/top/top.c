@@ -82,7 +82,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                 fflush(stdin);
                 key = getchar();
 
-                if (divider != 0) {
+                if (divider != 0 && key != 'k') {
                         divider--;
                         sleep_ms(100);
                         continue;
@@ -92,7 +92,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                 u8_t n = get_number_of_monitored_tasks();
 
-                printf(CLEAR_SCREEN"Press q to quit\n");
+                printf(CLEAR_SCREEN"Press q to quit or k to kill program\n");
 
                 printf("Total tasks: %u\n", n);
 
@@ -140,6 +140,22 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                         } else {
                                 break;
                         }
+                }
+
+                if (key == 'k') {
+                        ioctl(stdin, TTY_IORQ_ECHO_ON);
+
+                        int task_handle = 0;
+
+                        printf("Enter task handle: 0x");
+                        scanf("%8X", &task_handle);
+
+                        task_t *task = (task_t *)task_handle;
+                        if (task != get_parent_handle()) {
+                                delete_program(task);
+                        }
+
+                        ioctl(stdin, TTY_IORQ_ECHO_OFF);
                 }
 
                 clear_total_CPU_usage();
