@@ -566,9 +566,6 @@ stdret_t TTY_flush(void *drvhdl)
         struct tty_data *tty = drvhdl;
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                tty->key_stream.level       = 0;
-                tty->key_stream.read_index  = 0;
-                tty->key_stream.write_index = 0;
                 move_editline_to_streams(tty, true);
                 unlock_recursive_mutex(tty->secure_resources_mtx);
         }
@@ -681,6 +678,13 @@ static void input_service_task(void *arg)
                         break;
 
                 case END_OF_TEXT:
+                        add_charater_to_editline(tty, ETX);
+                        move_editline_to_streams(tty, false);
+                        break;
+
+                case END_OF_TRANSMISSION:
+                        add_charater_to_editline(tty, EOT);
+                        move_editline_to_streams(tty, false);
                         break;
 
                 default:

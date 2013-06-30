@@ -246,6 +246,9 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
                 break;
         }
 
+        /* enable echo if disabled by program */
+        ioctl(stdin, TTY_IORQ_ECHO_ON);
+
         return status;
 }
 

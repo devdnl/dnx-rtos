@@ -41,6 +41,8 @@ extern "C" {
 ==============================================================================*/
 /** stream values */
 #define EOF                                     (-1)
+#define ETX                                     0x03
+#define EOT                                     0x04
 
 /** stdio buffer size */
 #define BUFSIZ                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
