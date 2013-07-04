@@ -716,8 +716,6 @@ static void output_service_task(void *arg)
 
         fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
-        read_vt100_size();
-
         for (;;) {
                 if (current_tty_handle() == NULL) {
                         sleep_ms(100);

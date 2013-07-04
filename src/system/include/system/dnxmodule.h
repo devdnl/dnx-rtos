@@ -100,7 +100,7 @@ extern "C" {
 #define fwrite(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)   vfs_fwrite(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)
 
 #undef  fread
-#define fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)     vfs_fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)
+#define fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)    vfs_fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)
 
 #undef  fseek
 #define fseek(FILE__pfile, i64_t__offset, int__mode)                    vfs_fseek(FILE__pfile, i64_t__offset, int__mode)
