@@ -209,7 +209,7 @@ static int run_level_1(void)
 static int run_level_2(void)
 {
         /* initd info about stack usage */
-        printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
+        printk("[%d] initd: free stack: %d levels\n\n", get_OS_time_ms(), get_free_stack());
 
         /* change TTY for printk to last TTY */
         enable_printk("/dev/tty3");

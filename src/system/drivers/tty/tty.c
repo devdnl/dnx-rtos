@@ -1249,7 +1249,7 @@ static enum vt100cmd capture_VT100_commands(char chr)
 {
         enum vt100cmd vt100cmd = KEY_CAPTURE_PENDING;
 
-        if (  get_tick_counter() - tty_ctrl->VT100_cmd_capture.timer >= VT100_CMD_TIMEOUT
+        if (  get_OS_time_ms() - tty_ctrl->VT100_cmd_capture.timer >= VT100_CMD_TIMEOUT
            && tty_ctrl->VT100_cmd_capture.is_pending == true) {
 
                 if (  tty_ctrl->VT100_cmd_capture.buffer_index == 1
@@ -1333,7 +1333,7 @@ static enum vt100cmd capture_VT100_commands(char chr)
                 if (chr == '\e') {
                         tty_ctrl->VT100_cmd_capture.is_pending   = true;
                         tty_ctrl->VT100_cmd_capture.buffer_index = 0;
-                        tty_ctrl->VT100_cmd_capture.timer        = get_tick_counter();
+                        tty_ctrl->VT100_cmd_capture.timer        = get_OS_time_ms();
                 }
 
                 if (tty_ctrl->VT100_cmd_capture.is_pending == false) {

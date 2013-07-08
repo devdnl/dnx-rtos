@@ -52,7 +52,7 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 /** uptime counter */
-u32_t uptime_counter;
+u32_t uptime_counter_sec;
 u32_t uptime_divider;
 
 /*==============================================================================
@@ -93,22 +93,22 @@ void vApplicationStackOverflowHook(task_t *taskHdl, signed char *taskName)
 //==============================================================================
 void vApplicationTickHook(void)
 {
-        if (++uptime_divider >= configTICK_RATE_HZ) {
+        if (++uptime_divider >= (configTICK_RATE_HZ)) {
                 uptime_divider = 0;
-                uptime_counter++;
+                uptime_counter_sec++;
         }
 }
 
 //==============================================================================
 /**
- * @brief Function return uptime counter
+ * @brief Function return uptime counter in seconds
  *
  * @return uptime counter
  */
 //==============================================================================
 u32_t _get_uptime_counter(void)
 {
-        return uptime_counter;
+        return uptime_counter_sec;
 }
 
 #ifdef __cplusplus
