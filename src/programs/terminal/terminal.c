@@ -670,8 +670,6 @@ static enum cmd_status cmd_reboot(char *arg)
 {
         (void) arg;
 
-        printf("Rebooting...\n");
-        sleep_ms(500);
         restart();
 
         return CMD_STATUS_EXECUTED;

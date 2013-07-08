@@ -35,10 +35,12 @@ extern "C" {
 #include "user/initd.h"
 #include "drivers/tty_def.h"
 #include "drivers/sdspi_def.h"
+#include "drivers/uart_def.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define CPU_BASE_FREQ           8000000UL
 
 /*==============================================================================
   Local types, enums definitions
@@ -47,6 +49,11 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static int run_level_boot(void);
+static int run_level_0(void);
+static int run_level_1(void);
+static int run_level_2(void);
+static int run_level_exit(void);
 
 /*==============================================================================
   Local object definitions
@@ -74,50 +81,106 @@ void task_initd(void *arg)
 
         set_priority(INITD_PRIORITY);
 
-        /* mount main file system */
-        mount("lfs", "", "/");
+        if (run_level_boot() != STD_RET_OK)
+                goto start_failure;
 
+        if (run_level_0() != STD_RET_OK)
+                goto start_failure;
+
+        if (run_level_1() != STD_RET_OK)
+                goto start_failure;
+
+        if (run_level_2() != STD_RET_OK)
+                goto start_failure;
+
+start_failure:
+        run_level_exit();
+
+        task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief Run level at boot time
+ *
+ * @retval STD_RET_OK           run level finished successfully
+ * @retval STD_RET_ERROR        run level error
+ */
+//==============================================================================
+static int run_level_boot(void)
+{
+        mount("lfs", "", "/");
         mkdir("/bin");
         mkdir("/dev");
-        mkdir("/etc");
-        mkdir("/home");
         mkdir("/mnt");
         mkdir("/proc");
         mkdir("/tmp");
 
         mount("procfs", "", "/proc");
 
-        /* early initialization - basic drivers start */
-        if (init_driver("pll", NULL) != STD_RET_OK) {
-                while (TRUE);
-        }
+        return STD_RET_OK;
+}
 
+//==============================================================================
+/**
+ * @brief Run level 0
+ *
+ * @retval STD_RET_OK           run level finished successfully
+ * @retval STD_RET_ERROR        run level error
+ */
+//==============================================================================
+static int run_level_0(void)
+{
         init_driver("gpio", "/dev/gpio");
 
-        /* early initialization - terminal support */
         init_driver("uart1", "/dev/ttyS0");
+
+        FILE *ttyS0;
+        if ((ttyS0 = fopen("/dev/ttyS0", "r+"))) {
+                ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / CPU_BASE_FREQ));
+        }
+
         init_driver("tty0", "/dev/tty0");
         enable_printk("/dev/tty0");
 
-        /* something about board and system */
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
-               FONT_COLOR_CYAN "Daniel Zorychta "
-               FONT_COLOR_YELLOW "<daniel.zorychta@gmail.com>" RESET_ATTRIBUTES "\n\n",
-               get_OS_name(), get_kernel_name());
+               FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
+               get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
 
-        /* driver initialization */
         init_driver("tty1", "/dev/tty1");
         init_driver("tty2", "/dev/tty2");
         init_driver("tty3", "/dev/tty3");
+
+        if (init_driver("pll", NULL) == STD_RET_OK) {
+                if (ttyS0) {
+                        ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200);
+                }
+        }
+
+        if (ttyS0) {
+                fclose(ttyS0);
+        }
+
         init_driver("sdspi", "/dev/sda");
 
+        return STD_RET_OK;
+}
 
+//==============================================================================
+/**
+ * @brief Run level 1
+ *
+ * @retval STD_RET_OK           run level finished successfully
+ * @retval STD_RET_ERROR        run level error
+ */
+//==============================================================================
+static int run_level_1(void)
+{
         /* initializing SD card and detecting partitions */
         printk("Detecting SD card... ");
+
         FILE *sd = fopen("/dev/sda", "r+");
-        if (!sd) {
-                printk(FONT_COLOR_RED"Cannot open file!"RESET_ATTRIBUTES"\n");
-        } else {
+        if (sd) {
                 bool status;
                 ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
 
@@ -126,10 +189,25 @@ void task_initd(void *arg)
                 } else {
                         printk(FONT_COLOR_RED"Fail\n"RESET_ATTRIBUTES);
                 }
+
+                fclose(sd);
+        } else {
+                printk(FONT_COLOR_RED"Cannot open file!"RESET_ATTRIBUTES"\n");
         }
-        fclose(sd);
 
+        return STD_RET_OK;
+}
 
+//==============================================================================
+/**
+ * @brief Run level 2
+ *
+ * @retval STD_RET_OK           run level finished successfully
+ * @retval STD_RET_ERROR        run level error
+ */
+//==============================================================================
+static int run_level_2(void)
+{
         /* initd info about stack usage */
         printk("[%d] initd: free stack: %d levels\n\n", get_tick_counter(), get_free_stack());
 
@@ -137,13 +215,13 @@ void task_initd(void *arg)
         enable_printk("/dev/tty3");
 
         /* stdio program control */
-        FILE *tty[TTY_DEV_COUNT]                 = {NULL};
-        FILE *tty0                               = NULL;
-        task_t *program[TTY_DEV_COUNT - 1]       = {NULL};
-        enum prog_state state[TTY_DEV_COUNT - 1] = {PROGRAM_UNKNOWN_STATE};
-        int current_tty                          = -1;
+        FILE            *tty[TTY_DEV_COUNT]             = {NULL};
+        FILE            *tty0                           =  NULL;
+        task_t          *program[TTY_DEV_COUNT - 1]     = {NULL};
+        enum prog_state  state[TTY_DEV_COUNT - 1]       = {PROGRAM_UNKNOWN_STATE};
+        int              current_tty                    = -1;
 
-        while ((tty0 = fopen("/dev/tty0", "r+")) == NULL) {
+        while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
         }
 
@@ -216,7 +294,27 @@ void task_initd(void *arg)
                 sleep_ms(500);
         }
 
-        task_exit();
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Run level exit
+ *
+ * @retval STD_RET_OK           run level finished successfully
+ * @retval STD_RET_ERROR        run level error
+ */
+//==============================================================================
+static int run_level_exit(void)
+{
+        enter_critical_section();
+        disable_ISR();
+
+        while (true) {
+                sleep_ms(MAX_DELAY);
+        }
+
+        return STD_RET_OK;
 }
 
 #ifdef __cplusplus
