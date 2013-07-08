@@ -76,6 +76,11 @@ extern "C" {
 #define CONFIG_RTOS_TASK_NAME_LEN                       (16)
 
 /**
+ * Task schedule frequency [Hz]
+ */
+#define CONFIG_RTOS_TASK_SCHED_FREQ                     (1000)
+
+/**
  * Kernel interrupt priority
  */
 #define CONFIG_RTOS_KERNEL_IRQ_PRIORITY                 (0xFF) /* priority 15 (lowest) */

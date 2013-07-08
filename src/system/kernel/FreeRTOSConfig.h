@@ -104,7 +104,7 @@ extern size_t memman_free(void*);
 #define configUSE_IDLE_HOOK                     1
 #define configUSE_TICK_HOOK                     1
 #define configCPU_CLOCK_HZ                      CONFIG_CPU_TARGET_FREQ
-#define configTICK_RATE_HZ                      ((portTickType) 1000)
+#define configTICK_RATE_HZ                      ((portTickType) CONFIG_RTOS_TASK_SCHED_FREQ)
 #define configMAX_PRIORITIES                    ((unsigned portBASE_TYPE) CONFIG_RTOS_TASK_MAX_PRIORITIES)
 #define configMINIMAL_STACK_SIZE                ((unsigned short) CONFIG_RTOS_TASK_MIN_STACK_DEPTH)
 #define configMAX_TASK_NAME_LEN                 (CONFIG_RTOS_TASK_NAME_LEN)
