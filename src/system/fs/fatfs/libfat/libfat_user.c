@@ -81,8 +81,8 @@ extern "C" {
 //==============================================================================
 DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (fread(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
+        vfs_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (vfs_fread(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {
                 return RES_OK;
@@ -104,8 +104,8 @@ DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t
 //==============================================================================
 DRESULT _libfat_disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
+        vfs_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (vfs_fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
                 return RES_ERROR;
         } else {
                 return RES_OK;
