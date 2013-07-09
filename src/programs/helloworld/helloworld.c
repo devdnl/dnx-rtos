@@ -57,7 +57,7 @@ GLOBAL_VARIABLES {
   Exported object definitions
 ==============================================================================*/
 /* export program parameters */
-PROGRAM_PARAMS(helloworld, STACK_DEPTH_MEDIUM);
+PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
 
 /*==============================================================================
   Function definitions

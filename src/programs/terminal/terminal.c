@@ -66,24 +66,24 @@ struct cmd_entry {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void            print_prompt(void);
-static enum cmd_status find_internal_command(char *cmd, char *arg);
-static enum cmd_status find_external_command(char *cmd, char *arg);
-static enum cmd_status cmd_cd(char *arg);
-static enum cmd_status cmd_ls(char *arg);
-static enum cmd_status cmd_mkdir(char *arg);
-static enum cmd_status cmd_touch(char *arg);
-static enum cmd_status cmd_rm(char *arg);
-static enum cmd_status cmd_free(char *arg);
-static enum cmd_status cmd_uptime(char *arg);
-static enum cmd_status cmd_clear(char *arg);
-static enum cmd_status cmd_reboot(char *arg);
-static enum cmd_status cmd_df(char *arg);
-static enum cmd_status cmd_mount(char *arg);
-static enum cmd_status cmd_umount(char *arg);
-static enum cmd_status cmd_uname(char *arg);
-static enum cmd_status cmd_detect_card(char *arg);
-static enum cmd_status cmd_help(char *arg);
+static void            print_prompt             (void);
+static enum cmd_status find_internal_command    (char *cmd, char *arg);
+static enum cmd_status find_external_command    (char *cmd, char *arg);
+static enum cmd_status cmd_cd                   (char *arg);
+static enum cmd_status cmd_ls                   (char *arg);
+static enum cmd_status cmd_mkdir                (char *arg);
+static enum cmd_status cmd_touch                (char *arg);
+static enum cmd_status cmd_rm                   (char *arg);
+static enum cmd_status cmd_free                 (char *arg);
+static enum cmd_status cmd_uptime               (char *arg);
+static enum cmd_status cmd_clear                (char *arg);
+static enum cmd_status cmd_reboot               (char *arg);
+static enum cmd_status cmd_df                   (char *arg);
+static enum cmd_status cmd_mount                (char *arg);
+static enum cmd_status cmd_umount               (char *arg);
+static enum cmd_status cmd_uname                (char *arg);
+static enum cmd_status cmd_detect_card          (char *arg);
+static enum cmd_status cmd_help                 (char *arg);
 
 /*==============================================================================
   Local object definitions
@@ -114,7 +114,7 @@ static const struct cmd_entry commands[] = {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW);
+PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW,);
 
 /*==============================================================================
   Function definitions

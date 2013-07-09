@@ -1,5 +1,5 @@
-#ifndef DNX_H_
-#define DNX_H_
+#ifndef _DNX_H_
+#define _DNX_H_
 /*=========================================================================*//**
 @file    dnx.h
 
@@ -70,7 +70,7 @@ extern "C" {
 #define restart()                                                       _cpuctl_restart_system()
 #define get_platform_name()                                             CPUCTL_PLATFORM_NAME
 #define get_OS_name()                                                   "dnx"
-#define get_OS_version()                                                "0.9.35"
+#define get_OS_version()                                                "0.9.36"
 #define get_kernel_name()                                               "FreeRTOS"
 #define get_author_name()                                               "Daniel Zorychta"
 #define get_author_email()                                              "<daniel.zorychta@gmail.com"
@@ -97,7 +97,7 @@ extern void dnx_init(void);
 }
 #endif
 
-#endif /* DNX_H_ */
+#endif /* _DNX_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -1,5 +1,5 @@
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 /*=========================================================================*//**
 @file    config.h
 
@@ -61,14 +61,24 @@ extern "C" {
 
 /**=== RTOS CONFIGURATION ====================================================*/
 /**
- * Task priorities
- */
-#define CONFIG_RTOS_TASK_MAX_PRIORITIES                 (7)
-
-/**
  * Task minimal stack depth
  */
 #define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (64)
+
+/**
+ * File system stack usage
+ */
+#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (48)
+
+/**
+ * Interrupt stack usage
+ */
+#define CONFIG_RTOS_IRQ_STACK_DEPTH                     (16)
+
+/**
+ * Task priorities
+ */
+#define CONFIG_RTOS_TASK_MAX_PRIORITIES                 (7)
 
 /**
  * Task name length
@@ -174,7 +184,7 @@ extern "C" {
 }
 #endif
 
-#endif /* CONFIG_H_ */
+#endif /* _CONFIG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

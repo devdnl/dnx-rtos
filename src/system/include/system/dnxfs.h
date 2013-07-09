@@ -41,7 +41,7 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#ifdef DNX_H_
+#ifdef _DNX_H_
 #error "dnx.h and dnxfs.h cannot never included together!"
 #endif
 
