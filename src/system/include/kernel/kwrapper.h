@@ -33,7 +33,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
 #include "kernel/ktypes.h"
 #include "core/systypes.h"
 #include "FreeRTOS.h"
@@ -152,16 +151,16 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        FILE       *f_stdin;        /* stdin file                         */
-        FILE       *f_stdout;       /* stdout file                        */
-        FILE       *f_stderr;       /* stderr file                        */
-        const char *f_cwd;          /* current working path               */
-        void       *f_global_vars;  /* address to global variables        */
-        void       *f_user;         /* pointer to user data               */
-        void       *f_monitor;      /* pointer to task monitor data       */
-        task_t     *f_parent_task;  /* program's parent task              */
-        u32_t       f_cpu_usage;    /* counter used to calculate CPU load */
-        bool        f_program;      /* true if task is complex program    */
+        struct vfs_file *f_stdin;        /* stdin file                         */
+        struct vfs_file *f_stdout;       /* stdout file                        */
+        struct vfs_file *f_stderr;       /* stderr file                        */
+        const char      *f_cwd;          /* current working path               */
+        void            *f_global_vars;  /* address to global variables        */
+        void            *f_user;         /* pointer to user data               */
+        void            *f_monitor;      /* pointer to task monitor data       */
+        task_t          *f_parent_task;  /* program's parent task              */
+        u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
+        bool             f_program;      /* true if task is complex program    */
 };
 
 /*==============================================================================

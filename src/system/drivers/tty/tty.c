@@ -66,6 +66,18 @@ MODULE_NAME(TTY);
 #define VT100_CURSOR_ON                         "\e[?25h"
 #define VT100_SHIFT_CURSOR_RIGHT(t)             "\e["#t"C"
 
+#ifndef EOF
+#define EOF                                     (-1)
+#endif
+
+#ifndef ETX
+#define ETX                                     0x03
+#endif
+
+#ifndef EOT
+#define EOT                                     0x04
+#endif
+
 #define DEFAULT_COLUMN_NUMBER                   80
 #define DEFAULT_ROW_NUMBER                      24
 
@@ -219,7 +231,7 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
                         goto ctrl_error;
                 }
 
-                if (!(tty_ctrl->io_stream = fopen(TTYFILE, "r+"))) {
+                if (!(tty_ctrl->io_stream = vfs_fopen(TTYFILE, "r+"))) {
                         goto ctrl_error;
                 }
 
@@ -286,7 +298,7 @@ ctrl_error:
                 }
 
                 if (tty_ctrl->io_stream) {
-                        fclose(tty_ctrl->io_stream);
+                        vfs_fclose(tty_ctrl->io_stream);
                 }
 
                 free(tty_ctrl);
@@ -320,7 +332,7 @@ stdret_t TTY_release(void *drvhdl)
                 delete_semaphore(tty_ctrl->process_output_sem);
                 delete_task(tty_ctrl->input_service_handle);
                 delete_task(tty_ctrl->output_service_handle);
-                fclose(tty_ctrl->io_stream);
+                vfs_fclose(tty_ctrl->io_stream);
 
                 unlock_recursive_mutex(tty->secure_resources_mtx);
                 delete_recursive_mutex(tty->secure_resources_mtx);
@@ -611,7 +623,7 @@ static void input_service_task(void *arg)
 
         for (;;) {
                 char chr = 0;
-                if (fread(&chr, sizeof(char), 1, tty_ctrl->io_stream) == 0) {
+                if (vfs_fread(&chr, sizeof(char), 1, tty_ctrl->io_stream) == 0) {
                         continue;
                 }
 
@@ -638,7 +650,7 @@ static void input_service_task(void *arg)
 
                 case ARROW_LEFT_KEY:
                         if (tty->edit_line.cursor_position > 0) {
-                                fwrite("\b", sizeof(char), 1, tty_ctrl->io_stream);
+                                vfs_fwrite("\b", sizeof(char), 1, tty_ctrl->io_stream);
                                 tty->edit_line.cursor_position--;
                         }
                         break;
@@ -646,7 +658,7 @@ static void input_service_task(void *arg)
                 case ARROW_RIGHT_KEY:
                         if (tty->edit_line.cursor_position < tty->edit_line.length) {
                                 const char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                                fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
                                 tty->edit_line.cursor_position++;
                         }
                         break;
@@ -714,7 +726,7 @@ static void output_service_task(void *arg)
                           VT100_DISABLE_LINE_WRAP
                           VT100_CURSOR_HOME;
 
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
         for (;;) {
                 if (current_tty_handle() == NULL) {
@@ -750,15 +762,15 @@ static void output_service_task(void *arg)
 static void move_cursor_to_beginning_of_editline(struct tty_data *tty)
 {
         const char *cmd = VT100_CURSOR_OFF;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
         while (tty->edit_line.cursor_position > 0) {
-                fwrite("\b", sizeof(char), 1, tty_ctrl->io_stream);
+                vfs_fwrite("\b", sizeof(char), 1, tty_ctrl->io_stream);
                 tty->edit_line.cursor_position--;
         }
 
         cmd = VT100_CURSOR_ON;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 }
 
 //==============================================================================
@@ -771,16 +783,16 @@ static void move_cursor_to_beginning_of_editline(struct tty_data *tty)
 static void move_cursor_to_end_of_editline(struct tty_data *tty)
 {
         const char *cmd = VT100_CURSOR_OFF;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
         while (tty->edit_line.cursor_position < tty->edit_line.length) {
                 char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+                vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
                 tty->edit_line.cursor_position++;
         }
 
         cmd = VT100_CURSOR_ON;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 }
 
 //==============================================================================
@@ -805,13 +817,13 @@ static void remove_character_from_editline(struct tty_data *tty)
         tty->edit_line.length--;
 
         const char *cmd = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
         cmd = &tty->edit_line.buffer[tty->edit_line.cursor_position];
-        fwrite(cmd, sizeof(char), tty->edit_line.length - tty->edit_line.cursor_position, tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), tty->edit_line.length - tty->edit_line.cursor_position, tty_ctrl->io_stream);
 
         cmd = VT100_RESTORE_CURSOR_POSITION;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 }
 
 //==============================================================================
@@ -838,13 +850,13 @@ static void delete_character_from_editline(struct tty_data *tty)
         tty->edit_line.length--;
 
         const char *cmd = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
         cmd = &tty->edit_line.buffer[tty->edit_line.cursor_position];
-        fwrite(cmd, sizeof(char), tty->edit_line.length - tty->edit_line.cursor_position, tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), tty->edit_line.length - tty->edit_line.cursor_position, tty_ctrl->io_stream);
 
         cmd = VT100_RESTORE_CURSOR_POSITION;
-        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 }
 
 //==============================================================================
@@ -871,20 +883,20 @@ static void add_charater_to_editline(struct tty_data *tty, char chr)
 
                 if (tty->edit_line.echo_enabled == SET) {
                         const char *cmd = VT100_SAVE_CURSOR_POSITION;
-                        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
 
                         cmd = &tty->edit_line.buffer[tty->edit_line.cursor_position - 1];
-                        fwrite(cmd, sizeof(char), tty->edit_line.length - (tty->edit_line.cursor_position - 1), tty_ctrl->io_stream);
+                        vfs_fwrite(cmd, sizeof(char), tty->edit_line.length - (tty->edit_line.cursor_position - 1), tty_ctrl->io_stream);
 
                         cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
-                        fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_ctrl->io_stream);
                 }
         } else {
                 tty->edit_line.buffer[tty->edit_line.cursor_position++] = chr;
                 tty->edit_line.length++;
 
                 if (tty->edit_line.echo_enabled == SET) {
-                        fwrite(&chr, sizeof(char), 1, tty_ctrl->io_stream);
+                        vfs_fwrite(&chr, sizeof(char), 1, tty_ctrl->io_stream);
                 }
         }
 }
@@ -941,7 +953,7 @@ static void show_new_lines(struct tty_data *tty)
                         tty->screen.new_line_counter--;
 
                         if (line) {
-                                fwrite(line, sizeof(char), strlen(line), tty_ctrl->io_stream);
+                                vfs_fwrite(line, sizeof(char), strlen(line), tty_ctrl->io_stream);
                         }
                 }
 
@@ -967,15 +979,15 @@ static void refresh_last_line(struct tty_data *tty)
                                    VT100_ERASE_LINE_FROM_CUR
                                    VT100_RESET_ATTRIBUTES;
 
-                fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+                vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
                 /* refresh line */
                 data = tty->screen.line[get_line_index(tty, 1)];
-                fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+                vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
                 /* cursor on */
                 data = VT100_CURSOR_ON;
-                fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+                vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
                 tty->screen.refresh_last_line = RESET;
 
@@ -1367,7 +1379,7 @@ static void refresh_tty(struct tty_data *tty)
                            VT100_DISABLE_LINE_WRAP
                            VT100_CURSOR_HOME;
 
-        fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+        vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 int rows;
@@ -1382,12 +1394,12 @@ static void refresh_tty(struct tty_data *tty)
                         data = tty->screen.line[get_line_index(tty, i)];
 
                         if (data) {
-                                fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+                                vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
                         }
                 }
 
                 data = tty->edit_line.buffer;
-                fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+                vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
                 tty->screen.new_line_counter = 0;
 
@@ -1416,7 +1428,7 @@ static void read_vt100_size(void)
                            VT100_CURSOR_OFF
                            VT100_SET_CURSOR_POSITION(250, 250)
                            VT100_QUERY_CURSOR_POSITION;
-        fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+        vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
         /* waiting for response from input function */
         tty_ctrl->tty_size_updated = false;
@@ -1427,7 +1439,7 @@ static void read_vt100_size(void)
         /* restore cursor position, cursor on */
         data = VT100_RESTORE_CURSOR_POSITION
                VT100_CURSOR_ON;
-        fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+        vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 #endif
 }
 
@@ -1527,7 +1539,7 @@ static void move_editline_to_streams(struct tty_data *tty, bool flush)
                                 data = "\r"VT100_ERASE_LINE_FROM_CUR;
                         }
 
-                        fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
+                        vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
                 }
 
                 memset(tty->edit_line.buffer, '\0', TTY_EDIT_LINE_LEN);

@@ -251,7 +251,7 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
                 goto error;
         }
 
-        if (!(sdspi->gpio_file = fopen(SDSPI_GPIO_FILE, "r+"))) {
+        if (!(sdspi->gpio_file = vfs_fopen(SDSPI_GPIO_FILE, "r+"))) {
                 goto error;
         }
 
@@ -299,7 +299,7 @@ error:
                 }
 
                 if (sdspi->gpio_file) {
-                        fclose(sdspi->gpio_file);
+                        vfs_fclose(sdspi->gpio_file);
                 }
 
                 free(sdspi);
@@ -340,7 +340,7 @@ stdret_t SDSPI_release(void *drvhdl)
         enter_critical_section();
         unlock_mutex(hdl->card_protect_mtx);
         delete_mutex(hdl->card_protect_mtx);
-        fclose(hdl->gpio_file);
+        vfs_fclose(hdl->gpio_file);
         turn_off_SPI_clock();
         free(hdl);
         exit_critical_section();
@@ -470,10 +470,10 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
                         bool *result = va_arg(args, bool*);
                         *result      = false;
 
-                        remove(SDSPI_PARTITION_1_PATH);
-                        remove(SDSPI_PARTITION_2_PATH);
-                        remove(SDSPI_PARTITION_3_PATH);
-                        remove(SDSPI_PARTITION_4_PATH);
+                        vfs_remove(SDSPI_PARTITION_1_PATH);
+                        vfs_remove(SDSPI_PARTITION_2_PATH);
+                        vfs_remove(SDSPI_PARTITION_3_PATH);
+                        vfs_remove(SDSPI_PARTITION_4_PATH);
 
                         if (initialize_card(hdl) == STD_RET_OK) {
                                 if (detect_partitions(hdl) == STD_RET_OK) {
@@ -854,8 +854,8 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
         }
 
         /* select the card and wait for ready */
-        ioctl(sdspi->gpio_file, GPIO_IORQ_SD_DESELECT);
-        ioctl(sdspi->gpio_file, GPIO_IORQ_SD_SELECT);
+        vfs_ioctl(sdspi->gpio_file, GPIO_IORQ_SD_DESELECT);
+        vfs_ioctl(sdspi->gpio_file, GPIO_IORQ_SD_SELECT);
 
         if (wait_ready() != 0xFF) {
                 return 0xFF;
@@ -1217,7 +1217,7 @@ static size_t write_partial_sectors(struct sdspi_data *hdl, const void *src, siz
 //==============================================================================
 static stdret_t initialize_card(struct sdspi_data *hdl)
 {
-        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         for (int n = 0; n < 10; n++) {
                 spi_rw(0xFF);
         }
@@ -1274,7 +1274,7 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
                 }
         }
 
-        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         spi_rw(0xFF);
 
         if (hdl->card_initialized == false) {
@@ -1322,28 +1322,28 @@ static stdret_t detect_partitions(struct sdspi_data *hdl)
                         hdl->partition[0].first_sector    = MBR_GET_PARTITION_1_LBA_FIRST_SECTOR(MBR);
                         hdl->partition[0].size_in_sectors = MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(MBR);
                         drvif.handle                      = &hdl->partition[0];
-                        mknod(SDSPI_PARTITION_1_PATH, &drvif);
+                        vfs_mknod(SDSPI_PARTITION_1_PATH, &drvif);
                 }
 
                 if (MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(MBR) > 0) {
                         hdl->partition[1].first_sector    = MBR_GET_PARTITION_2_LBA_FIRST_SECTOR(MBR);
                         hdl->partition[1].size_in_sectors = MBR_GET_PARTITION_2_NUMBER_OF_SECTORS(MBR);
                         drvif.handle                      = &hdl->partition[1];
-                        mknod(SDSPI_PARTITION_2_PATH, &drvif);
+                        vfs_mknod(SDSPI_PARTITION_2_PATH, &drvif);
                 }
 
                 if (MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(MBR) > 0) {
                         hdl->partition[2].first_sector    = MBR_GET_PARTITION_3_LBA_FIRST_SECTOR(MBR);
                         hdl->partition[2].size_in_sectors = MBR_GET_PARTITION_3_NUMBER_OF_SECTORS(MBR);
                         drvif.handle                      = &hdl->partition[2];
-                        mknod(SDSPI_PARTITION_3_PATH, &drvif);
+                        vfs_mknod(SDSPI_PARTITION_3_PATH, &drvif);
                 }
 
                 if (MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(MBR) > 0) {
                         hdl->partition[3].first_sector    = MBR_GET_PARTITION_4_LBA_FIRST_SECTOR(MBR);
                         hdl->partition[3].size_in_sectors = MBR_GET_PARTITION_4_NUMBER_OF_SECTORS(MBR);
                         drvif.handle                      = &hdl->partition[3];
-                        mknod(SDSPI_PARTITION_4_PATH, &drvif);
+                        vfs_mknod(SDSPI_PARTITION_4_PATH, &drvif);
                 }
 
                 status = STD_RET_OK;
@@ -1386,7 +1386,7 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
                 n /= size;
         }
 
-        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         spi_rw(0xFF);
         return n;
 }
@@ -1423,7 +1423,7 @@ static size_t card_write(struct sdspi_data *hdl, const void *src, size_t size, s
                 n /= size;
         }
 
-        ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
         spi_rw(0xFF);
         return n;
 }

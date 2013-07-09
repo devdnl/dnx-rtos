@@ -97,7 +97,7 @@ stdret_t fatfs_init(void **fshdl, const char *src_path)
         if (hdl) {
                 *fshdl = hdl;
 
-                if ((hdl->fsfile = fopen(src_path, "r+"))) {
+                if ((hdl->fsfile = vfs_fopen(src_path, "r+"))) {
                         if (libfat_mount(hdl->fsfile, &hdl->fatfs) == FR_OK) {
                                 return STD_RET_OK;
                         }
@@ -105,7 +105,7 @@ stdret_t fatfs_init(void **fshdl, const char *src_path)
 
                 /* error */
                 if (hdl->fsfile) {
-                        fclose(hdl->fsfile);
+                        vfs_fclose(hdl->fsfile);
                 }
 
                 free(hdl);
@@ -132,7 +132,7 @@ stdret_t fatfs_release(void *fshdl)
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
                 libfat_umount(&hdl->fatfs);
-                fclose(hdl->fsfile);
+                vfs_fclose(hdl->fsfile);
                 free(hdl);
                 return STD_RET_OK;
         }
@@ -725,7 +725,7 @@ stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 
         struct vfs_stat fstat;
         fstat.st_size = 0;
-        fstat(hdl->fsfile, &fstat);
+        vfs_fstat(hdl->fsfile, &fstat);
 
         if (libfat_getfree(&hdl->fatfs, &free_clusters) == FR_OK) {
                 statfs->f_bsize  = _LIBFAT_MAX_SS;
