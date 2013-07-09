@@ -79,6 +79,8 @@ extern "C" {
 /** Rx DMA finish interrupt routine */
 #define SDSPI_DMA_ISR                   DMA2_Channel1_IRQHandler
 #define SDSPI_DMA_IRQ                   DMA2_Channel1_IRQn
+
+#define SDSPI_DMA_IRQ_PRIORITY          CONFIG_USER_IRQ_PRIORITY
 #endif
 
 /*==============================================================================

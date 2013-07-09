@@ -145,8 +145,8 @@ MODULE_NAME(SDSPI);
 #define MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET        0x08
 #define MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET        0x0C
 
-#define LOAD_U32(buff, offset)  (u32_t)(((u32_t)buff[offset + 0]) | ((u32_t)buff[offset + 1] << 8) | ((u32_t)buff[offset + 2] << 16) | ((u32_t)buff[offset + 3] << 24))
-#define LOAD_U16(buff, offset)  (u16_t)(((u16_t)buff[offset + 0]) | ((u16_t)buff[offset + 1] << 8))
+#define LOAD_U32(buff, offset)                          (u32_t)(((u32_t)buff[offset + 0]) | ((u32_t)buff[offset + 1] << 8) | ((u32_t)buff[offset + 2] << 16) | ((u32_t)buff[offset + 3] << 24))
+#define LOAD_U16(buff, offset)                          (u16_t)(((u16_t)buff[offset + 0]) | ((u16_t)buff[offset + 1] << 8))
 
 #define MBR_GET_BOOT_SIGNATURE(sector)                  LOAD_U16(sector, MBR_BOOT_SIGNATURE_OFFSET)
 #define MBR_GET_PARTITION_1_LBA_FIRST_SECTOR(sector)    LOAD_U32(sector, MBR_PARTITION_1_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET)
@@ -245,6 +245,8 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
         } else if ((u32_t)SDSPI_DMA == DMA2_BASE) {
                 RCC->AHBENR |= RCC_AHBENR_DMA2EN;
         }
+
+        NVIC_SetPriority(SDSPI_DMA_IRQ, SDSPI_DMA_IRQ_PRIORITY);
 #endif
 
         if (!(sdspi->card_protect_mtx = new_mutex())) {

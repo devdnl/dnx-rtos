@@ -45,9 +45,6 @@ MODULE_NAME(UART);
 #define force_lock_recursive_mutex(mtx)         while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
 #define force_lock_mutex(mtx)                   while (lock_mutex(mtx, 10) != MUTEX_LOCKED)
 
-/** IRQ priorities */
-#define IRQ_PRIORITY                            0xDF
-
 /** translation of configuration bits to function-like macros */
 #define wakeup_USART_on_address_mark(usart)     usart->CR1 |=  USART_CR1_WAKE
 #define wakeup_USART_on_idle_line(usart)        usart->CR1 &= ~USART_CR1_WAKE
@@ -834,31 +831,31 @@ static stdret_t enable_USART_interrupts(USART_t *USART)
 #if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
         case USART1_BASE:
                 NVIC_EnableIRQ(USART1_IRQn);
-                NVIC_SetPriority(USART1_IRQn, IRQ_PRIORITY);
+                NVIC_SetPriority(USART1_IRQn, UART_IRQ_PRIORITY);
                 break;
 #endif
 #if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
         case USART2_BASE:
                 NVIC_EnableIRQ(USART2_IRQn);
-                NVIC_SetPriority(USART2_IRQn, IRQ_PRIORITY);
+                NVIC_SetPriority(USART2_IRQn, UART_IRQ_PRIORITY);
                 break;
 #endif
 #if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
         case USART3_BASE:
                 NVIC_EnableIRQ(USART3_IRQn);
-                NVIC_SetPriority(USART3_IRQn, IRQ_PRIORITY);
+                NVIC_SetPriority(USART3_IRQn, UART_IRQ_PRIORITY);
                 break;
 #endif
 #if defined(RCC_APB1ENR_UART4EN)  && (UART_4_ENABLE > 0)
         case UART4_BASE:
                 NVIC_EnableIRQ(UART4_IRQn);
-                NVIC_SetPriority(UART4_IRQn, IRQ_PRIORITY);
+                NVIC_SetPriority(UART4_IRQn, UART_IRQ_PRIORITY);
                 break;
 #endif
 #if defined(RCC_APB1ENR_UART5EN)  && (UART_5_ENABLE > 0)
         case UART5_BASE:
                 NVIC_EnableIRQ(UART5_IRQn);
-                NVIC_SetPriority(UART5_IRQn, IRQ_PRIORITY);
+                NVIC_SetPriority(UART5_IRQn, UART_IRQ_PRIORITY);
                 break;
 #endif
         default:

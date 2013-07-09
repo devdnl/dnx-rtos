@@ -53,6 +53,8 @@ extern "C" {
 /** user UART5 enable (1) or disable (0) */
 #define UART_5_ENABLE                           0
 
+/** IRQ priority */
+#define UART_IRQ_PRIORITY                       CONFIG_USER_IRQ_PRIORITY
 
 /** UART wake method: idle line (0) or address mark (1) */
 #define UART_DEFAULT_WAKE_METHOD                0
