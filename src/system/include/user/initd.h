@@ -1,5 +1,5 @@
-#ifndef INITD_H_
-#define INITD_H_
+#ifndef _INITD_H_
+#define _INITD_H_
 /*=========================================================================*//**
 @file    initd.h
 
@@ -39,7 +39,7 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** initd stack size */
-#define INITD_STACK_DEPTH               STACK_DEPTH_LOW
+#define INITD_STACK_DEPTH               STACK_DEPTH_VERY_LOW + CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH + CONFIG_RTOS_IRQ_STACK_DEPTH
 
 /** initd name */
 #define INITD_NAME                      "initd"
@@ -67,7 +67,7 @@ extern void task_initd(void *arg);
 }
 #endif
 
-#endif /* INITD_H_ */
+#endif /* _INITD_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

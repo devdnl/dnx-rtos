@@ -1,5 +1,5 @@
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 /*=========================================================================*//**
 @file    config.h
 
@@ -54,24 +54,34 @@ extern "C" {
 #define CONFIG_HEAP_ALIGN                               (4)
 
 /**
- * Heap block size
+ * Heap block size [bytes]
  */
 #define CONFIG_HEAP_BLOCK_SIZE                          (16)
 
 
 /**=== RTOS CONFIGURATION ====================================================*/
 /**
+ * Task minimal stack depth [levels]
+ */
+#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (64)
+
+/**
+ * File system stack depth [levels]
+ */
+#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (48)
+
+/**
+ * Interrupt stack depth [levels]
+ */
+#define CONFIG_RTOS_IRQ_STACK_DEPTH                     (16)
+
+/**
  * Task priorities
  */
 #define CONFIG_RTOS_TASK_MAX_PRIORITIES                 (7)
 
 /**
- * Task minimal stack depth
- */
-#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (64)
-
-/**
- * Task name length
+ * Task name length [bytes]
  */
 #define CONFIG_RTOS_TASK_NAME_LEN                       (16)
 
@@ -81,17 +91,17 @@ extern "C" {
 #define CONFIG_RTOS_TASK_SCHED_FREQ                     (1000)
 
 /**
- * Kernel interrupt priority
+ * Kernel interrupt priority (CPU depend)
  */
 #define CONFIG_RTOS_KERNEL_IRQ_PRIORITY                 (0xFF) /* priority 15 (lowest) */
 
 /**
- * System call interrupt priority
+ * System call interrupt priority (CPU depend)
  */
 #define CONFIG_RTOS_SYSCALL_IRQ_PRIORITY                (0xEF) /* priority 14 */
 
 /**
- * User programs interrupt priority
+ * User programs interrupt priority (CPU depend)
  */
 #define CONFIG_USER_IRQ_PRIORITY                        (0xDF) /* priority 13 */
 
@@ -120,7 +130,7 @@ extern "C" {
 /**
  * Enable (1) or disable (0) color definitions
  */
-#define CONFIG_COLOR_TERM_ENABLE                        (1)
+#define CONFIG_COLOR_TERMINAL_ENABLE                    (1)
 
 /**
  * Maximum stream buffer size
@@ -174,7 +184,7 @@ extern "C" {
 }
 #endif
 
-#endif /* CONFIG_H_ */
+#endif /* _CONFIG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

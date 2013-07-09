@@ -208,12 +208,6 @@ static int run_level_1(void)
 //==============================================================================
 static int run_level_2(void)
 {
-        /* initd info about stack usage */
-        printk("[%d] initd: free stack: %d levels\n\n", get_OS_time_ms(), get_free_stack());
-
-        /* change TTY for printk to last TTY */
-        enable_printk("/dev/tty3");
-
         /* stdio program control */
         FILE            *tty[TTY_DEV_COUNT]             = {NULL};
         FILE            *tty0                           =  NULL;
@@ -224,6 +218,12 @@ static int run_level_2(void)
         while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
         }
+
+        /* initd info about stack usage */
+        printk("[%d] initd: free stack: %d levels\n\n", get_OS_time_ms(), get_free_stack());
+
+        /* change TTY for printk */
+        enable_printk("/dev/tty3");
 
         for (;;) {
                 ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);

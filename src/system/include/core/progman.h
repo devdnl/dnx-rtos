@@ -1,5 +1,5 @@
-#ifndef PROGMAN_H_
-#define PROGMAN_H_
+#ifndef _PROGMAN_H_
+#define _PROGMAN_H_
 /*=========================================================================*//**
 @file    progman.h
 
@@ -33,6 +33,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "config.h"
 #include <stdio.h>
 
 /*==============================================================================
@@ -49,9 +50,10 @@ extern "C" {
 #define GLOBAL_VARIABLES \
         struct __global_vars__
 
-#define PROGRAM_PARAMS(name, stack)\
+#define FS_STACK_NOT_USED  0 *
+#define PROGRAM_PARAMS(name, stack_base, fs_switch)\
         const uint prog_##name##_gs = sizeof(struct __global_vars__);\
-        const uint prog_##name##_stack = (stack)
+        const uint prog_##name##_stack = (stack_base) + (fs_switch (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH)
 
 #define EXPORT_PROGRAM_PARAMS(name)\
         extern const uint prog_##name##_gs;\
@@ -110,7 +112,7 @@ extern void    prgm_abort(void);
 }
 #endif
 
-#endif /* PROGMAN_H_ */
+#endif /* _PROGMAN_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
