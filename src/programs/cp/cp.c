@@ -132,19 +132,23 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
         }
 
         fseek(src_file, 0, SEEK_END);
-        uint file_size = ftell(src_file);
+        u64_t lfile_size = ftell(src_file);
         fseek(src_file, 0, SEEK_SET);
 
-        uint start_time   = get_OS_time_ms();
-        uint refresh_time = start_time;
-        uint copy_size    = 0;
-        int  n;
+        uint  start_time   = get_OS_time_ms();
+        uint  refresh_time = start_time;
+        u64_t lcopy_size    = 0;
+        int   n;
 
         while ((n = fread(buffer, sizeof(char), buffer_size, src_file))) {
-                copy_size += n;
+                lcopy_size += n;
 
                 if (get_OS_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
                         refresh_time = get_OS_time_ms();
+
+                        u32_t file_size = lfile_size / 1024;
+                        u32_t copy_size = lcopy_size / 1024;
+
                         printf("\r%d.%2d%% copied...",
                                ((copy_size*100)/file_size),
                                ((copy_size*10000)/file_size) % 100);
@@ -157,12 +161,24 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
         }
 
         uint stop_time = get_OS_time_ms() - start_time;
-        printf("\rCopied %d bytes in %d.%3d seconds (%d.%3d KiB/s)\n",
+        u32_t copy_size = lcopy_size;
+
+        if (lcopy_size >= 1024) {
+                copy_size = lcopy_size / 1024;
+        }
+
+        const char *pre = "";
+        if (copy_size >= 1024) {
+                pre = "Ki";
+        }
+
+        printf("\rCopied %d%sB in %d.%3d seconds (%d.%3d KiB/s)\n",
                copy_size,
+               pre,
                stop_time / 1000,
                stop_time % 1000,
-               ((copy_size / stop_time) * 1000) / 1024,
-               ((copy_size / stop_time) * 1000) % 1024);
+               (((u32_t)lcopy_size / stop_time) * 1000) / 1024,
+               (((u32_t)lcopy_size / stop_time) * 1000) % 1024);
 
         fclose(src_file);
         fclose(dst_file);
