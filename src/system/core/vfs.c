@@ -43,9 +43,8 @@ extern "C" {
 #define MTX_BLOCK_TIME                          10
 #define force_lock_recursive_mutex(mtx)         while (lock_recursive_mutex(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED)
 
-#define calloc(nmemb, msize)                    sysm_syscalloc(nmemb, msize)
-#define malloc(size)                            sysm_sysmalloc(size)
-#define free(mem)                               sysm_sysfree(mem)
+#define first_character(str)                    str[0]
+#define last_character(str)                     str[strlen(str) - 1]
 
 /*==============================================================================
   Local types, enums definitions
@@ -76,6 +75,7 @@ struct FS_data {
 enum path_correction {
           ADD_SLASH,
           SUB_SLASH,
+          NO_ACTION,
 };
 
 /*==============================================================================
@@ -159,7 +159,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                                                          external_path,
                                                          &dir) == STD_RET_OK) {
 
-                                new_fs = calloc(1, sizeof(struct FS_data));
+                                new_fs = sysm_syscalloc(1, sizeof(struct FS_data));
                                 base_fs->mounted_FS_counter++;
                                 dir.cldir(dir.handle, &dir);
                         }
@@ -168,7 +168,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                   && strlen(new_path) == 1
                   && new_path[0] == '/' ) {
 
-                new_fs = calloc(1, sizeof(struct FS_data));
+                new_fs = sysm_syscalloc(1, sizeof(struct FS_data));
         }
 
         /*
@@ -188,8 +188,8 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                         }
                 }
 
-                free(new_fs);
-                free(new_path);
+                sysm_sysfree(new_fs);
+                sysm_sysfree(new_path);
         }
 
         unlock_recursive_mutex(vfs_resource_mtx);
@@ -227,7 +227,7 @@ stdret_t vfs_umount(const char *path)
 
         force_lock_recursive_mutex(vfs_resource_mtx);
         mount_fs = find_mounted_FS(new_path, -1, &item_id);
-        free(new_path);
+        sysm_sysfree(new_path);
 
         if (mount_fs == NULL) {
                 goto vfs_umount_error;
@@ -247,7 +247,7 @@ stdret_t vfs_umount(const char *path)
                 }
 
                 if (mount_fs->mount_point) {
-                        free(mount_fs->mount_point);
+                        sysm_sysfree(mount_fs->mount_point);
                 }
 
                 if (list_rm_iditem(vfs_mnt_list, item_id) == STD_RET_OK) {
@@ -367,7 +367,7 @@ int vfs_mkdir(const char *path)
                         }
                 }
 
-                free(new_path);
+                sysm_sysfree(new_path);
         }
 
         return status;
@@ -388,7 +388,7 @@ dir_t *vfs_opendir(const char *path)
                 return NULL;
         }
 
-        dir_t *dir = malloc(sizeof(dir_t));
+        dir_t *dir = sysm_sysmalloc(sizeof(dir_t));
         if (dir) {
                 stdret_t status = STD_RET_ERROR;
 
@@ -407,11 +407,11 @@ dir_t *vfs_opendir(const char *path)
                                 }
                         }
 
-                        free(new_path);
+                        sysm_sysfree(new_path);
                 }
 
                 if (status == STD_RET_ERROR) {
-                        free(dir);
+                        sysm_sysfree(dir);
                         dir = NULL;
                 }
         }
@@ -433,7 +433,7 @@ int vfs_closedir(dir_t *dir)
         if (dir) {
                 if (dir->cldir) {
                         if (dir->cldir(dir->handle, dir) == STD_RET_OK) {
-                                free(dir);
+                                sysm_sysfree(dir);
                                 return 0;
                         }
                 }
@@ -497,7 +497,7 @@ int vfs_remove(const char *path)
                         }
                 }
 
-                free(new_path);
+                sysm_sysfree(new_path);
         }
 
         return status;
@@ -669,7 +669,7 @@ int vfs_statfs(const char *path, struct vfs_statfs *statfs)
         force_lock_recursive_mutex(vfs_resource_mtx);
         fs = find_mounted_FS(new_path, -1, NULL);
         unlock_recursive_mutex(vfs_resource_mtx);
-        free(new_path);
+        sysm_sysfree(new_path);
 
         if (!fs) {
                 return -1;
@@ -713,7 +713,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if ((file = calloc(1, sizeof(FILE)))) {
+        if ((file = sysm_syscalloc(1, sizeof(FILE)))) {
                 force_lock_recursive_mutex(vfs_resource_mtx);
                 fs = find_base_FS(path, &external_path);
                 unlock_recursive_mutex(vfs_resource_mtx);
@@ -749,7 +749,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 }
 
                 vfs_open_error:
-                free(file);
+                sysm_sysfree(file);
         }
 
         return NULL;
@@ -791,7 +791,7 @@ int vfs_fclose(FILE *file)
         if (file) {
                 if (file->f_close) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK) {
-                                free(file);
+                                sysm_sysfree(file);
                                 return 0;
                         }
                 }
@@ -1089,7 +1089,7 @@ static struct FS_data *find_base_FS(const char *path, char **extPath)
 
 //==============================================================================
 /**
- * @brief Function create new path with slash correction
+ * @brief Function create new path with slash and cwd correction
  *
  * @param[in] *path             path to correct
  * @param[in]  corr             path correction kind
@@ -1099,31 +1099,52 @@ static struct FS_data *find_base_FS(const char *path, char **extPath)
 //==============================================================================
 static char *new_corrected_path(const char *path, enum path_correction corr)
 {
-        char *new_path;
-        uint  new_path_len = strlen(path);
+        char       *new_path;
+        uint        new_path_len = strlen(path);
+        const char *cwd;
+        uint        cwd_len = 0;
 
-        if (corr == SUB_SLASH) {
-                if (path[new_path_len - 1] == '/') {
-                        new_path_len--;
-                }
-        } else if (corr == ADD_SLASH) {
-                if (path[new_path_len - 1] != '/') {
-                        new_path_len++;
-                }
-        } else {
-                return NULL;
+        /* correct ending slash */
+        if (corr == SUB_SLASH && last_character(path) == '/') {
+            new_path_len--;
+        } else if (corr == ADD_SLASH && last_character(path) != '/') {
+            new_path_len++;
         }
 
-        new_path = calloc(new_path_len + 1, sizeof(char));
-        if (new_path) {
-                if (corr == SUB_SLASH) {
-                        strncpy(new_path, path, new_path_len);
-                } else if (corr == ADD_SLASH) {
-                        strcpy(new_path, path);
+        /* correct cwd */
+        if (first_character(path) != '/') {
+                cwd = _get_this_task_data()->f_cwd;
+                if (cwd) {
+                    cwd_len       = strlen(cwd);
+                    new_path_len += cwd_len;
 
-                        if (new_path_len > strlen(path)) {
-                                strcat(new_path, "/");
+                    if (last_character(cwd) != '/' && cwd_len) {
+                        new_path_len++;
+                        cwd_len++;
+                    }
+                }
+        }
+
+        new_path = sysm_syscalloc(new_path_len + 1, sizeof(char));
+        if (new_path) {
+                if (cwd_len) {
+                        strcpy(new_path, cwd);
+
+                        if (last_character(cwd) != '/') {
+                            strcat(new_path, "/");
                         }
+                }
+
+                if (corr == SUB_SLASH) {
+                        strncat(new_path, path, new_path_len - cwd_len);
+                } else if (corr == ADD_SLASH) {
+                        strcat(new_path, path);
+
+                        if (last_character(new_path) != '/') {
+                            strcat(new_path, "/");
+                        }
+                } else {
+                    strcat(new_path, path);
                 }
         }
 
