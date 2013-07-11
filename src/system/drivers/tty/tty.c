@@ -41,8 +41,8 @@ MODULE_NAME(TTY);
 ==============================================================================*/
 #define INPUT_SERVICE_TASK_NAME                 "tty:key"
 #define OUTPUT_SERVICE_TASK_NAME                "tty:scr"
-#define INPUT_SERVICE_TASK_STACK_DEPTH          STACK_DEPTH_VERY_LOW
-#define OUTPUT_SERVICE_TASK_STACK_DEPTH         STACK_DEPTH_VERY_LOW
+#define INPUT_SERVICE_TASK_STACK_DEPTH          STACK_DEPTH_VERY_LOW - 20
+#define OUTPUT_SERVICE_TASK_STACK_DEPTH         STACK_DEPTH_VERY_LOW - 32
 #define INPUT_SERVICE_TASK_PRIORITY             0
 #define OUTPUT_SERVICE_TASK_PRIORITY            0
 

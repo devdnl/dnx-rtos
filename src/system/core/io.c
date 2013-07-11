@@ -626,19 +626,25 @@ int io_fputc(int c, FILE *stream)
 
 //==============================================================================
 /**
- * @brief Function puts string to selected file
+ * @brief Function puts string to selected file (fputs & puts)
  *
  * @param[in] *s        string
  * @param[in] *file     file
+ * @param[in]  puts     puts functionality
  *
  * @return number of puts characters
  */
 //==============================================================================
-int io_fputs(const char *s, FILE *file)
+int io_f_puts(const char *s, FILE *file, bool puts)
 {
         if (file) {
-                int n;
-                if ((n = vfs_fwrite(s, sizeof(char), strlen(s), file)) != 0)
+                int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
+
+                if (puts && n) {
+                        n += vfs_fwrite("\n", sizeof(char), 1, file);
+                }
+
+                if (n != 0)
                         return n;
         }
 
