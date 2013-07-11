@@ -75,7 +75,7 @@ PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
 //==============================================================================
 int PROGRAM_MAIN(helloworld, int argc, char *argv[])
 {
-        printf("Hello world!\n");
+        puts("Hello world!");
         printf("Free stack: %d\n", get_free_stack());
         printf("Static memory usage: %d\n", get_used_static_memory());
         printf("Memory size: %d\n", get_memory_size());

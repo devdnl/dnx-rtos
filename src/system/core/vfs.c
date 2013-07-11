@@ -702,7 +702,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if (path[strlen(path) - 1] == '/') { /* path is directory */
+        if (path[strlen(path) - 1] == '/') { /* path is a directory */
                 return NULL;
         }
 

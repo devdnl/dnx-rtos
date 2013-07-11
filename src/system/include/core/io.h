@@ -55,7 +55,8 @@ extern "C" {
 #define vsscanf(const_char__str, const_char__format, va_list__args)     io_vsscanf(const_char__str, const_char__format, va_list__args)
 #define putc(int__c, FILE__stream)                                      io_fputc(int__c, FILE__stream)
 #define fputc(int__c, FILE__stream)                                     io_fputc(int__c, FILE__stream)
-#define fputs(const_char__s, FILE__stream)                              io_fputs(const_char__s, FILE__stream)
+#define fputs(const_char__s, FILE__stream)                              io_f_puts(const_char__s, FILE__stream, false)
+#define puts(const_char__s)                                             io_f_puts(const_char__s, stdout, true)
 #define putchar(int__c)                                                 io_fputc(int__c, stdout)
 #define getchar()                                                       io_getc(stdin)
 #define getc(FILE__stream)                                              io_getc(FILE__stream)
@@ -168,7 +169,7 @@ extern i32_t  io_atoi(const char *str);
 extern char  *io_strtoi(const char*, int, i32_t*);
 extern double io_atof(const char*);
 extern int    io_fputc(int, FILE*);
-extern int    io_fputs(const char*, FILE*);
+extern int    io_f_puts(const char*, FILE*, bool);
 extern int    io_getc(FILE*);
 extern char  *io_fgets(char*, int, FILE *);
 
