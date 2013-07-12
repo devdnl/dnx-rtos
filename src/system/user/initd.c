@@ -133,33 +133,33 @@ static int run_level_0(void)
 {
         init_driver("gpio", "/dev/gpio");
 
+        stdret_t pll_init = init_driver("pll", NULL);
+
         init_driver("uart1", "/dev/ttyS0");
 
-        FILE *ttyS0;
-        if ((ttyS0 = fopen("/dev/ttyS0", "r+"))) {
-                ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / CPU_BASE_FREQ));
+        if (pll_init != STD_RET_OK) {
+                FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
+                if (ttyS0) {
+                        ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / CPU_BASE_FREQ));
+                        fclose(ttyS0);
+                }
         }
 
         init_driver("tty0", "/dev/tty0");
+
         enable_printk("/dev/tty0");
 
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
 
+        if (pll_init != STD_RET_OK) {
+                printk(FONT_COLOR_RED"PLL not started, running no base frequency!"RESET_ATTRIBUTES"\n");
+        }
+
         init_driver("tty1", "/dev/tty1");
         init_driver("tty2", "/dev/tty2");
         init_driver("tty3", "/dev/tty3");
-
-        if (init_driver("pll", NULL) == STD_RET_OK) {
-                if (ttyS0) {
-                        ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200);
-                }
-        }
-
-        if (ttyS0) {
-                fclose(ttyS0);
-        }
 
         init_driver("sdspi", "/dev/sda");
 

@@ -49,6 +49,11 @@ extern "C" {
 #define CONVERT_TO_MiB(_val)            (_val >> 20)
 #define CONVERT_TO_GiB(_val)            (_val >> 30)
 
+#define set_cwd(const_char__pstr)       const char *__real_cwd = _get_this_task_data()->f_cwd;\
+                                        _get_this_task_data()->f_cwd = const_char__pstr
+
+#define restore_original_cwd()          _get_this_task_data()->f_cwd = __real_cwd
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -130,13 +135,10 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        char *cmd;
-        char *arg;
-        u8_t  tty = 0;
-        enum cmd_status cmd_status;
+//        strcpy(global->cwd, "/");
+        getcwd(global->cwd, CWD_PATH_LEN);
 
-        strcpy(global->cwd, "/");
-
+        int tty = 0;
         ioctl(stdin, TTY_IORQ_GET_CURRENT_TTY, &tty);
 
         printf("Welcome to %s/%s (tty%u)\n", get_OS_name(), get_kernel_name(), tty);
@@ -150,10 +152,11 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 scanf("%100s", global->line);
 
                 /* finds all spaces before command */
-                cmd  = global->line;
+                char *cmd  = global->line;
                 cmd += strspn(global->line, " ");
 
                 /* finds first space after command */
+                char *arg;
                 if ((arg = strchr(cmd, ' ')) != NULL) {
                         *(arg++) = '\0';
                         arg += strspn(arg, " ");
@@ -171,7 +174,7 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 }
 
                 /* identify program localization */
-                cmd_status = find_internal_command(cmd, arg);
+                enum cmd_status cmd_status = find_internal_command(cmd, arg);
 
                 if (cmd_status == CMD_STATUS_NOT_EXIST) {
                         cmd_status = find_external_command(cmd, arg);
@@ -264,13 +267,18 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
 //==============================================================================
 static enum cmd_status find_internal_command(char *cmd, char *arg)
 {
+        enum cmd_status status = CMD_STATUS_NOT_EXIST;
+
         for (uint i = 0; i < ARRAY_SIZE(commands); i++) {
                 if (strcmp(cmd, commands[i].name) == 0) {
-                        return commands[i].cmd(arg);
+
+                        set_cwd(global->cwd);
+                        status = commands[i].cmd(arg);
+                        restore_original_cwd();
                 }
         }
 
-        return CMD_STATUS_NOT_EXIST;
+        return status;
 }
 
 //==============================================================================
@@ -342,40 +350,7 @@ static enum cmd_status cmd_cd(char *arg)
 //==============================================================================
 static enum cmd_status cmd_ls(char *arg)
 {
-        char  *newpath  = NULL;
-        bool   freePath = FALSE;
-
-        if (arg) {
-                if (strcmp(".", arg) == 0) {
-                        arg++;
-                } else if (strncmp("./", arg, 2) == 0) {
-                        arg += 2;
-                }
-
-                if (arg[0] == '/') {
-                        newpath = arg;
-                } else {
-                        newpath = calloc(strlen(arg) + strlen(global->cwd) + 2,
-                                         sizeof(global->cwd[0]));
-
-                        if (newpath) {
-                                strcpy(newpath, global->cwd);
-
-                                if (newpath[strlen(newpath) - 1] != '/') {
-                                        newpath[strlen(newpath)] = '/';
-                                }
-
-                                strcat(newpath, arg);
-
-                                freePath = TRUE;
-                        }
-                }
-        } else {
-                newpath = global->cwd;
-        }
-
-        dir_t *dir = opendir(newpath);
-
+        dir_t *dir = opendir(arg);
         if (dir) {
                 dirent_t dirent;
 
@@ -383,8 +358,6 @@ static enum cmd_status cmd_ls(char *arg)
                 char *rcolor = FONT_COLOR_MAGENTA"-";
                 char *lcolor = FONT_COLOR_CYAN"l";
                 char *dcolor = FONT_COLOR_GREEN"d";
-
-//                printf("Total %u\n", dir->items);
 
                 while ((dirent = readdir(dir)).name != NULL) {
                         char *type = NULL;
@@ -422,9 +395,6 @@ static enum cmd_status cmd_ls(char *arg)
                 printf("No such directory\n");
         }
 
-        if (freePath)
-                free(newpath);
-
         return CMD_STATUS_EXECUTED;
 }
 
@@ -437,38 +407,9 @@ static enum cmd_status cmd_ls(char *arg)
 //==============================================================================
 static enum cmd_status cmd_mkdir(char *arg)
 {
-        char *newpath  = NULL;
-        bool  freePath = FALSE;
-
-        if (arg) {
-                if (arg[0] == '/') {
-                        newpath = arg;
-                } else {
-                        newpath = calloc(strlen(arg) + strlen(global->cwd) + 2,
-                                         sizeof(global->cwd[0]));
-
-                        if (newpath) {
-                                strcpy(newpath, global->cwd);
-
-                                if (newpath[strlen(newpath) - 1] != '/') {
-                                        newpath[strlen(newpath)] = '/';
-                                }
-
-                                strcat(newpath, arg);
-
-                                freePath = TRUE;
-                        }
-                }
-        } else {
-                newpath = global->cwd;
-        }
-
-        if (mkdir(newpath) != 0) {
+        if (mkdir(arg) != 0) {
                 printf("Cannot create directory \"%s\"\n", arg);
         }
-
-        if (freePath)
-                free(newpath);
 
         return CMD_STATUS_EXECUTED;
 }
@@ -482,42 +423,12 @@ static enum cmd_status cmd_mkdir(char *arg)
 //==============================================================================
 static enum cmd_status cmd_touch(char *arg)
 {
-        char  *newpath  = NULL;
-        bool   freePath = FALSE;
-
-        if (arg) {
-                if (arg[0] == '/') {
-                        newpath = arg;
-                } else {
-                        newpath = calloc(strlen(arg) + strlen(global->cwd) + 2,
-                                         sizeof(global->cwd[0]));
-
-                        if (newpath) {
-                                strcpy(newpath, global->cwd);
-
-                                if (newpath[strlen(newpath) - 1] != '/') {
-                                        newpath[strlen(newpath)] = '/';
-                                }
-
-                                strcat(newpath, arg);
-
-                                freePath = TRUE;
-                        }
-                }
-        } else {
-                newpath = global->cwd;
-        }
-
-        FILE *file = fopen(newpath, "a+");
-
+        FILE *file = fopen(arg, "a+");
         if (file) {
                 fclose(file);
         } else {
                 printf("Cannot touch \"%s\"\n", arg);
         }
-
-        if (freePath)
-                free(newpath);
 
         return CMD_STATUS_EXECUTED;
 }
@@ -531,38 +442,9 @@ static enum cmd_status cmd_touch(char *arg)
 //==============================================================================
 static enum cmd_status cmd_rm(char *arg)
 {
-        char  *newpath  = NULL;
-        bool   freePath = FALSE;
-
-        if (arg) {
-                if (arg[0] == '/') {
-                        newpath = arg;
-                } else {
-                        newpath = calloc(strlen(arg) + strlen(global->cwd) + 2,
-                                         sizeof(global->cwd[0]));
-
-                        if (newpath) {
-                                strcpy(newpath, global->cwd);
-
-                                if (newpath[strlen(newpath) - 1] != '/') {
-                                        newpath[strlen(newpath)] = '/';
-                                }
-
-                                strcat(newpath, arg);
-
-                                freePath = TRUE;
-                        }
-                }
-        } else {
-                newpath = global->cwd;
-        }
-
-        if (remove(newpath) != 0) {
+        if (remove(arg) != 0) {
                 printf("Cannot remove \"%s\"\n", arg);
         }
-
-        if (freePath)
-                free(newpath);
 
         return CMD_STATUS_EXECUTED;
 }
@@ -799,12 +681,8 @@ static enum cmd_status cmd_mount(char *arg)
         strncpy(srcfile, arg2, arg3 - arg2 - 1);
         strcpy(mntpt, arg3);
 
-        if (srcfile[0] == '/' || srcfile[0] == '-') {
-                if (mount(fstype, srcfile, mntpt) != STD_RET_OK) {
-                        printf("Error while mounting file system!\n");
-                }
-        } else {
-                printf("Typed path is not correct!\n");
+        if (mount(fstype, srcfile, mntpt) != STD_RET_OK) {
+                printf("Error while mounting file system!\n");
         }
 
         free(fstype);
