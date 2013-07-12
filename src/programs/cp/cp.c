@@ -78,36 +78,9 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-//        char *src_path = NULL;
-//        char *dst_path = NULL;
         char *buffer   = NULL;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
-
-//        src_path = calloc(PATH_MAX_SIZE, sizeof(char));FIXME
-//        if (!src_path) {
-//                printf("Not enough free memory\n");
-//                goto exit_error;
-//        }
-
-//        if (argv[1][0] != '/') {
-//                getcwd(src_path, PATH_MAX_SIZE / 2);
-//                strcat(src_path, "/");
-//        }
-//        strcat(src_path, argv[1]);
-
-
-//        dst_path = calloc(PATH_MAX_SIZE, sizeof(char));
-//        if (!dst_path) {
-//                printf("Not enough free memory\n");
-//                goto exit_error;
-//        }
-
-//        if (argv[2][0] != '/') {
-//                getcwd(dst_path, PATH_MAX_SIZE / 2);
-//                strcat(dst_path, "/");
-//        }
-//        strcat(dst_path, argv[2]);
 
         int buffer_size = BUFFER_MAX_SIZE;
         while ((buffer = malloc(buffer_size * sizeof(char))) == NULL) {
@@ -119,15 +92,15 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
                 }
         }
 
-        src_file = fopen(/*src_path*/argv[1], "r");
+        src_file = fopen(argv[1], "r");
         if (!src_file) {
-                printf("Cannot open file %s\n", /*src_path*/argv[1]);
+                printf("Cannot open file %s\n", argv[1]);
                 goto exit_error;
         }
 
-        dst_file = fopen(/*dst_path*/argv[2], "w");
+        dst_file = fopen(argv[2], "w");
         if (!dst_file) {
-                printf("Cannot create file %s\n", /*dst_path*/argv[2]);
+                printf("Cannot create file %s\n", argv[2]);
                 goto exit_error;
         }
 
@@ -182,21 +155,11 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
 
         fclose(src_file);
         fclose(dst_file);
-//        free(src_path);
-//        free(dst_path);
         free(buffer);
 
         return EXIT_SUCCESS;
 
 exit_error:
-//        if (src_path) {
-//                free(src_path);
-//        }
-
-//        if (dst_path) {
-//                free(dst_path);
-//        }
-
         if (buffer) {
                 free(buffer);
         }

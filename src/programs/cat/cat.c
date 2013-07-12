@@ -40,7 +40,6 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define FILE_PATH_LEN           128
 
 /*==============================================================================
   Local types, enums definitions
@@ -54,7 +53,6 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES {
-//        char filepath[FILE_PATH_LEN];
 };
 
 /*==============================================================================
@@ -86,20 +84,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
         char *data = calloc(col + 1, sizeof(char));
 
         if (data) {
-//                if (argv[1][0] == '/') { FIXME
-//                        strcpy(global->filepath, argv[1]);
-//                } else {
-//                        getcwd(global->filepath, 128);
-//
-//                        if (global->filepath[strlen(global->filepath) - 1] != '/') {
-//                                strcat(global->filepath, "/");
-//                        }
-//
-//                        strcat(global->filepath, argv[1]);
-//                }
-
-                FILE *file = fopen(/*global->filepath*/argv[1], "r");
-
+                FILE *file = fopen(argv[1], "r");
                 if (file) {
                         while (fgets(data, col, file)) {
                                 for (uint i = 0; i < strlen(data); i++) {

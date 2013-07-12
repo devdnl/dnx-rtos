@@ -129,7 +129,7 @@ stdret_t vfs_init(void)
 //==============================================================================
 stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_interface *fs_interface)
 {
-        if (!mount_point || !fs_interface || !src_path) { /* FIXME */
+        if (!mount_point || !fs_interface || !src_path) {
                 return STD_RET_ERROR;
         }
 
@@ -492,7 +492,8 @@ int vfs_remove(const char *path)
         force_lock_recursive_mutex(vfs_resource_mtx);
         char *external_path      = NULL;
         struct FS_data *mount_fs = find_mounted_FS(cwd_path, -1, NULL);
-        struct FS_data *base_fs  = find_base_FS(path, &external_path);
+        last_character(cwd_path) = '\0';
+        struct FS_data *base_fs  = find_base_FS(cwd_path, &external_path);
         unlock_recursive_mutex(vfs_resource_mtx);
 
         int status = -1;
