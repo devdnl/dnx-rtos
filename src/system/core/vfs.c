@@ -147,15 +147,15 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
         force_lock_recursive_mutex(vfs_resource_mtx);
         struct FS_data *mount_fs = find_mounted_FS(cwd_mount_point, -1, NULL);
 
-        char *external_path;
+        char *external_path      = NULL;
         struct FS_data *base_fs  = find_base_FS(cwd_mount_point, &external_path);
-
-        struct FS_data *new_fs   = NULL;
 
         /*
          * create new FS in existing DIR and FS, otherwise create new FS if
          * first mount
          */
+        struct FS_data *new_fs = NULL;
+
         if (base_fs && mount_fs == NULL) {
                 if (base_fs->interface.fs_opendir && external_path) {
 
@@ -171,7 +171,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                 }
         } else if (  list_get_item_count(vfs_mnt_list) == 0
                   && strlen(cwd_mount_point) == 1
-                  && cwd_mount_point[0] == '/' ) {
+                  && first_character(cwd_mount_point) == '/' ) {
 
                 new_fs = sysm_syscalloc(1, sizeof(struct FS_data));
         }
