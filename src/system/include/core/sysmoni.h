@@ -1,5 +1,5 @@
-#ifndef SYSMONI_H_
-#define SYSMONI_H_
+#ifndef _SYSMONI_H_
+#define _SYSMONI_H_
 /*=========================================================================*//**
 @file    sysmoni.h
 
@@ -7,7 +7,7 @@
 
 @brief   This module is used to monitoring system
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -246,7 +246,7 @@ extern void  sysm_task_switched_out(void);
 }
 #endif
 
-#endif /* SYSMONI_H_ */
+#endif /* _SYSMONI_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

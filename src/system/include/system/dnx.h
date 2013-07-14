@@ -7,7 +7,7 @@
 
 @brief   dnx system main header
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ extern "C" {
 #define restart()                                                       _cpuctl_restart_system()
 #define get_platform_name()                                             CPUCTL_PLATFORM_NAME
 #define get_OS_name()                                                   "dnx"
-#define get_OS_version()                                                "0.9.38"
+#define get_OS_version()                                                "0.9.39"
 #define get_kernel_name()                                               "FreeRTOS"
 #define get_author_name()                                               "Daniel Zorychta"
 #define get_author_email()                                              "<daniel.zorychta@gmail.com"

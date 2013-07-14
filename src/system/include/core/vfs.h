@@ -1,5 +1,5 @@
-#ifndef VFS_H_
-#define VFS_H_
+#ifndef _VFS_H_
+#define _VFS_H_
 /*=========================================================================*//**
 @file    vfs.h
 
@@ -7,7 +7,7 @@
 
 @brief   This file support virtual file system
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -98,12 +98,12 @@ typedef struct dirent
 /** directory type */
 struct vfs_dir
 {
-        dirent_t (*rddir)(void *fshdl, struct vfs_dir *dir);
-        stdret_t (*cldir)(void *fshdl, struct vfs_dir *dir);
-        void      *dd;
-        void      *handle;
-        size_t     items;
-        size_t     seek;
+        dirent_t (*f_readdir)(void *fshdl, struct vfs_dir *dir);
+        stdret_t (*f_closedir)(void *fshdl, struct vfs_dir *dir);
+        void      *f_dd;
+        void      *f_handle;
+        size_t     f_items;
+        size_t     f_seek;
 };
 
 /** file statistics */
@@ -209,7 +209,7 @@ extern int      vfs_feof(FILE*);
 }
 #endif
 
-#endif /* VFS_H_ */
+#endif /* _VFS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

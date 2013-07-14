@@ -5,7 +5,7 @@
 
 @brief   This file support standard io functions
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -145,12 +145,14 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 /**
  * @brief Function convert double to string
  *
- * @param[in]  value            input value
- * @param[out] *str             string - result
- * @param[in]  prec             precision
- *
  * @note used software: nickgsuperstar@gmail.com & nickg@client9.com
  *                      https://code.google.com/p/stringencoders/
+ * 
+ * @param[in]   value           input value
+ * @param[out] *str             string - result
+ * @param[in]   prec            precision
+ *
+ * @return number of characters
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
@@ -573,8 +575,6 @@ void io_disable_printk(void)
  *
  * @param *format             formated text
  * @param ...                 format arguments
- *
- * @retval number of written characters
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
@@ -728,7 +728,7 @@ char *io_fgets(char *str, int size, FILE *stream)
  * @param *bfr                output buffer
  * @param  size               buffer size
  * @param *format             formated text
- * @param ...                 format arguments
+ * @param  ...                format arguments
  *
  * @retval number of written characters
  */

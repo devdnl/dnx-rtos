@@ -464,8 +464,8 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 return STD_RET_ERROR;
         }
 
-        dir->dd = malloc(sizeof(struct fatdir));
-        if (!dir->dd) {
+        dir->f_dd = malloc(sizeof(struct fatdir));
+        if (!dir->f_dd) {
                 free(dospath);
                 return STD_RET_ERROR;
         }
@@ -476,13 +476,13 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
                 strncpy(dospath, path, strlen(path) - 1);
         }
 
-        dir->handle = hdl;
-        dir->cldir  = fatfs_closedir;
-        dir->rddir  = fatfs_readdir;
-        dir->seek   = 0;
-        dir->items  = 0;
+        dir->f_handle   = hdl;
+        dir->f_closedir = fatfs_closedir;
+        dir->f_readdir  = fatfs_readdir;
+        dir->f_seek     = 0;
+        dir->f_items    = 0;
 
-        struct fatdir *fatdir = dir->dd;
+        struct fatdir *fatdir = dir->f_dd;
         if (libfat_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
                 free(dospath);
                 hdl->opened_dirs++;
@@ -490,7 +490,7 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
         }
 
         free(dospath);
-        free(dir->dd);
+        free(dir->f_dd);
 
         return STD_RET_ERROR;
 }
@@ -513,8 +513,8 @@ static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
 
         struct fatfs *hdl = fshdl;
 
-        if (dir->dd) {
-                free(dir->dd);
+        if (dir->f_dd) {
+                free(dir->f_dd);
                 hdl->opened_dirs--;
         }
 
@@ -538,7 +538,7 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
 
         _stop_if(!dir);
 
-        struct fatdir *fatdir = dir->dd;
+        struct fatdir *fatdir = dir->f_dd;
 
         dirent_t dirent;
         dirent.name = NULL;
