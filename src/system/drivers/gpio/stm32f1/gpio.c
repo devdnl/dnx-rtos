@@ -253,9 +253,9 @@ static void init_AFIO(void);
 //==============================================================================
 MODULE__DEVICE_INIT(GPIO)
 {
-        UNUSED(driver_handle);
-        UNUSED(major);
-        UNUSED(minor);
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(major);
+        UNUSED_ARG(minor);
 
 #if (AFIO_EN > 0)
         init_AFIO();
@@ -299,7 +299,7 @@ MODULE__DEVICE_INIT(GPIO)
 //==============================================================================
 MODULE__DEVICE_RELEASE(GPIO)
 {
-        UNUSED(driver_handle);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -311,7 +311,7 @@ MODULE__DEVICE_RELEASE(GPIO)
 //==============================================================================
 MODULE__DEVICE_OPEN(GPIO)
 {
-        UNUSED(driver_handle);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -323,7 +323,7 @@ MODULE__DEVICE_OPEN(GPIO)
 //==============================================================================
 MODULE__DEVICE_CLOSE(GPIO)
 {
-        UNUSED(driver_handle);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -335,11 +335,11 @@ MODULE__DEVICE_CLOSE(GPIO)
 //==============================================================================
 MODULE__DEVICE_WRITE(GPIO)
 {
-        UNUSED(driver_handle);
-        UNUSED(src);
-        UNUSED(item_size);
-        UNUSED(lseek);
-        UNUSED(n_items);
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(src);
+        UNUSED_ARG(item_size);
+        UNUSED_ARG(lseek);
+        UNUSED_ARG(n_items);
 
         return 0;
 }
@@ -351,11 +351,11 @@ MODULE__DEVICE_WRITE(GPIO)
 //==============================================================================
 MODULE__DEVICE_READ(GPIO)
 {
-        UNUSED(driver_handle);
-        UNUSED(dst);
-        UNUSED(item_size);
-        UNUSED(lseek);
-        UNUSED(n_items);
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(dst);
+        UNUSED_ARG(item_size);
+        UNUSED_ARG(lseek);
+        UNUSED_ARG(n_items);
 
         return 0;
 }
@@ -367,8 +367,8 @@ MODULE__DEVICE_READ(GPIO)
 //==============================================================================
 MODULE__DEVICE_IOCTL(GPIO)
 {
-        UNUSED(driver_handle);
-        UNUSED(args);
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(args);
 
         switch (iorq) {
         case GPIO_IORQ_SD_SELECT:
@@ -393,7 +393,7 @@ MODULE__DEVICE_IOCTL(GPIO)
 //==============================================================================
 MODULE__DEVICE_FLUSH(GPIO)
 {
-        UNUSED(driver_handle);
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -405,7 +405,7 @@ MODULE__DEVICE_FLUSH(GPIO)
 //==============================================================================
 MODULE__DEVICE_INFO(GPIO)
 {
-        UNUSED(driver_handle);
+        UNUSED_ARG(device_handle);
 
         device_info->st_size = 0;
 

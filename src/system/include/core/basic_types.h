@@ -72,7 +72,7 @@ extern "C" {
 #define CONTAINER_OF(ptr, type, member)   ((type *)((char *)ptr - offsetof(type, member)))
 
 /** usable macros */
-#define UNUSED(variable)                  (void)variable
+#define UNUSED_ARG(argument)              (void)argument
 
 /*==============================================================================
   Exported types, enums definitions

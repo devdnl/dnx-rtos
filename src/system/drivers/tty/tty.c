@@ -199,21 +199,14 @@ static struct tty_ctrl *tty_ctrl;
 
 //==============================================================================
 /**
- * @brief Initialize TTY devices
- *
- * @param[out] **driver_handle  driver's memory handle
- * @param[in]    major          device number
- * @param[in]    minor          device part
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Initialize TTY device
  */
 //==============================================================================
-MODULE_INIT(TTY)
+MODULE__DEVICE_INIT(TTY)
 {
-        (void)minor;
+        UNUSED_ARG(minor);
 
-        _stop_if(!driver_handle);
+        STOP_IF(device_handle == NULL);
 
         if (major >= TTY_DEV_COUNT) {
                 return STD_RET_ERROR;
@@ -265,7 +258,7 @@ MODULE_INIT(TTY)
         tty_ctrl->tty[major]        = tty;
         tty->device_number          = major;
         tty->file_size              = 1;
-        *driver_handle              = tty;
+        *device_handle              = tty;
 
         return STD_RET_OK;
 
@@ -308,19 +301,14 @@ ctrl_error:
 //==============================================================================
 /**
  * @brief Release TTY device
- *
- * @param[in] *driver_handle           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE_RELEASE(TTY)
+MODULE__DEVICE_RELEASE(TTY)
 {
-        _stop_if(!driver_handle);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = driver_handle;
+        struct tty_data *tty = device_handle;
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 clear_tty(tty);
@@ -348,35 +336,25 @@ MODULE_RELEASE(TTY)
 //==============================================================================
 /**
  * @brief Opens specified port and initialize default settings
- *
- * @param[in] *driver_handle           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE_OPEN(TTY)
+MODULE__DEVICE_OPEN(TTY)
 {
-        _stop_if(!driver_handle);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function close opened port
- *
- * @param[in] *driver_handle           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Close opened port
  */
 //==============================================================================
-MODULE_CLOSE(TTY)
+MODULE__DEVICE_CLOSE(TTY)
 {
-        _stop_if(!driver_handle);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
         return STD_RET_OK;
 }
@@ -384,27 +362,19 @@ MODULE_CLOSE(TTY)
 //==============================================================================
 /**
  * @brief Write data to TTY
- *
- * @param[in] *driver_handle
- * @param[in] *src
- * @param[in]  item_size
- * @param[in]  n_items
- * @param[in]  lseek
- *
- * @return number of written items
  */
 //==============================================================================
-MODULE_WRITE(TTY)
+MODULE__DEVICE_WRITE(TTY)
 {
-        (void)lseek;
+        UNUSED_ARG(lseek);
 
-        _stop_if(!driver_handle);
-        _stop_if(!src);
-        _stop_if(!item_size);
-        _stop_if(!n_items);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(src == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = driver_handle;
+        struct tty_data *tty = device_handle;
 
         /* if current TTY is showing wait to show refreshed line */
         while (  tty_ctrl->tty[tty_ctrl->current_TTY]->screen.refresh_last_line
@@ -435,28 +405,20 @@ MODULE_WRITE(TTY)
 
 //==============================================================================
 /**
- * @brief Write data to TTY
- *
- * @param[in]  *driver_handle
- * @param[out] *dst
- * @param[in]   item_size
- * @param[in]   n_items
- * @param[in]   lseek
- *
- * @return number of read items
+ * @brief Read data from TTY
  */
 //==============================================================================
-MODULE_READ(TTY)
+MODULE__DEVICE_READ(TTY)
 {
-        (void)lseek;
+        UNUSED_ARG(lseek);
 
-        _stop_if(!driver_handle);
-        _stop_if(!dst);
-        _stop_if(!item_size);
-        _stop_if(!n_items);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(dst == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = driver_handle;
+        struct tty_data *tty = device_handle;
 
         size_t n   = 0;
         char  *str = dst;
@@ -482,21 +444,14 @@ MODULE_READ(TTY)
 //==============================================================================
 /**
  * @brief Specific settings of TTY
- *
- * @param[in]     *driver_handle        driver's memory handle
- * @param[in]      iorq                 IO request
- * @param[in,out]  args                 additional arguments
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE_IOCTL(TTY)
+MODULE__DEVICE_IOCTL(TTY)
 {
-        _stop_if(!driver_handle);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = driver_handle;
+        struct tty_data *tty = device_handle;
         int *out_ptr;
 
         switch (iorq) {
@@ -562,20 +517,15 @@ MODULE_IOCTL(TTY)
 
 //==============================================================================
 /**
- * @brief Function flush device
- *
- * @param[in] *driver_handle           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Flush device
  */
 //==============================================================================
-MODULE_FLUSH(TTY)
+MODULE__DEVICE_FLUSH(TTY)
 {
-        _stop_if(!driver_handle);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = driver_handle;
+        struct tty_data *tty = device_handle;
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 move_editline_to_streams(tty, true);
@@ -587,24 +537,18 @@ MODULE_FLUSH(TTY)
 
 //==============================================================================
 /**
- * @brief Function returns device informations
- *
- * @param[in]  *driver_handle   driver's memory handle
- * @param[out] *info            device/file info
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE_INFO(TTY)
+MODULE__DEVICE_INFO(TTY)
 {
-        _stop_if(!driver_handle);
-        _stop_if(!info);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(device_info == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = driver_handle;
+        struct tty_data *tty = device_handle;
 
-        info->st_size = tty->file_size;
+        device_info->st_size = tty->file_size;
         return STD_RET_OK;
 }
 

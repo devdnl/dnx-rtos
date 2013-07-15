@@ -54,20 +54,20 @@ extern "C" {
 ==============================================================================*/
 #define USE_MODULE(module_name)                 #module_name
 
-#define USE_DRIVER_INTERFACE(drvmodule, drvname, major, minor)\
-{.drv_name    = drvname,\
- .major       = major,\
- .minor       = minor,\
- .drv_init    = _##drvmodule##_init,\
- .drv_release = _##drvmodule##_release,\
+#define USE_DRIVER_INTERFACE(_drvmodule, _drvname, _major, _minor)\
+{.drv_name    = _drvname,\
+ .major       = _major,\
+ .minor       = _minor,\
+ .drv_init    = _##_drvmodule##_init,\
+ .drv_release = _##_drvmodule##_release,\
  .drv_if      = {.handle    = NULL,\
-                 .drv_open  = _##drvmodule##_open,\
-                 .drv_close = _##drvmodule##_close,\
-                 .drv_write = _##drvmodule##_write,\
-                 .drv_read  = _##drvmodule##_read,\
-                 .drv_ioctl = _##drvmodule##_ioctl,\
-                 .drv_info  = _##drvmodule##_info,\
-                 .drv_flush = _##drvmodule##_flush}}
+                 .drv_open  = _##_drvmodule##_open,\
+                 .drv_close = _##_drvmodule##_close,\
+                 .drv_write = _##_drvmodule##_write,\
+                 .drv_read  = _##_drvmodule##_read,\
+                 .drv_ioctl = _##_drvmodule##_ioctl,\
+                 .drv_info  = _##_drvmodule##_info,\
+                 .drv_flush = _##_drvmodule##_flush}}
 
 /*==============================================================================
   Local types, enums definitions
@@ -99,14 +99,14 @@ static const char *regdrv_used_modules[REGDRV_NUMBER_OF_REGISTERED_MODULES] = {
 
 /* a table of a drivers interfaces */
 static const struct driver_entry regdrv_driver_table[] = {
-        USE_DRIVER_INTERFACE(UART , "uart1" , UART_DEV_1   , UART_PART_NONE),
-        USE_DRIVER_INTERFACE(GPIO , "gpio"  , GPIO_DEV_NONE, GPIO_PART_NONE),
-        USE_DRIVER_INTERFACE(PLL  , "pll"   , PLL_DEV_NONE , PLL_PART_NONE ),
-        USE_DRIVER_INTERFACE(TTY  , "tty0"  , TTY_DEV_0    , TTY_PART_NONE ),
-        USE_DRIVER_INTERFACE(TTY  , "tty1"  , TTY_DEV_1    , TTY_PART_NONE ),
-        USE_DRIVER_INTERFACE(TTY  , "tty2"  , TTY_DEV_2    , TTY_PART_NONE ),
-        USE_DRIVER_INTERFACE(TTY  , "tty3"  , TTY_DEV_3    , TTY_PART_NONE ),
-        USE_DRIVER_INTERFACE(SDSPI, "sdspi" , SDSPI_DEV_NO , SDSPI_DEV_PART),
+        USE_DRIVER_INTERFACE(UART , "uart1" , UART_DEV_1     , UART_PART_NONE),
+        USE_DRIVER_INTERFACE(GPIO , "gpio"  , GPIO_DEV_NONE  , GPIO_PART_NONE),
+        USE_DRIVER_INTERFACE(PLL  , "pll"   , PLL_DEV_NONE   , PLL_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY  , "tty0"  , TTY_DEV_0      , TTY_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY  , "tty1"  , TTY_DEV_1      , TTY_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY  , "tty2"  , TTY_DEV_2      , TTY_PART_NONE ),
+        USE_DRIVER_INTERFACE(TTY  , "tty3"  , TTY_DEV_3      , TTY_PART_NONE ),
+        USE_DRIVER_INTERFACE(SDSPI, "sdspi" , SDSPI_MAJOR_NO , SDSPI_MINOR_NO),
 };
 
 /* pointers to memory handle used by drivers */
