@@ -329,11 +329,11 @@ stdret_t appfs_opendir(void *fshdl, const char *path, dir_t *dir)
         _stop_if(!dir);
 
         if (path[0] == '/' && strlen(path) == 1) {
-                dir->dd    = 0;
-                dir->items = regprg_get_program_count();
-                dir->rddir = appfs_readrootdir;
-                dir->cldir = appfs_closedir;
-                dir->seek  = 0;
+                dir->f_dd       = 0;
+                dir->f_items    = regprg_get_program_count();
+                dir->f_readdir  = appfs_readrootdir;
+                dir->f_closedir = appfs_closedir;
+                dir->f_seek     = 0;
 
                 return STD_RET_OK;
         }
@@ -520,11 +520,11 @@ static dirent_t appfs_readrootdir(void *fshdl, dir_t *dir)
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir->seek < (size_t)regprg_get_program_count()) {
+        if (dir->f_seek < (size_t)regprg_get_program_count()) {
                 dirent.filetype = FILE_TYPE_REGULAR;
-                dirent.name     = (char*)regprg_get_pointer_to_program_list()[dir->seek].program_name;
+                dirent.name     = (char*)regprg_get_pointer_to_program_list()[dir->f_seek].program_name;
                 dirent.size     = 0;
-                dir->seek++;
+                dir->f_seek++;
         }
 
         return dirent;

@@ -5,7 +5,7 @@
 
 @brief   This file support virtual file system
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
            This program is free software; you can redistribute it and/or modify
            it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
 
                                 new_fs = sysm_syscalloc(1, sizeof(struct FS_data));
                                 base_fs->mounted_FS_counter++;
-                                dir.cldir(dir.handle, &dir);
+                                dir.f_closedir(dir.f_handle, &dir);
                         }
                 }
         } else if (  list_get_item_count(vfs_mnt_list) == 0
@@ -265,8 +265,11 @@ stdret_t vfs_umount(const char *path)
 /**
  * @brief Function gets mount point for n item
  *
- * @param[in]   item        mount point number
- * @param[out] *mntent      mount entry data
+ * @param[in]   item            mount point number
+ * @param[out] *mntent          mount entry data
+ * 
+ * @retval STD_RET_OK           mount success
+ * @retval STD_RET_ERROR        mount error
  */
 //==============================================================================
 stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
@@ -347,7 +350,7 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
  *
  * @param[in] *path                 path to new directory
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_mkdir(const char *path)
@@ -404,7 +407,7 @@ dir_t *vfs_opendir(const char *path)
                         unlock_recursive_mutex(vfs_resource_mtx);
 
                         if (fs) {
-                                dir->handle = fs->handle;
+                                dir->f_handle = fs->handle;
 
                                 if (fs->interface.fs_opendir) {
                                         status = fs->interface.fs_opendir(fs->handle, external_path, dir);
@@ -429,14 +432,14 @@ dir_t *vfs_opendir(const char *path)
  *
  * @param[in] *dir                  directory object
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_closedir(dir_t *dir)
 {
         if (dir) {
-                if (dir->cldir) {
-                        if (dir->cldir(dir->handle, dir) == STD_RET_OK) {
+                if (dir->f_closedir) {
+                        if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
                                 sysm_sysfree(dir);
                                 return 0;
                         }
@@ -461,8 +464,8 @@ dirent_t vfs_readdir(dir_t *dir)
         direntry.name = NULL;
         direntry.size = 0;
 
-        if (dir->rddir) {
-                direntry = dir->rddir(dir->handle, dir);
+        if (dir->f_readdir) {
+                direntry = dir->f_readdir(dir->f_handle, dir);
         }
 
         return direntry;
@@ -475,7 +478,7 @@ dirent_t vfs_readdir(dir_t *dir)
  *
  * @param[in] *patch                localization of file/directory
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_remove(const char *path)
@@ -515,10 +518,10 @@ int vfs_remove(const char *path)
  * The implementation of rename can move files only if external FS provide
  * functionality. Local VFS cannot do this. Cross FS move is also not possible.
  *
- * @param[in] *oldName                  old file name
- * @param[in] *newName                  new file name
+ * @param[in] *old_name                  old file name
+ * @param[in] *new_name                  new file name
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_rename(const char *old_name, const char *new_name)
@@ -571,7 +574,7 @@ exit:
  * @param[in] *path         file path
  * @param[in]  mode         file mode
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_chmod(const char *path, int mode)
@@ -610,7 +613,7 @@ int vfs_chmod(const char *path, int mode)
  * @param[in]  owner        file owner
  * @param[in]  group        file group
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_chown(const char *path, int owner, int group)
@@ -648,7 +651,7 @@ int vfs_chown(const char *path, int owner, int group)
  * @param[in]  *path            file/dir path
  * @param[out] *stat            pointer to structure
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_stat(const char *path, struct vfs_stat *stat)
@@ -686,7 +689,7 @@ int vfs_stat(const char *path, struct vfs_stat *stat)
  * @param[in]  *path            fs path
  * @param[out] *statfs          pointer to FS status structure
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_statfs(const char *path, struct vfs_statfs *statfs)
@@ -822,7 +825,7 @@ FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
  *
  * @param[in] *file             pinter to file
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_fclose(FILE *file)
@@ -903,7 +906,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
  * @param[in]  offset           seek value
  * @param[in]  mode             seek mode
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_fseek(FILE *file, i64_t offset, int mode)
@@ -956,7 +959,7 @@ i64_t vfs_ftell(FILE *file)
  * @param[in]      rq           request
  * @param[in,out] ...           additional function arguments
  *
- * @return zero on success. On error, different from 0 is returned
+ * @return 0 on success. On error, different from 0 is returned
  */
 //==============================================================================
 int vfs_ioctl(FILE *file, int rq, ...)
@@ -986,7 +989,7 @@ int vfs_ioctl(FILE *file, int rq, ...)
  * @param[in]  *path            file/dir path
  * @param[out] *stat            pointer to stat structure
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_fstat(FILE *file, struct vfs_stat *stat)
@@ -1008,7 +1011,7 @@ int vfs_fstat(FILE *file, struct vfs_stat *stat)
  *
  * @param[in] *file     file to flush
  *
- * @return zero on success. On error, -1 is returned
+ * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
 int vfs_fflush(FILE *file)

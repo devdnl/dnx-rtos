@@ -352,11 +352,11 @@ stdret_t lfs_opendir(void *fshdl, const char *path, dir_t *dir)
         node_t *node;
         if ((node = get_node(path, &lfs->root_dir, 0, NULL))) {
                 if (node->type == NODE_TYPE_DIR) {
-                        dir->items = list_get_item_count(node->data);
-                        dir->rddir = lfs_readdir;
-                        dir->cldir = lfs_closedir;
-                        dir->seek  = 0;
-                        dir->dd    = node;
+                        dir->f_items    = list_get_item_count(node->data);
+                        dir->f_readdir  = lfs_readdir;
+                        dir->f_closedir = lfs_closedir;
+                        dir->f_seek     = 0;
+                        dir->f_dd       = node;
 
                         unlock_recursive_mutex(lfs->resource_mtx);
                         return STD_RET_OK;
@@ -409,8 +409,8 @@ static dirent_t lfs_readdir(void *fshdl, dir_t *dir)
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
-        node_t *from = dir->dd;
-        node_t *node = list_get_nitem_data(from->data, dir->seek++);
+        node_t *from = dir->f_dd;
+        node_t *node = list_get_nitem_data(from->data, dir->f_seek++);
 
         if (node) {
                 if (node->type == NODE_TYPE_DRV) {

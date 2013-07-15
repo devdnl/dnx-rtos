@@ -5,7 +5,7 @@
 
 @brief   This file support programs layer
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -289,9 +289,6 @@ static void task_program_startup(void *argv)
  *
  * @param *status_ptr           pointer to status
  * @param  status               status
- *
- * @retval STD_RET_OK           manager variables initialized successfully
- * @retval STD_RET_ERROR        variables not initialized
  */
 //==============================================================================
 static void set_status(enum prog_state *status_ptr, enum prog_state status)

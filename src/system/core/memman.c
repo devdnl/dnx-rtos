@@ -208,9 +208,6 @@ static void plug_holes(struct mem *mem)
 //==============================================================================
 /**
 * @brief Zero the heap and initialize start, end and lowest-free
-*
-* @retval STD_RET_OK            initialization success
-* @retval STD_RET_ERROR         initialization error
 */
 //==============================================================================
 void memman_init(void)
@@ -289,8 +286,9 @@ size_t memman_free(void *rmem)
  * Adam's mem_malloc() plus solution for bug #17922
  * Allocate a block of memory with a minimum of 'size' bytes.
  *
- * @param[in]  size          is the minimum size of the requested block in bytes.
+ * @param[in]   size         is the minimum size of the requested block in bytes.
  * @param[out] *real_size    the real allocated memory
+ * 
  * @return pointer to allocated memory or NULL if no free memory was found.
  *
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
@@ -417,6 +415,7 @@ void *memman_malloc(size_t size, size_t *real_size)
  * @param[in]  count            number of objects to allocate
  * @param[in]  size             size of the objects to allocate
  * @param[out] *real_size       the real allocated memory
+ * 
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
 //==============================================================================
