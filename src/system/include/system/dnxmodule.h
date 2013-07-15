@@ -55,27 +55,137 @@ extern "C" {
 #undef  free
 #define free(void__pmem)                        sysm_modfree(void__pmem, regdrv_get_module_number(__module_name__))
 
+//==============================================================================
+/**
+ * @brief Initialize device
+ *
+ * @param[out] **driver_handle          memory region allocated by module
+ * @param[in]    major                  device major number
+ * @param[in]    minor                  device minor number
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
 #define _MODULE_INIT(modname)                   stdret_t _##modname##_init(void **driver_handle, u8_t major, u8_t minor)
-#define MODULE_INIT(modname)                    static const char *__module_name__ = #modname; _MODULE_INIT(modname)
-#define MODULE_RELEASE(modname)                 stdret_t _##modname##_release(void *driver_handle)
-#define MODULE_OPEN(modname)                    stdret_t _##modname##_open(void *driver_handle)
-#define MODULE_CLOSE(modname)                   stdret_t _##modname##_close(void *driver_handle)
-#define MODULE_WRITE(modname)                   size_t _##modname##_write(void *driver_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
-#define MODULE_READ(modname)                    size_t _##modname##_read(void *driver_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
-#define MODULE_IOCTL(modname)                   stdret_t _##modname##_ioctl(void *driver_handle, int iorq, va_list args)
-#define MODULE_FLUSH(modname)                   stdret_t _##modname##_flush(void *driver_handle)
-#define MODULE_INFO(modname)                    stdret_t _##modname##_info(void *driver_handle, struct vfs_dev_info *info)
+#define MODULE__DEVICE_INIT(modname)            static const char *__module_name__ = #modname; _MODULE_INIT(modname)
 
+//==============================================================================
+/**
+ * @brief Release device
+ *
+ * @param[in] *driver_handle           memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#define MODULE__DEVICE_RELEASE(modname)         stdret_t _##modname##_release(void *driver_handle)
+
+//==============================================================================
+/**
+ * @brief Open device
+ *
+ * @param[in] *driver_handle           memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#define MODULE__DEVICE_OPEN(modname)            stdret_t _##modname##_open(void *driver_handle)
+
+//==============================================================================
+/**
+ * @brief Close device
+ *
+ * @param[in] *driver_handle           memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *driver_handle)
+
+//==============================================================================
+/**
+ * @brief Write data into a device
+ *
+ * @param[in] *driver_handle            memory region allocated by module
+ * @param[in] *src                      data source
+ * @param[in]  item_size                size of item
+ * @param[in]  n_items                  number of items
+ * @param[in]  lseek                    position in file/device address
+ *
+ * @return number of written items
+ */
+//==============================================================================
+#define MODULE__DEVICE_WRITE(modname)           size_t _##modname##_write(void *driver_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
+
+//==============================================================================
+/**
+ * @brief Read data from a device
+ *
+ * @param[in]  *driver_handle           memory region allocated by module
+ * @param[out] *dst                     data destination
+ * @param[in]   item_size               size of item
+ * @param[in]   n_items                 number of items
+ * @param[in]   lseek                   position in file/device address
+ *
+ * @return number of written items
+ */
+//==============================================================================
+#define MODULE__DEVICE_READ(modname)            size_t _##modname##_read(void *driver_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
+
+//==============================================================================
+/**
+ * @brief Device control
+ *
+ * @param[in]    *driver_handle         memory region allocated by module
+ * @param[in]     iorq                  control request
+ * @param[in,out] args                  additional arguments
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#define MODULE__DEVICE_IOCTL(modname)           stdret_t _##modname##_ioctl(void *driver_handle, int iorq, va_list args)
+
+//==============================================================================
+/**
+ * @brief Flush device memory/cache
+ *
+ * @param[in] *driver_handle            memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#define MODULE__DEVICE_FLUSH(modname)           stdret_t _##modname##_flush(void *driver_handle)
+
+//==============================================================================
+/**
+ * @brief Device information
+ *
+ * @param[in]  *driver_handle           memory region allocated by module
+ * @param[out] *device_info             device/file info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+#define MODULE__DEVICE_INFO(modname)            stdret_t _##modname##_info(void *driver_handle, struct vfs_dev_info *device_info)
+
+/* module's external interface */
 #define DRIVER_INTERFACE(modname)\
 extern _MODULE_INIT(modname);    \
-extern MODULE_RELEASE(modname);  \
-extern MODULE_OPEN(modname);     \
-extern MODULE_CLOSE(modname);    \
-extern MODULE_WRITE(modname);    \
-extern MODULE_READ(modname);     \
-extern MODULE_IOCTL(modname);    \
-extern MODULE_FLUSH(modname);    \
-extern MODULE_INFO(modname)
+extern  MODULE_RELEASE(modname); \
+extern  MODULE_OPEN(modname);    \
+extern  MODULE_CLOSE(modname);   \
+extern  MODULE_WRITE(modname);   \
+extern  MODULE_READ(modname);    \
+extern  MODULE_IOCTL(modname);   \
+extern  MODULE_FLUSH(modname);   \
+extern  MODULE_INFO(modname)
 
 /*==============================================================================
   Exported types, enums definitions

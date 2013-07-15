@@ -54,29 +54,29 @@ extern "C" {
 ==============================================================================*/
 #define USE_MODULE(module_name)                 #module_name
 
-#define USE_DRIVER_INTERFACE(drvmodule, drvname, devno, devpart)\
+#define USE_DRIVER_INTERFACE(drvmodule, drvname, major, minor)\
 {.drv_name    = drvname,\
- .dev         = devno,\
- .part        = devpart,\
- .drv_init    = drvmodule##_init,\
- .drv_release = drvmodule##_release,\
+ .major       = major,\
+ .minor       = minor,\
+ .drv_init    = _##drvmodule##_init,\
+ .drv_release = _##drvmodule##_release,\
  .drv_if      = {.handle    = NULL,\
-                 .drv_open  = drvmodule##_open,\
-                 .drv_close = drvmodule##_close,\
-                 .drv_write = drvmodule##_write,\
-                 .drv_read  = drvmodule##_read,\
-                 .drv_ioctl = drvmodule##_ioctl,\
-                 .drv_info  = drvmodule##_info,\
-                 .drv_flush = drvmodule##_flush}}
+                 .drv_open  = _##drvmodule##_open,\
+                 .drv_close = _##drvmodule##_close,\
+                 .drv_write = _##drvmodule##_write,\
+                 .drv_read  = _##drvmodule##_read,\
+                 .drv_ioctl = _##drvmodule##_ioctl,\
+                 .drv_info  = _##drvmodule##_info,\
+                 .drv_flush = _##drvmodule##_flush}}
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 struct driver_entry {
         const char *drv_name;
-        uint  dev;
-        uint  part;
-        stdret_t (*drv_init   )(void **drvhdl, uint dev, uint part);
+        u8_t  major;
+        u8_t  minor;
+        stdret_t (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
         stdret_t (*drv_release)(void *drvhdl);
         struct vfs_drv_interface drv_if;
 };
@@ -152,8 +152,8 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                 }
 
                 if (regdrv_driver_table[drvid].drv_init(&regdrv_driver_handle[drvid],
-                                                        regdrv_driver_table[drvid].dev,
-                                                        regdrv_driver_table[drvid].part)
+                                                        regdrv_driver_table[drvid].major,
+                                                        regdrv_driver_table[drvid].minor)
                                                         != STD_RET_OK) {
 
                         if (regdrv_driver_handle[drvid] == NULL)

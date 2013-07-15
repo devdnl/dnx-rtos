@@ -71,6 +71,9 @@ extern "C" {
 #define FIELD_SIZEOF(t, f)                (sizeof(((t*)0)->f))
 #define CONTAINER_OF(ptr, type, member)   ((type *)((char *)ptr - offsetof(type, member)))
 
+/** usable macros */
+#define UNUSED(variable)                  (void)variable
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

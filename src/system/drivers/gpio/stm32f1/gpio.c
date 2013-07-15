@@ -38,8 +38,6 @@ extern "C" {
 #include "drivers/gpio.h"
 #include "stm32f1/stm32f10x.h"
 
-MODULE_NAME(GPIO);
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -250,21 +248,14 @@ static void init_AFIO(void);
 
 //==============================================================================
 /**
- * @brief Initialise all GPIOs
- *
- * @param[out] **drvhdl         driver's memory handle
- * @param[in]  dev              device number
- * @param[in]  part             device part
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Initialize GPIO module
  */
 //==============================================================================
-stdret_t GPIO_init(void **drvhdl, uint dev, uint part)
+MODULE__DEVICE_INIT(GPIO)
 {
-        (void)drvhdl;
-        (void)dev;
-        (void)part;
+        UNUSED(driver_handle);
+        UNUSED(major);
+        UNUSED(minor);
 
 #if (AFIO_EN > 0)
         init_AFIO();
@@ -303,17 +294,12 @@ stdret_t GPIO_init(void **drvhdl, uint dev, uint part)
 
 //==============================================================================
 /**
- * @brief Release GPIO devices. Here is removed driver node and reseted device
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Release GPIO device
  */
 //==============================================================================
-stdret_t GPIO_release(void *drvhdl)
+MODULE__DEVICE_RELEASE(GPIO)
 {
-        (void)drvhdl;
+        UNUSED(driver_handle);
 
         return STD_RET_OK;
 }
@@ -321,16 +307,11 @@ stdret_t GPIO_release(void *drvhdl)
 //==============================================================================
 /**
  * @brief Open device
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t GPIO_open(void *drvhdl)
+MODULE__DEVICE_OPEN(GPIO)
 {
-        (void)drvhdl;
+        UNUSED(driver_handle);
 
         return STD_RET_OK;
 }
@@ -338,63 +319,43 @@ stdret_t GPIO_open(void *drvhdl)
 //==============================================================================
 /**
  * @brief Close device
- *
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t GPIO_close(void *drvhdl)
+MODULE__DEVICE_CLOSE(GPIO)
 {
-        (void)drvhdl;
+        UNUSED(driver_handle);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Write to the device
- *
- * @param[in] *drvhdl           driver's memory handle
- * @param[in] *src              source
- * @param[in] size              size
- * @param[in] lseek             seek
- *
- * @retval number of written nitems
+ * @brief Write data to device
  */
 //==============================================================================
-size_t GPIO_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_WRITE(GPIO)
 {
-        (void)drvhdl;
-        (void)src;
-        (void)size;
-        (void)lseek;
-        (void)nitems;
+        UNUSED(driver_handle);
+        UNUSED(src);
+        UNUSED(item_size);
+        UNUSED(lseek);
+        UNUSED(n_items);
 
         return 0;
 }
 
 //==============================================================================
 /**
- * @brief Read from device
- *
- * @param[in]  *drvhdl          driver's memory handle
- * @param[out] *dst             destination
- * @param[in]  size             size
- * @param[in]  lseek            seek
- *
- * @retval number of read nitems
+ * @brief Read data from device
  */
 //==============================================================================
-size_t GPIO_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_READ(GPIO)
 {
-        (void)drvhdl;
-        (void)dst;
-        (void)size;
-        (void)lseek;
-        (void)nitems;
+        UNUSED(driver_handle);
+        UNUSED(dst);
+        UNUSED(item_size);
+        UNUSED(lseek);
+        UNUSED(n_items);
 
         return 0;
 }
@@ -402,19 +363,12 @@ size_t GPIO_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
 //==============================================================================
 /**
  * @brief IO control
- *
- * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     ioRq          IO reqest
- * @param[in,out] args          additinal arguments
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t GPIO_ioctl(void *drvhdl, int iorq, va_list args)
+MODULE__DEVICE_IOCTL(GPIO)
 {
-        (void)drvhdl;
-        (void)args;
+        UNUSED(driver_handle);
+        UNUSED(args);
 
         switch (iorq) {
         case GPIO_IORQ_SD_SELECT:
@@ -434,36 +388,27 @@ stdret_t GPIO_ioctl(void *drvhdl, int iorq, va_list args)
 
 //==============================================================================
 /**
- * @brief Function flush device
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Flush device
  */
 //==============================================================================
-stdret_t GPIO_flush(void *drvhdl)
+MODULE__DEVICE_FLUSH(GPIO)
 {
-        (void)drvhdl;
+        UNUSED(driver_handle);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function returns device informations
- *
- * @param[in]  *drvhld          driver's memory handle
- * @param[out] *info            device/file info
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Interface returns device information
  */
 //==============================================================================
-stdret_t GPIO_info(void *drvhdl, struct vfs_dev_info *info)
+MODULE__DEVICE_INFO(GPIO)
 {
-        (void) drvhdl;
-        info->st_size = 0;
+        UNUSED(driver_handle);
+
+        device_info->st_size = 0;
+
         return STD_RET_OK;
 }
 

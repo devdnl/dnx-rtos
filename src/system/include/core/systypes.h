@@ -47,6 +47,10 @@ extern "C" {
 #undef malloc
 #undef free
 
+/** string usable macros */
+#define FIRST_CHARACTER(char__pstr)             char__pstr[0]
+#define LAST_CHARACTER(char__pstr)              char__pstr[strlen(char__pstr) - 1]
+
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
