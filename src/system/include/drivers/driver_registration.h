@@ -1,13 +1,13 @@
-#ifndef REGDRV_H_
-#define REGDRV_H_
+#ifndef _DRIVER_REGISTRATION_
+#define _DRIVER_REGISTRATION_
 /*=========================================================================*//**
-@file    regdrv.h
+@file    driver_registration.h
 
 @author  Daniel Zorychta
 
 @brief   This file is used to registration drivers
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ extern int         regdrv_get_module_number(const char *module_name);
 }
 #endif
 
-#endif /* REGDRV_H_ */
+#endif /* _DRIVER_REGISTRATION_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -1,13 +1,13 @@
-#ifndef REGFS_H_
-#define REGFS_H_
+#ifndef _IOCTL_H_
+#define _IOCTL_H_
 /*=========================================================================*//**
-@file    regfs.h
+@file    ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration file systems
+@brief   Header contain all device control commands. Depend on existing drivers.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,31 +33,33 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
+#include "drivers/gpio_def.h"
+#include "drivers/pll_def.h"
+#include "drivers/sdspi_def.h"
+#include "drivers/tty_def.h"
+#include "drivers/uart_def.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
 ==============================================================================*/
-extern stdret_t mount(const char*, const char*, const char*);
-extern stdret_t umount(const char*);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGFS_H_ */
+#endif /* _IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

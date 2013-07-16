@@ -1,11 +1,11 @@
-#ifndef TTY_H_
-#define TTY_H_
+#ifndef _FS_REGISTRATION_
+#define _FS_REGISTRATION_
 /*=========================================================================*//**
-@file    tty.h
+@file    fs_registration.h
 
 @author  Daniel Zorychta
 
-@brief   This file support virtual terminal
+@brief   This file is used to registration file systems
 
 @note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,8 +33,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "drivers/tty_def.h"
+#include "core/systypes.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -45,15 +44,20 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
+  Exported object declarations
+==============================================================================*/
+
+/*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-DRIVER_INTERFACE(TTY);
+extern stdret_t mount(const char*, const char*, const char*);
+extern stdret_t umount(const char*);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TTY_H_ */
+#endif /* _FS_REGISTRATION_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

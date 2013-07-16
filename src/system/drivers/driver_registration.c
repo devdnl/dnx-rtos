@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    regdrv.c
+@file    driver_registration.c
 
 @author  Daniel Zorychta
 
 @brief   This file is used to registration drivers
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "user/regdrv.h"
+#include "drivers/driver_registration.h"
 #include "core/vfs.h"
 #include "core/io.h"
 
