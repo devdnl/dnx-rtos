@@ -41,8 +41,9 @@ extern "C" {
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/io.h"
-#include "user/regfs.h"
-#include "user/regdrv.h"
+#include "core/drivers.h"
+#include "drivers/driver_registration.h"
+#include "fs/fs_registration.h" /* FIXME */
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "portable/cpuctl.h"
@@ -77,8 +78,8 @@ extern "C" {
 #define get_kernel_version()                                            tskKERNEL_VERSION_NUMBER
 #define get_host_name()                                                 CONFIG_HOSTNAME
 #define getcwd(char__pbuf, size_t__size)                                strncpy(char__pbuf, _get_this_task_data()->f_cwd, size_t__size)
-#define get_module_name(uint__modid)                                    regdrv_get_module_name(uint__modid)
-#define get_number_of_modules()                                         REGDRV_NUMBER_OF_REGISTERED_MODULES
+#define get_module_name(uint__modid)                                    _get_module_name(uint__modid)
+#define get_number_of_modules()                                         _regdrv_number_of_modules
 
 /*==============================================================================
   Exported types, enums definitions

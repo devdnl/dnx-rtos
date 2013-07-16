@@ -600,8 +600,8 @@ static size_t partition_read(void *device_handle, void *dst, size_t size, size_t
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
-        STOP_IF(size = 0);
-        STOP_IF(nitems = 0);
+        STOP_IF(size == 0);
+        STOP_IF(nitems == 0);
 
         struct partition *hdl = device_handle;
 
@@ -666,7 +666,7 @@ static stdret_t partition_flush(void *device_handle)
 stdret_t partition_info(void *device_handle, struct vfs_dev_info *info)
 {
         STOP_IF(device_handle == NULL);
-        STOP_IF(info);
+        STOP_IF(info == NULL);
 
         struct partition *hdl = device_handle;
         info->st_size = (u64_t)hdl->size_in_sectors * SECTOR_SIZE;

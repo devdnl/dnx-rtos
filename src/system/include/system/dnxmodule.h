@@ -36,7 +36,7 @@ extern "C" {
 #include "core/systypes.h"
 #include "core/vfs.h"
 #include "core/sysmoni.h"
-#include "drivers/driver_registration.h"
+#include "core/drivers.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -47,13 +47,13 @@ extern "C" {
 #endif
 
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, regdrv_get_module_number(_module_name_))
+#define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
 
 #undef  malloc
-#define malloc(size_t__size)                    sysm_modmalloc(size_t__size, regdrv_get_module_number(_module_name_))
+#define malloc(size_t__size)                    sysm_modmalloc(size_t__size, _get_module_number(_module_name_))
 
 #undef  free
-#define free(void__pmem)                        sysm_modfree(void__pmem, regdrv_get_module_number(_module_name_))
+#define free(void__pmem)                        sysm_modfree(void__pmem, _get_module_number(_module_name_))
 
 #define STOP_IF(condition)                      _stop_if(condition)
 
@@ -69,7 +69,7 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 #define _MODULE__DEVICE_INIT(modname)           stdret_t _##modname##_init(void **device_handle, u8_t major, u8_t minor)
-#define MODULE__DEVICE_INIT(modname)            static const char *_module_name_ = #modname; _MODULE__DEVICE_INIT(modname)
+#define  MODULE__DEVICE_INIT(modname)           static const char *_module_name_ = #modname; _MODULE__DEVICE_INIT(modname)
 
 
 /**

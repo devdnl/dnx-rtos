@@ -1,13 +1,13 @@
-#ifndef _DRIVER_REGISTRATION_
-#define _DRIVER_REGISTRATION_
+#ifndef _DRIVERS_H_
+#define _DRIVERS_H_
 /*=========================================================================*//**
-@file    driver_registration.h
+@file    drivers.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration drivers
+@brief   Drivers support.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,42 +33,32 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
-#include "core/vfs.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
-struct _driver_entry {
-        const char               *drv_name;
-        u8_t                      major;
-        u8_t                      minor;
-        stdret_t                (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
-        stdret_t                (*drv_release)(void *drvhdl);
-        struct vfs_drv_interface  drv_if;
-};
 
 /*==============================================================================
-  Exported object declarations
+  Exported objects
 ==============================================================================*/
-extern const char                 *_regdrv_module_name[];
-extern const struct _driver_entry  _regdrv_driver_table[];
-extern const uint                  _regdrv_driver_table_array_size;
-extern const uint                  _regdrv_number_of_modules;
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
 ==============================================================================*/
+extern stdret_t    init_driver            (const char *drvName, const char *nodeName);
+extern stdret_t    release_driver         (const char *drvName);
+extern const char *_get_module_name       (uint module_number);
+extern int         _get_module_number     (const char *module_name);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _DRIVER_REGISTRATION_ */
+#endif /* _DRIVERS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -34,7 +34,7 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "core/io.h"
-#include "user/regdrv.h"
+#include "drivers/driver_registration.h"
 #include "kernel/kwrapper.h"
 #include "portable/cpuctl.h"
 
@@ -101,8 +101,8 @@ static i32_t sysm_system_memory_usage = (i32_t)CONFIG_RAM_SIZE - (i32_t)CONFIG_H
 #endif
 
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
-static i32_t sysm_modules_memory_usage;
-static i32_t sysm_module_memory_usage[REGDRV_NUMBER_OF_REGISTERED_MODULES];
+static i32_t  sysm_modules_memory_usage;
+static i32_t *sysm_module_memory_usage;
 #endif
 
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
@@ -135,7 +135,15 @@ stdret_t sysm_init(void)
         sysm_task_list    = new_list();
         sysm_resource_mtx = new_recursive_mutex();
 
+#if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
+        sysm_module_memory_usage = sysm_syscalloc(_regdrv_number_of_modules, sizeof(i32_t));
+#endif
+
+#if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
+        if (!sysm_task_list || !sysm_resource_mtx || !sysm_module_memory_usage)
+#else
         if (!sysm_task_list || !sysm_resource_mtx)
+#endif
                 return STD_RET_ERROR;
         else
                 return STD_RET_OK;
@@ -565,7 +573,7 @@ void *sysm_modmalloc(size_t size, uint module_number)
         size_t allocated;
         void   *p = NULL;
 
-        if (module_number < REGDRV_NUMBER_OF_REGISTERED_MODULES) {
+        if (module_number < _regdrv_number_of_modules) {
                 p = memman_malloc(size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
@@ -592,7 +600,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
         size_t allocated;
         void   *p = NULL;
 
-        if (module_number < REGDRV_NUMBER_OF_REGISTERED_MODULES) {
+        if (module_number < _regdrv_number_of_modules) {
                 p = memman_calloc(count, size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
@@ -613,7 +621,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 void sysm_modfree(void *mem, uint module_number)
 {
-        if (module_number < REGDRV_NUMBER_OF_REGISTERED_MODULES) {
+        if (module_number < _regdrv_number_of_modules) {
                 size_t freed = memman_free(mem);
                 sysm_modules_memory_usage -= freed;
                 sysm_module_memory_usage[module_number] -= freed;
@@ -633,7 +641,7 @@ void sysm_modfree(void *mem, uint module_number)
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 i32_t sysm_get_used_memory_by_module(uint module_number)
 {
-        if (module_number >= REGDRV_NUMBER_OF_REGISTERED_MODULES)
+        if (module_number >= _regdrv_number_of_modules)
                 return 0;
         else
                 return sysm_module_memory_usage[module_number];
