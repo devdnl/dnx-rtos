@@ -35,7 +35,7 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include "cat.h"
-#include "drivers/tty_def.h"
+#include "drivers/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

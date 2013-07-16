@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "terminal.h"
-#include "drivers/tty_def.h"
+#include "drivers/ioctl.h"
 #include <string.h>
 #include <stdio.h>
 
