@@ -47,17 +47,17 @@ extern "C" {
 #endif
 
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, regdrv_get_module_number(__module_name__))
+#define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, regdrv_get_module_number(_module_name_))
 
 #undef  malloc
-#define malloc(size_t__size)                    sysm_modmalloc(size_t__size, regdrv_get_module_number(__module_name__))
+#define malloc(size_t__size)                    sysm_modmalloc(size_t__size, regdrv_get_module_number(_module_name_))
 
 #undef  free
-#define free(void__pmem)                        sysm_modfree(void__pmem, regdrv_get_module_number(__module_name__))
+#define free(void__pmem)                        sysm_modfree(void__pmem, regdrv_get_module_number(_module_name_))
 
 #define STOP_IF(condition)                      _stop_if(condition)
 
-//==============================================================================
+
 /**
  * @brief Initialize device
  *
@@ -68,11 +68,10 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//==============================================================================
 #define _MODULE__DEVICE_INIT(modname)           stdret_t _##modname##_init(void **device_handle, u8_t major, u8_t minor)
-#define MODULE__DEVICE_INIT(modname)            const char *__module_name__ = #modname; _MODULE__DEVICE_INIT(modname)
+#define MODULE__DEVICE_INIT(modname)            static const char *_module_name_ = #modname; _MODULE__DEVICE_INIT(modname)
 
-//==============================================================================
+
 /**
  * @brief Release device
  *
@@ -81,10 +80,9 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//==============================================================================
 #define MODULE__DEVICE_RELEASE(modname)         stdret_t _##modname##_release(void *device_handle)
 
-//==============================================================================
+
 /**
  * @brief Open device
  *
@@ -93,10 +91,9 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//==============================================================================
 #define MODULE__DEVICE_OPEN(modname)            stdret_t _##modname##_open(void *device_handle)
 
-//==============================================================================
+
 /**
  * @brief Close device
  *
@@ -105,10 +102,9 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//==============================================================================
 #define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *device_handle)
 
-//==============================================================================
+
 /**
  * @brief Write data into a device
  *
@@ -120,10 +116,9 @@ extern "C" {
  *
  * @return number of written items
  */
-//==============================================================================
 #define MODULE__DEVICE_WRITE(modname)           size_t _##modname##_write(void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
 
-//==============================================================================
+
 /**
  * @brief Read data from a device
  *
@@ -135,10 +130,9 @@ extern "C" {
  *
  * @return number of written items
  */
-//==============================================================================
 #define MODULE__DEVICE_READ(modname)            size_t _##modname##_read(void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
 
-//==============================================================================
+
 /**
  * @brief Device control
  *
@@ -149,10 +143,9 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//==============================================================================
 #define MODULE__DEVICE_IOCTL(modname)           stdret_t _##modname##_ioctl(void *device_handle, int iorq, va_list args)
 
-//==============================================================================
+
 /**
  * @brief Flush device memory/cache
  *
@@ -161,10 +154,9 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//==============================================================================
 #define MODULE__DEVICE_FLUSH(modname)           stdret_t _##modname##_flush(void *device_handle)
 
-//==============================================================================
+
 /**
  * @brief Device information
  *
@@ -174,7 +166,6 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-//==============================================================================
 #define MODULE__DEVICE_INFO(modname)            stdret_t _##modname##_info(void *device_handle, struct vfs_dev_info *device_info)
 
 /* module's external interface */
