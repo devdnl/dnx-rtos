@@ -134,10 +134,6 @@ task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FI
 
         set_status(status, PROGRAM_RUNNING);
 
-        if (exit_code) {
-                *exit_code = STD_RET_UNKNOWN;
-        }
-
         taskhdl = new_task(task_program_startup, regpdata.program_name,
                            *regpdata.stack_depth, pdata);
 
@@ -235,7 +231,7 @@ static void task_program_startup(void *argv)
         struct program_data *prog_data = argv;
         struct task_data    *task_data = NULL;
         void                *task_mem  = NULL;
-        int                  exit_code = STD_RET_UNKNOWN;
+        int                  exit_code = -1;
 
         if (!(task_data = _get_this_task_data())) {
                 sysm_sysfree(prog_data);
