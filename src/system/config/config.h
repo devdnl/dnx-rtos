@@ -176,9 +176,9 @@ extern "C" {
 
 /**=== PROGRAMING OPTIONS ====================================================*/
 /**
- * Enable (1) or disable (0) system assert macro
+ * Enable (1) or disable (0) system assert macro (stop system if condition met)
  */
-#define CONFIG_SYSTEM_ASSERT_USAGE                      (1)
+#define CONFIG_SYSTEM_STOP_MACRO                        (1)
 
 #ifdef __cplusplus
 }

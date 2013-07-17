@@ -42,7 +42,7 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* macro used by internal modules to stop system if condition is equal (!assert) */
-#if CONFIG_SYSTEM_ASSERT_USAGE > 0
+#if CONFIG_SYSTEM_STOP_MACRO > 0
 #define _stop_if(stop_condition)                if ((stop_condition)) {while(1);}
 #else
 #define _stop_if(stop_condition)
