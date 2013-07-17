@@ -103,7 +103,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
                 }
 
         } else {
-                printf("Enough free memory\n");
+                puts("Not enough free memory");
 
                 status = EXIT_FAILURE;
         }
