@@ -63,6 +63,7 @@ CSRC_CORE += core/memman.c
 CSRC_CORE += core/io.c
 CSRC_CORE += core/vfs.c
 CSRC_CORE += core/drivers.c
+CSRC_CORE += core/fsctrl.c
 CSRC_CORE += fs/procfs/procfs.c
 CSRC_CORE += fs/appfs/appfs.c
 CSRC_CORE += fs/lfs/lfs.c

@@ -34,6 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "core/systypes.h"
+#include "core/vfs.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -42,16 +43,20 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+struct _FS_entry {
+      const char                    *FS_name;
+      const struct vfs_FS_interface  FS_if;
+};
 
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
+extern const struct _FS_entry _FS_table[];
+extern const uint             _FS_table_size;
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern stdret_t mount(const char*, const char*, const char*);
-extern stdret_t umount(const char*);
 
 #ifdef __cplusplus
 }

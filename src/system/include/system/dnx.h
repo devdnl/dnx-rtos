@@ -42,8 +42,8 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/io.h"
 #include "core/drivers.h"
+#include "core/fsctrl.h"
 #include "drivers/driver_registration.h"
-#include "fs/fs_registration.h" /* FIXME */
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "portable/cpuctl.h"
