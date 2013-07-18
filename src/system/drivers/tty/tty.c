@@ -5,7 +5,7 @@
 
 @brief   This file support virtual terminal
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ extern "C" {
 ==============================================================================*/
 #include "drivers/tty.h"
 #include "drivers/uart_def.h"
-
-MODULE_NAME(TTY);
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -201,23 +199,16 @@ static struct tty_ctrl *tty_ctrl;
 
 //==============================================================================
 /**
- * @brief Initialize TTY devices
- *
- * @param[out] **drvhdl         driver's memory handler
- * @param[in]  dev              device number
- * @param[in]  part             device part
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Initialize TTY device
  */
 //==============================================================================
-stdret_t TTY_init(void **drvhdl, uint dev, uint part)
+MODULE__DEVICE_INIT(TTY)
 {
-        (void)part;
+        UNUSED_ARG(minor);
 
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        if (dev >= TTY_DEV_COUNT) {
+        if (major >= TTY_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
 
@@ -264,10 +255,10 @@ stdret_t TTY_init(void **drvhdl, uint dev, uint part)
         }
 
         tty->edit_line.echo_enabled = SET;
-        tty_ctrl->tty[dev]          = tty;
-        tty->device_number          = dev;
+        tty_ctrl->tty[major]        = tty;
+        tty->device_number          = major;
         tty->file_size              = 1;
-        *drvhdl                     = tty;
+        *device_handle              = tty;
 
         return STD_RET_OK;
 
@@ -310,19 +301,14 @@ ctrl_error:
 //==============================================================================
 /**
  * @brief Release TTY device
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_release(void *drvhdl)
+MODULE__DEVICE_RELEASE(TTY)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = drvhdl;
+        struct tty_data *tty = device_handle;
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 clear_tty(tty);
@@ -350,35 +336,25 @@ stdret_t TTY_release(void *drvhdl)
 //==============================================================================
 /**
  * @brief Opens specified port and initialize default settings
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_open(void *drvhdl)
+MODULE__DEVICE_OPEN(TTY)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function close opened port
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Close opened port
  */
 //==============================================================================
-stdret_t TTY_close(void *drvhdl)
+MODULE__DEVICE_CLOSE(TTY)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
         return STD_RET_OK;
 }
@@ -386,26 +362,19 @@ stdret_t TTY_close(void *drvhdl)
 //==============================================================================
 /**
  * @brief Write data to TTY
- *
- * @param[in] *drvhdl           driver's memory handle
- * @param[in] *src              source
- * @param[in] size              size
- * @param[in] lseek             seek
- *
- * @retval number of written nitems
  */
 //==============================================================================
-size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_WRITE(TTY)
 {
-        (void)lseek;
+        UNUSED_ARG(lseek);
 
-        _stop_if(!drvhdl);
-        _stop_if(!src);
-        _stop_if(!size);
-        _stop_if(!nitems);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(src == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = drvhdl;
+        struct tty_data *tty = device_handle;
 
         /* if current TTY is showing wait to show refreshed line */
         while (  tty_ctrl->tty[tty_ctrl->current_TTY]->screen.refresh_last_line
@@ -423,9 +392,9 @@ size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_
                         clear_tty(tty);
                 }
 
-                add_line(tty, src, nitems);
+                add_line(tty, src, n_items);
 
-                n = nitems;
+                n = n_items;
                 tty->file_size += n;
 
                 unlock_recursive_mutex(tty->secure_resources_mtx);
@@ -436,31 +405,24 @@ size_t TTY_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_
 
 //==============================================================================
 /**
- * @brief Write data to TTY
- *
- * @param[in]  *drvhdl          driver's memory handle
- * @param[out] *dst             destination
- * @param[in]   size            size
- * @param[in]   lseek           seek
- *
- * @retval number of read nitems
+ * @brief Read data from TTY
  */
 //==============================================================================
-size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_READ(TTY)
 {
-        (void)lseek;
+        UNUSED_ARG(lseek);
 
-        _stop_if(!drvhdl);
-        _stop_if(!dst);
-        _stop_if(!size);
-        _stop_if(!nitems);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(dst == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = drvhdl;
+        struct tty_data *tty = device_handle;
 
         size_t n   = 0;
         char  *str = dst;
-        while (nitems > 0) {
+        while (n_items > 0) {
                 while (read_key_stream(tty, str) != STD_RET_OK);
 
                 n++;
@@ -469,11 +431,11 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek
                         break;
                 }
 
-                nitems--;
+                n_items--;
                 str++;
         }
 
-        n /= size;
+        n /= item_size;
         tty->file_size += n;
 
         return n;
@@ -482,21 +444,14 @@ size_t TTY_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek
 //==============================================================================
 /**
  * @brief Specific settings of TTY
- *
- * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     ioRq          IO reqest
- * @param[in,out] args          additional arguments
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t TTY_ioctl(void *drvhdl, int iorq, va_list args)
+MODULE__DEVICE_IOCTL(TTY)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = drvhdl;
+        struct tty_data *tty = device_handle;
         int *out_ptr;
 
         switch (iorq) {
@@ -562,20 +517,15 @@ stdret_t TTY_ioctl(void *drvhdl, int iorq, va_list args)
 
 //==============================================================================
 /**
- * @brief Function flush device
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Flush device
  */
 //==============================================================================
-stdret_t TTY_flush(void *drvhdl)
+MODULE__DEVICE_FLUSH(TTY)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = drvhdl;
+        struct tty_data *tty = device_handle;
 
         if (lock_recursive_mutex(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 move_editline_to_streams(tty, true);
@@ -587,24 +537,18 @@ stdret_t TTY_flush(void *drvhdl)
 
 //==============================================================================
 /**
- * @brief Function returns device informations
- *
- * @param[in]  *drvhld          driver's memory handle
- * @param[out] *info            device/file info
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Interface returns device informations
  */
 //==============================================================================
-stdret_t TTY_info(void *drvhdl, struct vfs_dev_info *info)
+MODULE__DEVICE_INFO(TTY)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!info);
-        _stop_if(!tty_ctrl);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(device_info == NULL);
+        STOP_IF(tty_ctrl == NULL);
 
-        struct tty_data *tty = drvhdl;
+        struct tty_data *tty = device_handle;
 
-        info->st_size = tty->file_size;
+        device_info->st_size = tty->file_size;
         return STD_RET_OK;
 }
 

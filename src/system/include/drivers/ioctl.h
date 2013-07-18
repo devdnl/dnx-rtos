@@ -1,13 +1,13 @@
-#ifndef TTY_H_
-#define TTY_H_
+#ifndef _IOCTL_H_
+#define _IOCTL_H_
 /*=========================================================================*//**
-@file    tty.h
+@file    ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   This file support virtual terminal
+@brief   Header contain all device control commands. Depend on existing drivers.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,27 +33,33 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
+#include "drivers/gpio_def.h"
+#include "drivers/pll_def.h"
+#include "drivers/sdspi_def.h"
 #include "drivers/tty_def.h"
+#include "drivers/uart_def.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported objects
 ==============================================================================*/
-DRIVER_INTERFACE(TTY);
+
+/*==============================================================================
+  Exported functions
+==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TTY_H_ */
+#endif /* _IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

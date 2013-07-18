@@ -61,8 +61,8 @@ struct fatfs {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t fatfs_closedir(void *fshdl, dir_t *dir);
-static dirent_t fatfs_readdir(void *fshdl, dir_t *dir);
+static stdret_t fatfs_closedir(void *fs_handle, dir_t *dir);
+static dirent_t fatfs_readdir (void *fs_handle, dir_t *dir);
 
 /*==============================================================================
   Local object definitions
@@ -80,22 +80,22 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir);
 /**
  * @brief Initialize file system
  *
- * @param[out] **fshdl          pointer to allocated memory by file system
+ * @param[out] **fs_handle      pointer to allocated memory by file system
  * @param[in]  *src_path        file source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_init(void **fshdl, const char *src_path)
+stdret_t fatfs_init(void **fs_handle, const char *src_path)
 {
-        _stop_if(!fshdl);
-        _stop_if(!src_path);
+        STOP_IF(!fs_handle);
+        STOP_IF(!src_path);
 
         struct fatfs *hdl = calloc(1, sizeof(struct fatfs));
 
         if (hdl) {
-                *fshdl = hdl;
+                *fs_handle = hdl;
 
                 if ((hdl->fsfile = vfs_fopen(src_path, "r+"))) {
                         if (libfat_mount(hdl->fsfile, &hdl->fatfs) == FR_OK) {
@@ -118,17 +118,17 @@ stdret_t fatfs_init(void **fshdl, const char *src_path)
 /**
  * @brief Function release file system
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle            FS handle
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_release(void *fshdl)
+stdret_t fatfs_release(void *fs_handle)
 {
-        _stop_if(!fshdl);
+        STOP_IF(!fs_handle);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
                 libfat_umount(&hdl->fatfs);
@@ -144,7 +144,7 @@ stdret_t fatfs_release(void *fshdl)
 /**
  * @brief Function open selected file
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[out] *extra           file extra data (useful in FS wrappers)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
@@ -155,17 +155,17 @@ stdret_t fatfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
-        (void)fd;
+        UNUSED_ARG(fd);
 
-        _stop_if(!fshdl);
-        _stop_if(!extra);
-        _stop_if(!lseek);
-        _stop_if(!path);
-        _stop_if(!mode);
+        STOP_IF(!fs_handle);
+        STOP_IF(!extra);
+        STOP_IF(!lseek);
+        STOP_IF(!path);
+        STOP_IF(!mode);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         FATFILE *fat_file = calloc(1, sizeof(FATFILE));
         if (!fat_file)
@@ -209,7 +209,7 @@ stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
 /**
  * @brief Function close file in LFS
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  *
@@ -217,14 +217,14 @@ stdret_t fatfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
+stdret_t fatfs_close(void *fs_handle, void *extra, fd_t fd)
 {
-        (void)fd;
+        UNUSED_ARG(fd);
 
-        _stop_if(!fshdl);
-        _stop_if(!extra);
+        STOP_IF(!fs_handle);
+        STOP_IF(!extra);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         FATFILE *fat_file = extra;
         if (libfat_close(fat_file) == FR_OK) {
@@ -240,7 +240,7 @@ stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
 /**
  * @brief Function write data to the file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
@@ -251,15 +251,15 @@ stdret_t fatfs_close(void *fshdl, void *extra, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t fatfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)fshdl;
-        (void)fd;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(fd);
 
-        _stop_if(!extra);
-        _stop_if(!src);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(!extra);
+        STOP_IF(!src);
+        STOP_IF(!size);
+        STOP_IF(!nitems);
 
         FATFILE *fat_file = extra;
         uint     n        = 0;
@@ -276,7 +276,7 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
 /**
  * @brief Function read from file data
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
@@ -287,15 +287,15 @@ size_t fatfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
  * @return number of read items
  */
 //==============================================================================
-size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t fatfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)fshdl;
-        (void)fd;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(fd);
 
-        _stop_if(!extra);
-        _stop_if(!dst);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(!extra);
+        STOP_IF(!dst);
+        STOP_IF(!size);
+        STOP_IF(!nitems);
 
         FATFILE *fat_file = extra;
         uint     n        = 0;
@@ -312,7 +312,7 @@ size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
 /**
  * @brief IO operations on files
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
@@ -322,13 +322,13 @@ size_t fatfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t fatfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)iorq;
-        (void)args;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(iorq);
+        UNUSED_ARG(args);
 
         /* not supported by this file system */
 
@@ -339,7 +339,7 @@ stdret_t fatfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 /**
  * @brief Function flush file data
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  *
@@ -347,12 +347,12 @@ stdret_t fatfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
+stdret_t fatfs_flush(void *fs_handle, void *extra, fd_t fd)
 {
-        (void)fshdl;
-        (void)fd;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(fd);
 
-        _stop_if(!extra);
+        STOP_IF(!extra);
 
         FATFILE *fat_file = extra;
         if (libfat_sync(fat_file) == FR_OK)
@@ -365,7 +365,7 @@ stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
 /**
  * @brief Function returns file status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *extra                file extra data (useful in FS wrappers)
  * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
@@ -374,13 +374,13 @@ stdret_t fatfs_flush(void *fshdl, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t fatfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
-        (void)fshdl;
-        (void)fd;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(fd);
 
-        _stop_if(!extra);
-        _stop_if(!stat);
+        STOP_IF(!extra);
+        STOP_IF(!stat);
 
         FATFILE *fat_file  = extra;
         stat->st_dev   = 0;
@@ -397,18 +397,18 @@ stdret_t fatfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 /**
  * @brief Create directory
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_mkdir(void *fshdl, const char *path)
+stdret_t fatfs_mkdir(void *fs_handle, const char *path)
 {
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
-        _stop_if(!path);
+        STOP_IF(!path);
 
         if (libfat_mkdir(&hdl->fatfs, path) == FR_OK)
                 return STD_RET_OK;
@@ -420,7 +420,7 @@ stdret_t fatfs_mkdir(void *fshdl, const char *path)
 /**
  * @brief Function create node for driver file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path when driver-file shall be created
  * @param[in] *drv_if           pointer to driver interface
  *
@@ -428,11 +428,11 @@ stdret_t fatfs_mkdir(void *fshdl, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t fatfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
-        (void)fshdl;
-        (void)path;
-        (void)drv_if;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(drv_if);
 
         /* not supported by this file system */
 
@@ -443,7 +443,7 @@ stdret_t fatfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
 /**
  * @brief Function open directory
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *path            directory path
  * @param[out] *dir             directory info
  *
@@ -451,13 +451,13 @@ stdret_t fatfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
+stdret_t fatfs_opendir(void *fs_handle, const char *path, dir_t *dir)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
-        _stop_if(!dir);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        STOP_IF(!dir);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         char *dospath = calloc(strlen(path) + 1, 1);
         if (!dospath) {
@@ -499,19 +499,19 @@ stdret_t fatfs_opendir(void *fshdl, const char *path, dir_t *dir)
 /**
  * @brief Function close dir
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *dir              directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
+static stdret_t fatfs_closedir(void *fs_handle, dir_t *dir)
 {
-        _stop_if(!fshdl);
-        _stop_if(!dir);
+        STOP_IF(!fs_handle);
+        STOP_IF(!dir);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         if (dir->f_dd) {
                 free(dir->f_dd);
@@ -525,18 +525,18 @@ static stdret_t fatfs_closedir(void *fshdl, dir_t *dir)
 /**
  * @brief Function read current directory
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *dir              directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
+static dirent_t fatfs_readdir(void *fs_handle, dir_t *dir)
 {
-        (void) fshdl;
+        UNUSED_ARG(fs_handle);
 
-        _stop_if(!dir);
+        STOP_IF(!dir);
 
         struct fatdir *fatdir = dir->f_dd;
 
@@ -571,19 +571,19 @@ static dirent_t fatfs_readdir(void *fshdl, dir_t *dir)
 /**
  * @brief Remove file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *patch            localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_remove(void *fshdl, const char *path)
+stdret_t fatfs_remove(void *fs_handle, const char *path)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         if (libfat_unlink(&hdl->fatfs, path) == FR_OK)
                 return STD_RET_OK;
@@ -595,7 +595,7 @@ stdret_t fatfs_remove(void *fshdl, const char *path)
 /**
  * @brief Rename file name
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *oldName              old file name
  * @param[in] *newName              new file name
  *
@@ -603,13 +603,13 @@ stdret_t fatfs_remove(void *fshdl, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
+stdret_t fatfs_rename(void *fs_handle, const char *old_name, const char *new_name)
 {
-        _stop_if(!fshdl);
-        _stop_if(!old_name);
-        _stop_if(!new_name);
+        STOP_IF(!fs_handle);
+        STOP_IF(!old_name);
+        STOP_IF(!new_name);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         if (libfat_rename(&hdl->fatfs, old_name, new_name) == FR_OK)
                 return STD_RET_OK;
@@ -621,7 +621,7 @@ stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
 /**
  * @brief Function change file mode
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  mode                 file mode
  *
@@ -629,12 +629,12 @@ stdret_t fatfs_rename(void *fshdl, const char *old_name, const char *new_name)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_chmod(void *fshdl, const char *path, int mode)
+stdret_t fatfs_chmod(void *fs_handle, const char *path, int mode)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         uint8_t dosmode = mode & OWNER_MODE(MODE_W) ? 0 : LIBFAT_AM_RDO;
         if (libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO) == FR_OK) {
@@ -648,7 +648,7 @@ stdret_t fatfs_chmod(void *fshdl, const char *path, int mode)
 /**
  * @brief Function change file owner and group
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  owner                file owner
  * @param[in]  group                file group
@@ -657,12 +657,12 @@ stdret_t fatfs_chmod(void *fshdl, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_chown(void *fshdl, const char *path, int owner, int group)
+stdret_t fatfs_chown(void *fs_handle, const char *path, int owner, int group)
 {
-        (void)fshdl;
-        (void)path;
-        (void)owner;
-        (void)group;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(owner);
+        UNUSED_ARG(group);
 
         /* not supported by this file system */
 
@@ -673,7 +673,7 @@ stdret_t fatfs_chown(void *fshdl, const char *path, int owner, int group)
 /**
  * @brief Function returns file/dir status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *path                 file/dir path
  * @param[out] *stat                 pointer to stat structure
  *
@@ -681,13 +681,13 @@ stdret_t fatfs_chown(void *fshdl, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
+stdret_t fatfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
-        _stop_if(!stat);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        STOP_IF(!stat);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
 
         FILEINFO file_info;
         if (libfat_stat(&hdl->fatfs, path, &file_info) == FR_OK) {
@@ -708,19 +708,19 @@ stdret_t fatfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 /**
  * @brief Function returns FS status
  *
- * @param[in]  *fshdl               FS handle
+ * @param[in]  *fs_handle           FS handle
  * @param[out] *statfs              pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_statfs(void *fshdl, struct vfs_statfs *statfs)
+stdret_t fatfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
 {
-        _stop_if(!fshdl);
-        _stop_if(!statfs);
+        STOP_IF(!fs_handle);
+        STOP_IF(!statfs);
 
-        struct fatfs *hdl = fshdl;
+        struct fatfs *hdl = fs_handle;
         u32_t  free_clusters = 0;
 
         struct vfs_stat fstat;

@@ -57,7 +57,7 @@ enum node_type {
 typedef struct node {
         char            *name;                  /* file name                 */
         enum node_type   type;                  /* file type                 */
-        fd_t             fd;                    /* file desriptor            */
+        fd_t             fd;                    /* file descriptor           */
         u32_t            mode;                  /* protection                */
         u32_t            uid;                   /* user ID of owner          */
         u32_t            gid;                   /* group ID of owner         */
@@ -85,13 +85,13 @@ struct LFS_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static node_t   *new_node(struct LFS_data*, node_t*, char*, i32_t*);
-static stdret_t  delete_node(node_t*, node_t*, u32_t);
-static node_t   *get_node(const char*, node_t*, i32_t, i32_t*);
-static uint      get_path_deep(const char*);
-static dirent_t  lfs_readdir(void*, dir_t*);
-static stdret_t  lfs_closedir(void*, dir_t*);
-static stdret_t  add_node_to_list_of_open_files(struct LFS_data*, node_t*, node_t*, i32_t*);
+static node_t   *new_node                       (struct LFS_data *lfs, node_t *nodebase, char *filename, i32_t *item);
+static stdret_t  delete_node                    (node_t *base, node_t *target, u32_t baseitemid);
+static node_t   *get_node                       (const char *path, node_t *startnode, i32_t deep, i32_t *item);
+static uint      get_path_deep                  (const char *path);
+static dirent_t  lfs_readdir                    (void *fs_handle, dir_t *dir);
+static stdret_t  lfs_closedir                   (void *fs_handle, dir_t *dir);
+static stdret_t  add_node_to_list_of_open_files (struct LFS_data *lfs, node_t *base_node, node_t *node, i32_t *item);
 
 /*==============================================================================
   Local object definitions
@@ -105,18 +105,18 @@ static stdret_t  add_node_to_list_of_open_files(struct LFS_data*, node_t*, node_
 /**
  * @brief Initialize file system
  *
- * @param[out] **fshdl          pointer to allocated memory by file system
+ * @param[out] **fs_handle      pointer to allocated memory by file system
  * @param[in]  *src_path        file source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_init(void **fshdl, const char *src_path)
+stdret_t lfs_init(void **fs_handle, const char *src_path)
 {
-        (void)src_path;
+        UNUSED_ARG(src_path);
 
-        _stop_if(!fshdl);
+        STOP_IF(!fs_handle);
 
         struct LFS_data *lfs;
         if (!(lfs = calloc(1, sizeof(struct LFS_data)))) {
@@ -147,7 +147,7 @@ stdret_t lfs_init(void **fshdl, const char *src_path)
                 lfs->root_dir.size = sizeof(node_t);
                 lfs->root_dir.type = NODE_TYPE_DIR;
 
-                *fshdl = lfs;
+                *fs_handle = lfs;
                 return STD_RET_OK;
         }
 }
@@ -156,15 +156,15 @@ stdret_t lfs_init(void **fshdl, const char *src_path)
 /**
  * @brief Function release file system
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle            FS handle
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_release(void *fshdl)
+stdret_t lfs_release(void *fs_handle)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
         /*
          * Here the LFS should delete all lists and free all allocated buffers.
@@ -178,7 +178,7 @@ stdret_t lfs_release(void *fshdl)
 /**
  * @brief Function create node for driver file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path when driver-file shall be created
  * @param[in] *drv_if           pointer to driver interface
  *
@@ -186,13 +186,13 @@ stdret_t lfs_release(void *fshdl)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t lfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
-        _stop_if(!drv_if);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        STOP_IF(!drv_if);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         if (path[0] != '/') {
                 return STD_RET_ERROR;
@@ -258,19 +258,19 @@ error:
 /**
  * @brief Create directory
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_mkdir(void *fshdl, const char *path)
+stdret_t lfs_mkdir(void *fs_handle, const char *path)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
         char *new_dir_name   = NULL;
 
         if (path[0] != '/') {
@@ -331,7 +331,7 @@ error:
 /**
  * @brief Function open directory
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *path            directory path
  * @param[out] *dir             directory info
  *
@@ -339,13 +339,13 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_opendir(void *fshdl, const char *path, dir_t *dir)
+stdret_t lfs_opendir(void *fs_handle, const char *path, dir_t *dir)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
-        _stop_if(!dir);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        STOP_IF(!dir);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
         force_lock_recursive_mutex(lfs->resource_mtx);
 
         /* go to target dir */
@@ -371,17 +371,17 @@ stdret_t lfs_opendir(void *fshdl, const char *path, dir_t *dir)
 /**
  * @brief Function close dir
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *dir              directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t lfs_closedir(void *fshdl, dir_t *dir)
+static stdret_t lfs_closedir(void *fs_handle, dir_t *dir)
 {
-        (void) fshdl;
-        (void) dir;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(dir);
 
         return STD_RET_OK;
 }
@@ -390,18 +390,18 @@ static stdret_t lfs_closedir(void *fshdl, dir_t *dir)
 /**
  * @brief Function read next item of opened directory
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *dir              directory object
  *
  * @return element attributes
  */
 //==============================================================================
-static dirent_t lfs_readdir(void *fshdl, dir_t *dir)
+static dirent_t lfs_readdir(void *fs_handle, dir_t *dir)
 {
-        _stop_if(!fshdl);
-        _stop_if(!dir);
+        STOP_IF(!fs_handle);
+        STOP_IF(!dir);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         dirent_t dirent;
         dirent.name = NULL;
@@ -435,19 +435,19 @@ static dirent_t lfs_readdir(void *fshdl, dir_t *dir)
 /**
  * @brief Remove file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *patch            localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_remove(void *fshdl, const char *path)
+stdret_t lfs_remove(void *fs_handle, const char *path)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
         i32_t   item;
@@ -500,7 +500,7 @@ error:
 /**
  * @brief Rename file name
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *oldName              old file name
  * @param[in] *newName              new file name
  *
@@ -508,13 +508,13 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_rename(void *fshdl, const char *old_name, const char *new_name)
+stdret_t lfs_rename(void *fs_handle, const char *old_name, const char *new_name)
 {
-        _stop_if(!fshdl);
-        _stop_if(!old_name);
-        _stop_if(!new_name);
+        STOP_IF(!fs_handle);
+        STOP_IF(!old_name);
+        STOP_IF(!new_name);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
         char *new_node_name  = NULL;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
@@ -571,7 +571,7 @@ error:
 /**
  * @brief Function change file mode
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  mode                 file mode
  *
@@ -579,12 +579,12 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_chmod(void *fshdl, const char *path, int mode)
+stdret_t lfs_chmod(void *fs_handle, const char *path, int mode)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
@@ -604,7 +604,7 @@ stdret_t lfs_chmod(void *fshdl, const char *path, int mode)
 /**
  * @brief Function change file owner and group
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  owner                file owner
  * @param[in]  group                file group
@@ -613,12 +613,12 @@ stdret_t lfs_chmod(void *fshdl, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_chown(void *fshdl, const char *path, int owner, int group)
+stdret_t lfs_chown(void *fs_handle, const char *path, int owner, int group)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
@@ -640,7 +640,7 @@ stdret_t lfs_chown(void *fshdl, const char *path, int owner, int group)
 /**
  * @brief Function returns file/dir status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *path                 file/dir path
  * @param[out] *stat                 pointer to stat structure
  *
@@ -648,13 +648,13 @@ stdret_t lfs_chown(void *fshdl, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
+stdret_t lfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
 {
-        _stop_if(!fshdl);
-        _stop_if(!path);
-        _stop_if(!stat);
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        STOP_IF(!stat);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
@@ -692,7 +692,7 @@ stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 /**
  * @brief Function returns file status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *extra                file extra data (useful in FS wrappers)
  * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
@@ -701,14 +701,14 @@ stdret_t lfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t lfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        _stop_if(!fshdl);
-        _stop_if(!stat);
+        STOP_IF(!fs_handle);
+        STOP_IF(!stat);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
@@ -744,18 +744,18 @@ stdret_t lfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 /**
  * @brief Function returns FS status
  *
- * @param[in]  *fshdl               FS handle
+ * @param[in]  *fs_handle           FS handle
  * @param[out] *statfs              pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
+stdret_t lfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        _stop_if(!statfs);
+        STOP_IF(!statfs);
 
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
@@ -771,7 +771,7 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 /**
  * @brief Function open selected file
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
@@ -782,17 +782,17 @@ stdret_t lfs_statfs(void *fshdl, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t lfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        _stop_if(!fshdl);
-        _stop_if(!fd);
-        _stop_if(!lseek);
-        _stop_if(!path);
-        _stop_if(!mode);
+        STOP_IF(!fs_handle);
+        STOP_IF(!fd);
+        STOP_IF(!lseek);
+        STOP_IF(!path);
+        STOP_IF(!mode);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
@@ -895,7 +895,7 @@ error:
 /**
  * @brief Function close file in LFS
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  *
@@ -903,13 +903,13 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
+stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        _stop_if(!fshdl);
+        STOP_IF(!fs_handle);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
         stdret_t status      = STD_RET_ERROR;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
@@ -977,7 +977,7 @@ stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
 /**
  * @brief Function write data to the file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
@@ -988,16 +988,16 @@ stdret_t lfs_close(void *fshdl, void *extra, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t lfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t lfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        _stop_if(!fshdl);
-        _stop_if(!src);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(!fs_handle);
+        STOP_IF(!src);
+        STOP_IF(!size);
+        STOP_IF(!nitems);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
         size_t           n   = 0;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
@@ -1061,7 +1061,7 @@ exit:
 /**
  * @brief Function read from file data
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
@@ -1072,16 +1072,16 @@ exit:
  * @return number of read items
  */
 //==============================================================================
-size_t lfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t lfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        _stop_if(!fshdl);
-        _stop_if(!dst);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(!fs_handle);
+        STOP_IF(!dst);
+        STOP_IF(!size);
+        STOP_IF(!nitems);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
         size_t           n   = 0;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
@@ -1138,7 +1138,7 @@ exit:
 /**
  * @brief IO operations on files
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
@@ -1148,13 +1148,13 @@ exit:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t lfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        _stop_if(!fshdl);
+        STOP_IF(!fs_handle);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 
@@ -1185,7 +1185,7 @@ error:
 /**
  * @brief Function flush file data
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  *
@@ -1193,13 +1193,13 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_flush(void *fshdl, void *extra, fd_t fd)
+stdret_t lfs_flush(void *fs_handle, void *extra, fd_t fd)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        _stop_if(!fshdl);
+        STOP_IF(!fs_handle);
 
-        struct LFS_data *lfs = fshdl;
+        struct LFS_data *lfs = fs_handle;
 
         force_lock_recursive_mutex(lfs->resource_mtx);
 

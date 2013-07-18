@@ -34,8 +34,6 @@ extern "C" {
 #include "drivers/sdspi.h"
 #include "stm32f1/stm32f10x.h"
 
-MODULE_NAME(SDSPI);
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -214,20 +212,13 @@ static struct sdspi_data *sdspi_data;
 //==============================================================================
 /**
  * @brief Initialize device
- *
- * @param[out] **drvhdl         driver's memory handler
- * @param[in]  dev              device number
- * @param[in]  part             device part
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
+MODULE__DEVICE_INIT(SDSPI)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        if (dev != SDSPI_DEV_NO || part != SDSPI_DEV_PART) {
+        if (major != SDSPI_MAJOR_NO || minor != SDSPI_MINOR_NO) {
                 return STD_RET_ERROR;
         }
 
@@ -236,8 +227,8 @@ stdret_t SDSPI_init(void **drvhdl, uint dev, uint part)
                 return STD_RET_ERROR;
         }
 
-        *drvhdl    = sdspi;
-        sdspi_data = sdspi;
+        *device_handle = sdspi;
+        sdspi_data     = sdspi;
 
 #if (SDSPI_ENABLE_DMA != 0)
         if ((u32_t)SDSPI_DMA == DMA1_BASE) {
@@ -312,18 +303,13 @@ error:
 //==============================================================================
 /**
  * @brief Release device
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t SDSPI_release(void *drvhdl)
+MODULE__DEVICE_RELEASE(SDSPI)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        struct sdspi_data *hdl = drvhdl;
+        struct sdspi_data *hdl = device_handle;
 
         /* wait for all partition are released */
         int timeout = 50;
@@ -352,63 +338,45 @@ stdret_t SDSPI_release(void *drvhdl)
 
 //==============================================================================
 /**
- * @brief Opens specified port
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Open device
  */
 //==============================================================================
-stdret_t SDSPI_open(void *drvhdl)
+MODULE__DEVICE_OPEN(SDSPI)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function close opened port
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Close device
  */
 //==============================================================================
-stdret_t SDSPI_close(void *drvhdl)
+MODULE__DEVICE_CLOSE(SDSPI)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Write data
- *
- * @param[in] *drvhdl           driver's memory handle
- * @param[in] *src              source
- * @param[in]  size             item size
- * @param[in]  nitems           n-items to write
- * @param[in]  lseek            file index
- *
- * @retval number of written nitems
+ * @brief Write data to device
  */
 //==============================================================================
-size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_WRITE(SDSPI)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!src);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(src == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
 
-        struct sdspi_data *hdl = drvhdl;
+        struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                n = card_write(hdl, src, size, nitems, lseek);
+                n = card_write(hdl, src, item_size, n_items, lseek);
                 unlock_mutex(hdl->card_protect_mtx);
         }
 
@@ -417,29 +385,21 @@ size_t SDSPI_write(void *drvhdl, const void *src, size_t size, size_t nitems, u6
 
 //==============================================================================
 /**
- * @brief Read data (read 512 byte sector)
- *
- * @param[in]  *drvhdl          driver's memory handle
- * @param[out] *dst             destination
- * @param[in]   size            item size
- * @param[in]   nitems          n-items to read
- * @param[in]   lseek           file index
- *
- * @retval number of read nitems
+ * @brief Read data from device
  */
 //==============================================================================
-size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_READ(SDSPI)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!dst);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(dst == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
 
-        struct sdspi_data *hdl = drvhdl;
+        struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                n = card_read(hdl, dst, size, nitems, lseek);
+                n = card_read(hdl, dst, item_size, n_items, lseek);
                 unlock_mutex(hdl->card_protect_mtx);
         }
 
@@ -447,22 +407,15 @@ size_t SDSPI_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lse
 }
 
 //==============================================================================
-/**SDSPI_SPI
+/**
  * @brief Direct IO control
- *
- * @param[in]     *drvhdl       driver's memory handle
- * @param[in]      iorq         IO request
- * @param[in,out]  args         additional arguments
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
+MODULE__DEVICE_IOCTL(SDSPI)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        struct sdspi_data *hdl = drvhdl;
+        struct sdspi_data *hdl = device_handle;
 
         stdret_t status = STD_RET_OK;
 
@@ -499,38 +452,27 @@ stdret_t SDSPI_ioctl(void *drvhdl, int iorq, va_list args)
 
 //==============================================================================
 /**
- * @brief Function flush device
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Flush device
  */
 //==============================================================================
-stdret_t SDSPI_flush(void *drvhdl)
+MODULE__DEVICE_FLUSH(SDSPI)
 {
-        (void)drvhdl;
+        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function returns device informations
- *
- * @param[in]  *drvhld          driver's memory handle
- * @param[out] *info            device/file info
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Interface returns device information
  */
 //==============================================================================
-stdret_t SDSPI_info(void *drvhdl, struct vfs_dev_info *info)
+MODULE__DEVICE_INFO(SDSPI)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!info);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(device_info == NULL);
 
-        struct sdspi_data *hdl = drvhdl;
+        struct sdspi_data *hdl = device_handle;
 
         /* size info */
         if (send_cmd(hdl, CMD9, 0) == 0) {
@@ -553,16 +495,16 @@ stdret_t SDSPI_info(void *drvhdl, struct vfs_dev_info *info)
                 spi_rw(0xFF);
 
                 /* SDC version 2.00 */
-                info->st_size = 0;
+                device_info->st_size = 0;
                 if ((csd[0] >> 6) == 1) {
                         int csize     = csd[9] + ((u16_t)csd[8] << 8) + 1;
-                        info->st_size = (u64_t)csize << 10;
+                        device_info->st_size = (u64_t)csize << 10;
                 } else { /* SDC version 1.XX or MMC*/
                         int n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
                         int csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
-                        info->st_size = (u64_t)csize << (n - 9);
+                        device_info->st_size = (u64_t)csize << (n - 9);
                 }
-                info->st_size *= SECTOR_SIZE;
+                device_info->st_size *= SECTOR_SIZE;
         }
 
         return STD_RET_OK;
@@ -570,19 +512,19 @@ stdret_t SDSPI_info(void *drvhdl, struct vfs_dev_info *info)
 
 //==============================================================================
 /**
- * @brief Function open new partiotion file
+ * @brief Function open new partition file
  *
- * @param[in] *drvhdl   handler to partition description
+ * @param[in] *device_handle   handle to partition description
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_open(void *drvhdl)
+static stdret_t partition_open(void *device_handle)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        struct partition *hdl = drvhdl;
+        struct partition *hdl = device_handle;
 
         if (hdl->in_use == true)
                 return STD_RET_ERROR;
@@ -594,17 +536,17 @@ static stdret_t partition_open(void *drvhdl)
 /**
  * @brief Function close partition file
  *
- * @param[in] *drvhdl   handler to partition description
+ * @param[in] *device_handle   handle to partition description
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_close(void *drvhdl)
+static stdret_t partition_close(void *device_handle)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        struct partition *hdl = drvhdl;
+        struct partition *hdl = device_handle;
 
         hdl->in_use = false;
         return STD_RET_OK;
@@ -614,7 +556,7 @@ static stdret_t partition_close(void *drvhdl)
 /**
  * @brief Function write data to partition file
  *
- * @param[in] *drvhdl           handler to partition description
+ * @param[in] *device_handle    handle to partition description
  * @param[in] *src              source
  * @param[in]  size             item size
  * @param[in]  nitems           n-items to write
@@ -623,14 +565,14 @@ static stdret_t partition_close(void *drvhdl)
  * @retval number of written nitems
  */
 //==============================================================================
-static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
+static size_t partition_write(void *device_handle, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!src);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(src == NULL);
+        STOP_IF(size == 0);
+        STOP_IF(nitems == 0);
 
-        struct partition *hdl = drvhdl;
+        struct partition *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
@@ -645,7 +587,7 @@ static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t
 /**
  * @brief Function read data from partition file
  *
- * @param[in]  *drvhdl          handler to partition description
+ * @param[in]  *device_handle   handle to partition description
  * @param[out] *dst             destination
  * @param[in]   size            item size
  * @param[in]   nitems          n-items to read
@@ -654,14 +596,14 @@ static size_t partition_write(void *drvhdl, const void *src, size_t size, size_t
  * @retval number of written nitems
  */
 //==============================================================================
-static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
+static size_t partition_read(void *device_handle, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!dst);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(dst == NULL);
+        STOP_IF(size == 0);
+        STOP_IF(nitems == 0);
 
-        struct partition *hdl = drvhdl;
+        struct partition *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
@@ -676,19 +618,19 @@ static size_t partition_read(void *drvhdl, void *dst, size_t size, size_t nitems
 /**
  * @brief Function control partition
  *
- * @param[in]    *drvhdl        handler to partition description
- * @param[in]     iorq          IO request
- * @param[in,out] args          additional arguments
+ * @param[in]    *device_handle         handle to partition description
+ * @param[in]     iorq                  IO request
+ * @param[in,out] args                  additional arguments
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_ioctl(void *drvhdl, int iorq, va_list args)
+static stdret_t partition_ioctl(void *device_handle, int iorq, va_list args)
 {
-        (void) drvhdl;
-        (void) iorq;
-        (void) args;
+        STOP_IF(device_handle == NULL);
+        UNUSED_ARG(iorq);
+        UNUSED_ARG(args);
 
         return STD_RET_ERROR;
 }
@@ -697,15 +639,15 @@ static stdret_t partition_ioctl(void *drvhdl, int iorq, va_list args)
 /**
  * @brief Function flush partition
  *
- * @param[in] *drvhdl           handler to partition description
+ * @param[in] *device_handle           handle to partition description
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_flush(void *drvhdl)
+static stdret_t partition_flush(void *device_handle)
 {
-        (void) drvhdl;
+        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -714,19 +656,19 @@ static stdret_t partition_flush(void *drvhdl)
 /**
  * @brief Function returns device informations
  *
- * @param[in]  *drvhld          driver's memory handle
+ * @param[in]  *device_handle   driver's memory handle
  * @param[out] *info            device/file info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t partition_info(void *drvhdl, struct vfs_dev_info *info)
+stdret_t partition_info(void *device_handle, struct vfs_dev_info *info)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!info);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(info == NULL);
 
-        struct partition *hdl = drvhdl;
+        struct partition *hdl = device_handle;
         info->st_size = (u64_t)hdl->size_in_sectors * SECTOR_SIZE;
         return STD_RET_OK;
 }

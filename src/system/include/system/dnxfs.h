@@ -54,6 +54,8 @@ extern "C" {
 #undef  free
 #define free(void__pmem)                        sysm_sysfree(void__pmem)
 
+#define STOP_IF(condition)                      _stop_if(condition)
+
 #define FILE_SYSTEM_INTERFACE(fsname)                                                    \
 extern stdret_t fsname##_init   (void**, const char*);                                   \
 extern stdret_t fsname##_release(void*);                                                 \

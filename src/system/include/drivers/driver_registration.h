@@ -1,11 +1,11 @@
-#ifndef TTY_H_
-#define TTY_H_
+#ifndef _DRIVER_REGISTRATION_
+#define _DRIVER_REGISTRATION_
 /*=========================================================================*//**
-@file    tty.h
+@file    driver_registration.h
 
 @author  Daniel Zorychta
 
-@brief   This file support virtual terminal
+@brief   This file is used to registration drivers
 
 @note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,8 +33,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "drivers/tty_def.h"
+#include "core/systypes.h"
+#include "core/vfs.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -43,17 +43,32 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+struct _driver_entry {
+        const char               *drv_name;
+        u8_t                      major;
+        u8_t                      minor;
+        stdret_t                (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
+        stdret_t                (*drv_release)(void *drvhdl);
+        struct vfs_drv_interface  drv_if;
+};
+
+/*==============================================================================
+  Exported object declarations
+==============================================================================*/
+extern const char                 *_regdrv_module_name[];
+extern const struct _driver_entry  _regdrv_driver_table[];
+extern const uint                  _regdrv_driver_table_array_size;
+extern const uint                  _regdrv_number_of_modules;
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-DRIVER_INTERFACE(TTY);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TTY_H_ */
+#endif /* _DRIVER_REGISTRATION_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

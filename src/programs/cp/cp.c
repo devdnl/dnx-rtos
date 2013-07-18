@@ -87,7 +87,7 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
                 buffer_size /= 2;
 
                 if (buffer_size < 512) {
-                        printf("Not enough free memory\n");
+                        puts("Not enough free memory");
                         goto exit_error;
                 }
         }

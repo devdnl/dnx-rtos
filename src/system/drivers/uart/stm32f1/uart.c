@@ -34,8 +34,6 @@ extern "C" {
 #include "drivers/uart.h"
 #include "stm32f1/stm32f10x.h"
 
-MODULE_NAME(UART);
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -141,164 +139,152 @@ static struct USART_data *USART_data[UART_DEV_COUNT];
 //==============================================================================
 /**
  * @brief Initialize USART devices
- *
- * @param[out] **drvhdl         driver's memory handler
- * @param[in]  dev              device number
- * @param[in]  part             device part
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_init(void **drvhdl, uint dev, uint part)
+MODULE__DEVICE_INIT(UART)
 {
-        (void)part;
+        UNUSED_ARG(minor);
 
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        if (dev >= UART_DEV_COUNT) {
+        if (major >= UART_DEV_COUNT) {
                 return STD_RET_ERROR;
         }
 
-        if (!(USART_data[dev] = calloc(1, sizeof(struct USART_data)))) {
+        if (!(USART_data[major] = calloc(1, sizeof(struct USART_data)))) {
                 return STD_RET_ERROR;
         }
 
-        *drvhdl = USART_data[dev];
+        *device_handle = USART_data[major];
 
-        USART_data[dev]->USART            = USART_peripherals[dev];
-        USART_data[dev]->data_write_sem   = new_semaphore();
-        USART_data[dev]->port_lock_rx_mtx = new_mutex();
-        USART_data[dev]->port_lock_tx_mtx = new_mutex();
+        USART_data[major]->USART            = USART_peripherals[major];
+        USART_data[major]->data_write_sem   = new_semaphore();
+        USART_data[major]->port_lock_rx_mtx = new_mutex();
+        USART_data[major]->port_lock_tx_mtx = new_mutex();
 
-        if (  !USART_data[dev]->data_write_sem
-           || !USART_data[dev]->port_lock_rx_mtx
-           || !USART_data[dev]->port_lock_tx_mtx) {
+        if (  !USART_data[major]->data_write_sem
+           || !USART_data[major]->port_lock_rx_mtx
+           || !USART_data[major]->port_lock_tx_mtx) {
                 goto error;
         } else {
-                take_semaphore(USART_data[dev]->data_write_sem, 1);
+                take_semaphore(USART_data[major]->data_write_sem, 1);
 
-                if (turn_on_USART(USART_data[dev]->USART) != STD_RET_OK) {
+                if (turn_on_USART(USART_data[major]->USART) != STD_RET_OK) {
                         goto error;
                 }
 
-                enable_USART(USART_data[dev]->USART);
+                enable_USART(USART_data[major]->USART);
 
-                if ((u32_t) USART_data[dev]->USART == USART1_BASE) {
-                        set_baud_rate(USART_data[dev]->USART, UART_PCLK2_FREQ, UART_DEFAULT_BAUDRATE);
+                if ((u32_t) USART_data[major]->USART == USART1_BASE) {
+                        set_baud_rate(USART_data[major]->USART, UART_PCLK2_FREQ, UART_DEFAULT_BAUDRATE);
                 } else {
-                        set_baud_rate(USART_data[dev]->USART, UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
+                        set_baud_rate(USART_data[major]->USART, UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
                 }
 
                 if (UART_DEFAULT_WAKE_METHOD) {
-                        wakeup_USART_on_address_mark(USART_data[dev]->USART);
+                        wakeup_USART_on_address_mark(USART_data[major]->USART);
                 } else {
-                        wakeup_USART_on_idle_line(USART_data[dev]->USART);
+                        wakeup_USART_on_idle_line(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_PARITY_ENABLE) {
-                        enable_parity_check(USART_data[dev]->USART);
+                        enable_parity_check(USART_data[major]->USART);
                 } else {
-                        disable_parity_check(USART_data[dev]->USART);
+                        disable_parity_check(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_PARITY_SELECTION) {
-                        enable_odd_parity(USART_data[dev]->USART);
+                        enable_odd_parity(USART_data[major]->USART);
                 } else {
-                        enable_even_parity(USART_data[dev]->USART);
+                        enable_even_parity(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_TX_ENABLE) {
-                        enable_transmitter(USART_data[dev]->USART);
+                        enable_transmitter(USART_data[major]->USART);
                 } else {
-                        disable_transmitter(USART_data[dev]->USART);
+                        disable_transmitter(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_RX_ENABLE) {
-                        enable_receiver(USART_data[dev]->USART);
+                        enable_receiver(USART_data[major]->USART);
                 } else {
-                        disable_receiver(USART_data[dev]->USART);
+                        disable_receiver(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_RX_WAKEUP_MODE) {
-                        receiver_wakeup_in_mute_mode(USART_data[dev]->USART);
+                        receiver_wakeup_in_mute_mode(USART_data[major]->USART);
                 } else {
-                        receiver_wakeup_in_active_mode(USART_data[dev]->USART);
+                        receiver_wakeup_in_active_mode(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_LIN_ENABLE) {
-                        enable_LIN_mode(USART_data[dev]->USART);
+                        enable_LIN_mode(USART_data[major]->USART);
                 } else {
-                        disable_LIN_mode(USART_data[dev]->USART);
+                        disable_LIN_mode(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_STOP_BITS) {
-                        set_2_stop_bits(USART_data[dev]->USART);
+                        set_2_stop_bits(USART_data[major]->USART);
                 } else {
-                        set_1_stop_bit(USART_data[dev]->USART);
+                        set_1_stop_bit(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_LIN_BREAK_LEN_DET) {
-                        detect_11_bit_LIN_break(USART_data[dev]->USART);
+                        detect_11_bit_LIN_break(USART_data[major]->USART);
                 } else {
-                        detect_10_bit_LIN_break(USART_data[dev]->USART);
+                        detect_10_bit_LIN_break(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_CTS_ENABLE) {
-                        enable_CTS(USART_data[dev]->USART);
+                        enable_CTS(USART_data[major]->USART);
                 } else {
-                        disable_CTS(USART_data[dev]->USART);
+                        disable_CTS(USART_data[major]->USART);
                 }
 
                 if (UART_DEFAULT_RTS_ENABLE) {
-                        enable_RTS(USART_data[dev]->USART);
+                        enable_RTS(USART_data[major]->USART);
                 } else {
-                        disable_RTS(USART_data[dev]->USART);
+                        disable_RTS(USART_data[major]->USART);
                 }
 
-                set_address_node(USART_data[dev]->USART, UART_DEFAULT_MULTICOM_ADDRESS);
+                set_address_node(USART_data[major]->USART, UART_DEFAULT_MULTICOM_ADDRESS);
 
-                if (enable_USART_interrupts(USART_data[dev]->USART) != STD_RET_OK) {
+                if (enable_USART_interrupts(USART_data[major]->USART) != STD_RET_OK) {
                         goto error;
                 }
 
-                enable_RXNE_IRQ(USART_data[dev]->USART);
+                enable_RXNE_IRQ(USART_data[major]->USART);
 
                 return STD_RET_OK;
         }
 
 error:
-        if (USART_data[dev]->data_write_sem) {
-                delete_semaphore(USART_data[dev]->data_write_sem);
+        if (USART_data[major]->data_write_sem) {
+                delete_semaphore(USART_data[major]->data_write_sem);
         }
 
-        if (USART_data[dev]->port_lock_rx_mtx) {
-                delete_recursive_mutex(USART_data[dev]->port_lock_rx_mtx);
+        if (USART_data[major]->port_lock_rx_mtx) {
+                delete_recursive_mutex(USART_data[major]->port_lock_rx_mtx);
         }
 
-        if (USART_data[dev]->port_lock_tx_mtx) {
-                delete_recursive_mutex(USART_data[dev]->port_lock_tx_mtx);
+        if (USART_data[major]->port_lock_tx_mtx) {
+                delete_recursive_mutex(USART_data[major]->port_lock_tx_mtx);
         }
 
-        free(USART_data[dev]);
+        free(USART_data[major]);
         return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
- * @brief Release USART devices
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Release USART device
  */
 //==============================================================================
-stdret_t UART_release(void *drvhdl)
+MODULE__DEVICE_RELEASE(UART)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        struct USART_data *hdl = drvhdl;
+        struct USART_data *hdl = device_handle;
 
         force_lock_mutex(hdl->port_lock_rx_mtx);
         force_lock_mutex(hdl->port_lock_tx_mtx);
@@ -322,16 +308,11 @@ stdret_t UART_release(void *drvhdl)
 //==============================================================================
 /**
  * @brief Opens specified port
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_open(void *drvhdl)
+MODULE__DEVICE_OPEN(UART)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
@@ -339,53 +320,40 @@ stdret_t UART_open(void *drvhdl)
 //==============================================================================
 /**
  * @brief Function close opened port
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_close(void *drvhdl)
+MODULE__DEVICE_CLOSE(UART)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Write data to UART (ISR or DMA)
- *
- * @param[in] *drvhdl           driver's memory handle
- * @param[in] *src              source
- * @param[in] size              size
- * @param[in] nitems            n items to read
- * @param[in] lseek             lseek
- *
- * @retval number of written nitems
+ * @brief Write data to UART
  */
 //==============================================================================
-size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_WRITE(UART)
 {
-        (void)lseek;
+        UNUSED_ARG(lseek);
 
-        _stop_if(!drvhdl);
-        _stop_if(!src);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(src == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
 
-        struct USART_data *hdl = drvhdl;
+        struct USART_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->Tx_buffer.src_ptr   = src;
-                hdl->Tx_buffer.data_size = size * nitems;
+                hdl->Tx_buffer.data_size = item_size * n_items;
 
                 enable_TXE_IRQ(hdl->USART);
                 take_semaphore(hdl->data_write_sem, TXC_WAIT_TIME);
 
-                n = nitems;
+                n = n_items;
 
                 unlock_mutex(hdl->port_lock_tx_mtx);
         }
@@ -396,31 +364,23 @@ size_t UART_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64
 //==============================================================================
 /**
  * @brief Read data from UART Rx buffer
- *
- * @param[in]  *drvhdl          driver's memory handle
- * @param[out] *dst             destination
- * @param[in]  size             size
- * @param[in]  nitems           n items to read
- * @param[in]  lseek            seek
- *
- * @retval number of read nitems
  */
 //==============================================================================
-size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_READ(UART)
 {
-        (void)lseek;
+        UNUSED_ARG(lseek);
 
-        _stop_if(!drvhdl);
-        _stop_if(!dst);
-        _stop_if(!size);
-        _stop_if(!nitems);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(dst == NULL);
+        STOP_IF(item_size == 0);
+        STOP_IF(n_items == 0);
 
-        struct USART_data *hdl = drvhdl;
+        struct USART_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 u8_t  *dst_ptr   = (u8_t *)dst;
-                size_t data_size = nitems * size;
+                size_t data_size = n_items * item_size;
                 hdl->task_rx     = get_task_handle();
 
                 do {
@@ -443,7 +403,7 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
                         }
                 } while (data_size);
 
-                n /= size;
+                n /= item_size;
 
                 unlock_mutex(hdl->port_lock_rx_mtx);
         }
@@ -454,20 +414,13 @@ size_t UART_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lsee
 //==============================================================================
 /**
  * @brief Direct IO control
- *
- * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     iorq          IO reqest
- * @param[in,out] args          additional arguments
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
+MODULE__DEVICE_IOCTL(UART)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
-        struct USART_data *hdl = drvhdl;
+        struct USART_data *hdl = device_handle;
         stdret_t status = STD_RET_OK;
         u8_t *out_ptr;
 
@@ -624,38 +577,27 @@ stdret_t UART_ioctl(void *drvhdl, int iorq, va_list args)
 
 //==============================================================================
 /**
- * @brief Function flush device
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Flush device
  */
 //==============================================================================
-stdret_t UART_flush(void *drvhdl)
+MODULE__DEVICE_FLUSH(UART)
 {
-        _stop_if(!drvhdl);
+        STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function returns device informations
- *
- * @param[in]  *drvhld          driver's memory handle
- * @param[out] *info            device/file info
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Interface returns device informations
  */
 //==============================================================================
-stdret_t UART_info(void *drvhdl, struct vfs_dev_info *info)
+MODULE__DEVICE_INFO(UART)
 {
-        _stop_if(!drvhdl);
-        _stop_if(!info);
+        STOP_IF(device_handle == NULL);
+        STOP_IF(device_info == NULL);
 
-        info->st_size = 0;
+        device_info->st_size = 0;
 
         return STD_RET_OK;
 }

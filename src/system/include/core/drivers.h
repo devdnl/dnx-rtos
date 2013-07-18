@@ -1,13 +1,13 @@
-#ifndef TTY_H_
-#define TTY_H_
+#ifndef _DRIVERS_H_
+#define _DRIVERS_H_
 /*=========================================================================*//**
-@file    tty.h
+@file    drivers.h
 
 @author  Daniel Zorychta
 
-@brief   This file support virtual terminal
+@brief   Drivers support.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,27 +33,32 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "drivers/tty_def.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported objects
 ==============================================================================*/
-DRIVER_INTERFACE(TTY);
+
+/*==============================================================================
+  Exported functions
+==============================================================================*/
+extern stdret_t    init_driver            (const char *drvName, const char *nodeName);
+extern stdret_t    release_driver         (const char *drvName);
+extern const char *_get_module_name       (uint module_number);
+extern int         _get_module_number     (const char *module_name);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TTY_H_ */
+#endif /* _DRIVERS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "terminal.h"
-#include "drivers/tty_def.h"
+#include "drivers/ioctl.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -325,7 +325,6 @@ static enum cmd_status cmd_cd(char *arg)
 
         if (newpath) {
                 dir_t *dir = opendir(newpath);
-
                 if (dir) {
                         closedir(dir);
 
@@ -334,8 +333,9 @@ static enum cmd_status cmd_cd(char *arg)
                         printf("No such directory\n");
                 }
 
-                if (freePath)
+                if (freePath) {
                         free(newpath);
+                }
         }
 
         return CMD_STATUS_EXECUTED;

@@ -45,8 +45,8 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static dirent_t appfs_readrootdir(void *fshdl, dir_t *dir);
-static stdret_t appfs_closedir(void *fshdl, dir_t *dir);
+static dirent_t appfs_readrootdir   (void *fs_handle, dir_t *dir);
+static stdret_t appfs_closedir      (void *fs_handle, dir_t *dir);
 
 /*==============================================================================
   Local object definitions
@@ -64,17 +64,17 @@ static stdret_t appfs_closedir(void *fshdl, dir_t *dir);
 /**
  * @brief Initialize file system
  *
- * @param[out] **fshdl          pointer to allocated memory by file system
+ * @param[out] **fs_handle      pointer to allocated memory by file system
  * @param[in]  *src_path        file source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_init(void **fshdl, const char *src_path)
+stdret_t appfs_init(void **fs_handle, const char *src_path)
 {
-        (void)fshdl;
-        (void)src_path;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(src_path);
 
         return STD_RET_OK;
 }
@@ -83,15 +83,15 @@ stdret_t appfs_init(void **fshdl, const char *src_path)
 /**
  * @brief Function release file system
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle            FS handle
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_release(void *fshdl)
+stdret_t appfs_release(void *fs_handle)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
         return STD_RET_OK;
 }
@@ -100,7 +100,7 @@ stdret_t appfs_release(void *fshdl)
 /**
  * @brief Function open selected file
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[out] **extra          file extra data (useful in FS wrappers)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
@@ -111,14 +111,14 @@ stdret_t appfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t appfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t appfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)lseek;
-        (void)path;
-        (void)mode;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(lseek);
+        UNUSED_ARG(path);
+        UNUSED_ARG(mode);
 
         return STD_RET_ERROR;
 }
@@ -127,7 +127,7 @@ stdret_t appfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
 /**
  * @brief Function close file in LFS
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  *
@@ -135,11 +135,11 @@ stdret_t appfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const cha
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_close(void *fshdl, void *extra, fd_t fd)
+stdret_t appfs_close(void *fs_handle, void *extra, fd_t fd)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
 
         return STD_RET_ERROR;
 }
@@ -148,7 +148,7 @@ stdret_t appfs_close(void *fshdl, void *extra, fd_t fd)
 /**
  * @brief Function write data to the file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
@@ -159,15 +159,15 @@ stdret_t appfs_close(void *fshdl, void *extra, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t appfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t appfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)src;
-        (void)size;
-        (void)nitems;
-        (void)lseek;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(src);
+        UNUSED_ARG(size);
+        UNUSED_ARG(nitems);
+        UNUSED_ARG(lseek);
 
         return STD_RET_ERROR;
 }
@@ -176,7 +176,7 @@ size_t appfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
 /**
  * @brief Function read from file data
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
@@ -187,15 +187,15 @@ size_t appfs_write(void *fshdl, void *extra, fd_t fd, const void *src, size_t si
  * @return number of read items
  */
 //==============================================================================
-size_t appfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t appfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)dst;
-        (void)size;
-        (void)nitems;
-        (void)lseek;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(dst);
+        UNUSED_ARG(size);
+        UNUSED_ARG(nitems);
+        UNUSED_ARG(lseek);
 
         return STD_RET_ERROR;
 }
@@ -204,7 +204,7 @@ size_t appfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
 /**
  * @brief IO operations on files
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
@@ -214,13 +214,13 @@ size_t appfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, siz
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t appfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)iorq;
-        (void)args;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(iorq);
+        UNUSED_ARG(args);
 
         return STD_RET_ERROR;
 }
@@ -229,7 +229,7 @@ stdret_t appfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 /**
  * @brief Function flush file data
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)`
  * @param[in]      fd           file descriptor
  *
@@ -237,11 +237,11 @@ stdret_t appfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_flush(void *fshdl, void *extra, fd_t fd)
+stdret_t appfs_flush(void *fs_handle, void *extra, fd_t fd)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
 
         return STD_RET_ERROR;
 }
@@ -250,7 +250,7 @@ stdret_t appfs_flush(void *fshdl, void *extra, fd_t fd)
 /**
  * @brief Function returns file status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *extra                file extra data (useful in FS wrappers)
  * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
@@ -259,12 +259,12 @@ stdret_t appfs_flush(void *fshdl, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t appfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)stat;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(stat);
 
         return STD_RET_ERROR;
 }
@@ -273,17 +273,17 @@ stdret_t appfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 /**
  * @brief Create directory
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_mkdir(void *fshdl, const char *path)
+stdret_t appfs_mkdir(void *fs_handle, const char *path)
 {
-        (void)fshdl;
-        (void)path;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
 
         return STD_RET_ERROR;
 }
@@ -292,7 +292,7 @@ stdret_t appfs_mkdir(void *fshdl, const char *path)
 /**
  * @brief Function create node for driver file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path when driver-file shall be created
  * @param[in] *drv_if           pointer to driver interface
  *
@@ -300,11 +300,11 @@ stdret_t appfs_mkdir(void *fshdl, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t appfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
-        (void)fshdl;
-        (void)path;
-        (void)drv_if;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(drv_if);
 
         return STD_RET_ERROR;
 }
@@ -313,7 +313,7 @@ stdret_t appfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
 /**
  * @brief Function open directory
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *path            directory path
  * @param[out] *dir             directory info
  *
@@ -321,12 +321,12 @@ stdret_t appfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *dr
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_opendir(void *fshdl, const char *path, dir_t *dir)
+stdret_t appfs_opendir(void *fs_handle, const char *path, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        _stop_if(!path);
-        _stop_if(!dir);
+        STOP_IF(!path);
+        STOP_IF(!dir);
 
         if (path[0] == '/' && strlen(path) == 1) {
                 dir->f_dd       = 0;
@@ -345,17 +345,17 @@ stdret_t appfs_opendir(void *fshdl, const char *path, dir_t *dir)
 /**
  * @brief Function close dir
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *dir              directory info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t appfs_closedir(void *fshdl, dir_t *dir)
+static stdret_t appfs_closedir(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
-        (void)dir;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(dir);
 
         return STD_RET_OK;
 }
@@ -364,17 +364,17 @@ static stdret_t appfs_closedir(void *fshdl, dir_t *dir)
 /**
  * @brief Remove file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *patch            localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_remove(void *fshdl, const char *path)
+stdret_t appfs_remove(void *fs_handle, const char *path)
 {
-        (void)fshdl;
-        (void)path;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
 
         return STD_RET_ERROR;
 }
@@ -383,7 +383,7 @@ stdret_t appfs_remove(void *fshdl, const char *path)
 /**
  * @brief Rename file name
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *oldName              old file name
  * @param[in] *newName              new file name
  *
@@ -391,11 +391,11 @@ stdret_t appfs_remove(void *fshdl, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_rename(void *fshdl, const char *old_name, const char *new_name)
+stdret_t appfs_rename(void *fs_handle, const char *old_name, const char *new_name)
 {
-        (void)fshdl;
-        (void)old_name;
-        (void)new_name;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(old_name);
+        UNUSED_ARG(new_name);
 
         return STD_RET_ERROR;
 }
@@ -404,7 +404,7 @@ stdret_t appfs_rename(void *fshdl, const char *old_name, const char *new_name)
 /**
  * @brief Function change file mode
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  mode                 file mode
  *
@@ -412,11 +412,11 @@ stdret_t appfs_rename(void *fshdl, const char *old_name, const char *new_name)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_chmod(void *fshdl, const char *path, int mode)
+stdret_t appfs_chmod(void *fs_handle, const char *path, int mode)
 {
-        (void)fshdl;
-        (void)path;
-        (void)mode;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(mode);
 
         return STD_RET_ERROR;
 }
@@ -425,7 +425,7 @@ stdret_t appfs_chmod(void *fshdl, const char *path, int mode)
 /**
  * @brief Function change file owner and group
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  owner                file owner
  * @param[in]  group                file group
@@ -434,12 +434,12 @@ stdret_t appfs_chmod(void *fshdl, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_chown(void *fshdl, const char *path, int owner, int group)
+stdret_t appfs_chown(void *fs_handle, const char *path, int owner, int group)
 {
-        (void)fshdl;
-        (void)path;
-        (void)owner;
-        (void)group;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(owner);
+        UNUSED_ARG(group);
 
         return STD_RET_ERROR;
 }
@@ -448,7 +448,7 @@ stdret_t appfs_chown(void *fshdl, const char *path, int owner, int group)
 /**
  * @brief Function returns file/dir status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *path                 file/dir path
  * @param[out] *stat                 pointer to stat structure
  *
@@ -456,12 +456,12 @@ stdret_t appfs_chown(void *fshdl, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
+stdret_t appfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
 {
-        (void)fshdl;
-        (void)path;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
 
-        _stop_if(!stat);
+        STOP_IF(!stat);
 
         stat->st_dev   = 0;
         stat->st_gid   = 0;
@@ -477,18 +477,18 @@ stdret_t appfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
 /**
  * @brief Function returns FS status
  *
- * @param[in]  *fshdl               FS handle
+ * @param[in]  *fs_handle           FS handle
  * @param[out] *statfs              pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_statfs(void *fshdl, struct vfs_statfs *statfs)
+stdret_t appfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        _stop_if(!statfs);
+        STOP_IF(!statfs);
 
         statfs->f_bfree  = 0;
         statfs->f_blocks = 0;
@@ -504,17 +504,17 @@ stdret_t appfs_statfs(void *fshdl, struct vfs_statfs *statfs)
 /**
  * @brief Read item from opened directory
  *
- * @param fsd             file system descriptor
- * @param *dir            directory object
+ * @param[in]  *fs_handle      FS handle
+ * @param[out] *dir            directory object
  *
  * @return directory entry
  */
 //==============================================================================
-static dirent_t appfs_readrootdir(void *fshdl, dir_t *dir)
+static dirent_t appfs_readrootdir(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        _stop_if(!dir);
+        STOP_IF(!dir);
 
         dirent_t dirent;
         dirent.name = NULL;
