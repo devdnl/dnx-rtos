@@ -1,13 +1,13 @@
-#ifndef REGFS_H_
-#define REGFS_H_
+#ifndef _FSCTRL_
+#define _FSCTRL_
 /*=========================================================================*//**
-@file    regfs.h
+@file    fsctrl.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration file systems
+@brief   Drivers support.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,31 +33,30 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
 ==============================================================================*/
-extern stdret_t mount(const char*, const char*, const char*);
-extern stdret_t umount(const char*);
+extern stdret_t mount   (const char*, const char*, const char*);
+extern stdret_t umount  (const char*);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGFS_H_ */
+#endif /* _FSCTRL_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

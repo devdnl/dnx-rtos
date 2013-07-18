@@ -5,7 +5,7 @@
 
 @brief   This file support standard io functions
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -145,12 +145,14 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
 /**
  * @brief Function convert double to string
  *
- * @param[in]  value            input value
- * @param[out] *str             string - result
- * @param[in]  prec             precision
- *
  * @note used software: nickgsuperstar@gmail.com & nickg@client9.com
  *                      https://code.google.com/p/stringencoders/
+ * 
+ * @param[in]   value           input value
+ * @param[out] *str             string - result
+ * @param[in]   prec            precision
+ *
+ * @return number of characters
  */
 //==============================================================================
 #if (CONFIG_PRINTF_ENABLE > 0)
@@ -573,8 +575,6 @@ void io_disable_printk(void)
  *
  * @param *format             formated text
  * @param ...                 format arguments
- *
- * @retval number of written characters
  */
 //==============================================================================
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
@@ -616,34 +616,35 @@ int io_fputc(int c, FILE *stream)
 {
         if (stream) {
                 char ch = (char)c;
-                if (vfs_fwrite(&ch, sizeof(char), 1, stream) < 1) {
-                        return EOF;
-                } else {
+                if (vfs_fwrite(&ch, sizeof(char), 1, stream) == 1) {
                         return c;
                 }
-        } else {
-                return EOF;
         }
+
+        return EOF;
 }
 
 //==============================================================================
 /**
- * @brief Function puts string to selected file
+ * @brief Function puts string to selected file (fputs & puts)
  *
  * @param[in] *s        string
  * @param[in] *file     file
+ * @param[in]  puts     puts functionality
  *
  * @return number of puts characters
  */
 //==============================================================================
-int io_fputs(const char *s, FILE *file)
+int io_f_puts(const char *s, FILE *file, bool puts)
 {
         if (file) {
                 int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
 
-                if (n == 0)
-                        return EOF;
-                else
+                if (puts && n) {
+                        n += vfs_fwrite("\n", sizeof(char), 1, file);
+                }
+
+                if (n != 0)
                         return n;
         }
 
@@ -661,23 +662,17 @@ int io_fputs(const char *s, FILE *file)
 //==============================================================================
 int io_getc(FILE *stream)
 {
-        int chr    = EOF;
-        u16_t dcnt = 0;
-
         if (!stream) {
                 return EOF;
         }
 
-        while (!vfs_feof(stream) && vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                if (dcnt >= 60000) {
-                        sleep_ms(200);
-                } else if (dcnt >= 5000) {
-                        dcnt += 100;
-                        sleep_ms(100);
-                } else {
-                        dcnt += 20;
-                        sleep_ms(20);
-                }
+        if (vfs_feof(stream)) {
+                return EOF;
+        }
+
+        int chr = 0;
+        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
+                sleep_ms(10);
         }
 
         return chr;
@@ -696,27 +691,34 @@ int io_getc(FILE *stream)
 //==============================================================================
 char *io_fgets(char *str, int size, FILE *stream)
 {
-        if (!str || !size || !stream) {
+        if (!str || size < 2 || !stream) {
                 return NULL;
         }
 
-        for (int i = 0; i < size - 1; i++) {
-                str[i] = io_getc(stream);
+        if (vfs_feof(stream) == 0) {
+                u64_t lseek = vfs_ftell(stream);
 
-                if (str[i] == (char)EOF && i == 0) {
-                        return NULL;
-                } else if (str[i] == '\n') {
-                        str[i + 1] = '\0';
-                        break;
-                } else if (str[i] == (char)EOF) {
-                        str[i] = '\0';
-                        break;
+                int n;
+                while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0);
+
+                char *end;
+                if ((end = strchr(str, '\n'))) {
+                        end++;
+                        *end = '\0';
+                } else if ((end = strchr(str, EOF))) {
+                        *end = '\0';
+                } else {
+                        str[n] = '\0';
                 }
+
+                int len = strlen(str);
+
+                vfs_fseek(stream, lseek + len, SEEK_SET);
+
+                return str;
         }
 
-        str[size - 1] = '\0';
-
-        return str;
+        return NULL;
 }
 
 //==============================================================================
@@ -726,7 +728,7 @@ char *io_fgets(char *str, int size, FILE *stream)
  * @param *bfr                output buffer
  * @param  size               buffer size
  * @param *format             formated text
- * @param ...                 format arguments
+ * @param  ...                format arguments
  *
  * @retval number of written characters
  */
@@ -895,23 +897,18 @@ vsnprint_end:
 #if (CONFIG_SCANF_ENABLE > 0)
 int io_fscanf(FILE *stream, const char *format, ...)
 {
-        int n = 0;
-        va_list args;
-
         char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
-
-        if (str == NULL) {
+        if (!str)
                 return 0;
-        }
 
+        int n = 0;
         if (io_fgets(str, BUFSIZ, stream) == str) {
-                for(uint i = 0; i < strlen(str); i++) {
-                        if (str[i] == '\n') {
-                                str[i] = '\0';
-                                break;
-                        }
+                char *lf;
+                if ((lf = strchr(str, '\n')) != NULL) {
+                        *lf = '\0';
                 }
 
+                va_list args;
                 va_start(args, format);
                 n = io_vsscanf(str, format, args);
                 va_end(args);
@@ -961,9 +958,9 @@ int io_vsscanf(const char *str, const char *format, va_list args)
         int    read_fields = 0;
         char   chr;
         int    value;
-        char   *strs;
+        char  *strs;
         int    sign;
-        char   *string;
+        char  *string;
         uint   bfr_size;
 
         if (!str || !format) {
@@ -1000,6 +997,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                 value = 0;
                                 sign  = 1;
 
+                                while (*str == ' ') {
+                                        str++;
+                                }
+
                                 if (*str == '-') {
                                         sign = -1;
                                         str++;
@@ -1027,6 +1028,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'X':
                                 value = 0;
                                 sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
 
                                 if (*str == '-') {
                                         sign = -1;
@@ -1069,6 +1074,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'o':
                                 value = 0;
                                 sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
 
                                 if (*str == '-') {
                                         sign = -1;
@@ -1118,10 +1127,14 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 'g':
                         case 'G':
                                 if (str) {
+                                        while (*str == ' ') {
+                                                str++;
+                                        }
+
                                         double *value = va_arg(args, double*);
                                         if (value) {
                                                 char *end;
-                                                *value = strtod(str, &end);
+                                                *value = io_strtod(str, &end);
                                                 str += ((int)end - (int)str);
 
                                                 if (*end != '\0')

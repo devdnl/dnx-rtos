@@ -78,12 +78,12 @@ struct file_info {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t procfs_closedir_freedd(void *fshdl, dir_t *dir);
-static stdret_t procfs_closedir_noop(void *fshdl, dir_t *dir);
-static dirent_t procfs_readdir_root(void *fshdl, dir_t *dir);
-static dirent_t procfs_readdir_taskname(void *fshdl, dir_t *dir);
-static dirent_t procfs_readdir_taskid(void *fshdl, dir_t *dir);
-static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir);
+static stdret_t procfs_closedir_freedd  (void *fs_handle, dir_t *dir);
+static stdret_t procfs_closedir_noop    (void *fs_handle, dir_t *dir);
+static dirent_t procfs_readdir_root     (void *fs_handle, dir_t *dir);
+static dirent_t procfs_readdir_taskname (void *fs_handle, dir_t *dir);
+static dirent_t procfs_readdir_taskid   (void *fs_handle, dir_t *dir);
+static dirent_t procfs_readdir_taskid_n (void *fs_handle, dir_t *dir);
 
 /*==============================================================================
   Local object definitions
@@ -101,22 +101,20 @@ static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir);
 /**
  * @brief Initialize file system
  *
- * @param[out] **fshdl          pointer to allocated memory by file system
+ * @param[out] **fs_handle      pointer to allocated memory by file system
  * @param[in]  *src_path        file source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_init(void **fshdl, const char *src_path)
+stdret_t procfs_init(void **fs_handle, const char *src_path)
 {
-        (void)src_path;
+        UNUSED_ARG(src_path);
+
+        STOP_IF(!fs_handle);
+
         struct procfs *procmem;
-
-        if (!fshdl) {
-                return STD_RET_ERROR;
-        }
-
         if (!(procmem = calloc(1, sizeof(struct procfs)))) {
                 return STD_RET_ERROR;
         }
@@ -136,7 +134,7 @@ stdret_t procfs_init(void **fshdl, const char *src_path)
                 free(procmem);
                 return STD_RET_ERROR;
         } else {
-                *fshdl = procmem;
+                *fs_handle = procmem;
                 return STD_RET_OK;
         }
 }
@@ -145,19 +143,17 @@ stdret_t procfs_init(void **fshdl, const char *src_path)
 /**
  * @brief Function release file system
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle            FS handle
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_release(void *fshdl)
+stdret_t procfs_release(void *fs_handle)
 {
-        struct procfs *procmem = fshdl;
+        STOP_IF(!fs_handle);
 
-        if (!procmem) {
-                return STD_RET_ERROR;
-        }
+        struct procfs *procmem = fs_handle;
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
         enter_critical_section();
@@ -174,7 +170,7 @@ stdret_t procfs_release(void *fshdl)
 /**
  * @brief Function open selected file
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[out] *extra           file extra data
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
@@ -185,17 +181,19 @@ stdret_t procfs_release(void *fshdl)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t procfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
 {
-        (void) extra;
+        UNUSED_ARG(extra);
 
-        struct procfs    *procmem = fshdl;
-        struct taskstat  taskdata;
-        struct file_info *fileInf;
+        STOP_IF(!fs_handle);
+        STOP_IF(!fd);
+        STOP_IF(!lseek);
+        STOP_IF(!path);
+        STOP_IF(!mode);
 
-        if (!path || !mode || !procmem) {
-                return STD_RET_ERROR;
-        }
+        struct procfs          *procmem = fs_handle;
+        struct sysmoni_taskstat taskdata;
+        struct file_info       *fileInf;
 
         if (strncmp(mode, "r", 2) != 0) {
                 return STD_RET_ERROR;
@@ -246,7 +244,7 @@ stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const ch
                 while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
                 if (list_add_item(procmem->file_list, procmem->ID_counter, fileInf) == 0) {
-                        *fd   = procmem->ID_counter++;
+                        *fd    = procmem->ID_counter++;
                         *lseek = 0;
 
                         unlock_mutex(procmem->resource_mtx);
@@ -309,20 +307,21 @@ stdret_t procfs_open(void *fshdl, void **extra, fd_t *fd, u64_t *lseek, const ch
 /**
  * @brief Function close file in LFS
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
- * @param[in] fd                file descriptor
+ * @param[in]  fd               file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_close(void *fshdl, void *extra, fd_t fd)
+stdret_t procfs_close(void *fs_handle, void *extra, fd_t fd)
 {
-        (void) extra;
+        UNUSED_ARG(extra);
 
-        struct procfs *procmem = fshdl;
+        STOP_IF(!fs_handle);
 
+        struct procfs *procmem = fs_handle;
         if (procmem) {
                 while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
@@ -341,7 +340,7 @@ stdret_t procfs_close(void *fshdl, void *extra, fd_t fd)
 /**
  * @brief Function write data to the file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)v
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
@@ -352,15 +351,15 @@ stdret_t procfs_close(void *fshdl, void *extra, fd_t fd)
  * @return number of written items
  */
 //==============================================================================
-size_t procfs_write(void *fshdl,void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t procfs_write(void *fs_handle,void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)src;
-        (void)size;
-        (void)nitems;
-        (void)lseek;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(src);
+        UNUSED_ARG(size);
+        UNUSED_ARG(nitems);
+        UNUSED_ARG(lseek);
 
         return 0;
 }
@@ -369,8 +368,8 @@ size_t procfs_write(void *fshdl,void *extra, fd_t fd, const void *src, size_t si
 /**
  * @brief Function read from file data
  *
- * @param[in]  *fshdl           FS handle
- * @param[in]  *extra            file extra data (useful in FS wrappers)
+ * @param[in]  *fs_handle       FS handle
+ * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
  * @param[in]   size            item size
@@ -380,22 +379,19 @@ size_t procfs_write(void *fshdl,void *extra, fd_t fd, const void *src, size_t si
  * @return number of read items
  */
 //==============================================================================
-size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t procfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        struct procfs    *procmem = fshdl;
-        struct file_info *fileInf;
-        struct taskstat   taskInfo;
-        size_t            n = 0;
-        size_t            seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
+        STOP_IF(!fs_handle);
+        STOP_IF(!dst);
+        STOP_IF(!size);
+        STOP_IF(!nitems);
 
-        if (!dst || !procmem) {
-                return 0;
-        }
+        struct procfs *procmem = fs_handle;
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
-        fileInf = list_get_iditem_data(procmem->file_list, fd);
+        struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
         unlock_mutex(procmem->resource_mtx);
 
         if (fileInf == NULL) {
@@ -406,6 +402,7 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
                 return 0;
         }
 
+        struct sysmoni_taskstat taskInfo;
         taskInfo.cpu_usage    = 1000;
         taskInfo.free_stack   = 0;
         taskInfo.task_handle  = 0;
@@ -414,53 +411,60 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
         taskInfo.opened_files = 0;
         taskInfo.priority     = 0;
 
-        char  data[12] = {0};
-        char *dataPtr  = data;
-        u8_t  dataSize = 0;
 
         if (sysm_get_task_stat(fileInf->taskhdl, &taskInfo) != STD_RET_OK) {
                 return 0;
         }
 
+        u8_t dataSize;
+        if (CONFIG_RTOS_TASK_NAME_LEN > 12) {
+                dataSize = CONFIG_RTOS_TASK_NAME_LEN + 1;
+        } else {
+                dataSize = 12;
+        }
+
+        char *data = calloc(dataSize + 1, 1);
+        if (!data) {
+                return 0;
+        }
+
         switch (fileInf->task_file) {
         case TASK_FILE_FREESTACK:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.free_stack);
+                dataSize = snprintf(data, dataSize, "%u\n", taskInfo.free_stack);
                 break;
 
         case TASK_FILE_NAME:
-                dataSize = strlen(taskInfo.task_name);
-                dataPtr  = taskInfo.task_name;
+                dataSize = snprintf(data, dataSize, "%s\n", taskInfo.task_name);
                 break;
 
         case TASK_FILE_OPENFILES:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.opened_files);
+                dataSize = snprintf(data, dataSize, "%u\n", taskInfo.opened_files);
                 break;
 
         case TASK_FILE_PRIO:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%d",
-                                    taskInfo.priority);
+                dataSize = snprintf(data, dataSize, "%d\n", taskInfo.priority);
                 break;
 
         case TASK_FILE_USEDMEM:
-                dataSize = snprintf(data, ARRAY_SIZE(data), "%u",
-                                    taskInfo.memory_usage);
+                dataSize = snprintf(data, dataSize, "%u\n", taskInfo.memory_usage);
                 break;
         }
 
+        size_t n;
+        size_t seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
         if (seek > dataSize) {
                 n = 0;
         } else {
-                if (dataSize - seek < size * nitems) {
+                if (dataSize - seek <= size * nitems) {
                         n = dataSize - seek;
-                        strncpy(dst, dataPtr + seek, n);
+                        strncpy(dst, data + seek, n);
                 } else {
                         n = size * nitems;
-                        strncpy(dst, dataPtr + seek, n);
+                        strncpy(dst, data + seek, n);
                 }
         }
 
+        free(data);
         return n;
 }
 
@@ -468,7 +472,7 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
 /**
  * @brief IO operations on files
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
@@ -478,13 +482,13 @@ size_t procfs_read(void *fshdl, void *extra, fd_t fd, void *dst, size_t size, si
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t procfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
-        (void)iorq;
-        (void)args;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
+        UNUSED_ARG(iorq);
+        UNUSED_ARG(args);
 
         return STD_RET_ERROR;
 }
@@ -493,7 +497,7 @@ stdret_t procfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
 /**
  * @brief Function flush file data
  *
- * @param[in]     *fshdl        FS handle
+ * @param[in]     *fs_handle    FS handle
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  *
@@ -501,11 +505,11 @@ stdret_t procfs_ioctl(void *fshdl, void *extra, fd_t fd, int iorq, va_list args)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_flush(void *fshdl, void *extra, fd_t fd)
+stdret_t procfs_flush(void *fs_handle, void *extra, fd_t fd)
 {
-        (void)fshdl;
-        (void)extra;
-        (void)fd;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(extra);
+        UNUSED_ARG(fd);
 
         return STD_RET_ERROR;
 }
@@ -514,7 +518,7 @@ stdret_t procfs_flush(void *fshdl, void *extra, fd_t fd)
 /**
  * @brief Function returns file status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *extra                file extra data (useful in FS wrappers)
  * @param[in]   fd                   file descriptor
  * @param[out] *stat                 pointer to status structure
@@ -523,20 +527,17 @@ stdret_t procfs_flush(void *fshdl, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t procfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
-        (void)extra;
+        UNUSED_ARG(extra);
 
-        struct procfs    *procmem = fshdl;
-        struct file_info *fileInf;
-        struct taskstat  taskInfo;
+        STOP_IF(!fs_handle);
+        STOP_IF(!stat);
 
-        if (!stat || !procmem) {
-                return STD_RET_ERROR;
-        }
+        struct procfs *procmem = fs_handle;
 
         while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
-        fileInf = list_get_iditem_data(procmem->file_list, fd);
+        struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
         unlock_mutex(procmem->resource_mtx);
 
         if (fileInf == NULL) {
@@ -547,12 +548,13 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
                 return STD_RET_ERROR;
         }
 
+        struct sysmoni_taskstat taskInfo;
         if (sysm_get_task_stat(fileInf->taskhdl, &taskInfo) != STD_RET_OK) {
                 return STD_RET_ERROR;
         }
 
         stat->st_dev   = 0;
-        stat->st_mode  = 0444;
+        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
         stat->st_mtime = 0;
         stat->st_size  = 0;
         stat->st_gid   = 0;
@@ -562,27 +564,23 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 
         switch (fileInf->task_file) {
         case TASK_FILE_FREESTACK:
-                stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.free_stack);
+                stat->st_size = snprintf(data, sizeof(data), "%u\n", taskInfo.free_stack);
                 break;
 
         case TASK_FILE_NAME:
-                stat->st_size = strlen(taskInfo.task_name);
+                stat->st_size = strlen(taskInfo.task_name) + 1;
                 break;
 
         case TASK_FILE_OPENFILES:
-                stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.opened_files);
+                stat->st_size = snprintf(data, sizeof(data), "%u\n", taskInfo.opened_files);
                 break;
 
         case TASK_FILE_PRIO:
-                stat->st_size = snprintf(data, sizeof(data), "%d",
-                                         taskInfo.priority);
+                stat->st_size = snprintf(data, sizeof(data), "%d\n", taskInfo.priority);
                 break;
 
         case TASK_FILE_USEDMEM:
-                stat->st_size = snprintf(data, sizeof(data), "%u",
-                                         taskInfo.memory_usage);
+                stat->st_size = snprintf(data, sizeof(data), "%u\n", taskInfo.memory_usage);
                 break;
         }
 
@@ -593,17 +591,17 @@ stdret_t procfs_fstat(void *fshdl, void *extra, fd_t fd, struct vfs_stat *stat)
 /**
  * @brief Create directory
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path to new directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_mkdir(void *fshdl, const char *path)
+stdret_t procfs_mkdir(void *fs_handle, const char *path)
 {
-        (void)fshdl;
-        (void)path;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
 
         return STD_RET_ERROR;
 }
@@ -612,7 +610,7 @@ stdret_t procfs_mkdir(void *fshdl, const char *path)
 /**
  * @brief Function create node for driver file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *path             path when driver-file shall be created
  * @param[in] *drv_if           pointer to driver interface
  *
@@ -620,11 +618,11 @@ stdret_t procfs_mkdir(void *fshdl, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t procfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
-        (void)fshdl;
-        (void)path;
-        (void)drv_if;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(drv_if);
 
         return STD_RET_ERROR;
 }
@@ -633,7 +631,7 @@ stdret_t procfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *d
 /**
  * @brief Function open directory
  *
- * @param[in]  *fshdl           FS handle
+ * @param[in]  *fs_handle       FS handle
  * @param[in]  *path            directory path
  * @param[out] *dir             directory info
  *
@@ -641,36 +639,34 @@ stdret_t procfs_mknod(void *fshdl, const char *path, struct vfs_drv_interface *d
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
+stdret_t procfs_opendir(void *fs_handle, const char *path, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        if (!path || !dir) {
-                return STD_RET_ERROR;
-        }
+        STOP_IF(!path);
+        STOP_IF(!dir);
 
-        dir->seek = 0;
+        dir->f_seek = 0;
 
         if (strcmp(path, "/") == 0) {
-                dir->dd    = NULL;
-                dir->items = 2;
-                dir->rddir = procfs_readdir_root;
-                dir->cldir = procfs_closedir_noop;
+                dir->f_dd       = NULL;
+                dir->f_items    = 2;
+                dir->f_readdir  = procfs_readdir_root;
+                dir->f_closedir = procfs_closedir_noop;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
-                dir->dd    = NULL;
-                dir->items = sysm_get_number_of_monitored_tasks();
-                dir->rddir = procfs_readdir_taskname;
-                dir->cldir = procfs_closedir_noop;
+                dir->f_dd       = NULL;
+                dir->f_items    = sysm_get_number_of_monitored_tasks();
+                dir->f_readdir  = procfs_readdir_taskname;
+                dir->f_closedir = procfs_closedir_noop;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
-                dir->dd    = calloc(TASK_ID_STR_LEN, sizeof(char));
-                dir->items = sysm_get_number_of_monitored_tasks();
-                dir->rddir = procfs_readdir_taskid;
-                dir->cldir = procfs_closedir_freedd;
+                dir->f_dd       = calloc(TASK_ID_STR_LEN, sizeof(char));
+                dir->f_items    = sysm_get_number_of_monitored_tasks();
+                dir->f_readdir  = procfs_readdir_taskid;
+                dir->f_closedir = procfs_closedir_freedd;
                 return STD_RET_OK;
-        } else if (strncmp(path, "/"DIR_TASKID_STR"/",
-                           strlen(DIR_TASKID_STR) + 2) == 0) {
+        } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
 
                 path = strchr(path + 1, '/') + 1;
 
@@ -685,13 +681,12 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
                         return STD_RET_ERROR;
                 }
 
-                struct taskstat taskdata;
-
+                struct sysmoni_taskstat taskdata;
                 if (sysm_get_task_stat(taskHdl, &taskdata) == STD_RET_OK) {
-                        dir->dd    = (void*)taskHdl;
-                        dir->items = TASK_FILE_COUNT;
-                        dir->rddir = procfs_readdir_taskid_n;
-                        dir->cldir = procfs_closedir_noop;
+                        dir->f_dd       = (void*)taskHdl;
+                        dir->f_items    = TASK_FILE_COUNT;
+                        dir->f_readdir  = procfs_readdir_taskid_n;
+                        dir->f_closedir = procfs_closedir_noop;
                         return STD_RET_OK;
                 }
         }
@@ -704,23 +699,23 @@ stdret_t procfs_opendir(void *fshdl, const char *path, dir_t *dir)
  * @brief Function close opened dir (is used when dd contains pointer to
  *        allocated block)
  *
- * @param[in]  *fshdl        file system data
+ * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t procfs_closedir_freedd(void *fshdl, dir_t *dir)
+static stdret_t procfs_closedir_freedd(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        if (dir) {
-                if (dir->dd) {
-                        free(dir->dd);
-                        dir->dd = NULL;
-                        return STD_RET_OK;
-                }
+        STOP_IF(!dir);
+
+        if (dir->f_dd) {
+                free(dir->f_dd);
+                dir->f_dd = NULL;
+                return STD_RET_OK;
         }
 
         return STD_RET_ERROR;
@@ -731,17 +726,17 @@ static stdret_t procfs_closedir_freedd(void *fshdl, dir_t *dir)
  * @brief Function close opened dir (is used when dd contains data which cannot
  *        be freed)
  *
- * @param[in]  *fshdl        file system data
+ * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t procfs_closedir_noop(void *fshdl, dir_t *dir)
+static stdret_t procfs_closedir_noop(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
-        (void)dir;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(dir);
 
         return STD_RET_OK;
 }
@@ -750,17 +745,17 @@ static stdret_t procfs_closedir_noop(void *fshdl, dir_t *dir)
 /**
  * @brief Remove file
  *
- * @param[in] *fshdl            FS handle
+ * @param[in] *fs_handle        FS handle
  * @param[in] *patch            localization of file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_remove(void *fshdl, const char *path)
+stdret_t procfs_remove(void *fs_handle, const char *path)
 {
-        (void)fshdl;
-        (void)path;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
 
         return STD_RET_ERROR;
 }
@@ -769,7 +764,7 @@ stdret_t procfs_remove(void *fshdl, const char *path)
 /**
  * @brief Rename file name
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *oldName              old file name
  * @param[in] *newName              new file name
  *
@@ -777,11 +772,11 @@ stdret_t procfs_remove(void *fshdl, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_rename(void *fshdl, const char *old_name, const char *new_name)
+stdret_t procfs_rename(void *fs_handle, const char *old_name, const char *new_name)
 {
-        (void)fshdl;
-        (void)old_name;
-        (void)new_name;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(old_name);
+        UNUSED_ARG(new_name);
 
         return STD_RET_ERROR;
 }
@@ -790,7 +785,7 @@ stdret_t procfs_rename(void *fshdl, const char *old_name, const char *new_name)
 /**
  * @brief Function change file mode
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  mode                 file mode
  *
@@ -798,11 +793,11 @@ stdret_t procfs_rename(void *fshdl, const char *old_name, const char *new_name)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_chmod(void *fshdl, const char *path, int mode)
+stdret_t procfs_chmod(void *fs_handle, const char *path, int mode)
 {
-        (void)fshdl;
-        (void)path;
-        (void)mode;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(mode);
 
         return STD_RET_ERROR;
 }
@@ -811,7 +806,7 @@ stdret_t procfs_chmod(void *fshdl, const char *path, int mode)
 /**
  * @brief Function change file owner and group
  *
- * @param[in] *fshdl                FS handle
+ * @param[in] *fs_handle            FS handle
  * @param[in] *path                 path
  * @param[in]  owner                file owner
  * @param[in]  group                file group
@@ -820,12 +815,12 @@ stdret_t procfs_chmod(void *fshdl, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_chown(void *fshdl, const char *path, int owner, int group)
+stdret_t procfs_chown(void *fs_handle, const char *path, int owner, int group)
 {
-        (void)fshdl;
-        (void)path;
-        (void)owner;
-        (void)group;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
+        UNUSED_ARG(owner);
+        UNUSED_ARG(group);
 
         return STD_RET_ERROR;
 }
@@ -834,7 +829,7 @@ stdret_t procfs_chown(void *fshdl, const char *path, int owner, int group)
 /**
  * @brief Function returns file/dir status
  *
- * @param[in]  *fshdl                FS handle
+ * @param[in]  *fs_handle            FS handle
  * @param[in]  *path                 file/dir path
  * @param[out] *stat                 pointer to stat structure
  *
@@ -842,85 +837,81 @@ stdret_t procfs_chown(void *fshdl, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_stat(void *fshdl, const char *path, struct vfs_stat *stat)
+stdret_t procfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
 {
-      (void)fshdl;
+        UNUSED_ARG(fs_handle);
+        UNUSED_ARG(path);
 
-      if (path && stat) {
-            stat->st_dev   = 0;
-            stat->st_gid   = 0;
-            stat->st_mode  = 0444;
-            stat->st_mtime = 0;
-            stat->st_size  = 0;
-            stat->st_uid   = 0;
+        STOP_IF(!stat);
 
-            return STD_RET_OK;
-      }
+        stat->st_dev   = 0;
+        stat->st_gid   = 0;
+        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
+        stat->st_mtime = 0;
+        stat->st_size  = 0;
+        stat->st_uid   = 0;
 
-      return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
 /**
  * @brief Function returns FS status
  *
- * @param[in]  *fshdl               FS handle
+ * @param[in]  *fs_handle           FS handle
  * @param[out] *statfs              pointer to status structure
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_statfs(void *fshdl, struct vfs_statfs *statfs)
+stdret_t procfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        if (statfs) {
-                statfs->f_bfree  = 0;
-                statfs->f_blocks = 0;
-                statfs->f_ffree  = 0;
-                statfs->f_files  = 0;
-                statfs->f_type   = 1;
-                statfs->fsname   = "procfs";
+        STOP_IF(!statfs);
 
-                return STD_RET_OK;
-        }
+        statfs->f_bfree  = 0;
+        statfs->f_blocks = 0;
+        statfs->f_ffree  = 0;
+        statfs->f_files  = 0;
+        statfs->f_type   = 1;
+        statfs->fsname   = "procfs";
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
 /**
  * @brief Read item from opened directory
  *
- * @param[in]  *fshdl        file system data
+ * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_root(void *fshdl, dir_t *dir)
+static dirent_t procfs_readdir_root(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
+
+        STOP_IF(!dir);
 
         dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
+        dirent.name     = NULL;
+        dirent.size     = 0;
+        dirent.filetype = FILE_TYPE_DIR;
+        dirent.size     = 0;
 
-        if (dir) {
-                dirent.filetype = FILE_TYPE_DIR;
-                dirent.size = 0;
-
-                switch (dir->seek++) {
-                case 0:
-                        dirent.name = DIR_TASKID_STR;
-                        break;
-                case 1:
-                        dirent.name = DIR_TASKNAME_STR;
-                        break;
-                default:
-                        break;
-                }
+        switch (dir->f_seek++) {
+        case 0:
+                dirent.name = DIR_TASKID_STR;
+                break;
+        case 1:
+                dirent.name = DIR_TASKNAME_STR;
+                break;
+        default:
+                break;
         }
 
         return dirent;
@@ -930,30 +921,29 @@ static dirent_t procfs_readdir_root(void *fshdl, dir_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param[in]  *fshdl        file system data
+ * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskname(void *fshdl, dir_t *dir)
+static dirent_t procfs_readdir_taskname(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
+
+        STOP_IF(!dir);
 
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
-        struct taskstat taskdata;
+        struct sysmoni_taskstat taskdata;
+        if (sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
+                dirent.filetype = FILE_TYPE_REGULAR;
+                dirent.name     = taskdata.task_name;
+                dirent.size     = 0;
 
-        if (dir) {
-                if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
-                        dirent.filetype = FILE_TYPE_REGULAR;
-                        dirent.name     = taskdata.task_name;
-                        dirent.size     = 0;
-
-                        dir->seek++;
-                }
+                dir->f_seek++;
         }
 
         return dirent;
@@ -963,35 +953,32 @@ static dirent_t procfs_readdir_taskname(void *fshdl, dir_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param[in]  *fshdl        file system data
+ * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid(void *fshdl, dir_t *dir)
+static dirent_t procfs_readdir_taskid(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
+
+        STOP_IF(!dir);
 
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
-        struct taskstat taskdata;
-
-        if (dir == NULL) {
-                return dirent;
-        }
-
-        if (dir->dd && dir->seek < (size_t)sysm_get_number_of_monitored_tasks()) {
-                if (sysm_get_ntask_stat(dir->seek, &taskdata) == STD_RET_OK) {
-                        snprintf(dir->dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
+        if (dir->f_dd && dir->f_seek < (size_t)sysm_get_number_of_monitored_tasks()) {
+                struct sysmoni_taskstat taskdata;
+                if (sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
+                        snprintf(dir->f_dd, TASK_ID_STR_LEN, "%x", (int)taskdata.task_handle);
 
                         dirent.filetype = FILE_TYPE_DIR;
-                        dirent.name     = dir->dd;
+                        dirent.name     = dir->f_dd;
                         dirent.size     = 0;
 
-                        dir->seek++;
+                        dir->f_seek++;
                 }
         }
 
@@ -1002,69 +989,62 @@ static dirent_t procfs_readdir_taskid(void *fshdl, dir_t *dir)
 /**
  * @brief Read item from opened directory
  *
- * @param[in]  *fshdl        file system data
+ * @param[in]  *fs_handle    file system data
  * @param[out] *dir          directory object
  *
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid_n(void *fshdl, dir_t *dir)
+static dirent_t procfs_readdir_taskid_n(void *fs_handle, dir_t *dir)
 {
-        (void)fshdl;
+        UNUSED_ARG(fs_handle);
 
-        struct taskstat taskdata;
+        STOP_IF(!dir);
 
         dirent_t dirent;
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir == NULL) {
+        if (dir->f_seek >= TASK_FILE_COUNT) {
                 return dirent;
         }
 
-        if (dir->seek >= TASK_FILE_COUNT) {
-                return dirent;
-        }
-
-        if (sysm_get_task_stat((task_t*)dir->dd, &taskdata) != STD_RET_OK) {
+        struct sysmoni_taskstat taskdata;
+        if (sysm_get_task_stat((task_t*)dir->f_dd, &taskdata) != STD_RET_OK) {
                 return dirent;
         }
 
         char data[12]   = {0};
         dirent.filetype = FILE_TYPE_REGULAR;
 
-        switch (dir->seek) {
+        switch (dir->f_seek) {
         case TASK_FILE_NAME:
                 dirent.name = TASK_FILE_NAME_STR;
-                dirent.size = strlen(taskdata.task_name);
+                dirent.size = strlen(taskdata.task_name) + 1;
                 break;
 
         case TASK_FILE_PRIO:
                 dirent.name = TASK_FILE_PRIO_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.priority);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.priority);
                 break;
 
         case TASK_FILE_FREESTACK:
                 dirent.name = TASK_FILE_FREESTACK_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%u",
-                                       taskdata.free_stack);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%u\n", taskdata.free_stack);
                 break;
 
         case TASK_FILE_USEDMEM:
                 dirent.name = TASK_FILE_USEDMEM_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.memory_usage);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.memory_usage);
                 break;
 
         case TASK_FILE_OPENFILES:
                 dirent.name = TASK_FILE_OPENFILES_STR;
-                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d",
-                                       taskdata.opened_files);
+                dirent.size = snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.opened_files);
                 break;
         }
 
-        dir->seek++;
+        dir->f_seek++;
         return dirent;
 }
 

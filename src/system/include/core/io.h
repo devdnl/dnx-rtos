@@ -7,7 +7,7 @@
 
 @brief   This file support standard io functions
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -55,7 +55,8 @@ extern "C" {
 #define vsscanf(const_char__str, const_char__format, va_list__args)     io_vsscanf(const_char__str, const_char__format, va_list__args)
 #define putc(int__c, FILE__stream)                                      io_fputc(int__c, FILE__stream)
 #define fputc(int__c, FILE__stream)                                     io_fputc(int__c, FILE__stream)
-#define fputs(const_char__s, FILE__stream)                              io_fputs(const_char__s, FILE__stream)
+#define fputs(const_char__s, FILE__stream)                              io_f_puts(const_char__s, FILE__stream, false)
+#define puts(const_char__s)                                             io_f_puts(const_char__s, stdout, true)
 #define putchar(int__c)                                                 io_fputc(int__c, stdout)
 #define getchar()                                                       io_getc(stdin)
 #define getc(FILE__stream)                                              io_getc(FILE__stream)
@@ -75,7 +76,7 @@ extern "C" {
 #define CURSOR_HOME                             "\e[H"
 #define CURSOR_FORWARD(n)                       "\e["#n"C"
 #define CURSOR_BACKWARD(n)                      "\e["#n"D"
-#if (CONFIG_COLOR_TERM_ENABLE > 0)
+#if (CONFIG_COLOR_TERMINAL_ENABLE > 0)
 #define RESET_ATTRIBUTES                        "\e[0m"
 #define FONT_BLINKING                           "\e[5m"
 #define FONT_UNDERLINE                          "\e[4m"
@@ -168,7 +169,7 @@ extern i32_t  io_atoi(const char *str);
 extern char  *io_strtoi(const char*, int, i32_t*);
 extern double io_atof(const char*);
 extern int    io_fputc(int, FILE*);
-extern int    io_fputs(const char*, FILE*);
+extern int    io_f_puts(const char*, FILE*, bool);
 extern int    io_getc(FILE*);
 extern char  *io_fgets(char*, int, FILE *);
 

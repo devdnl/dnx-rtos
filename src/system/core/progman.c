@@ -5,7 +5,7 @@
 
 @brief   This file support programs layer
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -86,9 +86,11 @@ static void   task_program_startup(void *argv);
  *
  * @param *name         program name
  * @param *args         program argument string
- * @param *fstdin       stdin file
- * @param *fstdout      stdout file
- * @oaram *cwd          current working path
+ * @param *cwd          current working dir
+ * @param *stdin        stdin file
+ * @param *stdout       stdout file
+ * @param *status       program status
+ * @param *exit_code    exit code
  *
  * @return NULL if error, otherwise task handle
  */
@@ -131,10 +133,6 @@ task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FI
         pdata->exit_code    = exit_code;
 
         set_status(status, PROGRAM_RUNNING);
-
-        if (exit_code) {
-                *exit_code = STD_RET_UNKNOWN;
-        }
 
         taskhdl = new_task(task_program_startup, regpdata.program_name,
                            *regpdata.stack_depth, pdata);
@@ -233,7 +231,7 @@ static void task_program_startup(void *argv)
         struct program_data *prog_data = argv;
         struct task_data    *task_data = NULL;
         void                *task_mem  = NULL;
-        int                  exit_code = STD_RET_UNKNOWN;
+        int                  exit_code = -1;
 
         if (!(task_data = _get_this_task_data())) {
                 sysm_sysfree(prog_data);
@@ -241,11 +239,12 @@ static void task_program_startup(void *argv)
                 task_exit();
         }
 
-        task_data->f_user   = prog_data;
-        task_data->f_stdin  = prog_data->stdin;
-        task_data->f_stdout = prog_data->stdout;
-        task_data->f_stderr = prog_data->stdout;
-        task_data->f_cwd    = prog_data->cwd;
+        task_data->f_user    = prog_data;
+        task_data->f_stdin   = prog_data->stdin;
+        task_data->f_stdout  = prog_data->stdout;
+        task_data->f_stderr  = prog_data->stdout;
+        task_data->f_cwd     = prog_data->cwd;
+        task_data->f_program = true;
 
         if (prog_data->globals_size) {
                 if (!(task_mem = sysm_tskcalloc(1, prog_data->globals_size))) {
@@ -286,9 +285,6 @@ static void task_program_startup(void *argv)
  *
  * @param *status_ptr           pointer to status
  * @param  status               status
- *
- * @retval STD_RET_OK           manager variables initialized successfully
- * @retval STD_RET_ERROR        variables not initialized
  */
 //==============================================================================
 static void set_status(enum prog_state *status_ptr, enum prog_state status)

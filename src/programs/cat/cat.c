@@ -35,12 +35,11 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include "cat.h"
-#include "drivers/tty_def.h"
+#include "drivers/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define FILE_PATH_LEN           128
 
 /*==============================================================================
   Local types, enums definitions
@@ -54,13 +53,12 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES {
-        char filepath[FILE_PATH_LEN];
 };
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(cat, STACK_DEPTH_MEDIUM);
+PROGRAM_PARAMS(cat, STACK_DEPTH_LOW,);
 
 /*==============================================================================
   Function definitions
@@ -86,20 +84,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
         char *data = calloc(col + 1, sizeof(char));
 
         if (data) {
-                if (argv[1][0] == '/') {
-                        strcpy(global->filepath, argv[1]);
-                } else {
-                        getcwd(global->filepath, 128);
-
-                        if (global->filepath[strlen(global->filepath) - 1] != '/') {
-                                strcat(global->filepath, "/");
-                        }
-
-                        strcat(global->filepath, argv[1]);
-                }
-
-                FILE *file = fopen(global->filepath, "r");
-
+                FILE *file = fopen(argv[1], "r");
                 if (file) {
                         while (fgets(data, col, file)) {
                                 for (uint i = 0; i < strlen(data); i++) {
@@ -118,7 +103,7 @@ int PROGRAM_MAIN(cat, int argc, char *argv[])
                 }
 
         } else {
-                printf("Enough free memory\n");
+                puts("Not enough free memory");
 
                 status = EXIT_FAILURE;
         }

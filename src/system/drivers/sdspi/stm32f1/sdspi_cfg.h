@@ -52,8 +52,8 @@ extern "C" {
 #define SDSPI_WAIT_TIMEOUT              500
 
 /** device numbers */
-#define SDSPI_DEV_NO                    0
-#define SDSPI_DEV_PART                  0
+#define SDSPI_MAJOR_NO                  0
+#define SDSPI_MINOR_NO                  0
 
 /** supported SPI peripheral */
 #define SDSPI_PORT                      SPI3
@@ -79,6 +79,8 @@ extern "C" {
 /** Rx DMA finish interrupt routine */
 #define SDSPI_DMA_ISR                   DMA2_Channel1_IRQHandler
 #define SDSPI_DMA_IRQ                   DMA2_Channel1_IRQn
+
+#define SDSPI_DMA_IRQ_PRIORITY          CONFIG_USER_IRQ_PRIORITY
 #endif
 
 /*==============================================================================

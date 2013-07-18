@@ -34,8 +34,6 @@ extern "C" {
 #include "drivers/pll.h"
 #include "stm32f1/stm32f10x.h"
 
-MODULE_NAME(PLL);
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -62,23 +60,14 @@ MODULE_NAME(PLL);
 
 //==============================================================================
 /**
- * @brief Initialize clocks
- *
- * @param[out] **drvhdl         driver's memory handler
- * @param[in]  dev              device number
- * @param[in]  part             device part
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- *
- * NOTE: PLL2 and PLL3 not used
+ * @brief Initialize PLL module
  */
 //==============================================================================
-stdret_t PLL_init(void **drvhdl, uint dev, uint part)
+MODULE__DEVICE_INIT(PLL)
 {
-        (void)drvhdl;
-        (void)dev;
-        (void)part;
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(major);
+        UNUSED_ARG(minor);
 
         u32_t wait;
 
@@ -155,17 +144,12 @@ stdret_t PLL_init(void **drvhdl, uint dev, uint part)
 
 //==============================================================================
 /**
- * @brief Release PLL devices
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Release PLL device
  */
 //==============================================================================
-stdret_t PLL_release(void *drvhdl)
+MODULE__DEVICE_RELEASE(PLL)
 {
-        (void)drvhdl;
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
@@ -173,16 +157,11 @@ stdret_t PLL_release(void *drvhdl)
 //==============================================================================
 /**
  * @brief Open device
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t PLL_open(void *drvhdl)
+MODULE__DEVICE_OPEN(PLL)
 {
-        (void)drvhdl;
+        UNUSED_ARG(device_handle);
 
         return STD_RET_ERROR;
 }
@@ -190,119 +169,84 @@ stdret_t PLL_open(void *drvhdl)
 //==============================================================================
 /**
  * @brief Close device
- *
- * @param[in] *drvhdl           driver's memory handler
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t PLL_close(void *drvhdl)
+MODULE__DEVICE_CLOSE(PLL)
 {
-        (void)drvhdl;
+        UNUSED_ARG(device_handle);
 
         return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
- * @brief Write to the device
- *
- * @param[in] *drvhdl           driver's memory handle
- * @param[in] *src              source
- * @param[in] size              size
- * @param[in] lseek             seek
- *
- * @retval number of written nitems
+ * @brief Write data to device
  */
 //==============================================================================
-size_t PLL_write(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_WRITE(PLL)
 {
-        (void)drvhdl;
-        (void)src;
-        (void)size;
-        (void)lseek;
-        (void)nitems;
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(src);
+        UNUSED_ARG(item_size);
+        UNUSED_ARG(lseek);
+        UNUSED_ARG(n_items);
 
         return 0;
 }
 
 //==============================================================================
 /**
- * @brief Read from device
- *
- * @param[in]  *drvhdl          driver's memory handle
- * @param[out] *dst             destination
- * @param[in]  size             size
- * @param[in]  lseek            seek
- *
- * @retval number of read nitems
+ * @brief Read data from device
  */
 //==============================================================================
-size_t PLL_read(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek)
+MODULE__DEVICE_READ(PLL)
 {
-        (void)drvhdl;
-        (void)dst;
-        (void)size;
-        (void)lseek;
-        (void)nitems;
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(dst);
+        UNUSED_ARG(item_size);
+        UNUSED_ARG(lseek);
+        UNUSED_ARG(n_items);
 
         return 0;
 }
 
 //==============================================================================
 /**
- * @brief IO control
- *
- * @param[in]     *drvhdl       driver's memory handle
- * @param[in]     iorq          IO reqest
- * @param[in,out] args          additional arguments
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Device control
  */
 //==============================================================================
-stdret_t PLL_ioctl(void *drvhdl, int iorq, va_list args)
+MODULE__DEVICE_IOCTL(PLL)
 {
-        (void)drvhdl;
-        (void)iorq;
-        (void)args;
+        UNUSED_ARG(device_handle);
+        UNUSED_ARG(iorq);
+        UNUSED_ARG(args);
 
         return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
- * @brief Function flush device
- *
- * @param[in] *drvhdl           driver's memory handle
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Flush device
  */
 //==============================================================================
-stdret_t PLL_flush(void *drvhdl)
+MODULE__DEVICE_FLUSH(PLL)
 {
-        (void)drvhdl;
+        UNUSED_ARG(device_handle);
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function returns device informations
- *
- * @param[in]  *drvhld          driver's memory handle
- * @param[out] *info            device/file info
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @brief Interface returns device informations
  */
 //==============================================================================
-stdret_t PLL_info(void *drvhdl, struct vfs_dev_info *info)
+MODULE__DEVICE_INFO(PLL)
 {
-        (void) drvhdl;
-        info->st_size = 0;
+        UNUSED_ARG(device_handle);
+
+        device_info->st_size = 0;
+
         return STD_RET_OK;
 }
 

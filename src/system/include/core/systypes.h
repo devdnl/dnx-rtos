@@ -47,6 +47,10 @@ extern "C" {
 #undef malloc
 #undef free
 
+/** string usable macros */
+#define FIRST_CHARACTER(char__pstr)             char__pstr[0]
+#define LAST_CHARACTER(char__pstr)              char__pstr[strlen(char__pstr) - 1]
+
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
@@ -54,16 +58,12 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** default system status */
-enum status_enum
+/** universal status type */
+typedef enum stdret_enum
 {
         STD_RET_OK      = 0,
         STD_RET_ERROR   = 1,
-        STD_RET_UNKNOWN = 127,
-};
-
-/** universal status type */
-typedef signed char stdret_t;
+} stdret_t;
 
 /** directory object */
 typedef struct vfs_dir dir_t;

@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnx.h"
+#include "user/initd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,14 +67,9 @@ void dnx_init(void)
 {
         _cpuctl_init();
         memman_init();
-
-        if (vfs_init() != STD_RET_OK) {
-                for (;;);
-        }
-
-        if (sysm_init() != STD_RET_OK) {
-                for (;;);
-        }
+        _stop_if(vfs_init() != STD_RET_OK);
+        _stop_if(sysm_init() != STD_RET_OK);
+        new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
 }
 
 #ifdef __cplusplus

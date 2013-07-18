@@ -32,7 +32,9 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 #include "top.h"
+#include "drivers/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -55,7 +57,7 @@ GLOBAL_VARIABLES {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW);
+PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
 
 /*==============================================================================
   Function definitions
@@ -68,29 +70,29 @@ PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW);
 //==============================================================================
 int PROGRAM_MAIN(top, int argc, char *argv[])
 {
-        (void)argc;
-        (void)argv;
+        (void) argc;
+        (void) argv;
 
-        u8_t divcnt = 10;
+        int key     = 0;
+        int divider = 0;
 
-        while (TRUE) {
-                char chr = EOF;
-                fread(&chr, sizeof(char), 1, stdin);
+        ioctl(stdin, TTY_IORQ_ECHO_OFF);
 
-                if (chr == 'q') {
-                        break;
-                }
+        while (key != 'q') {
+                fflush(stdin);
+                key = getchar();
 
-                sleep_ms(100);
-
-                if (divcnt < 10) {
-                        divcnt++;
+                if (divider != 0 && key != 'k') {
+                        divider--;
+                        sleep_ms(100);
                         continue;
+                } else {
+                        divider = 10;
                 }
 
                 u8_t n = get_number_of_monitored_tasks();
 
-                printf(CLEAR_SCREEN"Press q to quit\n");
+                printf(CLEAR_SCREEN"Press q to quit or k to kill program\n");
 
                 printf("Total tasks: %u\n", n);
 
@@ -101,21 +103,28 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                 printf("Up time: %ud %2u:%2u\n", udays, uhrs, umins);
 
+                struct sysmoni_used_memory mem;
+                get_detailed_memory_usage(&mem);
+
+                int mem_total = get_memory_size();
+                int mem_used  = get_used_memory();
+                int mem_free  = get_free_memory();
+
                 printf("Memory:\t%u total,\t%u used,\t%u free\n",
-                       get_memory_size(),
-                       get_used_memory(),
-                       get_free_memory());
+                       mem_total,
+                       mem_used,
+                       mem_free);
 
                 printf("Kernel  : %d\nSystem  : %d\nModules : %d\nPrograms: %d\n\n",
-                       get_used_memory_by_kernel(),
-                       get_used_memory_by_system(),
-                       get_used_memory_by_modules(),
-                       get_used_memory_by_programs());
+                       mem.used_kernel_memory,
+                       mem.used_system_memory,
+                       mem.used_modules_memory,
+                       mem.used_programs_memory);
 
                 printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
                 for (int i = 0; i < n; i++) {
-                        struct taskstat taskinfo;
+                        struct sysmoni_taskstat taskinfo;
                         u32_t total_cpu_load = get_total_CPU_usage();
 
                         if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
@@ -133,12 +142,28 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                         }
                 }
 
-                clear_total_CPU_usage();
+                if (key == 'k') {
+                        ioctl(stdin, TTY_IORQ_ECHO_ON);
 
-                divcnt = 0;
+                        int task_handle = 0;
+
+                        printf("Enter task handle: 0x");
+                        scanf("%8X", &task_handle);
+
+                        task_t *task = (task_t *)task_handle;
+                        if (task != get_parent_handle()) {
+                                delete_program(task);
+                        }
+
+                        ioctl(stdin, TTY_IORQ_ECHO_OFF);
+                }
+
+                clear_total_CPU_usage();
         }
 
-        return STD_RET_OK;
+        ioctl(stdin, TTY_IORQ_ECHO_ON);
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus

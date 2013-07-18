@@ -1,5 +1,5 @@
-#ifndef STDIO_H_
-#define STDIO_H_
+#ifndef _STDIO_H_
+#define _STDIO_H_
 /*=========================================================================*//**
 @file    dnxio.h
 
@@ -40,12 +40,14 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /** stream values */
-#define EOF                                     (-1)
+#define EOF                     (-1)
+#define ETX                     0x03
+#define EOT                     0x04
 
 /** stdio buffer size */
-#define BUFSIZ                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
+#define BUFSIZ                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
 
-
+/** file interface functions used in applications */
 #define getmntentry(size_t__item, struct_vfs_mntent__pmntent)           sysm_getmntentry(size_t__item, struct_vfs_mntent__pmntent)
 #define mknod(const_char__ppath, struct_vfs_drv_interface__pdrvif)      sysm_mknod(const_char__ppath, struct_vfs_drv_interface__pdrvif)
 #define mkdir(const_char__ppath)                                        sysm_mkdir(const_char__ppath)
@@ -88,7 +90,7 @@ extern "C" {
 }
 #endif
 
-#endif /* STDIO_H_ */
+#endif /* _STDIO_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

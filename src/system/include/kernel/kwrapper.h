@@ -33,7 +33,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
 #include "kernel/ktypes.h"
 #include "core/systypes.h"
 #include "FreeRTOS.h"
@@ -58,35 +57,39 @@ extern "C" {
 #define STACK_DEPTH_VERY_LARGE                                  (10 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 #define STACK_DEPTH_HUGE                                        (12 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
 #define STACK_DEPTH_VERY_HUGE                                   (14 * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH))
+#define STACK_DEPTH_USER(depth)                                 (depth)
 
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                                               NULL
 #define OS_OK                                                   pdTRUE
 #define OS_NOT_OK                                               pdFALSE
+#define OS_TRUE                                                 pdTRUE
+#define OS_FALSE                                                pdFALSE
 
 /** MUTEX AND SEMAPHORES DEFINITIONS */
 #define MUTEX_LOCKED                                            OS_OK
 #define SEMAPHORE_TAKEN                                         OS_OK
-#define MAX_DELAY                                               portMAX_DELAY
+#define MAX_DELAY                                               (portMAX_DELAY / 1000)
 
 /** OS kernel control functions */
 #define start_task_scheduler()                                  vTaskStartScheduler()
 
 /** CALCULATIONS */
 #define PRIORITY(prio)                                          (prio + (configMAX_PRIORITIES / 2))
-#define MS2TICK(ms)                                             ms <= (configTICK_RATE_HZ/1000) ? 1 : ms/(configTICK_RATE_HZ/1000)
 #define LOWEST_PRIORITY                                         (-(int)(configMAX_PRIORITIES / 2))
 #define HIGHEST_PRIORITY                                        (configMAX_PRIORITIES / 2)
+#define _CEILING(x,y)                                           (((x) + (y) - 1) / (y))
+#define MS2TICK(ms)                                             (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
 
 /** TASK LEVEL DEFINITIONS */
 #define new_task(void__pfunc, const_char__pname, uint__stack_depth, void__pargv) kwrap_new_task(void__pfunc, const_char__pname, uint__stack_depth, void__pargv)
 #define delete_task(task_t__ptaskhdl)                           kwrap_delete_task(task_t__ptaskhdl)
 #define task_exit()                                             kwrap_task_exit()
-#define sleep_ms(uint__msdelay)                                 vTaskDelay(uint__msdelay)
-#define sleep(uint__seconds)                                    vTaskDelay((uint__seconds) * 1000UL)
+#define sleep_ms(uint__msdelay)                                 vTaskDelay(MS2TICK(uint__msdelay))
+#define sleep(uint__seconds)                                    vTaskDelay(MS2TICK((uint__seconds) * 1000UL))
 #define prepare_sleep_until()                                   long int __last_wake_time__ = get_tick_counter();
-#define sleep_until(uint__seconds)                              vTaskDelayUntil(&__last_wake_time__, (uint__seconds) * 1000UL)
-#define sleep_ms_until(uint__msdelay)                           vTaskDelayUntil(&__last_wake_time__, uint__msdelay)
+#define sleep_until(uint__seconds)                              vTaskDelayUntil(&__last_wake_time__, MS2TICK((uint__seconds) * 1000UL))
+#define sleep_ms_until(uint__msdelay)                           vTaskDelayUntil(&__last_wake_time__, MS2TICK(uint__msdelay))
 #define suspend_task(task_t__ptaskhdl)                          vTaskSuspend(task_t__ptaskhdl)
 #define suspend_this_task()                                     vTaskSuspend(THIS_TASK)
 #define resume_task(task_t__ptaskhdl)                           vTaskResume(task_t__ptaskhdl)
@@ -97,6 +100,7 @@ extern "C" {
 #define disable_ISR()                                           taskDISABLE_INTERRUPTS()
 #define enable_ISR()                                            taskENABLE_INTERRUPTS()
 #define get_tick_counter()                                      xTaskGetTickCount()
+#define get_OS_time_ms()                                        (xTaskGetTickCount() * ((1000/(configTICK_RATE_HZ))))
 #define get_task_name(task_t__ptaskhdl)                         (char*)pcTaskGetTaskName(task_t__ptaskhdl)
 #define get_this_task_name()                                    (char*)pcTaskGetTaskName(THIS_TASK)
 #define get_task_handle()                                       xTaskGetCurrentTaskHandle()
@@ -130,32 +134,33 @@ extern "C" {
 #define delete_counting_semaphore(sem_t__psem)                  vSemaphoreDelete(sem_t__psem)
 #define delete_mutex(mutex_t__pmutex)                           vSemaphoreDelete(mutex_t__pmutex)
 #define delete_recursive_mutex(mutex_t__pmutex)                 vSemaphoreDelete(mutex_t__pmutex)
-#define take_semaphore(sem_t__psem, uint__blocktime)            xSemaphoreTake(sem_t__psem, (portTickType) uint__blocktime)
+#define take_semaphore(sem_t__psem, uint__blocktime_ms)         xSemaphoreTake(sem_t__psem, MS2TICK((portTickType)(uint__blocktime_ms)))
 #define give_semaphore(sem_t__psem)                             xSemaphoreGive(sem_t__psem)
 #define take_semaphore_from_ISR(sem_t__psem, int__pwoke)        xSemaphoreTakeFromISR(sem_t__psem, (signed portBASE_TYPE*) int__pwoke)
 #define give_semaphore_from_ISR(sem_t__psem, int__pwoke)        xSemaphoreGiveFromISR(sem_t__psem, (signed portBASE_TYPE*) int__pwoke)
-#define take_counting_semaphore(sem_t__psem, uint__blocktime)   xSemaphoreTake(sem_t__psem, (portTickType) uint__blocktime)
+#define take_counting_semaphore(sem_t__psem, uint__blocktime_ms)xSemaphoreTake(sem_t__psem, MS2TICK((portTickType)(uint__blocktime_ms)))
 #define give_counting_semaphore(sem_t__psem)                    xSemaphoreGive(sem_t__psem)
 #define take_counting_semaphore_from_ISR(sem_t__psem, int__pwoke)xSemaphoreTakeFromISR(sem_t__psem, (signed portBASE_TYPE*) int__pwoke)
 #define give_counting_semaphore_from_ISR(sem_t__psem, int__pwoke)xSemaphoreGiveFromISR(sem_t__psem, (signed portBASE_TYPE*) int__pwoke)
-#define lock_mutex(mutex_t__pmutex, uint__blocktime)            xSemaphoreTake(mutex_t__pmutex, (portTickType) uint__blocktime)
+#define lock_mutex(mutex_t__pmutex, uint__blocktime_ms)         xSemaphoreTake(mutex_t__pmutex, MS2TICK((portTickType)(uint__blocktime_ms)))
 #define unlock_mutex(mutex_t__pmutex)                           xSemaphoreGive(mutex_t__pmutex)
-#define lock_recursive_mutex(mutex_t__pmutex, uint__blocktime)  xSemaphoreTakeRecursive(mutex_t__pmutex, (portTickType) uint__blocktime)
+#define lock_recursive_mutex(mutex_t__pmutex, uint__blocktime_ms)xSemaphoreTakeRecursive(mutex_t__pmutex, MS2TICK((portTickType)(uint__blocktime_ms)))
 #define unlock_recursive_mutex(mutex_t__pmutex)                 xSemaphoreGiveRecursive(mutex_t__pmutex)
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        FILE       *f_stdin;        /* stdin file                         */
-        FILE       *f_stdout;       /* stdout file                        */
-        FILE       *f_stderr;       /* stderr file                        */
-        const char *f_cwd;          /* current working path               */
-        void       *f_global_vars;  /* address to global variables        */
-        void       *f_user;         /* pointer to user data               */
-        void       *f_monitor;      /* pointer to task monitor data       */
-        task_t     *f_parent_task;  /* program's parent task              */
-        u32_t       f_cpu_usage;    /* counter used to calculate CPU load */
+        struct vfs_file *f_stdin;        /* stdin file                         */
+        struct vfs_file *f_stdout;       /* stdout file                        */
+        struct vfs_file *f_stderr;       /* stderr file                        */
+        const char      *f_cwd;          /* current working path               */
+        void            *f_global_vars;  /* address to global variables        */
+        void            *f_user;         /* pointer to user data               */
+        void            *f_monitor;      /* pointer to task monitor data       */
+        task_t          *f_parent_task;  /* program's parent task              */
+        u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
+        bool             f_program;      /* true if task is complex program    */
 };
 
 /*==============================================================================

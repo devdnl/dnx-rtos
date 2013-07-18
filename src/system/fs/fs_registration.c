@@ -1,13 +1,11 @@
-#ifndef REGDRV_H_
-#define REGDRV_H_
 /*=========================================================================*//**
-@file    regdrv.h
+@file    fs_registration.c
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration drivers
+@brief   This file is used to registration file systems
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,41 +31,74 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
+#include "fs/fs_registration.h"
+#include "core/vfs.h"
+
+/* include here FS headers */
+#include "fs/lfs.h"
+#include "fs/appfs.h"
+#include "fs/procfs.h"
+#include "fs/fatfs.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Local symbolic constants/macros
 ==============================================================================*/
-/*
- * USER CONFIGURATION: this determine how many driver modules are used in the
- *                     system. Driver module example: UART, TTY, I2C, etc.
- *                     One module can support many devices e.g.: UART can support
- *                     uart1, uart2, etc, so here type only number of modules not
- *                     supported devices.
- */
-#define REGDRV_NUMBER_OF_REGISTERED_MODULES             5
+#define USE_FILE_SYSTEM_INTERFACE(fs_name)\
+{.FS_name = #fs_name,\
+ .FS_if   = {.fs_init    = fs_name##_init,\
+             .fs_chmod   = fs_name##_chmod,\
+             .fs_chown   = fs_name##_chown,\
+             .fs_close   = fs_name##_close,\
+             .fs_ioctl   = fs_name##_ioctl,\
+             .fs_mkdir   = fs_name##_mkdir,\
+             .fs_mknod   = fs_name##_mknod,\
+             .fs_open    = fs_name##_open,\
+             .fs_opendir = fs_name##_opendir,\
+             .fs_read    = fs_name##_read,\
+             .fs_release = fs_name##_release,\
+             .fs_remove  = fs_name##_remove,\
+             .fs_rename  = fs_name##_rename,\
+             .fs_stat    = fs_name##_stat,\
+             .fs_fstat   = fs_name##_fstat,\
+             .fs_statfs  = fs_name##_statfs,\
+             .fs_flush   = fs_name##_flush,\
+             .fs_write   = fs_name##_write}}
 
 /*==============================================================================
-  Exported types, enums definitions
+  Local types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Local function prototypes
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Local object definitions
 ==============================================================================*/
-extern stdret_t    init_driver(const char *drvName, const char *nodeName);
-extern stdret_t    release_driver(const char *drvName);
-extern const char *regdrv_get_module_name(uint module_number);
-extern int         regdrv_get_module_number(const char *module_name);
+
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
+/* driver registration */
+const struct _FS_entry _FS_table[] =
+{
+        USE_FILE_SYSTEM_INTERFACE(lfs),
+        USE_FILE_SYSTEM_INTERFACE(appfs),
+        USE_FILE_SYSTEM_INTERFACE(procfs),
+        USE_FILE_SYSTEM_INTERFACE(fatfs),
+};
+
+/* driver list size */
+const uint _FS_table_size = ARRAY_SIZE(_FS_table);
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGDRV_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

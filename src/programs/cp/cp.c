@@ -60,7 +60,7 @@ GLOBAL_VARIABLES {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(cp, STACK_DEPTH_LOW);
+PROGRAM_PARAMS(cp, STACK_DEPTH_LOW,);
 
 /*==============================================================================
   Function definitions
@@ -78,73 +78,50 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
-        char *src_path = NULL;
-        char *dst_path = NULL;
         char *buffer   = NULL;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
-
-        src_path = calloc(PATH_MAX_SIZE, sizeof(char));
-        if (!src_path) {
-                printf("Not enough free memory\n");
-                goto exit_error;
-        }
-
-        if (argv[1][0] != '/') {
-                getcwd(src_path, PATH_MAX_SIZE / 2);
-                strcat(src_path, "/");
-        }
-        strcat(src_path, argv[1]);
-
-
-        dst_path = calloc(PATH_MAX_SIZE, sizeof(char));
-        if (!dst_path) {
-                printf("Not enough free memory\n");
-                goto exit_error;
-        }
-
-        if (argv[2][0] != '/') {
-                getcwd(dst_path, PATH_MAX_SIZE / 2);
-                strcat(dst_path, "/");
-        }
-        strcat(dst_path, argv[2]);
 
         int buffer_size = BUFFER_MAX_SIZE;
         while ((buffer = malloc(buffer_size * sizeof(char))) == NULL) {
                 buffer_size /= 2;
 
                 if (buffer_size < 512) {
-                        printf("Not enough free memory\n");
+                        puts("Not enough free memory");
                         goto exit_error;
                 }
         }
 
-        src_file = fopen(src_path, "r");
+        src_file = fopen(argv[1], "r");
         if (!src_file) {
-                printf("Cannot open file %s\n", src_path);
+                printf("Cannot open file %s\n", argv[1]);
                 goto exit_error;
         }
 
-        dst_file = fopen(dst_path, "w");
+        dst_file = fopen(argv[2], "w");
         if (!dst_file) {
-                printf("Cannot create file %s\n", dst_path);
+                printf("Cannot create file %s\n", argv[2]);
                 goto exit_error;
         }
 
         fseek(src_file, 0, SEEK_END);
-        uint file_size = ftell(src_file);
+        u64_t lfile_size = ftell(src_file);
         fseek(src_file, 0, SEEK_SET);
 
-        uint start_time   = get_tick_counter();
-        uint refresh_time = start_time;
-        uint copy_size    = 0;
-        int  n;
+        uint  start_time   = get_OS_time_ms();
+        uint  refresh_time = start_time;
+        u64_t lcopy_size   = 0;
+        int   n;
 
         while ((n = fread(buffer, sizeof(char), buffer_size, src_file))) {
-                copy_size += n;
+                lcopy_size += n;
 
-                if (get_tick_counter() - refresh_time >= INFO_REFRESH_TIME_MS) {
-                        refresh_time = get_tick_counter();
+                if (get_OS_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
+                        refresh_time = get_OS_time_ms();
+
+                        u32_t file_size = lfile_size / 1024;
+                        u32_t copy_size = lcopy_size / 1024;
+
                         printf("\r%d.%2d%% copied...",
                                ((copy_size*100)/file_size),
                                ((copy_size*10000)/file_size) % 100);
@@ -156,25 +133,33 @@ int PROGRAM_MAIN(cp, int argc, char *argv[])
                 }
         }
 
-        uint stop_time = get_tick_counter() - start_time;
-        printf("\rCopied %d bytes in %d.%3d seconds (%d.%3d KiB/s)\n",
+        uint stop_time = get_OS_time_ms() - start_time;
+        u32_t copy_size = lcopy_size;
+
+        if (lcopy_size >= 1024) {
+                copy_size = lcopy_size / 1024;
+        }
+
+        const char *pre = "";
+        if (copy_size >= 1024) {
+                pre = "Ki";
+        }
+
+        printf("\rCopied %d%sB in %d.%3d seconds (%d.%3d KiB/s)\n",
                copy_size,
+               pre,
                stop_time / 1000,
                stop_time % 1000,
-               ((copy_size / stop_time) * 1000) / 1024,
-               ((copy_size / stop_time) * 1000) % 1024);
+               (((u32_t)lcopy_size / stop_time) * 1000) / 1024,
+               (((u32_t)lcopy_size / stop_time) * 1000) % 1024);
+
+        fclose(src_file);
+        fclose(dst_file);
+        free(buffer);
 
         return EXIT_SUCCESS;
 
 exit_error:
-        if (src_path) {
-                free(src_path);
-        }
-
-        if (dst_path) {
-                free(dst_path);
-        }
-
         if (buffer) {
                 free(buffer);
         }

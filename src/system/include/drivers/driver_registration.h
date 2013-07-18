@@ -1,11 +1,13 @@
+#ifndef _DRIVER_REGISTRATION_
+#define _DRIVER_REGISTRATION_
 /*=========================================================================*//**
-@file    helloworld.c
+@file    driver_registration.h
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   This file is used to registration drivers
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -31,68 +33,42 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "helloworld.h"
-#include <string.h>
+#include "core/systypes.h"
+#include "core/vfs.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported symbolic constants/macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported types, enums definitions
 ==============================================================================*/
-
-/*==============================================================================
-  Local function prototypes
-==============================================================================*/
-
-/*==============================================================================
-  Local object definitions
-==============================================================================*/
-/* put here global variables */
-GLOBAL_VARIABLES {
+struct _driver_entry {
+        const char               *drv_name;
+        u8_t                      major;
+        u8_t                      minor;
+        stdret_t                (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
+        stdret_t                (*drv_release)(void *drvhdl);
+        struct vfs_drv_interface  drv_if;
 };
 
 /*==============================================================================
-  Exported object definitions
+  Exported object declarations
 ==============================================================================*/
-/* export program parameters */
-PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
+extern const char                 *_regdrv_module_name[];
+extern const struct _driver_entry  _regdrv_driver_table[];
+extern const uint                  _regdrv_driver_table_array_size;
+extern const uint                  _regdrv_number_of_modules;
 
 /*==============================================================================
-  Function definitions
+  Exported function prototypes
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Program main function
- *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
- *
- * @return program status
- */
-//==============================================================================
-int PROGRAM_MAIN(helloworld, int argc, char *argv[])
-{
-        puts("Hello world!");
-        printf("Free stack: %d\n", get_free_stack());
-        printf("Static memory usage: %d\n", get_used_static_memory());
-        printf("Memory size: %d\n", get_memory_size());
-        printf("Free memory: %d\n", get_free_memory());
-
-        printf("Program arguments:\n");
-        for (int i = 0; i < argc; i++) {
-                printf("%d: %s\n", i + 1, argv[i]);
-        }
-
-        return 0;
-}
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _DRIVER_REGISTRATION_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

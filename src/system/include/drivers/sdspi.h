@@ -34,7 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
-#include "sdspi_def.h"
+#include "drivers/sdspi_def.h"
 
 #if defined ARCH_stm32f1
         #include "stm32f1/sdspi_cfg.h"

@@ -5,7 +5,7 @@
 
 @brief   This file provide system initialisation and RTOS start.
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnx.h"
-#include "user/initd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,9 +65,7 @@ extern "C" {
 int main(void)
 {
         dnx_init();
-        new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
         start_task_scheduler();
-
         return 0;
 }
 

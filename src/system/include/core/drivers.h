@@ -1,9 +1,11 @@
+#ifndef _DRIVERS_H_
+#define _DRIVERS_H_
 /*=========================================================================*//**
-@file    helloworld.c
+@file    drivers.h
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   Drivers support.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,68 +33,32 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "helloworld.h"
-#include <string.h>
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Exported functions
 ==============================================================================*/
-/* put here global variables */
-GLOBAL_VARIABLES {
-};
-
-/*==============================================================================
-  Exported object definitions
-==============================================================================*/
-/* export program parameters */
-PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Program main function
- *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
- *
- * @return program status
- */
-//==============================================================================
-int PROGRAM_MAIN(helloworld, int argc, char *argv[])
-{
-        puts("Hello world!");
-        printf("Free stack: %d\n", get_free_stack());
-        printf("Static memory usage: %d\n", get_used_static_memory());
-        printf("Memory size: %d\n", get_memory_size());
-        printf("Free memory: %d\n", get_free_memory());
-
-        printf("Program arguments:\n");
-        for (int i = 0; i < argc; i++) {
-                printf("%d: %s\n", i + 1, argv[i]);
-        }
-
-        return 0;
-}
+extern stdret_t    init_driver            (const char *drvName, const char *nodeName);
+extern stdret_t    release_driver         (const char *drvName);
+extern const char *_get_module_name       (uint module_number);
+extern int         _get_module_number     (const char *module_name);
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _DRIVERS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

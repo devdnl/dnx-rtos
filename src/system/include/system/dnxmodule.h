@@ -1,5 +1,5 @@
-#ifndef DNXMODULE_H_
-#define DNXMODULE_H_
+#ifndef _DNXMODULE_H_
+#define _DNXMODULE_H_
 /*=========================================================================*//**
 @file    dnxmodule.h
 
@@ -36,106 +36,149 @@ extern "C" {
 #include "core/systypes.h"
 #include "core/vfs.h"
 #include "core/sysmoni.h"
-#include "user/regdrv.h"
+#include "core/drivers.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#ifdef DNX_H_
+#ifdef _DNX_H_
 #error "dnx.h and dnxmodule.h shall never included together!"
 #endif
 
-#define MODULE_NAME(const_char__pmodule_name)                           static const char *__module_name__ = #const_char__pmodule_name
-
 #undef  calloc
-#define calloc(size_t__nmemb, size_t__msize)                            sysm_modcalloc(size_t__nmemb, size_t__msize, regdrv_get_module_number(__module_name__))
+#define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
 
 #undef  malloc
-#define malloc(size_t__size)                                            sysm_modmalloc(size_t__size, regdrv_get_module_number(__module_name__))
+#define malloc(size_t__size)                    sysm_modmalloc(size_t__size, _get_module_number(_module_name_))
 
 #undef  free
-#define free(void__pmem)                                                sysm_modfree(void__pmem, regdrv_get_module_number(__module_name__))
+#define free(void__pmem)                        sysm_modfree(void__pmem, _get_module_number(_module_name_))
 
-#undef  mknod
-#define mknod(const_char__ppath, struct_vfs_drv_interface__pdrvif)      vfs_mknod(const_char__ppath, struct_vfs_drv_interface__pdrvif)
+#define STOP_IF(condition)                      _stop_if(condition)
 
-#undef  mkdir
-#define mkdir(const_char__ppath)                                        vfs_mkdir(const_char__ppath)
 
-#undef  opendir
-#define opendir(const_char__ppath)                                      vfs_opendir(const_char__ppath)
+/**
+ * @brief Initialize device
+ *
+ * @param[out] **device_handle          memory region allocated by module
+ * @param[in]    major                  device major number
+ * @param[in]    minor                  device minor number
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+#define _MODULE__DEVICE_INIT(modname)           stdret_t _##modname##_init(void **device_handle, u8_t major, u8_t minor)
+#define  MODULE__DEVICE_INIT(modname)           static const char *_module_name_ = #modname; _MODULE__DEVICE_INIT(modname)
 
-#undef  closedir
-#define closedir(dir_t__pdir)                                           vfs_closedir(dir_t__pdir)
 
-#undef  readdir
-#define readdir(dir_t__pdir)                                            vfs_readdir(dir_t__pdir)
+/**
+ * @brief Release device
+ *
+ * @param[in] *device_handle           memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+#define MODULE__DEVICE_RELEASE(modname)         stdret_t _##modname##_release(void *device_handle)
 
-#undef  remove
-#define remove(const_char__ppath)                                       vfs_remove(const_char__ppath)
 
-#undef  rename
-#define rename(const_char__pold_name, const_char__pnew_name)            vfs_rename(const_char__pold_name, const_char__pnew_name)
+/**
+ * @brief Open device
+ *
+ * @param[in] *device_handle           memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+#define MODULE__DEVICE_OPEN(modname)            stdret_t _##modname##_open(void *device_handle)
 
-#undef  chmod
-#define chmod(const_char__ppath, int__mode)                             vfs_chmod(const_char__ppath, int__mode)
 
-#undef  chown
-#define chown(const_char__ppath, int__owner, int__group)                vfs_chown(const_char__ppath, int__owner, int__group)
+/**
+ * @brief Close device
+ *
+ * @param[in] *device_handle           memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+#define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *device_handle)
 
-#undef  stat
-#define stat(const_char__ppath, struct_vfs_stat__pstat)                 vfs_stat(const_char__ppath, struct_vfs_stat__pstat)
 
-#undef  statfs
-#define statfs(const_char__ppath, struct_vfs_statfs__pstatfs)           vfs_statfs(const_char__ppath, struct_vfs_statfs__pstatfs)
+/**
+ * @brief Write data into a device
+ *
+ * @param[in] *device_handle            memory region allocated by module
+ * @param[in] *src                      data source
+ * @param[in]  item_size                size of item
+ * @param[in]  n_items                  number of items
+ * @param[in]  lseek                    position in file/device address
+ *
+ * @return number of written items
+ */
+#define MODULE__DEVICE_WRITE(modname)           size_t _##modname##_write(void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
 
-#undef  fopen
-#define fopen(const_char__ppath, const_char__pmode)                     vfs_fopen(const_char__ppath, const_char__pmode)
 
-#undef  fclose
-#define fclose(FILE__pfile)                                             vfs_fclose(FILE__pfile)
+/**
+ * @brief Read data from a device
+ *
+ * @param[in]  *device_handle           memory region allocated by module
+ * @param[out] *dst                     data destination
+ * @param[in]   item_size               size of item
+ * @param[in]   n_items                 number of items
+ * @param[in]   lseek                   position in file/device address
+ *
+ * @return number of written items
+ */
+#define MODULE__DEVICE_READ(modname)            size_t _##modname##_read(void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
 
-#undef  fwrite
-#define fwrite(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)   vfs_fwrite(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)
 
-#undef  fread
-#define fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)     vfs_fread(void__ptr, size_t__isize, size_t__nitems, FILE__pfile)
+/**
+ * @brief Device control
+ *
+ * @param[in]    *device_handle         memory region allocated by module
+ * @param[in]     iorq                  control request
+ * @param[in,out] args                  additional arguments
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+#define MODULE__DEVICE_IOCTL(modname)           stdret_t _##modname##_ioctl(void *device_handle, int iorq, va_list args)
 
-#undef  fseek
-#define fseek(FILE__pfile, i64_t__offset, int__mode)                    vfs_fseek(FILE__pfile, i64_t__offset, int__mode)
 
-#undef  ftell
-#define ftell(FILE__pfile)                                              vfs_ftell(FILE__pfile)
+/**
+ * @brief Flush device memory/cache
+ *
+ * @param[in] *device_handle            memory region allocated by module
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+#define MODULE__DEVICE_FLUSH(modname)           stdret_t _##modname##_flush(void *device_handle)
 
-#undef  ioctl
-#define ioctl(FILE__pfile, ...)                                         vfs_ioctl(FILE__pfile, __VA_ARGS__)
 
-#undef  fflush
-#define fflush(FILE__pfile)                                             vfs_fflush(FILE__pfile)
+/**
+ * @brief Device information
+ *
+ * @param[in]  *device_handle           memory region allocated by module
+ * @param[out] *device_info             device/file info
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+#define MODULE__DEVICE_INFO(modname)            stdret_t _##modname##_info(void *device_handle, struct vfs_dev_info *device_info)
 
-#undef  fstat
-#define fstat(FILE__pfile, struct_vfs_stat__pstat)                      vfs_fstat(FILE__pfile, struct_vfs_stat__pstat)
-
-#undef  fflush
-#define fflush(FILE__pfile)                                             vfs_fflush(FILE__pfile)
-
-#undef  feof
-#define feof(FILE__pfile)                                               vfs_feof(FILE__pfile)
-
-#undef  rewind
-#define rewind(FILE__pfile)                                             vfs_rewind(FILE__pfile)
-
-#define DRIVER_INTERFACE(modname)                                               \
-extern stdret_t modname##_init   (void**, uint, uint);                          \
-extern stdret_t modname##_release(void*);                                       \
-extern stdret_t modname##_open   (void*);                                       \
-extern stdret_t modname##_close  (void*);                                       \
-extern size_t   modname##_write  (void*, const void*, size_t, size_t, u64_t);   \
-extern size_t   modname##_read   (void*, void*, size_t, size_t, u64_t);         \
-extern stdret_t modname##_ioctl  (void*, int, va_list);                         \
-extern stdret_t modname##_flush  (void*);                                       \
-extern stdret_t modname##_info   (void*, struct vfs_dev_info*);
+/* module's external interface */
+#define DRIVER_INTERFACE(modname)        \
+extern _MODULE__DEVICE_INIT(modname);    \
+extern  MODULE__DEVICE_RELEASE(modname); \
+extern  MODULE__DEVICE_OPEN(modname);    \
+extern  MODULE__DEVICE_CLOSE(modname);   \
+extern  MODULE__DEVICE_WRITE(modname);   \
+extern  MODULE__DEVICE_READ(modname);    \
+extern  MODULE__DEVICE_IOCTL(modname);   \
+extern  MODULE__DEVICE_FLUSH(modname);   \
+extern  MODULE__DEVICE_INFO(modname)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -153,7 +196,7 @@ extern stdret_t modname##_info   (void*, struct vfs_dev_info*);
 }
 #endif
 
-#endif /* DNXMODULE_H_ */
+#endif /* _DNXMODULE_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
