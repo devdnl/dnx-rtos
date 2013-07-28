@@ -87,7 +87,7 @@ extern "C" {
 #define task_exit()                                             kwrap_task_exit()
 #define sleep_ms(uint__msdelay)                                 vTaskDelay(MS2TICK(uint__msdelay))
 #define sleep(uint__seconds)                                    vTaskDelay(MS2TICK((uint__seconds) * 1000UL))
-#define prepare_sleep_until()                                   long int __last_wake_time__ = get_tick_counter();
+#define prepare_sleep_until()                                   unsigned long int __last_wake_time__ = get_tick_counter();
 #define sleep_until(uint__seconds)                              vTaskDelayUntil(&__last_wake_time__, MS2TICK((uint__seconds) * 1000UL))
 #define sleep_ms_until(uint__msdelay)                           vTaskDelayUntil(&__last_wake_time__, MS2TICK(uint__msdelay))
 #define suspend_task(task_t__ptaskhdl)                          vTaskSuspend(task_t__ptaskhdl)
