@@ -71,7 +71,7 @@ extern "C" {
 #define restart()                                                       _cpuctl_restart_system()
 #define get_platform_name()                                             CPUCTL_PLATFORM_NAME
 #define get_OS_name()                                                   "dnx"
-#define get_OS_version()                                                "1.0.1"
+#define get_OS_version()                                                "1.0.7"
 #define get_kernel_name()                                               "FreeRTOS"
 #define get_author_name()                                               "Daniel Zorychta"
 #define get_author_email()                                              "<daniel.zorychta@gmail.com>"
