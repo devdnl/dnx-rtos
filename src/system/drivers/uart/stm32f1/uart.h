@@ -37,9 +37,9 @@ extern "C" {
 #include "stm32f1/uart_def.h"
 
 #if defined ARCH_stm32f1
-        #include "stm32f1/uart_cfg.h"
+#include "stm32f1/uart_cfg.h"
 #elif defined ARCH_posix
-        #include "posix/uart_cfg.h"
+#include "posix/uart_cfg.h"
 #endif
 
 /*==============================================================================
