@@ -311,6 +311,8 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
         char  **arg_table  = NULL;
         list_t *arg_list   = NULL;
         char   *arg_string = NULL;
+        bool    first_quos = false;
+        bool    first_quod = false;
 
         if (arg == NULL || name == NULL || argc == NULL) {
                 goto exit_error;
@@ -328,17 +330,36 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                 goto add_args_to_table;
         }
 
-        if ((arg_string = sysm_syscalloc(strlen(arg) + 1, sizeof(char))) == NULL) {
+        const char *arg_start = arg;
+        while (*arg_start == ' ') {
+                arg_start++;
+        }
+
+        if (*arg_start == '\'') {
+                arg_start++;
+                first_quos = true;
+        } else if (*arg_start == '"') {
+                arg_start++;
+                first_quod = true;
+        }
+
+        if ((arg_string = sysm_syscalloc(strlen(arg_start) + 1, sizeof(char))) == NULL) {
                 goto exit_error;
         }
 
-        strcpy(arg_string, arg);
+        strcpy(arg_string, arg_start);
 
         while (*arg_string != '\0') {
                 char *arg_to_add = NULL;
 
-                if (*arg_string == '\'') {
-                        arg_to_add = ++arg_string;
+                if (*arg_string == '\'' || first_quos) {
+                        if (first_quos) {
+                                first_quos = false;
+                        } else {
+                                ++arg_string;
+                        }
+
+                        arg_to_add = arg_string;
 
                         while (*arg_string != '\0') {
                                 if ( *arg_string == '\''
@@ -354,8 +375,14 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                                 goto exit_error;
                         }
 
-                } else if (*arg_string == '"') {
-                        arg_to_add = ++arg_string;
+                } else if (*arg_string == '"' || first_quod) {
+                        if (first_quod) {
+                                first_quod = false;
+                        } else {
+                                ++arg_string;
+                        }
+
+                        arg_to_add = arg_string;
 
                         while (*arg_string != '\0') {
                                 if ( *arg_string == '"'
