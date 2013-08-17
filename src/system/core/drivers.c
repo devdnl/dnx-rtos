@@ -106,14 +106,14 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                                                         _regdrv_driver_table[drvid].minor)
                                                         != STD_RET_OK) {
 
-                        if (driver_memory_region[drvid] == NULL)
-                                driver_memory_region[drvid] = (void*)(size_t)drvid;
-
                         printk(FONT_COLOR_RED"Driver %s initialization error!"
                                RESET_ATTRIBUTES"\n", drv_name);
 
                         return STD_RET_ERROR;
                 }
+
+                if (driver_memory_region[drvid] == NULL)
+                        driver_memory_region[drvid] = (void*)(size_t)-1;
 
                 if (node_path) {
                         drv_if = _regdrv_driver_table[drvid].drv_if;
