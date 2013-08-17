@@ -147,7 +147,7 @@ static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_re
  *
  * @note used software: nickgsuperstar@gmail.com & nickg@client9.com
  *                      https://code.google.com/p/stringencoders/
- * 
+ *
  * @param[in]   value           input value
  * @param[out] *str             string - result
  * @param[in]   prec            precision
@@ -778,7 +778,7 @@ int io_fprintf(FILE *file, const char *format, ...)
                         n = io_vsnprintf(str, size, format, args);
                         va_end(args);
 
-                        vfs_fwrite(str, sizeof(char), n + 1, file);
+                        vfs_fwrite(str, sizeof(char), n, file);
 
                         sysm_sysfree(str);
                 }
