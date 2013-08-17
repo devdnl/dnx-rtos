@@ -38,6 +38,7 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 #define MTX_BLOCK_TIME                                  0
+#define MTX_BLOCK_TIME_LONG                             200
 #define force_lock_recursive_mutex(mtx)                 while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
 
 /* SPI configuration macros */
@@ -474,37 +475,41 @@ MODULE__DEVICE_INFO(SDSPI)
 
         struct sdspi_data *hdl = device_handle;
 
-        /* size info */
-        if (send_cmd(hdl, CMD9, 0) == 0) {
-                u8_t  csd[16];
-                u8_t  token;
-                uint  try = 1000000;
+        if (lock_mutex(hdl->card_protect_mtx, MTX_BLOCK_TIME_LONG) == MUTEX_LOCKED) {
+                /* size info */
+                if (send_cmd(hdl, CMD9, 0) == 0) {
+                        u8_t  csd[16];
+                        u8_t  token;
+                        uint  try = 1000000;
 
-                while ((token = spi_rw(0xFF)) == 0xFF && --try);
-                if (token != 0xFE)
-                        return STD_RET_ERROR;
+                        while ((token = spi_rw(0xFF)) == 0xFF && --try);
+                        if (token != 0xFE)
+                                return STD_RET_ERROR;
 
-                u8_t *ptr = &csd[0];
-                for (int i = 0; i < 4; i++) {
-                        *ptr++ = spi_rw(0xFF);
-                        *ptr++ = spi_rw(0xFF);
-                        *ptr++ = spi_rw(0xFF);
-                        *ptr++ = spi_rw(0xFF);
+                        u8_t *ptr = &csd[0];
+                        for (int i = 0; i < 4; i++) {
+                                *ptr++ = spi_rw(0xFF);
+                                *ptr++ = spi_rw(0xFF);
+                                *ptr++ = spi_rw(0xFF);
+                                *ptr++ = spi_rw(0xFF);
+                        }
+                        spi_rw(0xFF);
+                        spi_rw(0xFF);
+
+                        /* SDC version 2.00 */
+                        device_info->st_size = 0;
+                        if ((csd[0] >> 6) == 1) {
+                                int csize     = csd[9] + ((u16_t)csd[8] << 8) + 1;
+                                device_info->st_size = (u64_t)csize << 10;
+                        } else { /* SDC version 1.XX or MMC*/
+                                int n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
+                                int csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
+                                device_info->st_size = (u64_t)csize << (n - 9);
+                        }
+                        device_info->st_size *= SECTOR_SIZE;
                 }
-                spi_rw(0xFF);
-                spi_rw(0xFF);
 
-                /* SDC version 2.00 */
-                device_info->st_size = 0;
-                if ((csd[0] >> 6) == 1) {
-                        int csize     = csd[9] + ((u16_t)csd[8] << 8) + 1;
-                        device_info->st_size = (u64_t)csize << 10;
-                } else { /* SDC version 1.XX or MMC*/
-                        int n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
-                        int csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
-                        device_info->st_size = (u64_t)csize << (n - 9);
-                }
-                device_info->st_size *= SECTOR_SIZE;
+                unlock_mutex(hdl->card_protect_mtx);
         }
 
         return STD_RET_OK;
