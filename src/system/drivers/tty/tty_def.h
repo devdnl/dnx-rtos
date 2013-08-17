@@ -1,13 +1,13 @@
-#ifndef TTY_H_
-#define TTY_H_
+#ifndef _TTY_DEF_H_
+#define _TTY_DEF_H_
 /*=========================================================================*//**
-@file    tty.h
+@file    tty_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support virtual terminal
+@brief   This file support global definitions of TTY
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,27 +33,31 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "drivers/tty_def.h"
+#include "tty_cfg.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
+/** define part count */
+#define TTY_MINOR_NO                    0
 
-/*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-
-/*==============================================================================
-  Exported function prototypes
-==============================================================================*/
-DRIVER_INTERFACE(TTY);
+/** TTY requests */
+enum TTY_IORQ_enum {
+        TTY_IORQ_GET_CURRENT_TTY,               /* [out] int*   */
+        TTY_IORQ_SWITCH_TTY_TO,                 /* [in ] int    */
+        TTY_IORQ_CLEAN_TTY,                     /* none         */
+        TTY_IORQ_GET_COL,                       /* [out] int*   */
+        TTY_IORQ_GET_ROW,                       /* [out] int*   */
+        TTY_IORQ_CLEAR_SCR,                     /* none         */
+        TTY_IORQ_ECHO_ON,                       /* none         */
+        TTY_IORQ_ECHO_OFF,                      /* none         */
+};
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TTY_H_ */
+#endif /* _TTY_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

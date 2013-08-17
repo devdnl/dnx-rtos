@@ -34,7 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "stm32f1/stm32f10x.h"
-#include "drivers/gpio_def.h"
+#include "drivers/ioctl.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

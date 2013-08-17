@@ -1,13 +1,13 @@
-#ifndef _DRIVER_REGISTRATION_
-#define _DRIVER_REGISTRATION_
+#ifndef _UART_H_
+#define _UART_H_
 /*=========================================================================*//**
-@file    driver_registration.h
+@file    usart.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration drivers
+@brief   This file support USART peripherals
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,59 +33,33 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
-#include "core/vfs.h"
-#include "drivers/driver_registration.h"
+#include "system/dnxmodule.h"
+#include "stm32f1/uart_def.h"
+
+#if defined ARCH_stm32f1
+        #include "stm32f1/uart_cfg.h"
+#elif defined ARCH_posix
+        #include "posix/uart_cfg.h"
+#endif
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define USE_MODULE(module_name)                 #module_name
-
-#define USE_DRIVER_INTERFACE(_drvmodule, _drvname, _major, _minor)\
-{.drv_name    = _drvname,\
- .major       = _major,\
- .minor       = _minor,\
- .drv_init    = _##_drvmodule##_init,\
- .drv_release = _##_drvmodule##_release,\
- .drv_if      = {.handle    = NULL,\
-                 .drv_open  = _##_drvmodule##_open,\
-                 .drv_close = _##_drvmodule##_close,\
-                 .drv_write = _##_drvmodule##_write,\
-                 .drv_read  = _##_drvmodule##_read,\
-                 .drv_ioctl = _##_drvmodule##_ioctl,\
-                 .drv_info  = _##_drvmodule##_info,\
-                 .drv_flush = _##_drvmodule##_flush}}
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-struct _driver_entry {
-        const char               *drv_name;
-        u8_t                      major;
-        u8_t                      minor;
-        stdret_t                (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
-        stdret_t                (*drv_release)(void *drvhdl);
-        struct vfs_drv_interface  drv_if;
-};
-
-/*==============================================================================
-  Exported object declarations
-==============================================================================*/
-extern const char                 *_regdrv_module_name[];
-extern const struct _driver_entry  _regdrv_driver_table[];
-extern const uint                  _regdrv_driver_table_array_size;
-extern const uint                  _regdrv_number_of_modules;
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+DRIVER_INTERFACE(UART);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _DRIVER_REGISTRATION_ */
+#endif /* _UART_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

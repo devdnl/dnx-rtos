@@ -1,11 +1,11 @@
-#ifndef GPIO_DEF_H_
-#define GPIO_DEF_H_
+#ifndef _GPIO_H_
+#define _GPIO_H_
 /*=========================================================================*//**
-@file    gpio_def.h
+@file    gpio.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO definitions
+@brief   This driver support GPIO.
 
 @note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,40 +33,33 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "system/dnxmodule.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/gpio_cfg.h"
+#else
+#endif
+
+#include "gpio_def.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GPIO_PART_NONE       0
 
 /*==============================================================================
   Exported types, enums definitions
-==============================================================================*/
-/** port names */
-enum GPIO_DEV_NUMBER {
-        GPIO_DEV_NONE,
-        GPIO_DEV_LAST
-};
-
-/** ioctl commands */
-enum GPIO_IORQ {
-        GPIO_IORQ_SD_SELECT,
-        GPIO_IORQ_SD_DESELECT,
-};
-
-/*==============================================================================
-  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+DRIVER_INTERFACE(GPIO);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* GPIO_DEF_H_ */
+#endif /* _GPIO_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

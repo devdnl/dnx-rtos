@@ -1,13 +1,13 @@
-#ifndef PLL_H_
-#define PLL_H_
+#ifndef _TTY_H_
+#define _TTY_H_
 /*=========================================================================*//**
-@file    pll.h
+@file    tty.h
 
 @author  Daniel Zorychta
 
-@brief   File support PLL
+@brief   This file support virtual terminal
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -34,13 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
-#include "pll_def.h"
-
-#if defined ARCH_stm32f1
-        #include "stm32f1/pll_cfg.h"
-#elif defined ARCH_posix
-        #include "posix/pll_cfg.h"
-#endif
+#include "tty_def.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -53,13 +47,13 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-DRIVER_INTERFACE(PLL);
+DRIVER_INTERFACE(TTY);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PLL_H_ */
+#endif /* _TTY_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

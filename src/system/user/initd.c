@@ -33,9 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include "user/initd.h"
-#include "drivers/tty_def.h"
-#include "drivers/sdspi_def.h"
-#include "drivers/uart_def.h"
+#include "drivers/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
