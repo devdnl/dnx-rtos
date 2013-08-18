@@ -1130,7 +1130,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                                 bfr_size--;
                                         }
                                         *string++ = '\0';
-                                        str++;
+
+                                        if (bfr_size != 0)
+                                                str++;
+
                                         read_fields++;
                                 }
                                 break;
