@@ -342,7 +342,7 @@ static int calc_format_size(const char *format, va_list arg)
                                 continue;
                         }
 
-                        if (chr == 'd' || chr == 'x' || chr == 'u') {
+                        if (chr == 'd' || chr == 'x' || chr == 'u' || chr == 'i' || chr == 'X') {
                                 chr = va_arg(arg, i32_t);
                                 size += 11;
                                 continue;
@@ -840,7 +840,7 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         continue;
                 }
 
-                if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u') {
+                if (chr == 's' || chr == 'd' || chr == 'x' || chr == 'u' || chr == 'X' || chr == 'i') {
                         char result[12];
                         memset(result, 0, sizeof(result));
                         char *resultPtr;
@@ -855,8 +855,8 @@ int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                         arg_size = 9;
                                 }
 
-                                u8_t base    = (chr == 'd' || chr == 'u' ? 10 : 16);
-                                bool uint_en = (chr == 'x' || chr == 'u' ? TRUE : FALSE);
+                                u8_t base    = (chr == 'd' || chr == 'u' || chr == 'i' ? 10 : 16);
+                                bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? TRUE : FALSE);
 
                                 resultPtr = itoa(va_arg(arg, i32_t), result,
                                                  base, uint_en, arg_size);
