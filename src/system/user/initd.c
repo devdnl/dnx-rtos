@@ -234,6 +234,9 @@ static int run_level_2(void)
                                         tty[current_tty] = fopen(path, "r+");
                                 }
 
+                                fprintf(tty[current_tty], "Welcome to %s/%s (tty%d)\n",
+                                        get_OS_name(), get_kernel_name(), current_tty);
+
                                 program[current_tty] = new_program("terminal", "", "/",
                                                                    tty[current_tty],
                                                                    tty[current_tty],

@@ -42,7 +42,7 @@ extern "C" {
 ==============================================================================*/
 /** translate function to STDC */
 #define printf(...)                                                     io_fprintf(stdout, __VA_ARGS__)
-#define fprintf(...)                                                    io_fprintf(__VA_ARGS__)
+#define fprintf(FILE__stream, ...)                                      io_fprintf(FILE__stream, __VA_ARGS__)
 #define snprintf(char__bfr, size_t__size, ...)                          io_snprintf(char__bfr, size_t__size, __VA_ARGS__)
 #define sprintf(char__bfr, ...)                                         io_snprintf(char__bfr, UINT16_MAX, __VA_ARGS__)
 #define vsnprintf(char__bfr, size_t__size, va_list__args)               io_vsnprintf(char__bfr, size_t__size, va_list__args)

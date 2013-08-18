@@ -137,11 +137,6 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
 
         getcwd(global->cwd, CWD_PATH_LEN);
 
-        int tty = 0;
-        ioctl(stdin, TTY_IORQ_GET_CURRENT_TTY, &tty);
-
-        printf("Welcome to %s/%s (tty%u)\n", get_OS_name(), get_kernel_name(), tty);
-
         for (;;) {
                 /* clear input line and print prompt */
                 memset(global->line, '\0', PROMPT_LINE_LEN);
