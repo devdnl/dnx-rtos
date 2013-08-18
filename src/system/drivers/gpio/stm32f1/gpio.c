@@ -312,14 +312,14 @@ static void init_GPIOx(GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr)
                 return;
         }
 
+        /* configure outputs and inputs initial state */
+        gpio->ODR = odr;
+
         /* pin 0-7 configuration */
         gpio->CRL = crl;
 
         /* pin 8-15 configuration */
         gpio->CRH = crh;
-
-        /* configure outputs and inputs initial state */
-        gpio->ODR = odr;
 }
 
 //==============================================================================
