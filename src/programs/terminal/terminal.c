@@ -135,7 +135,6 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-//        strcpy(global->cwd, "/");
         getcwd(global->cwd, CWD_PATH_LEN);
 
         int tty = 0;
@@ -149,7 +148,10 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 print_prompt();
 
                 /* waiting for command */
-                scanf("%100s", global->line);
+                if (!fgets(global->line, PROMPT_LINE_LEN, stdin))
+                        continue;
+
+                LAST_CHARACTER(global->line) = '\0';
 
                 /* finds all spaces before command */
                 char *cmd  = global->line;
