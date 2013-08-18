@@ -135,13 +135,7 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-//        strcpy(global->cwd, "/");
         getcwd(global->cwd, CWD_PATH_LEN);
-
-        int tty = 0;
-        ioctl(stdin, TTY_IORQ_GET_CURRENT_TTY, &tty);
-
-        printf("Welcome to %s/%s (tty%u)\n", get_OS_name(), get_kernel_name(), tty);
 
         for (;;) {
                 /* clear input line and print prompt */
@@ -149,7 +143,10 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 print_prompt();
 
                 /* waiting for command */
-                scanf("%100s", global->line);
+                if (!fgets(global->line, PROMPT_LINE_LEN, stdin))
+                        continue;
+
+                LAST_CHARACTER(global->line) = '\0';
 
                 /* finds all spaces before command */
                 char *cmd  = global->line;
