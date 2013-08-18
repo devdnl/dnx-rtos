@@ -855,9 +855,13 @@ static void switch_tty_if_requested(void)
         if (tty_ctrl->change_to_TTY >= TTY_DEV_COUNT) {
                 tty_ctrl->change_to_TTY = -1;
         } else if (tty_ctrl->change_to_TTY != -1) {
-                tty_ctrl->current_TTY   = tty_ctrl->change_to_TTY;
-                tty_ctrl->change_to_TTY = -1;
-                refresh_tty(current_tty_handle());
+                if (tty_ctrl->tty[tty_ctrl->change_to_TTY] != NULL) {
+                        tty_ctrl->current_TTY   = tty_ctrl->change_to_TTY;
+                        tty_ctrl->change_to_TTY = -1;
+                        refresh_tty(current_tty_handle());
+                } else {
+                        tty_ctrl->change_to_TTY = -1;
+                }
         }
 }
 
