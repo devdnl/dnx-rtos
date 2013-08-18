@@ -961,7 +961,7 @@ int io_vsscanf(const char *str, const char *format, va_list args)
         char  *strs;
         int    sign;
         char  *string;
-        uint   bfr_size;
+        u16_t  bfr_size;
 
         if (!str || !format) {
                 return EOF;
@@ -983,6 +983,9 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                 chr       = *format++;
                         }
 
+                        if (bfr_size == 0)
+                            bfr_size = UINT16_MAX;
+
                         switch (chr) {
                         case '%':
                                 if (*str == '%') {
@@ -994,6 +997,7 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                 break;
 
                         case 'd':
+                        case 'i':
                                 value = 0;
                                 sign  = 1;
 
@@ -1008,10 +1012,11 @@ int io_vsscanf(const char *str, const char *format, va_list args)
 
                                 strs  = (char*)str;
 
-                                while (*str >= '0' && *str <= '9') {
+                                while (*str >= '0' && *str <= '9' && bfr_size > 0) {
                                         value *= 10;
                                         value += *str - '0';
                                         str++;
+                                        bfr_size--;
                                 }
 
                                 if (str != strs) {
@@ -1040,9 +1045,10 @@ int io_vsscanf(const char *str, const char *format, va_list args)
 
                                 strs  = (char*)str;
 
-                                while (  (*str >= '0' && *str <= '9')
-                                      || (*str >= 'a' && *str <= 'f')
-                                      || (*str >= 'A' && *str <= 'F') ) {
+                                while (  (  (*str >= '0' && *str <= '9')
+                                         || (*str >= 'a' && *str <= 'f')
+                                         || (*str >= 'A' && *str <= 'F') )
+                                      && (bfr_size > 0) ) {
 
                                         uint var;
 
@@ -1059,6 +1065,7 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                                         value *= 16;
                                         value += var;
                                         str++;
+                                        bfr_size--;
                                 }
 
                                 if (strs != str) {
@@ -1086,10 +1093,11 @@ int io_vsscanf(const char *str, const char *format, va_list args)
 
                                 strs  = (char*)str;
 
-                                while (*str >= '0' && *str <= '7') {
+                                while (*str >= '0' && *str <= '7' && bfr_size > 0) {
                                         value *= 8;
                                         value += *str - '0';
                                         str++;
+                                        bfr_size--;
                                 }
 
                                 if (str != strs) {
@@ -1117,10 +1125,15 @@ int io_vsscanf(const char *str, const char *format, va_list args)
                         case 's':
                                 string = va_arg(args, char*);
                                 if (string) {
-                                        strcpy(string, str);
+                                        while (*str != '\n' && *str != '\r' && *str != '\0' && *str != ' ' && bfr_size > 0) {
+                                                *string++ = *str++;
+                                                bfr_size--;
+                                        }
+                                        *string++ = '\0';
+                                        str++;
                                         read_fields++;
                                 }
-                                goto io_sscanf_end;
+                                break;
 
                         case 'f':
                         case 'F':
