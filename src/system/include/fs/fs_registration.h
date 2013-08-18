@@ -39,6 +39,26 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#define USE_FILE_SYSTEM_INTERFACE(fs_name)\
+{.FS_name = #fs_name,\
+ .FS_if   = {.fs_init    = fs_name##_init,\
+             .fs_chmod   = fs_name##_chmod,\
+             .fs_chown   = fs_name##_chown,\
+             .fs_close   = fs_name##_close,\
+             .fs_ioctl   = fs_name##_ioctl,\
+             .fs_mkdir   = fs_name##_mkdir,\
+             .fs_mknod   = fs_name##_mknod,\
+             .fs_open    = fs_name##_open,\
+             .fs_opendir = fs_name##_opendir,\
+             .fs_read    = fs_name##_read,\
+             .fs_release = fs_name##_release,\
+             .fs_remove  = fs_name##_remove,\
+             .fs_rename  = fs_name##_rename,\
+             .fs_stat    = fs_name##_stat,\
+             .fs_fstat   = fs_name##_fstat,\
+             .fs_statfs  = fs_name##_statfs,\
+             .fs_flush   = fs_name##_flush,\
+             .fs_write   = fs_name##_write}}
 
 /*==============================================================================
   Exported types, enums definitions
