@@ -33,11 +33,15 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "drivers/gpio_def.h"
-#include "drivers/pll_def.h"
-#include "drivers/sdspi_def.h"
-#include "drivers/tty_def.h"
-#include "drivers/uart_def.h"
+#include "tty_def.h"
+#ifdef ARCH_stm32f1
+#       include "stm32f1/gpio_def.h"
+#       include "stm32f1/pll_def.h"
+#       include "stm32f1/sdspi_def.h"
+#       include "stm32f1/uart_def.h"
+#else
+#       error "Unknown architecture!"
+#endif
 
 /*==============================================================================
   Exported macros

@@ -1,11 +1,11 @@
-#ifndef UART_H_
-#define UART_H_
+#ifndef _TTY_DEF_H_
+#define _TTY_DEF_H_
 /*=========================================================================*//**
-@file    usart.h
+@file    tty_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support USART peripherals
+@brief   This file support global definitions of TTY
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,33 +33,31 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "drivers/uart_def.h"
-
-#if defined ARCH_stm32f1
-        #include "stm32f1/uart_cfg.h"
-#elif defined ARCH_posix
-        #include "posix/uart_cfg.h"
-#endif
+#include "tty_cfg.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
+/** define part count */
+#define TTY_MINOR_NO                    0
 
-/*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-
-/*==============================================================================
-  Exported function prototypes
-==============================================================================*/
-DRIVER_INTERFACE(UART);
+/** TTY requests */
+enum TTY_IORQ_enum {
+        TTY_IORQ_GET_CURRENT_TTY,               /* [out] int*   */
+        TTY_IORQ_SWITCH_TTY_TO,                 /* [in ] int    */
+        TTY_IORQ_CLEAN_TTY,                     /* none         */
+        TTY_IORQ_GET_COL,                       /* [out] int*   */
+        TTY_IORQ_GET_ROW,                       /* [out] int*   */
+        TTY_IORQ_CLEAR_SCR,                     /* none         */
+        TTY_IORQ_ECHO_ON,                       /* none         */
+        TTY_IORQ_ECHO_OFF,                      /* none         */
+};
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_H_ */
+#endif /* _TTY_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

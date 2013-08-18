@@ -1,13 +1,13 @@
-#ifndef GPIO_H_
-#define GPIO_H_
+#ifndef _PLL_H_
+#define _PLL_H_
 /*=========================================================================*//**
-@file    gpio.h
+@file    pll.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO.
+@brief   File support PLL
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -34,13 +34,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
+#include "pll_def.h"
 
-#if defined(ARCH_stm32f1)
-#include "stm32f1/gpio_cfg.h"
-#else
+#if defined ARCH_stm32f1
+        #include "stm32f1/pll_cfg.h"
+#elif defined ARCH_posix
+        #include "posix/pll_cfg.h"
 #endif
-
-#include "drivers/gpio_def.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -53,13 +53,13 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-DRIVER_INTERFACE(GPIO);
+DRIVER_INTERFACE(PLL);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* GPIO_H_ */
+#endif /* _PLL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

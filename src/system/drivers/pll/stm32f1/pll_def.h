@@ -1,11 +1,11 @@
-#ifndef UART_DEF_H_
-#define UART_DEF_H_
+#ifndef _PLL_DEF_H_
+#define _PLL_DEF_H_
 /*=========================================================================*//**
-@file    usart_def.h
+@file    pll_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support statuses and request of USART peripherals
+@brief   PLL definition file
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,7 +33,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -42,47 +41,20 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** IO request for UART driver */
-enum UART_IORq
-{
-        UART_IORQ_ENABLE_WAKEUP_IDLE,                   /* [---] no arg       */
-        UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK,           /* [---] no arg       */
-        UART_IORQ_ENABLE_PARITY_CHECK,                  /* [---] no arg       */
-        UART_IORQ_DISABLE_PARITY_CHECK,                 /* [---] no arg       */
-        UART_IORQ_SET_ODD_PARITY,                       /* [---] no arg       */
-        UART_IORQ_SET_EVEN_PARITY,                      /* [---] no arg       */
-        UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE,          /* [---] no arg       */
-        UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE,         /* [---] no arg       */
-        UART_IORQ_ENABLE_LIN_MODE,                      /* [---] no arg       */
-        UART_IORQ_DISABLE_LIN_MODE,                     /* [---] no arg       */
-        UART_IORQ_SET_1_STOP_BIT,                       /* [---] no arg       */
-        UART_IORQ_SET_2_STOP_BITS,                      /* [---] no arg       */
-        UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS,         /* [---] no arg       */
-        UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS,         /* [---] no arg       */
-        UART_IORQ_SET_ADDRESS_NODE,                     /* [in ] int          */
-        UART_IORQ_ENABLE_CTS,                           /* [---] no arg       */
-        UART_IORQ_DISABLE_CTS,                          /* [---] no arg       */
-        UART_IORQ_ENABLE_RTS,                           /* [---] no arg       */
-        UART_IORQ_DISABLE_RTS,                          /* [---] no arg       */
-        UART_IORQ_GET_BYTE,                             /* [out] u8_t*        */
-        UART_IORQ_GET_BYTE_BLOCKING,                    /* [out] u8_t*        */
-        UART_IORQ_SEND_BYTE,                            /* [in ] int          */
-        UART_IORQ_SET_BAUDRATE,                         /* [in ] int          */
-};
 
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
- Exported function prototypes
+  Exported function prototypes
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* UART_DEF_H_ */
+#endif /* _PLL_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -742,8 +742,6 @@ static enum cmd_status cmd_uname(char *arg)
 //==============================================================================
 static enum cmd_status cmd_detect_card(char *arg)
 {
-#include "drivers/sdspi_def.h"
-
         FILE *sd = fopen(arg, "r");
         if (sd) {
                 bool status = false;

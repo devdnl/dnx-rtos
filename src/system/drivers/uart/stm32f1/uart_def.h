@@ -1,11 +1,11 @@
-#ifndef TTY_DEF_H_
-#define TTY_DEF_H_
+#ifndef _UART_DEF_H_
+#define _UART_DEF_H_
 /*=========================================================================*//**
-@file    tty_def.h
+@file    usart_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support global definitions of TTY
+@brief   This file support statuses and request of USART peripherals
 
 @note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,61 +33,41 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "core/systypes.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** define TTY max supported lines */
-#define TTY_MAX_LINES               40
-
-/** define output stream size (from keyboard) */
-#define TTY_STREAM_SIZE             80
-
-/** define edit line length */
-#define TTY_EDIT_LINE_LEN           80
-
-/** define number of virtual terminals */
-#define TTY_NUMBER_OF_VT            4
-
-/** define part count */
-#define TTY_PART_NONE               0
-
-/** enable (1) or disable (0) checking terminal size */
-#define TTY_TERM_SIZE_CHECK         1
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** devices number */
-enum tty_list {
-#if TTY_NUMBER_OF_VT > 0
-        TTY_DEV_0,
-#endif
-#if TTY_NUMBER_OF_VT > 1
-        TTY_DEV_1,
-#endif
-#if TTY_NUMBER_OF_VT > 2
-        TTY_DEV_2,
-#endif
-#if TTY_NUMBER_OF_VT > 3
-        TTY_DEV_3,
-#endif
-#if TTY_NUMBER_OF_VT > 4
-#error "TTY support 4 virtual terminals!"
-#endif
-        TTY_DEV_COUNT
-};
-
-/** TTY requests */
-enum TTY_IORQ_enum {
-        TTY_IORQ_GET_CURRENT_TTY,               /* [out] int*   */
-        TTY_IORQ_SWITCH_TTY_TO,                 /* [in ] int    */
-        TTY_IORQ_CLEAN_TTY,                     /* none         */
-        TTY_IORQ_GET_COL,                       /* [out] int*   */
-        TTY_IORQ_GET_ROW,                       /* [out] int*   */
-        TTY_IORQ_CLEAR_SCR,                     /* none         */
-        TTY_IORQ_ECHO_ON,                       /* none         */
-        TTY_IORQ_ECHO_OFF,                      /* none         */
+/** IO request for UART driver */
+enum UART_IORq
+{
+        UART_IORQ_ENABLE_WAKEUP_IDLE,                   /* [---] no arg       */
+        UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK,           /* [---] no arg       */
+        UART_IORQ_ENABLE_PARITY_CHECK,                  /* [---] no arg       */
+        UART_IORQ_DISABLE_PARITY_CHECK,                 /* [---] no arg       */
+        UART_IORQ_SET_ODD_PARITY,                       /* [---] no arg       */
+        UART_IORQ_SET_EVEN_PARITY,                      /* [---] no arg       */
+        UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE,          /* [---] no arg       */
+        UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE,         /* [---] no arg       */
+        UART_IORQ_ENABLE_LIN_MODE,                      /* [---] no arg       */
+        UART_IORQ_DISABLE_LIN_MODE,                     /* [---] no arg       */
+        UART_IORQ_SET_1_STOP_BIT,                       /* [---] no arg       */
+        UART_IORQ_SET_2_STOP_BITS,                      /* [---] no arg       */
+        UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS,         /* [---] no arg       */
+        UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS,         /* [---] no arg       */
+        UART_IORQ_SET_ADDRESS_NODE,                     /* [in ] int          */
+        UART_IORQ_ENABLE_CTS,                           /* [---] no arg       */
+        UART_IORQ_DISABLE_CTS,                          /* [---] no arg       */
+        UART_IORQ_ENABLE_RTS,                           /* [---] no arg       */
+        UART_IORQ_DISABLE_RTS,                          /* [---] no arg       */
+        UART_IORQ_GET_BYTE,                             /* [out] u8_t*        */
+        UART_IORQ_GET_BYTE_BLOCKING,                    /* [out] u8_t*        */
+        UART_IORQ_SEND_BYTE,                            /* [in ] int          */
+        UART_IORQ_SET_BAUDRATE,                         /* [in ] int          */
 };
 
 /*==============================================================================
@@ -95,14 +75,14 @@ enum TTY_IORQ_enum {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+ Exported function prototypes
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TTY_DEF_H_ */
+#endif /* _UART_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

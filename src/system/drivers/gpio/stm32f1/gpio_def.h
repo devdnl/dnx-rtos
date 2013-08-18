@@ -1,13 +1,13 @@
-#ifndef _SDSPI_H_
-#define _SDSPI_H_
+#ifndef _GPIO_DEF_H_
+#define _GPIO_DEF_H_
 /*=========================================================================*//**
-@file    sdspi.h
+@file    gpio_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file support SD card in SPI mode
+@brief   This driver support GPIO definitions
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,31 +33,39 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "drivers/sdspi_def.h"
-
-#if defined ARCH_stm32f1
-        #include "stm32f1/sdspi_cfg.h"
-#endif
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#define GPIO_PART_NONE       0
 
 /*==============================================================================
   Exported types, enums definitions
+==============================================================================*/
+/** port names */
+enum GPIO_DEV_NUMBER {
+        GPIO_DEV_NONE,
+        GPIO_DEV_LAST
+};
+
+/** ioctl commands */
+enum GPIO_IORQ {
+        _GPIO_IORQ_none
+};
+
+/*==============================================================================
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-DRIVER_INTERFACE(SDSPI);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _SDSPI_H_ */
+#endif /* _GPIO_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
