@@ -34,13 +34,12 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
+#include "gpio_def.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/gpio_cfg.h"
 #else
 #endif
-
-#include "gpio_def.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

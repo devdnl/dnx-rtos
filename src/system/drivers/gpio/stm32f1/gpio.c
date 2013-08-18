@@ -45,184 +45,32 @@ extern "C" {
 #define GPIO_PIN_CFG_SIZE                       4U
 
 /** define CRL configuration macro */
-#define GPIO_SET_CRL(CFG, PIN)                  ( CFG << (GPIO_PIN_CFG_SIZE * PIN) )
+#define GPIO_SET_CRL(CFG, PIN)                  ( (CFG) << ((GPIO_PIN_CFG_SIZE) * (PIN)) )
 
 /** define CRH configuration macro */
-#define GPIO_SET_CRH(CFG, PIN)                  ( CFG << (GPIO_PIN_CFG_SIZE * (PIN - 8)) )
+#define GPIO_SET_CRH(CFG, PIN)                  ( (CFG) << ((GPIO_PIN_CFG_SIZE) * ((PIN) - 8)) )
 
-/** define macro used to set port's pins */
-#define SET_PIN(port, pin_mask)                 port->BSRR = pin_mask
+/** CRL register value for GPIO */
+#define GPIOx_CRL(port) ( GPIO_SET_CRL(port##_PIN_0_MODE, 0 ) | GPIO_SET_CRL(port##_PIN_1_MODE, 1 ) \
+                        | GPIO_SET_CRL(port##_PIN_2_MODE, 2 ) | GPIO_SET_CRL(port##_PIN_3_MODE, 3 ) \
+                        | GPIO_SET_CRL(port##_PIN_4_MODE, 4 ) | GPIO_SET_CRL(port##_PIN_5_MODE, 5 ) \
+                        | GPIO_SET_CRL(port##_PIN_6_MODE, 6 ) | GPIO_SET_CRL(port##_PIN_7_MODE, 7 ) )
 
-/** define macro used to clear port's pins */
-#define CLEAR_PIN(port, pin_mask)               port->BRR = pin_mask
+/** CRH register value for GPIO */
+#define GPIOx_CRH(port) ( GPIO_SET_CRH(port##_PIN_8_MODE ,  8) | GPIO_SET_CRH(port##_PIN_9_MODE ,  9) \
+                        | GPIO_SET_CRH(port##_PIN_10_MODE, 10) | GPIO_SET_CRH(port##_PIN_11_MODE, 11) \
+                        | GPIO_SET_CRH(port##_PIN_12_MODE, 12) | GPIO_SET_CRH(port##_PIN_13_MODE, 13) \
+                        | GPIO_SET_CRH(port##_PIN_14_MODE, 14) | GPIO_SET_CRH(port##_PIN_15_MODE, 15) )
 
-#if (GPIOA_EN != 0)
-/** CRL register value for GPIOA */
-#define GPIOA_CRL    ( GPIO_SET_CRL(GPIOA_PIN_00_MODE, 0 ) | GPIO_SET_CRL(GPIOA_PIN_01_MODE, 1 ) \
-                     | GPIO_SET_CRL(GPIOA_PIN_02_MODE, 2 ) | GPIO_SET_CRL(GPIOA_PIN_03_MODE, 3 ) \
-                     | GPIO_SET_CRL(GPIOA_PIN_04_MODE, 4 ) | GPIO_SET_CRL(GPIOA_PIN_05_MODE, 5 ) \
-                     | GPIO_SET_CRL(GPIOA_PIN_06_MODE, 6 ) | GPIO_SET_CRL(GPIOA_PIN_07_MODE, 7 ) )
-
-/** CRH register value for GPIOA */
-#define GPIOA_CRH    ( GPIO_SET_CRH(GPIOA_PIN_08_MODE, 8 ) | GPIO_SET_CRH(GPIOA_PIN_09_MODE, 9 ) \
-                     | GPIO_SET_CRH(GPIOA_PIN_10_MODE, 10) | GPIO_SET_CRH(GPIOA_PIN_11_MODE, 11) \
-                     | GPIO_SET_CRH(GPIOA_PIN_12_MODE, 12) | GPIO_SET_CRH(GPIOA_PIN_13_MODE, 13) \
-                     | GPIO_SET_CRH(GPIOA_PIN_14_MODE, 14) | GPIO_SET_CRH(GPIOA_PIN_15_MODE, 15) )
-
-/** ODR register value for GPIOA */
-#define GPIOA_ODR    ( (GPIOA_PIN_00_DEFAULT_STATE << 0 ) | (GPIOA_PIN_01_DEFAULT_STATE << 1 ) \
-                     | (GPIOA_PIN_02_DEFAULT_STATE << 2 ) | (GPIOA_PIN_03_DEFAULT_STATE << 3 ) \
-                     | (GPIOA_PIN_04_DEFAULT_STATE << 4 ) | (GPIOA_PIN_05_DEFAULT_STATE << 5 ) \
-                     | (GPIOA_PIN_06_DEFAULT_STATE << 6 ) | (GPIOA_PIN_07_DEFAULT_STATE << 7 ) \
-                     | (GPIOA_PIN_08_DEFAULT_STATE << 8 ) | (GPIOA_PIN_09_DEFAULT_STATE << 9 ) \
-                     | (GPIOA_PIN_10_DEFAULT_STATE << 10) | (GPIOA_PIN_11_DEFAULT_STATE << 11) \
-                     | (GPIOA_PIN_12_DEFAULT_STATE << 12) | (GPIOA_PIN_13_DEFAULT_STATE << 13) \
-                     | (GPIOA_PIN_14_DEFAULT_STATE << 14) | (GPIOA_PIN_15_DEFAULT_STATE << 15) )
-#endif
-
-#if (GPIOB_EN != 0)
-/** CRL register value for GPIOB */
-#define GPIOB_CRL    ( GPIO_SET_CRL(GPIOB_PIN_00_MODE, 0 ) | GPIO_SET_CRL(GPIOB_PIN_01_MODE, 1 ) \
-                     | GPIO_SET_CRL(GPIOB_PIN_02_MODE, 2 ) | GPIO_SET_CRL(GPIOB_PIN_03_MODE, 3 ) \
-                     | GPIO_SET_CRL(GPIOB_PIN_04_MODE, 4 ) | GPIO_SET_CRL(GPIOB_PIN_05_MODE, 5 ) \
-                     | GPIO_SET_CRL(GPIOB_PIN_06_MODE, 6 ) | GPIO_SET_CRL(GPIOB_PIN_07_MODE, 7 ) )
-
-/** CRH register value for GPIOB */
-#define GPIOB_CRH    ( GPIO_SET_CRH(GPIOB_PIN_08_MODE, 8 ) | GPIO_SET_CRH(GPIOB_PIN_09_MODE, 9 ) \
-                     | GPIO_SET_CRH(GPIOB_PIN_10_MODE, 10) | GPIO_SET_CRH(GPIOB_PIN_11_MODE, 11) \
-                     | GPIO_SET_CRH(GPIOB_PIN_12_MODE, 12) | GPIO_SET_CRH(GPIOB_PIN_13_MODE, 13) \
-                     | GPIO_SET_CRH(GPIOB_PIN_14_MODE, 14) | GPIO_SET_CRH(GPIOB_PIN_15_MODE, 15) )
-
-/** ODR register value for GPIOB */
-#define GPIOB_ODR    ( (GPIOB_PIN_00_DEFAULT_STATE << 0 ) | (GPIOB_PIN_01_DEFAULT_STATE << 1 ) \
-                     | (GPIOB_PIN_02_DEFAULT_STATE << 2 ) | (GPIOB_PIN_03_DEFAULT_STATE << 3 ) \
-                     | (GPIOB_PIN_04_DEFAULT_STATE << 4 ) | (GPIOB_PIN_05_DEFAULT_STATE << 5 ) \
-                     | (GPIOB_PIN_06_DEFAULT_STATE << 6 ) | (GPIOB_PIN_07_DEFAULT_STATE << 7 ) \
-                     | (GPIOB_PIN_08_DEFAULT_STATE << 8 ) | (GPIOB_PIN_09_DEFAULT_STATE << 9 ) \
-                     | (GPIOB_PIN_10_DEFAULT_STATE << 10) | (GPIOB_PIN_11_DEFAULT_STATE << 11) \
-                     | (GPIOB_PIN_12_DEFAULT_STATE << 12) | (GPIOB_PIN_13_DEFAULT_STATE << 13) \
-                     | (GPIOB_PIN_14_DEFAULT_STATE << 14) | (GPIOB_PIN_15_DEFAULT_STATE << 15) )
-#endif
-
-#if (GPIOC_EN != 0)
-/** CRL register value for GPIOC */
-#define GPIOC_CRL    ( GPIO_SET_CRL(GPIOC_PIN_00_MODE, 0 ) | GPIO_SET_CRL(GPIOC_PIN_01_MODE, 1 ) \
-                     | GPIO_SET_CRL(GPIOC_PIN_02_MODE, 2 ) | GPIO_SET_CRL(GPIOC_PIN_03_MODE, 3 ) \
-                     | GPIO_SET_CRL(GPIOC_PIN_04_MODE, 4 ) | GPIO_SET_CRL(GPIOC_PIN_05_MODE, 5 ) \
-                     | GPIO_SET_CRL(GPIOC_PIN_06_MODE, 6 ) | GPIO_SET_CRL(GPIOC_PIN_07_MODE, 7 ) )
-
-/** CRH register value for GPIOC */
-#define GPIOC_CRH    ( GPIO_SET_CRH(GPIOC_PIN_08_MODE, 8 ) | GPIO_SET_CRH(GPIOC_PIN_09_MODE, 9 ) \
-                     | GPIO_SET_CRH(GPIOC_PIN_10_MODE, 10) | GPIO_SET_CRH(GPIOC_PIN_11_MODE, 11) \
-                     | GPIO_SET_CRH(GPIOC_PIN_12_MODE, 12) | GPIO_SET_CRH(GPIOC_PIN_13_MODE, 13) \
-                     | GPIO_SET_CRH(GPIOC_PIN_14_MODE, 14) | GPIO_SET_CRH(GPIOC_PIN_15_MODE, 15) )
-
-/** ODR register value for GPIOC */
-#define GPIOC_ODR    ( (GPIOC_PIN_00_DEFAULT_STATE << 0 ) | (GPIOC_PIN_01_DEFAULT_STATE << 1 ) \
-                     | (GPIOC_PIN_02_DEFAULT_STATE << 2 ) | (GPIOC_PIN_03_DEFAULT_STATE << 3 ) \
-                     | (GPIOC_PIN_04_DEFAULT_STATE << 4 ) | (GPIOC_PIN_05_DEFAULT_STATE << 5 ) \
-                     | (GPIOC_PIN_06_DEFAULT_STATE << 6 ) | (GPIOC_PIN_07_DEFAULT_STATE << 7 ) \
-                     | (GPIOC_PIN_08_DEFAULT_STATE << 8 ) | (GPIOC_PIN_09_DEFAULT_STATE << 9 ) \
-                     | (GPIOC_PIN_10_DEFAULT_STATE << 10) | (GPIOC_PIN_11_DEFAULT_STATE << 11) \
-                     | (GPIOC_PIN_12_DEFAULT_STATE << 12) | (GPIOC_PIN_13_DEFAULT_STATE << 13) \
-                     | (GPIOC_PIN_14_DEFAULT_STATE << 14) | (GPIOC_PIN_15_DEFAULT_STATE << 15) )
-#endif
-
-#if (GPIOD_EN != 0)
-/** CRL register value for GPIOD */
-#define GPIOD_CRL    ( GPIO_SET_CRL(GPIOD_PIN_00_MODE, 0 ) | GPIO_SET_CRL(GPIOD_PIN_01_MODE, 1 ) \
-                     | GPIO_SET_CRL(GPIOD_PIN_02_MODE, 2 ) | GPIO_SET_CRL(GPIOD_PIN_03_MODE, 3 ) \
-                     | GPIO_SET_CRL(GPIOD_PIN_04_MODE, 4 ) | GPIO_SET_CRL(GPIOD_PIN_05_MODE, 5 ) \
-                     | GPIO_SET_CRL(GPIOD_PIN_06_MODE, 6 ) | GPIO_SET_CRL(GPIOD_PIN_07_MODE, 7 ) )
-
-/** CRH register value for GPIOD */
-#define GPIOD_CRH    ( GPIO_SET_CRH(GPIOD_PIN_08_MODE, 8 ) | GPIO_SET_CRH(GPIOD_PIN_09_MODE, 9 ) \
-                     | GPIO_SET_CRH(GPIOD_PIN_10_MODE, 10) | GPIO_SET_CRH(GPIOD_PIN_11_MODE, 11) \
-                     | GPIO_SET_CRH(GPIOD_PIN_12_MODE, 12) | GPIO_SET_CRH(GPIOD_PIN_13_MODE, 13) \
-                     | GPIO_SET_CRH(GPIOD_PIN_14_MODE, 14) | GPIO_SET_CRH(GPIOD_PIN_15_MODE, 15) )
-
-/** ODR register value for GPIOD */
-#define GPIOD_ODR    ( (GPIOD_PIN_00_DEFAULT_STATE << 0 ) | (GPIOD_PIN_01_DEFAULT_STATE << 1 ) \
-                     | (GPIOD_PIN_02_DEFAULT_STATE << 2 ) | (GPIOD_PIN_03_DEFAULT_STATE << 3 ) \
-                     | (GPIOD_PIN_04_DEFAULT_STATE << 4 ) | (GPIOD_PIN_05_DEFAULT_STATE << 5 ) \
-                     | (GPIOD_PIN_06_DEFAULT_STATE << 6 ) | (GPIOD_PIN_07_DEFAULT_STATE << 7 ) \
-                     | (GPIOD_PIN_08_DEFAULT_STATE << 8 ) | (GPIOD_PIN_09_DEFAULT_STATE << 9 ) \
-                     | (GPIOD_PIN_10_DEFAULT_STATE << 10) | (GPIOD_PIN_11_DEFAULT_STATE << 11) \
-                     | (GPIOD_PIN_12_DEFAULT_STATE << 12) | (GPIOD_PIN_13_DEFAULT_STATE << 13) \
-                     | (GPIOD_PIN_14_DEFAULT_STATE << 14) | (GPIOD_PIN_15_DEFAULT_STATE << 15) )
-#endif
-
-#if (GPIOE_EN != 0)
-/** CRL register value for GPIOE */
-#define GPIOE_CRL    ( GPIO_SET_CRL(GPIOE_PIN_00_MODE, 0 ) | GPIO_SET_CRL(GPIOE_PIN_01_MODE, 1 ) \
-                     | GPIO_SET_CRL(GPIOE_PIN_02_MODE, 2 ) | GPIO_SET_CRL(GPIOE_PIN_03_MODE, 3 ) \
-                     | GPIO_SET_CRL(GPIOE_PIN_04_MODE, 4 ) | GPIO_SET_CRL(GPIOE_PIN_05_MODE, 5 ) \
-                     | GPIO_SET_CRL(GPIOE_PIN_06_MODE, 6 ) | GPIO_SET_CRL(GPIOE_PIN_07_MODE, 7 ) )
-
-/** CRH register value for GPIOE */
-#define GPIOE_CRH    ( GPIO_SET_CRH(GPIOE_PIN_08_MODE, 8 ) | GPIO_SET_CRH(GPIOE_PIN_09_MODE, 9 ) \
-                     | GPIO_SET_CRH(GPIOE_PIN_10_MODE, 10) | GPIO_SET_CRH(GPIOE_PIN_11_MODE, 11) \
-                     | GPIO_SET_CRH(GPIOE_PIN_12_MODE, 12) | GPIO_SET_CRH(GPIOE_PIN_13_MODE, 13) \
-                     | GPIO_SET_CRH(GPIOE_PIN_14_MODE, 14) | GPIO_SET_CRH(GPIOE_PIN_15_MODE, 15) )
-
-/** ODR register value for GPIOE */
-#define GPIOE_ODR    ( (GPIOE_PIN_00_DEFAULT_STATE << 0 ) | (GPIOE_PIN_01_DEFAULT_STATE << 1 ) \
-                     | (GPIOE_PIN_02_DEFAULT_STATE << 2 ) | (GPIOE_PIN_03_DEFAULT_STATE << 3 ) \
-                     | (GPIOE_PIN_04_DEFAULT_STATE << 4 ) | (GPIOE_PIN_05_DEFAULT_STATE << 5 ) \
-                     | (GPIOE_PIN_06_DEFAULT_STATE << 6 ) | (GPIOE_PIN_07_DEFAULT_STATE << 7 ) \
-                     | (GPIOE_PIN_08_DEFAULT_STATE << 8 ) | (GPIOE_PIN_09_DEFAULT_STATE << 9 ) \
-                     | (GPIOE_PIN_10_DEFAULT_STATE << 10) | (GPIOE_PIN_11_DEFAULT_STATE << 11) \
-                     | (GPIOE_PIN_12_DEFAULT_STATE << 12) | (GPIOE_PIN_13_DEFAULT_STATE << 13) \
-                     | (GPIOE_PIN_14_DEFAULT_STATE << 14) | (GPIOE_PIN_15_DEFAULT_STATE << 15) )
-#endif
-
-#if (GPIOF_EN != 0)
-/** CRL register value for GPIOF */
-#define GPIOF_CRL    ( GPIO_SET_CRL(GPIOF_PIN_00_MODE, 0 ) | GPIO_SET_CRL(GPIOF_PIN_01_MODE, 1 ) \
-                     | GPIO_SET_CRL(GPIOF_PIN_02_MODE, 2 ) | GPIO_SET_CRL(GPIOF_PIN_03_MODE, 3 ) \
-                     | GPIO_SET_CRL(GPIOF_PIN_04_MODE, 4 ) | GPIO_SET_CRL(GPIOF_PIN_05_MODE, 5 ) \
-                     | GPIO_SET_CRL(GPIOF_PIN_06_MODE, 6 ) | GPIO_SET_CRL(GPIOF_PIN_07_MODE, 7 ) )
-
-/** CRH register value for GPIOF */
-#define GPIOF_CRH    ( GPIO_SET_CRH(GPIOF_PIN_08_MODE, 8 ) | GPIO_SET_CRH(GPIOF_PIN_09_MODE, 9 ) \
-                     | GPIO_SET_CRH(GPIOF_PIN_10_MODE, 10) | GPIO_SET_CRH(GPIOF_PIN_11_MODE, 11) \
-                     | GPIO_SET_CRH(GPIOF_PIN_12_MODE, 12) | GPIO_SET_CRH(GPIOF_PIN_13_MODE, 13) \
-                     | GPIO_SET_CRH(GPIOF_PIN_14_MODE, 14) | GPIO_SET_CRH(GPIOF_PIN_15_MODE, 15) )
-
-/** ODR register value for GPIOF */
-#define GPIOF_ODR    ( (GPIOF_PIN_00_DEFAULT_STATE << 0 ) | (GPIOF_PIN_01_DEFAULT_STATE << 1 ) \
-                     | (GPIOF_PIN_02_DEFAULT_STATE << 2 ) | (GPIOF_PIN_03_DEFAULT_STATE << 3 ) \
-                     | (GPIOF_PIN_04_DEFAULT_STATE << 4 ) | (GPIOF_PIN_05_DEFAULT_STATE << 5 ) \
-                     | (GPIOF_PIN_06_DEFAULT_STATE << 6 ) | (GPIOF_PIN_07_DEFAULT_STATE << 7 ) \
-                     | (GPIOF_PIN_08_DEFAULT_STATE << 8 ) | (GPIOF_PIN_09_DEFAULT_STATE << 9 ) \
-                     | (GPIOF_PIN_10_DEFAULT_STATE << 10) | (GPIOF_PIN_11_DEFAULT_STATE << 11) \
-                     | (GPIOF_PIN_12_DEFAULT_STATE << 12) | (GPIOF_PIN_13_DEFAULT_STATE << 13) \
-                     | (GPIOF_PIN_14_DEFAULT_STATE << 14) | (GPIOF_PIN_15_DEFAULT_STATE << 15) )
-#endif
-
-#if (GPIOG_EN != 0)
-/** CRL register value for GPIOG */
-#define GPIOG_CRL    ( GPIO_SET_CRL(GPIOG_PIN_00_MODE, 0 ) | GPIO_SET_CRL(GPIOG_PIN_01_MODE, 1 ) \
-                     | GPIO_SET_CRL(GPIOG_PIN_02_MODE, 2 ) | GPIO_SET_CRL(GPIOG_PIN_03_MODE, 3 ) \
-                     | GPIO_SET_CRL(GPIOG_PIN_04_MODE, 4 ) | GPIO_SET_CRL(GPIOG_PIN_05_MODE, 5 ) \
-                     | GPIO_SET_CRL(GPIOG_PIN_06_MODE, 6 ) | GPIO_SET_CRL(GPIOG_PIN_07_MODE, 7 ) )
-
-/** CRH register value for GPIOG */
-#define GPIOG_CRH    ( GPIO_SET_CRH(GPIOG_PIN_08_MODE, 8 ) | GPIO_SET_CRH(GPIOG_PIN_09_MODE, 9 ) \
-                     | GPIO_SET_CRH(GPIOG_PIN_10_MODE, 10) | GPIO_SET_CRH(GPIOG_PIN_11_MODE, 11) \
-                     | GPIO_SET_CRH(GPIOG_PIN_12_MODE, 12) | GPIO_SET_CRH(GPIOG_PIN_13_MODE, 13) \
-                     | GPIO_SET_CRH(GPIOG_PIN_14_MODE, 14) | GPIO_SET_CRH(GPIOG_PIN_15_MODE, 15) )
-
-/** ODR register value for GPIOG */
-#define GPIOG_ODR    ( (GPIOG_PIN_00_DEFAULT_STATE << 0 ) | (GPIOG_PIN_01_DEFAULT_STATE << 1 ) \
-                     | (GPIOG_PIN_02_DEFAULT_STATE << 2 ) | (GPIOG_PIN_03_DEFAULT_STATE << 3 ) \
-                     | (GPIOG_PIN_04_DEFAULT_STATE << 4 ) | (GPIOG_PIN_05_DEFAULT_STATE << 5 ) \
-                     | (GPIOG_PIN_06_DEFAULT_STATE << 6 ) | (GPIOG_PIN_07_DEFAULT_STATE << 7 ) \
-                     | (GPIOG_PIN_08_DEFAULT_STATE << 8 ) | (GPIOG_PIN_09_DEFAULT_STATE << 9 ) \
-                     | (GPIOG_PIN_10_DEFAULT_STATE << 10) | (GPIOG_PIN_11_DEFAULT_STATE << 11) \
-                     | (GPIOG_PIN_12_DEFAULT_STATE << 12) | (GPIOG_PIN_13_DEFAULT_STATE << 13) \
-                     | (GPIOG_PIN_14_DEFAULT_STATE << 14) | (GPIOG_PIN_15_DEFAULT_STATE << 15) )
-#endif
+/** ODR register value for GPIO */
+#define GPIOx_ODR(port) ( (port##_PIN_0_STATE  <<  0) | (port##_PIN_1_STATE  <<  1) \
+                        | (port##_PIN_2_STATE  <<  2) | (port##_PIN_3_STATE  <<  3) \
+                        | (port##_PIN_4_STATE  <<  4) | (port##_PIN_5_STATE  <<  5) \
+                        | (port##_PIN_6_STATE  <<  6) | (port##_PIN_7_STATE  <<  7) \
+                        | (port##_PIN_8_STATE  <<  8) | (port##_PIN_9_STATE  <<  9) \
+                        | (port##_PIN_10_STATE << 10) | (port##_PIN_11_STATE << 11) \
+                        | (port##_PIN_12_STATE << 12) | (port##_PIN_13_STATE << 13) \
+                        | (port##_PIN_14_STATE << 14) | (port##_PIN_15_STATE << 15) )
 
 /*==============================================================================
   Local types, enums definitions
@@ -257,36 +105,36 @@ MODULE__DEVICE_INIT(GPIO)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
-#if (AFIO_EN > 0)
+#if (_AFIO_EN > 0)
         init_AFIO();
 #endif
 
-#if (GPIOA_EN > 0)
-        init_GPIOx(GPIOA, GPIOA_CRL, GPIOA_CRH, GPIOA_ODR);
+#if (_GPIOA_EN > 0)
+        init_GPIOx(GPIOA, GPIOx_CRL(GPIOA), GPIOx_CRH(GPIOA), GPIOx_ODR(GPIOA));
 #endif
 
-#if (GPIOB_EN > 0)
-        init_GPIOx(GPIOB, GPIOB_CRL, GPIOB_CRH, GPIOB_ODR);
+#if (_GPIOB_EN > 0)
+        init_GPIOx(GPIOB, GPIOx_CRL(GPIOB), GPIOx_CRH(GPIOB), GPIOx_ODR(GPIOB));
 #endif
 
-#if (GPIOC_EN > 0)
-        init_GPIOx(GPIOC, GPIOC_CRL, GPIOC_CRH, GPIOC_ODR);
+#if (_GPIOC_EN > 0)
+        init_GPIOx(GPIOC, GPIOx_CRL(GPIOC), GPIOx_CRH(GPIOC), GPIOx_ODR(GPIOC));
 #endif
 
-#if (GPIOD_EN > 0)
-        init_GPIOx(GPIOD, GPIOD_CRL, GPIOD_CRH, GPIOD_ODR);
+#if (_GPIOD_EN > 0)
+        init_GPIOx(GPIOD, GPIOx_CRL(GPIOD), GPIOx_CRH(GPIOD), GPIOx_ODR(GPIOD));
 #endif
 
-#if (GPIOE_EN > 0)
-        init_GPIOx(GPIOE, GPIOE_CRL, GPIOE_CRH, GPIOE_ODR);
+#if (_GPIOE_EN > 0)
+        init_GPIOx(GPIOE, GPIOx_CRL(GPIOE), GPIOx_CRH(GPIOE), GPIOx_ODR(GPIOE));
 #endif
 
-#if (GPIOF_EN > 0)
-        init_GPIOx(GPIOF, GPIOF_CRL, GPIOF_CRH, GPIOF_ODR);
+#if (_GPIOF_EN > 0)
+        init_GPIOx(GPIOF, GPIOx_CRL(GPIOF), GPIOx_CRH(GPIOF), GPIOx_ODR(GPIOF));
 #endif
 
-#if (GPIOG_EN > 0)
-        init_GPIOx(GPIOG, GPIOG_CRL, GPIOG_CRH, GPIOG_ODR);
+#if (_GPIOG_EN > 0)
+        init_GPIOx(GPIOG, GPIOx_CRL(GPIOG), GPIOx_CRH(GPIOG), GPIOx_ODR(GPIOG));
 #endif
 
         return STD_RET_OK;
@@ -372,11 +220,11 @@ MODULE__DEVICE_IOCTL(GPIO)
 
         switch (iorq) {
         case GPIO_IORQ_SD_SELECT:
-                CLEAR_PIN(SD_CS_PORT, SD_CS_BM);
+                GPIO_CLEAR_PIN(SD_CS);
                 break;
 
         case GPIO_IORQ_SD_DESELECT:
-                SET_PIN(SD_CS_PORT, SD_CS_BM);
+                GPIO_SET_PIN(SD_CS);
                 break;
 
         default:
@@ -426,43 +274,43 @@ static void init_GPIOx(GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr)
 {
         /* enable peripherals */
         switch ((u32_t)gpio) {
-#if (GPIOA_EN > 0)
+#if (_GPIOA_EN > 0)
         case GPIOA_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
                 break;
 #endif
 
-#if (GPIOB_EN > 0)
+#if (_GPIOB_EN > 0)
         case GPIOB_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
                 break;
 #endif
 
-#if (GPIOC_EN > 0)
+#if (_GPIOC_EN > 0)
         case GPIOC_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
                 break;
 #endif
 
-#if (GPIOD_EN > 0)
+#if (_GPIOD_EN > 0)
         case GPIOD_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_IOPDEN;
                 break;
 #endif
 
-#if (GPIOE_EN > 0)
+#if (_GPIOE_EN > 0)
         case GPIOE_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_IOPEEN;
                 break;
 #endif
 
-#if (GPIOF_EN > 0)
+#if (_GPIOF_EN > 0)
         case GPIOF_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_IOPFEN;
                 break;
 #endif
 
-#if (GPIOG_EN > 0)
+#if (_GPIOG_EN > 0)
         case GPIOG_BASE:
                 RCC->APB2ENR |= RCC_APB2ENR_IOPGEN;
                 break;
