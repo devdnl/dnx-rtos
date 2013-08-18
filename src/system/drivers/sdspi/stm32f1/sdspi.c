@@ -37,6 +37,9 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define select_SD_card()                                SDSPI_SD_SELECT
+#define deselect_SD_card()                              SDSPI_SD_DESELECT
+
 #define MTX_BLOCK_TIME                                  0
 #define MTX_BLOCK_TIME_LONG                             200
 #define force_lock_recursive_mutex(mtx)                 while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
@@ -172,10 +175,9 @@ typedef u8_t card_type;
 
 /** handling structure */
 struct sdspi_data {
-        FILE            *gpio_file;
+        mutex_t         *card_protect_mtx;
         card_type        card_type;
         bool             card_initialized;
-        mutex_t         *card_protect_mtx;
         struct partition partition[4];
 #if (SDSPI_ENABLE_DMA != 0)
         volatile bool    DMA_tansaction_finished;
@@ -238,14 +240,10 @@ MODULE__DEVICE_INIT(SDSPI)
                 RCC->AHBENR |= RCC_AHBENR_DMA2EN;
         }
 
-        NVIC_SetPriority(SDSPI_DMA_IRQ, SDSPI_DMA_IRQ_PRIORITY);
+        NVIC_SetPriority(SDSPI_DMA_IRQ_NUMBER, SDSPI_DMA_IRQ_PRIORITY);
 #endif
 
         if (!(sdspi->card_protect_mtx = new_mutex())) {
-                goto error;
-        }
-
-        if (!(sdspi->gpio_file = vfs_fopen(SDSPI_GPIO_FILE, "r+"))) {
                 goto error;
         }
 
@@ -261,19 +259,19 @@ MODULE__DEVICE_INIT(SDSPI)
         enable_software_slave_management();
         transmit_MSB_first();
 
-#if   (SDSPI_PERIPERAL_DIVIDER <=   2)
+#if   (SDSPI_PERIPHERAL_DIVIDER <=   2)
         set_baud_rate(FPCLK_DIV_2);
-#elif (SDSPI_PERIPERAL_DIVIDER <=   4)
+#elif (SDSPI_PERIPHERAL_DIVIDER <=   4)
         set_baud_rate(FPCLK_DIV_4);
-#elif (SDSPI_PERIPERAL_DIVIDER <=   8)
+#elif (SDSPI_PERIPHERAL_DIVIDER <=   8)
         set_baud_rate(FPCLK_DIV_8);
-#elif (SDSPI_PERIPERAL_DIVIDER <=  16)
+#elif (SDSPI_PERIPHERAL_DIVIDER <=  16)
         set_baud_rate(FPCLK_DIV_16);
-#elif (SDSPI_PERIPERAL_DIVIDER <=  32)
+#elif (SDSPI_PERIPHERAL_DIVIDER <=  32)
         set_baud_rate(FPCLK_DIV_32);
-#elif (SDSPI_PERIPERAL_DIVIDER <=  64)
+#elif (SDSPI_PERIPHERAL_DIVIDER <=  64)
         set_baud_rate(FPCLK_DIV_64);
-#elif (SDSPI_PERIPERAL_DIVIDER <= 128)
+#elif (SDSPI_PERIPHERAL_DIVIDER <= 128)
         set_baud_rate(FPCLK_DIV_128);
 #else
         set_baud_rate(FPCLK_DIV_256);
@@ -290,10 +288,6 @@ error:
         if (sdspi) {
                 if (sdspi->card_protect_mtx) {
                         delete_mutex(sdspi->card_protect_mtx);
-                }
-
-                if (sdspi->gpio_file) {
-                        vfs_fclose(sdspi->gpio_file);
                 }
 
                 free(sdspi);
@@ -329,7 +323,6 @@ MODULE__DEVICE_RELEASE(SDSPI)
         enter_critical_section();
         unlock_mutex(hdl->card_protect_mtx);
         delete_mutex(hdl->card_protect_mtx);
-        vfs_fclose(hdl->gpio_file);
         turn_off_SPI_clock();
         free(hdl);
         exit_critical_section();
@@ -803,8 +796,8 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
         }
 
         /* select the card and wait for ready */
-        vfs_ioctl(sdspi->gpio_file, GPIO_IORQ_SD_DESELECT);
-        vfs_ioctl(sdspi->gpio_file, GPIO_IORQ_SD_SELECT);
+        deselect_SD_card();
+        select_SD_card();
 
         if (wait_ready() != 0xFF) {
                 return 0xFF;
@@ -862,7 +855,7 @@ static bool receive_data_block(u8_t *buff)
         SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)buff;
         SDSPI_DMA_RX_CHANNEL->CNDTR = SECTOR_SIZE;
         SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_EN;
-        NVIC_EnableIRQ(SDSPI_DMA_IRQ);
+        NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
 
         u16_t dummy = 0xFFFF;
         SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
@@ -919,7 +912,7 @@ static bool transmit_data_block(const u8_t *buff, u8_t token)
                 SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
                 SDSPI_DMA_RX_CHANNEL->CNDTR = SECTOR_SIZE;
                 SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_TCIE | DMA_CCR1_EN;
-                NVIC_EnableIRQ(SDSPI_DMA_IRQ);
+                NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
 
                 SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)buff;
                 SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
@@ -1166,7 +1159,7 @@ static size_t write_partial_sectors(struct sdspi_data *hdl, const void *src, siz
 //==============================================================================
 static stdret_t initialize_card(struct sdspi_data *hdl)
 {
-        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        deselect_SD_card();
         for (int n = 0; n < 10; n++) {
                 spi_rw(0xFF);
         }
@@ -1223,7 +1216,7 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
                 }
         }
 
-        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        deselect_SD_card();
         spi_rw(0xFF);
 
         if (hdl->card_initialized == false) {
@@ -1335,7 +1328,7 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
                 n /= size;
         }
 
-        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        deselect_SD_card();
         spi_rw(0xFF);
         return n;
 }
@@ -1372,7 +1365,7 @@ static size_t card_write(struct sdspi_data *hdl, const void *src, size_t size, s
                 n /= size;
         }
 
-        vfs_ioctl(hdl->gpio_file, GPIO_IORQ_SD_DESELECT);
+        deselect_SD_card();
         spi_rw(0xFF);
         return n;
 }
@@ -1383,13 +1376,13 @@ static size_t card_write(struct sdspi_data *hdl, const void *src, size_t size, s
  */
 //==============================================================================
 #if (SDSPI_ENABLE_DMA != 0)
-void SDSPI_DMA_ISR(void)
+void SDSPI_DMA_IRQ_ROUTINE(void)
 {
         disable_Tx_Rx_DMA();
         SDSPI_DMA_RX_CHANNEL->CCR = 0x00;
         SDSPI_DMA_TX_CHANNEL->CCR = 0x00;
 
-        NVIC_DisableIRQ(SDSPI_DMA_IRQ);
+        NVIC_DisableIRQ(SDSPI_DMA_IRQ_NUMBER);
 
         SDSPI_DMA->IFCR = DMA_IFCR_CTCIF1 << (4 * (SDSPI_DMA_RX_CHANNEL_NO - 1));
 

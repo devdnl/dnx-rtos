@@ -219,14 +219,6 @@ MODULE__DEVICE_IOCTL(GPIO)
         UNUSED_ARG(args);
 
         switch (iorq) {
-        case GPIO_IORQ_SD_SELECT:
-                GPIO_CLEAR_PIN(SD_CS);
-                break;
-
-        case GPIO_IORQ_SD_DESELECT:
-                GPIO_SET_PIN(SD_CS);
-                break;
-
         default:
                 return STD_RET_ERROR;
         }

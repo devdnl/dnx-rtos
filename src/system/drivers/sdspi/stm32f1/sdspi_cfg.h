@@ -34,14 +34,11 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "stm32f1/stm32f10x.h"
-#include "drivers/ioctl.h"
+#include "stm32f1/gpio_cfg.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** GPIO file */
-#define SDSPI_GPIO_FILE                         "/dev/gpio"
-
 /** partitions node path */
 #define SDSPI_PARTITION_1_PATH                  "/dev/sda1"
 #define SDSPI_PARTITION_2_PATH                  "/dev/sda2"
@@ -58,8 +55,12 @@ extern "C" {
 /** supported SPI peripheral */
 #define SDSPI_PORT                              SPI3
 
-/** SPI periperal devider */
-#define SDSPI_PERIPERAL_DIVIDER                 4
+/** SPI peripheral divider */
+#define SDSPI_PERIPHERAL_DIVIDER                4
+
+/** card select pin operation */
+#define SDSPI_SD_SELECT                         GPIO_CLEAR_PIN(SD_CS)
+#define SDSPI_SD_DESELECT                       GPIO_SET_PIN(SD_CS)
 
 /** enable (1) or disable (0) DMA support */
 #define SDSPI_ENABLE_DMA                        1
@@ -77,8 +78,8 @@ extern "C" {
         #define SDSPI_DMA_RX_CHANNEL_NO         1
 
         /** Rx DMA finish interrupt routine */
-        #define SDSPI_DMA_ISR                   DMA2_Channel1_IRQHandler
-        #define SDSPI_DMA_IRQ                   DMA2_Channel1_IRQn
+        #define SDSPI_DMA_IRQ_ROUTINE           DMA2_Channel1_IRQHandler
+        #define SDSPI_DMA_IRQ_NUMBER            DMA2_Channel1_IRQn
 
         #define SDSPI_DMA_IRQ_PRIORITY          CONFIG_USER_IRQ_PRIORITY
 #endif

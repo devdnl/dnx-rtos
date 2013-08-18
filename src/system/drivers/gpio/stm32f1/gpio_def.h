@@ -50,8 +50,7 @@ enum GPIO_DEV_NUMBER {
 
 /** ioctl commands */
 enum GPIO_IORQ {
-        GPIO_IORQ_SD_SELECT,
-        GPIO_IORQ_SD_DESELECT,
+        _GPIO_IORQ_none
 };
 
 /*==============================================================================

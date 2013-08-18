@@ -6,7 +6,7 @@ create_gdb_command() {
     echo "target remote localhost:3333" >> gdbcmd
     echo "monitor reset halt" >> gdbcmd
     echo "load" >> gdbcmd
-    echo "monitor reset halt" >> gdbcmd
+    echo "monitor reset" >> gdbcmd
 }
 
 if [ "$1" == "" ]; then
