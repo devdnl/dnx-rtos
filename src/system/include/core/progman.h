@@ -39,10 +39,10 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define new_program(const_char__pname, const_char__pargs, const_char__pcwd,\
-                    FILE__pfstdin, FILE__pfstdout, enum_prog_state__pstatus, int__pexit_code) \
-        prgm_new_program(const_char__pname, const_char__pargs, const_char__pcwd, FILE__pfstdin,\
-                         FILE__pfstdout, enum_prog_state__pstatus, int__pexit_code)
+#define new_program(const_char__pcmd, const_char__pcwd,\
+                    FILE__pstdin, FILE__pstdout, enum_prog_state__pstatus, int__pexit_code) \
+        prgm_new_program(const_char__pcmd, const_char__pcwd, FILE__pstdin,\
+                         FILE__pstdout, enum_prog_state__pstatus, int__pexit_code)
 
 #define delete_program(task_t__ptaskhdl) \
         prgm_delete_program(task_t__ptaskhdl, EXIT_SUCCESS)
@@ -83,6 +83,9 @@ extern "C" {
 #define abort() \
         prgm_abort()
 
+#define system(const_char__pstr) \
+        prgm_system(const_char__pstr)
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -103,10 +106,11 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *prgm_new_program(const char*, const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
-extern void    prgm_delete_program(task_t*, int);
-extern void    prgm_exit(int);
-extern void    prgm_abort(void);
+extern task_t   *prgm_new_program       (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
+extern void      prgm_delete_program    (task_t*, int);
+extern void      prgm_exit              (int);
+extern void      prgm_abort             (void);
+extern int       prgm_system            (const char*);
 
 #ifdef __cplusplus
 }
