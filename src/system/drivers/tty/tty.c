@@ -678,7 +678,7 @@ static void output_service_task(void *arg)
                         continue;
                 }
 
-                if (take_semaphore(tty_ctrl->process_output_sem, MAX_DELAY) == OS_OK) {
+                if (take_semaphore(tty_ctrl->process_output_sem, MAX_DELAY) == SEMAPHORE_TAKEN) {
                         struct tty_data *tty = current_tty_handle();
 
                         if (tty->screen.new_line_counter > 0) {
@@ -1437,7 +1437,7 @@ static void write_key_stream(struct tty_data *tty, char chr)
 //==============================================================================
 static stdret_t read_key_stream(struct tty_data *tty, char *chr)
 {
-        if (take_counting_semaphore(tty->edit_line.read_sem, MAX_DELAY) == OS_OK) {
+        if (take_counting_semaphore(tty->edit_line.read_sem, MAX_DELAY) == SEMAPHORE_TAKEN) {
                 if (tty->key_stream.level == 0)
                         return STD_RET_ERROR;
 

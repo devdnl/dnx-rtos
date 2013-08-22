@@ -63,10 +63,10 @@ struct program_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void   set_status(enum prog_state *status_ptr, enum prog_state status);
-static char **new_argument_table(const char *arg, const char *name, int *argc);
-static void   delete_argument_table(char **argv, int argc);
-static void   task_program_startup(void *argv);
+static void   set_status                (enum prog_state *status_ptr, enum prog_state status);
+static char **new_argument_table        (const char *str, int *argc);
+static void   delete_argument_table     (char **argv);
+static void   task_program_startup      (void *argv);
 
 /*==============================================================================
   Local object definitions
@@ -84,8 +84,7 @@ static void   task_program_startup(void *argv);
 /**
  * @brief Function start new program by name
  *
- * @param *name         program name
- * @param *args         program argument string
+ * @param *cmd          program name
  * @param *cwd          current working dir
  * @param *stdin        stdin file
  * @param *stdout       stdout file
@@ -95,20 +94,15 @@ static void   task_program_startup(void *argv);
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FILE *stdin,
+task_t *prgm_new_program(const char *cmd, const char *cwd, FILE *stdin,
                          FILE *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
         task_t              *taskhdl = NULL;
         struct regprg_pdata  regpdata;
 
-        if (!name || !args || !cwd) {
+        if (!cmd || !cwd) {
                 set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
-                return NULL;
-        }
-
-        if (regprg_get_program_data(name, &regpdata) != STD_RET_OK) {
-                set_status(status, PROGRAM_DOES_NOT_EXIST);
                 return NULL;
         }
 
@@ -117,9 +111,16 @@ task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FI
                 return NULL;
         }
 
-        if ((pdata->argv = new_argument_table(args, name, &pdata->argc)) == NULL) {
+        if ((pdata->argv = new_argument_table(cmd, &pdata->argc)) == NULL) {
                 sysm_sysfree(pdata);
                 set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
+                return NULL;
+        }
+
+        if (regprg_get_program_data(pdata->argv[0], &regpdata) != STD_RET_OK) {
+                delete_argument_table(pdata->argv);
+                sysm_sysfree(pdata);
+                set_status(status, PROGRAM_DOES_NOT_EXIST);
                 return NULL;
         }
 
@@ -139,7 +140,7 @@ task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FI
 
         if (taskhdl == NULL) {
                 set_status(status, PROGRAM_HANDLE_ERROR);
-                delete_argument_table(pdata->argv, pdata->argc);
+                delete_argument_table(pdata->argv);
                 sysm_sysfree(pdata);
                 return NULL;
         }
@@ -172,7 +173,7 @@ void prgm_delete_program(task_t *taskhdl, int exit_code)
 
                 if ((pdata = tdata->f_user)) {
                         if (pdata->argv) {
-                                delete_argument_table(pdata->argv, pdata->argc);
+                                delete_argument_table(pdata->argv);
                         }
 
                         if (pdata->exit_code) {
@@ -217,6 +218,28 @@ void prgm_abort(void)
 
         /* wait to kill program */
         for (;;);
+}
+
+//==============================================================================
+/**
+ * @brief Function start program in shell
+ */
+//==============================================================================
+int prgm_system(const char *command)
+{
+        enum prog_state state = PROGRAM_UNKNOWN_STATE;
+        int exit_code = 1;
+        prgm_new_program(command,
+                         _get_this_task_data()->f_cwd,
+                         _get_this_task_data()->f_stdin,
+                         _get_this_task_data()->f_stdout,
+                         &state, &exit_code);
+
+        while (state == PROGRAM_RUNNING) {
+                suspend_this_task();
+        }
+
+        return exit_code;
 }
 
 //==============================================================================
@@ -270,7 +293,7 @@ static void task_program_startup(void *argv)
         }
 
         if (prog_data->argv) {
-                delete_argument_table(prog_data->argv, prog_data->argc);
+                delete_argument_table(prog_data->argv);
         }
 
         sysm_sysfree(prog_data);
@@ -298,14 +321,13 @@ static void set_status(enum prog_state *status_ptr, enum prog_state status)
 /**
  * @brief Function create new table with argument pointers
  *
- * @param[in]  *arg             argument string
- * @param[in]  *name            program name (argument argv[0])
+ * @param[in]  *str             argument string
  * @param[out] *arg_count       number of argument
  *
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static char **new_argument_table(const char *arg, const char *name, int *argc)
+static char **new_argument_table(const char *str, int *argc)
 {
         int     arg_count  = 0;
         char  **arg_table  = NULL;
@@ -314,7 +336,7 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
         bool    first_quos = false;
         bool    first_quod = false;
 
-        if (arg == NULL || name == NULL || argc == NULL) {
+        if (str == NULL || argc == NULL) {
                 goto exit_error;
         }
 
@@ -322,15 +344,11 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                 goto exit_error;
         }
 
-        if (list_add_item(arg_list, ++arg_count, (char*)name) < 0) {
+        if (str[0] == '\0') {
                 goto exit_error;
         }
 
-        if (arg[0] == '\0') {
-                goto add_args_to_table;
-        }
-
-        const char *arg_start = arg;
+        const char *arg_start = str;
         while (*arg_start == ' ') {
                 arg_start++;
         }
@@ -348,6 +366,7 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
         }
 
         strcpy(arg_string, arg_start);
+        arg_start = arg_string;
 
         while (*arg_string != '\0') {
                 char *arg_to_add = NULL;
@@ -414,7 +433,7 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                         goto exit_error;
                 }
 
-                if (list_add_item(arg_list, ++arg_count, arg_to_add) < 0) {
+                if (list_add_item(arg_list, arg_count++, arg_to_add) < 0) {
                         goto exit_error;
                 }
 
@@ -426,7 +445,7 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                 }
         }
 
-add_args_to_table:
+        /* add args to table */
         if ((arg_table = sysm_syscalloc(arg_count + 1, sizeof(char*))) == NULL) {
                 goto exit_error;
         }
@@ -465,7 +484,7 @@ exit_error:
         }
 
         if (arg_string) {
-                sysm_sysfree(arg_string);
+                sysm_sysfree((char *)arg_start);
         }
 
         *argc = 0;
@@ -477,19 +496,16 @@ exit_error:
  * @brief Function remove argument table
  *
  * @param **argv        pointer to argument table
- * @param   argc        argument count
  */
 //==============================================================================
-static void delete_argument_table(char **argv, int argc)
+static void delete_argument_table(char **argv)
 {
         if (argv == NULL) {
                 return;
         }
 
-        if (argc > 1) {
-                if (argv[1]) {
-                        sysm_sysfree(argv[1]);
-                }
+        if (argv[0]) {
+                sysm_sysfree(argv[0]);
         }
 
         sysm_sysfree(argv);

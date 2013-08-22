@@ -60,7 +60,8 @@ extern "C" {
 enum cmd_status {
         CMD_STATUS_EXECUTED,
         CMD_STATUS_NOT_EXIST,
-        CMD_STATUS_NOT_ENOUGH_FREE_MEMORY
+        CMD_STATUS_NOT_ENOUGH_FREE_MEMORY,
+        CMD_STATUS_LINE_PARSE_ERROR
 };
 
 struct cmd_entry {
@@ -72,8 +73,8 @@ struct cmd_entry {
   Local function prototypes
 ==============================================================================*/
 static void            print_prompt             (void);
-static enum cmd_status find_internal_command    (char *cmd, char *arg);
-static enum cmd_status find_external_command    (char *cmd, char *arg);
+static enum cmd_status find_internal_command    (const char *cmd);
+static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
 static enum cmd_status cmd_ls                   (char *arg);
 static enum cmd_status cmd_mkdir                (char *arg);
@@ -152,41 +153,27 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 char *cmd  = global->line;
                 cmd += strspn(global->line, " ");
 
-                /* finds first space after command */
-                char *arg;
-                if ((arg = strchr(cmd, ' ')) != NULL) {
-                        *(arg++) = '\0';
-                        arg += strspn(arg, " ");
-                } else {
-                        arg = strchr(cmd, '\0');
-                }
-
-                /* terminal exit */
-                if (strcmp("exit", cmd) == 0) {
-                        break;
-                }
-
-                if (strcmp("", cmd) == 0) {
+                if (cmd[0] == '\0') {
                         continue;
                 }
 
-                /* identify program localization */
-                enum cmd_status cmd_status = find_internal_command(cmd, arg);
+                enum cmd_status cmd_status = find_external_command(cmd);
 
                 if (cmd_status == CMD_STATUS_NOT_EXIST) {
-                        cmd_status = find_external_command(cmd, arg);
+                        cmd_status = find_internal_command(cmd);
                 }
 
                 switch (cmd_status) {
                 case CMD_STATUS_EXECUTED:
                         continue;
-
                 case CMD_STATUS_NOT_EXIST:
-                        printf("\"%s\" is unknown command.\n", cmd);
+                        printf("\'%s\' is unknown command.\n", cmd);
                         break;
-
                 case CMD_STATUS_NOT_ENOUGH_FREE_MEMORY:
                         printf("Not enough free memory.\n");
+                        break;
+                case CMD_STATUS_LINE_PARSE_ERROR:
+                        puts("Line parse error.");
                         break;
                 }
         }
@@ -215,12 +202,12 @@ static void print_prompt(void)
  * @return operation status
  */
 //==============================================================================
-static enum cmd_status find_external_command(char *cmd, char *arg)
+static enum cmd_status find_external_command(const char *cmd)
 {
         enum prog_state state  = PROGRAM_UNKNOWN_STATE;
         enum cmd_status status = CMD_STATUS_NOT_EXIST;
 
-        new_program(cmd, arg, global->cwd, stdin, stdout, &state, NULL);
+        new_program(cmd, global->cwd, stdin, stdout, &state, NULL);
 
         while (state == PROGRAM_RUNNING) {
                 suspend_this_task();
@@ -230,17 +217,16 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
         case PROGRAM_UNKNOWN_STATE:
         case PROGRAM_RUNNING:
                 break;
-
         case PROGRAM_ENDED:
                 status = CMD_STATUS_EXECUTED;
                 break;
-
-        case PROGRAM_HANDLE_ERROR:
         case PROGRAM_ARGUMENTS_PARSE_ERROR:
+                status = CMD_STATUS_LINE_PARSE_ERROR;
+                break;
+        case PROGRAM_HANDLE_ERROR:
         case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
                 status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY;
                 break;
-
         case PROGRAM_DOES_NOT_EXIST:
                 status = CMD_STATUS_NOT_EXIST;
                 break;
@@ -262,8 +248,22 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
  * @return operation status
  */
 //==============================================================================
-static enum cmd_status find_internal_command(char *cmd, char *arg)
+static enum cmd_status find_internal_command(const char *cmd)
 {
+        /* finds first space after command */
+        char *arg;
+        if ((arg = strchr(cmd, ' ')) != NULL) {
+                *(arg++) = '\0';
+                arg += strspn(arg, " ");
+        } else {
+                arg = strchr(cmd, '\0');
+        }
+
+        /* terminal exit */
+        if (strcmp("exit", cmd) == 0) {
+                ;
+        }
+
         enum cmd_status status = CMD_STATUS_NOT_EXIST;
 
         for (uint i = 0; i < ARRAY_SIZE(commands); i++) {
@@ -352,7 +352,7 @@ static enum cmd_status cmd_ls(char *arg)
                 dirent_t dirent;
 
                 char *ccolor = FONT_COLOR_YELLOW"c";
-                char *rcolor = FONT_COLOR_MAGENTA"-";
+                char *rcolor = FONT_COLOR_MAGENTA" ";
                 char *lcolor = FONT_COLOR_CYAN"l";
                 char *dcolor = FONT_COLOR_GREEN"d";
 
