@@ -644,7 +644,7 @@ static void IRQ_handler(struct USART_data *USART_data)
                   }
 
                   if (USART_data->task_rx) {
-                        if (resume_task_from_ISR(USART_data->task_rx) == OS_TRUE) {
+                        if (resume_task_from_ISR(USART_data->task_rx)) {
                                 yield_task();
                         }
                   }

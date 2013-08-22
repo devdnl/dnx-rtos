@@ -48,6 +48,7 @@ extern "C" {
 typedef void task_t;
 typedef void sem_t;
 typedef void mutex_t;
+typedef void queue_t;
 
 /*==============================================================================
    Exported object declarations

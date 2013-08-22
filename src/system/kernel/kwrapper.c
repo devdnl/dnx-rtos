@@ -90,8 +90,7 @@ task_t *kwrap_new_task(void (*func)(void*), const char *name, uint stack_depth, 
         }
 
         taskENTER_CRITICAL();
-        if (xTaskCreate(func, (signed char *)name, stack_depth,
-                        argv, child_priority, &task) == OS_OK) {
+        if (xTaskCreate(func, (signed char *)name, stack_depth, argv, child_priority, &task)) {
 
                 vTaskSuspend(task);
                 taskEXIT_CRITICAL();
