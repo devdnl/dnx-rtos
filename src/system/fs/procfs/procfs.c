@@ -310,14 +310,16 @@ stdret_t procfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, cons
  * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
+ * @param[in]  forced           force close
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_close(void *fs_handle, void *extra, fd_t fd)
+stdret_t procfs_close(void *fs_handle, void *extra, fd_t fd, bool forced)
 {
         UNUSED_ARG(extra);
+        UNUSED_ARG(forced);
 
         STOP_IF(!fs_handle);
 

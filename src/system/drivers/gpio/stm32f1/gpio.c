@@ -172,6 +172,7 @@ MODULE__DEVICE_OPEN(GPIO)
 MODULE__DEVICE_CLOSE(GPIO)
 {
         UNUSED_ARG(device_handle);
+        UNUSED_ARG(forced);
 
         return STD_RET_OK;
 }
