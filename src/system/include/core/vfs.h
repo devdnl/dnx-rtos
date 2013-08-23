@@ -108,36 +108,39 @@ struct vfs_dir
 
 /** file statistics */
 struct vfs_stat {
-        u64_t st_size;          /* total size, in bytes */
+        u64_t st_size;          /* total size, in bytes         */
         u32_t st_dev;           /* ID of device containing file */
-        u32_t st_mode;          /* protection */
-        u32_t st_uid;           /* user ID of owner */
-        u32_t st_gid;           /* group ID of owner */
-        u32_t st_mtime;         /* time of last modification */
+        u32_t st_mode;          /* protection                   */
+        u32_t st_uid;           /* user ID of owner             */
+        u32_t st_gid;           /* group ID of owner            */
+        u32_t st_atime;         /* time of last access          */
+        u32_t st_mtime;         /* time of last modification    */
 };
 
 /** device info */
-struct vfs_dev_info {
+struct vfs_dev_stat {
         u64_t st_size;          /* total size, in bytes */
+        u32_t st_major;         /* device major number  */
+        u32_t st_minor;         /* device minor number  */
 };
 
 /** file system statistic */
 struct vfs_statfs {
-        u32_t f_type;           /* file system type */
-        u32_t f_bsize;          /* block size */
-        u32_t f_blocks;         /* total blocks */
-        u32_t f_bfree;          /* free blocks */
-        u32_t f_files;          /* total file nodes in FS */
-        u32_t f_ffree;          /* free file nodes in FS */
-        const char *fsname;     /* FS name */
+        u32_t f_type;           /* file system type             */
+        u32_t f_bsize;          /* block size                   */
+        u32_t f_blocks;         /* total blocks                 */
+        u32_t f_bfree;          /* free blocks                  */
+        u32_t f_files;          /* total file nodes in FS       */
+        u32_t f_ffree;          /* free file nodes in FS        */
+        const char *fsname;     /* FS name                      */
 };
 
 /** structure describing a mount table entry */
 struct vfs_mntent {
-        char *mnt_fsname;       /* device or server for filesystem.  */
-        char *mnt_dir;          /* directory mounted on.  */
-        u64_t total;            /* device total size */
-        u64_t free;             /* device free */
+        char *mnt_fsname;       /* device or server for filesystem.     */
+        char *mnt_dir;          /* directory mounted on.                */
+        u64_t total;            /* device total size                    */
+        u64_t free;             /* device free                          */
 };
 
 /** driver configuration */
@@ -149,7 +152,7 @@ struct vfs_drv_interface {
         size_t   (*drv_read )(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek);
         stdret_t (*drv_ioctl)(void *drvhdl, int iorq, va_list args);
         stdret_t (*drv_flush)(void *drvhdl);
-        stdret_t (*drv_info )(void *drvhdl, struct vfs_dev_info *info);
+        stdret_t (*drv_stat )(void *drvhdl, struct vfs_dev_stat *info);
 };
 
 /** file system configuration */

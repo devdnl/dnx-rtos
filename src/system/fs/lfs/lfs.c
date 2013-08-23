@@ -415,10 +415,10 @@ static dirent_t lfs_readdir(void *fs_handle, dir_t *dir)
         if (node) {
                 if (node->type == NODE_TYPE_DRV) {
                         struct vfs_drv_interface *drv_if = node->data;
-                        struct vfs_dev_info dev_info;
-                        dev_info.st_size = 0;
-                        drv_if->drv_info(drv_if->handle, &dev_info);
-                        node->size = dev_info.st_size;
+                        struct vfs_dev_stat dev_stat;
+                        dev_stat.st_size = 0;
+                        drv_if->drv_stat(drv_if->handle, &dev_stat);
+                        node->size = dev_stat.st_size;
                 }
 
                 dirent.filetype = node->type;
@@ -665,13 +665,15 @@ stdret_t lfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
 
                         if (node->type == NODE_TYPE_DRV) {
                                 struct vfs_drv_interface *drv_if = node->data;
-                                struct vfs_dev_info dev_info;
-                                dev_info.st_size = 0;
-                                drv_if->drv_info(drv_if->handle, &dev_info);
-                                node->size = dev_info.st_size;
+                                struct vfs_dev_stat dev_stat;
+                                dev_stat.st_size = 0;
+                                drv_if->drv_stat(drv_if->handle, &dev_stat);
+                                node->size = dev_stat.st_size;
+                                stat->st_dev = dev_stat.st_major;
+                        } else {
+                                stat->st_dev = node->fd;
                         }
 
-                        stat->st_dev   = node->fd;
                         stat->st_gid   = node->gid;
                         stat->st_mode  = node->mode;
                         stat->st_mtime = node->mtime;
@@ -717,13 +719,15 @@ stdret_t lfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
                 if (opened_file->node) {
                         if (opened_file->node->type == NODE_TYPE_DRV) {
                                 struct vfs_drv_interface *drv_if = opened_file->node->data;
-                                struct vfs_dev_info dev_info;
-                                dev_info.st_size = 0;
-                                drv_if->drv_info(drv_if->handle, &dev_info);
-                                opened_file->node->size = dev_info.st_size;
+                                struct vfs_dev_stat dev_stat;
+                                dev_stat.st_size = 0;
+                                drv_if->drv_stat(drv_if->handle, &dev_stat);
+                                opened_file->node->size = dev_stat.st_size;
+                                stat->st_dev = dev_stat.st_major;
+                        } else {
+                                stat->st_dev = opened_file->node->fd;
                         }
 
-                        stat->st_dev   = opened_file->node->fd;
                         stat->st_gid   = opened_file->node->gid;
                         stat->st_mode  = opened_file->node->mode;
                         stat->st_mtime = opened_file->node->mtime;

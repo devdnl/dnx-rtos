@@ -242,11 +242,13 @@ MODULE__DEVICE_FLUSH(PLL)
  * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE__DEVICE_INFO(PLL)
+MODULE__DEVICE_STAT(PLL)
 {
         UNUSED_ARG(device_handle);
 
-        device_info->st_size = 0;
+        device_stat->st_size  = 0;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
 
         return STD_RET_OK;
 }

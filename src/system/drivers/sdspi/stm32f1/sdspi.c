@@ -463,10 +463,10 @@ MODULE__DEVICE_FLUSH(SDSPI)
  * @brief Interface returns device information
  */
 //==============================================================================
-MODULE__DEVICE_INFO(SDSPI)
+MODULE__DEVICE_STAT(SDSPI)
 {
         STOP_IF(device_handle == NULL);
-        STOP_IF(device_info == NULL);
+        STOP_IF(device_stat == NULL);
 
         struct sdspi_data *hdl = device_handle;
 
@@ -492,16 +492,18 @@ MODULE__DEVICE_INFO(SDSPI)
                         spi_rw(0xFF);
 
                         /* SDC version 2.00 */
-                        device_info->st_size = 0;
+                        device_stat->st_size = 0;
                         if ((csd[0] >> 6) == 1) {
                                 int csize     = csd[9] + ((u16_t)csd[8] << 8) + 1;
-                                device_info->st_size = (u64_t)csize << 10;
+                                device_stat->st_size = (u64_t)csize << 10;
                         } else { /* SDC version 1.XX or MMC*/
                                 int n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
                                 int csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
-                                device_info->st_size = (u64_t)csize << (n - 9);
+                                device_stat->st_size = (u64_t)csize << (n - 9);
                         }
-                        device_info->st_size *= SECTOR_SIZE;
+                        device_stat->st_size *= SECTOR_SIZE;
+                        device_stat->st_major = 0;
+                        device_stat->st_minor = 0;
                 }
 
                 unlock_mutex(hdl->card_protect_mtx);
@@ -665,13 +667,15 @@ static stdret_t partition_flush(void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t partition_info(void *device_handle, struct vfs_dev_info *info)
+stdret_t partition_stat(void *device_handle, struct vfs_dev_stat *stat)
 {
         STOP_IF(device_handle == NULL);
-        STOP_IF(info == NULL);
+        STOP_IF(stat == NULL);
 
         struct partition *hdl = device_handle;
-        info->st_size = (u64_t)hdl->size_in_sectors * SECTOR_SIZE;
+        stat->st_size  = (u64_t)hdl->size_in_sectors * SECTOR_SIZE;
+        stat->st_major = 0;
+        stat->st_minor = 0;
         return STD_RET_OK;
 }
 
@@ -1262,7 +1266,7 @@ static stdret_t detect_partitions(struct sdspi_data *hdl)
                 drvif.drv_read  = partition_read;
                 drvif.drv_ioctl = partition_ioctl;
                 drvif.drv_flush = partition_flush;
-                drvif.drv_info  = partition_info;
+                drvif.drv_stat  = partition_stat;
 
                 if (MBR_GET_PARTITION_1_NUMBER_OF_SECTORS(MBR) > 0) {
                         hdl->partition[0].first_sector    = MBR_GET_PARTITION_1_LBA_FIRST_SECTOR(MBR);
