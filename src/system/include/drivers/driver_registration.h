@@ -54,7 +54,7 @@ extern "C" {
                  .drv_write = _##_drvmodule##_write,\
                  .drv_read  = _##_drvmodule##_read,\
                  .drv_ioctl = _##_drvmodule##_ioctl,\
-                 .drv_info  = _##_drvmodule##_info,\
+                 .drv_stat  = _##_drvmodule##_stat,\
                  .drv_flush = _##_drvmodule##_flush}}
 
 /*==============================================================================

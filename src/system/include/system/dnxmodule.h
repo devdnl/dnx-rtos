@@ -161,12 +161,12 @@ extern "C" {
  * @brief Device information
  *
  * @param[in]  *device_handle           memory region allocated by module
- * @param[out] *device_info             device/file info
+ * @param[out] *device_stat             device/file info
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-#define MODULE__DEVICE_INFO(modname)            stdret_t _##modname##_info(void *device_handle, struct vfs_dev_info *device_info)
+#define MODULE__DEVICE_STAT(modname)            stdret_t _##modname##_stat(void *device_handle, struct vfs_dev_stat *device_stat)
 
 /* module's external interface */
 #define DRIVER_INTERFACE(modname)        \
@@ -178,7 +178,7 @@ extern  MODULE__DEVICE_WRITE(modname);   \
 extern  MODULE__DEVICE_READ(modname);    \
 extern  MODULE__DEVICE_IOCTL(modname);   \
 extern  MODULE__DEVICE_FLUSH(modname);   \
-extern  MODULE__DEVICE_INFO(modname)
+extern  MODULE__DEVICE_STAT(modname)
 
 /*==============================================================================
   Exported types, enums definitions

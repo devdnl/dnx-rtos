@@ -594,12 +594,14 @@ MODULE__DEVICE_FLUSH(UART)
  * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE__DEVICE_INFO(UART)
+MODULE__DEVICE_STAT(UART)
 {
         STOP_IF(device_handle == NULL);
-        STOP_IF(device_info == NULL);
+        STOP_IF(device_stat == NULL);
 
-        device_info->st_size = 0;
+        device_stat->st_size  = 0;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
 
         return STD_RET_OK;
 }

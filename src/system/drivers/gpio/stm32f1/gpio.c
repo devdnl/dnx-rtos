@@ -244,11 +244,13 @@ MODULE__DEVICE_FLUSH(GPIO)
  * @brief Interface returns device information
  */
 //==============================================================================
-MODULE__DEVICE_INFO(GPIO)
+MODULE__DEVICE_STAT(GPIO)
 {
         UNUSED_ARG(device_handle);
 
-        device_info->st_size = 0;
+        device_stat->st_size  = 0;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
 
         return STD_RET_OK;
 }

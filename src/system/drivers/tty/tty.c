@@ -542,15 +542,17 @@ MODULE__DEVICE_FLUSH(TTY)
  * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE__DEVICE_INFO(TTY)
+MODULE__DEVICE_STAT(TTY)
 {
         STOP_IF(device_handle == NULL);
-        STOP_IF(device_info == NULL);
+        STOP_IF(device_stat == NULL);
         STOP_IF(tty_ctrl == NULL);
 
         struct tty_data *tty = device_handle;
 
-        device_info->st_size = tty->file_size;
+        device_stat->st_size  = tty->file_size;
+        device_stat->st_major = tty->device_number;
+        device_stat->st_minor = 0;
         return STD_RET_OK;
 }
 
