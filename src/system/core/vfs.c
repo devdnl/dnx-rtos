@@ -53,7 +53,7 @@ extern "C" {
 struct vfs_file
 {
         void      *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd);
+        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool forced);
         size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
         size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
         stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, va_list);
@@ -267,7 +267,7 @@ stdret_t vfs_umount(const char *path)
  *
  * @param[in]   item            mount point number
  * @param[out] *mntent          mount entry data
- * 
+ *
  * @retval STD_RET_OK           mount success
  * @retval STD_RET_ERROR        mount error
  */
@@ -832,7 +832,30 @@ int vfs_fclose(FILE *file)
 {
         if (file) {
                 if (file->f_close) {
-                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, false) == STD_RET_OK) {
+                                sysm_sysfree(file);
+                                return 0;
+                        }
+                }
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
+ * @brief Function force close opened file (used by system to close all files)
+ *
+ * @param[in] *file             pinter to file
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+int vfs_fclose_force(FILE *file)
+{
+        if (file) {
+                if (file->f_close) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, true) == STD_RET_OK) {
                                 sysm_sysfree(file);
                                 return 0;
                         }

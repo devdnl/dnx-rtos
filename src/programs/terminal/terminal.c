@@ -61,7 +61,8 @@ enum cmd_status {
         CMD_STATUS_EXECUTED,
         CMD_STATUS_NOT_EXIST,
         CMD_STATUS_NOT_ENOUGH_FREE_MEMORY,
-        CMD_STATUS_LINE_PARSE_ERROR
+        CMD_STATUS_LINE_PARSE_ERROR,
+        CMD_STATUS_DO_EXIT
 };
 
 struct cmd_entry {
@@ -175,6 +176,8 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 case CMD_STATUS_LINE_PARSE_ERROR:
                         puts("Line parse error.");
                         break;
+                case CMD_STATUS_DO_EXIT:
+                        return 0;
                 }
         }
 
@@ -261,7 +264,7 @@ static enum cmd_status find_internal_command(const char *cmd)
 
         /* terminal exit */
         if (strcmp("exit", cmd) == 0) {
-                ;
+                return CMD_STATUS_DO_EXIT;
         }
 
         enum cmd_status status = CMD_STATUS_NOT_EXIST;

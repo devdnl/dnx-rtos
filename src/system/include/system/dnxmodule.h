@@ -102,7 +102,7 @@ extern "C" {
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-#define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *device_handle)
+#define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *device_handle, bool forced)
 
 
 /**

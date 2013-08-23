@@ -349,6 +349,8 @@ MODULE__DEVICE_OPEN(SDSPI)
 //==============================================================================
 MODULE__DEVICE_CLOSE(SDSPI)
 {
+        UNUSED_ARG(forced);
+
         STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
@@ -534,14 +536,16 @@ static stdret_t partition_open(void *device_handle)
 /**
  * @brief Function close partition file
  *
- * @param[in] *device_handle   handle to partition description
+ * @param[in] *device_handle    handle to partition description
+ * @param[in]  forced           force close
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_close(void *device_handle)
+static stdret_t partition_close(void *device_handle, bool forced)
 {
+        UNUSED_ARG(forced);
         STOP_IF(device_handle == NULL);
 
         struct partition *hdl = device_handle;

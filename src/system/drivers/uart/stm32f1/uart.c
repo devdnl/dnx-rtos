@@ -324,6 +324,8 @@ MODULE__DEVICE_OPEN(UART)
 //==============================================================================
 MODULE__DEVICE_CLOSE(UART)
 {
+        UNUSED_ARG(forced);
+
         STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;

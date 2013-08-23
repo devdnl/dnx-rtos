@@ -898,12 +898,13 @@ error:
  * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
+ * @param[in]  forced           force close
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd)
+stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd, bool forced)
 {
         UNUSED_ARG(extra);
 
@@ -935,7 +936,7 @@ stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd)
                         goto exit;
                 }
 
-                if ((status = drv_if->drv_close(drv_if->handle)) != STD_RET_OK) {
+                if ((status = drv_if->drv_close(drv_if->handle, forced)) != STD_RET_OK) {
                         goto exit;
                 }
         }
@@ -968,7 +969,7 @@ stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd)
                                      opened_file_data.item_ID);
         }
 
-        exit:
+exit:
         unlock_recursive_mutex(lfs->resource_mtx);
         return status;
 }

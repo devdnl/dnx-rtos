@@ -144,7 +144,7 @@ struct vfs_mntent {
 struct vfs_drv_interface {
         void     *handle;
         stdret_t (*drv_open )(void *drvhdl);
-        stdret_t (*drv_close)(void *drvhdl);
+        stdret_t (*drv_close)(void *drvhdl, bool forced);
         size_t   (*drv_write)(void *drvhdl, const void *src, size_t size, size_t nitems, u64_t lseek);
         size_t   (*drv_read )(void *drvhdl, void *dst, size_t size, size_t nitems, u64_t lseek);
         stdret_t (*drv_ioctl)(void *drvhdl, int iorq, va_list args);
@@ -157,7 +157,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, const char *mode);
-        stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd);
+        stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool forced);
         size_t   (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
         size_t   (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek);
         stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, va_list args);
@@ -195,6 +195,7 @@ extern int      vfs_statfs(const char*, struct vfs_statfs*);
 extern FILE    *vfs_fopen(const char*, const char*);
 extern FILE    *vfs_freopen(const char*, const char*, FILE*);
 extern int      vfs_fclose(FILE*);
+extern int      vfs_fclose_force(FILE*);
 extern size_t   vfs_fwrite(const void*, size_t, size_t, FILE*);
 extern size_t   vfs_fread(void*, size_t, size_t, FILE*);
 extern int      vfs_fseek(FILE*, i64_t, int);
