@@ -165,12 +165,12 @@ stdret_t sysm_init(void)
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 bool sysm_is_task_exist(task_t *taskhdl)
 {
-        i32_t item  = -1;
-        bool  exist = FALSE;
+        bool exist = FALSE;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
         if (taskhdl) {
+                i32_t item  = -1;
                 if (list_get_iditem_No(sysm_task_list, (u32_t)taskhdl, &item) == STD_RET_OK) {
                         if (item >= 0) {
                                 exist = TRUE;
@@ -199,15 +199,14 @@ bool sysm_is_task_exist(task_t *taskhdl)
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_start_task_monitoring(task_t *taskhdl)
 {
-        struct task_monitor_data *tmdata;
-
         force_lock_recursive_mutex(sysm_resource_mtx);
 
         if (sysm_is_task_exist(taskhdl) == TRUE) {
                 goto exit_error;
         }
 
-        if ((tmdata = sysm_syscalloc(1, sizeof(struct task_monitor_data)))) {
+        struct task_monitor_data *tmdata = sysm_syscalloc(1, sizeof(struct task_monitor_data));
+        if (tmdata) {
 
                 if (list_add_item(sysm_task_list, (u32_t)taskhdl, NULL) < 0) {
                         sysm_sysfree(tmdata);
@@ -220,7 +219,7 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
                 }
         }
 
-        exit_error:
+exit_error:
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_ERROR;
 }
@@ -241,15 +240,14 @@ stdret_t sysm_start_task_monitoring(task_t *taskhdl)
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 {
-        struct task_monitor_data *task_monitor_data;
-
         force_lock_recursive_mutex(sysm_resource_mtx);
 
         if (sysm_is_task_exist(taskhdl) == FALSE) {
                 goto exit_error;
         }
 
-        if (!(task_monitor_data = _get_task_monitor_data(taskhdl))) {
+        struct task_monitor_data *task_monitor_data = _get_task_monitor_data(taskhdl);
+        if (!task_monitor_data) {
                 goto exit_error;
         }
 
@@ -321,8 +319,6 @@ exit_error:
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
 {
-        struct task_monitor_data *tmdata;
-
         force_lock_recursive_mutex(sysm_resource_mtx);
 
         if (!stat) {
@@ -333,7 +329,8 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
                 goto exit_error;
         }
 
-        if (!(tmdata = _get_task_monitor_data(taskhdl))) {
+        struct task_monitor_data *tmdata = _get_task_monitor_data(taskhdl);
+        if (!tmdata) {
                 goto exit_error;
         }
 
@@ -360,7 +357,7 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_OK;
 
-        exit_error:
+exit_error:
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_ERROR;
 }
@@ -382,10 +379,9 @@ stdret_t sysm_get_task_stat(task_t *taskhdl, struct sysmoni_taskstat *stat)
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 stdret_t sysm_get_ntask_stat(i32_t item, struct sysmoni_taskstat *stat)
 {
-        task_t *task;
-
         force_lock_recursive_mutex(sysm_resource_mtx);
 
+        task_t *task;
         if (list_get_nitem_ID(sysm_task_list, item, (u32_t *)&task) != STD_RET_OK) {
                 goto exit_error;
         }
@@ -397,7 +393,7 @@ stdret_t sysm_get_ntask_stat(i32_t item, struct sysmoni_taskstat *stat)
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_OK;
 
-        exit_error:
+exit_error:
         unlock_recursive_mutex(sysm_resource_mtx);
         return STD_RET_ERROR;
 }
@@ -441,10 +437,8 @@ stdret_t sysm_get_used_memory(struct sysmoni_used_memory *mem_info)
     || (SYSM_MONITOR_CPU_LOAD > 0         ) )
 int sysm_get_number_of_monitored_tasks(void)
 {
-        int task_count;
-
         force_lock_recursive_mutex(sysm_resource_mtx);
-        task_count = list_get_item_count(sysm_task_list);
+        int task_count = list_get_item_count(sysm_task_list);
         unlock_recursive_mutex(sysm_resource_mtx);
 
         return task_count;
@@ -570,10 +564,10 @@ void sysm_sysfree(void *mem)
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 void *sysm_modmalloc(size_t size, uint module_number)
 {
-        size_t allocated;
-        void   *p = NULL;
+        void *p = NULL;
 
         if (module_number < _regdrv_number_of_modules) {
+                size_t allocated;
                 p = memman_malloc(size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
@@ -597,10 +591,10 @@ void *sysm_modmalloc(size_t size, uint module_number)
 #if (SYSM_MONITOR_MODULE_MEMORY_USAGE > 0)
 void *sysm_modcalloc(size_t count, size_t size, uint module_number)
 {
-        size_t allocated;
-        void   *p = NULL;
+        void *p = NULL;
 
         if (module_number < _regdrv_number_of_modules) {
+                size_t allocated;
                 p = memman_calloc(count, size, &allocated);
                 sysm_modules_memory_usage += allocated;
                 sysm_module_memory_usage[module_number] += allocated;
@@ -662,10 +656,7 @@ i32_t sysm_get_used_memory_by_module(uint module_number)
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
 {
-        void                     *mem = NULL;
-        struct task_monitor_data *task_monitor_data;
-        mem_slot_chain_t         *chain;
-        size_t                   allocated;
+        void *mem = NULL;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
@@ -677,17 +668,19 @@ void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
                 goto exit;
         }
 
-        if (!(task_monitor_data = _get_task_monitor_data(taskhdl))) {
+        struct task_monitor_data *task_monitor_data = _get_task_monitor_data(taskhdl);
+        if (!task_monitor_data) {
                 goto exit;
         }
 
-        chain = &task_monitor_data->mem_chain;
+        mem_slot_chain_t *chain = &task_monitor_data->mem_chain;
         do {
                 if (chain->used_slots < TASK_MEMORY_SLOTS) {
                         for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
                                 if (chain->mem_slot[i] != NULL)
                                         continue;
 
+                                size_t allocated;
                                 if ((mem = memman_malloc(size, &allocated))) {
                                         chain->mem_slot[i] = mem;
                                         chain->used_slots++;
@@ -707,7 +700,7 @@ void *sysm_tskmalloc_as(task_t *taskhdl, size_t size)
 
         printk("%s: malloc(): cannot create the next memory slot chain!\n", get_this_task_name());
 
-        exit:
+exit:
         unlock_recursive_mutex(sysm_resource_mtx);
         return mem;
 }
@@ -787,10 +780,6 @@ void *sysm_tskcalloc(size_t nmemb, size_t msize)
 #if (SYSM_MONITOR_TASK_MEMORY_USAGE > 0)
 void sysm_tskfree_as(task_t *taskhdl, void *mem)
 {
-        struct task_monitor_data *task_monitor_data;
-        mem_slot_chain_t         *chain;
-        size_t                   freed;
-
         force_lock_recursive_mutex(sysm_resource_mtx);
 
         if (!mem) {
@@ -801,15 +790,16 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
                 goto exit;
         }
 
-        if (!(task_monitor_data = _get_task_monitor_data(taskhdl))) {
+        struct task_monitor_data *task_monitor_data = _get_task_monitor_data(taskhdl);
+        if (!task_monitor_data) {
                 goto exit;
         }
 
-        chain = &task_monitor_data->mem_chain;
+        mem_slot_chain_t *chain = &task_monitor_data->mem_chain;
         do {
                 for (uint i = 0; i < TASK_MEMORY_SLOTS; i++) {
                         if (chain->mem_slot[i] == mem) {
-                                freed = memman_free(mem);
+                                size_t freed = memman_free(mem);
                                 chain->mem_slot[i] = NULL;
                                 task_monitor_data->used_memory -= freed;
                                 sysm_programs_memory_usage     -= freed;
@@ -831,7 +821,7 @@ void sysm_tskfree_as(task_t *taskhdl, void *mem)
 
         printk("%s: free(): address does not exist!\n", get_this_task_name());
 
-        exit:
+exit:
         unlock_recursive_mutex(sysm_resource_mtx);
 }
 #endif
@@ -864,18 +854,17 @@ void sysm_tskfree(void *mem)
 FILE *sysm_fopen(const char *path, const char *mode)
 {
         FILE *file = NULL;
-        task_t *task;
-        struct task_monitor_data *task_monitor_data;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
-        task = get_task_handle();
+        task_t *task = get_task_handle();
 
         if (sysm_is_task_exist(task) == FALSE) {
                 goto exit;
         }
 
-        if (!(task_monitor_data = _get_task_monitor_data(task))) {
+        struct task_monitor_data *task_monitor_data = _get_task_monitor_data(task);
+        if (!task_monitor_data) {
                 goto exit;
         }
 
@@ -894,7 +883,7 @@ FILE *sysm_fopen(const char *path, const char *mode)
 
         printk("%s: Not enough free slots to open file!\n", get_this_task_name());
 
-        exit:
+exit:
         unlock_recursive_mutex(sysm_resource_mtx);
         return file;
 }
@@ -914,6 +903,10 @@ FILE *sysm_fopen(const char *path, const char *mode)
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
 FILE *sysm_freopen(const char *path, const char *mode, FILE *file)
 {
+        if (!path || !mode || !file) {
+                return NULL;
+        }
+
         if (sysm_fclose(file) == STD_RET_OK) {
                 return sysm_fopen(path, mode);
         } else {
@@ -928,15 +921,18 @@ FILE *sysm_freopen(const char *path, const char *mode, FILE *file)
  *
  * @param *file               pinter to file
  *
- * @retval STD_RET_OK         file closed successfully
- * @retval STD_RET_ERROR      file not closed
+ * @retval 0                  file closed successfully
+ * @retval -1                 file not closed
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-stdret_t sysm_fclose(FILE *file)
+int sysm_fclose(FILE *file)
 {
-        stdret_t status = STD_RET_ERROR;
-        task_t *task;
+        if (!file)
+                return EOF;
+
+        stdret_t                  status = EOF;
+        task_t                   *task;
         struct task_monitor_data *task_monitor_data;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
@@ -966,7 +962,7 @@ stdret_t sysm_fclose(FILE *file)
 
         printk("%s: File does not exist or closed!\n", get_this_task_name());
 
-        exit:
+exit:
         unlock_recursive_mutex(sysm_resource_mtx);
         return status;
 }
@@ -984,18 +980,17 @@ stdret_t sysm_fclose(FILE *file)
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
 dir_t *sysm_opendir(const char *path)
 {
-        dir_t  *dir = NULL;
-        task_t *task;
-        struct task_monitor_data *task_monitor_data;
+        dir_t *dir = NULL;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
-        task = get_task_handle();
+        task_t *task = get_task_handle();
 
         if (sysm_is_task_exist(task) == FALSE) {
                 goto exit;
         }
 
+        struct task_monitor_data *task_monitor_data;
         if (!(task_monitor_data = _get_task_monitor_data(task))) {
                 goto exit;
         }
@@ -1015,7 +1010,7 @@ dir_t *sysm_opendir(const char *path)
 
         printk("%s: Not enough free slots to open directory!\n", get_this_task_name());
 
-        exit:
+exit:
         unlock_recursive_mutex(sysm_resource_mtx);
         return dir;
 }
@@ -1027,26 +1022,25 @@ dir_t *sysm_opendir(const char *path)
  *
  * @param *DIR                pinter to directory
  *
- * @retval STD_RET_OK         file closed successfully
- * @retval STD_RET_ERROR      file not closed
+ * @retval 0                  file closed successfully
+ * @retval -1                 file not closed
  */
 //==============================================================================
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-extern stdret_t sysm_closedir(dir_t *dir)
+extern int sysm_closedir(dir_t *dir)
 {
-        stdret_t status = STD_RET_ERROR;
-        task_t *task;
-        struct task_monitor_data *task_monitor_data;
+        stdret_t status = EOF;
 
         force_lock_recursive_mutex(sysm_resource_mtx);
 
-        task = get_task_handle();
+        task_t *task = get_task_handle();
 
         if (sysm_is_task_exist(task) == FALSE) {
                 goto exit;
         }
 
-        if (!(task_monitor_data = _get_task_monitor_data(task))) {
+        struct task_monitor_data *task_monitor_data = _get_task_monitor_data(task);
+        if (!task_monitor_data) {
                 goto exit;
         }
 
@@ -1065,7 +1059,7 @@ extern stdret_t sysm_closedir(dir_t *dir)
 
         printk("%s: Directory does not exist or closed!\n", get_this_task_name());
 
-        exit:
+exit:
         unlock_recursive_mutex(sysm_resource_mtx);
         return status;
 }

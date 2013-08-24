@@ -840,7 +840,7 @@ stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const c
 
         /* set file parameters */
         if (node->type == NODE_TYPE_FILE) {
-                if (flags & O_CREAT) {
+                if ((flags & O_CREAT) && !(flags & O_APPEND)) {
                         if (node->data) {
                                 free(node->data);
                                 node->data = NULL;
