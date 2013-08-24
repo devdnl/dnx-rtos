@@ -149,13 +149,13 @@ stdret_t fatfs_release(void *fs_handle)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
  * @param[in]  *path            file path
- * @param[in]  *mode            file mode
+ * @param[in]   flags           file open flags
  *
  * @retval STD_RET_OK           file opened/created
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(fd);
 
@@ -163,7 +163,6 @@ stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
         STOP_IF(!extra);
         STOP_IF(!lseek);
         STOP_IF(!path);
-        STOP_IF(!mode);
 
         struct fatfs *hdl = fs_handle;
 
@@ -174,18 +173,21 @@ stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
         *extra = fat_file;
 
         u8_t fat_mode = 0;
-        if (strncmp("r",  mode, 2) == 0) {
+        if (flags == O_RDONLY) {
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_OPEN_EXISTING;
-        } else if (strncmp("r+", mode, 2) == 0) {
+        } else if (flags == O_RDWR) {
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_EXISTING;
-        } else if (strncmp("w",  mode, 2) == 0) {
+        } else if (flags == (O_WRONLY | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (strncmp("w+", mode, 2) == 0) {
+        } else if (flags == (O_RDWR | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (strncmp("a",  mode, 2) == 0) {
+        } else if (flags == (O_WRONLY | O_APPEND | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_ALWAYS;
-        } else if (strncmp("a+", mode, 2) == 0) {
+        } else if (flags == (O_RDWR | O_APPEND | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_OPEN_ALWAYS;
+        } else {
+                free(fat_file);
+                return STD_RET_ERROR;
         }
 
         if (libfat_open(&hdl->fatfs, fat_file, path, fat_mode) != FR_OK) {
@@ -193,7 +195,7 @@ stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                 return STD_RET_ERROR;
         }
 
-        if (strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) {
+        if (flags & O_APPEND) {
                 libfat_lseek(fat_file, libfat_size(fat_file));
                 *lseek = libfat_size(fat_file);
         } else {

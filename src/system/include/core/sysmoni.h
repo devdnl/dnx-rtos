@@ -228,11 +228,11 @@ extern void  sysm_tskfree(void*);
 #endif
 
 #if (SYSM_MONITOR_TASK_FILE_USAGE > 0)
-extern FILE    *sysm_fopen(const char*, const char*);
-extern FILE    *sysm_freopen(const char*, const char*, FILE*);
-extern stdret_t sysm_fclose(FILE*);
-extern dir_t   *sysm_opendir(const char*);
-extern stdret_t sysm_closedir(dir_t*);
+extern FILE  *sysm_fopen(const char*, const char*);
+extern FILE  *sysm_freopen(const char*, const char*, FILE*);
+extern int    sysm_fclose(FILE*);
+extern dir_t *sysm_opendir(const char*);
+extern int    sysm_closedir(dir_t*);
 #endif
 
 #if (SYSM_MONITOR_CPU_LOAD > 0)

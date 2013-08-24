@@ -81,9 +81,10 @@ enum path_correction {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static struct FS_data *find_mounted_FS(const char *path, u16_t len, u32_t *itemid);
-static struct FS_data *find_base_FS(const char *path, char **extPath);
-static char           *new_corrected_path(const char *path, enum path_correction corr);
+static int             file_mode_str_to_flags   (const char *str);
+static struct FS_data *find_mounted_FS          (const char *path, u16_t len, u32_t *itemid);
+static struct FS_data *find_base_FS             (const char *path, char **extPath);
+static char           *new_corrected_path       (const char *path, enum path_correction corr);
 
 /*==============================================================================
   Local object definitions
@@ -739,10 +740,8 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if (  strncmp("r", mode, 2) != 0 && strncmp("r+", mode, 2) != 0
-           && strncmp("w", mode, 2) != 0 && strncmp("w+", mode, 2) != 0
-           && strncmp("a", mode, 2) != 0 && strncmp("a+", mode, 2) != 0) {
-
+        int flags = file_mode_str_to_flags(mode);
+        if (flags == -1) {
                 return NULL;
         }
 
@@ -768,7 +767,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
 
                 if (fs->interface.fs_open(fs->handle, &file->f_extra_data,
                                           &file->fd,  &file->f_lseek,
-                                          external_path, mode) == STD_RET_OK) {
+                                          external_path, flags) == STD_RET_OK) {
 
                         file->FS_hdl  = fs->handle;
                         file->f_close = fs->interface.fs_close;
@@ -1073,6 +1072,44 @@ int vfs_feof(FILE *file)
         }
 
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function convert file open mode string to flags
+ *
+ * @param[in] *str      file open mode string
+ *
+ * @return file open flags, -1 if error
+ */
+//==============================================================================
+static int file_mode_str_to_flags(const char *str)
+{
+        if (strncmp("r", str, 2) == 0) {
+                return (O_RDONLY);
+        }
+
+        if (strncmp("r+", str, 2) == 0) {
+                return (O_RDWR);
+        }
+
+        if (strncmp("w", str, 2) == 0) {
+                return (O_WRONLY | O_CREAT);
+        }
+
+        if (strncmp("w+", str, 2) == 0) {
+                return (O_RDWR | O_CREAT);
+        }
+
+        if (strncmp("a", str, 2) == 0) {
+                return (O_WRONLY | O_CREAT | O_APPEND);
+        }
+
+        if (strncmp("a+", str, 2) == 0) {
+                return (O_RDWR | O_CREAT | O_APPEND);
+        }
+
+        return -1;
 }
 
 //==============================================================================

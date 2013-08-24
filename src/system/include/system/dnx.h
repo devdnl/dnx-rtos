@@ -51,12 +51,12 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** MEMORY MANAGEMENT DEFINTIONS */
+/* MEMORY MANAGEMENT DEFINTIONS */
 #define malloc(size_t__size)                                            sysm_tskmalloc(size_t__size)
 #define calloc(size_t__nitems, size_t__isize)                           sysm_tskcalloc(size_t__nitems, size_t__isize)
 #define free(void__pmem)                                                sysm_tskfree(void__pmem)
 
-/** ENVIRONMENT DEFINITIONS */
+/* ENVIRONMENT DEFINITIONS */
 #define get_used_static_memory()                                        (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE)
 #define get_free_memory()                                               memman_get_free_heap()
 #define get_used_memory()                                               (get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()))
@@ -71,7 +71,7 @@ extern "C" {
 #define restart()                                                       _cpuctl_restart_system()
 #define get_platform_name()                                             CPUCTL_PLATFORM_NAME
 #define get_OS_name()                                                   "dnx"
-#define get_OS_version()                                                "1.0.15"
+#define get_OS_version()                                                "1.0.16"
 #define get_kernel_name()                                               "FreeRTOS"
 #define get_author_name()                                               "Daniel Zorychta"
 #define get_author_email()                                              "<daniel.zorychta@gmail.com>"
