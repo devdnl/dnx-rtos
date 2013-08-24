@@ -312,6 +312,7 @@ MODULE__DEVICE_RELEASE(UART)
 //==============================================================================
 MODULE__DEVICE_OPEN(UART)
 {
+        UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;

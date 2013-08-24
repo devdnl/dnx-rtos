@@ -340,6 +340,8 @@ MODULE__DEVICE_RELEASE(TTY)
 //==============================================================================
 MODULE__DEVICE_OPEN(TTY)
 {
+        UNUSED_ARG(flags);
+
         STOP_IF(device_handle == NULL);
         STOP_IF(tty_ctrl == NULL);
 

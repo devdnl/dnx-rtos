@@ -175,13 +175,13 @@ stdret_t procfs_release(void *fs_handle)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
  * @param[in]  *path            file path
- * @param[in]  *mode            file mode
+ * @param[in]   flags           file open flags
  *
  * @retval STD_RET_OK           file opened/created
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t procfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t procfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(extra);
 
@@ -189,13 +189,12 @@ stdret_t procfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, cons
         STOP_IF(!fd);
         STOP_IF(!lseek);
         STOP_IF(!path);
-        STOP_IF(!mode);
 
         struct procfs          *procmem = fs_handle;
         struct sysmoni_taskstat taskdata;
         struct file_info       *fileInf;
 
-        if (strncmp(mode, "r", 2) != 0) {
+        if (flags != O_RDONLY) {
                 return STD_RET_ERROR;
         }
 

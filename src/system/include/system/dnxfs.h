@@ -59,7 +59,7 @@ extern "C" {
 #define FILE_SYSTEM_INTERFACE(fsname)                                                    \
 extern stdret_t fsname##_init   (void**, const char*);                                   \
 extern stdret_t fsname##_release(void*);                                                 \
-extern stdret_t fsname##_open   (void*, void**, fd_t*, u64_t*, const char*, const char*);\
+extern stdret_t fsname##_open   (void*, void**, fd_t*, u64_t*, const char*, int);        \
 extern stdret_t fsname##_close  (void*, void*, fd_t, bool);                              \
 extern size_t   fsname##_write  (void*, void*, fd_t, const void*, size_t, size_t, u64_t);\
 extern size_t   fsname##_read   (void*, void*, fd_t, void*, size_t, size_t, u64_t);      \

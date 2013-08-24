@@ -105,20 +105,20 @@ stdret_t appfs_release(void *fs_handle)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
  * @param[in]  *path            file path
- * @param[in]  *mode            file mode
+ * @param[in]   flags           file open flags
  *
  * @retval STD_RET_OK           file opened/created
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t appfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t appfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
         UNUSED_ARG(lseek);
         UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG(flags);
 
         return STD_RET_ERROR;
 }

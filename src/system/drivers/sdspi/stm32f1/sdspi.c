@@ -337,6 +337,7 @@ MODULE__DEVICE_RELEASE(SDSPI)
 //==============================================================================
 MODULE__DEVICE_OPEN(SDSPI)
 {
+        UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
 
         return STD_RET_OK;
@@ -516,14 +517,16 @@ MODULE__DEVICE_STAT(SDSPI)
 /**
  * @brief Function open new partition file
  *
- * @param[in] *device_handle   handle to partition description
+ * @param[in] *device_handle    handle to partition description
+ * @param[in]  flags            file open flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_open(void *device_handle)
+static stdret_t partition_open(void *device_handle, int flags)
 {
+        UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
 
         struct partition *hdl = device_handle;

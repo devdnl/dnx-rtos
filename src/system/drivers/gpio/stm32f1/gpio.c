@@ -160,6 +160,7 @@ MODULE__DEVICE_RELEASE(GPIO)
 MODULE__DEVICE_OPEN(GPIO)
 {
         UNUSED_ARG(device_handle);
+        UNUSED_ARG(flags);
 
         return STD_RET_OK;
 }

@@ -162,6 +162,7 @@ MODULE__DEVICE_RELEASE(PLL)
 MODULE__DEVICE_OPEN(PLL)
 {
         UNUSED_ARG(device_handle);
+        UNUSED_ARG(flags);
 
         return STD_RET_ERROR;
 }

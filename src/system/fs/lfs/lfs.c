@@ -780,13 +780,13 @@ stdret_t lfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
  * @param[out] *fd              file descriptor
  * @param[out] *lseek           file position
  * @param[in]  *path            file path
- * @param[in]  *mode            file mode
+ * @param[in]   flags           file open flags
  *
  * @retval STD_RET_OK           file opened/created
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, const char *mode)
+stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(extra);
 
@@ -794,7 +794,6 @@ stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const c
         STOP_IF(!fd);
         STOP_IF(!lseek);
         STOP_IF(!path);
-        STOP_IF(!mode);
 
         struct LFS_data *lfs = fs_handle;
 
@@ -806,10 +805,7 @@ stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const c
 
         /* create new file when necessary */
         if (base_node && node == NULL) {
-                if (  (strncmp("w",  mode, 2) != 0)
-                   && (strncmp("w+", mode, 2) != 0)
-                   && (strncmp("a",  mode, 2) != 0)
-                   && (strncmp("a+", mode, 2) != 0) ) {
+                if (!(flags & O_CREAT)) {
                         goto error;
                 }
 
@@ -844,18 +840,7 @@ stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const c
 
         /* set file parameters */
         if (node->type == NODE_TYPE_FILE) {
-                /* set seek at begin if selected */
-                if (  strncmp("r",  mode, 2) == 0
-                   || strncmp("r+", mode, 2) == 0
-                   || strncmp("w",  mode, 2) == 0
-                   || strncmp("w+", mode, 2) == 0 ) {
-                        *lseek = 0;
-                }
-
-                /* set file size */
-                if (  strncmp("w",  mode, 2) == 0
-                   || strncmp("w+", mode, 2) == 0 ) {
-
+                if (flags & O_CREAT) {
                         if (node->data) {
                                 free(node->data);
                                 node->data = NULL;
@@ -864,8 +849,9 @@ stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const c
                         node->size = 0;
                 }
 
-                /* set seek at file end */
-                if (strncmp("a", mode, 2) == 0 || strncmp("a+", mode, 2) == 0) {
+                if (!(flags & O_APPEND)) {
+                        *lseek = 0;
+                } else {
                         *lseek = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
@@ -875,7 +861,7 @@ stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const c
                         goto error;
                 }
 
-                if (drv->drv_open(drv->handle) == STD_RET_OK) {
+                if (drv->drv_open(drv->handle, flags & (O_RDWR | O_RDONLY | O_WRONLY)) == STD_RET_OK) {
                         *lseek = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);

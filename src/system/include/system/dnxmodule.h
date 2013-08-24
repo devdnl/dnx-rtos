@@ -87,11 +87,12 @@ extern "C" {
  * @brief Open device
  *
  * @param[in] *device_handle           memory region allocated by module
+ * @param[in]  flags                   open file flags
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-#define MODULE__DEVICE_OPEN(modname)            stdret_t _##modname##_open(void *device_handle)
+#define MODULE__DEVICE_OPEN(modname)            stdret_t _##modname##_open(void *device_handle, int flags)
 
 
 /**
