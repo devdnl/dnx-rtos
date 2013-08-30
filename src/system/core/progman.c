@@ -31,6 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdlib.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"
@@ -48,7 +49,7 @@ extern "C" {
   Local types, enums definitions
 ==============================================================================*/
 struct program_data {
-        int (*main)(int, char**);
+        int            (*main)(int, char**);
         const char      *cwd;
         enum prog_state *status;
         int             *exit_code;
@@ -227,13 +228,15 @@ void prgm_abort(void)
 //==============================================================================
 int prgm_system(const char *command)
 {
-        enum prog_state state = PROGRAM_UNKNOWN_STATE;
-        int exit_code = 1;
+        enum prog_state state     = PROGRAM_UNKNOWN_STATE;
+        int             exit_code = EXIT_FAILURE;
+
         prgm_new_program(command,
                          _get_this_task_data()->f_cwd,
                          _get_this_task_data()->f_stdin,
                          _get_this_task_data()->f_stdout,
-                         &state, &exit_code);
+                         &state,
+                         &exit_code);
 
         while (state == PROGRAM_RUNNING) {
                 suspend_this_task();
