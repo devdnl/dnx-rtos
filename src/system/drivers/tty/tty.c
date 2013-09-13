@@ -356,7 +356,7 @@ MODULE__DEVICE_OPEN(TTY)
 MODULE__DEVICE_CLOSE(TTY)
 {
         UNUSED_ARG(forced);
-        UNUSED_ARG(task);
+        UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(tty_ctrl == NULL);

@@ -351,7 +351,7 @@ MODULE__DEVICE_OPEN(SDSPI)
 MODULE__DEVICE_CLOSE(SDSPI)
 {
         UNUSED_ARG(forced);
-        UNUSED_ARG(task);
+        UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
 
