@@ -95,7 +95,7 @@ static void   task_program_startup      (void *argv);
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *prgm_new_program(const char *cmd, const char *cwd, FILE *stdin,
+task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
                          FILE *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
@@ -157,7 +157,7 @@ task_t *prgm_new_program(const char *cmd, const char *cwd, FILE *stdin,
  * @param  exit_code            program exit value
  */
 //==============================================================================
-void prgm_delete_program(task_t *taskhdl, int exit_code)
+void delete_program(task_t *taskhdl, int exit_code)
 {
         struct task_data    *tdata;
         struct program_data *pdata;
@@ -200,9 +200,9 @@ void prgm_delete_program(task_t *taskhdl, int exit_code)
  * @param status        exit value
  */
 //==============================================================================
-void prgm_exit(int status)
+void exit(int status)
 {
-        prgm_delete_program(get_task_handle(), status);
+        delete_program(get_task_handle(), status);
 
         /* wait to kill program */
         for (;;);
@@ -213,9 +213,9 @@ void prgm_exit(int status)
  * @brief Function close program with error code
  */
 //==============================================================================
-void prgm_abort(void)
+void abort(void)
 {
-        prgm_delete_program(get_task_handle(), -1);
+        delete_program(get_task_handle(), -1);
 
         /* wait to kill program */
         for (;;);
@@ -226,12 +226,12 @@ void prgm_abort(void)
  * @brief Function start program in shell
  */
 //==============================================================================
-int prgm_system(const char *command)
+int system(const char *command)
 {
         enum prog_state state     = PROGRAM_UNKNOWN_STATE;
         int             exit_code = EXIT_FAILURE;
 
-        prgm_new_program(command,
+        new_program(command,
                          _get_this_task_data()->f_cwd,
                          _get_this_task_data()->f_stdin,
                          _get_this_task_data()->f_stdout,
