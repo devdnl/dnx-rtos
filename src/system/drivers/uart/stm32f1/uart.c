@@ -102,10 +102,10 @@ struct USART_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t turn_on_USART(USART_t *USART);
-static stdret_t turn_off_USART(USART_t *USART);
-static stdret_t enable_USART_interrupts(USART_t *USART);
-static void IRQ_handler(struct USART_data *USART_data);
+static stdret_t turn_on_USART           (USART_t *USART);
+static stdret_t turn_off_USART          (USART_t *USART);
+static stdret_t enable_USART_interrupts (USART_t *USART);
+static void     IRQ_handler             (struct USART_data *USART_data);
 
 /*==============================================================================
   Local object definitions
@@ -159,8 +159,8 @@ MODULE__DEVICE_INIT(UART)
 
         USART_data[major]->USART            = USART_peripherals[major];
         USART_data[major]->data_write_sem   = new_semaphore();
-        USART_data[major]->port_lock_rx_mtx = new_mutex();
-        USART_data[major]->port_lock_tx_mtx = new_mutex();
+        USART_data[major]->port_lock_rx_mtx = new_recursive_mutex();
+        USART_data[major]->port_lock_tx_mtx = new_recursive_mutex();
 
         if (  !USART_data[major]->data_write_sem
            || !USART_data[major]->port_lock_rx_mtx
@@ -312,10 +312,29 @@ MODULE__DEVICE_RELEASE(UART)
 //==============================================================================
 MODULE__DEVICE_OPEN(UART)
 {
-        UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
 
-        return STD_RET_OK;
+        struct USART_data *hdl = device_handle;
+
+        if (flags & O_RDONLY) {
+                if (lock_recursive_mutex(hdl->port_lock_rx_mtx, 0) == MUTEX_LOCKED) {
+                        return STD_RET_OK;
+                }
+        } else if (flags & O_WRONLY) {
+                if (lock_recursive_mutex(hdl->port_lock_tx_mtx, 0) == MUTEX_LOCKED) {
+                        return STD_RET_OK;
+                }
+        } else if (flags & O_RDWR) {
+                if (lock_recursive_mutex(hdl->port_lock_rx_mtx, 0) == MUTEX_LOCKED) {
+                        if (lock_recursive_mutex(hdl->port_lock_tx_mtx, 0) == MUTEX_LOCKED) {
+                                return STD_RET_OK;
+                        }
+
+                        unlock_recursive_mutex(hdl->port_lock_rx_mtx);
+                }
+        }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -328,6 +347,18 @@ MODULE__DEVICE_CLOSE(UART)
         UNUSED_ARG(forced);
 
         STOP_IF(device_handle == NULL);
+
+        struct USART_data *hdl = device_handle;
+
+        if (lock_recursive_mutex(hdl->port_lock_rx_mtx, 0) == MUTEX_LOCKED || forced) {
+                unlock_recursive_mutex(hdl->port_lock_rx_mtx);
+                unlock_recursive_mutex(hdl->port_lock_rx_mtx);
+        }
+
+        if (lock_recursive_mutex(hdl->port_lock_tx_mtx, 0) == MUTEX_LOCKED || forced) {
+                unlock_recursive_mutex(hdl->port_lock_tx_mtx);
+                unlock_recursive_mutex(hdl->port_lock_tx_mtx);
+        }
 
         return STD_RET_OK;
 }
