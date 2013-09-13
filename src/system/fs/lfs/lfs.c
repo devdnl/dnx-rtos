@@ -889,12 +889,13 @@ error:
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in]  forced           force close
+ * @param[in] *task             task which opened file
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd, bool forced)
+stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t *task)
 {
         UNUSED_ARG(extra);
 
@@ -926,7 +927,7 @@ stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd, bool forced)
                         goto exit;
                 }
 
-                if ((status = drv_if->drv_close(drv_if->handle, forced)) != STD_RET_OK) {
+                if ((status = drv_if->drv_close(drv_if->handle, forced, task)) != STD_RET_OK) {
                         goto exit;
                 }
         }

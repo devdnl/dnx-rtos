@@ -102,10 +102,10 @@ struct USART_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t turn_on_USART(USART_t *USART);
-static stdret_t turn_off_USART(USART_t *USART);
-static stdret_t enable_USART_interrupts(USART_t *USART);
-static void IRQ_handler(struct USART_data *USART_data);
+static stdret_t turn_on_USART           (USART_t *USART);
+static stdret_t turn_off_USART          (USART_t *USART);
+static stdret_t enable_USART_interrupts (USART_t *USART);
+static void     IRQ_handler             (struct USART_data *USART_data);
 
 /*==============================================================================
   Local object definitions
@@ -326,6 +326,7 @@ MODULE__DEVICE_OPEN(UART)
 MODULE__DEVICE_CLOSE(UART)
 {
         UNUSED_ARG(forced);
+        UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
 

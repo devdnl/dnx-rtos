@@ -99,11 +99,13 @@ extern "C" {
  * @brief Close device
  *
  * @param[in] *device_handle           memory region allocated by module
+ * @param[in]  forced                  file forced close by system
+ * @param[in] *opened_by_task          task which opened device, valid if forced = true
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
-#define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *device_handle, bool forced)
+#define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *device_handle, bool forced, task_t *opened_by_task)
 
 
 /**
