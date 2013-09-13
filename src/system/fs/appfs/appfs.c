@@ -131,17 +131,20 @@ stdret_t appfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in]  forced           force close
+ * @param[in] *task             task which opened file
+ *
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_close(void *fs_handle, void *extra, fd_t fd, bool forced)
+stdret_t appfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t *task)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
         UNUSED_ARG(forced);
+        UNUSED_ARG(task);
 
         return STD_RET_ERROR;
 }

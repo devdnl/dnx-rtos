@@ -53,7 +53,7 @@ extern "C" {
 struct vfs_file
 {
         void      *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool forced);
+        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool forced, task_t *task);
         size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
         size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
         stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, va_list);
@@ -831,7 +831,7 @@ int vfs_fclose(FILE *file)
 {
         if (file) {
                 if (file->f_close) {
-                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, false) == STD_RET_OK) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, false, NULL) == STD_RET_OK) {
                                 sysm_sysfree(file);
                                 return 0;
                         }
@@ -846,15 +846,16 @@ int vfs_fclose(FILE *file)
  * @brief Function force close opened file (used by system to close all files)
  *
  * @param[in] *file             pinter to file
+ * @param[in] *task             task which opened file
  *
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose_force(FILE *file)
+int vfs_fclose_force(FILE *file, task_t *task)
 {
         if (file) {
                 if (file->f_close) {
-                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, true) == STD_RET_OK) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, true, task) == STD_RET_OK) {
                                 sysm_sysfree(file);
                                 return 0;
                         }

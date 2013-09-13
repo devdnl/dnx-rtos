@@ -176,6 +176,7 @@ MODULE__DEVICE_CLOSE(PLL)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(forced);
+        UNUSED_ARG(task);
 
         return STD_RET_ERROR;
 }

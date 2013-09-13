@@ -345,6 +345,7 @@ MODULE__DEVICE_OPEN(UART)
 MODULE__DEVICE_CLOSE(UART)
 {
         UNUSED_ARG(forced);
+        UNUSED_ARG(task);
 
         STOP_IF(device_handle == NULL);
 
