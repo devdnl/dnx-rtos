@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include "config.h"
 #include "kernel/khooks.h"
-#include "core/io.h"
+#include "core/printx.h"
 #include "portable/cpuctl.h"
 
 #ifdef __cplusplus
@@ -82,7 +82,7 @@ void vApplicationIdleHook(void)
 //==============================================================================
 void vApplicationStackOverflowHook(task_t *taskHdl, signed char *taskName)
 {
-        kwrap_delete_task(taskHdl);
+        delete_task(taskHdl);
         printk(FONT_COLOR_RED"%s: stack overflow!"RESET_ATTRIBUTES"\n", taskName);
 }
 

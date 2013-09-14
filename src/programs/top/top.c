@@ -152,7 +152,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                         task_t *task = (task_t *)task_handle;
                         if (task != get_parent_handle()) {
-                                delete_program(task);
+                                delete_program(task, EXIT_FAILURE);
                         }
 
                         ioctl(stdin, TTY_IORQ_ECHO_OFF);

@@ -68,7 +68,7 @@ extern stdret_t fsname##_fstat  (void*, void*, fd_t, struct vfs_stat*);         
 extern stdret_t fsname##_flush  (void*, void*, fd_t);                                    \
 extern stdret_t fsname##_mkdir  (void*, const char*);                                    \
 extern stdret_t fsname##_mknod  (void*, const char*, struct vfs_drv_interface*);         \
-extern stdret_t fsname##_opendir(void*, const char*, dir_t*);                            \
+extern stdret_t fsname##_opendir(void*, const char*, struct vfs_dir*);                   \
 extern stdret_t fsname##_remove (void*, const char*);                                    \
 extern stdret_t fsname##_rename (void*, const char*, const char*);                       \
 extern stdret_t fsname##_chmod  (void*, const char*, int);                               \

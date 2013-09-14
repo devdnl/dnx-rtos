@@ -1,9 +1,11 @@
+#ifndef _CONV_H_
+#define _CONV_H_
 /*=========================================================================*//**
-@file    helloworld.c
+@file    conv.h
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   Module with calculation and convert functions.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,70 +33,37 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include "helloworld.h"
-#include <string.h>
-
+#include "core/systypes.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Exported functions
 ==============================================================================*/
-/* put here global variables */
-GLOBAL_VARIABLES {
-};
+extern double   sys_strtod      (const char*, char**);
+extern i32_t    sys_atoi        (const char*);
+extern char    *sys_strtoi      (const char*, int, i32_t*);
+extern double   sys_atof        (const char*);
 
 /*==============================================================================
-  Exported object definitions
+  Exported inline functions
 ==============================================================================*/
-/* export program parameters */
-PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Program main function
- *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
- *
- * @return program status
- */
-//==============================================================================
-int PROGRAM_MAIN(helloworld, int argc, char *argv[])
-{
-        puts("Hello world!");
-        printf("Free stack: %d\n", get_free_stack());
-        printf("Static memory usage: %d\n", get_used_static_memory());
-        printf("Memory size: %d\n", get_memory_size());
-        printf("Free memory: %d\n", get_free_memory());
-
-        printf("Program arguments:\n");
-        for (int i = 0; i < argc; i++) {
-                printf("%d: %s\n", i + 1, argv[i]);
-        }
-
-        return 0;
-}
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _CONV_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

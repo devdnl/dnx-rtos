@@ -73,7 +73,7 @@ extern "C" {
  * @return task object pointer or NULL if error
  */
 //==============================================================================
-task_t *kwrap_new_task(void (*func)(void*), const char *name, uint stack_depth, void *argv)
+task_t *new_task(void (*func)(void*), const char *name, uint stack_depth, void *argv)
 {
         task_t           *task          = NULL;
         uint             child_priority = PRIORITY(0);
@@ -120,7 +120,7 @@ task_t *kwrap_new_task(void (*func)(void*), const char *name, uint stack_depth, 
  * @param *taskHdl       task handle
  */
 //==============================================================================
-void kwrap_delete_task(task_t *taskHdl)
+void delete_task(task_t *taskHdl)
 {
         if (sysm_is_task_exist(taskHdl)) {
                 (void)sysm_stop_task_monitoring(taskHdl);
@@ -151,7 +151,7 @@ void kwrap_delete_task(task_t *taskHdl)
  * @return binary semaphore object
  */
 //==============================================================================
-sem_t *kwrap_create_binary_semaphore(void)
+sem_t *new_semaphore(void)
 {
         sem_t *sem = NULL;
         vSemaphoreCreateBinary(sem);
@@ -163,7 +163,7 @@ sem_t *kwrap_create_binary_semaphore(void)
  * @brief Function wait for task exit
  */
 //==============================================================================
-void kwrap_task_exit(void)
+void task_exit(void)
 {
         do {
                 /* request to delete task */

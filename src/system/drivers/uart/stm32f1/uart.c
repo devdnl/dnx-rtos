@@ -626,9 +626,9 @@ static void IRQ_handler(struct USART_data *USART_data)
                         if (--USART_data->Tx_buffer.data_size == 0) {
                                 USART_data->Tx_buffer.src_ptr = NULL;
 
-                                i32_t woke;
+                                int woken;
                                 disable_TXE_IRQ(USART_data->USART);
-                                give_semaphore_from_ISR(USART_data->data_write_sem, &woke);
+                                give_semaphore_from_ISR(USART_data->data_write_sem, &woken);
                         }
                 } else {
                         disable_TXE_IRQ(USART_data->USART);

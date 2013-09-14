@@ -45,8 +45,8 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static dirent_t appfs_readrootdir   (void *fs_handle, dir_t *dir);
-static stdret_t appfs_closedir      (void *fs_handle, dir_t *dir);
+static dirent_t appfs_readrootdir   (void *fs_handle, DIR *dir);
+static stdret_t appfs_closedir      (void *fs_handle, DIR *dir);
 
 /*==============================================================================
   Local object definitions
@@ -326,7 +326,7 @@ stdret_t appfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_opendir(void *fs_handle, const char *path, dir_t *dir)
+stdret_t appfs_opendir(void *fs_handle, const char *path, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -357,7 +357,7 @@ stdret_t appfs_opendir(void *fs_handle, const char *path, dir_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t appfs_closedir(void *fs_handle, dir_t *dir)
+static stdret_t appfs_closedir(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(dir);
@@ -515,7 +515,7 @@ stdret_t appfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t appfs_readrootdir(void *fs_handle, dir_t *dir)
+static dirent_t appfs_readrootdir(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
