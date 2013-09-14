@@ -63,7 +63,7 @@ extern "C" {
  * @brief Initialize dnx system
  */
 //==============================================================================
-void dnx_init(void)
+void _dnx_init(void)
 {
         _cpuctl_init();
         memman_init();
