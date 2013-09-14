@@ -538,9 +538,9 @@ double io_atof(const char *str)
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 void io_enable_printk(char *filename)
 {
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         /* close file if opened */
         if (io_printk_file) {
                 vfs_fclose(io_printk_file);
@@ -551,23 +551,25 @@ void io_enable_printk(char *filename)
         if (io_printk_file == NULL) {
                 io_printk_file = vfs_fopen(filename, "w");
         }
-}
+#else
+        UNUSED_ARG(filename);
 #endif
+}
 
 //==============================================================================
 /**
  * @brief Disable printk functionality
  */
 //==============================================================================
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 void io_disable_printk(void)
 {
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         if (io_printk_file) {
                 vfs_fclose(io_printk_file);
                 io_printk_file = NULL;
         }
-}
 #endif
+}
 
 //==============================================================================
 /**
@@ -577,9 +579,9 @@ void io_disable_printk(void)
  * @param ...                 format arguments
  */
 //==============================================================================
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
 void io_printk(const char *format, ...)
 {
+#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         va_list args;
 
         if (io_printk_file) {
@@ -599,8 +601,10 @@ void io_printk(const char *format, ...)
                         sysm_sysfree(buffer);
                 }
         }
-}
+#else
+        UNUSED_ARG(format);
 #endif
+}
 
 //==============================================================================
 /**
@@ -733,21 +737,26 @@ char *io_fgets(char *str, int size, FILE *stream)
  * @retval number of written characters
  */
 //==============================================================================
-#if (CONFIG_PRINTF_ENABLE > 0)
 int io_snprintf(char *bfr, size_t size, const char *format, ...)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
         int n = 0;
 
-        if (bfr) {
+        if (bfr && size && format) {
                 va_start(args, format);
                 n = io_vsnprintf(bfr, size, format, args);
                 va_end(args);
         }
 
         return n;
-}
+#else
+        UNUSED_ARG(bfr);
+        UNUSED_ARG(size);
+        UNUSED_ARG(format);
+        return 0;
 #endif
+}
 
 //==============================================================================
 /**
@@ -760,13 +769,13 @@ int io_snprintf(char *bfr, size_t size, const char *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
-#if (CONFIG_PRINTF_ENABLE > 0)
 int io_fprintf(FILE *file, const char *format, ...)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
         int n = 0;
 
-        if (file) {
+        if (file && format) {
                 va_start(args, format);
                 u32_t size = calc_format_size(format, args);
                 va_end(args);
@@ -785,8 +794,12 @@ int io_fprintf(FILE *file, const char *format, ...)
         }
 
         return n;
-}
+#else
+        UNUSED_ARG(file);
+        UNUSED_ARG(format);
+        return 0;
 #endif
+}
 
 //==============================================================================
 /**
@@ -799,10 +812,10 @@ int io_fprintf(FILE *file, const char *format, ...)
  *
  * @return number of printed characters
  */
-//==============================================================================
-#if (CONFIG_PRINTF_ENABLE > 0)
+//===============================================================================
 int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
+#if (CONFIG_PRINTF_ENABLE > 0)
         #define put_character(character) {      \
                 if ((size_t)slen < size)  {     \
                         *buf++ = character;     \
@@ -880,8 +893,14 @@ vsnprint_end:
         *buf = 0;
         return (slen - 1);
         #undef put_character
-}
+#else
+        UNUSED_ARG(buf);
+        UNUSED_ARG(size);
+        UNUSED_ARG(format);
+        UNUSED_ARG(arg);
+        return 0;
 #endif
+}
 
 //==============================================================================
 /**
@@ -894,9 +913,9 @@ vsnprint_end:
  * @return number of scanned elements
  */
 //==============================================================================
-#if (CONFIG_SCANF_ENABLE > 0)
 int io_fscanf(FILE *stream, const char *format, ...)
 {
+#if (CONFIG_SCANF_ENABLE > 0)
         char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
         if (!str)
                 return 0;
@@ -916,8 +935,12 @@ int io_fscanf(FILE *stream, const char *format, ...)
 
         sysm_sysfree(str);
         return n;
-}
+#else
+        UNUSED_ARG(stream);
+        UNUSED_ARG(format);
+        return 0;
 #endif
+}
 
 //==============================================================================
 /**
@@ -927,19 +950,23 @@ int io_fscanf(FILE *stream, const char *format, ...)
  * @param[in]  *format        scan format
  * @param[out]  ...           output
  *
- * @return number of printed characters
+ * @return number of scanned elements
  */
 //==============================================================================
-#if (CONFIG_SCANF_ENABLE > 0)
 int io_sscanf(const char *str, const char *format, ...)
 {
+#if (CONFIG_SCANF_ENABLE > 0)
         va_list args;
         va_start(args, format);
         int n = io_vsscanf(str, format, args);
         va_end(args);
         return n;
-}
+#else
+        UNUSED_ARG(str);
+        UNUSED_ARG(format);
+        return 0;
 #endif
+}
 
 //============================================================================//
 /**
@@ -949,12 +976,12 @@ int io_sscanf(const char *str, const char *format, ...)
  * @param[in]  *format        scan format
  * @param[out]  ...           output
  *
- * @return number of printed characters
+ * @return number of scanned elements
  */
 //============================================================================//
-#if (CONFIG_SCANF_ENABLE > 0)
 int io_vsscanf(const char *str, const char *format, va_list args)
 {
+#if (CONFIG_SCANF_ENABLE > 0)
         int    read_fields = 0;
         char   chr;
         int    value;
@@ -1184,8 +1211,13 @@ int io_vsscanf(const char *str, const char *format, va_list args)
 
         io_sscanf_end:
         return read_fields;
-}
+#else
+        UNUSED_ARG(str);
+        UNUSED_ARG(format);
+        UNUSED_ARG(args);
+        return 0;
 #endif
+}
 
 #ifdef __cplusplus
 }

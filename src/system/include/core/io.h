@@ -123,22 +123,6 @@ extern "C" {
 #       define BACK_COLOR_WHITE
 #endif
 
-#if ((CONFIG_SYSTEM_MSG_ENABLE == 0) || (CONFIG_PRINTF_ENABLE == 0))
-#define io_printk(...)
-#define io_enable_printk(...)
-#define io_disable_printk(...)
-#endif
-#if (CONFIG_PRINTF_ENABLE == 0)
-#define io_snprintf(...)                        0
-#define io_fprintf(...)                         0
-#define io_vsnprintf(...)                       0
-#endif
-#if (CONFIG_SCANF_ENABLE == 0)
-#define io_fscanf(...)                          0
-#define io_sscanf(...)                          0
-#define io_vsscanf(...)                         0
-#endif
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -150,34 +134,27 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-#if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-extern void   io_printk(const char*, ...);
-extern void   io_enable_printk(char*);
-extern void   io_disable_printk(void);
-#endif
-#if (CONFIG_PRINTF_ENABLE > 0)
-extern int    io_snprintf(char*, size_t, const char*, ...);
-extern int    io_fprintf(FILE*, const char*, ...);
-extern int    io_vsnprintf(char*, size_t, const char*, va_list);
-#endif
-#if (CONFIG_SCANF_ENABLE > 0)
-extern int    io_fscanf(FILE*, const char*, ...);
-extern int    io_sscanf(const char*, const char*, ...);
-extern int    io_vsscanf(const char*, const char*, va_list);
-#endif
-extern double io_strtod(const char*, char**);
-extern i32_t  io_atoi(const char *str);
-extern char  *io_strtoi(const char*, int, i32_t*);
-extern double io_atof(const char*);
-extern int    io_fputc(int, FILE*);
-extern int    io_f_puts(const char*, FILE*, bool);
-extern int    io_getc(FILE*);
-extern char  *io_fgets(char*, int, FILE *);
+extern void   io_printk         (const char*, ...);
+extern void   io_enable_printk  (char*);
+extern void   io_disable_printk (void);
+extern int    io_snprintf       (char*, size_t, const char*, ...);
+extern int    io_fprintf        (FILE*, const char*, ...);
+extern int    io_vsnprintf      (char*, size_t, const char*, va_list);
+extern int    io_fscanf         (FILE*, const char*, ...);
+extern int    io_sscanf         (const char*, const char*, ...);
+extern int    io_vsscanf        (const char*, const char*, va_list);
+extern double io_strtod         (const char*, char**);
+extern i32_t  io_atoi           (const char*);
+extern char  *io_strtoi         (const char*, int, i32_t*);
+extern double io_atof           (const char*);
+extern int    io_fputc          (int, FILE*);
+extern int    io_f_puts         (const char*, FILE*, bool);
+extern int    io_getc           (FILE*);
+extern char  *io_fgets          (char*, int, FILE *);
 
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-
 
 #ifdef __cplusplus
 }
