@@ -51,9 +51,9 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* MEMORY MANAGEMENT DEFINTIONS */
-#define malloc(size_t__size)                                            sysm_tskmalloc(size_t__size)
-#define calloc(size_t__nitems, size_t__isize)                           sysm_tskcalloc(size_t__nitems, size_t__isize)
-#define free(void__pmem)                                                sysm_tskfree(void__pmem)
+#define malloc(size_t__size)                    sysm_tskmalloc(size_t__size)
+#define calloc(size_t__nitems, size_t__isize)   sysm_tskcalloc(size_t__nitems, size_t__isize)
+#define free(void__pmem)                        sysm_tskfree(void__pmem)
 
 /*==============================================================================
   Exported types, enums definitions
