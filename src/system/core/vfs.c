@@ -160,7 +160,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
         if (base_fs && mount_fs == NULL) {
                 if (base_fs->interface.fs_opendir && external_path) {
 
-                        dir_t dir;
+                        DIR dir;
                         if (base_fs->interface.fs_opendir(base_fs->handle,
                                                          external_path,
                                                          &dir) == STD_RET_OK) {
@@ -390,13 +390,13 @@ int vfs_mkdir(const char *path)
  * @return directory object
  */
 //==============================================================================
-dir_t *vfs_opendir(const char *path)
+DIR *vfs_opendir(const char *path)
 {
         if (!path) {
                 return NULL;
         }
 
-        dir_t *dir = sysm_sysmalloc(sizeof(dir_t));
+        DIR *dir = sysm_sysmalloc(sizeof(DIR));
         if (dir) {
                 stdret_t status = STD_RET_ERROR;
 
@@ -436,7 +436,7 @@ dir_t *vfs_opendir(const char *path)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_closedir(dir_t *dir)
+int vfs_closedir(DIR *dir)
 {
         if (dir) {
                 if (dir->f_closedir) {
@@ -459,7 +459,7 @@ int vfs_closedir(dir_t *dir)
  * @return element attributes
  */
 //==============================================================================
-dirent_t vfs_readdir(dir_t *dir)
+dirent_t vfs_readdir(DIR *dir)
 {
         dirent_t direntry;
         direntry.name = NULL;

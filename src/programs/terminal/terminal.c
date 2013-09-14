@@ -324,7 +324,7 @@ static enum cmd_status cmd_cd(char *arg)
         }
 
         if (newpath) {
-                dir_t *dir = opendir(newpath);
+                DIR *dir = opendir(newpath);
                 if (dir) {
                         closedir(dir);
 
@@ -350,7 +350,7 @@ static enum cmd_status cmd_cd(char *arg)
 //==============================================================================
 static enum cmd_status cmd_ls(char *arg)
 {
-        dir_t *dir = opendir(arg);
+        DIR *dir = opendir(arg);
         if (dir) {
                 dirent_t dirent;
 

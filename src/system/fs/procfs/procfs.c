@@ -78,12 +78,12 @@ struct file_info {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t procfs_closedir_freedd  (void *fs_handle, dir_t *dir);
-static stdret_t procfs_closedir_noop    (void *fs_handle, dir_t *dir);
-static dirent_t procfs_readdir_root     (void *fs_handle, dir_t *dir);
-static dirent_t procfs_readdir_taskname (void *fs_handle, dir_t *dir);
-static dirent_t procfs_readdir_taskid   (void *fs_handle, dir_t *dir);
-static dirent_t procfs_readdir_taskid_n (void *fs_handle, dir_t *dir);
+static stdret_t procfs_closedir_freedd  (void *fs_handle, DIR *dir);
+static stdret_t procfs_closedir_noop    (void *fs_handle, DIR *dir);
+static dirent_t procfs_readdir_root     (void *fs_handle, DIR *dir);
+static dirent_t procfs_readdir_taskname (void *fs_handle, DIR *dir);
+static dirent_t procfs_readdir_taskid   (void *fs_handle, DIR *dir);
+static dirent_t procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
 
 /*==============================================================================
   Local object definitions
@@ -642,7 +642,7 @@ stdret_t procfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interfac
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_opendir(void *fs_handle, const char *path, dir_t *dir)
+stdret_t procfs_opendir(void *fs_handle, const char *path, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -709,7 +709,7 @@ stdret_t procfs_opendir(void *fs_handle, const char *path, dir_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t procfs_closedir_freedd(void *fs_handle, dir_t *dir)
+static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -736,7 +736,7 @@ static stdret_t procfs_closedir_freedd(void *fs_handle, dir_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t procfs_closedir_noop(void *fs_handle, dir_t *dir)
+static stdret_t procfs_closedir_noop(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(dir);
@@ -894,7 +894,7 @@ stdret_t procfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_root(void *fs_handle, dir_t *dir)
+static dirent_t procfs_readdir_root(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -930,7 +930,7 @@ static dirent_t procfs_readdir_root(void *fs_handle, dir_t *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskname(void *fs_handle, dir_t *dir)
+static dirent_t procfs_readdir_taskname(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -962,7 +962,7 @@ static dirent_t procfs_readdir_taskname(void *fs_handle, dir_t *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid(void *fs_handle, dir_t *dir)
+static dirent_t procfs_readdir_taskid(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -998,7 +998,7 @@ static dirent_t procfs_readdir_taskid(void *fs_handle, dir_t *dir)
  * @return directory entry
  */
 //==============================================================================
-static dirent_t procfs_readdir_taskid_n(void *fs_handle, dir_t *dir)
+static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 

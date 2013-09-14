@@ -61,8 +61,8 @@ struct fatfs {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t fatfs_closedir(void *fs_handle, dir_t *dir);
-static dirent_t fatfs_readdir (void *fs_handle, dir_t *dir);
+static stdret_t fatfs_closedir(void *fs_handle, DIR *dir);
+static dirent_t fatfs_readdir (void *fs_handle, DIR *dir);
 
 /*==============================================================================
   Local object definitions
@@ -457,7 +457,7 @@ stdret_t fatfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_opendir(void *fs_handle, const char *path, dir_t *dir)
+stdret_t fatfs_opendir(void *fs_handle, const char *path, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -512,7 +512,7 @@ stdret_t fatfs_opendir(void *fs_handle, const char *path, dir_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t fatfs_closedir(void *fs_handle, dir_t *dir)
+static stdret_t fatfs_closedir(void *fs_handle, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!dir);
@@ -538,7 +538,7 @@ static stdret_t fatfs_closedir(void *fs_handle, dir_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static dirent_t fatfs_readdir(void *fs_handle, dir_t *dir)
+static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 

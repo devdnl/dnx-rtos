@@ -89,8 +89,8 @@ static node_t   *new_node                       (struct LFS_data *lfs, node_t *n
 static stdret_t  delete_node                    (node_t *base, node_t *target, u32_t baseitemid);
 static node_t   *get_node                       (const char *path, node_t *startnode, i32_t deep, i32_t *item);
 static uint      get_path_deep                  (const char *path);
-static dirent_t  lfs_readdir                    (void *fs_handle, dir_t *dir);
-static stdret_t  lfs_closedir                   (void *fs_handle, dir_t *dir);
+static dirent_t  lfs_readdir                    (void *fs_handle, DIR *dir);
+static stdret_t  lfs_closedir                   (void *fs_handle, DIR *dir);
 static stdret_t  add_node_to_list_of_open_files (struct LFS_data *lfs, node_t *base_node, node_t *node, i32_t *item);
 
 /*==============================================================================
@@ -339,7 +339,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_opendir(void *fs_handle, const char *path, dir_t *dir)
+stdret_t lfs_opendir(void *fs_handle, const char *path, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -378,7 +378,7 @@ stdret_t lfs_opendir(void *fs_handle, const char *path, dir_t *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t lfs_closedir(void *fs_handle, dir_t *dir)
+static stdret_t lfs_closedir(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(dir);
@@ -396,7 +396,7 @@ static stdret_t lfs_closedir(void *fs_handle, dir_t *dir)
  * @return element attributes
  */
 //==============================================================================
-static dirent_t lfs_readdir(void *fs_handle, dir_t *dir)
+static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!dir);

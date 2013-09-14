@@ -630,7 +630,7 @@ int io_fputc(int c, FILE *stream)
  *
  * @param[in] *s        string
  * @param[in] *file     file
- * @param[in]  puts     puts functionality
+ * @param[in]  puts     puts functionality (true: add \n at the end of string)
  *
  * @return number of puts characters
  */

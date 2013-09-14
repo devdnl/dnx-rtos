@@ -76,50 +76,51 @@ extern "C" {
 #define CURSOR_HOME                             "\e[H"
 #define CURSOR_FORWARD(n)                       "\e["#n"C"
 #define CURSOR_BACKWARD(n)                      "\e["#n"D"
+
 #if (CONFIG_COLOR_TERMINAL_ENABLE > 0)
-#define RESET_ATTRIBUTES                        "\e[0m"
-#define FONT_BLINKING                           "\e[5m"
-#define FONT_UNDERLINE                          "\e[4m"
-#define FONT_NORMAL                             "\e[0m"
-#define FONT_BOLD                               "\e[1m"
-#define FONT_COLOR_BLACK                        "\e[30m"
-#define FONT_COLOR_RED                          "\e[31m"
-#define FONT_COLOR_GREEN                        "\e[32m"
-#define FONT_COLOR_YELLOW                       "\e[33m"
-#define FONT_COLOR_BLUE                         "\e[34m"
-#define FONT_COLOR_MAGENTA                      "\e[35m"
-#define FONT_COLOR_CYAN                         "\e[36m"
-#define FONT_COLOR_WHITE                        "\e[37m"
-#define BACK_COLOR_BLACK                        "\e[40m"
-#define BACK_COLOR_RED                          "\e[41m"
-#define BACK_COLOR_GREEN                        "\e[42m"
-#define BACK_COLOR_YELLOW                       "\e[43m"
-#define BACK_COLOR_BLUE                         "\e[44m"
-#define BACK_COLOR_MAGENTA                      "\e[45m"
-#define BACK_COLOR_CYAN                         "\e[46m"
-#define BACK_COLOR_WHITE                        "\e[47m"
+#       define RESET_ATTRIBUTES                 "\e[0m"
+#       define FONT_BLINKING                    "\e[5m"
+#       define FONT_UNDERLINE                   "\e[4m"
+#       define FONT_NORMAL                      "\e[0m"
+#       define FONT_BOLD                        "\e[1m"
+#       define FONT_COLOR_BLACK                 "\e[30m"
+#       define FONT_COLOR_RED                   "\e[31m"
+#       define FONT_COLOR_GREEN                 "\e[32m"
+#       define FONT_COLOR_YELLOW                "\e[33m"
+#       define FONT_COLOR_BLUE                  "\e[34m"
+#       define FONT_COLOR_MAGENTA               "\e[35m"
+#       define FONT_COLOR_CYAN                  "\e[36m"
+#       define FONT_COLOR_WHITE                 "\e[37m"
+#       define BACK_COLOR_BLACK                 "\e[40m"
+#       define BACK_COLOR_RED                   "\e[41m"
+#       define BACK_COLOR_GREEN                 "\e[42m"
+#       define BACK_COLOR_YELLOW                "\e[43m"
+#       define BACK_COLOR_BLUE                  "\e[44m"
+#       define BACK_COLOR_MAGENTA               "\e[45m"
+#       define BACK_COLOR_CYAN                  "\e[46m"
+#       define BACK_COLOR_WHITE                 "\e[47m"
 #else
-#define RESET_ATTRIBUTES
-#define FONT_BLINKING
-#define FONT_UNDERLINE
-#define FONT_NORMAL
-#define FONT_BOLD
-#define FONT_COLOR_BLACK
-#define FONT_COLOR_RED
-#define FONT_COLOR_GREEN
-#define FONT_COLOR_YELLOW
-#define FONT_COLOR_BLUE
-#define FONT_COLOR_MAGENTA
-#define FONT_COLOR_CYAN
-#define FONT_COLOR_WHITE
-#define BACK_COLOR_BLACK
-#define BACK_COLOR_RED
-#define BACK_COLOR_GREEN
-#define BACK_COLOR_YELLOW
-#define BACK_COLOR_BLUE
-#define BACK_COLOR_MAGENTA
-#define BACK_COLOR_CYAN
-#define BACK_COLOR_WHITE
+#       define RESET_ATTRIBUTES
+#       define FONT_BLINKING
+#       define FONT_UNDERLINE
+#       define FONT_NORMAL
+#       define FONT_BOLD
+#       define FONT_COLOR_BLACK
+#       define FONT_COLOR_RED
+#       define FONT_COLOR_GREEN
+#       define FONT_COLOR_YELLOW
+#       define FONT_COLOR_BLUE
+#       define FONT_COLOR_MAGENTA
+#       define FONT_COLOR_CYAN
+#       define FONT_COLOR_WHITE
+#       define BACK_COLOR_BLACK
+#       define BACK_COLOR_RED
+#       define BACK_COLOR_GREEN
+#       define BACK_COLOR_YELLOW
+#       define BACK_COLOR_BLUE
+#       define BACK_COLOR_MAGENTA
+#       define BACK_COLOR_CYAN
+#       define BACK_COLOR_WHITE
 #endif
 
 #if ((CONFIG_SYSTEM_MSG_ENABLE == 0) || (CONFIG_PRINTF_ENABLE == 0))
@@ -172,6 +173,11 @@ extern int    io_fputc(int, FILE*);
 extern int    io_f_puts(const char*, FILE*, bool);
 extern int    io_getc(FILE*);
 extern char  *io_fgets(char*, int, FILE *);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+
 
 #ifdef __cplusplus
 }

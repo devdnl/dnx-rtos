@@ -66,7 +66,7 @@ typedef enum stdret_enum
 } stdret_t;
 
 /** directory object */
-typedef struct vfs_dir dir_t;
+typedef struct vfs_dir DIR;
 
 /*==============================================================================
   Exported object declarations
