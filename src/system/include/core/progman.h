@@ -34,7 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <stdio.h>
+#include "core/vfs.h"
 
 /*==============================================================================
   Exported symbolic constants/macros

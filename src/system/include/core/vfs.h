@@ -76,6 +76,11 @@ extern "C" {
 #define O_CREAT                 (1 << 3)                /* create file  */
 #define O_APPEND                (1 << 4)                /* append data  */
 
+/* stream definitions */
+#define EOF                     (-1)
+#define ETX                     0x03
+#define EOT                     0x04
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

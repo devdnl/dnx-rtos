@@ -1,11 +1,13 @@
+#ifndef _SCANX_H_
+#define _SCANX_H_
 /*=========================================================================*//**
-@file    helloworld.c
+@file    scanx.h
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   Basic scan functions
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -31,70 +33,37 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include "helloworld.h"
-#include <string.h>
-
+#include <stdarg.h>
+#include "core/vfs.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported symbolic constants/macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Exported function prototypes
 ==============================================================================*/
-/* put here global variables */
-GLOBAL_VARIABLES {
-};
+extern int      sys_fscanf      (FILE*, const char*, ...);
+extern int      sys_sscanf      (const char*, const char*, ...);
+extern int      sys_vsscanf     (const char*, const char*, va_list);
 
 /*==============================================================================
-  Exported object definitions
+  Exported inline functions
 ==============================================================================*/
-/* export program parameters */
-PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Program main function
- *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
- *
- * @return program status
- */
-//==============================================================================
-int PROGRAM_MAIN(helloworld, int argc, char *argv[])
-{
-        puts("Hello world!");
-        printf("Free stack: %d\n", get_free_stack());
-        printf("Static memory usage: %d\n", get_used_static_memory());
-        printf("Memory size: %d\n", get_memory_size());
-        printf("Free memory: %d\n", get_free_memory());
-
-        printf("Program arguments:\n");
-        for (int i = 0; i < argc; i++) {
-                printf("%d: %s\n", i + 1, argv[i]);
-        }
-
-        return 0;
-}
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _SCANX_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

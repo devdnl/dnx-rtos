@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    io.c
+@file    printx.c
 
 @author  Daniel Zorychta
 
-@brief   This file support standard io functions
+@brief   Basic print functions
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,24 +29,23 @@ extern "C" {
 #endif
 
 /*==============================================================================
- Include files
- =============================================================================*/
-#include <ctype.h>
-#include "core/io.h"
-#include "core/vfs.h"
+  Include files
+==============================================================================*/
+#include "config.h"
+#include "core/printx.h"
 #include "core/sysmoni.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
- Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
- Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
- Local function prototypes
+  Local function prototypes
 ==============================================================================*/
 #if (CONFIG_PRINTF_ENABLE > 0)
 static char *itoa(i32_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req);
@@ -54,18 +53,18 @@ static int   calc_format_size(const char *format, va_list arg);
 #endif
 
 /*==============================================================================
- Local object definitions
+  Local objects
 ==============================================================================*/
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-static FILE *io_printk_file;
+static FILE *sys_printk_file;
 #endif
 
 /*==============================================================================
- Exported object definitions
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
- Function definitions
+  Function definitions
 ==============================================================================*/
 
 //==============================================================================
@@ -356,200 +355,23 @@ static int calc_format_size(const char *format, va_list arg)
 
 //==============================================================================
 /**
- * @brief Function convert ASCII to the number
- * When function find any other character than number (depended of actual base)
- * immediately finished operation and return pointer when bad character was
- * found
- *
- * @param[in]  *string       string to decode
- * @param[in]   base         decode base
- * @param[out] *value        pointer to result
- *
- * @return pointer in string when operation was finished
- */
-//==============================================================================
-char *io_strtoi(const char *string, int base, i32_t *value)
-{
-        char  character;
-        i32_t sign = 1;
-        bool  char_found = FALSE;
-
-        *value = 0;
-
-        if (base < 2 || base > 16) {
-                goto atoi_end;
-        }
-
-        while ((character = *string) != '\0') {
-                /* if space exist, atoi continue finding correct character */
-                if ((character == ' ') && (char_found == FALSE)) {
-                        string++;
-                        continue;
-                } else {
-                        char_found = TRUE;
-                }
-
-                /* check signum */
-                if (character == '-') {
-                        if (base == 10) {
-                                if (sign == 1) {
-                                        sign = -1;
-                                }
-
-                                string++;
-                                continue;
-                        } else {
-                                goto atoi_sign;
-                        }
-                }
-
-                /* check character range */
-                if (character >= 'a') {
-                        character -= 'a' - 10;
-                } else if (character >= 'A') {
-                        character -= 'A' - 10;
-                } else if (character >= '0') {
-                        character -= '0';
-                } else {
-                        goto atoi_sign;
-                }
-
-                /* check character range according to actual base */
-                if (character >= base) {
-                        break;
-                }
-
-                /* compute value */
-                *value = *value * base;
-                *value = *value + character;
-
-                string++;
-        }
-
-atoi_sign:
-        *value *= sign;
-
-atoi_end:
-        return (char *)string;
-}
-
-//==============================================================================
-/**
- * @brief Function convert string to integer
- *
- * @param[in] *str      string
- *
- * @return converted value
- */
-//==============================================================================
-i32_t io_atoi(const char *str)
-{
-        i32_t result;
-        io_strtoi(str, 10, &result);
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief Function convert string to double
- *
- * @param[in]  *str             string
- * @param[out] **end            the pointer to the character when conversion was finished
- *
- * @return converted value
- */
-//==============================================================================
-double io_strtod(const char *str, char **end)
-{
-        double sign    = 1;
-        double div     = 1;
-        double number  = 0;
-        int    i       = 0;
-        int    decimal = 0;
-        bool   point   = FALSE;
-
-        while (str[i] != '\0') {
-                char num = str[i];
-
-                if (num >= '0' && num <= '9') {
-                        number *= 10;
-                        number += (double) (num - '0');
-                } else if (num == '.' && !point) {
-                        point = TRUE;
-                        i++;
-                        continue;
-                } else if (num == '-') {
-                        sign = -1;
-                        if (!isdigit((int)str[i + 1])) {
-                                i = 0;
-                                break;
-                        }
-                        i++;
-                        continue;
-                } else if (num == '+') {
-                        if (!isdigit((int)str[i + 1])) {
-                                i = 0;
-                                break;
-                        }
-                        i++;
-                        continue;
-                } else if (strchr(" \n\t+", num) == NULL) {
-                        break;
-                }
-
-                if (point) {
-                        decimal++;
-                }
-
-                i++;
-        }
-
-        if (point) {
-                for (int j = 0; j < decimal; j++) {
-                        div *= 10;
-                }
-        }
-
-        if (end)
-                *end = (char *) &str[i];
-
-        return sign * (number / div);
-}
-
-
-//==============================================================================
-/**
- * @brief Function convert string to float
- *
- * @param[in] *str      string
- *
- * @return converted value
- */
-//==============================================================================
-double io_atof(const char *str)
-{
-        return io_strtod(str, NULL);
-}
-
-//==============================================================================
-/**
  * @brief Enable printk functionality
  *
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-void io_enable_printk(char *filename)
+void enable_printk(char *filename)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         /* close file if opened */
-        if (io_printk_file) {
-                vfs_fclose(io_printk_file);
-                io_printk_file = NULL;
+        if (sys_printk_file) {
+                vfs_fclose(sys_printk_file);
+                sys_printk_file = NULL;
         }
 
         /* open new file */
-        if (io_printk_file == NULL) {
-                io_printk_file = vfs_fopen(filename, "w");
+        if (sys_printk_file == NULL) {
+                sys_printk_file = vfs_fopen(filename, "w");
         }
 #else
         UNUSED_ARG(filename);
@@ -561,12 +383,12 @@ void io_enable_printk(char *filename)
  * @brief Disable printk functionality
  */
 //==============================================================================
-void io_disable_printk(void)
+void disable_printk(void)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
-        if (io_printk_file) {
-                vfs_fclose(io_printk_file);
-                io_printk_file = NULL;
+        if (sys_printk_file) {
+                vfs_fclose(sys_printk_file);
+                sys_printk_file = NULL;
         }
 #endif
 }
@@ -579,12 +401,12 @@ void io_disable_printk(void)
  * @param ...                 format arguments
  */
 //==============================================================================
-void io_printk(const char *format, ...)
+void printk(const char *format, ...)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         va_list args;
 
-        if (io_printk_file) {
+        if (sys_printk_file) {
                 va_start(args, format);
                 int size = calc_format_size(format, args);
                 va_end(args);
@@ -593,10 +415,10 @@ void io_printk(const char *format, ...)
 
                 if (buffer) {
                         va_start(args, format);
-                        io_vsnprintf(buffer, size, format, args);
+                        sys_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        vfs_fwrite(buffer, sizeof(char), size, io_printk_file);
+                        vfs_fwrite(buffer, sizeof(char), size, sys_printk_file);
 
                         sysm_sysfree(buffer);
                 }
@@ -616,7 +438,7 @@ void io_printk(const char *format, ...)
  * @retval c if OK otherwise EOF
  */
 //==============================================================================
-int io_fputc(int c, FILE *stream)
+int sys_fputc(int c, FILE *stream)
 {
         if (stream) {
                 char ch = (char)c;
@@ -639,7 +461,7 @@ int io_fputc(int c, FILE *stream)
  * @return number of puts characters
  */
 //==============================================================================
-int io_f_puts(const char *s, FILE *file, bool puts)
+int sys_f_puts(const char *s, FILE *file, bool puts)
 {
         if (file) {
                 int n = vfs_fwrite(s, sizeof(char), strlen(s), file);
@@ -664,7 +486,7 @@ int io_f_puts(const char *s, FILE *file, bool puts)
  * @retval character
  */
 //==============================================================================
-int io_getc(FILE *stream)
+int sys_getc(FILE *stream)
 {
         if (!stream) {
                 return EOF;
@@ -693,7 +515,7 @@ int io_getc(FILE *stream)
  * @retval NULL if error, otherwise pointer to str
  */
 //==============================================================================
-char *io_fgets(char *str, int size, FILE *stream)
+char *sys_fgets(char *str, int size, FILE *stream)
 {
         if (!str || size < 2 || !stream) {
                 return NULL;
@@ -737,7 +559,7 @@ char *io_fgets(char *str, int size, FILE *stream)
  * @retval number of written characters
  */
 //==============================================================================
-int io_snprintf(char *bfr, size_t size, const char *format, ...)
+int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
@@ -745,7 +567,7 @@ int io_snprintf(char *bfr, size_t size, const char *format, ...)
 
         if (bfr && size && format) {
                 va_start(args, format);
-                n = io_vsnprintf(bfr, size, format, args);
+                n = sys_vsnprintf(bfr, size, format, args);
                 va_end(args);
         }
 
@@ -769,7 +591,7 @@ int io_snprintf(char *bfr, size_t size, const char *format, ...)
  * @retval number of written characters
  */
 //==============================================================================
-int io_fprintf(FILE *file, const char *format, ...)
+int sys_fprintf(FILE *file, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         va_list args;
@@ -784,7 +606,7 @@ int io_fprintf(FILE *file, const char *format, ...)
 
                 if (str) {
                         va_start(args, format);
-                        n = io_vsnprintf(str, size, format, args);
+                        n = sys_vsnprintf(str, size, format, args);
                         va_end(args);
 
                         vfs_fwrite(str, sizeof(char), n, file);
@@ -813,7 +635,7 @@ int io_fprintf(FILE *file, const char *format, ...)
  * @return number of printed characters
  */
 //===============================================================================
-int io_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
+int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         #define put_character(character) {      \
@@ -902,327 +724,10 @@ vsnprint_end:
 #endif
 }
 
-//==============================================================================
-/**
- * @brief Function scan stream
- *
- * @param[in]  *stream        file
- * @param[in]  *format        message format
- * @param[out]  ...           output
- *
- * @return number of scanned elements
- */
-//==============================================================================
-int io_fscanf(FILE *stream, const char *format, ...)
-{
-#if (CONFIG_SCANF_ENABLE > 0)
-        char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
-        if (!str)
-                return 0;
-
-        int n = 0;
-        if (io_fgets(str, BUFSIZ, stream) == str) {
-                char *lf;
-                if ((lf = strchr(str, '\n')) != NULL) {
-                        *lf = '\0';
-                }
-
-                va_list args;
-                va_start(args, format);
-                n = io_vsscanf(str, format, args);
-                va_end(args);
-        }
-
-        sysm_sysfree(str);
-        return n;
-#else
-        UNUSED_ARG(stream);
-        UNUSED_ARG(format);
-        return 0;
-#endif
-}
-
-//==============================================================================
-/**
- * @brief Function scan arguments defined by format (multiple argument version)
- *
- * @param[in]  *str           data buffer
- * @param[in]  *format        scan format
- * @param[out]  ...           output
- *
- * @return number of scanned elements
- */
-//==============================================================================
-int io_sscanf(const char *str, const char *format, ...)
-{
-#if (CONFIG_SCANF_ENABLE > 0)
-        va_list args;
-        va_start(args, format);
-        int n = io_vsscanf(str, format, args);
-        va_end(args);
-        return n;
-#else
-        UNUSED_ARG(str);
-        UNUSED_ARG(format);
-        return 0;
-#endif
-}
-
-//============================================================================//
-/**
- * @brief Function scan arguments defined by format (argument list version)
- *
- * @param[in]  *str           data buffer
- * @param[in]  *format        scan format
- * @param[out]  ...           output
- *
- * @return number of scanned elements
- */
-//============================================================================//
-int io_vsscanf(const char *str, const char *format, va_list args)
-{
-#if (CONFIG_SCANF_ENABLE > 0)
-        int    read_fields = 0;
-        char   chr;
-        int    value;
-        char  *strs;
-        int    sign;
-        char  *string;
-        u16_t  bfr_size;
-
-        if (!str || !format) {
-                return EOF;
-        }
-
-        if (str[0] == '\0') {
-                return EOF;
-        }
-
-        while ((chr = *format++) != '\0') {
-                if (chr == '%') {
-                        chr = *format++;
-
-                        /* calculate buffer size */
-                        bfr_size = 0;
-                        while (chr >= '0' && chr <= '9') {
-                                bfr_size *= 10;
-                                bfr_size += chr - '0';
-                                chr       = *format++;
-                        }
-
-                        if (bfr_size == 0)
-                            bfr_size = UINT16_MAX;
-
-                        switch (chr) {
-                        case '%':
-                                if (*str == '%') {
-                                        str++;
-                                        continue;
-                                } else {
-                                        goto io_sscanf_end;
-                                }
-                                break;
-
-                        case 'd':
-                        case 'i':
-                                value = 0;
-                                sign  = 1;
-
-                                while (*str == ' ') {
-                                        str++;
-                                }
-
-                                if (*str == '-') {
-                                        sign = -1;
-                                        str++;
-                                }
-
-                                strs  = (char*)str;
-
-                                while (*str >= '0' && *str <= '9' && bfr_size > 0) {
-                                        value *= 10;
-                                        value += *str - '0';
-                                        str++;
-                                        bfr_size--;
-                                }
-
-                                if (str != strs) {
-                                        int *var = va_arg(args, int*);
-
-                                        if (var) {
-                                                *var = value * sign;
-                                                read_fields++;
-                                        }
-                                }
-                                break;
-
-                        case 'x':
-                        case 'X':
-                                value = 0;
-                                sign  = 1;
-
-                                while (*str == ' ') {
-                                        str++;
-                                }
-
-                                if (*str == '-') {
-                                        sign = -1;
-                                        str++;
-                                }
-
-                                strs  = (char*)str;
-
-                                while (  (  (*str >= '0' && *str <= '9')
-                                         || (*str >= 'a' && *str <= 'f')
-                                         || (*str >= 'A' && *str <= 'F') )
-                                      && (bfr_size > 0) ) {
-
-                                        uint var;
-
-                                        if (*str >= 'a') {
-                                                var = *str - 'a' + 10;
-                                        } else if (*str >= 'A') {
-                                                var = *str - 'A' + 10;
-                                        } else if (*str >= '0') {
-                                                var = *str - '0';
-                                        } else {
-                                                var = 0;
-                                        }
-
-                                        value *= 16;
-                                        value += var;
-                                        str++;
-                                        bfr_size--;
-                                }
-
-                                if (strs != str) {
-                                        int *var = va_arg(args, int*);
-
-                                        if (var) {
-                                                *var = value * sign;
-                                                read_fields++;
-                                        }
-                                }
-                                break;
-
-                        case 'o':
-                                value = 0;
-                                sign  = 1;
-
-                                while (*str == ' ') {
-                                        str++;
-                                }
-
-                                if (*str == '-') {
-                                        sign = -1;
-                                        str++;
-                                }
-
-                                strs  = (char*)str;
-
-                                while (*str >= '0' && *str <= '7' && bfr_size > 0) {
-                                        value *= 8;
-                                        value += *str - '0';
-                                        str++;
-                                        bfr_size--;
-                                }
-
-                                if (str != strs) {
-                                        int *var = va_arg(args, int*);
-
-                                        if (var) {
-                                                *var = value * sign;
-                                                read_fields++;
-                                        }
-                                }
-                                break;
-
-                        case 'c':
-                                if (*str >= ' ') {
-                                        char *var = va_arg(args, char*);
-
-                                        if (var) {
-                                                *var = *str;
-                                                read_fields++;
-                                        }
-                                        str++;
-                                }
-                                break;
-
-                        case 's':
-                                string = va_arg(args, char*);
-                                if (string) {
-                                        while (*str != '\n' && *str != '\r' && *str != '\0' && *str != ' ' && bfr_size > 0) {
-                                                *string++ = *str++;
-                                                bfr_size--;
-                                        }
-                                        *string++ = '\0';
-
-                                        if (bfr_size != 0)
-                                                str++;
-
-                                        read_fields++;
-                                }
-                                break;
-
-                        case 'f':
-                        case 'F':
-                        case 'g':
-                        case 'G':
-                                if (str) {
-                                        while (*str == ' ') {
-                                                str++;
-                                        }
-
-                                        double *value = va_arg(args, double*);
-                                        if (value) {
-                                                char *end;
-                                                *value = io_strtod(str, &end);
-                                                str += ((int)end - (int)str);
-
-                                                if (*end != '\0')
-                                                        str++;
-                                        }
-                                }
-                                break;
-                        }
-                } else if (chr <= ' ') {
-                        while (*str <= ' ' && *str != '\0') {
-                                str++;
-                        }
-
-                        if (*str == '\0') {
-                                break;
-                        }
-                } else {
-                        while (*str == chr && chr != '%' && chr > ' ' && chr != '\0') {
-                                str++;
-                                chr = *format++;
-                        }
-
-                        if (chr == '%' || chr <= ' ') {
-                                format--;
-                                continue;
-                        } else {
-                                break;
-                        }
-                }
-        }
-
-        io_sscanf_end:
-        return read_fields;
-#else
-        UNUSED_ARG(str);
-        UNUSED_ARG(format);
-        UNUSED_ARG(args);
-        return 0;
-#endif
-}
-
 #ifdef __cplusplus
 }
 #endif
 
 /*==============================================================================
- End of file
+  End of file
 ==============================================================================*/

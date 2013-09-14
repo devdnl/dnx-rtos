@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include "config.h"
 #include "kernel/khooks.h"
-#include "core/io.h"
+#include "core/printx.h"
 #include "portable/cpuctl.h"
 
 #ifdef __cplusplus

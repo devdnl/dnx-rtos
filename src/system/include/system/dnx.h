@@ -40,7 +40,6 @@ extern "C" {
 #include "core/memman.h"
 #include "core/progman.h"
 #include "core/sysmoni.h"
-#include "core/io.h"
 #include "core/drivers.h"
 #include "core/fsctrl.h"
 #include "drivers/driver_registration.h"

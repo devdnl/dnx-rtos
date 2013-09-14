@@ -33,7 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include "core/sysmoni.h"
 #include "core/list.h"
-#include "core/io.h"
+#include "core/printx.h"
 #include "drivers/driver_registration.h"
 #include "kernel/kwrapper.h"
 #include "portable/cpuctl.h"

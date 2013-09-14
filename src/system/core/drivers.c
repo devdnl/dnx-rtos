@@ -34,7 +34,8 @@ extern "C" {
 #include "core/systypes.h"
 #include "core/drivers.h"
 #include "core/vfs.h"
-#include "core/io.h"
+#include "core/printx.h"
+#include "core/sysmoni.h"
 #include "drivers/driver_registration.h"
 
 /*==============================================================================
