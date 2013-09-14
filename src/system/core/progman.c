@@ -137,7 +137,7 @@ task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
         set_status(status, PROGRAM_RUNNING);
 
         taskhdl = new_task(task_program_startup, regpdata.program_name,
-                           *regpdata.stack_depth, pdata);
+                           regpdata.stack_depth, pdata);
 
         if (taskhdl == NULL) {
                 set_status(status, PROGRAM_HANDLE_ERROR);

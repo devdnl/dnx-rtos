@@ -33,7 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
-#include "top.h"
+#include "system/dnx.h"
 #include "drivers/ioctl.h"
 
 /*==============================================================================
@@ -51,13 +51,13 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
-};
+GLOBAL_VARIABLES_SECTION_BEGIN
+
+GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
 
 /*==============================================================================
   Function definitions
@@ -68,7 +68,7 @@ PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
  * @brief Main function
  */
 //==============================================================================
-int PROGRAM_MAIN(top, int argc, char *argv[])
+PROGRAM_MAIN(top, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
@@ -163,7 +163,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
         ioctl(stdin, TTY_IORQ_ECHO_ON);
 
-        return EXIT_SUCCESS;
+        return 0;
 }
 
 #ifdef __cplusplus

@@ -39,20 +39,12 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GLOBAL_VARIABLES \
-        struct __global_vars__
-
-#define FS_STACK_NOT_USED  0 *
-#define PROGRAM_PARAMS(name, stack_base, fs_switch)\
-        const uint prog_##name##_gs = sizeof(struct __global_vars__);\
-        const uint prog_##name##_stack = (stack_base) + (fs_switch (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH)
-
-#define EXPORT_PROGRAM_PARAMS(name)\
-        extern const uint prog_##name##_gs;\
-        extern const uint prog_##name##_stack
+#define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
+#define GLOBAL_VARIABLES_SECTION_END    };
 
 #define PROGRAM_MAIN(name, argc, argv) \
-        program_##name##_main(argc, argv)
+        const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
+        int program_##name##_main(argc, argv)
 
 #define stdin \
         _get_this_task_data()->f_stdin

@@ -32,22 +32,20 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "user/regprg.h"
-
-/* USER: include here programs */
-#include "programs/helloworld/helloworld.h"
-#include "programs/top/top.h"
-#include "programs/terminal/terminal.h"
-#include "programs/cat/cat.h"
-#include "programs/cp/cp.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define IMPORT_PROGRAM(name) \
+#define IMPORT_PROGRAM(name)\
+        extern const int __prog_##name##_gs__;\
+        extern int program_##name##_main(int, char**)
+
+#define PROGRAM_CONFIG(name, stack_size) \
         {.program_name  = #name,\
          .main_function = program_##name##_main,\
-         .globals_size  = &prog_##name##_gs,\
-         .stack_depth   = &prog_##name##_stack}
+         .globals_size  = &__prog_##name##_gs__,\
+         .stack_depth   = stack_size}
 
 /*==============================================================================
   Local types, enums definitions
@@ -56,16 +54,21 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+IMPORT_PROGRAM(helloworld);
+IMPORT_PROGRAM(top);
+IMPORT_PROGRAM(terminal);
+IMPORT_PROGRAM(cat);
+IMPORT_PROGRAM(cp);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 static const struct regprg_pdata prog_table[] = {
-        IMPORT_PROGRAM(helloworld),
-        IMPORT_PROGRAM(top),
-        IMPORT_PROGRAM(terminal),
-        IMPORT_PROGRAM(cat),
-        IMPORT_PROGRAM(cp),
+        PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
+        PROGRAM_CONFIG(top, STACK_DEPTH_VERY_LOW),
+        PROGRAM_CONFIG(terminal, STACK_DEPTH_LOW),
+        PROGRAM_CONFIG(cat, STACK_DEPTH_LOW),
+        PROGRAM_CONFIG(cp, STACK_DEPTH_LOW),
 };
 
 /*==============================================================================
