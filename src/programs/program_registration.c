@@ -1,11 +1,9 @@
-#ifndef REGPRG_H_
-#define REGPRG_H_
 /*=========================================================================*//**
-@file    regprg.h
+@file    program_registration.c
 
 @author  Daniel Zorychta
 
-@brief
+@brief   This file is used to register user program.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,38 +31,35 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
+#include "kernel/kwrapper.h"
+#include "core/progman.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Eternal object definitions
 ==============================================================================*/
+IMPORT_PROGRAM(helloworld);
+IMPORT_PROGRAM(top);
+IMPORT_PROGRAM(terminal);
+IMPORT_PROGRAM(cat);
+IMPORT_PROGRAM(cp);
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object definitions
 ==============================================================================*/
-struct regprg_pdata {
-        char      *program_name;
-        int      (*main_function)(int, char**);
-        const int *globals_size;
-        int        stack_depth;
+const struct _prog_data _prog_table[] = {
+        PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
+        PROGRAM_CONFIG(top       , STACK_DEPTH_VERY_LOW),
+        PROGRAM_CONFIG(terminal  , STACK_DEPTH_LOW     ),
+        PROGRAM_CONFIG(cat       , STACK_DEPTH_LOW     ),
+        PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
 };
 
-/*==============================================================================
-  Exported object declarations
-==============================================================================*/
-
-/*==============================================================================
-  Exported function prototypes
-==============================================================================*/
-extern stdret_t             regprg_get_program_data             (const char*, struct regprg_pdata*);
-extern int                  regprg_get_program_count            (void);
-extern struct regprg_pdata *regprg_get_pointer_to_program_list  (void);
+const int _prog_table_size = ARRAY_SIZE(_prog_table);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* REGPRG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

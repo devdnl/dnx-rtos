@@ -35,7 +35,6 @@ extern "C" {
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"
-#include "user/regprg.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -64,10 +63,13 @@ struct program_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void   set_status                (enum prog_state *status_ptr, enum prog_state status);
-static char **new_argument_table        (const char *str, int *argc);
-static void   delete_argument_table     (char **argv);
-static void   task_program_startup      (void *argv);
+static void     set_status              (enum prog_state *status_ptr, enum prog_state status);
+static char   **new_argument_table      (const char *str, int *argc);
+static void     delete_argument_table   (char **argv);
+static void     task_program_startup    (void *argv);
+static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
+//static inline int         get_program_count                     (void);
+//static struct _prog_data *regprg_get_pointer_to_program_list    (void);
 
 /*==============================================================================
   Local object definitions
@@ -76,6 +78,12 @@ static void   task_program_startup      (void *argv);
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+
+/*==============================================================================
+  External object definitions
+==============================================================================*/
+extern const struct _prog_data _prog_table[];
+extern const int               _prog_table_size;
 
 /*==============================================================================
   Function definitions
@@ -100,7 +108,7 @@ task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
 {
         struct program_data *pdata   = NULL;
         task_t              *taskhdl = NULL;
-        struct regprg_pdata  regpdata;
+        struct _prog_data    regpdata;
 
         if (!cmd || !cwd) {
                 set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
@@ -118,7 +126,7 @@ task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
                 return NULL;
         }
 
-        if (regprg_get_program_data(pdata->argv[0], &regpdata) != STD_RET_OK) {
+        if (get_program_data(pdata->argv[0], &regpdata) != STD_RET_OK) {
                 delete_argument_table(pdata->argv);
                 sysm_sysfree(pdata);
                 set_status(status, PROGRAM_DOES_NOT_EXIST);
@@ -513,6 +521,53 @@ static void delete_argument_table(char **argv)
 
         sysm_sysfree(argv);
 }
+
+//==============================================================================
+/**
+ * @brief Function returns pointer to all program data necessary to start program
+ *
+ * @param [in]  *name           program name
+ * @param [out] *pdata          program data
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
+{
+        if (!prg_data || !name) {
+                return STD_RET_ERROR;
+        }
+
+        for (int i = 0; i < _prog_table_size; i++) {
+                if (strcmp(name, _prog_table[i].program_name) == 0) {
+                        *prg_data = _prog_table[i];
+                        return STD_RET_OK;
+                }
+        }
+
+        return STD_RET_ERROR;
+}
+
+////==============================================================================
+///**
+// * @brief Function returns number of programs
+// */
+////==============================================================================
+//static inline int get_program_count(void)
+//{
+//        return _prog_table_size;
+//}
+
+////==============================================================================
+///**
+// * @brief Function returns pointer to the program table
+// */
+////==============================================================================
+//static struct _prog_data *regprg_get_pointer_to_program_list(void)
+//{
+//        return (struct regprg_pdata*)&_prog_table;
+//}
 
 #ifdef __cplusplus
 }

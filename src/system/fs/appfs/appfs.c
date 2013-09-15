@@ -24,6 +24,8 @@
 
 *//*==========================================================================*/
 
+/* FIXME: appfs shall be reimplement! */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,7 +34,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "fs/appfs.h"
-#include "user/regprg.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -335,7 +336,7 @@ stdret_t appfs_opendir(void *fs_handle, const char *path, DIR *dir)
 
         if (path[0] == '/' && strlen(path) == 1) {
                 dir->f_dd       = 0;
-                dir->f_items    = regprg_get_program_count();
+                dir->f_items    = 0/*regprg_get_program_count()*/;
                 dir->f_readdir  = appfs_readrootdir;
                 dir->f_closedir = appfs_closedir;
                 dir->f_seek     = 0;
@@ -525,12 +526,12 @@ static dirent_t appfs_readrootdir(void *fs_handle, DIR *dir)
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir->f_seek < (size_t)regprg_get_program_count()) {
-                dirent.filetype = FILE_TYPE_REGULAR;
-                dirent.name     = (char*)regprg_get_pointer_to_program_list()[dir->f_seek].program_name;
-                dirent.size     = 0;
-                dir->f_seek++;
-        }
+//        if (dir->f_seek < (size_t)/*get_program_count()*/0) {
+//                dirent.filetype = FILE_TYPE_REGULAR;
+//                dirent.name     = "not implemented";//(char*)regprg_get_pointer_to_program_list()[dir->f_seek].program_name;
+//                dirent.size     = 0;
+//                dir->f_seek++;
+//        }
 
         return dirent;
 }

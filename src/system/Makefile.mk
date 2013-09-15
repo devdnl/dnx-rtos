@@ -75,7 +75,6 @@ CSRC_CORE += fs/fatfs/libfat/libfat.c
 CSRC_CORE += fs/fatfs/libfat/libfat_unicode.c
 CSRC_CORE += fs/fs_registration.c
 CSRC_CORE += user/initd.c
-CSRC_CORE += user/regprg.c
 CSRC_CORE += drivers/driver_registration.c
 CSRC_CORE += kernel/khooks.c
 CSRC_CORE += kernel/kwrapper.c
@@ -85,6 +84,7 @@ CSRC_CORE += kernel/FreeRTOS/Source/queue.c
 CSRC_CORE += kernel/FreeRTOS/Source/tasks.c
 CSRC_CORE += kernel/FreeRTOS/Source/timers.c
 CSRC_CORE += kernel/FreeRTOS/Source/portable/MemMang/heap_3.c
+CSRC_CORE += ../programs/program_registration.c
 
 HDRLOC_CORE += kernel/FreeRTOS/Source/include
 HDRLOC_CORE += kernel
