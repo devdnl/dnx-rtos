@@ -31,7 +31,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/fatfs.h"
 #include "libfat/libfat.h"
 
 /*==============================================================================
@@ -86,7 +85,7 @@ static dirent_t fatfs_readdir (void *fs_handle, DIR *dir);
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_init(void **fs_handle, const char *src_path)
+stdret_t API_FS_INIT(fatfs, void **fs_handle, const char *src_path)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!src_path);
@@ -123,7 +122,7 @@ stdret_t fatfs_init(void **fs_handle, const char *src_path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_release(void *fs_handle)
+stdret_t API_FS_RELEASE(fatfs, void *fs_handle)
 {
         STOP_IF(!fs_handle);
 
@@ -154,7 +153,7 @@ stdret_t fatfs_release(void *fs_handle)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
+stdret_t API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(fd);
 
@@ -213,18 +212,18 @@ stdret_t fatfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
  * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
- * @param[in]  forced           force close
- * @param[in] *task             task which opened file
+ * @param[in]  force            force close
+ * @param[in] *file_owner       task which opened file
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t *task)
+stdret_t API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
 {
         UNUSED_ARG(fd);
-        UNUSED_ARG(forced);
-        UNUSED_ARG(task);
+        UNUSED_ARG(force);
+        UNUSED_ARG(file_owner);
 
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -256,7 +255,7 @@ stdret_t fatfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t 
  * @return number of written items
  */
 //==============================================================================
-size_t fatfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -292,7 +291,7 @@ size_t fatfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_
  * @return number of read items
  */
 //==============================================================================
-size_t fatfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -327,7 +326,7 @@ size_t fatfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size,
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -352,7 +351,7 @@ stdret_t fatfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list ar
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_flush(void *fs_handle, void *extra, fd_t fd)
+stdret_t API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -379,7 +378,7 @@ stdret_t fatfs_flush(void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -409,7 +408,7 @@ stdret_t fatfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_mkdir(void *fs_handle, const char *path)
+stdret_t API_FS_MKDIR(fatfs, void *fs_handle, const char *path)
 {
         struct fatfs *hdl = fs_handle;
 
@@ -433,7 +432,7 @@ stdret_t fatfs_mkdir(void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t API_FS_MKNOD(fatfs, void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -456,7 +455,7 @@ stdret_t fatfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_opendir(void *fs_handle, const char *path, DIR *dir)
+stdret_t API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -583,7 +582,7 @@ static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_remove(void *fs_handle, const char *path)
+stdret_t API_FS_REMOVE(fatfs, void *fs_handle, const char *path)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -608,7 +607,7 @@ stdret_t fatfs_remove(void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_rename(void *fs_handle, const char *old_name, const char *new_name)
+stdret_t API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!old_name);
@@ -634,7 +633,7 @@ stdret_t fatfs_rename(void *fs_handle, const char *old_name, const char *new_nam
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_chmod(void *fs_handle, const char *path, int mode)
+stdret_t API_FS_CHMOD(fatfs, void *fs_handle, const char *path, int mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -662,7 +661,7 @@ stdret_t fatfs_chmod(void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_chown(void *fs_handle, const char *path, int owner, int group)
+stdret_t API_FS_CHOWN(fatfs, void *fs_handle, const char *path, int owner, int group)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -686,7 +685,7 @@ stdret_t fatfs_chown(void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
+stdret_t API_FS_STAT(fatfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -720,7 +719,7 @@ stdret_t fatfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t fatfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
+stdret_t API_FS_STATFS(fatfs, void *fs_handle, struct vfs_statfs *statfs)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!statfs);

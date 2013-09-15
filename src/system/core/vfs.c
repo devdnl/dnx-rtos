@@ -53,7 +53,7 @@ extern "C" {
 struct vfs_file
 {
         void      *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool forced, task_t *opened_by_task);
+        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, task_t *opened_by_task);
         size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
         size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
         stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, va_list);

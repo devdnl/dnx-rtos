@@ -31,7 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/lfs.h"
+#include "system/dnxfs.h"
 #include "core/list.h"
 
 /*==============================================================================
@@ -112,7 +112,7 @@ static stdret_t  add_node_to_list_of_open_files (struct LFS_data *lfs, node_t *b
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_init(void **fs_handle, const char *src_path)
+stdret_t API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
@@ -162,7 +162,7 @@ stdret_t lfs_init(void **fs_handle, const char *src_path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_release(void *fs_handle)
+stdret_t API_FS_RELEASE(lfs, void *fs_handle)
 {
         UNUSED_ARG(fs_handle);
 
@@ -186,7 +186,7 @@ stdret_t lfs_release(void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t API_FS_MKNOD(lfs, void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -265,7 +265,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_mkdir(void *fs_handle, const char *path)
+stdret_t API_FS_MKDIR(lfs, void *fs_handle, const char *path)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -339,7 +339,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_opendir(void *fs_handle, const char *path, DIR *dir)
+stdret_t API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -442,7 +442,7 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_remove(void *fs_handle, const char *path)
+stdret_t API_FS_REMOVE(lfs, void *fs_handle, const char *path)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -508,7 +508,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_rename(void *fs_handle, const char *old_name, const char *new_name)
+stdret_t API_FS_RENAME(lfs, void *fs_handle, const char *old_name, const char *new_name)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!old_name);
@@ -579,7 +579,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_chmod(void *fs_handle, const char *path, int mode)
+stdret_t API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -613,7 +613,7 @@ stdret_t lfs_chmod(void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_chown(void *fs_handle, const char *path, int owner, int group)
+stdret_t API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -648,7 +648,7 @@ stdret_t lfs_chown(void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
+stdret_t API_FS_STAT(lfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -703,7 +703,7 @@ stdret_t lfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         UNUSED_ARG(extra);
 
@@ -755,7 +755,7 @@ stdret_t lfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
+stdret_t API_FS_STATFS(lfs, void *fs_handle, struct vfs_statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 
@@ -786,7 +786,7 @@ stdret_t lfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t lfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
+stdret_t API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(extra);
 
@@ -888,14 +888,14 @@ error:
  * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
- * @param[in]  forced           force close
- * @param[in] *task             task which opened file
+ * @param[in]  force            force close
+ * @param[in] *file_owner       task which opened file
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t *task)
+stdret_t API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
 {
         UNUSED_ARG(extra);
 
@@ -927,7 +927,7 @@ stdret_t lfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t *t
                         goto exit;
                 }
 
-                if ((status = drv_if->drv_close(drv_if->handle, forced, task)) != STD_RET_OK) {
+                if ((status = drv_if->drv_close(drv_if->handle, force, file_owner)) != STD_RET_OK) {
                         goto exit;
                 }
         }
@@ -980,7 +980,7 @@ exit:
  * @return number of written items
  */
 //==============================================================================
-size_t lfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(extra);
 
@@ -1064,7 +1064,7 @@ exit:
  * @return number of read items
  */
 //==============================================================================
-size_t lfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(extra);
 
@@ -1140,7 +1140,7 @@ exit:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
         UNUSED_ARG(extra);
 
@@ -1185,7 +1185,7 @@ error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t lfs_flush(void *fs_handle, void *extra, fd_t fd)
+stdret_t API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
 {
         UNUSED_ARG(extra);
 

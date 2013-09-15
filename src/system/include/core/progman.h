@@ -46,11 +46,11 @@ extern "C" {
         const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
         int program_##name##_main(argc, argv)
 
-#define IMPORT_PROGRAM(name)\
+#define _IMPORT_PROGRAM(name)\
         extern const int __prog_##name##_gs__;\
         extern int program_##name##_main(int, char**)
 
-#define PROGRAM_CONFIG(name, stack_size) \
+#define _PROGRAM_CONFIG(name, stack_size) \
         {.program_name  = #name,\
          .main_function = program_##name##_main,\
          .globals_size  = &__prog_##name##_gs__,\

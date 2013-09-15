@@ -31,7 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/procfs.h"
+#include "system/dnxfs.h"
 #include "core/printx.h"
 #include "core/conv.h"
 #include "core/list.h"
@@ -109,7 +109,7 @@ static dirent_t procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_init(void **fs_handle, const char *src_path)
+stdret_t API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(src_path);
 
@@ -150,7 +150,7 @@ stdret_t procfs_init(void **fs_handle, const char *src_path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_release(void *fs_handle)
+stdret_t API_FS_RELEASE(procfs, void *fs_handle)
 {
         STOP_IF(!fs_handle);
 
@@ -182,7 +182,7 @@ stdret_t procfs_release(void *fs_handle)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t procfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
+stdret_t API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(extra);
 
@@ -310,18 +310,18 @@ stdret_t procfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, cons
  * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
- * @param[in]  forced           force close
- * @param[in] *task             task which opened file
+ * @param[in]  force            force close
+ * @param[in] *file_owner       task which opened file
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t *task)
+stdret_t API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
 {
         UNUSED_ARG(extra);
-        UNUSED_ARG(forced);
-        UNUSED_ARG(task);
+        UNUSED_ARG(force);
+        UNUSED_ARG(file_owner);
 
         STOP_IF(!fs_handle);
 
@@ -355,7 +355,7 @@ stdret_t procfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t
  * @return number of written items
  */
 //==============================================================================
-size_t procfs_write(void *fs_handle,void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -383,7 +383,7 @@ size_t procfs_write(void *fs_handle,void *extra, fd_t fd, const void *src, size_
  * @return number of read items
  */
 //==============================================================================
-size_t procfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(extra);
 
@@ -486,7 +486,7 @@ size_t procfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -509,7 +509,7 @@ stdret_t procfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list a
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_flush(void *fs_handle, void *extra, fd_t fd)
+stdret_t API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -531,7 +531,7 @@ stdret_t procfs_flush(void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         UNUSED_ARG(extra);
 
@@ -602,7 +602,7 @@ stdret_t procfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *st
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_mkdir(void *fs_handle, const char *path)
+stdret_t API_FS_MKDIR(procfs, void *fs_handle, const char *path)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -622,7 +622,7 @@ stdret_t procfs_mkdir(void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t API_FS_MKNOD(procfs, void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -643,7 +643,7 @@ stdret_t procfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interfac
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_opendir(void *fs_handle, const char *path, DIR *dir)
+stdret_t API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -756,7 +756,7 @@ static stdret_t procfs_closedir_noop(void *fs_handle, DIR *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_remove(void *fs_handle, const char *path)
+stdret_t API_FS_REMOVE(procfs, void *fs_handle, const char *path)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -776,7 +776,7 @@ stdret_t procfs_remove(void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_rename(void *fs_handle, const char *old_name, const char *new_name)
+stdret_t API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_name)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(old_name);
@@ -797,7 +797,7 @@ stdret_t procfs_rename(void *fs_handle, const char *old_name, const char *new_na
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_chmod(void *fs_handle, const char *path, int mode)
+stdret_t API_FS_CHMOD(procfs, void *fs_handle, const char *path, int mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -819,7 +819,7 @@ stdret_t procfs_chmod(void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_chown(void *fs_handle, const char *path, int owner, int group)
+stdret_t API_FS_CHOWN(procfs, void *fs_handle, const char *path, int owner, int group)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -841,7 +841,7 @@ stdret_t procfs_chown(void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
+stdret_t API_FS_STAT(procfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -869,7 +869,7 @@ stdret_t procfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t procfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
+stdret_t API_FS_STATFS(procfs, void *fs_handle, struct vfs_statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 

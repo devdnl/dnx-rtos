@@ -56,25 +56,44 @@ extern "C" {
 
 #define STOP_IF(condition)                      _stop_if(condition)
 
-#define FILE_SYSTEM_INTERFACE(fsname)                                                    \
-extern stdret_t fsname##_init   (void**, const char*);                                   \
-extern stdret_t fsname##_release(void*);                                                 \
-extern stdret_t fsname##_open   (void*, void**, fd_t*, u64_t*, const char*, int);        \
-extern stdret_t fsname##_close  (void*, void*, fd_t, bool, task_t*);                     \
-extern size_t   fsname##_write  (void*, void*, fd_t, const void*, size_t, size_t, u64_t);\
-extern size_t   fsname##_read   (void*, void*, fd_t, void*, size_t, size_t, u64_t);      \
-extern stdret_t fsname##_ioctl  (void*, void*, fd_t, int, va_list);                      \
-extern stdret_t fsname##_fstat  (void*, void*, fd_t, struct vfs_stat*);                  \
-extern stdret_t fsname##_flush  (void*, void*, fd_t);                                    \
-extern stdret_t fsname##_mkdir  (void*, const char*);                                    \
-extern stdret_t fsname##_mknod  (void*, const char*, struct vfs_drv_interface*);         \
-extern stdret_t fsname##_opendir(void*, const char*, struct vfs_dir*);                   \
-extern stdret_t fsname##_remove (void*, const char*);                                    \
-extern stdret_t fsname##_rename (void*, const char*, const char*);                       \
-extern stdret_t fsname##_chmod  (void*, const char*, int);                               \
-extern stdret_t fsname##_chown  (void*, const char*, int, int);                          \
-extern stdret_t fsname##_stat   (void*, const char*, struct vfs_stat*);                  \
-extern stdret_t fsname##_statfs (void*, struct vfs_statfs*)
+#define API_FS_INIT(fsname, ...)                _##fsname##_init(__VA_ARGS__)
+#define API_FS_RELEASE(fsname, ...)             _##fsname##_release(__VA_ARGS__)
+#define API_FS_OPEN(fsname, ...)                _##fsname##_open(__VA_ARGS__)
+#define API_FS_CLOSE(fsname, ...)               _##fsname##_close(__VA_ARGS__)
+#define API_FS_WRITE(fsname, ...)               _##fsname##_write(__VA_ARGS__)
+#define API_FS_READ(fsname, ...)                _##fsname##_read(__VA_ARGS__)
+#define API_FS_IOCTL(fsname, ...)               _##fsname##_ioctl(__VA_ARGS__)
+#define API_FS_FSTAT(fsname, ...)               _##fsname##_fstat(__VA_ARGS__)
+#define API_FS_FLUSH(fsname, ...)               _##fsname##_flush(__VA_ARGS__)
+#define API_FS_MKDIR(fsname, ...)               _##fsname##_mkdir(__VA_ARGS__)
+#define API_FS_MKNOD(fsname, ...)               _##fsname##_mknod(__VA_ARGS__)
+#define API_FS_OPENDIR(fsname, ...)             _##fsname##_opendir(__VA_ARGS__)
+#define API_FS_REMOVE(fsname, ...)              _##fsname##_remove(__VA_ARGS__)
+#define API_FS_RENAME(fsname, ...)              _##fsname##_rename(__VA_ARGS__)
+#define API_FS_CHMOD(fsname, ...)               _##fsname##_chmod(__VA_ARGS__)
+#define API_FS_CHOWN(fsname, ...)               _##fsname##_chown(__VA_ARGS__)
+#define API_FS_STAT(fsname, ...)                _##fsname##_stat(__VA_ARGS__)
+#define API_FS_STATFS(fsname, ...)              _##fsname##_statfs(__VA_ARGS__)
+
+#define _IMPORT_FILE_SYSTEM(fsname)                                                          \
+extern stdret_t API_FS_INIT(fsname, void**, const char*);                                    \
+extern stdret_t API_FS_RELEASE(fsname, void*);                                               \
+extern stdret_t API_FS_OPEN(fsname, void*, void**, fd_t*, u64_t*, const char*, int);         \
+extern stdret_t API_FS_CLOSE(fsname, void*, void*, fd_t, bool, task_t*);                     \
+extern size_t   API_FS_WRITE(fsname, void*, void*, fd_t, const void*, size_t, size_t, u64_t);\
+extern size_t   API_FS_READ(fsname, void*, void*, fd_t, void*, size_t, size_t, u64_t);       \
+extern stdret_t API_FS_IOCTL(fsname, void*, void*, fd_t, int, va_list);                      \
+extern stdret_t API_FS_FSTAT(fsname, void*, void*, fd_t, struct vfs_stat*);                  \
+extern stdret_t API_FS_FLUSH(fsname, void*, void*, fd_t);                                    \
+extern stdret_t API_FS_MKDIR(fsname, void*, const char*);                                    \
+extern stdret_t API_FS_MKNOD(fsname, void*, const char*, struct vfs_drv_interface*);         \
+extern stdret_t API_FS_OPENDIR(fsname, void*, const char*, struct vfs_dir*);                 \
+extern stdret_t API_FS_REMOVE(fsname, void*, const char*);                                   \
+extern stdret_t API_FS_RENAME(fsname, void*, const char*, const char*);                      \
+extern stdret_t API_FS_CHMOD(fsname, void*, const char*, int);                               \
+extern stdret_t API_FS_CHOWN(fsname, void*, const char*, int, int);                          \
+extern stdret_t API_FS_STAT(fsname, void*, const char*, struct vfs_stat*);                   \
+extern stdret_t API_FS_STATFS(fsname, void*, struct vfs_statfs*)
 
 /*==============================================================================
   Exported types, enums definitions

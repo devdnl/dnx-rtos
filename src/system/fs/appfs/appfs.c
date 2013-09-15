@@ -33,7 +33,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/appfs.h"
+#include "system/dnxfs.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -72,7 +72,7 @@ static stdret_t appfs_closedir      (void *fs_handle, DIR *dir);
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_init(void **fs_handle, const char *src_path)
+stdret_t API_FS_INIT(appfs, void **fs_handle, const char *src_path)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(src_path);
@@ -90,7 +90,7 @@ stdret_t appfs_init(void **fs_handle, const char *src_path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_release(void *fs_handle)
+stdret_t API_FS_RELEASE(appfs, void *fs_handle)
 {
         UNUSED_ARG(fs_handle);
 
@@ -112,7 +112,7 @@ stdret_t appfs_release(void *fs_handle)
  * @retval STD_RET_ERROR        file not opened/created
  */
 //==============================================================================
-stdret_t appfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
+stdret_t API_FS_OPEN(appfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -131,21 +131,21 @@ stdret_t appfs_open(void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
  * @param[in] *fs_handle        FS handle
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
- * @param[in]  forced           force close
- * @param[in] *task             task which opened file
+ * @param[in]  file_owner       force close
+ * @param[in] *file_owner       task which opened file
  *
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t *task)
+stdret_t API_FS_CLOSE(appfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
-        UNUSED_ARG(forced);
-        UNUSED_ARG(task);
+        UNUSED_ARG(force);
+        UNUSED_ARG(file_owner);
 
         return STD_RET_ERROR;
 }
@@ -165,7 +165,7 @@ stdret_t appfs_close(void *fs_handle, void *extra, fd_t fd, bool forced, task_t 
  * @return number of written items
  */
 //==============================================================================
-size_t appfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_WRITE(appfs, void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -193,7 +193,7 @@ size_t appfs_write(void *fs_handle, void *extra, fd_t fd, const void *src, size_
  * @return number of read items
  */
 //==============================================================================
-size_t appfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+size_t API_FS_READ(appfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -220,7 +220,7 @@ size_t appfs_read(void *fs_handle, void *extra, fd_t fd, void *dst, size_t size,
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
+stdret_t API_FS_IOCTL(appfs, void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -243,7 +243,7 @@ stdret_t appfs_ioctl(void *fs_handle, void *extra, fd_t fd, int iorq, va_list ar
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_flush(void *fs_handle, void *extra, fd_t fd)
+stdret_t API_FS_FLUSH(appfs, void *fs_handle, void *extra, fd_t fd)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -265,7 +265,7 @@ stdret_t appfs_flush(void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+stdret_t API_FS_FSTAT(appfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
@@ -286,7 +286,7 @@ stdret_t appfs_fstat(void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_mkdir(void *fs_handle, const char *path)
+stdret_t API_FS_MKDIR(appfs, void *fs_handle, const char *path)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -306,7 +306,7 @@ stdret_t appfs_mkdir(void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
+stdret_t API_FS_MKNOD(appfs, void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -327,7 +327,7 @@ stdret_t appfs_mknod(void *fs_handle, const char *path, struct vfs_drv_interface
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_opendir(void *fs_handle, const char *path, DIR *dir)
+stdret_t API_FS_OPENDIR(appfs, void *fs_handle, const char *path, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
 
@@ -377,7 +377,7 @@ static stdret_t appfs_closedir(void *fs_handle, DIR *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_remove(void *fs_handle, const char *path)
+stdret_t API_FS_REMOVE(appfs, void *fs_handle, const char *path)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -397,7 +397,7 @@ stdret_t appfs_remove(void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_rename(void *fs_handle, const char *old_name, const char *new_name)
+stdret_t API_FS_RENAME(appfs, void *fs_handle, const char *old_name, const char *new_name)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(old_name);
@@ -418,7 +418,7 @@ stdret_t appfs_rename(void *fs_handle, const char *old_name, const char *new_nam
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_chmod(void *fs_handle, const char *path, int mode)
+stdret_t API_FS_CHMOD(appfs, void *fs_handle, const char *path, int mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -440,7 +440,7 @@ stdret_t appfs_chmod(void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_chown(void *fs_handle, const char *path, int owner, int group)
+stdret_t API_FS_CHOWN(appfs, void *fs_handle, const char *path, int owner, int group)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -462,7 +462,7 @@ stdret_t appfs_chown(void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
+stdret_t API_FS_STAT(appfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -490,7 +490,7 @@ stdret_t appfs_stat(void *fs_handle, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t appfs_statfs(void *fs_handle, struct vfs_statfs *statfs)
+stdret_t API_FS_STATFS(appfs, void *fs_handle, struct vfs_statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 

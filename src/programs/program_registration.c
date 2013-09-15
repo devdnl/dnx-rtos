@@ -35,23 +35,23 @@ extern "C" {
 #include "core/progman.h"
 
 /*==============================================================================
-  Eternal object definitions
+  External objects
 ==============================================================================*/
-IMPORT_PROGRAM(helloworld);
-IMPORT_PROGRAM(top);
-IMPORT_PROGRAM(terminal);
-IMPORT_PROGRAM(cat);
-IMPORT_PROGRAM(cp);
+_IMPORT_PROGRAM(helloworld);
+_IMPORT_PROGRAM(top);
+_IMPORT_PROGRAM(terminal);
+_IMPORT_PROGRAM(cat);
+_IMPORT_PROGRAM(cp);
 
 /*==============================================================================
-  Exported object definitions
+  Exported objects
 ==============================================================================*/
 const struct _prog_data _prog_table[] = {
-        PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
-        PROGRAM_CONFIG(top       , STACK_DEPTH_VERY_LOW),
-        PROGRAM_CONFIG(terminal  , STACK_DEPTH_LOW     ),
-        PROGRAM_CONFIG(cat       , STACK_DEPTH_LOW     ),
-        PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(top       , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(terminal  , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(cat       , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
 };
 
 const int _prog_table_size = ARRAY_SIZE(_prog_table);

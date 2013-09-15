@@ -68,8 +68,6 @@ static char   **new_argument_table      (const char *str, int *argc);
 static void     delete_argument_table   (char **argv);
 static void     task_program_startup    (void *argv);
 static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
-//static inline int         get_program_count                     (void);
-//static struct _prog_data *regprg_get_pointer_to_program_list    (void);
 
 /*==============================================================================
   Local object definitions
@@ -548,26 +546,6 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 
         return STD_RET_ERROR;
 }
-
-////==============================================================================
-///**
-// * @brief Function returns number of programs
-// */
-////==============================================================================
-//static inline int get_program_count(void)
-//{
-//        return _prog_table_size;
-//}
-
-////==============================================================================
-///**
-// * @brief Function returns pointer to the program table
-// */
-////==============================================================================
-//static struct _prog_data *regprg_get_pointer_to_program_list(void)
-//{
-//        return (struct regprg_pdata*)&_prog_table;
-//}
 
 #ifdef __cplusplus
 }
