@@ -31,8 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "tty.h"
-#include "drivers/ioctl.h"
+#include "system/dnxmodule.h"
+#include "tty_cfg.h"
+#include "tty_def.h"
 
 /*==============================================================================
   Local symbolic constants/macros

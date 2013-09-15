@@ -37,6 +37,9 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/** device numbers */
+#define SDSPI_MAJOR_NUMBER      0
+#define SDSPI_MINOR_NUMBER      0
 
 /*==============================================================================
   Exported types, enums definitions

@@ -105,37 +105,6 @@ extern "C" {
 /** RX buffer size [B] */
 #define UART_RX_BUFFER_SIZE                     128
 
-
-/** uart part */
-#define UART_PART_NONE                          0
-
-
-/** port names */
-enum UART_DEV_NUMBER
-{
-#if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
-        UART_DEV_1,
-#endif
-
-#if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
-        UART_DEV_2,
-#endif
-
-#if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
-        UART_DEV_3,
-#endif
-
-#if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
-        UART_DEV_4,
-#endif
-
-#if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
-        UART_DEV_5,
-#endif
-
-        UART_DEV_COUNT
-};
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

@@ -34,7 +34,6 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "core/printx.h"
-#include "drivers/driver_registration.h"
 #include "kernel/kwrapper.h"
 #include "portable/cpuctl.h"
 
@@ -110,6 +109,11 @@ static i32_t sysm_programs_memory_usage;
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+
+/*==============================================================================
+  External object definitions
+==============================================================================*/
+extern const int _regdrv_number_of_modules;
 
 /*==============================================================================
   Function definitions
@@ -608,7 +612,7 @@ void sysm_sysfree(void *mem)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modmalloc(size_t size, uint module_number)
+void *sysm_modmalloc(size_t size, int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         void *p = NULL;
@@ -638,7 +642,7 @@ void *sysm_modmalloc(size_t size, uint module_number)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modcalloc(size_t count, size_t size, uint module_number)
+void *sysm_modcalloc(size_t count, size_t size, int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         void *p = NULL;
@@ -666,7 +670,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
  * @param  module_number        module number
  */
 //==============================================================================
-void sysm_modfree(void *mem, uint module_number)
+void sysm_modfree(void *mem, int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number < _regdrv_number_of_modules) {
@@ -689,7 +693,7 @@ void sysm_modfree(void *mem, uint module_number)
  * @return used memory by selected driver
  */
 //==============================================================================
-i32_t sysm_get_used_memory_by_module(uint module_number)
+i32_t sysm_get_used_memory_by_module(int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number >= _regdrv_number_of_modules)

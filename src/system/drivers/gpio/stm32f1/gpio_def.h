@@ -37,17 +37,12 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GPIO_PART_NONE       0
+#define GPIO_MAJOR_NUMBER       0
+#define GPIO_MINOR_NUMBER       0
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** port names */
-enum GPIO_DEV_NUMBER {
-        GPIO_DEV_NONE,
-        GPIO_DEV_LAST
-};
-
 /** ioctl commands */
 enum GPIO_IORQ {
         _GPIO_IORQ_none

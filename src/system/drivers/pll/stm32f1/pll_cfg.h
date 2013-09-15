@@ -49,9 +49,6 @@ extern "C" {
 #define PLL_STATUS_PLL3_ERROR             -4
 #define PLL_STATUS_PLL_SW_ERROR           -5
 
-#define PLL_PART_NONE                     0
-#define PLL_DEV_NONE                      0
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

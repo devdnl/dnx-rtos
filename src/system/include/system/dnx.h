@@ -42,7 +42,6 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/drivers.h"
 #include "core/fsctrl.h"
-#include "drivers/driver_registration.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "portable/cpuctl.h"
@@ -64,14 +63,18 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  External object declarations
 ==============================================================================*/
+extern const int _regdrv_number_of_modules;
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
 extern void _dnx_init(void);
 
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
 //==============================================================================
 /**
  * @brief Function return used static memory

@@ -55,25 +55,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** devices number */
-enum tty_list {
-#if TTY_NUMBER_OF_VT > 0
-        TTY_DEV_0,
-#endif
-#if TTY_NUMBER_OF_VT > 1
-        TTY_DEV_1,
-#endif
-#if TTY_NUMBER_OF_VT > 2
-        TTY_DEV_2,
-#endif
-#if TTY_NUMBER_OF_VT > 3
-        TTY_DEV_3,
-#endif
-#if TTY_NUMBER_OF_VT > 4
-#error "TTY support 4 virtual terminals!"
-#endif
-        TTY_DEV_COUNT
-};
 
 /*==============================================================================
   Exported objects

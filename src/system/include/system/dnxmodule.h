@@ -172,16 +172,16 @@ extern "C" {
 #define MODULE__DEVICE_STAT(modname)            stdret_t _##modname##_stat(void *device_handle, struct vfs_dev_stat *device_stat)
 
 /* module's external interface */
-#define DRIVER_INTERFACE(modname)        \
-extern _MODULE__DEVICE_INIT(modname);    \
-extern  MODULE__DEVICE_RELEASE(modname); \
-extern  MODULE__DEVICE_OPEN(modname);    \
-extern  MODULE__DEVICE_CLOSE(modname);   \
-extern  MODULE__DEVICE_WRITE(modname);   \
-extern  MODULE__DEVICE_READ(modname);    \
-extern  MODULE__DEVICE_IOCTL(modname);   \
-extern  MODULE__DEVICE_FLUSH(modname);   \
-extern  MODULE__DEVICE_STAT(modname)
+#define _IMPORT_MODULE(modname)         \
+extern _MODULE__DEVICE_INIT(modname);   \
+extern MODULE__DEVICE_RELEASE(modname); \
+extern MODULE__DEVICE_OPEN(modname);    \
+extern MODULE__DEVICE_CLOSE(modname);   \
+extern MODULE__DEVICE_WRITE(modname);   \
+extern MODULE__DEVICE_READ(modname);    \
+extern MODULE__DEVICE_IOCTL(modname);   \
+extern MODULE__DEVICE_FLUSH(modname);   \
+extern MODULE__DEVICE_STAT(modname)
 
 /*==============================================================================
   Exported types, enums definitions

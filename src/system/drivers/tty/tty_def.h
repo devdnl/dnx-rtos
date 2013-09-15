@@ -39,7 +39,27 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 /** define part count */
-#define TTY_MINOR_NO                    0
+#define TTY_MINOR_NUMBER        0
+
+/** devices number */
+enum TTY_major_number {
+#if TTY_NUMBER_OF_VT > 0
+        TTY_DEV_0,
+#endif
+#if TTY_NUMBER_OF_VT > 1
+        TTY_DEV_1,
+#endif
+#if TTY_NUMBER_OF_VT > 2
+        TTY_DEV_2,
+#endif
+#if TTY_NUMBER_OF_VT > 3
+        TTY_DEV_3,
+#endif
+#if TTY_NUMBER_OF_VT > 4
+#error "TTY support 4 virtual terminals!"
+#endif
+        TTY_DEV_COUNT
+};
 
 /** TTY requests */
 enum TTY_IORQ_enum {

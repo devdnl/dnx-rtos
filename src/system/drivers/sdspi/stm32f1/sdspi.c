@@ -31,7 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/sdspi.h"
+#include "system/dnxmodule.h"
+#include "stm32f1/sdspi_cfg.h"
+#include "stm32f1/sdspi_def.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
@@ -221,7 +223,7 @@ MODULE__DEVICE_INIT(SDSPI)
 {
         STOP_IF(device_handle == NULL);
 
-        if (major != SDSPI_MAJOR_NO || minor != SDSPI_MINOR_NO) {
+        if (major != SDSPI_MAJOR_NUMBER || minor != SDSPI_MINOR_NUMBER) {
                 return STD_RET_ERROR;
         }
 
