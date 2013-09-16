@@ -353,19 +353,15 @@ static enum cmd_status cmd_ls(char *arg)
         if (dir) {
                 dirent_t dirent;
 
-                char *ccolor = FONT_COLOR_YELLOW"c";
-                char *rcolor = FONT_COLOR_MAGENTA" ";
-                char *lcolor = FONT_COLOR_CYAN"l";
-                char *dcolor = FONT_COLOR_GREEN"d";
-
                 while ((dirent = readdir(dir)).name != NULL) {
-                        char *type = NULL;
+                        const char *type = NULL;
 
                         switch (dirent.filetype) {
-                        case FILE_TYPE_DIR:     type = dcolor; break;
-                        case FILE_TYPE_DRV:     type = ccolor; break;
-                        case FILE_TYPE_LINK:    type = lcolor; break;
-                        case FILE_TYPE_REGULAR: type = rcolor; break;
+                        case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"c";  break;
+                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA" "; break;
+                        case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
+                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN"d";   break;
+                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"p";          break;
                         default: type = "?";
                         }
 

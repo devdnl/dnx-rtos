@@ -35,6 +35,7 @@ extern "C" {
 #include "core/printx.h"
 #include "core/conv.h"
 #include "core/list.h"
+#include "core/progman.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -44,6 +45,7 @@ extern "C" {
 
 #define DIR_TASKID_STR                    "taskid"
 #define DIR_TASKNAME_STR                  "taskname"
+#define DIR_BIN_STR                       "bin"
 #define TASK_FILE_NAME_STR                "name"
 #define TASK_FILE_PRIO_STR                "priority"
 #define TASK_FILE_FREESTACK_STR           "freestack"
@@ -80,9 +82,10 @@ struct file_info {
   Local function prototypes
 ==============================================================================*/
 static stdret_t procfs_closedir_freedd  (void *fs_handle, DIR *dir);
-static stdret_t procfs_closedir_noop    (void *fs_handle, DIR *dir);
+static stdret_t procfs_closedir_generic (void *fs_handle, DIR *dir);
 static dirent_t procfs_readdir_root     (void *fs_handle, DIR *dir);
 static dirent_t procfs_readdir_taskname (void *fs_handle, DIR *dir);
+static dirent_t procfs_readdir_bin      (void *fs_handle, DIR *dir);
 static dirent_t procfs_readdir_taskid   (void *fs_handle, DIR *dir);
 static dirent_t procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
 
@@ -654,21 +657,27 @@ stdret_t API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 
         if (strcmp(path, "/") == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = 2;
+                dir->f_items    = 3;
                 dir->f_readdir  = procfs_readdir_root;
-                dir->f_closedir = procfs_closedir_noop;
+                dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKNAME_STR"/") == 0) {
                 dir->f_dd       = NULL;
                 dir->f_items    = sysm_get_number_of_monitored_tasks();
                 dir->f_readdir  = procfs_readdir_taskname;
-                dir->f_closedir = procfs_closedir_noop;
+                dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_TASKID_STR"/") == 0) {
                 dir->f_dd       = calloc(TASK_ID_STR_LEN, sizeof(char));
                 dir->f_items    = sysm_get_number_of_monitored_tasks();
                 dir->f_readdir  = procfs_readdir_taskid;
                 dir->f_closedir = procfs_closedir_freedd;
+                return STD_RET_OK;
+        } else if (strcmp(path, "/"DIR_BIN_STR"/") == 0) {
+                dir->f_dd       = NULL;
+                dir->f_items    = _get_programs_table_size();//_prog_table_size;
+                dir->f_readdir  = procfs_readdir_bin;
+                dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;
         } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
 
@@ -690,7 +699,7 @@ stdret_t API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                         dir->f_dd       = (void*)taskHdl;
                         dir->f_items    = TASK_FILE_COUNT;
                         dir->f_readdir  = procfs_readdir_taskid_n;
-                        dir->f_closedir = procfs_closedir_noop;
+                        dir->f_closedir = procfs_closedir_generic;
                         return STD_RET_OK;
                 }
         }
@@ -737,7 +746,7 @@ static stdret_t procfs_closedir_freedd(void *fs_handle, DIR *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t procfs_closedir_noop(void *fs_handle, DIR *dir)
+static stdret_t procfs_closedir_generic(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(dir);
@@ -914,6 +923,8 @@ static dirent_t procfs_readdir_root(void *fs_handle, DIR *dir)
         case 1:
                 dirent.name = DIR_TASKNAME_STR;
                 break;
+        case 2: dirent.name = DIR_BIN_STR;
+                break;
         default:
                 break;
         }
@@ -945,6 +956,37 @@ static dirent_t procfs_readdir_taskname(void *fs_handle, DIR *dir)
         if (sysm_get_ntask_stat(dir->f_seek, &taskdata) == STD_RET_OK) {
                 dirent.filetype = FILE_TYPE_REGULAR;
                 dirent.name     = taskdata.task_name;
+                dirent.size     = 0;
+
+                dir->f_seek++;
+        }
+
+        return dirent;
+}
+
+//==============================================================================
+/**
+ * @brief Read item from opened directory
+ *
+ * @param[in]  *fs_handle    file system data
+ * @param[out] *dir          directory object
+ *
+ * @return directory entry
+ */
+//==============================================================================
+static dirent_t procfs_readdir_bin(void *fs_handle, DIR *dir)
+{
+        UNUSED_ARG(fs_handle);
+
+        STOP_IF(!dir);
+
+        dirent_t dirent;
+        dirent.name = NULL;
+        dirent.size = 0;
+
+        if (dir->f_seek < (size_t)_get_programs_table_size()) {
+                dirent.filetype = FILE_TYPE_PROGRAM;
+                dirent.name     = _get_programs_table()[dir->f_seek].program_name;
                 dirent.size     = 0;
 
                 dir->f_seek++;

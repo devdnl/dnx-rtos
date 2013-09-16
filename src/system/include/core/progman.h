@@ -103,6 +103,21 @@ extern void      exit              (int);
 extern void      abort             (void);
 extern int       system            (const char*);
 
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+static inline const struct _prog_data *_get_programs_table(void)
+{
+        extern const struct _prog_data _prog_table[];
+        return _prog_table;
+}
+
+static inline int _get_programs_table_size(void)
+{
+        extern const int _prog_table_size;
+        return _prog_table_size;
+}
+
 #ifdef __cplusplus
 }
 #endif

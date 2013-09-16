@@ -81,7 +81,7 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 #define MODULE__DEVICE_RELEASE(modname)         stdret_t _##modname##_release(void *device_handle)
-
+/* FIXME investigate module macros naming, the same as FS or as is */
 
 /**
  * @brief Open device

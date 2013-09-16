@@ -238,11 +238,11 @@ int system(const char *command)
         int             exit_code = EXIT_FAILURE;
 
         new_program(command,
-                         _get_this_task_data()->f_cwd,
-                         _get_this_task_data()->f_stdin,
-                         _get_this_task_data()->f_stdout,
-                         &state,
-                         &exit_code);
+                    _get_this_task_data()->f_cwd,
+                    _get_this_task_data()->f_stdin,
+                    _get_this_task_data()->f_stdout,
+                    &state,
+                    &exit_code);
 
         while (state == PROGRAM_RUNNING) {
                 suspend_this_task();

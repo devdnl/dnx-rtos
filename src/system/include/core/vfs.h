@@ -96,7 +96,8 @@ typedef enum tfile
         FILE_TYPE_REGULAR,
         FILE_TYPE_DIR,
         FILE_TYPE_DRV,
-        FILE_TYPE_LINK
+        FILE_TYPE_LINK,
+        FILE_TYPE_PROGRAM
 } tfile_t;
 
 /** directory entry */

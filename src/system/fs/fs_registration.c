@@ -38,7 +38,6 @@ extern "C" {
   External objects
 ==============================================================================*/
 _IMPORT_FILE_SYSTEM(lfs);
-_IMPORT_FILE_SYSTEM(appfs);
 _IMPORT_FILE_SYSTEM(procfs);
 _IMPORT_FILE_SYSTEM(fatfs);
 
@@ -47,7 +46,6 @@ _IMPORT_FILE_SYSTEM(fatfs);
 ==============================================================================*/
 const struct _FS_entry _FS_table[] = {
         _USE_FILE_SYSTEM_INTERFACE(lfs),
-        _USE_FILE_SYSTEM_INTERFACE(appfs),
         _USE_FILE_SYSTEM_INTERFACE(procfs),
         _USE_FILE_SYSTEM_INTERFACE(fatfs),
 };

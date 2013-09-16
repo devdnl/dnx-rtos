@@ -67,7 +67,6 @@ CSRC_CORE += core/drivers.c
 CSRC_CORE += core/fsctrl.c
 CSRC_CORE += core/conv.c
 CSRC_CORE += fs/procfs/procfs.c
-CSRC_CORE += fs/appfs/appfs.c
 CSRC_CORE += fs/lfs/lfs.c
 CSRC_CORE += fs/fatfs/fatfs.c
 CSRC_CORE += fs/fatfs/libfat/libfat_user.c
