@@ -203,7 +203,7 @@ static struct tty_ctrl *tty_ctrl;
  * @brief Initialize TTY device
  */
 //==============================================================================
-MODULE__DEVICE_INIT(TTY)
+API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
 
@@ -304,7 +304,7 @@ ctrl_error:
  * @brief Release TTY device
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(TTY)
+API_MOD_RELEASE(TTY, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(tty_ctrl == NULL);
@@ -339,7 +339,7 @@ MODULE__DEVICE_RELEASE(TTY)
  * @brief Opens specified port and initialize default settings
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(TTY)
+API_MOD_OPEN(TTY, void *device_handle, int flags)
 {
         UNUSED_ARG(flags);
 
@@ -354,9 +354,9 @@ MODULE__DEVICE_OPEN(TTY)
  * @brief Close opened port
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(TTY)
+API_MOD_CLOSE(TTY, void *device_handle, bool force, task_t *opened_by_task)
 {
-        UNUSED_ARG(forced);
+        UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
@@ -370,7 +370,7 @@ MODULE__DEVICE_CLOSE(TTY)
  * @brief Write data to TTY
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(TTY)
+API_MOD_WRITE(TTY, void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
 {
         UNUSED_ARG(lseek);
 
@@ -414,7 +414,7 @@ MODULE__DEVICE_WRITE(TTY)
  * @brief Read data from TTY
  */
 //==============================================================================
-MODULE__DEVICE_READ(TTY)
+API_MOD_READ(TTY, void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
 {
         UNUSED_ARG(lseek);
 
@@ -452,7 +452,7 @@ MODULE__DEVICE_READ(TTY)
  * @brief Specific settings of TTY
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(TTY)
+API_MOD_IOCTL(TTY, void *device_handle, int iorq, va_list args)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(tty_ctrl == NULL);
@@ -526,7 +526,7 @@ MODULE__DEVICE_IOCTL(TTY)
  * @brief Flush device
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(TTY)
+API_MOD_FLUSH(TTY, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(tty_ctrl == NULL);
@@ -546,7 +546,7 @@ MODULE__DEVICE_FLUSH(TTY)
  * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE__DEVICE_STAT(TTY)
+API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(device_stat == NULL);

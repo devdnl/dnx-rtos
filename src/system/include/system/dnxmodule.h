@@ -57,131 +57,27 @@ extern "C" {
 
 #define STOP_IF(condition)                      _stop_if(condition)
 
+#define _API_MOD_INIT(modname, ...)             stdret_t _##modname##_init(__VA_ARGS__)
+#define API_MOD_INIT(modname, ...)              static const char *_module_name_ = #modname; _API_MOD_INIT(modname, __VA_ARGS__)
+#define API_MOD_RELEASE(modname, ...)           stdret_t _##modname##_release(__VA_ARGS__)
+#define API_MOD_OPEN(modname, ...)              stdret_t _##modname##_open(__VA_ARGS__)
+#define API_MOD_CLOSE(modname, ...)             stdret_t _##modname##_close(__VA_ARGS__)
+#define API_MOD_WRITE(modname, ...)             size_t _##modname##_write(__VA_ARGS__)
+#define API_MOD_READ(modname, ...)              size_t _##modname##_read(__VA_ARGS__)
+#define API_MOD_IOCTL(modname, ...)             stdret_t _##modname##_ioctl(__VA_ARGS__)
+#define API_MOD_FLUSH(modname, ...)             stdret_t _##modname##_flush(__VA_ARGS__)
+#define API_MOD_STAT(modname, ...)              stdret_t _##modname##_stat(__VA_ARGS__)
 
-/**
- * @brief Initialize device
- *
- * @param[out] **device_handle          memory region allocated by module
- * @param[in]    major                  device major number
- * @param[in]    minor                  device minor number
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-#define _MODULE__DEVICE_INIT(modname)           stdret_t _##modname##_init(void **device_handle, u8_t major, u8_t minor)
-#define  MODULE__DEVICE_INIT(modname)           static const char *_module_name_ = #modname; _MODULE__DEVICE_INIT(modname)
-
-
-/**
- * @brief Release device
- *
- * @param[in] *device_handle           memory region allocated by module
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-#define MODULE__DEVICE_RELEASE(modname)         stdret_t _##modname##_release(void *device_handle)
-/* FIXME investigate module macros naming, the same as FS or as is */
-
-/**
- * @brief Open device
- *
- * @param[in] *device_handle           memory region allocated by module
- * @param[in]  flags                   open file flags
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-#define MODULE__DEVICE_OPEN(modname)            stdret_t _##modname##_open(void *device_handle, int flags)
-
-
-/**
- * @brief Close device
- *
- * @param[in] *device_handle           memory region allocated by module
- * @param[in]  forced                  file forced close by system
- * @param[in] *opened_by_task          task which opened device, valid if forced = true
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-#define MODULE__DEVICE_CLOSE(modname)           stdret_t _##modname##_close(void *device_handle, bool forced, task_t *opened_by_task)
-
-
-/**
- * @brief Write data into a device
- *
- * @param[in] *device_handle            memory region allocated by module
- * @param[in] *src                      data source
- * @param[in]  item_size                size of item
- * @param[in]  n_items                  number of items
- * @param[in]  lseek                    position in file/device address
- *
- * @return number of written items
- */
-#define MODULE__DEVICE_WRITE(modname)           size_t _##modname##_write(void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
-
-
-/**
- * @brief Read data from a device
- *
- * @param[in]  *device_handle           memory region allocated by module
- * @param[out] *dst                     data destination
- * @param[in]   item_size               size of item
- * @param[in]   n_items                 number of items
- * @param[in]   lseek                   position in file/device address
- *
- * @return number of written items
- */
-#define MODULE__DEVICE_READ(modname)            size_t _##modname##_read(void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
-
-
-/**
- * @brief Device control
- *
- * @param[in]    *device_handle         memory region allocated by module
- * @param[in]     iorq                  control request
- * @param[in,out] args                  additional arguments
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-#define MODULE__DEVICE_IOCTL(modname)           stdret_t _##modname##_ioctl(void *device_handle, int iorq, va_list args)
-
-
-/**
- * @brief Flush device memory/cache
- *
- * @param[in] *device_handle            memory region allocated by module
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-#define MODULE__DEVICE_FLUSH(modname)           stdret_t _##modname##_flush(void *device_handle)
-
-
-/**
- * @brief Device information
- *
- * @param[in]  *device_handle           memory region allocated by module
- * @param[out] *device_stat             device/file info
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-#define MODULE__DEVICE_STAT(modname)            stdret_t _##modname##_stat(void *device_handle, struct vfs_dev_stat *device_stat)
-
-/* module's external interface */
-#define _IMPORT_MODULE(modname)         \
-extern _MODULE__DEVICE_INIT(modname);   \
-extern MODULE__DEVICE_RELEASE(modname); \
-extern MODULE__DEVICE_OPEN(modname);    \
-extern MODULE__DEVICE_CLOSE(modname);   \
-extern MODULE__DEVICE_WRITE(modname);   \
-extern MODULE__DEVICE_READ(modname);    \
-extern MODULE__DEVICE_IOCTL(modname);   \
-extern MODULE__DEVICE_FLUSH(modname);   \
-extern MODULE__DEVICE_STAT(modname)
+#define _IMPORT_MODULE(modname)                                          \
+extern _API_MOD_INIT(modname, void**, u8_t, u8_t);                       \
+extern API_MOD_RELEASE(modname, void*);                                  \
+extern API_MOD_OPEN(modname, void*, int);                                \
+extern API_MOD_CLOSE(modname, void*, bool, task_t*);                     \
+extern API_MOD_WRITE(modname, void*, const void*, size_t, size_t, u64_t);\
+extern API_MOD_READ(modname, void*, void*, size_t, size_t, u64_t);       \
+extern API_MOD_IOCTL(modname, void*, int, va_list);                      \
+extern API_MOD_FLUSH(modname, void*);                                    \
+extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 
 /*==============================================================================
   Exported types, enums definitions

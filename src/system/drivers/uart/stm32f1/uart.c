@@ -143,7 +143,7 @@ static struct USART_data *USART_data[UART_DEV_COUNT];
  * @brief Initialize USART devices
  */
 //==============================================================================
-MODULE__DEVICE_INIT(UART)
+API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
 
@@ -282,7 +282,7 @@ error:
  * @brief Release USART device
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(UART)
+API_MOD_RELEASE(UART, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -312,7 +312,7 @@ MODULE__DEVICE_RELEASE(UART)
  * @brief Opens specified port
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(UART)
+API_MOD_OPEN(UART, void *device_handle, int flags)
 {
         UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
@@ -325,9 +325,9 @@ MODULE__DEVICE_OPEN(UART)
  * @brief Function close opened port
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(UART)
+API_MOD_CLOSE(UART, void *device_handle, bool force, task_t *opened_by_task)
 {
-        UNUSED_ARG(forced);
+        UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
@@ -340,7 +340,7 @@ MODULE__DEVICE_CLOSE(UART)
  * @brief Write data to UART
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(UART)
+API_MOD_WRITE(UART, void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
 {
         UNUSED_ARG(lseek);
 
@@ -372,7 +372,7 @@ MODULE__DEVICE_WRITE(UART)
  * @brief Read data from UART Rx buffer
  */
 //==============================================================================
-MODULE__DEVICE_READ(UART)
+API_MOD_READ(UART, void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
 {
         UNUSED_ARG(lseek);
 
@@ -422,7 +422,7 @@ MODULE__DEVICE_READ(UART)
  * @brief Direct IO control
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(UART)
+API_MOD_IOCTL(UART, void *device_handle, int iorq, va_list args)
 {
         STOP_IF(device_handle == NULL);
 
@@ -586,7 +586,7 @@ MODULE__DEVICE_IOCTL(UART)
  * @brief Flush device
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(UART)
+API_MOD_FLUSH(UART, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -598,7 +598,7 @@ MODULE__DEVICE_FLUSH(UART)
  * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE__DEVICE_STAT(UART)
+API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(device_stat == NULL);

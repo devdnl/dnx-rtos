@@ -219,7 +219,7 @@ static struct sdspi_data *sdspi_data;
  * @brief Initialize device
  */
 //==============================================================================
-MODULE__DEVICE_INIT(SDSPI)
+API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
         STOP_IF(device_handle == NULL);
 
@@ -302,7 +302,7 @@ error:
  * @brief Release device
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(SDSPI)
+API_MOD_RELEASE(SDSPI, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -337,7 +337,7 @@ MODULE__DEVICE_RELEASE(SDSPI)
  * @brief Open device
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(SDSPI)
+API_MOD_OPEN(SDSPI, void *device_handle, int flags)
 {
         UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
@@ -350,9 +350,9 @@ MODULE__DEVICE_OPEN(SDSPI)
  * @brief Close device
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(SDSPI)
+API_MOD_CLOSE(SDSPI, void *device_handle, bool force, task_t *opened_by_task)
 {
-        UNUSED_ARG(forced);
+        UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
@@ -365,7 +365,7 @@ MODULE__DEVICE_CLOSE(SDSPI)
  * @brief Write data to device
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(SDSPI)
+API_MOD_WRITE(SDSPI, void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
@@ -388,7 +388,7 @@ MODULE__DEVICE_WRITE(SDSPI)
  * @brief Read data from device
  */
 //==============================================================================
-MODULE__DEVICE_READ(SDSPI)
+API_MOD_READ(SDSPI, void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
@@ -411,7 +411,7 @@ MODULE__DEVICE_READ(SDSPI)
  * @brief Direct IO control
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(SDSPI)
+API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, va_list args)
 {
         STOP_IF(device_handle == NULL);
 
@@ -455,7 +455,7 @@ MODULE__DEVICE_IOCTL(SDSPI)
  * @brief Flush device
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(SDSPI)
+API_MOD_FLUSH(SDSPI, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -467,7 +467,7 @@ MODULE__DEVICE_FLUSH(SDSPI)
  * @brief Interface returns device information
  */
 //==============================================================================
-MODULE__DEVICE_STAT(SDSPI)
+API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(device_stat == NULL);
