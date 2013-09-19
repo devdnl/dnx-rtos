@@ -973,21 +973,20 @@ exit:
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
- * @param[in]  size             item size
- * @param[in]  nitems           number of items
- * @param[in]  lseek            position in file
+ * @param[in]  count            number of bytes
+ * @param[in] *fpos             position in file
  *
  * @return number of written items
  */
 //==============================================================================
-API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(extra);
 
         STOP_IF(!fs_handle);
+        STOP_IF(!fpos);
         STOP_IF(!src);
-        STOP_IF(!size);
-        STOP_IF(!nitems);
+        STOP_IF(!count);
 
         struct LFS_data *lfs = fs_handle;
         size_t           n   = 0;
@@ -1010,12 +1009,12 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const void *src, size_t
                 if (drv_if->drv_write) {
                         unlock_recursive_mutex(lfs->resource_mtx);
 
-                        return drv_if->drv_write(drv_if->handle, src, size, nitems, lseek);
+                        return drv_if->drv_write(drv_if->handle, src, count, fpos);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
-                size_t write_size  = size * nitems;
+                size_t write_size  = count;
                 size_t file_length = node->size;
-                size_t seek        = lseek > SIZE_MAX ? SIZE_MAX : lseek;
+                size_t seek        = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
 
                 if (seek > file_length) {
                         seek = file_length;
@@ -1037,10 +1036,10 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const void *src, size_t
                         node->data  = new_data;
                         node->size += write_size - (file_length - seek);
 
-                        n = nitems;
+                        n = count;
                 } else {
                         memcpy(node->data + seek, src, write_size);
-                        n = nitems;
+                        n = count;
                 }
         }
 
@@ -1057,21 +1056,20 @@ exit:
  * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
- * @param[in]   size            item size
- * @param[in]   nitems          number of items
- * @param[in]   lseek           position in file
+ * @param[in]   count           number of bytes
+ * @param[in]  *fpos            position in file
  *
  * @return number of read items
  */
 //==============================================================================
-API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(extra);
 
         STOP_IF(!fs_handle);
+        STOP_IF(!fpos);
         STOP_IF(!dst);
-        STOP_IF(!size);
-        STOP_IF(!nitems);
+        STOP_IF(!count);
 
         struct LFS_data *lfs = fs_handle;
         size_t           n   = 0;
@@ -1093,11 +1091,11 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, 
 
                 if (drv_if->drv_read) {
                         unlock_recursive_mutex(lfs->resource_mtx);
-                        return drv_if->drv_read(drv_if->handle, dst, size, nitems, lseek);
+                        return drv_if->drv_read(drv_if->handle, dst, count, fpos);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
                 size_t file_length = node->size;
-                size_t seek        = lseek > SIZE_MAX ? SIZE_MAX : lseek;
+                size_t seek        = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
 
                 /* check if seek is not bigger than file length */
                 if (seek > file_length) {
@@ -1106,16 +1104,16 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, 
 
                 /* check how many items to read is on current file position */
                 size_t items_to_read;
-                if (((file_length - seek) / size) >= nitems) {
-                        items_to_read = nitems;
+                if ((file_length - seek) >= count) {
+                        items_to_read = count;
                 } else {
-                        items_to_read = (file_length - seek) / size;
+                        items_to_read = file_length - seek;
                 }
 
                 /* copy if file buffer exist */
                 if (node->data) {
                         if (items_to_read > 0) {
-                                memcpy(dst, node->data + seek, items_to_read * size);
+                                memcpy(dst, node->data + seek, items_to_read);
                                 n = items_to_read;
                         }
                 }

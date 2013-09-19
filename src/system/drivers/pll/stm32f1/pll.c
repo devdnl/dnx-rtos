@@ -187,13 +187,12 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force, task_t *opened_by_task)
  * @brief Write data to device
  */
 //==============================================================================
-API_MOD_WRITE(PLL, void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
+API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
@@ -203,13 +202,12 @@ API_MOD_WRITE(PLL, void *device_handle, const void *src, size_t item_size, size_
  * @brief Read data from device
  */
 //==============================================================================
-API_MOD_READ(PLL, void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
+API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }

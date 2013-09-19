@@ -351,22 +351,20 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *
  * @param[in] *extra            file extra data (useful in FS wrappers)v
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
- * @param[in]  size             item size
- * @param[in]  nitems           number of items
- * @param[in]  lseek            position in file
+ * @param[in]  count            number of bytes
+ * @param[in] *fpos             position in file
  *
  * @return number of written items
  */
 //==============================================================================
-API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
         UNUSED_ARG(src);
-        UNUSED_ARG(size);
-        UNUSED_ARG(nitems);
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
@@ -379,21 +377,20 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const void *src, size
  * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
- * @param[in]   size            item size
- * @param[in]   nitems          number of items
- * @param[in]   lseek           position in file
+ * @param[in]  count            number of bytes
+ * @param[in] *fpos             position in file
  *
  * @return number of read items
  */
 //==============================================================================
-API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(extra);
 
         STOP_IF(!fs_handle);
         STOP_IF(!dst);
-        STOP_IF(!size);
-        STOP_IF(!nitems);
+        STOP_IF(!count);
+        STOP_IF(!fpos);
 
         struct procfs *procmem = fs_handle;
 
@@ -458,16 +455,16 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t siz
         }
 
         size_t n;
-        size_t seek = lseek > SIZE_MAX ? SIZE_MAX : lseek;
+        size_t seek = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
         if (seek > dataSize) {
                 n = 0;
         } else {
-                if (dataSize - seek <= size * nitems) {
+                if (dataSize - seek <= count) {
                         n = dataSize - seek;
-                        strncpy(dst, data + seek, n);
+                        strncpy((char*)dst, data + seek, n);
                 } else {
-                        n = size * nitems;
-                        strncpy(dst, data + seek, n);
+                        n = count;
+                        strncpy((char *)dst, data + seek, n);
                 }
         }
 

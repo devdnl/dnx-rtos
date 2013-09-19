@@ -340,26 +340,25 @@ API_MOD_CLOSE(UART, void *device_handle, bool force, task_t *opened_by_task)
  * @brief Write data to UART
  */
 //==============================================================================
-API_MOD_WRITE(UART, void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
+API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
 
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->Tx_buffer.src_ptr   = src;
-                hdl->Tx_buffer.data_size = item_size * n_items;
+                hdl->Tx_buffer.data_size = count;
 
                 enable_TXE_IRQ(hdl->USART);
                 take_semaphore(hdl->data_write_sem, TXC_WAIT_TIME);
 
-                n = n_items;
+                n = count;
 
                 unlock_mutex(hdl->port_lock_tx_mtx);
         }
@@ -372,21 +371,20 @@ API_MOD_WRITE(UART, void *device_handle, const void *src, size_t item_size, size
  * @brief Read data from UART Rx buffer
  */
 //==============================================================================
-API_MOD_READ(UART, void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
+API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
 
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                u8_t  *dst_ptr   = (u8_t *)dst;
-                size_t data_size = n_items * item_size;
+                u8_t  *dst_ptr   = dst;
+                size_t data_size = count;
                 hdl->task_rx     = get_task_handle();
 
                 do {
@@ -408,8 +406,6 @@ API_MOD_READ(UART, void *device_handle, void *dst, size_t item_size, size_t n_it
                                 suspend_this_task();
                         }
                 } while (data_size);
-
-                n /= item_size;
 
                 unlock_mutex(hdl->port_lock_rx_mtx);
         }

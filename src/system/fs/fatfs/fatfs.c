@@ -248,32 +248,31 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *f
  * @param[in] *extra            file extra data (useful in FS wrappers)
  * @param[in]  fd               file descriptor
  * @param[in] *src              data source
- * @param[in]  size             item size
- * @param[in]  nitems           number of items
- * @param[in]  lseek            position in file
+ * @param[in]  count            number of bytes
+ * @param[in] *fpos             position in file
  *
  * @return number of written items
  */
 //==============================================================================
-API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek)
+API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
         STOP_IF(!extra);
         STOP_IF(!src);
-        STOP_IF(!size);
-        STOP_IF(!nitems);
+        STOP_IF(!count);
+        STOP_IF(!fpos);
 
         FATFILE *fat_file = extra;
         uint     n        = 0;
 
-        if (libfat_tell(fat_file) != (u32_t)lseek) {
-                libfat_lseek(fat_file, (u32_t)lseek);
+        if (libfat_tell(fat_file) != (u32_t)*fpos) {
+                libfat_lseek(fat_file, (u32_t)*fpos);
         }
 
-        libfat_write(fat_file, src, size * nitems, &n);
-        return n / size;
+        libfat_write(fat_file, src, count, &n);
+        return n;
 }
 
 //==============================================================================
@@ -284,32 +283,31 @@ API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const void *src, size
  * @param[in]  *extra           file extra data (useful in FS wrappers)
  * @param[in]   fd              file descriptor
  * @param[out] *dst             data destination
- * @param[in]   size            item size
- * @param[in]   nitems          number of items
- * @param[in]   lseek           position in file
+ * @param[in]   count           number of bytes
+ * @param[in]  *fpos           position in file
  *
  * @return number of read items
  */
 //==============================================================================
-API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t size, size_t nitems, u64_t lseek)
+API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
 
         STOP_IF(!extra);
         STOP_IF(!dst);
-        STOP_IF(!size);
-        STOP_IF(!nitems);
+        STOP_IF(!count);
+        STOP_IF(!fpos);
 
         FATFILE *fat_file = extra;
         uint     n        = 0;
 
-        if (libfat_tell(fat_file) != (u32_t)lseek) {
-                libfat_lseek(fat_file, (u32_t)lseek);
+        if (libfat_tell(fat_file) != (u32_t)*fpos) {
+                libfat_lseek(fat_file, (u32_t)*fpos);
         }
 
-        libfat_read(fat_file, dst, size * nitems, &n);
-        return n / size;
+        libfat_read(fat_file, dst, count, &n);
+        return n;
 }
 
 //==============================================================================

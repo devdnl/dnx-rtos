@@ -45,8 +45,6 @@ extern "C" {
 #define INPUT_SERVICE_TASK_PRIORITY             0
 #define OUTPUT_SERVICE_TASK_PRIORITY            0
 
-#define TTYFILE                                 "/dev/ttyS0"
-
 #define BLOCK_TIME                              10000
 
 #define VT100_RESET_ATTRIBUTES                  "\e[0m"
@@ -82,8 +80,6 @@ extern "C" {
 
 #define VT100_CMD_TIMEOUT                       5
 
-#define current_tty_handle()                    tty_ctrl->tty[tty_ctrl->current_TTY]
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -112,7 +108,6 @@ struct tty_data {
         } edit_line;
 
         mutex_t *secure_resources_mtx;
-        u32_t    file_size;
         u8_t     device_number;
 };
 
@@ -161,32 +156,33 @@ enum vt100cmd {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void          input_service_task                   (void *arg);
-static void          output_service_task                  (void *arg);
-static void          switch_tty_if_requested              (void);
-static void          move_cursor_to_beginning_of_editline (struct tty_data *tty);
-static void          move_cursor_to_end_of_editline       (struct tty_data *tty);
-static void          remove_character_from_editline       (struct tty_data *tty);
-static void          delete_character_from_editline       (struct tty_data *tty);
-static void          add_charater_to_editline             (struct tty_data *tty, char chr);
-static void          show_new_lines                       (struct tty_data *tty);
-static void          refresh_last_line                    (struct tty_data *tty);
-static void          switch_tty_to                        (int tty_number);
-static void          clear_tty                            (struct tty_data *tty);
-static char         *new_CRLF_line                        (const char *line, uint line_len);
-static stdret_t      free_the_oldest_line                 (struct tty_data *tty);
-static char         *merge_or_create_line                 (struct tty_data *tty, const char *line_src);
-static void          add_line                             (struct tty_data *tty, const char *line, uint line_len);
-static void          strncpy_LF2CRLF                      (char *dst, const char *src, uint n);
-static void          link_line                            (struct tty_data *tty, char *line);
-static void          increase_line_counter                (struct tty_data *tty);
-static enum vt100cmd capture_VT100_commands               (char chr);
-static u8_t          get_line_index                       (struct tty_data *tty, u8_t go_back);
-static void          refresh_tty                          (struct tty_data *tty);
-static void          read_vt100_size                      (void);
-static void          write_key_stream                     (struct tty_data *tty, char chr);
-static stdret_t      read_key_stream                      (struct tty_data *tty, char *chr);
-static void          move_editline_to_streams             (struct tty_data *tty, bool flush);
+static inline struct tty_data *current_tty_handle                   (void);
+static void                    input_service_task                   (void *arg);
+static void                    output_service_task                  (void *arg);
+static void                    switch_tty_if_requested              (void);
+static void                    move_cursor_to_beginning_of_editline (struct tty_data *tty);
+static void                    move_cursor_to_end_of_editline       (struct tty_data *tty);
+static void                    remove_character_from_editline       (struct tty_data *tty);
+static void                    delete_character_from_editline       (struct tty_data *tty);
+static void                    add_charater_to_editline             (struct tty_data *tty, char chr);
+static void                    show_new_lines                       (struct tty_data *tty);
+static void                    refresh_last_line                    (struct tty_data *tty);
+static void                    switch_tty_to                        (int tty_number);
+static void                    clear_tty                            (struct tty_data *tty);
+static char                   *new_CRLF_line                        (const char *line, uint line_len);
+static stdret_t                free_the_oldest_line                 (struct tty_data *tty);
+static char                   *merge_or_create_line                 (struct tty_data *tty, const char *line_src);
+static void                    add_line                             (struct tty_data *tty, const char *line, uint line_len);
+static void                    strncpy_LF2CRLF                      (char *dst, const char *src, uint n);
+static void                    link_line                            (struct tty_data *tty, char *line);
+static void                    increase_line_counter                (struct tty_data *tty);
+static enum vt100cmd           capture_VT100_commands               (char chr);
+static u8_t                    get_line_index                       (struct tty_data *tty, u8_t go_back);
+static void                    refresh_tty                          (struct tty_data *tty);
+static void                    read_vt100_size                      (void);
+static void                    write_key_stream                     (struct tty_data *tty, char chr);
+static stdret_t                read_key_stream                      (struct tty_data *tty, char *chr);
+static void                    move_editline_to_streams             (struct tty_data *tty, bool flush);
 
 /*==============================================================================
   Local object definitions
@@ -258,7 +254,6 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
         tty->edit_line.echo_enabled = SET;
         tty_ctrl->tty[major]        = tty;
         tty->device_number          = major;
-        tty->file_size              = 1;
         *device_handle              = tty;
 
         return STD_RET_OK;
@@ -370,14 +365,13 @@ API_MOD_CLOSE(TTY, void *device_handle, bool force, task_t *opened_by_task)
  * @brief Write data to TTY
  */
 //==============================================================================
-API_MOD_WRITE(TTY, void *device_handle, const void *src, size_t item_size, size_t n_items, u64_t lseek)
+API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
         STOP_IF(tty_ctrl == NULL);
 
         struct tty_data *tty = device_handle;
@@ -394,14 +388,15 @@ API_MOD_WRITE(TTY, void *device_handle, const void *src, size_t item_size, size_
         size_t n = 0;
         if (lock_recursive_mutex(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
                 /* check if screen is cleared */
-                if (strncmp(VT100_CLEAR_SCREEN, src, 4) == 0) {
+                if (strncmp(VT100_CLEAR_SCREEN, (char *)src, 4) == 0) {
                         clear_tty(tty);
                 }
 
-                add_line(tty, src, n_items);
+                add_line(tty, (char *)src, count);
 
-                n = n_items;
-                tty->file_size += n;
+                n = count;
+
+                *fpos = -n;
 
                 unlock_recursive_mutex(tty->secure_resources_mtx);
         }
@@ -414,21 +409,20 @@ API_MOD_WRITE(TTY, void *device_handle, const void *src, size_t item_size, size_
  * @brief Read data from TTY
  */
 //==============================================================================
-API_MOD_READ(TTY, void *device_handle, void *dst, size_t item_size, size_t n_items, u64_t lseek)
+API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
         STOP_IF(tty_ctrl == NULL);
 
         struct tty_data *tty = device_handle;
 
         size_t n   = 0;
-        char  *str = dst;
-        while (n_items > 0) {
+        char  *str = (char *)dst;
+        while (count > 0) {
                 while (read_key_stream(tty, str) != STD_RET_OK);
 
                 n++;
@@ -437,12 +431,11 @@ API_MOD_READ(TTY, void *device_handle, void *dst, size_t item_size, size_t n_ite
                         break;
                 }
 
-                n_items--;
+                count--;
                 str++;
         }
 
-        n /= item_size;
-        tty->file_size += n;
+        *fpos = -n;
 
         return n;
 }
@@ -554,10 +547,20 @@ API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 
         struct tty_data *tty = device_handle;
 
-        device_stat->st_size  = tty->file_size;
+        device_stat->st_size  = 1;
         device_stat->st_major = tty->device_number;
         device_stat->st_minor = 0;
         return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns handle of current TTY
+ */
+//==============================================================================
+static inline struct tty_data *current_tty_handle(void)
+{
+        return tty_ctrl->tty[tty_ctrl->current_TTY];
 }
 
 //==============================================================================

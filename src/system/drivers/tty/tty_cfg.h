@@ -52,6 +52,9 @@ extern "C" {
 /** enable (1) or disable (0) checking terminal size */
 #define TTY_TERM_SIZE_CHECK         1
 
+/** file used by TTY connected to VT100 terminal */
+#define TTYFILE                     "/dev/ttyS0"
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
