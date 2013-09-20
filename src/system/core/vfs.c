@@ -56,7 +56,7 @@ struct vfs_file
         stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, task_t *opened_by_task);
         size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *lseek);
         size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *lseek);
-        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, va_list);
+        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
         void      *f_extra_data;
@@ -1001,7 +1001,7 @@ int vfs_ioctl(FILE *file, int rq, ...)
         }
 
         va_start(args, rq);
-        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, args);
+        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(args, void*));
         va_end(args);
 
         return status;

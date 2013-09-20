@@ -163,7 +163,7 @@ struct vfs_drv_interface {
         stdret_t (*drv_close)(void *drvhdl, bool force, task_t *opened_by_task);
         size_t   (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *lseek);
         size_t   (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *lseek);
-        stdret_t (*drv_ioctl)(void *drvhdl, int iorq, va_list args);
+        stdret_t (*drv_ioctl)(void *drvhdl, int iorq, void *args);
         stdret_t (*drv_flush)(void *drvhdl);
         stdret_t (*drv_stat )(void *drvhdl, struct vfs_dev_stat *info);
 };
@@ -176,7 +176,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force, task_t *opened_by_task);
         size_t   (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *lseek);
         size_t   (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *lseek);
-        stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, va_list args);
+        stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path);

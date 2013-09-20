@@ -445,27 +445,25 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  * @brief Specific settings of TTY
  */
 //==============================================================================
-API_MOD_IOCTL(TTY, void *device_handle, int iorq, va_list args)
+API_MOD_IOCTL(TTY, void *device_handle, int iorq, void *arg)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(tty_ctrl == NULL);
 
         struct tty_data *tty = device_handle;
-        int *out_ptr;
 
         switch (iorq) {
         /* return current TTY */
         case TTY_IORQ_GET_CURRENT_TTY:
-                out_ptr = va_arg(args, int*);
-                if (out_ptr == NULL) {
+                if (arg == NULL) {
                         return STD_RET_ERROR;
                 }
-                *out_ptr = tty_ctrl->current_TTY;
+                *((int*)arg) = tty_ctrl->current_TTY;
                 break;
 
         /* set active terminal */
         case TTY_IORQ_SWITCH_TTY_TO:
-                switch_tty_to(va_arg(args, int));
+                switch_tty_to((int)arg);
                 break;
 
         /* clear terminal */
@@ -475,20 +473,18 @@ API_MOD_IOCTL(TTY, void *device_handle, int iorq, va_list args)
 
         /* terminal size - number of columns */
         case TTY_IORQ_GET_COL:
-                out_ptr = va_arg(args, int*);
-                if (out_ptr == NULL) {
+                if (arg == NULL) {
                         return STD_RET_ERROR;
                 }
-                *out_ptr = tty_ctrl->column_count;
+                *((int*)arg) = tty_ctrl->column_count;
                 break;
 
         /* terminal size - number of rows */
         case TTY_IORQ_GET_ROW:
-                out_ptr = va_arg(args, int*);
-                if (out_ptr == NULL) {
+                if (arg == NULL) {
                         return STD_RET_ERROR;
                 }
-                *out_ptr = tty_ctrl->row_count;
+                *((int*)arg) = tty_ctrl->row_count;
                 break;
 
         /* clear screen */

@@ -62,7 +62,6 @@ extern "C" {
 #define BUFSIZ                                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
 
 /** function-like macros */
-#define ioctl(file, ...)                                        vfs_ioctl(file, __VA_ARGS__)
 #define printf(...)                                             sys_fprintf(stdout, __VA_ARGS__)
 #define fprintf(FILE__stream, ...)                              sys_fprintf(FILE__stream, __VA_ARGS__)
 #define snprintf(char__bfr, size_t__size, ...)                  sys_snprintf(char__bfr, size_t__size, __VA_ARGS__)

@@ -1,11 +1,11 @@
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _IOCTL_MACROS_H_
+#define _IOCTL_MACROS_H_
 /*=========================================================================*//**
-@file    ioctl.h
+@file    ioctl_macros.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   ioctl build macros.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,19 +33,15 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "tty_def.h"
-#ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#else
-#       error "Unknown architecture!"
-#endif
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _DIR_NONE                       0x0
+#define _DIR_RD                         0x1
+#define _DIR_WR                         0x2
+#define _DIR_RW                         0x3
+#define _IORQ(nr, id, dir, size)        (((u32_t)((u32_t)(id) & 0xFFFF) << 16) | ((u32_t)(((size) / 4) & 0x3F) << 10) | ((u32_t)((dir) & 0x03) << 8) | ((u32_t)((nr) & 0xFF) << 0))
 
 /*==============================================================================
   Exported object types
@@ -59,11 +55,15 @@ extern "C" {
   Exported functions
 ==============================================================================*/
 
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _IOCTL_MACROS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

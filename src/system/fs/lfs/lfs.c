@@ -1132,13 +1132,13 @@ exit:
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
- * @param[in,out]  args         additional arguments
+ * @param[in,out] *arg          request's argument
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
+API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int iorq, void *arg)
 {
         UNUSED_ARG(extra);
 
@@ -1162,7 +1162,7 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
 
                 if (drv_if->drv_ioctl) {
                         unlock_recursive_mutex(lfs->resource_mtx);
-                        return drv_if->drv_ioctl(drv_if->handle, iorq, args);
+                        return drv_if->drv_ioctl(drv_if->handle, iorq, arg);
                 }
         }
 

@@ -1,13 +1,13 @@
-#ifndef _GPIO_DEF_H_
-#define _GPIO_DEF_H_
+#ifndef _IOCTL_H_
+#define _IOCTL_H_
 /*=========================================================================*//**
-@file    gpio_def.h
+@file    ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support GPIO definitions
+@brief   Header contain all device control commands. Depend on existing drivers.
 
-@note    Copyright (C) 2012  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,30 +33,42 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "system/ioctl_macros.h"
+
+/* include here drivers definitions */
+#include "tty_def.h"
+#ifdef ARCH_stm32f1
+#       include "stm32f1/gpio_def.h"
+#       include "stm32f1/pll_def.h"
+#       include "stm32f1/sdspi_def.h"
+#       include "stm32f1/uart_def.h"
+#else
+#       error "Unknown architecture!"
+#endif
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
-#define GPIO_MAJOR_NUMBER       0
-#define GPIO_MINOR_NUMBER       0
+/* ioctl function-like macro */
+#define ioctl(file, ...)                vfs_ioctl(file, __VA_ARGS__)
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _GPIO_DEF_H_ */
+#endif /* _IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

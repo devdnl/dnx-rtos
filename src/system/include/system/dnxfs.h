@@ -82,7 +82,7 @@ extern API_FS_OPEN(fsname, void*, void**, fd_t*, u64_t*, const char*, int);     
 extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool, task_t*);                     \
 extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, u64_t*);       \
 extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, u64_t*);              \
-extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, va_list);                      \
+extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, void*);                        \
 extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct vfs_stat*);                  \
 extern API_FS_FLUSH(fsname, void*, void*, fd_t);                                    \
 extern API_FS_MKDIR(fsname, void*, const char*);                                    \

@@ -418,13 +418,12 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  * @brief Direct IO control
  */
 //==============================================================================
-API_MOD_IOCTL(UART, void *device_handle, int iorq, va_list args)
+API_MOD_IOCTL(UART, void *device_handle, int iorq, void *arg)
 {
         STOP_IF(device_handle == NULL);
 
         struct USART_data *hdl = device_handle;
         stdret_t status = STD_RET_OK;
-        u8_t *out_ptr;
 
         switch (iorq) {
         case UART_IORQ_ENABLE_WAKEUP_IDLE:
@@ -484,7 +483,7 @@ API_MOD_IOCTL(UART, void *device_handle, int iorq, va_list args)
                 break;
 
         case UART_IORQ_SET_ADDRESS_NODE:
-                set_address_node(hdl->USART, va_arg(args, int));
+                set_address_node(hdl->USART, (int)arg);
                 break;
 
         case UART_IORQ_ENABLE_CTS:
@@ -506,14 +505,14 @@ API_MOD_IOCTL(UART, void *device_handle, int iorq, va_list args)
         case UART_IORQ_GET_BYTE:
                 enter_critical_section();
 
-                if (!(out_ptr = va_arg(args, u8_t*))) {
+                if (!arg) {
                         exit_critical_section();
                         status = STD_RET_ERROR;
                         break;
                 }
 
                 if (hdl->Rx_FIFO.buffer_level > 0) {
-                        *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+                        *((u8_t*)arg) = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
 
                         if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
                                 hdl->Rx_FIFO.read_index = 0;
@@ -530,14 +529,14 @@ API_MOD_IOCTL(UART, void *device_handle, int iorq, va_list args)
                 while (TRUE) {
                         enter_critical_section();
 
-                        if (!(out_ptr = va_arg(args, u8_t*))) {
+                        if (!arg) {
                                 exit_critical_section();
                                 status = STD_RET_ERROR;
                                 break;
                         }
 
                         if (hdl->Rx_FIFO.buffer_level > 0) {
-                                *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+                                *((u8_t*)arg) = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
 
                                 if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
                                         hdl->Rx_FIFO.read_index = 0;
@@ -558,14 +557,14 @@ API_MOD_IOCTL(UART, void *device_handle, int iorq, va_list args)
                         sleep_ms(1);
                 }
 
-                hdl->USART->DR = va_arg(args, int);
+                hdl->USART->DR = (int)arg;
                 break;
 
         case UART_IORQ_SET_BAUDRATE:
                 if ((u32_t)hdl->USART == USART1_BASE) {
-                        set_baud_rate(hdl->USART, UART_PCLK2_FREQ, va_arg(args, int));
+                        set_baud_rate(hdl->USART, UART_PCLK2_FREQ, (int)arg);
                 } else {
-                        set_baud_rate(hdl->USART, UART_PCLK1_FREQ, va_arg(args, int));
+                        set_baud_rate(hdl->USART, UART_PCLK1_FREQ, (int)arg);
                 }
                 break;
 

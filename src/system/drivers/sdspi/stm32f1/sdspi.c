@@ -411,7 +411,7 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  * @brief Direct IO control
  */
 //==============================================================================
-API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, va_list args)
+API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, void *arg)
 {
         STOP_IF(device_handle == NULL);
 
@@ -422,7 +422,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, va_list args)
         switch (iorq) {
         case SDSPI_IORQ_INITIALIZE_CARD:
                 if (lock_mutex(hdl->card_protect_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                        bool *result = va_arg(args, bool*);
+                        bool *result = arg;
                         *result      = false;
 
                         vfs_remove(SDSPI_PARTITION_1_PATH);
@@ -631,17 +631,17 @@ static size_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t
  *
  * @param[in]    *device_handle         handle to partition description
  * @param[in]     iorq                  IO request
- * @param[in,out] args                  additional arguments
+ * @param[in,out]*arg                   request's argument
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_ioctl(void *device_handle, int iorq, va_list args)
+static stdret_t partition_ioctl(void *device_handle, int iorq, void *arg)
 {
         STOP_IF(device_handle == NULL);
         UNUSED_ARG(iorq);
-        UNUSED_ARG(args);
+        UNUSED_ARG(arg);
 
         return STD_RET_ERROR;
 }

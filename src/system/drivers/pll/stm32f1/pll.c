@@ -217,11 +217,11 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  * @brief Device control
  */
 //==============================================================================
-API_MOD_IOCTL(PLL, void *device_handle, int iorq, va_list args)
+API_MOD_IOCTL(PLL, void *device_handle, int iorq, void *arg)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(iorq);
-        UNUSED_ARG(args);
+        UNUSED_ARG(arg);
 
         return STD_RET_ERROR;
 }

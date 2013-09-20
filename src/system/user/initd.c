@@ -33,7 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include "user/initd.h"
-#include "drivers/ioctl.h"
+#include "system/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

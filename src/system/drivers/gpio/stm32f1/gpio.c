@@ -217,10 +217,10 @@ API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  * @brief IO control
  */
 //==============================================================================
-API_MOD_IOCTL(GPIO, void *device_handle, int iorq, va_list args)
+API_MOD_IOCTL(GPIO, void *device_handle, int iorq, void *arg)
 {
         UNUSED_ARG(device_handle);
-        UNUSED_ARG(args);
+        UNUSED_ARG(arg);
 
         switch (iorq) {
         default:

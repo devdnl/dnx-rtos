@@ -34,7 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "drivers/ioctl.h"
+#include "system/ioctl.h"
 #include "system/dnx.h"
 
 /*==============================================================================

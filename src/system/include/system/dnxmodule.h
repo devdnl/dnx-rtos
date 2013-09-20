@@ -75,7 +75,7 @@ extern API_MOD_OPEN(modname, void*, int);                                \
 extern API_MOD_CLOSE(modname, void*, bool, task_t*);                     \
 extern API_MOD_WRITE(modname, void*, const u8_t*, size_t, u64_t*);       \
 extern API_MOD_READ(modname, void*, u8_t*, size_t, u64_t*);              \
-extern API_MOD_IOCTL(modname, void*, int, va_list);                      \
+extern API_MOD_IOCTL(modname, void*, int, void*);                        \
 extern API_MOD_FLUSH(modname, void*);                                    \
 extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 
@@ -89,6 +89,10 @@ extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 
 /*==============================================================================
   Exported function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline function
 ==============================================================================*/
 
 #ifdef __cplusplus

@@ -34,6 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "tty_cfg.h"
+#include "system/ioctl_macros.h"
 
 /*==============================================================================
   Exported object types
@@ -61,17 +62,15 @@ enum TTY_major_number {
         TTY_DEV_COUNT
 };
 
-/** TTY requests */
-enum TTY_IORQ_enum {
-        TTY_IORQ_GET_CURRENT_TTY,               /* [out] int*   */
-        TTY_IORQ_SWITCH_TTY_TO,                 /* [in ] int    */
-        TTY_IORQ_CLEAN_TTY,                     /* none         */
-        TTY_IORQ_GET_COL,                       /* [out] int*   */
-        TTY_IORQ_GET_ROW,                       /* [out] int*   */
-        TTY_IORQ_CLEAR_SCR,                     /* none         */
-        TTY_IORQ_ECHO_ON,                       /* none         */
-        TTY_IORQ_ECHO_OFF,                      /* none         */
-};
+/* IO requests ('T''T' - 0x5454 id) */
+#define TTY_IORQ_GET_CURRENT_TTY                _IORQ(0x00, 0x5454, _DIR_RD, sizeof(int*))
+#define TTY_IORQ_SWITCH_TTY_TO                  _IORQ(0x01, 0x5454, _DIR_WR, sizeof(int))
+#define TTY_IORQ_CLEAN_TTY                      _IORQ(0x02, 0x5454, _DIR_NONE, 0)
+#define TTY_IORQ_GET_COL                        _IORQ(0x03, 0x5454, _DIR_RD, sizeof(int*))
+#define TTY_IORQ_GET_ROW                        _IORQ(0x04, 0x5454, _DIR_RD, sizeof(int*))
+#define TTY_IORQ_CLEAR_SCR                      _IORQ(0x05, 0x5454, _DIR_NONE, 0)
+#define TTY_IORQ_ECHO_ON                        _IORQ(0x06, 0x5454, _DIR_NONE, 0)
+#define TTY_IORQ_ECHO_OFF                       _IORQ(0x07, 0x5454, _DIR_NONE, 0)
 
 #ifdef __cplusplus
 }

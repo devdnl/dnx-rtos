@@ -318,19 +318,19 @@ API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t coun
  * @param[in]     *extra        file extra data (useful in FS wrappers)
  * @param[in]      fd           file descriptor
  * @param[in]      iorq         request
- * @param[in,out]  args         additional arguments
+ * @param[in,out] *arg          request's argument
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int iorq, va_list args)
+API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int iorq, void *arg)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
         UNUSED_ARG(iorq);
-        UNUSED_ARG(args);
+        UNUSED_ARG(arg);
 
         /* not supported by this file system */
 
