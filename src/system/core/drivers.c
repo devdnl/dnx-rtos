@@ -109,39 +109,44 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                         return STD_RET_ERROR;
                 }
 
-                if (_regdrv_driver_table[drvid].drv_init(&driver_memory_region[drvid],
-                                                        _regdrv_driver_table[drvid].major,
-                                                        _regdrv_driver_table[drvid].minor)
-                                                        != STD_RET_OK) {
+                for (int mod = 0; mod < _regdrv_number_of_modules; mod++) {
+                        if (strcmp(_regdrv_module_name[mod], _regdrv_driver_table[drvid].mod_name) == 0) {
 
-                        printk(FONT_COLOR_RED"Driver %s initialization error!"
-                               RESET_ATTRIBUTES"\n", drv_name);
+                                if (_regdrv_driver_table[drvid].drv_init(&driver_memory_region[drvid],
+                                                                         _regdrv_driver_table[drvid].major,
+                                                                         _regdrv_driver_table[drvid].minor)
+                                                                         != STD_RET_OK) {
 
-                        return STD_RET_ERROR;
-                }
+                                        printk(FONT_COLOR_RED"Driver %s initialization error!"
+                                               RESET_ATTRIBUTES"\n", drv_name);
 
-                if (driver_memory_region[drvid] == NULL)
-                        driver_memory_region[drvid] = (void*)(size_t)-1;
+                                        return STD_RET_ERROR;
+                                }
 
-                if (node_path) {
-                        drv_if = _regdrv_driver_table[drvid].drv_if;
-                        drv_if.handle = driver_memory_region[drvid];
+                                if (driver_memory_region[drvid] == NULL)
+                                        driver_memory_region[drvid] = (void*)(size_t)-1;
 
-                        if (vfs_mknod(node_path, &drv_if) == STD_RET_OK) {
-                                printk("Created node %s\n", node_path);
-                                return STD_RET_OK;
-                        } else {
-                                _regdrv_driver_table[drvid].drv_release(driver_memory_region[drvid]);
+                                if (node_path) {
+                                        drv_if = _regdrv_driver_table[drvid].drv_if;
+                                        drv_if.handle = driver_memory_region[drvid];
 
-                                printk(FONT_COLOR_RED"Create node %s failed"
-                                       RESET_ATTRIBUTES"\n", node_path);
+                                        if (vfs_mknod(node_path, &drv_if) == STD_RET_OK) {
+                                                printk("Created node %s\n", node_path);
+                                                return STD_RET_OK;
+                                        } else {
+                                                _regdrv_driver_table[drvid].drv_release(driver_memory_region[drvid]);
 
-                                return STD_RET_ERROR;
+                                                printk(FONT_COLOR_RED"Create node %s failed"
+                                                       RESET_ATTRIBUTES"\n", node_path);
+
+                                                return STD_RET_ERROR;
+                                        }
+
+                                } else {
+                                        printk("Driver %s initialized\n", drv_name);
+                                        return STD_RET_OK;
+                                }
                         }
-
-                } else {
-                        printk("Driver %s initialized\n", drv_name);
-                        return STD_RET_OK;
                 }
         }
 

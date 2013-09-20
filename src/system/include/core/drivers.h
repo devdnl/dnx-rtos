@@ -42,6 +42,7 @@ extern "C" {
 
 #define _USE_DRIVER_INTERFACE(_drvmodule, _drvname, _major, _minor)\
 {.drv_name    = _drvname,\
+ .mod_name    = #_drvmodule,\
  .major       = _major,\
  .minor       = _minor,\
  .drv_init    = _##_drvmodule##_init,\
@@ -60,6 +61,7 @@ extern "C" {
 ==============================================================================*/
 struct _driver_entry {
         const char               *drv_name;
+        const char               *mod_name;
         u8_t                      major;
         u8_t                      minor;
         stdret_t                (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);

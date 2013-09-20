@@ -41,6 +41,7 @@ extern "C" {
 #define PLL_MAJOR_NUMBER        0
 #define PLL_MINOR_NUMBER        0
 
+#define PLL_CPU_BASE_FREQ       8000000UL
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
