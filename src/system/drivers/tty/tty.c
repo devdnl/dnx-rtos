@@ -466,11 +466,6 @@ API_MOD_IOCTL(TTY, void *device_handle, int iorq, void *arg)
                 switch_tty_to((int)arg);
                 break;
 
-        /* clear terminal */
-        case TTY_IORQ_CLEAN_TTY:
-                clear_tty(tty);
-                break;
-
         /* terminal size - number of columns */
         case TTY_IORQ_GET_COL:
                 if (arg == NULL) {

@@ -283,7 +283,7 @@ static int run_level_2(void)
                                 program[i] = NULL;
                                 state[i]   = PROGRAM_UNKNOWN_STATE;
 
-                                ioctl(tty[i], TTY_IORQ_CLEAN_TTY);
+                                ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
                                 fclose(tty[i]);
                                 tty[i] = NULL;
 
