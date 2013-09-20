@@ -206,12 +206,22 @@ static inline u32_t get_total_CPU_usage(void)
 
 //==============================================================================
 /**
- * @brief Function clear CPU usage
+ * @brief Function disable CPU load measurement
  */
 //==============================================================================
-static inline void clear_total_CPU_usage(void)
+static inline void disable_CPU_load_measurement(void)
 {
-        sysm_clear_total_CPU_usage();
+        sysm_disable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable CPU load measurement
+ */
+//==============================================================================
+static inline void enable_CPU_load_measurement(void)
+{
+        sysm_enable_CPU_load_measurement();
 }
 
 //==============================================================================

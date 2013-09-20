@@ -105,7 +105,8 @@ extern int      sysm_fclose                             (FILE*);
 extern DIR     *sysm_opendir                            (const char*);
 extern int      sysm_closedir                           (DIR*);
 extern u32_t    sysm_get_total_CPU_usage                (void);
-extern void     sysm_clear_total_CPU_usage              (void);
+extern void     sysm_disable_CPU_load_measurement       (void);
+extern void     sysm_enable_CPU_load_measurement        (void);
 extern void     sysm_task_switched_in                   (void);
 extern void     sysm_task_switched_out                  (void);
 
