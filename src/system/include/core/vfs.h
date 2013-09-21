@@ -146,7 +146,7 @@ struct vfs_statfs {
         u32_t f_bfree;          /* free blocks            */
         u32_t f_files;          /* total file nodes in FS */
         u32_t f_ffree;          /* free file nodes in FS  */
-        const char *fsname;     /* FS name                */
+        const char *f_fsname;   /* FS name                */
 };
 
 /** structure describing a mount table entry */

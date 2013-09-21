@@ -281,13 +281,13 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 unlock_recursive_mutex(vfs_resource_mtx);
 
                 if (fs) {
-                        struct vfs_statfs stat_fs = {.fsname = NULL};
+                        struct vfs_statfs stat_fs = {.f_fsname = NULL};
 
                         if (fs->interface.fs_statfs) {
                                 fs->interface.fs_statfs(fs->handle, &stat_fs);
                         }
 
-                        if (stat_fs.fsname) {
+                        if (stat_fs.f_fsname) {
                                 if (strlen(fs->mount_point) > 1) {
                                         strncpy(mntent->mnt_dir, fs->mount_point,
                                                 strlen(fs->mount_point) - 1);
@@ -295,7 +295,7 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                                         strcpy(mntent->mnt_dir, fs->mount_point);
                                 }
 
-                                strcpy(mntent->mnt_fsname, stat_fs.fsname);
+                                strcpy(mntent->mnt_fsname, stat_fs.f_fsname);
                                 mntent->free  = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
                                 mntent->total = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
 

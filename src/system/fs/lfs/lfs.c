@@ -766,7 +766,7 @@ API_FS_STATFS(lfs, void *fs_handle, struct vfs_statfs *statfs)
         statfs->f_ffree  = 0;
         statfs->f_files  = 0;
         statfs->f_type   = 0x01;
-        statfs->fsname   = "lfs";
+        statfs->f_fsname = "lfs";
 
         return STD_RET_OK;
 }

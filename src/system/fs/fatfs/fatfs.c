@@ -740,13 +740,13 @@ API_FS_STATFS(fatfs, void *fs_handle, struct vfs_statfs *statfs)
                 statfs->f_type   = hdl->fatfs.fs_type;
 
                 if (hdl->fatfs.fs_type == LIBFAT_FS_FAT12)
-                        statfs->fsname = "fatfs (FAT12)";
+                        statfs->f_fsname = "fatfs (FAT12)";
                 else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT16)
-                        statfs->fsname = "fatfs (FAT16)";
+                        statfs->f_fsname = "fatfs (FAT16)";
                 else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT32)
-                        statfs->fsname = "fatfs (FAT32)";
+                        statfs->f_fsname = "fatfs (FAT32)";
                 else
-                        statfs->fsname = "fatfs (FAT\?\?)";
+                        statfs->f_fsname = "fatfs (FAT\?\?)";
 
                 return STD_RET_OK;
         }

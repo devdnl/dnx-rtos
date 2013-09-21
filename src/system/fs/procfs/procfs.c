@@ -887,7 +887,7 @@ API_FS_STATFS(procfs, void *fs_handle, struct vfs_statfs *statfs)
         statfs->f_ffree  = 0;
         statfs->f_files  = 0;
         statfs->f_type   = 1;
-        statfs->fsname   = "procfs";
+        statfs->f_fsname = "procfs";
 
         return STD_RET_OK;
 }

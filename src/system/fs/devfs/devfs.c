@@ -424,10 +424,10 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
                            return STD_RET_ERROR;
                    *node->drvif = *drv_if;
 
-                   node->path  = calloc(strlen(path), sizeof(char));
+                   node->path  = calloc(strlen(path + 1) + 1, sizeof(char));
                    if (!node->path)
                            return STD_RET_ERROR; /* FIXME memory leakage */
-                   strcpy(node->path, path);
+                   strcpy(node->path, path + 1);
 
                    node->gid   = 0;
                    node->uid   = 0;
@@ -526,6 +526,8 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
 
                 dirent.name = node->path;
                 dirent.size = devstat.st_size;
+
+                dir->f_seek++;
 
                 return dirent;
         }
@@ -722,12 +724,12 @@ API_FS_STATFS(devfs, void *fs_handle, struct vfs_statfs *statfs)
 
         struct devfs *devfs = fs_handle;
 
-        statfs->f_blocks = devfs->number_of_chains * CHAIN_NUMBER_OF_NODES;
-        statfs->f_bfree  = statfs->f_blocks - devfs->number_of_used_nodes;
-        statfs->f_ffree  = statfs->f_bfree;
+        statfs->f_blocks = 0;
+        statfs->f_bfree  = 0;
+        statfs->f_ffree  = 0;
         statfs->f_files  = devfs->number_of_used_nodes;
         statfs->f_type   = 1;
-        statfs->fsname   = "devfs";
+        statfs->f_fsname = "devfs";
 
         return STD_RET_OK;
 }
@@ -749,7 +751,7 @@ static struct devnode *get_node_by_path(struct devfs *devfs, const char *path)
                         if (chain->devnode[i].drvif == NULL)
                                 continue;
 
-                        if (strcmp(chain->devnode[i].path, path) == 0)
+                        if (strcmp(chain->devnode[i].path, path + 1) == 0)
                                 return &chain->devnode[i];
                 }
         }
@@ -795,7 +797,7 @@ static struct devnode *get_n_node(struct devfs *devfs, int n)
         for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
                         if (chain->devnode[i].drvif != NULL) {
-                                if (++n_node == n)
+                                if (n_node++ == n)
                                         return &chain->devnode[i];
                         }
                 }
