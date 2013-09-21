@@ -37,6 +37,7 @@ extern "C" {
   Local macros
 ==============================================================================*/
 #define CHAIN_NUMBER_OF_NODES           8
+#define TIMEOUT_MS                      MAX_DELAY
 
 /*==============================================================================
   Local object types
@@ -48,6 +49,7 @@ struct devfs_chain {
                 int                       gid;
                 int                       uid;
                 int                       mode;
+                int                       opended;
         } devnode[CHAIN_NUMBER_OF_NODES];
 
         struct devfs_chain       *next_chain;
@@ -55,6 +57,7 @@ struct devfs_chain {
 
 struct devfs {
         struct devfs_chain *root_chain;
+        mutex_t            *mutex;
         int                 number_of_opened_devices;
         int                 number_of_chains;
         int                 number_of_used_nodes;
@@ -63,11 +66,13 @@ struct devfs {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t        closedir         (void *fs_handle, DIR *dir);
-static dirent_t        readdir          (void *fs_handle, DIR *dir);
-static struct devnode *get_node_by_path (struct devfs *devfs, const char *path);
-static struct devnode *get_empty_node   (struct devfs *devfs);
-static struct devnode *get_n_node       (struct devfs *devfs, int n);
+static stdret_t            closedir             (void *fs_handle, DIR *dir);
+static dirent_t            readdir              (void *fs_handle, DIR *dir);
+static struct devnode     *get_node_by_path     (struct devfs *devfs, const char *path);
+static struct devnode     *get_empty_node       (struct devfs *devfs);
+static struct devnode     *get_n_node           (struct devfs *devfs, int n);
+static struct devfs_chain *new_chain            (void);
+static void                delete_chain         (struct devfs_chain *chain);
 
 /*==============================================================================
   Local objects
@@ -101,19 +106,31 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         STOP_IF(!fs_handle);
         STOP_IF(!src_path);
 
-        struct devfs *devfs = calloc(1, sizeof(struct devfs));
+        struct devfs       *devfs = malloc(sizeof(struct devfs));
+        mutex_t            *mtx   = new_mutex();
+        struct devfs_chain *chain = new_chain();
+
+        if (devfs && mtx && chain) {
+                devfs->root_chain               = chain;
+                devfs->mutex                    = mtx;
+                devfs->number_of_chains         = 1;
+                devfs->number_of_opened_devices = 0;
+                devfs->number_of_used_nodes     = 0;
+
+                *fs_handle = devfs;
+                return STD_RET_OK;
+        }
+
         if (devfs) {
-                devfs->root_chain = calloc(1, sizeof(struct devfs_chain));
-                if (devfs->root_chain) {
-                        devfs->number_of_chains = 1;
-                        *fs_handle = devfs;
-                        return STD_RET_OK;
-                }
-
-
-                /* FIXME mutex */
-
                 free(devfs);
+        }
+
+        if (mtx) {
+                delete_mutex(mtx);
+        }
+
+        if (chain) {
+                delete_chain(chain);
         }
 
         return STD_RET_ERROR;
@@ -135,13 +152,21 @@ API_FS_RELEASE(devfs, void *fs_handle)
 
         struct devfs *devfs = fs_handle;
 
-        if (devfs->number_of_opened_devices != 0) {
-                return STD_RET_ERROR;
-        } else {
+        if (devfs->number_of_opened_devices == 0) {
+                if (lock_mutex(devfs->mutex, 0) == MUTEX_LOCKED) {
+                        enter_critical_section();
+                        unlock_mutex(devfs->mutex);
 
-                /*TODO devfs release */
-                return STD_RET_OK;
+                        delete_chain(devfs->root_chain);
+                        delete_mutex(devfs->mutex);
+                        free(devfs);
+
+                        exit_critical_section();
+                        return STD_RET_OK;
+                }
         }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -167,23 +192,27 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
         STOP_IF(!fpos);
         STOP_IF(!path);
 
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
+        stdret_t      status = STD_RET_ERROR;
 
-        struct devnode *node = get_node_by_path(devfs, path);
-        if (node) {
-                const struct vfs_drv_interface *drvif = node->drvif;
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+                struct devnode *node = get_node_by_path(devfs, path);
+                if (node) {
+                        const struct vfs_drv_interface *drvif = node->drvif;
 
-                if (drvif->drv_open(drvif->handle, O_DEV_FLAGS(flags)) == STD_RET_OK) {
-                        *extra = node;
-                        *fpos  = 0;
-                        devfs->number_of_opened_devices++;
-                        return STD_RET_OK;
-                } else {
-                        return STD_RET_ERROR;
+                        if (drvif->drv_open(drvif->handle, O_DEV_FLAGS(flags)) == STD_RET_OK) {
+                                *extra = node;
+                                *fpos  = 0;
+                                devfs->number_of_opened_devices++;
+                                node->opended++;
+                                status = STD_RET_OK;
+                        }
                 }
+
+                unlock_mutex(devfs->mutex);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -208,11 +237,17 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
 
         UNUSED_ARG(fd);
 
-        struct devfs   *devfs = fs_handle;
-        struct devnode *node  = extra;
+        struct devfs   *devfs  = fs_handle;
+        struct devnode *node   = extra;
 
         if (node->drvif->drv_close(node->drvif->handle, force, file_owner) == STD_RET_OK) {
-                devfs->number_of_opened_devices--;
+
+                if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+                        devfs->number_of_opened_devices--;
+                        node->opended--;
+                        unlock_mutex(devfs->mutex);
+                }
+
                 return STD_RET_OK;
         }
 
@@ -402,45 +437,62 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
         STOP_IF(!path);
         STOP_IF(!drv_if);
 
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
+        stdret_t      status = STD_RET_ERROR;
 
-        if (devfs->number_of_chains * CHAIN_NUMBER_OF_NODES == devfs->number_of_used_nodes) {
-                struct devfs_chain *chain = devfs->root_chain;
-                for (; chain != NULL; chain = chain->next_chain);
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                STOP_IF(chain == NULL); /* TEST */
+                if (devfs->number_of_chains * CHAIN_NUMBER_OF_NODES == devfs->number_of_used_nodes) {
+                        struct devfs_chain *chain = devfs->root_chain;
+                        while (chain->next_chain != NULL) {
+                                chain = chain->next_chain;
+                        }
 
-                chain->next_chain = calloc(1, sizeof(struct devfs_chain));
-                if (!chain->next_chain)
-                        return STD_RET_ERROR;
+                        STOP_IF(chain == NULL); /* TEST */
 
-                devfs->number_of_chains++;
+                        chain->next_chain = new_chain();
+                        if (!chain->next_chain)
+                                goto exit;
+
+                        devfs->number_of_chains++;
+                }
+
+                struct devnode *node = get_empty_node(devfs);
+                if (node) {
+                        node->drvif = malloc(sizeof(struct vfs_drv_interface));
+                        node->path  = malloc(strlen(path + 1) + 1);
+
+                        if (node->drvif && node->path) {
+                                *node->drvif = *drv_if;
+                                strcpy(node->path, path + 1);
+                                node->gid   = 0;
+                                node->uid   = 0;
+                                node->mode  = OWNER_MODE(MODE_R | MODE_W)
+                                            | GROUP_MODE(MODE_R | MODE_W)
+                                            | OTHER_MODE(MODE_R | MODE_W);
+
+                                devfs->number_of_used_nodes++;
+
+                                status = STD_RET_OK;
+                                goto exit;
+                        }
+
+                        if (node->drvif) {
+                                free(node->drvif);
+                                node->drvif = NULL;
+                        }
+
+                        if (node->path) {
+                                free(node->path);
+                                node->path = NULL;
+                        }
+                }
+
+exit:
+                unlock_mutex(devfs->mutex);
         }
 
-        struct devnode *node = get_empty_node(devfs);
-        if (node) {
-                   node->drvif = malloc(sizeof(struct vfs_drv_interface));
-                   if (!node->drvif)
-                           return STD_RET_ERROR;
-                   *node->drvif = *drv_if;
-
-                   node->path  = calloc(strlen(path + 1) + 1, sizeof(char));
-                   if (!node->path)
-                           return STD_RET_ERROR; /* FIXME memory leakage */
-                   strcpy(node->path, path + 1);
-
-                   node->gid   = 0;
-                   node->uid   = 0;
-                   node->mode  = OWNER_MODE(MODE_R | MODE_W)
-                               | GROUP_MODE(MODE_R | MODE_W)
-                               | OTHER_MODE(MODE_R | MODE_W);
-
-                   devfs->number_of_used_nodes++;
-
-                   return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -518,18 +570,21 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
         dirent.name     = NULL;
         dirent.size     = 0;
 
-        struct devnode *node = get_n_node(devfs, dir->f_seek);
-        if (node) {
-                struct vfs_dev_stat devstat;
-                devstat.st_size = 0;
-                node->drvif->drv_stat(node->drvif->handle, &devstat);
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                dirent.name = node->path;
-                dirent.size = devstat.st_size;
+                struct devnode *node = get_n_node(devfs, dir->f_seek);
+                if (node) {
+                        struct vfs_dev_stat devstat;
+                        devstat.st_size = 0;
+                        node->drvif->drv_stat(node->drvif->handle, &devstat);
 
-                dir->f_seek++;
+                        dirent.name = node->path;
+                        dirent.size = devstat.st_size;
 
-                return dirent;
+                        dir->f_seek++;
+                }
+
+                unlock_mutex(devfs->mutex);
         }
 
         return dirent;
@@ -551,24 +606,33 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
         STOP_IF(!fs_handle);
         STOP_IF(!path);
 
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
+        stdret_t      status = STD_RET_ERROR;
 
-        struct devnode *node = get_node_by_path(devfs, path);
-        if (node) {
-                free(node->drvif);
-                free(node->path);
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                node->drvif = NULL;
-                node->path  = NULL;
-                node->gid   = 0;
-                node->uid   = 0;
-                node->mode  = 0;
+                struct devnode *node = get_node_by_path(devfs, path);
+                if (node) {
+                        if (node->opended == 0) {
+                                free(node->drvif);
+                                free(node->path);
 
-                devfs->number_of_used_nodes--;
-                return STD_RET_OK;
+                                node->drvif = NULL;
+                                node->path  = NULL;
+                                node->gid   = 0;
+                                node->uid   = 0;
+                                node->mode  = 0;
+                                node->opended--;
+
+                                devfs->number_of_used_nodes--;
+                                status = STD_RET_OK;
+                        }
+                }
+
+                unlock_mutex(devfs->mutex);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -589,21 +653,27 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
         STOP_IF(!old_name);
         STOP_IF(!new_name);
 
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
+        stdret_t      status = STD_RET_ERROR;
 
-        struct devnode *node = get_node_by_path(devfs, old_name);
-        if (node) {
-                char *name = calloc(strlen(new_name), 1);
-                if (!name)
-                        return STD_RET_ERROR;
-                strcpy(name, new_name);
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                free(node->path);
-                node->path = name;
-                return STD_RET_OK;
+                struct devnode *node = get_node_by_path(devfs, old_name);
+                if (node) {
+                        char *name = malloc(strlen(new_name) + 1);
+                        if (name) {
+                                strcpy(name, new_name);
+                                free(node->path);
+                                node->path = name;
+
+                                status = STD_RET_OK;
+                        }
+                }
+
+                unlock_mutex(devfs->mutex);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -623,15 +693,21 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
         STOP_IF(!fs_handle);
         STOP_IF(!path);
 
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
+        stdret_t      status = STD_RET_ERROR;
 
-        struct devnode *node = get_node_by_path(devfs, path);
-        if (node) {
-                node->mode = mode;
-                return STD_RET_OK;
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+
+                struct devnode *node = get_node_by_path(devfs, path);
+                if (node) {
+                        node->mode = mode;
+                        status = STD_RET_OK;
+                }
+
+                unlock_mutex(devfs->mutex);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -652,16 +728,23 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
         STOP_IF(!fs_handle);
         STOP_IF(!path);
 
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
+        stdret_t      status = STD_RET_ERROR;
 
-        struct devnode *node = get_node_by_path(devfs, path);
-        if (node) {
-                node->uid = owner;
-                node->gid = group;
-                return STD_RET_OK;
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+
+                struct devnode *node = get_node_by_path(devfs, path);
+                if (node) {
+                        node->uid = owner;
+                        node->gid = group;
+
+                        status = STD_RET_OK;
+                }
+
+                unlock_mutex(devfs->mutex);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -682,28 +765,34 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct vfs_stat *stat)
         STOP_IF(!path);
         STOP_IF(!stat);
 
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
+        stdret_t      status = STD_RET_ERROR;
 
-        struct devnode *node = get_node_by_path(devfs, path);
-        if (node) {
-                struct vfs_dev_stat devstat;
-                devstat.st_size  = 0;
-                devstat.st_major = 0;
-                devstat.st_minor = 0;
-                node->drvif->drv_stat(node->drvif->handle, &devstat);
+        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                stat->st_atime = 0;
-                stat->st_mtime = 0;
-                stat->st_dev   = devstat.st_major << 8 | devstat.st_minor;
-                stat->st_gid   = node->gid;
-                stat->st_uid   = node->uid;
-                stat->st_mode  = node->mode;
-                stat->st_size  = devstat.st_size;
+                struct devnode *node = get_node_by_path(devfs, path);
+                if (node) {
+                        struct vfs_dev_stat devstat;
+                        devstat.st_size  = 0;
+                        devstat.st_major = 0;
+                        devstat.st_minor = 0;
+                        node->drvif->drv_stat(node->drvif->handle, &devstat);
 
-                return STD_RET_OK;
+                        stat->st_atime = 0;
+                        stat->st_mtime = 0;
+                        stat->st_dev   = devstat.st_major << 8 | devstat.st_minor;
+                        stat->st_gid   = node->gid;
+                        stat->st_uid   = node->uid;
+                        stat->st_mode  = node->mode;
+                        stat->st_size  = devstat.st_size;
+
+                        status = STD_RET_OK;
+                }
+
+                unlock_mutex(devfs->mutex);
         }
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
@@ -805,6 +894,46 @@ static struct devnode *get_n_node(struct devfs *devfs, int n)
 
         return NULL;
 }
+
+//==============================================================================
+/**
+ * @brief Create new chain for nodes
+ *
+ * @return pointer to new object or NULL if error
+ */
+//==============================================================================
+static struct devfs_chain *new_chain(void)
+{
+        return calloc(1, sizeof(struct devfs_chain));
+}
+
+//==============================================================================
+/**
+ * @brief Delete chain
+ *
+ * @param[in] *chain            chain to delete
+ */
+//==============================================================================
+static void delete_chain(struct devfs_chain *chain)
+{
+        if (chain->next_chain) {
+                delete_chain(chain->next_chain);
+        }
+
+        for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                if (chain->devnode[i].drvif) {
+                        free(chain->devnode[i].drvif);
+                }
+
+                if (chain->devnode[i].path) {
+                        free(chain->devnode[i].path);
+                }
+        }
+
+        free(chain);
+}
+
+
 
 #ifdef __cplusplus
 }
