@@ -32,9 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
-#include "helloworld.h"
 #include <string.h>
-
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -51,15 +50,13 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+GLOBAL_VARIABLES_SECTION_BEGIN
 /* put here global variables */
-GLOBAL_VARIABLES {
-};
+GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-/* export program parameters */
-PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
 
 /*==============================================================================
   Function definitions
@@ -75,7 +72,7 @@ PROGRAM_PARAMS(helloworld, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
  * @return program status
  */
 //==============================================================================
-int PROGRAM_MAIN(helloworld, int argc, char *argv[])
+PROGRAM_MAIN(helloworld, int argc, char *argv[])
 {
         puts("Hello world!");
         printf("Free stack: %d\n", get_free_stack());

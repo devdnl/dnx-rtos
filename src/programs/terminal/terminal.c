@@ -31,10 +31,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "terminal.h"
-#include "drivers/ioctl.h"
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+#include "system/dnx.h"
+#include "system/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -95,10 +95,10 @@ static enum cmd_status cmd_help                 (char *arg);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
-        char line[PROMPT_LINE_LEN];
-        char cwd[CWD_PATH_LEN];
-};
+GLOBAL_VARIABLES_SECTION_BEGIN
+char line[PROMPT_LINE_LEN];
+char cwd[CWD_PATH_LEN];
+GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
@@ -121,7 +121,6 @@ static const struct cmd_entry commands[] = {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW,);
 
 /*==============================================================================
   Function definitions
@@ -132,7 +131,7 @@ PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW,);
  * @brief Terminal main function
  */
 //==============================================================================
-int PROGRAM_MAIN(terminal, int argc, char *argv[])
+PROGRAM_MAIN(terminal, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
@@ -354,19 +353,15 @@ static enum cmd_status cmd_ls(char *arg)
         if (dir) {
                 dirent_t dirent;
 
-                char *ccolor = FONT_COLOR_YELLOW"c";
-                char *rcolor = FONT_COLOR_MAGENTA" ";
-                char *lcolor = FONT_COLOR_CYAN"l";
-                char *dcolor = FONT_COLOR_GREEN"d";
-
                 while ((dirent = readdir(dir)).name != NULL) {
-                        char *type = NULL;
+                        const char *type = NULL;
 
                         switch (dirent.filetype) {
-                        case FILE_TYPE_DIR:     type = dcolor; break;
-                        case FILE_TYPE_DRV:     type = ccolor; break;
-                        case FILE_TYPE_LINK:    type = lcolor; break;
-                        case FILE_TYPE_REGULAR: type = rcolor; break;
+                        case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"c";  break;
+                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA" "; break;
+                        case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
+                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN"d";   break;
+                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"p";          break;
                         default: type = "?";
                         }
 

@@ -25,12 +25,12 @@ static void PrintFunction(const Proto* f, int full);
 #define PROGNAME	"luac"		/* default program name */
 #define OUTPUT		PROGNAME ".out"	/* default output file */
 
-GLOBAL_VARIABLES {
-        int listing;                   /* list bytecodes? */
-        int dumping;                   /* dump bytecodes? */
-        int stripping;                 /* strip debug information? */
-        char *Output;        /* default output file name */
-};
+GLOBAL_VARIABLES_SECTION_BEGIN
+int listing;                   /* list bytecodes? */
+int dumping;                   /* dump bytecodes? */
+int stripping;                 /* strip debug information? */
+char *Output;        /* default output file name */
+GLOBAL_VARIABLES_SECTION_END
 
 const char* output="luac.out";       /* actual output file name */
 const char* progname=PROGNAME;   /* actual program name */
@@ -189,10 +189,8 @@ static int pmain(lua_State* L)
  return 0;
 }
 
-/* export program parameters */
-PROGRAM_PARAMS(luac, STACK_DEPTH_VERY_HUGE);
 
-int PROGRAM_MAIN(luac, int argc, char **argv)
+PROGRAM_MAIN(luac, int argc, char **argv)
 {
         global->listing = 0;
         global->dumping = 1;

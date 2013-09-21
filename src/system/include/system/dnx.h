@@ -42,7 +42,6 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/drivers.h"
 #include "core/fsctrl.h"
-#include "drivers/driver_registration.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "portable/cpuctl.h"
@@ -64,7 +63,7 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  External object declarations
 ==============================================================================*/
 
 /*==============================================================================
@@ -72,6 +71,9 @@ extern "C" {
 ==============================================================================*/
 extern void _dnx_init(void);
 
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
 //==============================================================================
 /**
  * @brief Function return used static memory
@@ -203,12 +205,22 @@ static inline u32_t get_total_CPU_usage(void)
 
 //==============================================================================
 /**
- * @brief Function clear CPU usage
+ * @brief Function disable CPU load measurement
  */
 //==============================================================================
-static inline void clear_total_CPU_usage(void)
+static inline void disable_CPU_load_measurement(void)
 {
-        sysm_clear_total_CPU_usage();
+        sysm_disable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable CPU load measurement
+ */
+//==============================================================================
+static inline void enable_CPU_load_measurement(void)
+{
+        sysm_enable_CPU_load_measurement();
 }
 
 //==============================================================================
@@ -254,7 +266,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.0.18";
+        return "1.0.19";
 }
 
 //==============================================================================
@@ -355,6 +367,7 @@ static inline const char *get_module_name(uint modid)
 //==============================================================================
 static inline uint get_number_of_modules(void)
 {
+        extern const int _regdrv_number_of_modules;
         return _regdrv_number_of_modules;
 }
 

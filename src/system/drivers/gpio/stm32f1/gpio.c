@@ -35,7 +35,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/gpio.h"
+#include "system/dnxmodule.h"
+#include "stm32f1/gpio_cfg.h"
+#include "stm32f1/gpio_def.h"
+#include "stm32f1/gpio_macros.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
@@ -79,8 +82,8 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void init_GPIOx(GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr);
-static void init_AFIO(void);
+static void init_GPIOx  (GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr);
+static void init_AFIO   (void);
 
 /*==============================================================================
   Local object definitions
@@ -99,7 +102,7 @@ static void init_AFIO(void);
  * @brief Initialize GPIO module
  */
 //==============================================================================
-MODULE__DEVICE_INIT(GPIO)
+API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(major);
@@ -145,7 +148,7 @@ MODULE__DEVICE_INIT(GPIO)
  * @brief Release GPIO device
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(GPIO)
+API_MOD_RELEASE(GPIO, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
@@ -157,7 +160,7 @@ MODULE__DEVICE_RELEASE(GPIO)
  * @brief Open device
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(GPIO)
+API_MOD_OPEN(GPIO, void *device_handle, int flags)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
@@ -170,10 +173,10 @@ MODULE__DEVICE_OPEN(GPIO)
  * @brief Close device
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(GPIO)
+API_MOD_CLOSE(GPIO, void *device_handle, bool force, task_t *opened_by_task)
 {
         UNUSED_ARG(device_handle);
-        UNUSED_ARG(forced);
+        UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
         return STD_RET_OK;
@@ -184,13 +187,12 @@ MODULE__DEVICE_CLOSE(GPIO)
  * @brief Write data to device
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(GPIO)
+API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
@@ -200,13 +202,12 @@ MODULE__DEVICE_WRITE(GPIO)
  * @brief Read data from device
  */
 //==============================================================================
-MODULE__DEVICE_READ(GPIO)
+API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
@@ -216,10 +217,10 @@ MODULE__DEVICE_READ(GPIO)
  * @brief IO control
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(GPIO)
+API_MOD_IOCTL(GPIO, void *device_handle, int iorq, void *arg)
 {
         UNUSED_ARG(device_handle);
-        UNUSED_ARG(args);
+        UNUSED_ARG(arg);
 
         switch (iorq) {
         default:
@@ -234,7 +235,7 @@ MODULE__DEVICE_IOCTL(GPIO)
  * @brief Flush device
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(GPIO)
+API_MOD_FLUSH(GPIO, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
@@ -246,7 +247,7 @@ MODULE__DEVICE_FLUSH(GPIO)
  * @brief Interface returns device information
  */
 //==============================================================================
-MODULE__DEVICE_STAT(GPIO)
+API_MOD_STAT(GPIO, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG(device_handle);
 
@@ -262,9 +263,9 @@ MODULE__DEVICE_STAT(GPIO)
  * @brief Initialize GPIOx
  *
  * @param[in] *gpio             GPIO address
- * @param[in] crl               CRL register value
- * @param[in] crh               CRH register value
- * @param[in] odr               ODR register value
+ * @param[in]  crl              CRL register value
+ * @param[in]  crh              CRH register value
+ * @param[in]  odr              ODR register value
  */
 //==============================================================================
 static void init_GPIOx(GPIO_t *gpio, u32_t crl, u32_t crh, u32_t odr)

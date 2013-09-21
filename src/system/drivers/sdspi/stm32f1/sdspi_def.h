@@ -33,19 +33,20 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "system/ioctl_macros.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/** device numbers */
+#define SDSPI_MAJOR_NUMBER      0
+#define SDSPI_MINOR_NUMBER      0
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** IO request for SDSPI driver */
-enum SDSPI_IORQ
-{
-        SDSPI_IORQ_INITIALIZE_CARD,     /* [out]: bool true (initialized), false (fail) */
-};
+/** IO request for SDSPI driver (0x5344 - "SD" )*/
+#define SDSPI_IORQ_INITIALIZE_CARD      _IORQ(0x00, 0x5344, _DIR_RD, sizeof(bool))
 
 /*==============================================================================
   Exported object declarations

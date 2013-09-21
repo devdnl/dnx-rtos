@@ -45,11 +45,23 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/* MEMORY MANAGEMENT DEFINTIONS */
+#ifndef malloc
+#define malloc(size_t__size)                                    sysm_tskmalloc(size_t__size)
+#endif
+
+#ifndef calloc
+#define calloc(size_t__nitems, size_t__isize)                   sysm_tskcalloc(size_t__nitems, size_t__isize)
+#endif
+
+#ifndef free
+#define free(void__pmem)                                        sysm_tskfree(void__pmem)
+#endif
+
 /** stdio buffer size */
 #define BUFSIZ                                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
 
 /** function-like macros */
-#define ioctl(file, ...)                                        vfs_ioctl(file, __VA_ARGS__)
 #define printf(...)                                             sys_fprintf(stdout, __VA_ARGS__)
 #define fprintf(FILE__stream, ...)                              sys_fprintf(FILE__stream, __VA_ARGS__)
 #define snprintf(char__bfr, size_t__size, ...)                  sys_snprintf(char__bfr, size_t__size, __VA_ARGS__)

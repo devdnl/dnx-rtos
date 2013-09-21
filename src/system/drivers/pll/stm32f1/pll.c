@@ -31,7 +31,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/pll.h"
+#include "system/dnxmodule.h"
+#include "stm32f1/pll_cfg.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
@@ -63,7 +64,7 @@ extern "C" {
  * @brief Initialize PLL module
  */
 //==============================================================================
-MODULE__DEVICE_INIT(PLL)
+API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(major);
@@ -147,7 +148,7 @@ MODULE__DEVICE_INIT(PLL)
  * @brief Release PLL device
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(PLL)
+API_MOD_RELEASE(PLL, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
@@ -159,7 +160,7 @@ MODULE__DEVICE_RELEASE(PLL)
  * @brief Open device
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(PLL)
+API_MOD_OPEN(PLL, void *device_handle, int flags)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
@@ -172,10 +173,10 @@ MODULE__DEVICE_OPEN(PLL)
  * @brief Close device
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(PLL)
+API_MOD_CLOSE(PLL, void *device_handle, bool force, task_t *opened_by_task)
 {
         UNUSED_ARG(device_handle);
-        UNUSED_ARG(forced);
+        UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
         return STD_RET_ERROR;
@@ -186,13 +187,12 @@ MODULE__DEVICE_CLOSE(PLL)
  * @brief Write data to device
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(PLL)
+API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
@@ -202,13 +202,12 @@ MODULE__DEVICE_WRITE(PLL)
  * @brief Read data from device
  */
 //==============================================================================
-MODULE__DEVICE_READ(PLL)
+API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
@@ -218,11 +217,11 @@ MODULE__DEVICE_READ(PLL)
  * @brief Device control
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(PLL)
+API_MOD_IOCTL(PLL, void *device_handle, int iorq, void *arg)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(iorq);
-        UNUSED_ARG(args);
+        UNUSED_ARG(arg);
 
         return STD_RET_ERROR;
 }
@@ -232,7 +231,7 @@ MODULE__DEVICE_IOCTL(PLL)
  * @brief Flush device
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(PLL)
+API_MOD_FLUSH(PLL, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
@@ -244,7 +243,7 @@ MODULE__DEVICE_FLUSH(PLL)
  * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE__DEVICE_STAT(PLL)
+API_MOD_STAT(PLL, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG(device_handle);
 

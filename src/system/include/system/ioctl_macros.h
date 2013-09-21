@@ -1,13 +1,13 @@
-#ifndef _FS_REGISTRATION_
-#define _FS_REGISTRATION_
+#ifndef _IOCTL_MACROS_H_
+#define _IOCTL_MACROS_H_
 /*=========================================================================*//**
-@file    fs_registration.h
+@file    ioctl_macros.h
 
 @author  Daniel Zorychta
 
-@brief   This file is used to registration file systems
+@brief   ioctl build macros.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,56 +33,37 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
-#include "core/vfs.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
-#define USE_FILE_SYSTEM_INTERFACE(fs_name)\
-{.FS_name = #fs_name,\
- .FS_if   = {.fs_init    = fs_name##_init,\
-             .fs_chmod   = fs_name##_chmod,\
-             .fs_chown   = fs_name##_chown,\
-             .fs_close   = fs_name##_close,\
-             .fs_ioctl   = fs_name##_ioctl,\
-             .fs_mkdir   = fs_name##_mkdir,\
-             .fs_mknod   = fs_name##_mknod,\
-             .fs_open    = fs_name##_open,\
-             .fs_opendir = fs_name##_opendir,\
-             .fs_read    = fs_name##_read,\
-             .fs_release = fs_name##_release,\
-             .fs_remove  = fs_name##_remove,\
-             .fs_rename  = fs_name##_rename,\
-             .fs_stat    = fs_name##_stat,\
-             .fs_fstat   = fs_name##_fstat,\
-             .fs_statfs  = fs_name##_statfs,\
-             .fs_flush   = fs_name##_flush,\
-             .fs_write   = fs_name##_write}}
+#define _DIR_NONE                       0x0
+#define _DIR_RD                         0x1
+#define _DIR_WR                         0x2
+#define _DIR_RW                         0x3
+#define _IORQ(nr, id, dir, size)        (((u32_t)((u32_t)(id) & 0xFFFF) << 16) | ((u32_t)(((size) / 4) & 0x3F) << 10) | ((u32_t)((dir) & 0x03) << 8) | ((u32_t)((nr) & 0xFF) << 0))
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
-struct _FS_entry {
-      const char                    *FS_name;
-      const struct vfs_FS_interface  FS_if;
-};
 
 /*==============================================================================
-  Exported object declarations
+  Exported objects
 ==============================================================================*/
-extern const struct _FS_entry _FS_table[];
-extern const uint             _FS_table_size;
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _FS_REGISTRATION_ */
+#endif /* _IOCTL_MACROS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

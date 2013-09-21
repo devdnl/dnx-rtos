@@ -34,7 +34,6 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "core/printx.h"
-#include "drivers/driver_registration.h"
 #include "kernel/kwrapper.h"
 #include "portable/cpuctl.h"
 
@@ -90,6 +89,10 @@ static list_t  *sysm_task_list;
 static mutex_t *sysm_resource_mtx;
 #endif
 
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+static bool CPU_load_enabled = true;
+#endif
+
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
 static i32_t sysm_kernel_memory_usage;
 #endif
@@ -110,6 +113,11 @@ static i32_t sysm_programs_memory_usage;
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+
+/*==============================================================================
+  External object definitions
+==============================================================================*/
+extern const int _regdrv_number_of_modules;
 
 /*==============================================================================
   Function definitions
@@ -608,7 +616,7 @@ void sysm_sysfree(void *mem)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modmalloc(size_t size, uint module_number)
+void *sysm_modmalloc(size_t size, int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         void *p = NULL;
@@ -638,7 +646,7 @@ void *sysm_modmalloc(size_t size, uint module_number)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modcalloc(size_t count, size_t size, uint module_number)
+void *sysm_modcalloc(size_t count, size_t size, int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         void *p = NULL;
@@ -666,7 +674,7 @@ void *sysm_modcalloc(size_t count, size_t size, uint module_number)
  * @param  module_number        module number
  */
 //==============================================================================
-void sysm_modfree(void *mem, uint module_number)
+void sysm_modfree(void *mem, int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number < _regdrv_number_of_modules) {
@@ -689,7 +697,7 @@ void sysm_modfree(void *mem, uint module_number)
  * @return used memory by selected driver
  */
 //==============================================================================
-i32_t sysm_get_used_memory_by_module(uint module_number)
+i32_t sysm_get_used_memory_by_module(int module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number >= _regdrv_number_of_modules)
@@ -1158,7 +1166,9 @@ exit:
 u32_t sysm_get_total_CPU_usage(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        return _cpuctl_get_CPU_total_time();
+        u32_t time = _cpuctl_get_CPU_total_time();
+        _cpuctl_clear_CPU_total_time();
+        return time;
 #else
         return 0;
 #endif
@@ -1166,13 +1176,25 @@ u32_t sysm_get_total_CPU_usage(void)
 
 //==============================================================================
 /**
- * @brief Function clears the CPU total time
+ * @brief Function disable CPU load measurement
  */
 //==============================================================================
-void sysm_clear_total_CPU_usage(void)
+void sysm_disable_CPU_load_measurement(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        _cpuctl_clear_CPU_total_time();
+        CPU_load_enabled = false;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function enable CPU load measurement
+ */
+//==============================================================================
+void sysm_enable_CPU_load_measurement(void)
+{
+#if (CONFIG_MONITOR_CPU_LOAD > 0)
+        CPU_load_enabled = true;
 #endif
 }
 
@@ -1196,11 +1218,13 @@ void sysm_task_switched_in(void)
 void sysm_task_switched_out(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-        struct task_data *tdata = _get_this_task_data();
-        u32_t             cnt   = _cpuctl_get_CPU_load_timer();
+        if (CPU_load_enabled) {
+                struct task_data *tdata = _get_this_task_data();
+                u32_t             cnt   = _cpuctl_get_CPU_load_timer();
 
-        if (tdata) {
-                tdata->f_cpu_usage += cnt;
+                if (tdata) {
+                        tdata->f_cpu_usage += cnt;
+                }
         }
 #endif
 }

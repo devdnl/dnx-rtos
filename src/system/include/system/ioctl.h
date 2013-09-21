@@ -1,11 +1,11 @@
-#ifndef _FATFS_H_
-#define _FATFS_H_
+#ifndef _IOCTL_H_
+#define _IOCTL_H_
 /*=========================================================================*//**
-@file    fatfs.h
+@file    ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   FAT file system support.
+@brief   Header contain all device control commands. Depend on existing drivers.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,30 +33,42 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxfs.h"
+#include "system/ioctl_macros.h"
+
+/* include here drivers definitions */
+#include "tty_def.h"
+#ifdef ARCH_stm32f1
+#       include "stm32f1/gpio_def.h"
+#       include "stm32f1/pll_def.h"
+#       include "stm32f1/sdspi_def.h"
+#       include "stm32f1/uart_def.h"
+#else
+#       error "Unknown architecture!"
+#endif
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
+==============================================================================*/
+/* ioctl function-like macro */
+#define ioctl(file, ...)                vfs_ioctl(file, __VA_ARGS__)
+
+/*==============================================================================
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Exported functions
 ==============================================================================*/
-
-/*==============================================================================
-  Exported function prototypes
-==============================================================================*/
-FILE_SYSTEM_INTERFACE(fatfs);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _FATFS_H_ */
+#endif /* _IOCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

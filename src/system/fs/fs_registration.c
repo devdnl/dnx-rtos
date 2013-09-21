@@ -31,48 +31,26 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/fs_registration.h"
-#include "core/vfs.h"
-
-/* include here FS headers */
-#include "fs/lfs.h"
-#include "fs/appfs.h"
-#include "fs/procfs.h"
-#include "fs/fatfs.h"
+#include "core/fsctrl.h"
+#include "system/dnxfs.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  External objects
 ==============================================================================*/
+_IMPORT_FILE_SYSTEM(lfs);
+_IMPORT_FILE_SYSTEM(procfs);
+_IMPORT_FILE_SYSTEM(fatfs);
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported objects
 ==============================================================================*/
-
-/*==============================================================================
-  Local function prototypes
-==============================================================================*/
-
-/*==============================================================================
-  Local object definitions
-==============================================================================*/
-
-/*==============================================================================
-  Exported object definitions
-==============================================================================*/
-/* driver registration */
 const struct _FS_entry _FS_table[] = {
-        USE_FILE_SYSTEM_INTERFACE(lfs),
-        USE_FILE_SYSTEM_INTERFACE(appfs),
-        USE_FILE_SYSTEM_INTERFACE(procfs),
-        USE_FILE_SYSTEM_INTERFACE(fatfs),
+        _USE_FILE_SYSTEM_INTERFACE(lfs),
+        _USE_FILE_SYSTEM_INTERFACE(procfs),
+        _USE_FILE_SYSTEM_INTERFACE(fatfs),
 };
 
-/* driver list size */
 const uint _FS_table_size = ARRAY_SIZE(_FS_table);
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
 
 #ifdef __cplusplus
 }

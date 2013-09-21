@@ -33,8 +33,8 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
-#include "top.h"
-#include "drivers/ioctl.h"
+#include "system/dnx.h"
+#include "system/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -51,13 +51,13 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
-};
+GLOBAL_VARIABLES_SECTION_BEGIN
+
+GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
 
 /*==============================================================================
   Function definitions
@@ -68,7 +68,7 @@ PROGRAM_PARAMS(top, STACK_DEPTH_VERY_LOW, FS_STACK_NOT_USED);
  * @brief Main function
  */
 //==============================================================================
-int PROGRAM_MAIN(top, int argc, char *argv[])
+PROGRAM_MAIN(top, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
@@ -123,10 +123,10 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                 printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
+                u32_t total_cpu_load = get_total_CPU_usage();
+                disable_CPU_load_measurement();
                 for (int i = 0; i < n; i++) {
                         struct sysmoni_taskstat taskinfo;
-                        u32_t total_cpu_load = get_total_CPU_usage();
-
                         if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
                                 printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                 taskinfo.task_handle,
@@ -141,6 +141,7 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
                                 break;
                         }
                 }
+                enable_CPU_load_measurement();
 
                 if (key == 'k') {
                         ioctl(stdin, TTY_IORQ_ECHO_ON);
@@ -157,13 +158,11 @@ int PROGRAM_MAIN(top, int argc, char *argv[])
 
                         ioctl(stdin, TTY_IORQ_ECHO_OFF);
                 }
-
-                clear_total_CPU_usage();
         }
 
         ioctl(stdin, TTY_IORQ_ECHO_ON);
 
-        return EXIT_SUCCESS;
+        return 0;
 }
 
 #ifdef __cplusplus

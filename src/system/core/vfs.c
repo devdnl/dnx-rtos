@@ -53,10 +53,10 @@ extern "C" {
 struct vfs_file
 {
         void      *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool forced, task_t *opened_by_task);
-        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
-        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
-        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, va_list);
+        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, task_t *opened_by_task);
+        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *lseek);
+        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *lseek);
+        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
         void      *f_extra_data;
@@ -884,9 +884,10 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_write) {
-                        n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
-                                          nitems, file->f_lseek);
-                        file->f_lseek += (u64_t)n * size;
+                        n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
+                                          ptr, size * nitems, &file->f_lseek);
+                        file->f_lseek += (u64_t)n;
+                        n /= size;
                 }
         }
 
@@ -912,9 +913,10 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_read) {
-                        n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
-                                         nitems, file->f_lseek);
-                        file->f_lseek += (u64_t)n * size;
+                        n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
+                                         ptr, size * nitems, &file->f_lseek);
+                        file->f_lseek += (u64_t)n;
+                        n /= size;
                 }
         }
 
@@ -999,7 +1001,7 @@ int vfs_ioctl(FILE *file, int rq, ...)
         }
 
         va_start(args, rq);
-        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, args);
+        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(args, void*));
         va_end(args);
 
         return status;

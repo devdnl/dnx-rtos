@@ -31,7 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/sdspi.h"
+#include "system/dnxmodule.h"
+#include "stm32f1/sdspi_cfg.h"
+#include "stm32f1/sdspi_def.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
@@ -200,8 +202,8 @@ static size_t           write_whole_sectors     (struct sdspi_data *hdl, const v
 static size_t           write_partial_sectors   (struct sdspi_data *hdl, const void *src, size_t size, u64_t lseek);
 static stdret_t         initialize_card         (struct sdspi_data *hdl);
 static stdret_t         detect_partitions       (struct sdspi_data *hdl);
-static size_t           card_read               (struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek);
-static size_t           card_write              (struct sdspi_data *hdl, const void *src, size_t size, size_t nitems, u64_t lseek);
+static size_t           card_read               (struct sdspi_data *hdl, u8_t *dst, size_t count, u64_t lseek);
+static size_t           card_write              (struct sdspi_data *hdl, const u8_t *src, size_t count, u64_t lseek);
 
 /*==============================================================================
   Local object definitions
@@ -217,11 +219,11 @@ static struct sdspi_data *sdspi_data;
  * @brief Initialize device
  */
 //==============================================================================
-MODULE__DEVICE_INIT(SDSPI)
+API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
         STOP_IF(device_handle == NULL);
 
-        if (major != SDSPI_MAJOR_NO || minor != SDSPI_MINOR_NO) {
+        if (major != SDSPI_MAJOR_NUMBER || minor != SDSPI_MINOR_NUMBER) {
                 return STD_RET_ERROR;
         }
 
@@ -300,7 +302,7 @@ error:
  * @brief Release device
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(SDSPI)
+API_MOD_RELEASE(SDSPI, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -335,7 +337,7 @@ MODULE__DEVICE_RELEASE(SDSPI)
  * @brief Open device
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(SDSPI)
+API_MOD_OPEN(SDSPI, void *device_handle, int flags)
 {
         UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
@@ -348,9 +350,9 @@ MODULE__DEVICE_OPEN(SDSPI)
  * @brief Close device
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(SDSPI)
+API_MOD_CLOSE(SDSPI, void *device_handle, bool force, task_t *opened_by_task)
 {
-        UNUSED_ARG(forced);
+        UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
@@ -363,18 +365,18 @@ MODULE__DEVICE_CLOSE(SDSPI)
  * @brief Write data to device
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(SDSPI)
+API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
+        STOP_IF(fpos == NULL);
 
         struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                n = card_write(hdl, src, item_size, n_items, lseek);
+                n = card_write(hdl, src, count, *fpos);
                 unlock_mutex(hdl->card_protect_mtx);
         }
 
@@ -386,18 +388,18 @@ MODULE__DEVICE_WRITE(SDSPI)
  * @brief Read data from device
  */
 //==============================================================================
-MODULE__DEVICE_READ(SDSPI)
+API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
+        STOP_IF(fpos == NULL);
 
         struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                n = card_read(hdl, dst, item_size, n_items, lseek);
+                n = card_read(hdl, dst, count, *fpos);
                 unlock_mutex(hdl->card_protect_mtx);
         }
 
@@ -409,7 +411,7 @@ MODULE__DEVICE_READ(SDSPI)
  * @brief Direct IO control
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(SDSPI)
+API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, void *arg)
 {
         STOP_IF(device_handle == NULL);
 
@@ -420,7 +422,7 @@ MODULE__DEVICE_IOCTL(SDSPI)
         switch (iorq) {
         case SDSPI_IORQ_INITIALIZE_CARD:
                 if (lock_mutex(hdl->card_protect_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                        bool *result = va_arg(args, bool*);
+                        bool *result = arg;
                         *result      = false;
 
                         vfs_remove(SDSPI_PARTITION_1_PATH);
@@ -453,7 +455,7 @@ MODULE__DEVICE_IOCTL(SDSPI)
  * @brief Flush device
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(SDSPI)
+API_MOD_FLUSH(SDSPI, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -465,7 +467,7 @@ MODULE__DEVICE_FLUSH(SDSPI)
  * @brief Interface returns device information
  */
 //==============================================================================
-MODULE__DEVICE_STAT(SDSPI)
+API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(device_stat == NULL);
@@ -569,24 +571,24 @@ static stdret_t partition_close(void *device_handle, bool forced, task_t *task)
  * @param[in] *device_handle    handle to partition description
  * @param[in] *src              source
  * @param[in]  size             item size
- * @param[in]  nitems           n-items to write
- * @param[in]  lseek            file index
+ * @param[in]  count            bytes to write
+ * @param[in] *fpos             file index
  *
- * @retval number of written nitems
+ * @retval number of written bytes
  */
 //==============================================================================
-static size_t partition_write(void *device_handle, const void *src, size_t size, size_t nitems, u64_t lseek)
+static size_t partition_write(void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
-        STOP_IF(size == 0);
-        STOP_IF(nitems == 0);
+        STOP_IF(count == 0);
+        STOP_IF(fpos == NULL);
 
         struct partition *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                n = card_write(sdspi_data, src, size, nitems, lseek + ((u64_t)hdl->first_sector * SECTOR_SIZE));
+                n = card_write(sdspi_data, src, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 unlock_mutex(sdspi_data->card_protect_mtx);
         }
 
@@ -599,25 +601,24 @@ static size_t partition_write(void *device_handle, const void *src, size_t size,
  *
  * @param[in]  *device_handle   handle to partition description
  * @param[out] *dst             destination
- * @param[in]   size            item size
- * @param[in]   nitems          n-items to read
- * @param[in]   lseek           file index
+ * @param[in]   count           bytes to read
+ * @param[in]  *fpos            file index
  *
- * @retval number of written nitems
+ * @retval number of read bytes
  */
 //==============================================================================
-static size_t partition_read(void *device_handle, void *dst, size_t size, size_t nitems, u64_t lseek)
+static size_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
-        STOP_IF(size == 0);
-        STOP_IF(nitems == 0);
+        STOP_IF(count == 0);
+        STOP_IF(fpos == NULL);
 
         struct partition *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
-                n = card_read(sdspi_data, dst, size, nitems, lseek + ((u64_t)hdl->first_sector * SECTOR_SIZE));
+                n = card_read(sdspi_data, dst, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 unlock_mutex(sdspi_data->card_protect_mtx);
         }
 
@@ -630,17 +631,17 @@ static size_t partition_read(void *device_handle, void *dst, size_t size, size_t
  *
  * @param[in]    *device_handle         handle to partition description
  * @param[in]     iorq                  IO request
- * @param[in,out] args                  additional arguments
+ * @param[in,out]*arg                   request's argument
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_ioctl(void *device_handle, int iorq, va_list args)
+static stdret_t partition_ioctl(void *device_handle, int iorq, void *arg)
 {
         STOP_IF(device_handle == NULL);
         UNUSED_ARG(iorq);
-        UNUSED_ARG(args);
+        UNUSED_ARG(arg);
 
         return STD_RET_ERROR;
 }
@@ -1257,7 +1258,7 @@ static stdret_t detect_partitions(struct sdspi_data *hdl)
         u8_t *MBR = malloc(SECTOR_SIZE);
 
         if (MBR) {
-                if (card_read(hdl, MBR, SECTOR_SIZE, 1, 0) != 1) {
+                if (card_read(hdl, MBR, SECTOR_SIZE, 0) != SECTOR_SIZE) {
                         goto error;
                 }
 
@@ -1316,14 +1317,13 @@ error:
  *
  * @param[in]  *hdl             driver's memory handle
  * @param[out] *dst             destination
- * @param[in]   size            item size
- * @param[in]   nitems          n-items to read
+ * @param[in]   count           bytes to read
  * @param[in]   lseek           file index
  *
- * @retval number of read nitems
+ * @retval number of read bytes
  */
 //==============================================================================
-static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t nitems, u64_t lseek)
+static size_t card_read(struct sdspi_data *hdl, u8_t *dst, size_t count, u64_t lseek)
 {
         size_t n = 0;
 
@@ -1332,14 +1332,13 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
         }
 
         /* whole sector(s) read */
-        if (((size * nitems) % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
+        if ((count % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
 
-                n  = read_whole_sectors(hdl, dst, (size * nitems) / SECTOR_SIZE, lseek);
-                n *= SECTOR_SIZE / size;
+                n  = read_whole_sectors(hdl, dst, count / SECTOR_SIZE, lseek);
+                n *= SECTOR_SIZE;
 
         } else {
-                n  = read_partial_sectors(hdl, dst, size * nitems, lseek);
-                n /= size;
+                n  = read_partial_sectors(hdl, dst, count, lseek);
         }
 
         deselect_SD_card();
@@ -1353,14 +1352,13 @@ static size_t card_read(struct sdspi_data *hdl, void *dst, size_t size, size_t n
  *
  * @param[in] *hdl              driver's memory handle
  * @param[in] *src              source
- * @param[in]  size             item size
- * @param[in]  nitems           n-items to write
+ * @param[in]  count            bytes to write
  * @param[in]  lseek            file index
  *
- * @retval number of written nitems
+ * @retval number of written bytes
  */
 //==============================================================================
-static size_t card_write(struct sdspi_data *hdl, const void *src, size_t size, size_t nitems, u64_t lseek)
+static size_t card_write(struct sdspi_data *hdl, const u8_t *src, size_t count, u64_t lseek)
 {
         size_t n = 0;
 
@@ -1369,14 +1367,13 @@ static size_t card_write(struct sdspi_data *hdl, const void *src, size_t size, s
         }
 
         /* whole sector(s) read */
-        if (((size * nitems) % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
+        if ((count % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
 
-                n  = write_whole_sectors(hdl, src, (size * nitems) / SECTOR_SIZE, lseek);
-                n *= SECTOR_SIZE / size;
+                n  = write_whole_sectors(hdl, src, count / SECTOR_SIZE, lseek);
+                n *= SECTOR_SIZE;
 
         } else {
-                n  = write_partial_sectors(hdl, src, size * nitems, lseek);
-                n /= size;
+                n  = write_partial_sectors(hdl, src, count, lseek);
         }
 
         deselect_SD_card();

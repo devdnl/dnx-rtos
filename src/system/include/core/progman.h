@@ -39,20 +39,22 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GLOBAL_VARIABLES \
-        struct __global_vars__
-
-#define FS_STACK_NOT_USED  0 *
-#define PROGRAM_PARAMS(name, stack_base, fs_switch)\
-        const uint prog_##name##_gs = sizeof(struct __global_vars__);\
-        const uint prog_##name##_stack = (stack_base) + (fs_switch (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH)
-
-#define EXPORT_PROGRAM_PARAMS(name)\
-        extern const uint prog_##name##_gs;\
-        extern const uint prog_##name##_stack
+#define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
+#define GLOBAL_VARIABLES_SECTION_END    };
 
 #define PROGRAM_MAIN(name, argc, argv) \
-        program_##name##_main(argc, argv)
+        const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
+        int program_##name##_main(argc, argv)
+
+#define _IMPORT_PROGRAM(name)\
+        extern const int __prog_##name##_gs__;\
+        extern int program_##name##_main(int, char**)
+
+#define _PROGRAM_CONFIG(name, stack_size) \
+        {.program_name  = #name,\
+         .main_function = program_##name##_main,\
+         .globals_size  = &__prog_##name##_gs__,\
+         .stack_depth   = stack_size}
 
 #define stdin \
         _get_this_task_data()->f_stdin
@@ -72,6 +74,12 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+struct _prog_data {
+        char      *program_name;
+        int      (*main_function)(int, char**);
+        const int *globals_size;
+        int        stack_depth;
+};
 
 /*==============================================================================
   Exported object declarations
@@ -94,6 +102,21 @@ extern void      delete_program    (task_t*, int);
 extern void      exit              (int);
 extern void      abort             (void);
 extern int       system            (const char*);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+static inline const struct _prog_data *_get_programs_table(void)
+{
+        extern const struct _prog_data _prog_table[];
+        return _prog_table;
+}
+
+static inline int _get_programs_table_size(void)
+{
+        extern const int _prog_table_size;
+        return _prog_table_size;
+}
 
 #ifdef __cplusplus
 }

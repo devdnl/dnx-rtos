@@ -48,10 +48,6 @@ extern "C" {
 /** card waiting timeout [ms] */
 #define SDSPI_WAIT_TIMEOUT                      500
 
-/** device numbers */
-#define SDSPI_MAJOR_NO                          0
-#define SDSPI_MINOR_NO                          0
-
 /** supported SPI peripheral */
 #define SDSPI_PORT                              SPI3
 

@@ -31,69 +31,48 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "drivers/driver_registration.h"
+#include "core/drivers.h"
+#include "system/dnxmodule.h"
 
-/* include here modules headers */
-#include "tty.h"
-#if defined(ARCH_stm32f1)
-#include "stm32f1/uart.h"
-#include "stm32f1/gpio.h"
-#include "stm32f1/pll.h"
-#include "stm32f1/sdspi.h"
-#elif defined(ARCH_posix)
-#include "drivers/uart.h"
-#include "drivers/tty.h"
-#include "drivers/pll.h"
-#else
-#endif
+#include "stm32f1/uart_def.h"
+#include "stm32f1/gpio_def.h"
+#include "stm32f1/pll_def.h"
+#include "stm32f1/sdspi_def.h"
+#include "tty_def.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  External objects
 ==============================================================================*/
-
-/*==============================================================================
-  Local types, enums definitions
-==============================================================================*/
-
-/*==============================================================================
-  Local function prototypes
-==============================================================================*/
-
-/*==============================================================================
-  Local object definitions
-==============================================================================*/
+_IMPORT_MODULE(UART);
+_IMPORT_MODULE(GPIO);
+_IMPORT_MODULE(PLL);
+_IMPORT_MODULE(TTY);
+_IMPORT_MODULE(SDSPI);
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-/* a table of names of used modules */
 const char *_regdrv_module_name[] = {
-        USE_MODULE(UART),
-        USE_MODULE(GPIO),
-        USE_MODULE(PLL),
-        USE_MODULE(TTY),
-        USE_MODULE(SDSPI),
+        _USE_MODULE(UART),
+        _USE_MODULE(GPIO),
+        _USE_MODULE(PLL),
+        _USE_MODULE(TTY),
+        _USE_MODULE(SDSPI),
 };
 
-/* a table of a drivers interfaces */
 const struct _driver_entry _regdrv_driver_table[] = {
-        USE_DRIVER_INTERFACE(UART , "uart1" , UART_DEV_1     , UART_PART_NONE),
-        USE_DRIVER_INTERFACE(GPIO , "gpio"  , GPIO_DEV_NONE  , GPIO_PART_NONE),
-        USE_DRIVER_INTERFACE(PLL  , "pll"   , PLL_DEV_NONE   , PLL_PART_NONE ),
-        USE_DRIVER_INTERFACE(TTY  , "tty0"  , TTY_DEV_0      , TTY_MINOR_NO  ),
-        USE_DRIVER_INTERFACE(TTY  , "tty1"  , TTY_DEV_1      , TTY_MINOR_NO  ),
-        USE_DRIVER_INTERFACE(TTY  , "tty2"  , TTY_DEV_2      , TTY_MINOR_NO  ),
-        USE_DRIVER_INTERFACE(TTY  , "tty3"  , TTY_DEV_3      , TTY_MINOR_NO  ),
-        USE_DRIVER_INTERFACE(SDSPI, "sdspi" , SDSPI_MAJOR_NO , SDSPI_MINOR_NO),
+        _USE_DRIVER_INTERFACE(UART , "uart1", UART_DEV_1        , UART_MINOR_NUMBER ),
+        _USE_DRIVER_INTERFACE(GPIO , "gpio" , GPIO_MAJOR_NUMBER , GPIO_MINOR_NUMBER ),
+        _USE_DRIVER_INTERFACE(PLL  , "pll"  , PLL_MAJOR_NUMBER  , PLL_MINOR_NUMBER  ),
+        _USE_DRIVER_INTERFACE(TTY  , "tty0" , TTY_DEV_0         , TTY_MINOR_NUMBER  ),
+        _USE_DRIVER_INTERFACE(TTY  , "tty1" , TTY_DEV_1         , TTY_MINOR_NUMBER  ),
+        _USE_DRIVER_INTERFACE(TTY  , "tty2" , TTY_DEV_2         , TTY_MINOR_NUMBER  ),
+        _USE_DRIVER_INTERFACE(TTY  , "tty3" , TTY_DEV_3         , TTY_MINOR_NUMBER  ),
+        _USE_DRIVER_INTERFACE(SDSPI, "sdspi", SDSPI_MAJOR_NUMBER, SDSPI_MINOR_NUMBER),
 };
 
-/* number of items in above tables */
-const uint _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);
-const uint _regdrv_number_of_modules       = ARRAY_SIZE(_regdrv_module_name);
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
+const int _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);
+const int _regdrv_number_of_modules       = ARRAY_SIZE(_regdrv_module_name);
 
 #ifdef __cplusplus
 }

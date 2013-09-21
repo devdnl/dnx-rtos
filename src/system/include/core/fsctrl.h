@@ -33,14 +33,39 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "core/vfs.h"
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _USE_FILE_SYSTEM_INTERFACE(fs_name)\
+{.FS_name = #fs_name,\
+ .FS_if   = {.fs_init    = _##fs_name##_init,\
+             .fs_chmod   = _##fs_name##_chmod,\
+             .fs_chown   = _##fs_name##_chown,\
+             .fs_close   = _##fs_name##_close,\
+             .fs_ioctl   = _##fs_name##_ioctl,\
+             .fs_mkdir   = _##fs_name##_mkdir,\
+             .fs_mknod   = _##fs_name##_mknod,\
+             .fs_open    = _##fs_name##_open,\
+             .fs_opendir = _##fs_name##_opendir,\
+             .fs_read    = _##fs_name##_read,\
+             .fs_release = _##fs_name##_release,\
+             .fs_remove  = _##fs_name##_remove,\
+             .fs_rename  = _##fs_name##_rename,\
+             .fs_stat    = _##fs_name##_stat,\
+             .fs_fstat   = _##fs_name##_fstat,\
+             .fs_statfs  = _##fs_name##_statfs,\
+             .fs_flush   = _##fs_name##_flush,\
+             .fs_write   = _##fs_name##_write}}
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+struct _FS_entry {
+      const char                    *FS_name;
+      const struct vfs_FS_interface  FS_if;
+};
 
 /*==============================================================================
   Exported objects

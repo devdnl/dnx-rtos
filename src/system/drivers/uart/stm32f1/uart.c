@@ -31,7 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/uart.h"
+#include "system/dnxmodule.h"
+#include "stm32f1/uart_cfg.h"
+#include "stm32f1/uart_def.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
@@ -141,7 +143,7 @@ static struct USART_data *USART_data[UART_DEV_COUNT];
  * @brief Initialize USART devices
  */
 //==============================================================================
-MODULE__DEVICE_INIT(UART)
+API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(minor);
 
@@ -280,7 +282,7 @@ error:
  * @brief Release USART device
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(UART)
+API_MOD_RELEASE(UART, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -310,7 +312,7 @@ MODULE__DEVICE_RELEASE(UART)
  * @brief Opens specified port
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(UART)
+API_MOD_OPEN(UART, void *device_handle, int flags)
 {
         UNUSED_ARG(flags);
         STOP_IF(device_handle == NULL);
@@ -323,9 +325,9 @@ MODULE__DEVICE_OPEN(UART)
  * @brief Function close opened port
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(UART)
+API_MOD_CLOSE(UART, void *device_handle, bool force, task_t *opened_by_task)
 {
-        UNUSED_ARG(forced);
+        UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
@@ -338,26 +340,25 @@ MODULE__DEVICE_CLOSE(UART)
  * @brief Write data to UART
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(UART)
+API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
 
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->Tx_buffer.src_ptr   = src;
-                hdl->Tx_buffer.data_size = item_size * n_items;
+                hdl->Tx_buffer.data_size = count;
 
                 enable_TXE_IRQ(hdl->USART);
                 take_semaphore(hdl->data_write_sem, TXC_WAIT_TIME);
 
-                n = n_items;
+                n = count;
 
                 unlock_mutex(hdl->port_lock_tx_mtx);
         }
@@ -370,21 +371,20 @@ MODULE__DEVICE_WRITE(UART)
  * @brief Read data from UART Rx buffer
  */
 //==============================================================================
-MODULE__DEVICE_READ(UART)
+API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
 
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
         if (lock_mutex(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                u8_t  *dst_ptr   = (u8_t *)dst;
-                size_t data_size = n_items * item_size;
+                u8_t  *dst_ptr   = dst;
+                size_t data_size = count;
                 hdl->task_rx     = get_task_handle();
 
                 do {
@@ -407,8 +407,6 @@ MODULE__DEVICE_READ(UART)
                         }
                 } while (data_size);
 
-                n /= item_size;
-
                 unlock_mutex(hdl->port_lock_rx_mtx);
         }
 
@@ -420,13 +418,12 @@ MODULE__DEVICE_READ(UART)
  * @brief Direct IO control
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(UART)
+API_MOD_IOCTL(UART, void *device_handle, int iorq, void *arg)
 {
         STOP_IF(device_handle == NULL);
 
         struct USART_data *hdl = device_handle;
         stdret_t status = STD_RET_OK;
-        u8_t *out_ptr;
 
         switch (iorq) {
         case UART_IORQ_ENABLE_WAKEUP_IDLE:
@@ -486,7 +483,7 @@ MODULE__DEVICE_IOCTL(UART)
                 break;
 
         case UART_IORQ_SET_ADDRESS_NODE:
-                set_address_node(hdl->USART, va_arg(args, int));
+                set_address_node(hdl->USART, (int)arg);
                 break;
 
         case UART_IORQ_ENABLE_CTS:
@@ -508,14 +505,14 @@ MODULE__DEVICE_IOCTL(UART)
         case UART_IORQ_GET_BYTE:
                 enter_critical_section();
 
-                if (!(out_ptr = va_arg(args, u8_t*))) {
+                if (!arg) {
                         exit_critical_section();
                         status = STD_RET_ERROR;
                         break;
                 }
 
                 if (hdl->Rx_FIFO.buffer_level > 0) {
-                        *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+                        *((u8_t*)arg) = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
 
                         if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
                                 hdl->Rx_FIFO.read_index = 0;
@@ -532,14 +529,14 @@ MODULE__DEVICE_IOCTL(UART)
                 while (TRUE) {
                         enter_critical_section();
 
-                        if (!(out_ptr = va_arg(args, u8_t*))) {
+                        if (!arg) {
                                 exit_critical_section();
                                 status = STD_RET_ERROR;
                                 break;
                         }
 
                         if (hdl->Rx_FIFO.buffer_level > 0) {
-                                *out_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
+                                *((u8_t*)arg) = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
 
                                 if (hdl->Rx_FIFO.read_index >= UART_RX_BUFFER_SIZE)
                                         hdl->Rx_FIFO.read_index = 0;
@@ -560,14 +557,14 @@ MODULE__DEVICE_IOCTL(UART)
                         sleep_ms(1);
                 }
 
-                hdl->USART->DR = va_arg(args, int);
+                hdl->USART->DR = (int)arg;
                 break;
 
         case UART_IORQ_SET_BAUDRATE:
                 if ((u32_t)hdl->USART == USART1_BASE) {
-                        set_baud_rate(hdl->USART, UART_PCLK2_FREQ, va_arg(args, int));
+                        set_baud_rate(hdl->USART, UART_PCLK2_FREQ, (int)arg);
                 } else {
-                        set_baud_rate(hdl->USART, UART_PCLK1_FREQ, va_arg(args, int));
+                        set_baud_rate(hdl->USART, UART_PCLK1_FREQ, (int)arg);
                 }
                 break;
 
@@ -584,7 +581,7 @@ MODULE__DEVICE_IOCTL(UART)
  * @brief Flush device
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(UART)
+API_MOD_FLUSH(UART, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -596,7 +593,7 @@ MODULE__DEVICE_FLUSH(UART)
  * @brief Interface returns device informations
  */
 //==============================================================================
-MODULE__DEVICE_STAT(UART)
+API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(device_stat == NULL);

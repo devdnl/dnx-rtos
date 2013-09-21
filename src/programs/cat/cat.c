@@ -34,8 +34,8 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "cat.h"
-#include "drivers/ioctl.h"
+#include "system/ioctl.h"
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -52,13 +52,13 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
-};
+GLOBAL_VARIABLES_SECTION_BEGIN
+
+GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(cat, STACK_DEPTH_LOW,);
 
 /*==============================================================================
   Function definitions
@@ -69,7 +69,7 @@ PROGRAM_PARAMS(cat, STACK_DEPTH_LOW,);
  * @brief Cat main function
  */
 //==============================================================================
-int PROGRAM_MAIN(cat, int argc, char *argv[])
+PROGRAM_MAIN(cat, int argc, char *argv[])
 {
         int status = EXIT_SUCCESS;
 
