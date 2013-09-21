@@ -44,6 +44,8 @@ extern "C" {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static stdret_t closedir(void *fs_handle, DIR *dir);
+static dirent_t readdir (void *fs_handle, DIR *dir);
 
 /*==============================================================================
   Local objects
@@ -318,6 +320,45 @@ API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
         STOP_IF(!dir);
 
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Close directory
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t closedir(void *fs_handle, DIR *dir)
+{
+        STOP_IF(!fs_handle);
+        STOP_IF(!dir);
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Read directory
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ *
+ * @return directory entry description object
+ */
+//==============================================================================
+static dirent_t readdir(void *fs_handle, DIR *dir)
+{
+        STOP_IF(!fs_handle);
+        STOP_IF(!dir);
+
+        dirent_t dirent;
+
+        return dirent;
 }
 
 //==============================================================================

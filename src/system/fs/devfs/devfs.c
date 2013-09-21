@@ -36,14 +36,35 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define CHAIN_NUMBER_OF_NODES           8
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
+struct devfs_chain {
+        struct devnode {
+                const struct vfs_drv_interface *drvif;
+                const char                     *path;
+                int                             gid;
+                int                             uid;
+                int                             mode;
+        } devnode[CHAIN_NUMBER_OF_NODES];
+
+        struct devfs_chain       *next_chain;
+};
+
+struct devfs {
+        struct devfs_chain *root_chain;
+        int                 number_of_opened_devices;
+        int                 number_of_chains;
+        int                 number_of_used_nodes;
+};
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static stdret_t closedir(void *fs_handle, DIR *dir);
+static dirent_t readdir (void *fs_handle, DIR *dir);
 
 /*==============================================================================
   Local objects
@@ -77,6 +98,16 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         STOP_IF(!fs_handle);
         STOP_IF(!src_path);
 
+        struct devfs *devfs = calloc(1, sizeof(struct devfs));
+        if (devfs) {
+                devfs->root_chain = calloc(1, sizeof(struct devfs_chain));
+                if (devfs->root_chain) {
+                        return STD_RET_OK;
+                }
+
+                free(devfs);
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -94,7 +125,12 @@ API_FS_RELEASE(devfs, void *fs_handle)
 {
         STOP_IF(!fs_handle);
 
-        return STD_RET_OK;
+        struct devfs *devfs = fs_handle;
+
+        if (devfs->number_of_opened_devices != 0)
+                return STD_RET_ERROR;
+        else
+                return STD_RET_OK;
 }
 
 //==============================================================================
@@ -120,6 +156,29 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
         STOP_IF(!fpos);
         STOP_IF(!path);
 
+        struct devfs *devfs = fs_handle;
+
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                        if (chain->devnode[i].drvif == NULL)
+                                continue;
+
+                        if (strcmp(chain->devnode[i].path, path) != 0)
+                                continue;
+
+                        const struct vfs_drv_interface *drvif = chain->devnode[i].drvif;
+
+                        if (drvif->drv_open(drvif->handle, O_DEV_FLAGS(flags)) == STD_RET_OK) {
+                                *extra = &chain->devnode[i];
+                                *fpos  = 0;
+                                devfs->number_of_opened_devices++;
+                                return STD_RET_OK;
+                        } else {
+                                return STD_RET_ERROR;
+                        }
+                }
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -142,6 +201,16 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
         STOP_IF(!file_owner);
+
+        UNUSED_ARG(fd);
+
+        struct devfs   *devfs = fs_handle;
+        struct devnode *node  = extra;
+
+        if (node->drvif->drv_close(node->drvif->handle, force, file_owner) == STD_RET_OK) {
+                devfs->number_of_opened_devices--;
+                return STD_RET_OK;
+        }
 
         return STD_RET_ERROR;
 }
@@ -167,7 +236,11 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         STOP_IF(!src);
         STOP_IF(!fpos);
 
-        return 0;
+        UNUSED_ARG(fd);
+
+        struct devnode *node = extra;
+
+        return node->drvif->drv_write(node->drvif->handle, src, count, fpos);
 }
 
 //==============================================================================
@@ -191,7 +264,11 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         STOP_IF(!dst);
         STOP_IF(!fpos);
 
-        return 0;
+        UNUSED_ARG(fd);
+
+        struct devnode *node = extra;
+
+        return node->drvif->drv_read(node->drvif->handle, dst, count, fpos);
 }
 
 //==============================================================================
@@ -214,7 +291,11 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
 
-        return STD_RET_ERROR;
+        UNUSED_ARG(fd);
+
+        struct devnode *node = extra;
+
+        return node->drvif->drv_ioctl(node->drvif->handle, request, arg);
 }
 
 //==============================================================================
@@ -234,7 +315,11 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
 
-        return STD_RET_ERROR;
+        UNUSED_ARG(fd);
+
+        struct devnode *node = extra;
+
+        return node->drvif->drv_flush(node->drvif->handle);
 }
 
 //==============================================================================
@@ -256,7 +341,24 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat
         STOP_IF(!extra);
         STOP_IF(!stat);
 
-        return STD_RET_OK;
+        UNUSED_ARG(fd);
+
+        struct devnode *node = extra;
+
+        struct vfs_dev_stat devstat;
+        if (node->drvif->drv_stat(node->drvif->handle, &devstat) == STD_RET_OK) {
+                stat->st_atime = 0;
+                stat->st_mtime = 0;
+                stat->st_dev   = devstat.st_major << 8 | devstat.st_minor;
+                stat->st_gid   = node->gid;
+                stat->st_uid   = node->uid;
+                stat->st_mode  = node->mode;
+                stat->st_size  = devstat.st_size;
+
+                return STD_RET_OK;
+        }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -296,6 +398,38 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
         STOP_IF(!path);
         STOP_IF(!drv_if);
 
+        struct devfs *devfs = fs_handle;
+
+        if (devfs->number_of_chains * CHAIN_NUMBER_OF_NODES == devfs->number_of_used_nodes) {
+                struct devfs_chain *chain = devfs->root_chain;
+                for (; chain != NULL; chain = chain->next_chain);
+
+                STOP_IF(chain == NULL); /* TEST */
+
+                chain->next_chain = calloc(1, sizeof(struct devfs_chain));
+                if (!chain->next_chain)
+                        return STD_RET_ERROR;
+
+                devfs->number_of_chains++;
+        }
+
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                        if (chain->devnode[i].drvif != NULL)
+                                continue;
+
+                        chain->devnode[i].drvif = drv_if;
+                        chain->devnode[i].path  = path;
+                        chain->devnode[i].gid   = 0;
+                        chain->devnode[i].uid   = 0;
+                        chain->devnode[i].mode  = OWNER_MODE(MODE_R | MODE_W)
+                                                | GROUP_MODE(MODE_R | MODE_W)
+                                                | OTHER_MODE(MODE_R | MODE_W);
+
+                        return STD_RET_OK;
+                }
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -317,7 +451,82 @@ API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
         STOP_IF(!path);
         STOP_IF(!dir);
 
+        struct devfs *devfs = fs_handle;
+
+        if (strcmp(path, "/") == 0) {
+                dir->f_closedir = closedir;
+                dir->f_readdir  = readdir;
+                dir->f_dd       = NULL;
+                dir->f_handle   = fs_handle;
+                dir->f_items    = devfs->number_of_used_nodes;
+                dir->f_seek     = 0;
+        }
+
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Close directory
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t closedir(void *fs_handle, DIR *dir)
+{
+        STOP_IF(!fs_handle);
+        STOP_IF(!dir);
+
+        return STD_RET_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Read directory
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ *
+ * @return directory entry description object
+ */
+//==============================================================================
+static dirent_t readdir(void *fs_handle, DIR *dir)
+{
+        STOP_IF(!fs_handle);
+        STOP_IF(!dir);
+
+        struct devfs *devfs = fs_handle;
+
+        dirent_t dirent;
+        dirent.filetype = FILE_TYPE_DRV;
+        dirent.name     = NULL;
+        dirent.size     = 0;
+
+        size_t n_node = 0;
+
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++, n_node++) {
+                        if (n_node == dir->f_seek) {
+                                dirent.name = (char *)chain->devnode[i].path;
+
+                                struct vfs_dev_stat devstat;
+                                devstat.st_size = 0;
+
+                                const struct vfs_drv_interface *drvif = chain->devnode[i].drvif;
+                                drvif->drv_stat(drvif->handle, &devstat);
+
+                                dirent.size = devstat.st_size;
+
+                                return dirent;
+                        }
+                }
+        }
+
+        return dirent;
 }
 
 //==============================================================================
@@ -335,6 +544,23 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
+
+        struct devfs *devfs = fs_handle;
+
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                        if (strcmp(chain->devnode[i].path, path) == 0) {
+                                chain->devnode[i].drvif = NULL;
+                                chain->devnode[i].path  = NULL;
+                                chain->devnode[i].gid   = 0;
+                                chain->devnode[i].uid   = 0;
+                                chain->devnode[i].mode  = 0;
+
+                                devfs->number_of_used_nodes--;
+                                return STD_RET_OK;
+                        }
+                }
+        }
 
         return STD_RET_ERROR;
 }
@@ -357,6 +583,17 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
         STOP_IF(!old_name);
         STOP_IF(!new_name);
 
+        struct devfs *devfs = fs_handle;
+
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                        if (strcmp(chain->devnode[i].path, old_name) == 0) {
+                                chain->devnode[i].path = new_name;
+                                return STD_RET_OK;
+                        }
+                }
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -376,6 +613,17 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
+
+        struct devfs *devfs = fs_handle;
+
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                        if (strcmp(chain->devnode[i].path, path) == 0) {
+                                chain->devnode[i].mode = mode;
+                                return STD_RET_OK;
+                        }
+                }
+        }
 
         return STD_RET_ERROR;
 }
@@ -398,6 +646,18 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
         STOP_IF(!fs_handle);
         STOP_IF(!path);
 
+        struct devfs *devfs = fs_handle;
+
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                        if (strcmp(chain->devnode[i].path, path) == 0) {
+                                chain->devnode[i].uid = owner;
+                                chain->devnode[i].gid = group;
+                                return STD_RET_OK;
+                        }
+                }
+        }
+
         return STD_RET_ERROR;
 }
 
@@ -419,14 +679,33 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct vfs_stat *stat)
         STOP_IF(!path);
         STOP_IF(!stat);
 
-        stat->st_dev   = 0;
-        stat->st_gid   = 0;
-        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
-        stat->st_mtime = 0;
-        stat->st_size  = 0;
-        stat->st_uid   = 0;
+        struct devfs *devfs = fs_handle;
 
-        return STD_RET_OK;
+        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+                for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
+                        if (strcmp(chain->devnode[i].path, path) == 0) {
+                                struct vfs_dev_stat devstat;
+                                devstat.st_size  = 0;
+                                devstat.st_major = 0;
+                                devstat.st_minor = 0;
+
+                                const struct vfs_drv_interface *drvif = chain->devnode[i].drvif;
+                                drvif->drv_stat(drvif->handle, &devstat);
+
+                                stat->st_atime = 0;
+                                stat->st_mtime = 0;
+                                stat->st_dev   = devstat.st_major << 8 | devstat.st_minor;
+                                stat->st_gid   = chain->devnode[i].gid;
+                                stat->st_uid   = chain->devnode[i].uid;
+                                stat->st_mode  = chain->devnode[i].mode;
+                                stat->st_size  = devstat.st_size;
+
+                                return STD_RET_OK;
+                        }
+                }
+        }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -445,10 +724,12 @@ API_FS_STATFS(devfs, void *fs_handle, struct vfs_statfs *statfs)
         STOP_IF(!fs_handle);
         STOP_IF(!statfs);
 
-        statfs->f_bfree  = 0;
-        statfs->f_blocks = 0;
-        statfs->f_ffree  = 0;
-        statfs->f_files  = 0;
+        struct devfs *devfs = fs_handle;
+
+        statfs->f_blocks = devfs->number_of_chains * CHAIN_NUMBER_OF_NODES;
+        statfs->f_bfree  = statfs->f_blocks - devfs->number_of_used_nodes;
+        statfs->f_ffree  = statfs->f_bfree;
+        statfs->f_files  = devfs->number_of_used_nodes;
         statfs->f_type   = 1;
         statfs->fsname   = "devfs";
 

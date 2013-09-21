@@ -54,8 +54,8 @@ struct vfs_file
 {
         void      *FS_hdl;
         stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
-        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *lseek);
-        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *lseek);
+        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
+        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
         stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);

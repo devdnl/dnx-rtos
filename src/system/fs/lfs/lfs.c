@@ -786,13 +786,13 @@ API_FS_STATFS(lfs, void *fs_handle, struct vfs_statfs *statfs)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
+API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
 {
         UNUSED_ARG(extra);
 
         STOP_IF(!fs_handle);
         STOP_IF(!fd);
-        STOP_IF(!lseek);
+        STOP_IF(!fpos);
         STOP_IF(!path);
 
         struct LFS_data *lfs = fs_handle;
@@ -850,9 +850,9 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const ch
                 }
 
                 if (!(flags & O_APPEND)) {
-                        *lseek = 0;
+                        *fpos = 0;
                 } else {
-                        *lseek = node->size;
+                        *fpos = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
                 struct vfs_drv_interface *drv = node->data;
@@ -861,8 +861,8 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const ch
                         goto error;
                 }
 
-                if (drv->drv_open(drv->handle, flags & (O_RDWR | O_RDONLY | O_WRONLY)) == STD_RET_OK) {
-                        *lseek = 0;
+                if (drv->drv_open(drv->handle, O_DEV_FLAGS(flags)) == STD_RET_OK) {
+                        *fpos = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);
                         goto error;

@@ -75,6 +75,7 @@ extern "C" {
 #define O_RDWR                  (1 << 2)                /* read write   */
 #define O_CREAT                 (1 << 3)                /* create file  */
 #define O_APPEND                (1 << 4)                /* append data  */
+#define O_DEV_FLAGS(flags)      ((flags) & (O_RDONLY | O_WRONLY | O_RDWR))
 
 /* stream definitions */
 #define EOF                     (-1)
@@ -161,8 +162,8 @@ struct vfs_drv_interface {
         void     *handle;
         stdret_t (*drv_open )(void *drvhdl, int flags);
         stdret_t (*drv_close)(void *drvhdl, bool force, const task_t *opened_by_task);
-        size_t   (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *lseek);
-        size_t   (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *lseek);
+        size_t   (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *fpos);
+        size_t   (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *fpos);
         stdret_t (*drv_ioctl)(void *drvhdl, int iorq, void *args);
         stdret_t (*drv_flush)(void *drvhdl);
         stdret_t (*drv_stat )(void *drvhdl, struct vfs_dev_stat *info);
@@ -174,8 +175,8 @@ struct vfs_FS_interface {
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, int flags);
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
-        size_t   (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *lseek);
-        size_t   (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *lseek);
+        size_t   (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
+        size_t   (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
         stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);

@@ -154,13 +154,13 @@ API_FS_RELEASE(fatfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
+API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
 {
         UNUSED_ARG(fd);
 
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
-        STOP_IF(!lseek);
+        STOP_IF(!fpos);
         STOP_IF(!path);
 
         struct fatfs *hdl = fs_handle;
@@ -196,9 +196,9 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const 
 
         if (flags & O_APPEND) {
                 libfat_lseek(fat_file, libfat_size(fat_file));
-                *lseek = libfat_size(fat_file);
+                *fpos = libfat_size(fat_file);
         } else {
-                *lseek = 0;
+                *fpos = 0;
         }
 
         hdl->opened_files++;
