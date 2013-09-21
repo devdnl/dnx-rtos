@@ -26,8 +26,8 @@
 #
 ####################################################################################################
 
-include src/programs/Makefile.mk
-include src/system/Makefile.mk
+include src/programs/Makefile.in
+include src/system/Makefile.in
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -56,21 +56,6 @@ LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT
                     -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
                     $(DEFINES_stm32f1) -lm
 AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINES_stm32f1)
-
-#---------------------------------------------------------------------------------------------------
-# ARCHITECTURE CONFIG: POSIX
-#---------------------------------------------------------------------------------------------------
-CC_posix       = gcc
-CXX_posix      = g++
-LINKER_posix   = gcc
-AS_posix       = gcc -x assembler-with-cpp
-DEFINES_posix  = -D__GCC_POSIX__=1 -DDEBUG_BUILD=1 -DUSE_STDIO=1 -DARCH_$(TARGET)
-CFLAGS_posix   = -m32 -c -O0 -Wall -Wstrict-prototypes -Wextra -std=gnu99 -g -Wparentheses\
-                 -Wno-pointer-sign -fmessage-length=0 -pthread -lrt $(DEFINES_posix)
-CXXFLAGS_posix =
-LFLAGS_posix   = -m32 -g -Wall -lrt -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                 -pthread $(DEFINES_posix) -lm
-AFLAGS_posix   = -m32 -c -g $(DEFINES_posix)
 
 #---------------------------------------------------------------------------------------------------
 # FILE EXTENSIONS CONFIGURATION
@@ -158,7 +143,6 @@ all :
 	@echo "Possible targets:"
 	@echo "   help                this help"
 	@echo "   stm32f1             compilation for ARM-Cortex-M3 STM32F1XX microcontroller family"
-	@echo "   posix               compilation for POSIX system"
 	@echo "   clean               clean project"
 	@echo "   cleanall            clean all non-project files"
 	@echo ""
@@ -175,9 +159,8 @@ check :
 ####################################################################################################
 # targets
 ####################################################################################################
-.PHONY : stm32f1 posix
+.PHONY : stm32f1
 stm32f1 : dependencies buildobjects linkobjects hex status
-posix   : dependencies buildobjects linkobjects status
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.

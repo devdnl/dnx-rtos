@@ -34,9 +34,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #if defined(ARCH_stm32f1)
-        #include "stm32f1/cpuctl.h"
-#elif defined(ARCH_posix)
-        #include "posix/cpuctl.h"
+#       include "stm32f1/cpuctl.h"
 #endif
 
 /*==============================================================================
