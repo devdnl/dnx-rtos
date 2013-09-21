@@ -196,6 +196,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
         stdret_t      status = STD_RET_ERROR;
 
         if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+
                 struct devnode *node = get_node_by_path(devfs, path);
                 if (node) {
                         const struct vfs_drv_interface *drvif = node->drvif;
@@ -447,8 +448,6 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
                         while (chain->next_chain != NULL) {
                                 chain = chain->next_chain;
                         }
-
-                        STOP_IF(chain == NULL); /* TEST */
 
                         chain->next_chain = new_chain();
                         if (!chain->next_chain)
