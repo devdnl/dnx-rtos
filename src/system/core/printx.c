@@ -539,6 +539,9 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
                 int len = strlen(str);
 
+                if (len == 0)
+                        len = 1;
+
                 vfs_fseek(stream, lseek + len, SEEK_SET);
 
                 return str;
