@@ -219,7 +219,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         goto ctrl_error;
                 }
 
-                if (!(tty_ctrl->io_stream = vfs_fopen(TTYFILE, "r+"))) {
+                if (!(tty_ctrl->io_stream = vfs_fopen(TTY_IF_FILE, "r+"))) {
                         goto ctrl_error;
                 }
 

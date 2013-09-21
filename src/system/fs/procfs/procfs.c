@@ -672,7 +672,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 return STD_RET_OK;
         } else if (strcmp(path, "/"DIR_BIN_STR"/") == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = _get_programs_table_size();//_prog_table_size;
+                dir->f_items    = _get_programs_table_size();
                 dir->f_readdir  = procfs_readdir_bin;
                 dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;

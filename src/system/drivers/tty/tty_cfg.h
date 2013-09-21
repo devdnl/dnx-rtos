@@ -53,7 +53,7 @@ extern "C" {
 #define TTY_TERM_SIZE_CHECK         1
 
 /** file used by TTY connected to VT100 terminal */
-#define TTYFILE                     "/dev/ttyS0"
+#define TTY_IF_FILE                 "/dev/ttyS0"
 
 /*==============================================================================
   Exported object types

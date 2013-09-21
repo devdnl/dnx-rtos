@@ -63,12 +63,12 @@ extern "C" {
 /**
  * Task minimal stack depth [levels]
  */
-#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (64)
+#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (48)
 
 /**
  * File system stack depth [levels]
  */
-#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (48)
+#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (32)
 
 /**
  * Interrupt stack depth [levels]
