@@ -610,7 +610,7 @@ static stdret_t partition_open(void *device_handle, int flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_close(void *device_handle, bool forced, task_t *task)
+static stdret_t partition_close(void *device_handle, bool forced, const task_t *task)
 {
         UNUSED_ARG(forced);
         UNUSED_ARG(task);
