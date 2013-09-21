@@ -65,7 +65,6 @@ extern "C" {
 /*==============================================================================
   External object declarations
 ==============================================================================*/
-extern const int _regdrv_number_of_modules;
 
 /*==============================================================================
   Exported function prototypes
@@ -368,6 +367,7 @@ static inline const char *get_module_name(uint modid)
 //==============================================================================
 static inline uint get_number_of_modules(void)
 {
+        extern const int _regdrv_number_of_modules;
         return _regdrv_number_of_modules;
 }
 
