@@ -43,11 +43,11 @@ extern "C" {
 ==============================================================================*/
 struct devfs_chain {
         struct devnode {
-                const struct vfs_drv_interface *drvif;
-                const char                     *path;
-                int                             gid;
-                int                             uid;
-                int                             mode;
+                struct vfs_drv_interface *drvif;
+                char                     *path;
+                int                       gid;
+                int                       uid;
+                int                       mode;
         } devnode[CHAIN_NUMBER_OF_NODES];
 
         struct devfs_chain       *next_chain;
@@ -102,6 +102,8 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         if (devfs) {
                 devfs->root_chain = calloc(1, sizeof(struct devfs_chain));
                 if (devfs->root_chain) {
+                        devfs->number_of_chains = 1;
+                        *fs_handle = devfs;
                         return STD_RET_OK;
                 }
 
@@ -127,10 +129,13 @@ API_FS_RELEASE(devfs, void *fs_handle)
 
         struct devfs *devfs = fs_handle;
 
-        if (devfs->number_of_opened_devices != 0)
+        if (devfs->number_of_opened_devices != 0) {
                 return STD_RET_ERROR;
-        else
+        } else {
+
+                /*TODO devfs release */
                 return STD_RET_OK;
+        }
 }
 
 //==============================================================================
@@ -418,13 +423,23 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
                         if (chain->devnode[i].drvif != NULL)
                                 continue;
 
-                        chain->devnode[i].drvif = drv_if;
-                        chain->devnode[i].path  = path;
+                        chain->devnode[i].drvif = malloc(sizeof(struct vfs_drv_interface));
+                        if (!chain->devnode[i].drvif)
+                                return STD_RET_ERROR;
+                        *chain->devnode[i].drvif = *drv_if;
+
+                        chain->devnode[i].path  = calloc(strlen(path), sizeof(char));
+                        if (!chain->devnode[i].path)
+                                return STD_RET_ERROR; /* FIXME memory leakage */
+                        strcpy(chain->devnode[i].path, path);
+
                         chain->devnode[i].gid   = 0;
                         chain->devnode[i].uid   = 0;
                         chain->devnode[i].mode  = OWNER_MODE(MODE_R | MODE_W)
                                                 | GROUP_MODE(MODE_R | MODE_W)
                                                 | OTHER_MODE(MODE_R | MODE_W);
+
+                        devfs->number_of_used_nodes++;
 
                         return STD_RET_OK;
                 }
@@ -550,6 +565,9 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
         for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
                         if (strcmp(chain->devnode[i].path, path) == 0) {
+                                free(chain->devnode[i].drvif);
+                                free(chain->devnode[i].path);
+
                                 chain->devnode[i].drvif = NULL;
                                 chain->devnode[i].path  = NULL;
                                 chain->devnode[i].gid   = 0;
@@ -588,7 +606,13 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
         for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
                         if (strcmp(chain->devnode[i].path, old_name) == 0) {
-                                chain->devnode[i].path = new_name;
+                                char *name = calloc(strlen(new_name), 1);
+                                if (!name)
+                                        return STD_RET_ERROR;
+                                strcpy(name, new_name);
+
+                                free(chain->devnode[i].path);
+                                chain->devnode[i].path = name;
                                 return STD_RET_OK;
                         }
                 }

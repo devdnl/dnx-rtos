@@ -40,6 +40,7 @@ extern "C" {
 _IMPORT_FILE_SYSTEM(lfs);
 _IMPORT_FILE_SYSTEM(procfs);
 _IMPORT_FILE_SYSTEM(fatfs);
+_IMPORT_FILE_SYSTEM(devfs);
 
 /*==============================================================================
   Exported objects
@@ -48,6 +49,7 @@ const struct _FS_entry _FS_table[] = {
         _USE_FILE_SYSTEM_INTERFACE(lfs),
         _USE_FILE_SYSTEM_INTERFACE(procfs),
         _USE_FILE_SYSTEM_INTERFACE(fatfs),
+        _USE_FILE_SYSTEM_INTERFACE(devfs),
 };
 
 const uint _FS_table_size = ARRAY_SIZE(_FS_table);

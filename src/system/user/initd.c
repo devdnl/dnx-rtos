@@ -114,6 +114,7 @@ static int run_level_boot(void)
         mkdir("/tmp");
 
         mount("procfs", "", "/proc");
+        mount("devfs", "", "/dev");
 
         return STD_RET_OK;
 }
