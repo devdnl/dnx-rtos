@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    pll.c
+@file    genericmod.c
 
-@author  Daniel Zorychta
+@author  Author
 
-@brief   File support PLL
+@brief   This driver support generic device.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) year  Author <email>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -32,15 +32,15 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
-#include "stm32f1/pll_cfg.h"
-#include "stm32f1/stm32f10x.h"
+#include "genericmod_cfg.h"
+#include "genericmod_def.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -48,11 +48,15 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Local objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object definitions
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -71,84 +75,14 @@ extern "C" {
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(GENERICMOD, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG(device_handle);
+        STOP_IF(!device_handle);
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
-        u32_t wait;
-
-        /* turn on HSE oscillator */
-        RCC->CR |= RCC_CR_HSEON;
-
-        /* waiting for HSE ready */
-        wait = UINT32_MAX;
-        while (!(RCC->CR & RCC_CR_HSERDY) && wait) {
-                wait--;
-        }
-
-        if (wait == 0)
-                return PLL_STATUS_HSE_ERROR;
-
-        /* wait states */
-        if (PLL_CPU_TARGET_FREQ <= 24000000UL)
-                FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
-        else if (PLL_CPU_TARGET_FREQ <= 48000000UL)
-                FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
-        else if (PLL_CPU_TARGET_FREQ <= 72000000UL)
-                FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
-        else
-                FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
-
-        /* AHB prescaler  configuration (/1) */
-        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
-
-        /* APB1 prescaler configuration (/2) */
-        RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
-
-        /* APB2 prescaler configuration (/1) */
-        RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
-
-        /* FCLK cortex free running clock */
-        SysTick->CTRL |= SysTick_CTRL_CLKSOURCE;
-
-        /* PLL source - HSE; PREDIV1 = 1; PLL x9 */
-        RCC->CFGR2 |= RCC_CFGR2_PREDIV1SRC_HSE | RCC_CFGR2_PREDIV1_DIV1;
-        RCC->CFGR  |= RCC_CFGR_PLLSRC_PREDIV1  | RCC_CFGR_PLLMULL9;
-
-        /* OTG USB set to 48 MHz (72*2 / 3)*/
-        RCC->CFGR &= ~RCC_CFGR_OTGFSPRE;
-
-        /* I2S3 and I2S2 from SYSCLK */
-        RCC->CFGR2 &= ~(RCC_CFGR2_I2S3SRC | RCC_CFGR2_I2S2SRC);
-
-        /* enable PLL */
-        RCC->CR |= RCC_CR_PLLON;
-
-        /* waiting for PLL ready */
-        wait = UINT32_MAX;
-        while (!(RCC->CR & RCC_CR_PLLRDY) && wait) {
-                wait--;
-        }
-
-        if (wait == 0)
-                return PLL_STATUS_PLL_ERROR;
-
-        /* set PLL as system clock */
-        RCC->CFGR |= RCC_CFGR_SW_PLL;
-
-        wait = UINT32_MAX;
-        while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {
-                wait--;
-        }
-
-        if (wait == 0)
-                return PLL_STATUS_PLL_SW_ERROR;
-
         return STD_RET_OK;
 }
-
 
 //==============================================================================
 /**
@@ -160,9 +94,9 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_RELEASE(PLL, void *device_handle)
+API_MOD_RELEASE(GENERICMOD, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        STOP_IF(!device_handle);
 
         return STD_RET_OK;
 }
@@ -178,12 +112,11 @@ API_MOD_RELEASE(PLL, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(PLL, void *device_handle, int flags)
+API_MOD_OPEN(GENERICMOD, void *device_handle, int flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        STOP_IF(!device_handle);
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -198,13 +131,11 @@ API_MOD_OPEN(PLL, void *device_handle, int flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(PLL, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force, const task_t *opened_by_task)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
-        UNUSED_ARG(opened_by_task);
+        STOP_IF(!device_handle);
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -219,12 +150,11 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force, const task_t *opened_by_task
  * @return number of written bytes
  */
 //==============================================================================
-API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
+        STOP_IF(!device_handle);
+        STOP_IF(!src);
+        STOP_IF(!fpos);
 
         return 0;
 }
@@ -241,12 +171,11 @@ API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @return number of read bytes
  */
 //==============================================================================
-API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(dst);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
+        STOP_IF(!device_handle);
+        STOP_IF(!dst);
+        STOP_IF(!fpos);
 
         return 0;
 }
@@ -264,13 +193,16 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  * @retval ...
  */
 //==============================================================================
-API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
+API_MOD_IOCTL(GENERICMOD, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        STOP_IF(!device_handle);
 
-        return STD_RET_ERROR;
+        switch (request) {
+        default:
+                return STD_RET_ERROR;
+        }
+
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -283,9 +215,9 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_FLUSH(PLL, void *device_handle)
+API_MOD_FLUSH(GENERICMOD, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        STOP_IF(!device_handle);
 
         return STD_RET_OK;
 }
@@ -301,9 +233,10 @@ API_MOD_FLUSH(PLL, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_STAT(PLL, void *device_handle, struct vfs_dev_stat *device_stat)
+API_MOD_STAT(GENERICMOD, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        STOP_IF(!device_handle);
+        STOP_IF(!device_stat);
 
         device_stat->st_size  = 0;
         device_stat->st_major = 0;
@@ -317,5 +250,5 @@ API_MOD_STAT(PLL, void *device_handle, struct vfs_dev_stat *device_stat)
 #endif
 
 /*==============================================================================
-  End of file
+                                             End of file
 ==============================================================================*/

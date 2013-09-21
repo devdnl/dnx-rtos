@@ -79,14 +79,14 @@ extern "C" {
 extern API_FS_INIT(fsname, void**, const char*);                                    \
 extern API_FS_RELEASE(fsname, void*);                                               \
 extern API_FS_OPEN(fsname, void*, void**, fd_t*, u64_t*, const char*, int);         \
-extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool, task_t*);                     \
+extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool, const task_t*);               \
 extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, u64_t*);       \
 extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, u64_t*);              \
 extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, void*);                        \
 extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct vfs_stat*);                  \
 extern API_FS_FLUSH(fsname, void*, void*, fd_t);                                    \
 extern API_FS_MKDIR(fsname, void*, const char*);                                    \
-extern API_FS_MKNOD(fsname, void*, const char*, struct vfs_drv_interface*);         \
+extern API_FS_MKNOD(fsname, void*, const char*, const struct vfs_drv_interface*);   \
 extern API_FS_OPENDIR(fsname, void*, const char*, struct vfs_dir*);                 \
 extern API_FS_REMOVE(fsname, void*, const char*);                                   \
 extern API_FS_RENAME(fsname, void*, const char*, const char*);                      \

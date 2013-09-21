@@ -37,11 +37,10 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _DIR_NONE                       0x0
-#define _DIR_RD                         0x1
-#define _DIR_WR                         0x2
-#define _DIR_RW                         0x3
-#define _IORQ(nr, id, dir, size)        (((u32_t)((u32_t)(id) & 0xFFFF) << 16) | ((u32_t)(((size) / 4) & 0x3F) << 10) | ((u32_t)((dir) & 0x03) << 8) | ((u32_t)((nr) & 0xFF) << 0))
+#define _IO(g, n)               (((u32_t)(g) << 24) | (u32_t)0x000000 | ((u32_t)(n) & 0xFF))
+#define _IOR(g, n, t)           (((u32_t)(g) << 24) | (u32_t)0x400000 | ((u32_t)(sizeof(t) & 0x3FF) << 8) | ((u32_t)(n) & 0xFF))
+#define _IOW(g, n, t)           (((u32_t)(g) << 24) | (u32_t)0x800000 | ((u32_t)(sizeof(t) & 0x3FF) << 8) | ((u32_t)(n) & 0xFF))
+#define _IOWR(g, n, t)          (((u32_t)(g) << 24) | (u32_t)0xC00000 | ((u32_t)(sizeof(t) & 0x3FF) << 8) | ((u32_t)(n) & 0xFF))
 
 /*==============================================================================
   Exported object types

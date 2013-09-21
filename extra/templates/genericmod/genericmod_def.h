@@ -1,11 +1,13 @@
+#ifndef _GENERICMOD_DEF_H_
+#define _GENERICMOD_DEF_H_
 /*=========================================================================*//**
-@file    fs_registration.c
+@file    genericmod_def.h
 
-@author  Daniel Zorychta
+@author  Author
 
-@brief   This file is used to registration file systems
+@brief   This driver support generic device definitions (e.g. used in ioctl()).
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) year  Author <email>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -31,33 +33,32 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fsctrl.h"
-#include "system/dnxfs.h"
 
 /*==============================================================================
-  External objects
+  Exported macros
 ==============================================================================*/
-_IMPORT_FILE_SYSTEM(lfs);
-_IMPORT_FILE_SYSTEM(procfs);
-_IMPORT_FILE_SYSTEM(fatfs);
-_IMPORT_FILE_SYSTEM(devfs);
+
+/*==============================================================================
+  Exported object types
+==============================================================================*/
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-const struct _FS_entry _FS_table[] = {
-        _USE_FILE_SYSTEM_INTERFACE(lfs),
-        _USE_FILE_SYSTEM_INTERFACE(procfs),
-        _USE_FILE_SYSTEM_INTERFACE(fatfs),
-        _USE_FILE_SYSTEM_INTERFACE(devfs),
-};
 
-const uint _FS_table_size = ARRAY_SIZE(_FS_table);
+/*==============================================================================
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _GENERICMOD_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

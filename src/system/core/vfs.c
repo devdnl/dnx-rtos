@@ -53,9 +53,9 @@ extern "C" {
 struct vfs_file
 {
         void      *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, task_t *opened_by_task);
-        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *lseek);
-        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *lseek);
+        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
+        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
+        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
         stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
@@ -281,13 +281,13 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 unlock_recursive_mutex(vfs_resource_mtx);
 
                 if (fs) {
-                        struct vfs_statfs stat_fs = {.fsname = NULL};
+                        struct vfs_statfs stat_fs = {.f_fsname = NULL};
 
                         if (fs->interface.fs_statfs) {
                                 fs->interface.fs_statfs(fs->handle, &stat_fs);
                         }
 
-                        if (stat_fs.fsname) {
+                        if (stat_fs.f_fsname) {
                                 if (strlen(fs->mount_point) > 1) {
                                         strncpy(mntent->mnt_dir, fs->mount_point,
                                                 strlen(fs->mount_point) - 1);
@@ -295,7 +295,7 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                                         strcpy(mntent->mnt_dir, fs->mount_point);
                                 }
 
-                                strcpy(mntent->mnt_fsname, stat_fs.fsname);
+                                strcpy(mntent->mnt_fsname, stat_fs.f_fsname);
                                 mntent->free  = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
                                 mntent->total = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
 

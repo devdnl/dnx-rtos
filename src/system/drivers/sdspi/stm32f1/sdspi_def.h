@@ -45,8 +45,8 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** IO request for SDSPI driver (0x5344 - "SD" )*/
-#define SDSPI_IORQ_INITIALIZE_CARD      _IORQ(0x00, 0x5344, _DIR_RD, sizeof(bool))
+/** IO request for SDSPI driver */
+#define SDSPI_IORQ_INITIALIZE_CARD      _IOR('S', 0x00, bool)
 
 /*==============================================================================
   Exported object declarations

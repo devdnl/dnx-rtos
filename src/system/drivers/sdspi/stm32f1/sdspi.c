@@ -217,6 +217,13 @@ static struct sdspi_data *sdspi_data;
 //==============================================================================
 /**
  * @brief Initialize device
+ *
+ * @param[out]          **device_handle        device allocated memory
+ * @param[in ]            major                major device number
+ * @param[in ]            minor                minor device number
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
@@ -300,6 +307,11 @@ error:
 //==============================================================================
 /**
  * @brief Release device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_RELEASE(SDSPI, void *device_handle)
@@ -335,6 +347,12 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 //==============================================================================
 /**
  * @brief Open device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_OPEN(SDSPI, void *device_handle, int flags)
@@ -348,9 +366,16 @@ API_MOD_OPEN(SDSPI, void *device_handle, int flags)
 //==============================================================================
 /**
  * @brief Close device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           force                  device force close (true)
+ * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(SDSPI, void *device_handle, bool force, task_t *opened_by_task)
+API_MOD_CLOSE(SDSPI, void *device_handle, bool force, const task_t *opened_by_task)
 {
         UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
@@ -363,6 +388,13 @@ API_MOD_CLOSE(SDSPI, void *device_handle, bool force, task_t *opened_by_task)
 //==============================================================================
 /**
  * @brief Write data to device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]          *src                    data source
+ * @param[in ]           count                  number of bytes to write
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of written bytes
  */
 //==============================================================================
 API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
@@ -386,6 +418,13 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
 //==============================================================================
 /**
  * @brief Read data from device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *dst                    data destination
+ * @param[in ]           count                  number of bytes to read
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of read bytes
  */
 //==============================================================================
 API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
@@ -408,10 +447,18 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 
 //==============================================================================
 /**
- * @brief Direct IO control
+ * @brief IO control
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           request                request
+ * @param[in ][out]     *arg                    request's argument
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ * @retval ...
  */
 //==============================================================================
-API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, void *arg)
+API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 {
         STOP_IF(device_handle == NULL);
 
@@ -419,7 +466,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, void *arg)
 
         stdret_t status = STD_RET_OK;
 
-        switch (iorq) {
+        switch (request) {
         case SDSPI_IORQ_INITIALIZE_CARD:
                 if (lock_mutex(hdl->card_protect_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                         bool *result = arg;
@@ -453,6 +500,11 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int iorq, void *arg)
 //==============================================================================
 /**
  * @brief Flush device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_FLUSH(SDSPI, void *device_handle)
@@ -464,7 +516,13 @@ API_MOD_FLUSH(SDSPI, void *device_handle)
 
 //==============================================================================
 /**
- * @brief Interface returns device information
+ * @brief Device information
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *device_stat            device status
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
@@ -552,7 +610,7 @@ static stdret_t partition_open(void *device_handle, int flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_close(void *device_handle, bool forced, task_t *task)
+static stdret_t partition_close(void *device_handle, bool forced, const task_t *task)
 {
         UNUSED_ARG(forced);
         UNUSED_ARG(task);

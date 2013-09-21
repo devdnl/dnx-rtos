@@ -357,11 +357,11 @@ static enum cmd_status cmd_ls(char *arg)
                         const char *type = NULL;
 
                         switch (dirent.filetype) {
-                        case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"c";  break;
-                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA" "; break;
+                        case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"d";  break;
+                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA"m"; break;
                         case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
-                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN"d";   break;
-                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"p";          break;
+                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN" ";   break;
+                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"x";          break;
                         default: type = "?";
                         }
 

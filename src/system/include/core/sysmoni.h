@@ -45,7 +45,7 @@ extern "C" {
 #if CONFIG_SYSTEM_STOP_MACRO > 0
 #define _stop_if(stop_condition)                if ((stop_condition)) {while(1);}
 #else
-#define _stop_if(stop_condition)
+#define _stop_if(stop_condition)                (void)(stop_condition)
 #endif
 
 /*==============================================================================

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    fatfs.c
+@file    genericfs.c
 
-@author  Daniel Zorychta
+@author  Author
 
-@brief   FAT File system support.
+@brief   This file support generic file system
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) year Author <email>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -32,43 +32,31 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxfs.h"
-#include "libfat/libfat.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
-struct fatdir {
-        FATDIR dir;
-#if _LIBFAT_USE_LFN == 0
-        char name[14];
-#else
-        char name[(_LIBFAT_MAX_LFN + 1) * sizeof(TCHAR)];
-#endif
-};
-
-struct fatfs {
-        FILE  *fsfile;
-        FATFS  fatfs;
-        int    opened_files;
-        int    opened_dirs;
-};
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t fatfs_closedir(void *fs_handle, DIR *dir);
-static dirent_t fatfs_readdir (void *fs_handle, DIR *dir);
+static stdret_t closedir(void *fs_handle, DIR *dir);
+static dirent_t readdir (void *fs_handle, DIR *dir);
 
 /*==============================================================================
-  Local object definitions
+  Local objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object definitions
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -86,29 +74,10 @@ static dirent_t fatfs_readdir (void *fs_handle, DIR *dir);
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_INIT(fatfs, void **fs_handle, const char *src_path)
+API_FS_INIT(genericfs, void **fs_handle, const char *src_path)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!src_path);
-
-        struct fatfs *hdl = calloc(1, sizeof(struct fatfs));
-
-        if (hdl) {
-                *fs_handle = hdl;
-
-                if ((hdl->fsfile = vfs_fopen(src_path, "r+"))) {
-                        if (libfat_mount(hdl->fsfile, &hdl->fatfs) == FR_OK) {
-                                return STD_RET_OK;
-                        }
-                }
-
-                /* error */
-                if (hdl->fsfile) {
-                        vfs_fclose(hdl->fsfile);
-                }
-
-                free(hdl);
-        }
 
         return STD_RET_ERROR;
 }
@@ -123,20 +92,11 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_RELEASE(fatfs, void *fs_handle)
+API_FS_RELEASE(genericfs, void *fs_handle)
 {
         STOP_IF(!fs_handle);
 
-        struct fatfs *hdl = fs_handle;
-
-        if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
-                libfat_umount(&hdl->fatfs);
-                vfs_fclose(hdl->fsfile);
-                free(hdl);
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -154,56 +114,15 @@ API_FS_RELEASE(fatfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
+API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
 {
-        UNUSED_ARG(fd);
-
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
+        STOP_IF(!fd);
         STOP_IF(!fpos);
         STOP_IF(!path);
 
-        struct fatfs *hdl = fs_handle;
-
-        FATFILE *fat_file = calloc(1, sizeof(FATFILE));
-        if (!fat_file)
-                return STD_RET_ERROR;
-
-        *extra = fat_file;
-
-        u8_t fat_mode = 0;
-        if (flags == O_RDONLY) {
-                fat_mode = LIBFAT_FA_READ | LIBFAT_FA_OPEN_EXISTING;
-        } else if (flags == O_RDWR) {
-                fat_mode = LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_EXISTING;
-        } else if (flags == (O_WRONLY | O_CREAT)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_RDWR | O_CREAT)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_WRONLY | O_APPEND | O_CREAT)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_ALWAYS;
-        } else if (flags == (O_RDWR | O_APPEND | O_CREAT)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_OPEN_ALWAYS;
-        } else {
-                free(fat_file);
-                return STD_RET_ERROR;
-        }
-
-        if (libfat_open(&hdl->fatfs, fat_file, path, fat_mode) != FR_OK) {
-                free(fat_file);
-                return STD_RET_ERROR;
-        }
-
-        if (flags & O_APPEND) {
-                libfat_lseek(fat_file, libfat_size(fat_file));
-                *fpos = libfat_size(fat_file);
-        } else {
-                *fpos = 0;
-        }
-
-        hdl->opened_files++;
-
-        return STD_RET_OK;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -220,23 +139,11 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
+API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_t *file_owner)
 {
-        UNUSED_ARG(fd);
-        UNUSED_ARG(force);
-        UNUSED_ARG(file_owner);
-
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
-
-        struct fatfs *hdl = fs_handle;
-
-        FATFILE *fat_file = extra;
-        if (libfat_close(fat_file) == FR_OK) {
-                free(fat_file);
-                hdl->opened_files--;
-                return STD_RET_OK;
-        }
+        STOP_IF(!file_owner);
 
         return STD_RET_ERROR;
 }
@@ -255,25 +162,14 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *f
  * @return number of written bytes
  */
 //==============================================================================
-API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
-
+        STOP_IF(!fs_handle);
         STOP_IF(!extra);
         STOP_IF(!src);
-        STOP_IF(!count);
         STOP_IF(!fpos);
 
-        FATFILE *fat_file = extra;
-        uint     n        = 0;
-
-        if (libfat_tell(fat_file) != (u32_t)*fpos) {
-                libfat_lseek(fat_file, (u32_t)*fpos);
-        }
-
-        libfat_write(fat_file, src, count, &n);
-        return n;
+        return 0;
 }
 
 //==============================================================================
@@ -290,25 +186,14 @@ API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size
  * @return number of read bytes
  */
 //==============================================================================
-API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t count, u64_t *fpos)
+API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
-
+        STOP_IF(!fs_handle);
         STOP_IF(!extra);
         STOP_IF(!dst);
-        STOP_IF(!count);
         STOP_IF(!fpos);
 
-        FATFILE *fat_file = extra;
-        uint     n        = 0;
-
-        if (libfat_tell(fat_file) != (u32_t)*fpos) {
-                libfat_lseek(fat_file, (u32_t)*fpos);
-        }
-
-        libfat_read(fat_file, dst, count, &n);
-        return n;
+        return 0;
 }
 
 //==============================================================================
@@ -326,15 +211,10 @@ API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t coun
  * @retval ...
  */
 //==============================================================================
-API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(genericfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(extra);
-        UNUSED_ARG(fd);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
-
-        /* not supported by this file system */
+        STOP_IF(!fs_handle);
+        STOP_IF(!extra);
 
         return STD_RET_ERROR;
 }
@@ -351,18 +231,12 @@ API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(genericfs, void *fs_handle, void *extra, fd_t fd)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
-
+        STOP_IF(!fs_handle);
         STOP_IF(!extra);
 
-        FATFILE *fat_file = extra;
-        if (libfat_sync(fat_file) == FR_OK)
-                return STD_RET_OK;
-        else
-                return STD_RET_ERROR;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -378,21 +252,11 @@ API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
-
+        STOP_IF(!fs_handle);
         STOP_IF(!extra);
         STOP_IF(!stat);
-
-        FATFILE *fat_file  = extra;
-        stat->st_dev   = 0;
-        stat->st_gid   = 0;
-        stat->st_mode  = 0777;
-        stat->st_mtime = 0;
-        stat->st_size  = fat_file->fsize;
-        stat->st_uid   = 0;
 
         return STD_RET_OK;
 }
@@ -408,16 +272,12 @@ API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(fatfs, void *fs_handle, const char *path)
+API_FS_MKDIR(genericfs, void *fs_handle, const char *path)
 {
-        struct fatfs *hdl = fs_handle;
-
+        STOP_IF(!fs_handle);
         STOP_IF(!path);
 
-        if (libfat_mkdir(&hdl->fatfs, path) == FR_OK)
-                return STD_RET_OK;
-        else
-                return STD_RET_ERROR;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -432,13 +292,11 @@ API_FS_MKDIR(fatfs, void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(fatfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(drv_if);
-
-        /* not supported by this file system */
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        STOP_IF(!drv_if);
 
         return STD_RET_ERROR;
 }
@@ -455,118 +313,50 @@ API_FS_MKNOD(fatfs, void *fs_handle, const char *path, const struct vfs_drv_inte
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(genericfs, void *fs_handle, const char *path, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
         STOP_IF(!dir);
-
-        struct fatfs *hdl = fs_handle;
-
-        char *dospath = calloc(strlen(path) + 1, 1);
-        if (!dospath) {
-                return STD_RET_ERROR;
-        }
-
-        dir->f_dd = malloc(sizeof(struct fatdir));
-        if (!dir->f_dd) {
-                free(dospath);
-                return STD_RET_ERROR;
-        }
-
-        if (strlen(path) == 1) {
-                strcpy(dospath, path);
-        } else {
-                strncpy(dospath, path, strlen(path) - 1);
-        }
-
-        dir->f_handle   = hdl;
-        dir->f_closedir = fatfs_closedir;
-        dir->f_readdir  = fatfs_readdir;
-        dir->f_seek     = 0;
-        dir->f_items    = 0;
-
-        struct fatdir *fatdir = dir->f_dd;
-        if (libfat_opendir(&hdl->fatfs, &fatdir->dir, dospath) == FR_OK) {
-                free(dospath);
-                hdl->opened_dirs++;
-                return STD_RET_OK;
-        }
-
-        free(dospath);
-        free(dir->f_dd);
 
         return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
- * @brief Function close dir
+ * @brief Close directory
  *
- * @param[in] *fs_handle        FS handle
- * @param[in] *dir              directory info
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t fatfs_closedir(void *fs_handle, DIR *dir)
+static stdret_t closedir(void *fs_handle, DIR *dir)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!dir);
-
-        struct fatfs *hdl = fs_handle;
-
-        if (dir->f_dd) {
-                free(dir->f_dd);
-                hdl->opened_dirs--;
-        }
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function read current directory
+ * @brief Read directory
  *
- * @param[in] *fs_handle        FS handle
- * @param[in] *dir              directory info
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return directory entry description object
  */
 //==============================================================================
-static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
+static dirent_t readdir(void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-
+        STOP_IF(!fs_handle);
         STOP_IF(!dir);
 
-        struct fatdir *fatdir = dir->f_dd;
-
         dirent_t dirent;
-        dirent.name = NULL;
-        dirent.size = 0;
-
-        FILEINFO fat_file_info;
-#if _LIBFAT_USE_LFN != 0
-        fat_file_info.lfname = &fatdir->name[0];
-        fat_file_info.lfsize = _LIBFAT_MAX_LFN;
-#endif
-        if (libfat_readdir(&fatdir->dir, &fat_file_info) == FR_OK) {
-                if (fat_file_info.fname[0] != 0) {
-#if _LIBFAT_USE_LFN != 0
-                        if (fat_file_info.lfname[0] == 0) {
-                                memcpy(fatdir->name, fat_file_info.fname, 13);
-                        }
-#else
-                        memcpy(fatdir->name, fat_file_info.fname, 13);
-#endif
-                        dirent.name     = &fatdir->name[0];
-                        dirent.filetype = fat_file_info.fattrib & LIBFAT_AM_DIR ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
-                        dirent.size     = fat_file_info.fsize;
-                }
-        }
 
         return dirent;
 }
@@ -582,17 +372,12 @@ static dirent_t fatfs_readdir(void *fs_handle, DIR *dir)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_REMOVE(fatfs, void *fs_handle, const char *path)
+API_FS_REMOVE(genericfs, void *fs_handle, const char *path)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
 
-        struct fatfs *hdl = fs_handle;
-
-        if (libfat_unlink(&hdl->fatfs, path) == FR_OK)
-                return STD_RET_OK;
-        else
-                return STD_RET_ERROR;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -607,18 +392,13 @@ API_FS_REMOVE(fatfs, void *fs_handle, const char *path)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name)
+API_FS_RENAME(genericfs, void *fs_handle, const char *old_name, const char *new_name)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!old_name);
         STOP_IF(!new_name);
 
-        struct fatfs *hdl = fs_handle;
-
-        if (libfat_rename(&hdl->fatfs, old_name, new_name) == FR_OK)
-                return STD_RET_OK;
-        else
-                return STD_RET_ERROR;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -633,17 +413,10 @@ API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHMOD(fatfs, void *fs_handle, const char *path, int mode)
+API_FS_CHMOD(genericfs, void *fs_handle, const char *path, int mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
-
-        struct fatfs *hdl = fs_handle;
-
-        uint8_t dosmode = mode & OWNER_MODE(MODE_W) ? 0 : LIBFAT_AM_RDO;
-        if (libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO) == FR_OK) {
-                return STD_RET_OK;
-        }
 
         return STD_RET_ERROR;
 }
@@ -661,14 +434,10 @@ API_FS_CHMOD(fatfs, void *fs_handle, const char *path, int mode)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CHOWN(fatfs, void *fs_handle, const char *path, int owner, int group)
+API_FS_CHOWN(genericfs, void *fs_handle, const char *path, int owner, int group)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(owner);
-        UNUSED_ARG(group);
-
-        /* not supported by this file system */
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
 
         return STD_RET_ERROR;
 }
@@ -685,27 +454,20 @@ API_FS_CHOWN(fatfs, void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(fatfs, void *fs_handle, const char *path, struct vfs_stat *stat)
+API_FS_STAT(genericfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
         STOP_IF(!stat);
 
-        struct fatfs *hdl = fs_handle;
+        stat->st_dev   = 0;
+        stat->st_gid   = 0;
+        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
+        stat->st_mtime = 0;
+        stat->st_size  = 0;
+        stat->st_uid   = 0;
 
-        FILEINFO file_info;
-        if (libfat_stat(&hdl->fatfs, path, &file_info) == FR_OK) {
-                stat->st_dev   = 0;
-                stat->st_gid   = 0;
-                stat->st_mode  = 0777;
-                stat->st_mtime = file_info.ftime;
-                stat->st_size  = file_info.fsize;
-                stat->st_uid   = 0;
-
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -719,39 +481,19 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(fatfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(genericfs, void *fs_handle, struct vfs_statfs *statfs)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!statfs);
 
-        struct fatfs *hdl = fs_handle;
-        u32_t  free_clusters = 0;
+        statfs->f_bfree  = 0;
+        statfs->f_blocks = 0;
+        statfs->f_ffree  = 0;
+        statfs->f_files  = 0;
+        statfs->f_type   = 1;
+        statfs->fsname   = "genericfs";
 
-        struct vfs_stat fstat;
-        fstat.st_size = 0;
-        vfs_fstat(hdl->fsfile, &fstat);
-
-        if (libfat_getfree(&hdl->fatfs, &free_clusters) == FR_OK) {
-                statfs->f_bsize  = _LIBFAT_MAX_SS;
-                statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
-                statfs->f_blocks = fstat.st_size / _LIBFAT_MAX_SS;
-                statfs->f_ffree  = 0;
-                statfs->f_files  = 0;
-                statfs->f_type   = hdl->fatfs.fs_type;
-
-                if (hdl->fatfs.fs_type == LIBFAT_FS_FAT12)
-                        statfs->f_fsname = "fatfs (FAT12)";
-                else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT16)
-                        statfs->f_fsname = "fatfs (FAT16)";
-                else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT32)
-                        statfs->f_fsname = "fatfs (FAT32)";
-                else
-                        statfs->f_fsname = "fatfs (FAT\?\?)";
-
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 #ifdef __cplusplus
