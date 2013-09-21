@@ -26,8 +26,8 @@
 #
 ####################################################################################################
 
-include src/programs/Makefile.mk
-include src/system/Makefile.mk
+include src/programs/Makefile.in
+include src/system/Makefile.in
 
 ####################################################################################################
 # PROJECT CONFIGURATION
