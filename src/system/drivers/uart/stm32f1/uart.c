@@ -140,7 +140,14 @@ static struct USART_data *USART_data[UART_DEV_COUNT];
 
 //==============================================================================
 /**
- * @brief Initialize USART devices
+ * @brief Initialize device
+ *
+ * @param[out]          **device_handle        device allocated memory
+ * @param[in ]            major                major device number
+ * @param[in ]            minor                minor device number
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
@@ -279,7 +286,12 @@ error:
 
 //==============================================================================
 /**
- * @brief Release USART device
+ * @brief Release device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_RELEASE(UART, void *device_handle)
@@ -309,7 +321,13 @@ API_MOD_RELEASE(UART, void *device_handle)
 
 //==============================================================================
 /**
- * @brief Opens specified port
+ * @brief Open device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_OPEN(UART, void *device_handle, int flags)
@@ -322,10 +340,17 @@ API_MOD_OPEN(UART, void *device_handle, int flags)
 
 //==============================================================================
 /**
- * @brief Function close opened port
+ * @brief Close device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           force                  device force close (true)
+ * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(UART, void *device_handle, bool force, task_t *opened_by_task)
+API_MOD_CLOSE(UART, void *device_handle, bool force, const task_t *opened_by_task)
 {
         UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
@@ -337,7 +362,14 @@ API_MOD_CLOSE(UART, void *device_handle, bool force, task_t *opened_by_task)
 
 //==============================================================================
 /**
- * @brief Write data to UART
+ * @brief Write data to device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]          *src                    data source
+ * @param[in ]           count                  number of bytes to write
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of written bytes
  */
 //==============================================================================
 API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
@@ -368,7 +400,14 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
 
 //==============================================================================
 /**
- * @brief Read data from UART Rx buffer
+ * @brief Read data from device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *dst                    data destination
+ * @param[in ]           count                  number of bytes to read
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of read bytes
  */
 //==============================================================================
 API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
@@ -415,17 +454,25 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 
 //==============================================================================
 /**
- * @brief Direct IO control
+ * @brief IO control
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           request                request
+ * @param[in ][out]     *arg                    request's argument
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ * @retval ...
  */
 //==============================================================================
-API_MOD_IOCTL(UART, void *device_handle, int iorq, void *arg)
+API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 {
         STOP_IF(device_handle == NULL);
 
         struct USART_data *hdl = device_handle;
         stdret_t status = STD_RET_OK;
 
-        switch (iorq) {
+        switch (request) {
         case UART_IORQ_ENABLE_WAKEUP_IDLE:
                 wakeup_USART_on_idle_line(hdl->USART);
                 break;
@@ -579,6 +626,11 @@ API_MOD_IOCTL(UART, void *device_handle, int iorq, void *arg)
 //==============================================================================
 /**
  * @brief Flush device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_FLUSH(UART, void *device_handle)
@@ -590,7 +642,13 @@ API_MOD_FLUSH(UART, void *device_handle)
 
 //==============================================================================
 /**
- * @brief Interface returns device informations
+ * @brief Device information
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *device_stat            device status
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)

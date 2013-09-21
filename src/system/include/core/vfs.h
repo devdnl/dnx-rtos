@@ -160,7 +160,7 @@ struct vfs_mntent {
 struct vfs_drv_interface {
         void     *handle;
         stdret_t (*drv_open )(void *drvhdl, int flags);
-        stdret_t (*drv_close)(void *drvhdl, bool force, task_t *opened_by_task);
+        stdret_t (*drv_close)(void *drvhdl, bool force, const task_t *opened_by_task);
         size_t   (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *lseek);
         size_t   (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *lseek);
         stdret_t (*drv_ioctl)(void *drvhdl, int iorq, void *args);
@@ -173,14 +173,14 @@ struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, int flags);
-        stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force, task_t *opened_by_task);
+        stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
         size_t   (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *lseek);
         size_t   (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *lseek);
         stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path);
-        stdret_t (*fs_mknod  )(void *fshdl, const char *path, struct vfs_drv_interface *drv_if);
+        stdret_t (*fs_mknod  )(void *fshdl, const char *path, const struct vfs_drv_interface *drv_if);
         stdret_t (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
         stdret_t (*fs_remove )(void *fshdl, const char *path);
         stdret_t (*fs_rename )(void *fshdl, const char *old_name, const char *new_name);

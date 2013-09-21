@@ -105,8 +105,8 @@ static stdret_t  add_node_to_list_of_open_files (struct LFS_data *lfs, node_t *b
 /**
  * @brief Initialize file system
  *
- * @param[out] **fs_handle      pointer to allocated memory by file system
- * @param[in]  *src_path        file source path
+ * @param[out]          **fs_handle             file system allocated memory
+ * @param[in ]           *src_path              file source path
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -154,9 +154,9 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
 
 //==============================================================================
 /**
- * @brief Function release file system
+ * @brief Release file system
  *
- * @param[in] *fs_handle            FS handle
+ * @param[in ]          *fs_handle              file system allocated memory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -176,17 +176,17 @@ API_FS_RELEASE(lfs, void *fs_handle)
 
 //==============================================================================
 /**
- * @brief Function create node for driver file
+ * @brief Create node for driver file
  *
- * @param[in] *fs_handle        FS handle
- * @param[in] *path             path when driver-file shall be created
- * @param[in] *drv_if           pointer to driver interface
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of created node
+ * @param[in ]          *drv_if                 driver interface
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(lfs, void *fs_handle, const char *path, struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(lfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -258,8 +258,8 @@ error:
 /**
  * @brief Create directory
  *
- * @param[in] *fs_handle        FS handle
- * @param[in] *path             path to new directory
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of created directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -329,11 +329,11 @@ error:
 
 //==============================================================================
 /**
- * @brief Function open directory
+ * @brief Open directory
  *
- * @param[in]  *fs_handle       FS handle
- * @param[in]  *path            directory path
- * @param[out] *dir             directory info
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of opened directory
+ * @param[in ]          *dir                    directory object
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -433,10 +433,10 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
 
 //==============================================================================
 /**
- * @brief Remove file
+ * @brief Remove file/directory
  *
- * @param[in] *fs_handle        FS handle
- * @param[in] *patch            localization of file/directory
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of removed file/directory
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -498,11 +498,11 @@ error:
 
 //==============================================================================
 /**
- * @brief Rename file name
+ * @brief Rename file/directory
  *
- * @param[in] *fs_handle            FS handle
- * @param[in] *oldName              old file name
- * @param[in] *newName              new file name
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *old_name               old object name
+ * @param[in ]          *new_name               new object name
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -569,11 +569,11 @@ error:
 
 //==============================================================================
 /**
- * @brief Function change file mode
+ * @brief Change file's mode
  *
- * @param[in] *fs_handle            FS handle
- * @param[in] *path                 path
- * @param[in]  mode                 file mode
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   file path
+ * @param[in ]           mode                   new file mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -602,12 +602,12 @@ API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
 
 //==============================================================================
 /**
- * @brief Function change file owner and group
+ * @brief Change file's owner and group
  *
- * @param[in] *fs_handle            FS handle
- * @param[in] *path                 path
- * @param[in]  owner                file owner
- * @param[in]  group                file group
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   file path
+ * @param[in ]           owner                  new file owner
+ * @param[in ]           group                  new file group
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -638,11 +638,11 @@ API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
 
 //==============================================================================
 /**
- * @brief Function returns file/dir status
+ * @brief Return file/dir status
  *
- * @param[in]  *fs_handle            FS handle
- * @param[in]  *path                 file/dir path
- * @param[out] *stat                 pointer to stat structure
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   file path
+ * @param[out]          *stat                   file status
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -692,12 +692,12 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 
 //==============================================================================
 /**
- * @brief Function returns file status
+ * @brief Return file status
  *
- * @param[in]  *fs_handle            FS handle
- * @param[in]  *extra                file extra data (useful in FS wrappers)
- * @param[in]   fd                   file descriptor
- * @param[out] *stat                 pointer to status structure
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *extra                  file extra data
+ * @param[in ]           fd                     file descriptor
+ * @param[out]          *stat                   file status
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -746,10 +746,10 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
 
 //==============================================================================
 /**
- * @brief Function returns FS status
+ * @brief Return file system status
  *
- * @param[in]  *fs_handle           FS handle
- * @param[out] *statfs              pointer to status structure
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[out]          *statfs                 file system status
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
@@ -773,17 +773,17 @@ API_FS_STATFS(lfs, void *fs_handle, struct vfs_statfs *statfs)
 
 //==============================================================================
 /**
- * @brief Function open selected file
+ * @brief Open file
  *
- * @param[in]  *fs_handle       FS handle
- * @param[in]  *extra           file extra data (useful in FS wrappers)
- * @param[out] *fd              file descriptor
- * @param[out] *lseek           file position
- * @param[in]  *path            file path
- * @param[in]   flags           file open flags
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[out]          *extra                  file extra data
+ * @param[out]          *fd                     file descriptor
+ * @param[out]          *fpos                   file position
+ * @param[in]           *path                   file path
+ * @param[in]            flags                  file open flags (see vfs.h)
  *
- * @retval STD_RET_OK           file opened/created
- * @retval STD_RET_ERROR        file not opened/created
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
 API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
@@ -883,19 +883,19 @@ error:
 
 //==============================================================================
 /**
- * @brief Function close file in LFS
+ * @brief Close file
  *
- * @param[in] *fs_handle        FS handle
- * @param[in] *extra            file extra data (useful in FS wrappers)
- * @param[in]  fd               file descriptor
- * @param[in]  force            force close
- * @param[in] *file_owner       task which opened file
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *extra                  file extra data
+ * @param[in ]           fd                     file descriptor
+ * @param[in ]           force                  force close
+ * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
+API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_t *file_owner)
 {
         UNUSED_ARG(extra);
 
@@ -967,16 +967,16 @@ exit:
 
 //==============================================================================
 /**
- * @brief Function write data to the file
+ * @brief Write data to the file
  *
- * @param[in] *fs_handle        FS handle
- * @param[in] *extra            file extra data (useful in FS wrappers)
- * @param[in]  fd               file descriptor
- * @param[in] *src              data source
- * @param[in]  count            number of bytes
- * @param[in] *fpos             position in file
- *
- * @return number of written items
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *extra                  file extra data
+ * @param[in ]           fd                     file descriptor
+ * @param[in ]          *src                    data source
+ * @param[in ]           count                  number of bytes to write
+ * @param[in ]          *fpos                   position in file
+
+ * @return number of written bytes
  */
 //==============================================================================
 API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
@@ -1050,16 +1050,16 @@ exit:
 
 //==============================================================================
 /**
- * @brief Function read from file data
+ * @brief Read data from file
  *
- * @param[in]  *fs_handle       FS handle
- * @param[in]  *extra           file extra data (useful in FS wrappers)
- * @param[in]   fd              file descriptor
- * @param[out] *dst             data destination
- * @param[in]   count           number of bytes
- * @param[in]  *fpos            position in file
- *
- * @return number of read items
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *extra                  file extra data
+ * @param[in ]           fd                     file descriptor
+ * @param[out]          *dst                    data destination
+ * @param[in ]           count                  number of bytes to read
+ * @param[in ]          *fpos                   position in file
+
+ * @return number of read bytes
  */
 //==============================================================================
 API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
@@ -1128,17 +1128,18 @@ exit:
 /**
  * @brief IO operations on files
  *
- * @param[in]     *fs_handle    FS handle
- * @param[in]     *extra        file extra data (useful in FS wrappers)
- * @param[in]      fd           file descriptor
- * @param[in]      iorq         request
- * @param[in,out] *arg          request's argument
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *extra                  file extra data
+ * @param[in ]           fd                     file descriptor
+ * @param[in ]           request                request
+ * @param[in ][out]     *arg                    request's argument
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
+ * @retval ...
  */
 //==============================================================================
-API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int iorq, void *arg)
+API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
 {
         UNUSED_ARG(extra);
 
@@ -1162,7 +1163,7 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int iorq, void *arg)
 
                 if (drv_if->drv_ioctl) {
                         unlock_recursive_mutex(lfs->resource_mtx);
-                        return drv_if->drv_ioctl(drv_if->handle, iorq, arg);
+                        return drv_if->drv_ioctl(drv_if->handle, request, arg);
                 }
         }
 
@@ -1173,11 +1174,11 @@ error:
 
 //==============================================================================
 /**
- * @brief Function flush file data
+ * @brief Flush file data
  *
- * @param[in]     *fs_handle    FS handle
- * @param[in]     *extra        file extra data (useful in FS wrappers)
- * @param[in]      fd           file descriptor
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *extra                  file extra data
+ * @param[in ]           fd                     file descriptor
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
