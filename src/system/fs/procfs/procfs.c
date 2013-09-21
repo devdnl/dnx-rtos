@@ -69,8 +69,8 @@ enum taskInfFile {
 
 struct procfs {
       list_t  *file_list;
-      u32_t    ID_counter;
       mutex_t *resource_mtx;
+      u32_t    ID_counter;
 };
 
 struct file_info {
@@ -118,29 +118,32 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 
         STOP_IF(!fs_handle);
 
-        struct procfs *procmem;
-        if (!(procmem = calloc(1, sizeof(struct procfs)))) {
-                return STD_RET_ERROR;
-        }
+        struct procfs *procfs    = calloc(1, sizeof(struct procfs));
+        list_t        *file_list = new_list();
+        mutex_t       *mtx       = new_mutex();
 
-        procmem->file_list    = new_list();
-        procmem->resource_mtx = new_mutex();
+        if (procfs && file_list && mtx) {
+                procfs->file_list    = file_list;
+                procfs->resource_mtx = mtx;
+                procfs->ID_counter   = 0;
 
-        if (!procmem->file_list || !procmem->resource_mtx) {
-                if (procmem->file_list) {
-                        delete_list(procmem->file_list);
-                }
-
-                if (procmem->resource_mtx) {
-                        delete_mutex(procmem->resource_mtx);
-                }
-
-                free(procmem);
-                return STD_RET_ERROR;
-        } else {
-                *fs_handle = procmem;
+                *fs_handle = procfs;
                 return STD_RET_OK;
         }
+
+        if (file_list) {
+                delete_list(file_list);
+        }
+
+        if (mtx) {
+                delete_mutex(mtx);
+        }
+
+        if (procfs) {
+                free(procfs);
+        }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -157,17 +160,26 @@ API_FS_RELEASE(procfs, void *fs_handle)
 {
         STOP_IF(!fs_handle);
 
-        struct procfs *procmem = fs_handle;
+        struct procfs *procfs = fs_handle;
 
-        while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
-        enter_critical_section();
-        unlock_mutex(procmem->resource_mtx);
-        delete_mutex(procmem->resource_mtx);
-        delete_list(procmem->file_list);
-        free(procmem);
-        exit_critical_section();
+        if (lock_mutex(procfs->resource_mtx, 100) == MUTEX_LOCKED) {
+                if (list_get_item_count(procfs->file_list) != 0) {
+                        unlock_mutex(procfs->resource_mtx);
+                        return STD_RET_ERROR;
+                }
 
-        return STD_RET_OK;
+                enter_critical_section();
+                unlock_mutex(procfs->resource_mtx);
+
+                delete_list(procfs->file_list);
+                delete_mutex(procfs->resource_mtx);
+                free(procfs);
+
+                exit_critical_section();
+                return STD_RET_OK;
+        }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================

@@ -152,18 +152,21 @@ API_FS_RELEASE(devfs, void *fs_handle)
 
         struct devfs *devfs = fs_handle;
 
-        if (devfs->number_of_opened_devices == 0) {
-                if (lock_mutex(devfs->mutex, 0) == MUTEX_LOCKED) {
-                        enter_critical_section();
+        if (lock_mutex(devfs->mutex, 100) == MUTEX_LOCKED) {
+                if (devfs->number_of_opened_devices != 0) {
                         unlock_mutex(devfs->mutex);
-
-                        delete_chain(devfs->root_chain);
-                        delete_mutex(devfs->mutex);
-                        free(devfs);
-
-                        exit_critical_section();
-                        return STD_RET_OK;
+                        return STD_RET_ERROR;
                 }
+
+                enter_critical_section();
+                unlock_mutex(devfs->mutex);
+
+                delete_chain(devfs->root_chain);
+                delete_mutex(devfs->mutex);
+                free(devfs);
+
+                exit_critical_section();
+                return STD_RET_OK;
         }
 
         return STD_RET_ERROR;
