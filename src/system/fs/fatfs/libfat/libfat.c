@@ -662,12 +662,9 @@ static void clear_lock(FATFS *fs)
 //==============================================================================
 static FRESULT sync_window(FATFS *fs)
 {
-        uint32_t wsect;
-        uint nf;
-
         /* Write back the sector if it is dirty */
         if (fs->wflag) {
-                wsect = fs->winsect;
+                uint32_t wsect = fs->winsect;
 
                 /* Current sector number */
                 if (_libfat_disk_write(fs->srcfile, fs->win, wsect, 1) != RES_OK)
@@ -678,7 +675,7 @@ static FRESULT sync_window(FATFS *fs)
                 /* In FAT area? */
                 if (wsect >= fs->fatbase && wsect < (fs->fatbase + fs->fsize)) {
                         /* Reflect the change to all FAT copies */
-                        for (nf = fs->n_fats; nf >= 2; nf--) {
+                        for (uint nf = fs->n_fats; nf >= 2; nf--) {
                                 wsect += fs->fsize;
                                 _libfat_disk_write(fs->srcfile, fs->win, wsect, 1);
                         }
@@ -1185,12 +1182,9 @@ static FRESULT dir_next(FATDIR *dj, int stretch)
 //==============================================================================
 static FRESULT dir_alloc(FATDIR *dj, uint nent)
 {
-        FRESULT res;
-        uint n;
-
-        res = dir_sdi(dj, 0);
+        FRESULT res = dir_sdi(dj, 0);
         if (res == FR_OK) {
-                n = 0;
+                uint n = 0;
                 do {
                         res = move_window(dj->fs, dj->sect);
                         if (res != FR_OK)
@@ -1265,16 +1259,13 @@ static void st_clust(uint8_t *dir, uint32_t cl)
 //==============================================================================
 static int cmp_lfn(wchar_t *lfnbuf, uint8_t *dir)
 {
-        uint i, s;
-        wchar_t wc, uc;
-
         /* Get offset in the LFN buffer */
-        i = ((dir[LDIR_Ord] & ~LLE) - 1) * 13;
-        s = 0;
-        wc = 1;
+        uint i = ((dir[LDIR_Ord] & ~LLE) - 1) * 13;
+        uint s = 0;
+        wchar_t wc = 1;
         do {
                 /* Pick an LFN character from the entry */
-                uc = LOAD_UINT16(dir + LfnOfs[s]);
+                wchar_t uc = LOAD_UINT16(dir + LfnOfs[s]);
 
                 /* Last char has not been processed */
                 if (wc) {
@@ -1308,17 +1299,14 @@ static int cmp_lfn(wchar_t *lfnbuf, uint8_t *dir)
 //==============================================================================
 static int pick_lfn(wchar_t *lfnbuf, uint8_t *dir)
 {
-        uint i, s;
-        wchar_t wc, uc;
-
         /* Offset in the LFN buffer */
-        i = ((dir[LDIR_Ord] & 0x3F) - 1) * 13;
+        uint i = ((dir[LDIR_Ord] & 0x3F) - 1) * 13;
 
-        s = 0;
-        wc = 1;
+        uint s = 0;
+        wchar_t wc = 1;
         do {
                 /* Pick an LFN character from the entry */
-                uc = LOAD_UINT16(dir+LfnOfs[s]);
+                wchar_t uc = LOAD_UINT16(dir+LfnOfs[s]);
                 if (wc) {
                         if (i >= _LIBFAT_MAX_LFN)
                                 return 0;
@@ -2076,9 +2064,8 @@ static void get_fileinfo(FATDIR *dj, FILEINFO *fno)
 {
         uint i;
         uint8_t nt, *dir;
-        TCHAR *p, c;
 
-        p = fno->fname;
+        TCHAR *p = fno->fname;
         if (dj->sect) {
                 dir = dj->dir;
 
@@ -2087,7 +2074,7 @@ static void get_fileinfo(FATDIR *dj, FILEINFO *fno)
 
                 /* Copy name body */
                 for (i = 0; i < 8; i++) {
-                        c = dir[i];
+                        TCHAR c = dir[i];
                         if (c == ' ')
                                 break;
 
@@ -2111,7 +2098,7 @@ static void get_fileinfo(FATDIR *dj, FILEINFO *fno)
                 if (dir[8] != ' ') {
                         *p++ = '.';
                         for (i = 8; i < 11; i++) {
-                                c = dir[i];
+                                TCHAR c = dir[i];
                                 if (c == ' ')
                                         break;
 
@@ -2140,14 +2127,14 @@ static void get_fileinfo(FATDIR *dj, FILEINFO *fno)
 #if _LIBFAT_USE_LFN
         if (fno->lfname && fno->lfsize) {
                 TCHAR *tp = fno->lfname;
-                wchar_t w, *lfn;
 
                 i = 0;
                 /* Get LFN if available */
                 if (dj->sect && dj->lfn_idx != 0xFFFF) {
-                        lfn = dj->lfn;
+                        wchar_t *lfn = dj->lfn;
 
                         /* Get an LFN char */
+                        wchar_t w;
                         while ((w = *lfn++) != 0) {
 #if !_LIBFAT_LFN_UNICODE
                                 w = _libfat_convert(w, 0);
@@ -2190,7 +2177,6 @@ static void get_fileinfo(FATDIR *dj, FILEINFO *fno)
 static FRESULT follow_path(FATDIR *dj, const TCHAR *path)
 {
         FRESULT res;
-        uint8_t *dir, ns;
 
         /* Strip heading separator if exist */
         if (*path == '/' || *path == '\\')
@@ -2211,7 +2197,7 @@ static FRESULT follow_path(FATDIR *dj, const TCHAR *path)
                                 break;
 
                         res = dir_find(dj);
-                        ns = *(dj->fn+NS);
+                        uint8_t ns = *(dj->fn+NS);
                         if (res != FR_OK) {
                                 if (res != FR_NO_FILE)
                                         break;
@@ -2226,7 +2212,7 @@ static FRESULT follow_path(FATDIR *dj, const TCHAR *path)
                                 break;
 
                         /* There is next segment. Follow the sub directory */
-                        dir = dj->dir;
+                        uint8_t *dir = dj->dir;
                         if (!(dir[DIR_Attr] & LIBFAT_AM_DIR)) {
                                 /* Cannot follow because it is a file */
                                 res = FR_NO_PATH;
@@ -3429,8 +3415,6 @@ FRESULT libfat_getfree(FATFS *fs, uint32_t *nclst)
 {
         FRESULT  res = FR_OK;
         uint32_t n, clst, sect, stat;
-        uint     i;
-        uint8_t  fat, *p;
 
         ENTER_FF(fs);
 
@@ -3439,7 +3423,7 @@ FRESULT libfat_getfree(FATFS *fs, uint32_t *nclst)
                 *nclst = fs->free_clust;
         } else {
                 /* Get number of free clusters */
-                fat = fs->fs_type;
+                uint8_t fat = fs->fs_type;
                 n   = 0;
                 if (fat == LIBFAT_FS_FAT12) {
                         clst = 2;
@@ -3461,8 +3445,8 @@ FRESULT libfat_getfree(FATFS *fs, uint32_t *nclst)
                 } else {
                         clst = fs->n_fatent;
                         sect = fs->fatbase;
-                        i = 0;
-                        p = 0;
+                        uint i = 0;
+                        uint8_t *p = 0;
                         do {
                                 if (!i) {
                                         res = move_window(fs, sect++);
@@ -3585,7 +3569,6 @@ FRESULT libfat_unlink(FATFS *fs, const TCHAR *path)
 {
         FRESULT  res;
         FATDIR   dj, sdj;
-        uint8_t *dir;
         uint32_t dclst;
         DEF_NAMEBUF;
 
@@ -3601,7 +3584,7 @@ FRESULT libfat_unlink(FATFS *fs, const TCHAR *path)
         }
 #endif
         if (res == FR_OK) {
-                dir = dj.dir;
+                uint8_t *dir = dj.dir;
                 if (!dir) {
                         /* Cannot remove the start directory */
                         res = FR_INVALID_NAME;
@@ -3675,7 +3658,7 @@ FRESULT libfat_mkdir(FATFS *fs, const TCHAR *path)
 {
         FRESULT  res;
         FATDIR   dj;
-        uint8_t *dir, n;
+        uint8_t  n;
         uint32_t dsc, dcl, pcl, tm = _libfat_get_fattime();
         DEF_NAMEBUF;
 
@@ -3713,6 +3696,7 @@ FRESULT libfat_mkdir(FATFS *fs, const TCHAR *path)
                         res = sync_window(dj.fs);
                 }
 
+                uint8_t *dir;
                 if (res == FR_OK) {
                         /* Initialize the new directory table */
                         dsc = clust2sect(dj.fs, dcl);
@@ -3793,7 +3777,6 @@ FRESULT libfat_chmod(FATFS *fs, const TCHAR *path, uint8_t value, uint8_t mask)
 {
         FRESULT  res;
         FATDIR   dj;
-        uint8_t *dir;
         DEF_NAMEBUF;
 
         ENTER_FF(fs);
@@ -3804,7 +3787,7 @@ FRESULT libfat_chmod(FATFS *fs, const TCHAR *path, uint8_t value, uint8_t mask)
         FREE_BUF();
 
         if (res == FR_OK) {
-                dir = dj.dir;
+                uint8_t *dir = dj.dir;
                 if (!dir) {
                         res = FR_INVALID_NAME;
                 } else {
@@ -3842,7 +3825,6 @@ FRESULT libfat_utime(FATFS *fs, const TCHAR *path, const FILEINFO *fno)
 {
         FRESULT  res;
         FATDIR   dj;
-        uint8_t *dir;
         DEF_NAMEBUF;
 
         ENTER_FF(fs);
@@ -3853,7 +3835,7 @@ FRESULT libfat_utime(FATFS *fs, const TCHAR *path, const FILEINFO *fno)
         FREE_BUF();
 
         if (res == FR_OK) {
-                dir = dj.dir;
+                uint8_t *dir = dj.dir;
                 if (!dir) {
                         res = FR_INVALID_NAME;
                 } else {
@@ -3889,7 +3871,7 @@ FRESULT libfat_rename(FATFS *fs, const TCHAR *path_old, const TCHAR *path_new)
 {
         FRESULT  res;
         FATDIR   djo, djn;
-        uint8_t  buf[21], *dir;
+        uint8_t  buf[21];
         uint32_t dw;
         DEF_NAMEBUF;
 
@@ -3926,7 +3908,7 @@ FRESULT libfat_rename(FATFS *fs, const TCHAR *path_old, const TCHAR *path_new)
                                 res = dir_register(&djn);
                                 if (res == FR_OK) {
                                         /* Copy object information except for name */
-                                        dir = djn.dir;
+                                        uint8_t *dir = djn.dir;
                                         memcpy(dir+13, buf+2, 19);
                                         dir[DIR_Attr] = buf[0] | LIBFAT_AM_ARC;
                                         djo.fs->wflag = 1;

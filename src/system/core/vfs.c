@@ -1246,7 +1246,7 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
 
         new_path = sysm_syscalloc(new_path_len + 1, sizeof(char));
         if (new_path) {
-                if (cwd_len) {
+                if (cwd_len && cwd) {
                         strcpy(new_path, cwd);
 
                         if (last_character(cwd) != '/') {
