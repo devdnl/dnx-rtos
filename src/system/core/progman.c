@@ -165,20 +165,19 @@ task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
 //==============================================================================
 void delete_program(task_t *taskhdl, int exit_code)
 {
-        struct task_data    *tdata;
-        struct program_data *pdata;
-
         if (taskhdl == NULL) {
                 return;
         }
 
-        if ((tdata = _get_task_data(taskhdl))) {
+        struct task_data *tdata = _get_task_data(taskhdl);
+        if (tdata) {
                 if (tdata->f_global_vars) {
                         sysm_tskfree_as(taskhdl, tdata->f_global_vars);
                         tdata->f_global_vars = NULL;
                 }
 
-                if ((pdata = tdata->f_user)) {
+                struct program_data *pdata = tdata->f_user;
+                if (pdata) {
                         if (pdata->argv) {
                                 delete_argument_table(pdata->argv);
                         }

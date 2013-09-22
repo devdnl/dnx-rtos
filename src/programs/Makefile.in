@@ -1,5 +1,8 @@
 # Makefile for GNU make
 
+####################################################################################################
+# INSERT HERE SOURCE OF BUILT-IN PROGRAMS
+####################################################################################################
 CSRC_PROGRAMS += cat/cat.c
 CSRC_PROGRAMS += cp/cp.c
 CSRC_PROGRAMS += helloworld/helloworld.c

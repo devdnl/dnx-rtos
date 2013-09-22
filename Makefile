@@ -6,8 +6,7 @@
 # Version: 20130516
 #--------------------------------------------------------------------------------------------------
 #
-#
-#    Copyright (C) 2011  Daniel Zorychta (daniel.zorychta@gmail.com)
+#    Copyright (C) 2011, 2012, 2013  Daniel Zorychta (daniel.zorychta@gmail.com)
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -38,24 +37,18 @@ PROJECT = dnx
 #---------------------------------------------------------------------------------------------------
 # ARCHITECTURE CONFIG: stm32f1
 #---------------------------------------------------------------------------------------------------
-CC_stm32f1        = arm-none-eabi-gcc
-CXX_stm32f1       = arm-none-eabi-g++
-LINKER_stm32f1    = arm-none-eabi-gcc
-AS_stm32f1        = arm-none-eabi-gcc -x assembler-with-cpp
-OBJCOPY_stm32f1   = arm-none-eabi-objcopy
-OBJDUMP_stm32f1   = arm-none-eabi-objdump
-SIZE_stm32f1      = arm-none-eabi-size
-LD_SCRIPT_stm32f1 = src/system/portable/stm32f1/stm32f107xx.ld
+TOOLCHAIN_stm32f1 = arm-none-eabi-
+LD_SCRIPT_stm32f1 = src/system/portable/stm32f1/STM32F107xCxx.ld
 CPU_stm32f1       = cortex-m3
 MCU_stm32f1       = STM32F10X_CL
-DEFINES_stm32f1   = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
+DEFINE_stm32f1    = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
 CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
-                    -Wstrict-prototypes -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINES_stm32f1)
+                    -Wstrict-prototypes -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINE_stm32f1)
 CXXFLAGS_stm32f1  =
 LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
                     -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                    $(DEFINES_stm32f1) -lm
-AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINES_stm32f1)
+                    $(DEFINE_stm32f1) -lm
+AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINE_stm32f1)
 
 #---------------------------------------------------------------------------------------------------
 # FILE EXTENSIONS CONFIGURATION
@@ -86,10 +79,17 @@ MKDIR    = mkdir -p
 TEST     = test
 DATE     = date
 CAT      = cat
-DEPAPP   = makedepend
+MKDEP    = makedepend
 WC       = wc
 GREP     = grep
 SIZEOF   = stat -c %s
+CC       = $(TOOLCHAIN_$(TARGET))gcc
+CXX      = $(TOOLCHAIN_$(TARGET))g++
+LD       = $(TOOLCHAIN_$(TARGET))gcc
+AS       = $(TOOLCHAIN_$(TARGET))gcc -x assembler-with-cpp
+OBJCOPY  = $(TOOLCHAIN_$(TARGET))objcopy
+OBJDUMP  = $(TOOLCHAIN_$(TARGET))objdump
+SIZE     = $(TOOLCHAIN_$(TARGET))size
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -154,7 +154,7 @@ all :
 ####################################################################################################
 .PHONY : check
 check :
-	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive $(DEFINES_stm32f1) $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
+	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive $(DEFINE_stm32f1) $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
 
 ####################################################################################################
 # targets
@@ -168,19 +168,19 @@ stm32f1 : dependencies buildobjects linkobjects hex status
 .PHONY : hex
 hex :
 	@echo 'Creating IHEX image...'
-	@$(OBJCOPY_$(TARGET)) $(TARGET_PATH)/$(PROJECT).elf -O ihex $(TARGET_PATH)/$(PROJECT).hex
+	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O ihex $(TARGET_PATH)/$(PROJECT).hex
 
 	@echo 'Creating binary image...'
-	@$(OBJCOPY_$(TARGET)) $(TARGET_PATH)/$(PROJECT).elf -O binary $(TARGET_PATH)/$(PROJECT).bin
+	@$(OBJCOPY) $(TARGET_PATH)/$(PROJECT).elf -O binary $(TARGET_PATH)/$(PROJECT).bin
 
 	@echo 'Creating memory dump...'
-	@$(OBJDUMP_$(TARGET)) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
+	@$(OBJDUMP) -x --syms $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).dmp
 
 	@echo 'Creating extended listing....'
-	@$(OBJDUMP_$(TARGET)) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
+	@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
 
 	@echo 'Size of modules:'
-	@$(SIZE_$(TARGET)) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
+	@$(SIZE) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 
 	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) bytes\n"
 
@@ -203,7 +203,7 @@ dependencies :
 	@$(MKDIR) $(TARGET_PATH)
 	@$(RM) $(TARGET_PATH)/*.*
 	@echo "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
-	@$(DEPAPP) -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >& /dev/null
+	@$(MKDEP) -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >& /dev/null
 	@echo -e "$(foreach var,$(CSRC),\n$(OBJ_PATH)/$(var:.$(C_EXT )=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
 	@echo -e "$(foreach var,$(ASRC),\n$(OBJ_PATH)/$(var:.$(AS_EXT)=.$(OBJ_EXT)) : $(var))" >> $(TARGET_PATH)/$(DEP_FILE_NAME)
 
@@ -213,7 +213,7 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@echo "Linking..."
-	@$(LINKER_$(TARGET)) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS_$(TARGET)) -o $(TARGET_PATH)/$(PROJECT).elf
+	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS_$(TARGET)) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
 # build objects
@@ -231,7 +231,7 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CC_$(TARGET)) $(CFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
+	$(CC) $(CFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from C++ sources
@@ -239,7 +239,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CXX_$(TARGET)) $(CXXFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
+	$(CXX) $(CXXFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from assembler sources
@@ -247,7 +247,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(AS_$(TARGET)) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	$(AS) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
 ####################################################################################################
 # clean target
