@@ -1,0 +1,14 @@
+# Makefile for GNU make
+
+####################################################################################################
+# INSERT HERE SOURCE OF BUILT-IN PROGRAMS
+####################################################################################################
+CSRC_PROGRAMS += cat/cat.c
+CSRC_PROGRAMS += cp/cp.c
+CSRC_PROGRAMS += helloworld/helloworld.c
+CSRC_PROGRAMS += top/top.c
+CSRC_PROGRAMS += terminal/terminal.c
+
+CXXSRC_PROGRAMS += 
+
+HDRLOC_PROGRAMS += 

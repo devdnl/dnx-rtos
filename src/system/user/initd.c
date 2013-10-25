@@ -33,14 +33,11 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include "user/initd.h"
-#include "drivers/tty_def.h"
-#include "drivers/sdspi_def.h"
-#include "drivers/uart_def.h"
+#include "system/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CPU_BASE_FREQ           8000000UL
 
 /*==============================================================================
   Local types, enums definitions
@@ -117,6 +114,7 @@ static int run_level_boot(void)
         mkdir("/tmp");
 
         mount("procfs", "", "/proc");
+        mount("devfs", "", "/dev");
 
         return STD_RET_OK;
 }
@@ -140,7 +138,7 @@ static int run_level_0(void)
         if (pll_init != STD_RET_OK) {
                 FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
                 if (ttyS0) {
-                        ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / CPU_BASE_FREQ));
+                        ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / PLL_CPU_BASE_FREQ));
                         fclose(ttyS0);
                 }
         }
@@ -236,7 +234,10 @@ static int run_level_2(void)
                                         tty[current_tty] = fopen(path, "r+");
                                 }
 
-                                program[current_tty] = new_program("terminal", "", "/",
+                                fprintf(tty[current_tty], "Welcome to %s/%s (tty%d)\n",
+                                        get_OS_name(), get_kernel_name(), current_tty);
+
+                                program[current_tty] = new_program("terminal", "/",
                                                                    tty[current_tty],
                                                                    tty[current_tty],
                                                                    &state[current_tty],
@@ -283,7 +284,7 @@ static int run_level_2(void)
                                 program[i] = NULL;
                                 state[i]   = PROGRAM_UNKNOWN_STATE;
 
-                                ioctl(tty[i], TTY_IORQ_CLEAN_TTY);
+                                ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
                                 fclose(tty[i]);
                                 tty[i] = NULL;
 

@@ -5,7 +5,7 @@
 
 @brief   This file support all kernel hooks
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include "config.h"
 #include "kernel/khooks.h"
-#include "core/io.h"
+#include "core/printx.h"
 #include "portable/cpuctl.h"
 
 #ifdef __cplusplus
@@ -71,7 +71,7 @@ u32_t uptime_divider;
 void vApplicationIdleHook(void)
 {
 #if (CONFIG_RTOS_SLEEP_ON_IDLE > 0)
-        cpuctl_sleep();
+        _cpuctl_sleep();
 #endif
 }
 
@@ -82,7 +82,7 @@ void vApplicationIdleHook(void)
 //==============================================================================
 void vApplicationStackOverflowHook(task_t *taskHdl, signed char *taskName)
 {
-        kwrap_delete_task(taskHdl);
+        delete_task(taskHdl);
         printk(FONT_COLOR_RED"%s: stack overflow!"RESET_ATTRIBUTES"\n", taskName);
 }
 

@@ -1,5 +1,3 @@
-#ifndef _LIBFAT_H_
-#define _LIBFAT_H_
 /*=========================================================================*//**
 @file    libfat.h
 
@@ -40,6 +38,9 @@
 / * Redistributions of source code must retain the above copyright notice.
 /
 /-----------------------------------------------------------------------------*/
+
+#ifndef _LIBFAT_H_
+#define _LIBFAT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -245,10 +246,29 @@ extern FRESULT  libfat_mkdir     (FATFS*, const TCHAR*);
 extern FRESULT  libfat_chmod     (FATFS*, const TCHAR*, uint8_t, uint8_t);
 extern FRESULT  libfat_utime     (FATFS*, const TCHAR*, const FILEINFO*);
 extern FRESULT  libfat_rename    (FATFS*, const TCHAR*, const TCHAR*);
-#define         libfat_eof(fp)   (((fp)->fptr == (fp)->fsize) ? 1 : 0)
-#define         libfat_error(fp) (((fp)->flag & FA__ERROR) ? 1 : 0)
-#define         libfat_tell(fp)  ((fp)->fptr)
-#define         libfat_size(fp)  ((fp)->fsize)
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+static inline int libfat_eof(FATFILE *fp)
+{
+        return fp->fptr == fp->fsize ? 1 : 0;
+}
+
+static inline int libfat_error(FATFILE *fp)
+{
+        return fp->flag & LIBFAT_FA__ERROR ? 1 : 0;
+}
+
+static inline uint32_t libfat_tell(FATFILE *fp)
+{
+        return fp->fptr;
+}
+
+static inline uint32_t libfat_size(FATFILE *fp)
+{
+        return fp->fsize;
+}
 
 #ifdef __cplusplus
 }

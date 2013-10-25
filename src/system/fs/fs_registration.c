@@ -31,69 +31,28 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "fs/fs_registration.h"
-#include "core/vfs.h"
-
-/* include here FS headers */
-#include "fs/lfs.h"
-#include "fs/appfs.h"
-#include "fs/procfs.h"
-#include "fs/fatfs.h"
+#include "core/fsctrl.h"
+#include "system/dnxfs.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  External objects
 ==============================================================================*/
-#define USE_FILE_SYSTEM_INTERFACE(fs_name)\
-{.FS_name = #fs_name,\
- .FS_if   = {.fs_init    = fs_name##_init,\
-             .fs_chmod   = fs_name##_chmod,\
-             .fs_chown   = fs_name##_chown,\
-             .fs_close   = fs_name##_close,\
-             .fs_ioctl   = fs_name##_ioctl,\
-             .fs_mkdir   = fs_name##_mkdir,\
-             .fs_mknod   = fs_name##_mknod,\
-             .fs_open    = fs_name##_open,\
-             .fs_opendir = fs_name##_opendir,\
-             .fs_read    = fs_name##_read,\
-             .fs_release = fs_name##_release,\
-             .fs_remove  = fs_name##_remove,\
-             .fs_rename  = fs_name##_rename,\
-             .fs_stat    = fs_name##_stat,\
-             .fs_fstat   = fs_name##_fstat,\
-             .fs_statfs  = fs_name##_statfs,\
-             .fs_flush   = fs_name##_flush,\
-             .fs_write   = fs_name##_write}}
+_IMPORT_FILE_SYSTEM(lfs);
+_IMPORT_FILE_SYSTEM(procfs);
+_IMPORT_FILE_SYSTEM(fatfs);
+_IMPORT_FILE_SYSTEM(devfs);
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported objects
 ==============================================================================*/
-
-/*==============================================================================
-  Local function prototypes
-==============================================================================*/
-
-/*==============================================================================
-  Local object definitions
-==============================================================================*/
-
-/*==============================================================================
-  Exported object definitions
-==============================================================================*/
-/* driver registration */
-const struct _FS_entry _FS_table[] =
-{
-        USE_FILE_SYSTEM_INTERFACE(lfs),
-        USE_FILE_SYSTEM_INTERFACE(appfs),
-        USE_FILE_SYSTEM_INTERFACE(procfs),
-        USE_FILE_SYSTEM_INTERFACE(fatfs),
+const struct _FS_entry _FS_table[] = {
+        _USE_FILE_SYSTEM_INTERFACE(lfs),
+        _USE_FILE_SYSTEM_INTERFACE(procfs),
+        _USE_FILE_SYSTEM_INTERFACE(fatfs),
+        _USE_FILE_SYSTEM_INTERFACE(devfs),
 };
 
-/* driver list size */
 const uint _FS_table_size = ARRAY_SIZE(_FS_table);
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
 
 #ifdef __cplusplus
 }

@@ -53,10 +53,10 @@ extern "C" {
 struct vfs_file
 {
         void      *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd);
-        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const void *src, size_t size, size_t nitems, u64_t lseek);
-        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, void *dst, size_t size, size_t nitmes, u64_t lseek);
-        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, va_list);
+        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
+        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
+        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
+        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
         void      *f_extra_data;
@@ -81,9 +81,10 @@ enum path_correction {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static struct FS_data *find_mounted_FS(const char *path, u16_t len, u32_t *itemid);
-static struct FS_data *find_base_FS(const char *path, char **extPath);
-static char           *new_corrected_path(const char *path, enum path_correction corr);
+static int             file_mode_str_to_flags   (const char *str);
+static struct FS_data *find_mounted_FS          (const char *path, u16_t len, u32_t *itemid);
+static struct FS_data *find_base_FS             (const char *path, char **extPath);
+static char           *new_corrected_path       (const char *path, enum path_correction corr);
 
 /*==============================================================================
   Local object definitions
@@ -159,7 +160,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
         if (base_fs && mount_fs == NULL) {
                 if (base_fs->interface.fs_opendir && external_path) {
 
-                        dir_t dir;
+                        DIR dir;
                         if (base_fs->interface.fs_opendir(base_fs->handle,
                                                          external_path,
                                                          &dir) == STD_RET_OK) {
@@ -267,7 +268,7 @@ stdret_t vfs_umount(const char *path)
  *
  * @param[in]   item            mount point number
  * @param[out] *mntent          mount entry data
- * 
+ *
  * @retval STD_RET_OK           mount success
  * @retval STD_RET_ERROR        mount error
  */
@@ -280,13 +281,13 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 unlock_recursive_mutex(vfs_resource_mtx);
 
                 if (fs) {
-                        struct vfs_statfs stat_fs = {.fsname = NULL};
+                        struct vfs_statfs stat_fs = {.f_fsname = NULL};
 
                         if (fs->interface.fs_statfs) {
                                 fs->interface.fs_statfs(fs->handle, &stat_fs);
                         }
 
-                        if (stat_fs.fsname) {
+                        if (stat_fs.f_fsname) {
                                 if (strlen(fs->mount_point) > 1) {
                                         strncpy(mntent->mnt_dir, fs->mount_point,
                                                 strlen(fs->mount_point) - 1);
@@ -294,7 +295,7 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                                         strcpy(mntent->mnt_dir, fs->mount_point);
                                 }
 
-                                strcpy(mntent->mnt_fsname, stat_fs.fsname);
+                                strcpy(mntent->mnt_fsname, stat_fs.f_fsname);
                                 mntent->free  = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
                                 mntent->total = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
 
@@ -389,13 +390,13 @@ int vfs_mkdir(const char *path)
  * @return directory object
  */
 //==============================================================================
-dir_t *vfs_opendir(const char *path)
+DIR *vfs_opendir(const char *path)
 {
         if (!path) {
                 return NULL;
         }
 
-        dir_t *dir = sysm_sysmalloc(sizeof(dir_t));
+        DIR *dir = sysm_sysmalloc(sizeof(DIR));
         if (dir) {
                 stdret_t status = STD_RET_ERROR;
 
@@ -435,7 +436,7 @@ dir_t *vfs_opendir(const char *path)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_closedir(dir_t *dir)
+int vfs_closedir(DIR *dir)
 {
         if (dir) {
                 if (dir->f_closedir) {
@@ -458,7 +459,7 @@ int vfs_closedir(dir_t *dir)
  * @return element attributes
  */
 //==============================================================================
-dirent_t vfs_readdir(dir_t *dir)
+dirent_t vfs_readdir(DIR *dir)
 {
         dirent_t direntry;
         direntry.name = NULL;
@@ -739,10 +740,8 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if (  strncmp("r", mode, 2) != 0 && strncmp("r+", mode, 2) != 0
-           && strncmp("w", mode, 2) != 0 && strncmp("w+", mode, 2) != 0
-           && strncmp("a", mode, 2) != 0 && strncmp("a+", mode, 2) != 0) {
-
+        int flags = file_mode_str_to_flags(mode);
+        if (flags == -1) {
                 return NULL;
         }
 
@@ -768,7 +767,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
 
                 if (fs->interface.fs_open(fs->handle, &file->f_extra_data,
                                           &file->fd,  &file->f_lseek,
-                                          external_path, mode) == STD_RET_OK) {
+                                          external_path, flags) == STD_RET_OK) {
 
                         file->FS_hdl  = fs->handle;
                         file->f_close = fs->interface.fs_close;
@@ -832,7 +831,31 @@ int vfs_fclose(FILE *file)
 {
         if (file) {
                 if (file->f_close) {
-                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, false, get_task_handle()) == STD_RET_OK) {
+                                sysm_sysfree(file);
+                                return 0;
+                        }
+                }
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
+ * @brief Function force close opened file (used by system to close all files)
+ *
+ * @param[in] *file             pinter to file
+ * @param[in] *opened_by_task   task which opened file
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+int vfs_fclose_force(FILE *file, task_t *opened_by_task)
+{
+        if (file) {
+                if (file->f_close) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, true, opened_by_task) == STD_RET_OK) {
                                 sysm_sysfree(file);
                                 return 0;
                         }
@@ -861,9 +884,10 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_write) {
-                        n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
-                                          nitems, file->f_lseek);
-                        file->f_lseek += (u64_t)n * size;
+                        n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
+                                          ptr, size * nitems, &file->f_lseek);
+                        file->f_lseek += (u64_t)n;
+                        n /= size;
                 }
         }
 
@@ -889,9 +913,10 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
 
         if (ptr && size && nitems && file) {
                 if (file->f_read) {
-                        n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd, ptr, size,
-                                         nitems, file->f_lseek);
-                        file->f_lseek += (u64_t)n * size;
+                        n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
+                                         ptr, size * nitems, &file->f_lseek);
+                        file->f_lseek += (u64_t)n;
+                        n /= size;
                 }
         }
 
@@ -976,7 +1001,7 @@ int vfs_ioctl(FILE *file, int rq, ...)
         }
 
         va_start(args, rq);
-        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, args);
+        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(args, void*));
         va_end(args);
 
         return status;
@@ -1050,6 +1075,58 @@ int vfs_feof(FILE *file)
         }
 
         return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function rewind file
+ *
+ * @param[in] *file     file
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+int vfs_rewind(FILE *file)
+{
+        return vfs_fseek(file, 0, VFS_SEEK_SET);
+}
+
+//==============================================================================
+/**
+ * @brief Function convert file open mode string to flags
+ *
+ * @param[in] *str      file open mode string
+ *
+ * @return file open flags, -1 if error
+ */
+//==============================================================================
+static int file_mode_str_to_flags(const char *str)
+{
+        if (strncmp("r", str, 2) == 0) {
+                return (O_RDONLY);
+        }
+
+        if (strncmp("r+", str, 2) == 0) {
+                return (O_RDWR);
+        }
+
+        if (strncmp("w", str, 2) == 0) {
+                return (O_WRONLY | O_CREAT);
+        }
+
+        if (strncmp("w+", str, 2) == 0) {
+                return (O_RDWR | O_CREAT);
+        }
+
+        if (strncmp("a", str, 2) == 0) {
+                return (O_WRONLY | O_CREAT | O_APPEND);
+        }
+
+        if (strncmp("a+", str, 2) == 0) {
+                return (O_RDWR | O_CREAT | O_APPEND);
+        }
+
+        return -1;
 }
 
 //==============================================================================
@@ -1169,7 +1246,7 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
 
         new_path = sysm_syscalloc(new_path_len + 1, sizeof(char));
         if (new_path) {
-                if (cwd_len) {
+                if (cwd_len && cwd) {
                         strcpy(new_path, cwd);
 
                         if (last_character(cwd) != '/') {

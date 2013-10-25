@@ -1,5 +1,3 @@
-#ifndef BASIC_TYPES_H_
-#define BASIC_TYPES_H_
 /*=========================================================================*//**
 @file    basic_types.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef BASIC_TYPES_H_
+#define BASIC_TYPES_H_
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,21 +1,76 @@
-\documentclass[a4paper,11pt]{article}
+\documentclass[a4paper,11pt]{report}
 \usepackage[utf8]{inputenc}
 \usepackage[sc]{mathpazo}
 \usepackage[T1]{fontenc}
 \usepackage[colorlinks=true,urlcolor=blue,linkcolor=red,citecolor=black]{hyperref}
-\usepackage[left=40mm,right=30mm,top=30mm,bottom=30mm]{geometry}
+\usepackage[left=30mm,right=30mm,top=30mm,bottom=30mm]{geometry}
 \usepackage{url}
+\usepackage{dirtree}
+\usepackage{nameref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
 \linespread{1.05}
+\sloppy
 
-\title{dnx/FreeRTOS System Documentation}
+\definecolor{commcolor}{rgb}{0.0, 0.5, 0.0}
+\definecolor{stringcolor}{rgb}{0.8, 0, 0}
+\definecolor{keywordcolor}{rgb}{0, 0, 1}
+
+% commands
+\newcommand{\TODO}{\marginpar{\color{red}{\textbf{TODO}}}}
+\renewcommand{\path}[1]{\textit{#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+\newcommand{\macro}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\type}[1]{\texttt{#1}}
+\newcommand{\includecode}[1]{\lstinputlisting
+    [numbers=left, language=C, commentstyle=\color{commcolor}, basicstyle=\scriptsize\ttfamily,
+    showstringspaces=false, stringstyle=\color{stringcolor}, keywordstyle=\color{keywordcolor},
+    breaklines=true,
+    morekeywords={u8_t, bool, task_t, size_t, u64_t, stdret_t, dirent_t, DIR, fd_t}]
+    {#1}}
+
+\newcommand{\prototype}[2]{
+   \begin{tabularx}{\textwidth}{@{}l@{}l@{}X}
+      \code{#1} & \code{(} & \code{#2)}
+   \end{tabularx}
+}
+
+\newcommand{\apidescription}[5]{
+   #1\newline Function prototype:
+   \begin{center}
+      \prototype{#2}{#3}
+   \end{center}
+   Function arguments:\\
+   \indent
+   \begin{tabularx}{0.95\textwidth}{@{}lllX@{}}
+      #4
+   \end{tabularx}\\[1ex]
+   Function return:\\
+   \indent
+   \begin{tabularx}{0.95\textwidth}{@{}lllX@{}}
+      #5
+   \end{tabularx}
+}
+\newcommand{\apiarg}[2]{\textbullet & \code{#1} & -- & #2\\}
+\newcommand{\apiret}[2]{\textbullet & \code{#1} & -- & #2\\}
+
+% title page data
+\title{dnx/FreeRTOS System Documentation\\[1em]PRELIMINARY\\[1em]dnx 1.1.0}
 \author{Daniel Zorychta}
 \date{\today}
+
+\pagestyle{fancy}
 
 \begin{document}
 \maketitle
 \tableofcontents
 
-\section{Introduction}
+% -------------------------------------------------------------------------------------------------
+
+\chapter{Introduction}
 The dnx/FreeRTOS is a general purpose operating system based on FreeRTOS kernel.
 The dnx layer is modeled on well-known Unix architecture (everything is a file).
 Destination  of  the  system  are  small  microcontrollers supported by FreeRTOS
@@ -23,14 +78,916 @@ kernel,  especially  32-bit.  System  is easy scalable to user's needs, user can
 write own drivers,  virtual devices,  programs and so on.  The programs layer is
 mostly compatibile with C standard.
 
-\section{Project Build}
+Example project is designed for STM32F107RCT6 microcontroller because of development platform when
+dnx development started. System can be easily ported for other STM32 microcontrollers because all
+are similarly constructed.
 
-\section{Driver Development}
+System was designed to create small UNIX system on microcontrollers and to achieve fast
+time-to-market cycle. Project is an open source product licensed by GPL v2. In project exist
+software which are licensed on other licenses i.e. FATFS, FreeRTOS, etc. Those products are free
+for open source project. For commercial usage please contact with producer to get appropriate
+license. The dnx layer is licensed by GPL v2 license and there is NO WARRANTY.
 
-\section{Program Development}
+\section{Coding style}
+In the project is used Linux C coding style.
+See \url{https://www.kernel.org/doc/Documentation/CodingStyle} to obtain information about
+this style. Project is written using C99 standard.
 
-\section{File System Development}
+\section{Project download}
+The dnx project can be download from \url{git@bitbucket.org:devdnl/dnx.git}
+Project is stored in GIT repository.
+
+% -------------------------------------------------------------------------------------------------
+
+\chapter{Project folder structure}
+Project was implemented with complex folder structure to categorize usage of created software. In
+the figure~\ref{fig:folder_struct} on page~\pageref{fig:folder_struct} can see current folder
+structure of project.
+
+\begin{figure}[!htp]
+   \dirtree{%
+      .1 .
+      .1 {\bf build}                   \DTcomment{folder with build results}.
+      .2 {\bf stm32f1}                 \DTcomment{folder with built binary of stm32f1 target}.
+      .2 {\bf *}                       \DTcomment{folder with built binary of ... target}.
+      .1 {\bf doc}                     \DTcomment{folder with documentations}.
+      .2 {\rm dxn\_doc.*}              \DTcomment{documentation files}.
+      .2 {\rm license.txt}             \DTcomment{the GNU GPL v2 license}.
+      .1 {\bf extra}                   \DTcomment{folder with additional software}.
+      .2 {\bf programs}                \DTcomment{folder with extra programs (if exists)}.
+      .2 {\bf templates}               \DTcomment{folder with templates}.
+      .2 {\bf drivers}                 \DTcomment{folder with extra drivers (if exists)}.
+      .2 {\bf fs}                      \DTcomment{folder with extra filesystems (if exists)}.
+      .1 {\bf src}                     \DTcomment{folder with compilable source files}.
+      .2 {\bf programs}                \DTcomment{folder with buil-in programs (user layer)}.
+      .3 {\bf *}                       \DTcomment{folder with program}.
+      .3 {\rm Makefile.include}        \DTcomment{makefile with built-in program sources}.
+      .3 {\rm program\_registration.c} \DTcomment{system list used to register program}.
+      .2 {\bf system}                  \DTcomment{folder with system}.
+      .3 {\bf config}                  \DTcomment{system configuration}.
+      .3 {\bf core}                    \DTcomment{folder with core dnx files}.
+      .3 {\bf drivers}                 \DTcomment{folder with drivers implementation}.
+      .3 {\bf fs}                      \DTcomment{folder with file system implementation}.
+      .3 {\bf include}                 \DTcomment{folder with headers}.
+      .3 {\bf kernel}                  \DTcomment{folder with kernel sources}.
+      .3 {\bf portable}                \DTcomment{folder with sources depends on architecture}.
+      .3 {\bf user}                    \DTcomment{folder with users's initd start daemon}.
+      .3 {\rm Makefile.include}        \DTcomment{makefile with system source files}.
+      .1 {\bf tools}                   \DTcomment{folder with miscellaneous tools}.
+      .1 {\rm changelog}               \DTcomment{release changelog file}.
+      .1 {\rm Makefile}                \DTcomment{GNU make Makefile}.
+      .1 {\rm README}                  \DTcomment{readme file}.
+   }
+   \caption{Folder structure\label{fig:folder_struct}}
+\end{figure}
+
+\section{The \path{build} folder}
+The \path{build} folder is created when new build process is started. After project was clone
+the folder does not exits. Folder contain all targets which were built in build process after type
+\cmd{make <target>}. Folder is not added to the version control system. Folder contains sub-folders
+named the same as target typed to the command line in compilation procedure.
+
+\section{The \path{doc} folder}
+The \path{doc} folder contains all documentation files for system in general or for specific file
+system or driver.
+
+\section{The \path{extra} folder}
+The \path{extra} folder contains additional software e.g. programs, drivers (modules), file
+systems; can also contains other files e.g. templates.
+
+\section{The \path{src} folder}
+The \path{src} folder contains main software. Software in folder is divided to \path{programs}
+and \path{system} directories. First one contains user's programs, second one full operating system.
+The \path{system} folder contains many other folders which contains specific software.
+
+\section{The \path{tools} folder}
+The \path{tools} folder contains all tool-scripts which are helpful in project development. For
+example folder contains script that start openOCD application (\path{runoocd.sh}), and script
+that is the most important for software developer -- \path{flash.sh}, which programs microcontroller
+via openOCD software.
+
+% -------------------------------------------------------------------------------------------------
+
+\chapter{Project build}
+In general, Makefile used in project is designed to support many different microcontroller's
+architectures and families. Makefile can be easly corrected to other or additional architectures.
+The main Makefile is localized in \path{./Makefile} file.
+
+\section{Build from command line}
+To build project go to project's root folder, and type \cmd{make <target>}, where \cmd{target} is
+existing microcontroller port. Nowadays, exist only stm32f1 port for STM32F107RCT6 microcontroller.
+This can be easily expanded to other STM32F1 microcontroller family. For other families based on
+ARM Cortex-M3 CPU, porting is also easy but more things shall be changed (see \nameref{sec:porting}
+section). By default, project is configured for \path{arm-none-eabi} toolchain. Make sure that
+this software exist in your system path. Toolchain can be downloaded from Mentor Graphics
+\url{http://www.mentor.com/embedded-software/codesourcery} -- Code Sourcery; or from Linaro
+\url{http://www.linaro.org/downloads}. If you're using \path{arm-elf} toolchain please change
+\path{./Makefile} configuration.
+
+Project starts building when \cmd{make stm32f1} was type in console. If compilation was finished
+successfully then on screen we see information as follow:
+\begin{verbatim}
+      -----------------------------------
+      | Compilation completed: 14:07:30 |
+      -----------------------------------
+\end{verbatim}
+In \path{build/stm32f1} directory, ready for flash programming, built files shall exist. Those
+files can be programmed using \path{./tools/flash.sh} script typing in console
+\cmd{./tools/flash.sh stm32f1}. Remember to run the openOCD (if your're using) application first to
+connect to the target board. To do this run \path{./tools/runoocd.sh} script in other terminal.
+
+Default project is configured for specified development board. To use project in other development
+board or on target board, please reconfigure project, especially GPIO configuration
+(\path{./src/system/drivers/gpio/stm32f1/gpio\_cfg.h}). To know more about project configuration
+read \nameref{sec:proj_cfg} section.
+
+\section{Build from IDE}
+In project exists Eclipse project files: \path{./.cproject\_template} and
+\path{./.project\_template}. To use those files user shall change names of those files to:
+\path{.cproject} and \path{.project}, then Eclipse can import project. To compile project user
+shall click to hammer icon.
+
+If you're using other IDE you're on your own. Other IDEs are not supported by project.
+
+% -------------------------------------------------------------------------------------------------
+
+\chapter{Project configuration}\label{sec:proj_cfg}
+To configure project, first what user shall know is project organization. Each configurable modules
+contains \path{*\_cfg.h} file. In those files do possible configuration. Configuration files
+localized are in drivers, can be localized in file systems (currently none file system have
+configuration file), and other modules. Main system configuration is localized in
+\path{./src/system/config/config.h} file.
+Steps which user shall cross to configure whole system:
+\begin{enumerate}
+   \item check if project currently contains port for your microcontroller, if yes go to next step,
+         otherwise new port is needed;
+   \item make sure that correct linker script is used in \path{Makefile}. Linker script is depend
+         on microcontroller architecture and family;
+   \item edit \path{./src/system/config/config.h} file to set correct settings;
+   \item add or remove drivers and configure it. Don't forget about GPIO driver;
+   \item add or remove file systems;
+   \item correct or write your own initd (\path{./src/system/user/initd.c}). You can use existing
+         implementation but simpler implementation in most projects are recommended;
+   \item compile and try that project works correctly.
+\end{enumerate}
+
+\section{Makefile configuration}
+Makefile configuration is needed when you're using other microcontroller's family than used by
+default in project. In this case open file \path{./Makefile} and edit architecture configuration
+for specified target. Those configuration variables are localized at the beginning of file. Make
+sure that linker script exist, if not then create your own similar to existing.
+
+\section{The dnx configuration}
+Whole dnx configuration can be changed in the \path{./src/system/config/config.h} file. There are
+configuration sections like memory size, target frequency and all other. Note that you
+shall carefully check interrupt priorities used by your processor. If those configuration are
+invalid then system can crash all time. The \macro{CONFIG\_RTOS\_KERNEL\_IRQ\_PRIORITY} shall be the
+lowest possible priority. Next (higher) priority \macro{CONFIG\_RTOS\_SYSCALL\_IRQ\_PRIORITY} shall
+be higher than first one. The \macro{CONFIG\_USER\_IRQ\_PRIORITY} priority shall be higher than
+previous one but this is only default user priority. In the drivers a higher priorities can be used.
+
+\section{Driver configuration}
+Driver configuration depends on module usage, construction and needs. Possible module configuration
+shall be localized in files with \path{\_cfg.h} suffix. If module hasn't any configuration then
+file shall still exist, even be empty. Don't forgot add or remove driver's files in
+\path{./src/system/Makefile.include} file.
+
+\section{File system configuration}
+File systems can be configured in \path{\_cfg.h} files. If file systems use external libraries then
+configuration can be done in the library configuration (e.g. fatfs). To add or remove file system
+from dnx, edit \path{./src/system/Makefile.include} file (\code{CSRC\_CORE} variables).
+
+\section{Kernel configuration}
+Kernel configuration is done in the \path{./src/system/config/config.h} file using defined macros.
+Direct kernel configuration is not allowed, because system use specified kernel functions that have
+to be enabled or disabled to perform correct system behavior.
+
+% -------------------------------------------------------------------------------------------------
+
+\chapter{Driver development}\label{sec:drv_devel}
+Drivers (modules) are based on common structure, other words, each driver have the same
+unified interfaces. Operating system use suitable interfaces to communicate with driver.
+Interfaces are defined as functions and all of those functions must exist in module.
+
+\section{Interface}
+Functions that create module interfaces:
+\begin{itemize}
+   \item\prototype{API\_MOD\_INIT}{MODULE\_NAME, void **device\_handle, u8\_t major, u8\_t minor}
+   \item\prototype{API\_MOD\_RELEASE}{MODULE\_NAME, void *device\_handle}
+   \item\prototype{API\_MOD\_OPEN}{MODULE\_NAME, void *device\_handle, int flags}
+   \item\prototype{API\_MOD\_CLOSE}{MODULE\_NAME, void *device\_handle, bool force, const task\_t *opened\_by\_task}
+   \item\prototype{API\_MOD\_WRITE}{MODULE\_NAME, void *device\_handle, const u8\_t *src, size\_t count, u64\_t *fpos}
+   \item\prototype{API\_MOD\_READ}{MODULE\_NAME, void *device\_handle, u8\_t *dst, size\_t count, u64\_t *fpos}
+   \item\prototype{API\_MOD\_IOCTL}{MODULE\_NAME, void *device\_handle, int request, void *arg}
+   \item\prototype{API\_MOD\_FLUSH}{MODULE\_NAME, void *device\_handle}
+   \item\prototype{API\_MOD\_STAT}{MODULE\_NAME, void *device\_handle, struct vfs\_dev\_stat *device\_stat}
+\end{itemize}
+
+Functions are constructed using macros \code{API\_MOD\_x()}. This macro and first argument are used to
+generate specified function names. Interface functions returns values which say the system about
+operation status. In all functions, except \code{API\_MOD\_WRITE()} and \code{API\_MOD\_READ()}, is
+used \type{stdret\_t} type that contain a two values:
+\begin{itemize}
+   \item \code{STD\_RET\_OK} -- operation finished successful;
+   \item \code{STD\_RET\_NOT\_OK} -- operation finished with error.
+\end{itemize}
+This return type can be extended of other return values specific for module, but those basic values
+always must be preserved.
+
+\code{API\_MOD\_WRITE()} and \code{API\_MOD\_READ()} functions return a number of written/read
+bytes.
+
+\subsection{The \code{API\_MOD\_INIT()}}
+\apidescription
+{
+   Function is called when operating system, on user request (\code{init\_driver()} function),
+   initialize driver.
+}
+{API\_MOD\_INIT}{MODULE\_NAME, void **device\_handle, u8\_t major, u8\_t minor}
+{
+   \apiarg{MODULE\_NAME}  {a module name, this is used to generate function name;}
+   \apiarg{device\_handle}{a pointer to memory allocated by module. This is an output pointer;}
+   \apiarg{major}         {a major driver/device number;}
+   \apiarg{minor}         {a minor driver/device number.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_MOD\_RELEASE()}}
+\apidescription
+{
+   Function is called when user release driver using \code{release\_driver()} function.
+}
+{API\_MOD\_RELEASE}{MODULE\_NAME, void *device\_handle}
+{
+   \apiarg{MODULE\_NAME}  {a module name, this is used to generate function name;}
+   \apiarg{device\_handle}{a pointer to allocated memory region in initialization phase.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_MOD\_OPEN()}}
+\apidescription
+{
+   Function is called when device is opening.
+}
+{API\_MOD\_OPEN}{MODULE\_NAME, void *device\_handle, int flags}
+{
+   \apiarg{MODULE\_NAME}   {a module name, this is used to generate function name;}
+   \apiarg{device\_handle} {a pointer to allocated memory region in initialization phase;}
+   \apiarg{flags}          {a device open operation flags. Possible flags:\newline
+                           \begin{tabular}{@{}ll@{}}
+                              \macro{O\_RDONLY} & -- a device opened for read only;\\
+                              \macro{O\_WRONLY} & -- a device opened for write only;\\
+                              \macro{O\_RDWR}   & -- a device opened both for write and read.
+                           \end{tabular}}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_MOD\_CLOSE()}}
+\apidescription
+{
+   Function is called when device is closing.
+}
+{API\_MOD\_CLOSE}{MODULE\_NAME, void *device\_handle, bool force, const task\_t *opened\_by\_task}
+{
+   \apiarg{MODULE\_NAME}      {a module name, this is used to generate function name;}
+   \apiarg{device\_handle}    {a pointer to allocated memory region in initialization phase;}
+   \apiarg{force}             {a flag which means that device is force closing. Flag is controller by
+                               operating system and current task can be different than task which
+                               opens device;}
+   \apiarg{opened\_by\_task}  {a task handle, contain task number which opened device; valid only
+                               when \code{force} flag is \code{true}.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_MOD\_WRITE()}}
+\apidescription
+{
+   Function is called when device write a data. Function returns number of written bytes.
+}
+{API\_MOD\_WRITE}{MODULE\_NAME, void *device\_handle, const u8\_t *src, size\_t count, u64\_t *fpos}
+{
+   \apiarg{MODULE\_NAME}   {a module name, this is used to generate function name;}
+   \apiarg{device\_handle} {a pointer to allocated memory region in initialization phase;}
+   \apiarg{src}            {a data source pointer;}
+   \apiarg{count}          {a number of bytes to write;}
+   \apiarg{fpos}           {a pointer to file position index. Can be read and modified.}
+}
+{
+   \apiret{integer (size\_t)}        {a number of written bytes.}
+}
+
+\subsection{The \code{API\_MOD\_READ()}}
+\apidescription
+{
+   Function is called when device read a data. Function returns number of read bytes.
+}
+{API\_MOD\_READ}{MODULE\_NAME, void *device\_handle, u8\_t *dst, size\_t count, u64\_t *fpos}
+{
+   \apiarg{MODULE\_NAME}   {a module name, this is used to generate function name;}
+   \apiarg{device\_handle} {a pointer to allocated memory region in initialization phase;}
+   \apiarg{dst}            {a data destination pointer;}
+   \apiarg{count}          {a number of bytes to read;}
+   \apiarg{fpos}           {a pointer to file position index. Can be read and modified.}
+}
+{
+   \apiret{integer (size\_t)}        {a number of read bytes.}
+}
+
+\subsection{The \code{API\_MOD\_IOCTL()}}
+\apidescription
+{
+   Function is called when non-standard operations are requested.
+}
+{API\_MOD\_IOCTL}{MODULE\_NAME, void *device\_handle, int request, void *arg}
+{
+   \apiarg{MODULE\_NAME}   {a module name, this is used to generate function name;}
+   \apiarg{device\_handle} {a pointer to allocated memory region in initialization phase;}
+   \apiarg{request}        {a number of request. Function request numbers are generated using macros:\newline
+                           \begin{tabular}{@{}ll@{}}
+                              \macro{\_IO(g, n)}       & -- generate request without arguments;\\
+                              \macro{\_IOR(g, n, t)}   & -- generate read request;\\
+                              \macro{\_IOW(g, n, t)}   & -- generate write request;\\
+                              \macro{\_IOWR(g, n, t)}  & -- generate read/write request.
+                           \end{tabular}}
+   \apiarg{arg}            {a pointer to request's argument. Can be used as \code{int} value, input
+                            or output pointer.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_MOD\_FLUSH()}}
+\apidescription
+{
+   Function is called when flush operation is requested.
+}
+{API\_MOD\_FLUSH}{MODULE\_NAME, void *device\_handle}
+{
+   \apiarg{MODULE\_NAME}   {a module name, this is used to generate function name;}
+   \apiarg{device\_handle} {a pointer to allocated memory region in initialization phase.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_MOD\_STAT()}}
+\apidescription
+{
+   Function is called when device status operation are requested.
+}
+{API\_MOD\_STAT}{MODULE\_NAME, void *device\_handle, struct vfs\_dev\_stat *device\_stat}
+{
+   \apiarg{MODULE\_NAME}   {a module name, this is used to generate function name;}
+   \apiarg{device\_handle} {a pointer to allocated memory region in initialization phase;}
+   \apiarg{device\_stat}   {a pointer to device statistics structure.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\section{Driver registration}
+To register driver in the system edit \path{./src/system/drivers/driver\_registration.c} file and
+add specified sections. Registration steps:
+\begin{itemize}
+   \item add \code{\#include} statement with driver definitions (ioctl),
+         for example:
+         \newline\code{\#include "example\_module\_def.h"}
+   \item import module external objects using \code{\_IMPORT\_MODULE()} macro,
+         for example:
+         \newline\code{\_IMPORT\_MODULE(EXAMPLE\_MODULE);}
+   \item add registration to \code{\_regdrv\_module\_name[]} array using \code{\_USE\_MODULE()}
+         macro to enable module monitoring by system, for example:
+         \newline\code{\_USE\_MODULE(EXAMPLE\_MODULE),}
+   \item define module interfaces using \code{\_USE\_DRIVER\_INTERFACE()} macro in the
+         \code{\_regdrv\_driver\_table[]} array, for example:
+         \newline\code{\_USE\_DRIVER\_INTERFACE(EXAMPLE\_DRIVER, "ex1", EX\_MA\_0, EX\_MI\_0),}
+\end{itemize}
+Those steps registers module in the system, don't forgot to add or remove module source files in to
+makefile (\path{./src/system/Makefile.include}). To share \code{ioctl()} definitions add
+\code{\#include "example\_module\_def.h"} code to \path{./src/system/include/system/ioctl.h}
+file.
+
+\section{Example module}
+\subsection{Source file}
+\includecode{../extra/templates/genericmod/genericmod.c}
+
+\subsection{Module configuration header}
+\includecode{../extra/templates/genericmod/genericmod_cfg.h}
+
+\subsection{Module definitions header}
+\includecode{../extra/templates/genericmod/genericmod_def.h}
+
+% -------------------------------------------------------------------------------------------------
+
+\chapter{File System development}\label{sec:fs_devel}
+File systems are based on common API structure, other words, each file system have the same unified
+interfaces. Operating system (by VFS) use suitable interfaces to gets/gives data from/to device.
+Interfaces are defined as functions and all of those functions must exist in file system.
+
+\section{Interface}
+Functions that create module interfaces:
+\begin{itemize}
+   \item\prototype{API\_FS\_INIT}{FS\_NAME, void **fs\_handle, const char *src\_path}
+   \item\prototype{API\_FS\_RELEASE}{FS\_NAME, void *fs\_handle}
+   \item\prototype{API\_FS\_OPEN}{FS\_NAME, void *fs\_handle, void **extra, fd\_t *fd, u64\_t *fpos, const char *path, int flags}
+   \item\prototype{API\_FS\_CLOSE}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, bool force, const task\_t *file\_owner}
+   \item\prototype{API\_FS\_WRITE}{FS\_NAME, void *fs\_handle,void *extra, fd\_t fd, const u8\_t *src, size\_t count, u64\_t *fpos}
+   \item\prototype{API\_FS\_READ}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, u8\_t *dst, size\_t count, u64\_t *fpos}
+   \item\prototype{API\_FS\_IOCTL}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, int request, void *arg}
+   \item\prototype{API\_FS\_FLUSH}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd}
+   \item\prototype{API\_FS\_FSTAT}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, struct vfs\_stat *stat}
+   \item\prototype{API\_FS\_MKDIR}{FS\_NAME, void *fs\_handle, const char *path}
+   \item\prototype{API\_FS\_MKNOD}{FS\_NAME, void *fs\_handle, const char *path, const struct vfs\_drv\_interface *drv\_if}
+   \item\prototype{API\_FS\_OPENDIR}{FS\_NAME, void *fs\_handle, const char *path, DIR *dir}
+   \item\prototype{API\_FS\_REMOVE}{FS\_NAME, void *fs\_handle, const char *path}
+   \item\prototype{API\_FS\_RENAME}{FS\_NAME, void *fs\_handle, const char *old\_name, const char *new\_name}
+   \item\prototype{API\_FS\_CHMOD}{FS\_NAME, void *fs\_handle, const char *path, int mode}
+   \item\prototype{API\_FS\_CHOWN}{FS\_NAME, void *fs\_handle, const char *path, int owner, int group}
+   \item\prototype{API\_FS\_STAT}{FS\_NAME, void *fs\_handle, const char *path, struct vfs\_stat *stat}
+   \item\prototype{API\_FS\_STATFS}{FS\_NAME, void *fs\_handle, struct vfs\_statfs *statfs}
+\end{itemize}
+
+Functions are constructed using \macro{API\_FS\_x()} macros. The first argument of those macros are
+used to generate specified function names. Interface functions returns values which indicate the
+operating system about operation status. In all functions, except \macro{API\_FS\_WRITE()} and
+\macro{API\_FS\_READ()}, is used \type{stdret\_t} type.
+
+The \macro{API\_FS\_WRITE()} and \macro{API\_FS\_READ()} functions return a number of written/read
+bytes using \type{size\_t} type.
+
+\subsection{The \code{API\_FS\_INIT()}}
+\apidescription
+{
+   Function is used to initialize single instance of file system.
+}
+{API\_FS\_INIT}{FS\_NAME, void **fs\_handle, const char *src\_path}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a pointer to memory allocated by file system. This is an output pointer;}
+   \apiarg{src\_path}   {a path to device/file where file system data is stored.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_RELEASE()}}
+\apidescription
+{
+   Function is called when file system is releasing (unmount process). Function shall return
+   \code{STD\_RET\_OK} when all files used by file system are closed.
+}
+{API\_FS\_RELEASE}{FS\_NAME, void *fs\_handle}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_OPEN()}}
+\apidescription
+{
+   Function is used to open or create file specified in path.
+}
+{API\_FS\_OPEN}{FS\_NAME, void *fs\_handle, void **extra, fd\_t *fd, u64\_t *fpos, const char *path, int flags}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{extra}       {an extra pointer to specified data created/existing in file open process. This
+                         is an output pointer, value defined by file system;}
+   \apiarg{fd}          {pointer to value which contains file descriptor (file number). This is an output
+                         pointer, value defined by file system;}
+   \apiarg{fpos}        {a file position index. This is an output pointer, value defined by file system
+                         depending on flags etc;}
+   \apiarg{flags}       {a flags which determine an operation at file open process. Possible flags:\newline
+                        \begin{tabular}{@{}ll@{}}
+                           \macro{O\_RDONLY} & -- a file opened for read only;\\
+                           \macro{O\_WRONLY} & -- a file opened for write only;\\
+                           \macro{O\_RDWR}   & -- a file opened both for write and read;\\
+                           \macro{O\_CREAT}  & -- a file shall be created;\\
+                           \macro{O\_APPEND} & -- a file shall exist and is opened to append.
+                        \end{tabular}}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_CLOSE()}}
+\apidescription
+{
+   Function is called when file is closing. When \code{force} flag is \code{true} then file system
+   shall safe force close specified file even a current task is not the owner task.
+}
+{API\_FS\_CLOSE}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, bool force, const task\_t *file\_owner}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{extra}       {an extra pointer with file system data, pointer loaded at file open interface;}
+   \apiarg{fd}          {a file descriptor number created at file open process;}
+   \apiarg{force}       {a flag which indicate that file shall be force closed;}
+   \apiarg{file\_owner} {a task handle that is an owner of closing file; valid if \code{force} is \code{true}.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_WRITE()}}
+\apidescription
+{
+   Function is called when data is write to the file.
+}
+{API\_FS\_WRITE}{FS\_NAME, void *fs\_handle,void *extra, fd\_t fd, const u8\_t *src, size\_t count, u64\_t *fpos}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{extra}       {an extra pointer with file system data, pointer loaded at file open interface;}
+   \apiarg{fd}          {a file descriptor number created at file open process;}
+   \apiarg{src}         {a pointer to source data;}
+   \apiarg{count}       {a number of bytes to write;}
+   \apiarg{fpos}        {a pointer to file position index.}
+}
+{
+   \apiret{integer (size\_t)}        {a number of written bytes.}
+}
+
+\subsection{The \code{API\_FS\_READ()}}
+\apidescription
+{
+   Function is called when data is read from the file.
+}
+{API\_FS\_READ}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, u8\_t *dst, size\_t count, u64\_t *fpos}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{extra}       {an extra pointer with file system data, pointer loaded at file open interface;}
+   \apiarg{fd}          {a file descriptor number created at file open process;}
+   \apiarg{dst}         {a pointer to data destination;}
+   \apiarg{count}       {a number of bytes to read;}
+   \apiarg{fpos}        {a pointer to file position index.}
+}
+{
+   \apiret{integer (size\_t)}        {a number of read bytes.}
+}
+
+\subsection{The \code{API\_FS\_IOCTL()}}
+\apidescription
+{
+   Function is used to provide non-standard operations on files or devices if file is device node.
+}
+{API\_FS\_IOCTL}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, int request, void *arg}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{extra}       {an extra pointer with file system data, pointer loaded at file open interface;}
+   \apiarg{fd}          {a file descriptor number created at file open process;}
+   \apiarg{arg}         {a pointer to data or integer value.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_FLUSH()}}
+\apidescription
+{
+   Function is used to flush file buffer to solid storage.
+}
+{API\_FS\_FLUSH}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{extra}       {an extra pointer with file system data, pointer loaded at file open interface;}
+   \apiarg{fd}          {a file descriptor number created at file open process.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_FSTAT()}}
+\apidescription
+{
+   Function is used to getting file's information e.g size, times, etc.
+}
+{API\_FS\_FSTAT}{FS\_NAME, void *fs\_handle, void *extra, fd\_t fd, struct vfs\_stat *stat}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{extra}       {an extra pointer with file system data, pointer loaded at file open interface;}
+   \apiarg{fd}          {a file descriptor number created at file open process;}
+   \apiarg{stat}        {a pointer to object with file information to write.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_MKDIR()}}
+\apidescription
+{
+   Function is used to create an directory in specified path and name.
+}
+{API\_FS\_MKDIR}{FS\_NAME, void *fs\_handle, const char *path}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{path}        {a path where directory shall be created.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_MKNOD()}}
+\apidescription
+{
+   Function is used to created device node. If file system doesn't support devices then function
+   shall finish with error.
+}
+{API\_FS\_MKNOD}{FS\_NAME, void *fs\_handle, const char *path, const struct vfs\_drv\_interface *drv\_if}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{path}        {a file path where node shall be created;}
+   \apiarg{drv\_if}     {a driver interface provided by VFS layer.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_OPENDIR()}}
+\apidescription
+{
+   Function is used to open selected directory.
+}
+{API\_FS\_OPENDIR}{FS\_NAME, void *fs\_handle, const char *path, DIR *dir}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{path}        {a directory path;}
+   \apiarg{dir}         {a pointer to directory object which must be filled by file system.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_REMOVE()}}
+\apidescription
+{
+   Function is used to remove file, directory or device node.
+}
+{API\_FS\_REMOVE}{FS\_NAME, void *fs\_handle, const char *path}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{path}        {a path to object which shall be removed.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_RENAME()}}
+\apidescription
+{
+   Function is used to rename file, directory or device node.
+}
+{API\_FS\_RENAME}{FS\_NAME, void *fs\_handle, const char *old\_name, const char *new\_name}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{old\_name}   {a path to current existing object which shall be renamed;}
+   \apiarg{new\_name}   {a new object path/name.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_CHMOD()}}
+\apidescription
+{
+   Function is used to change a mode of file, directory or device node.
+}
+{API\_FS\_CHMOD}{FS\_NAME, void *fs\_handle, const char *path, int mode}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{path}        {an object path which mode shall be changed;}
+   \apiarg{mode}        {a new object mode.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_CHOWN()}}
+\apidescription
+{
+   Function is used to change file, directory or device node owner and group.
+}
+{API\_FS\_CHOWN}{FS\_NAME, void *fs\_handle, const char *path, int owner, int group}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{path}        {an object path which owner or group shall be changed;}
+   \apiarg{owner}       {an owner ID;}
+   \apiarg{group}       {a group ID.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_STAT()}}
+\apidescription
+{
+   Function is used to getting file's information. Usage of function is the same as
+   \code{API\_FS\_FSTAT()} function but user provide path to file, directory or device node.
+}
+{API\_FS\_STAT}{FS\_NAME, void *fs\_handle, const char *path, struct vfs\_stat *stat}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{path}        {a path to object;}
+   \apiarg{stat}        {a pointer to object with file information to write.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{The \code{API\_FS\_STATFS()}}
+\apidescription
+{
+   Function is used to getting an information of file system (this file system).
+}
+{API\_FS\_STATFS}{FS\_NAME, void *fs\_handle, struct vfs\_statfs *statfs}
+{
+   \apiarg{FS\_NAME}    {a file system name, argument used to generate function name;}
+   \apiarg{fs\_handle}  {a memory region allocated by file system at initialization phase;}
+   \apiarg{statfs}      {a pointer to object which shall be filled by file system.}
+}
+{
+   \apiret{STD\_RET\_OK}      {an initialization finished successfully;}
+   \apiret{STD\_RET\_NOT\_OK} {an initialization finished with error.}
+}
+
+\subsection{Helper functions}
+Helper functions are file system's internal functions which are created to handle directory read
+and close functionality. Those functions are filled at directory open process. In file system the
+number of helper functions can be different because of specific of file system. Prototypes of helper
+functions:\\[1ex]
+\prototype{static stdret\_t closedir}{void *fs\_handle, DIR *dir}
+\prototype{static dirent\_t readdir}{void *fs\_handle, DIR *dir}
+
+\section{File system registration}
+File system registration is mostly the same as driver registration. To register file system user
+shall edit \path{./src/system/fs/fs\_registration.c} and add specified macros. Use
+\macro{\_IMPORT\_FILE\_SYSTEM(FS\_NAME)} in external object section to import file system prototypes.
+To share file system interface use \macro{\_USE\_FILE\_SYSTEM\_INTERFACE(FS\_NAME)} macro in
+\code{\_FS\_table[]} array.
+
+\section{Example}
+\subsection{Source file}
+\includecode{../extra/templates/genericfs/genericfs.c}
+
+% -------------------------------------------------------------------------------------------------
+
+\chapter{Program development}\label{sec:prog_devel}
+A~programs can be development similarly as in standard PC computer. The dnx provide standard C API functions
+that can be used in the same way as in PC programming. The dnx API doesn't contain all functions, some
+of functions are implemented in standard libraries and can be used as well.
 
 \section{Limitations}
+The dnx program implementation have many limitations:
+\begin{itemize}
+   \item Global variables are provided by main global structure and access to those variables are
+         provided by \macro{global->...} macro. This is a pointer to independent program instance.
+         To share global variables to other modules of the program, user shall share global variable
+         structure. Global variable structure shall be between \macro{GLOBAL\_VARIABLES\_SECTION\_BEGIN}
+         and \macro{GLOBAL\_VARIABLES\_SECTION\_END} macros.
+   \item Global variables cannot be predefined at program start up. User shall initialize values
+         of defined global variables if other than 0 values is required.
+   \item Debugging of global variables maybe difficult because of global variables nature (pointer is
+         requested from operating system).
+   \item Its not necessary to include constant variables inside global variable structure because
+         these are localized in ROM.
+   \item Program main function shall be created using \macro{PROGRAM\_MAIN()} macro.
+   \item The \code{<stdio.h>} library shall be \textbf{always} put first in include list.
+   \item To register program in system, user shall edit \path{./src/programs/program\_registration.c}
+         file adding suitable statements. After registration, program will be visible in \path{/proc/bin}
+         directory after system start up and procfs mount.
+\end{itemize}
+
+\section{Program registration}
+To register program in system, user shall edit \path{./src/programs/program\_registration.c} file.
+Program registration is mostly the same as driver and file system registration. To add program to
+built-in program list, edit file adding: \macro{\_IMPORT\_PROGRAM()} macro to import program objects,
+and configure program using \macro{\_PROGRAM\_CONFIG()} macro in \code{\_prog\_table[]} variable.
+Don't forget to add source files to makefile (\path{./src/programs/Makefile.include}).
+
+\section{Example}
+\includecode{../src/programs/helloworld/helloworld.c}
+
+% -------------------------------------------------------------------------------------------------
+
+\chapter{Porting}\label{sec:porting}
+This section describe steps that user shall achieve to create own port for microcontroller that is
+supported by FreeRTOS kernel.
+
+\section{Makefile}
+To port project to other CPU, user shall create new target in makefile first. The best way is
+edit \path{./Makefile} and create new target similarly as example target \code{stm32f1}.
+User shall create new architecture configuration that define toolchain, liker script, C flags, etc.
+In next step user shall edit \code{all} target to show help when user doesn't type target. This
+is necessary only if user need this. The latest step is create target with list of dependencies,
+for example: \code{stm32f1 : dependencies buildobjects linkobjects hex status}. There are all
+steps that create output product (hex and bin files).
+
+Sub-makefiles \path{./src/programs/Makefile.include} and \path{./src/system/Makefile.include} contains
+sources for all defined targets and core files. The core files are common for all targets. Only
+source files which depends on architecture shall be added to source list of specified architecture
+variables (\code{CSRC\_new\_target} \code{CXXSRC\_new\_target} \code{ASRC\_new\_target}
+\code{HDRLOC\_new\_target}). In the system may exists files that aren't designed for any architecture
+(e.g. TTY driver). For codes of this kind there are prepared \code{CSRC\_noarch},
+\code{CXXSRC\_noarch} and \code{HDRLOC\_noarch} variables.
+
+\section{Kernel port selection}
+The FreeRTOS kernel supports many CPUs and many compilers. To enable specified CPU, user shall edit
+\path{./src/system/Makefile.include} file and add \code{CSRC\_new\_target} variable with
+specified kernel port. An example:
+\begin{center}
+   \code{CSRC\_stm32f1 += kernel/FreeRTOS/Source/portable/GCC/ARM\_CM3/port.c}
+\end{center}
+To create new FreeRTOS port please learn more at \url{http://www.freertos.org}
+website.
+
+\section{dnx port create}
+To create new dnx port create a new directory with port name in \path{./src/system/portable} localization
+(for example stm32f0). To this folder add:
+\begin{itemize}
+   \item startup code (C or asm);
+   \item \path{cpuctl.c} and \path{cpuctl.h} files, those files contains all functions which are used
+         to communication with system. For example see \path{./src/system/portable/stm32f1/cpuctl.h}
+         and \path{./src/system/portable/stm32f1/cpuctl.h} files;
+   \item create a file that handle CPU hooks (Hard fault, error and exception interrupts);
+   \item create a file with CPU interrupt vectors;
+   \item create linker script;
+   \item create all other files which are needed to handle specified CPU.
+\end{itemize}
+
+The \path{cpuctl.c} and \path{cpuctl.h} are required files by system and those has defined API functions
+as follow:
+\begin{itemize}
+   \item \prototype{void \_cpuctl\_init}{void}
+         function is used to initialize CPU/MCU; function called before kernel start;
+
+   \item \prototype{void \_cpuctl\_restart\_system}{void}
+         function is called by system to perform system reboot;
+
+   \item \prototype{void \_cpuctl\_init\_CPU\_load\_timer}{void}
+         function is used to initialize CPU load timer;
+
+   \item \prototype{u32\_t \_cpuctl\_get\_CPU\_load\_timer}{void}
+         function return CPU load timer value;
+
+   \item \prototype{void \_cpuctl\_clear\_CPU\_load\_timer}{void}
+         function clear CPU load timer;
+
+   \item \prototype{u32\_t \_cpuctl\_get\_CPU\_total\_time}{void}
+         function return CPU total time; time is encountered from last clear;
+
+   \item \prototype{void \_cpuctl\_clear\_CPU\_total\_time}{void}
+         function clear CPU total time;
+
+   \item \prototype{void \_cpuctl\_sleep}{void}
+         function prepare and enter CPU in sleep mode; CPU from sleep mode shall be wake up from any
+         interrupt source (especially context switch interrupt).
+\end{itemize}
+
+
 
 \end{document}

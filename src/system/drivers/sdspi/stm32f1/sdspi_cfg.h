@@ -1,5 +1,3 @@
-#ifndef _SDSPI_CFG_H_
-#define _SDSPI_CFG_H_
 /*=========================================================================*//**
 @file    sdspi_cfg.h
 
@@ -26,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _SDSPI_CFG_H_
+#define _SDSPI_CFG_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,53 +35,50 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "stm32f1/stm32f10x.h"
-#include "drivers/gpio_def.h"
+#include "stm32f1/gpio_cfg.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** GPIO file */
-#define SDSPI_GPIO_FILE                 "/dev/gpio"
-
 /** partitions node path */
-#define SDSPI_PARTITION_1_PATH          "/dev/sda1"
-#define SDSPI_PARTITION_2_PATH          "/dev/sda2"
-#define SDSPI_PARTITION_3_PATH          "/dev/sda3"
-#define SDSPI_PARTITION_4_PATH          "/dev/sda4"
+#define SDSPI_PARTITION_1_PATH                  "/dev/sda1"
+#define SDSPI_PARTITION_2_PATH                  "/dev/sda2"
+#define SDSPI_PARTITION_3_PATH                  "/dev/sda3"
+#define SDSPI_PARTITION_4_PATH                  "/dev/sda4"
 
 /** card waiting timeout [ms] */
-#define SDSPI_WAIT_TIMEOUT              500
-
-/** device numbers */
-#define SDSPI_MAJOR_NO                  0
-#define SDSPI_MINOR_NO                  0
+#define SDSPI_WAIT_TIMEOUT                      500
 
 /** supported SPI peripheral */
-#define SDSPI_PORT                      SPI3
+#define SDSPI_PORT                              SPI3
 
-/** SPI periperal devider */
-#define SDSPI_PERIPERAL_DIVIDER         4
+/** SPI peripheral divider */
+#define SDSPI_PERIPHERAL_DIVIDER                4
+
+/** card select pin operation */
+#define SDSPI_SD_SELECT                         GPIO_CLEAR_PIN(SD_CS)
+#define SDSPI_SD_DESELECT                       GPIO_SET_PIN(SD_CS)
 
 /** enable (1) or disable (0) DMA support */
-#define SDSPI_ENABLE_DMA                1
+#define SDSPI_ENABLE_DMA                        1
 
 #if (SDSPI_ENABLE_DMA != 0)
-/** DMA device */
-#define SDSPI_DMA                       DMA2
+        /** DMA device */
+        #define SDSPI_DMA                       DMA2
 
-/** Tx DMA channel */
-#define SDSPI_DMA_TX_CHANNEL            DMA2_Channel2
-#define SDSPI_DMA_TX_CHANNEL_NO         2
+        /** Tx DMA channel */
+        #define SDSPI_DMA_TX_CHANNEL            DMA2_Channel2
+        #define SDSPI_DMA_TX_CHANNEL_NO         2
 
-/** Rx DMA channel */
-#define SDSPI_DMA_RX_CHANNEL            DMA2_Channel1
-#define SDSPI_DMA_RX_CHANNEL_NO         1
+        /** Rx DMA channel */
+        #define SDSPI_DMA_RX_CHANNEL            DMA2_Channel1
+        #define SDSPI_DMA_RX_CHANNEL_NO         1
 
-/** Rx DMA finish interrupt routine */
-#define SDSPI_DMA_ISR                   DMA2_Channel1_IRQHandler
-#define SDSPI_DMA_IRQ                   DMA2_Channel1_IRQn
+        /** Rx DMA finish interrupt routine */
+        #define SDSPI_DMA_IRQ_ROUTINE           DMA2_Channel1_IRQHandler
+        #define SDSPI_DMA_IRQ_NUMBER            DMA2_Channel1_IRQn
 
-#define SDSPI_DMA_IRQ_PRIORITY          CONFIG_USER_IRQ_PRIORITY
+        #define SDSPI_DMA_IRQ_PRIORITY          CONFIG_USER_IRQ_PRIORITY
 #endif
 
 /*==============================================================================

@@ -1,5 +1,3 @@
-#ifndef KTYPES_H_
-#define KTYPES_H_
 /*=========================================================================*//**
 @file    ktypes.h
 
@@ -26,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _KTYPES_H_
+#define _KTYPES_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,6 +49,7 @@ extern "C" {
 typedef void task_t;
 typedef void sem_t;
 typedef void mutex_t;
+typedef void queue_t;
 
 /*==============================================================================
    Exported object declarations
@@ -61,7 +63,7 @@ typedef void mutex_t;
 }
 #endif
 
-#endif /* KTYPES_H_ */
+#endif /* _KTYPES_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

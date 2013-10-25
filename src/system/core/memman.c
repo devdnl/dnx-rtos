@@ -288,7 +288,7 @@ size_t memman_free(void *rmem)
  *
  * @param[in]   size         is the minimum size of the requested block in bytes.
  * @param[out] *real_size    the real allocated memory
- * 
+ *
  * @return pointer to allocated memory or NULL if no free memory was found.
  *
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
@@ -415,7 +415,7 @@ void *memman_malloc(size_t size, size_t *real_size)
  * @param[in]  count            number of objects to allocate
  * @param[in]  size             size of the objects to allocate
  * @param[out] *real_size       the real allocated memory
- * 
+ *
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
 //==============================================================================
@@ -439,7 +439,7 @@ void *memman_calloc(size_t count, size_t size, size_t *real_size)
 //==============================================================================
 u32_t memman_get_free_heap(void)
 {
-        return ((size_t)CONFIG_HEAP_SIZE - used_mem);
+        return ((u32_t)CONFIG_HEAP_SIZE - used_mem);
 }
 
 #ifdef __cplusplus

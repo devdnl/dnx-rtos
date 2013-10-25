@@ -31,10 +31,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdlib.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"
-#include "user/regprg.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -48,7 +48,7 @@ extern "C" {
   Local types, enums definitions
 ==============================================================================*/
 struct program_data {
-        int (*main)(int, char**);
+        int            (*main)(int, char**);
         const char      *cwd;
         enum prog_state *status;
         int             *exit_code;
@@ -63,10 +63,11 @@ struct program_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void   set_status(enum prog_state *status_ptr, enum prog_state status);
-static char **new_argument_table(const char *arg, const char *name, int *argc);
-static void   delete_argument_table(char **argv, int argc);
-static void   task_program_startup(void *argv);
+static void     set_status              (enum prog_state *status_ptr, enum prog_state status);
+static char   **new_argument_table      (const char *str, int *argc);
+static void     delete_argument_table   (char **argv);
+static void     task_program_startup    (void *argv);
+static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
 
 /*==============================================================================
   Local object definitions
@@ -77,6 +78,12 @@ static void   task_program_startup(void *argv);
 ==============================================================================*/
 
 /*==============================================================================
+  External object definitions
+==============================================================================*/
+extern const struct _prog_data _prog_table[];
+extern const int               _prog_table_size;
+
+/*==============================================================================
   Function definitions
 ==============================================================================*/
 
@@ -84,8 +91,7 @@ static void   task_program_startup(void *argv);
 /**
  * @brief Function start new program by name
  *
- * @param *name         program name
- * @param *args         program argument string
+ * @param *cmd          program name
  * @param *cwd          current working dir
  * @param *stdin        stdin file
  * @param *stdout       stdout file
@@ -95,20 +101,15 @@ static void   task_program_startup(void *argv);
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FILE *stdin,
+task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
                          FILE *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
         task_t              *taskhdl = NULL;
-        struct regprg_pdata  regpdata;
+        struct _prog_data    regpdata;
 
-        if (!name || !args || !cwd) {
+        if (!cmd || !cwd) {
                 set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
-                return NULL;
-        }
-
-        if (regprg_get_program_data(name, &regpdata) != STD_RET_OK) {
-                set_status(status, PROGRAM_DOES_NOT_EXIST);
                 return NULL;
         }
 
@@ -117,9 +118,16 @@ task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FI
                 return NULL;
         }
 
-        if ((pdata->argv = new_argument_table(args, name, &pdata->argc)) == NULL) {
+        if ((pdata->argv = new_argument_table(cmd, &pdata->argc)) == NULL) {
                 sysm_sysfree(pdata);
                 set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
+                return NULL;
+        }
+
+        if (get_program_data(pdata->argv[0], &regpdata) != STD_RET_OK) {
+                delete_argument_table(pdata->argv);
+                sysm_sysfree(pdata);
+                set_status(status, PROGRAM_DOES_NOT_EXIST);
                 return NULL;
         }
 
@@ -135,11 +143,11 @@ task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FI
         set_status(status, PROGRAM_RUNNING);
 
         taskhdl = new_task(task_program_startup, regpdata.program_name,
-                           *regpdata.stack_depth, pdata);
+                           regpdata.stack_depth, pdata);
 
         if (taskhdl == NULL) {
                 set_status(status, PROGRAM_HANDLE_ERROR);
-                delete_argument_table(pdata->argv, pdata->argc);
+                delete_argument_table(pdata->argv);
                 sysm_sysfree(pdata);
                 return NULL;
         }
@@ -155,24 +163,23 @@ task_t *prgm_new_program(const char *name, const char *args, const char *cwd, FI
  * @param  exit_code            program exit value
  */
 //==============================================================================
-void prgm_delete_program(task_t *taskhdl, int exit_code)
+void delete_program(task_t *taskhdl, int exit_code)
 {
-        struct task_data    *tdata;
-        struct program_data *pdata;
-
         if (taskhdl == NULL) {
                 return;
         }
 
-        if ((tdata = _get_task_data(taskhdl))) {
+        struct task_data *tdata = _get_task_data(taskhdl);
+        if (tdata) {
                 if (tdata->f_global_vars) {
                         sysm_tskfree_as(taskhdl, tdata->f_global_vars);
                         tdata->f_global_vars = NULL;
                 }
 
-                if ((pdata = tdata->f_user)) {
+                struct program_data *pdata = tdata->f_user;
+                if (pdata) {
                         if (pdata->argv) {
-                                delete_argument_table(pdata->argv, pdata->argc);
+                                delete_argument_table(pdata->argv);
                         }
 
                         if (pdata->exit_code) {
@@ -198,9 +205,9 @@ void prgm_delete_program(task_t *taskhdl, int exit_code)
  * @param status        exit value
  */
 //==============================================================================
-void prgm_exit(int status)
+void exit(int status)
 {
-        prgm_delete_program(get_task_handle(), status);
+        delete_program(get_task_handle(), status);
 
         /* wait to kill program */
         for (;;);
@@ -211,12 +218,36 @@ void prgm_exit(int status)
  * @brief Function close program with error code
  */
 //==============================================================================
-void prgm_abort(void)
+void abort(void)
 {
-        prgm_delete_program(get_task_handle(), -1);
+        delete_program(get_task_handle(), -1);
 
         /* wait to kill program */
         for (;;);
+}
+
+//==============================================================================
+/**
+ * @brief Function start program in shell
+ */
+//==============================================================================
+int system(const char *command)
+{
+        enum prog_state state     = PROGRAM_UNKNOWN_STATE;
+        int             exit_code = EXIT_FAILURE;
+
+        new_program(command,
+                    _get_this_task_data()->f_cwd,
+                    _get_this_task_data()->f_stdin,
+                    _get_this_task_data()->f_stdout,
+                    &state,
+                    &exit_code);
+
+        while (state == PROGRAM_RUNNING) {
+                suspend_this_task();
+        }
+
+        return exit_code;
 }
 
 //==============================================================================
@@ -270,7 +301,7 @@ static void task_program_startup(void *argv)
         }
 
         if (prog_data->argv) {
-                delete_argument_table(prog_data->argv, prog_data->argc);
+                delete_argument_table(prog_data->argv);
         }
 
         sysm_sysfree(prog_data);
@@ -298,21 +329,22 @@ static void set_status(enum prog_state *status_ptr, enum prog_state status)
 /**
  * @brief Function create new table with argument pointers
  *
- * @param[in]  *arg             argument string
- * @param[in]  *name            program name (argument argv[0])
+ * @param[in]  *str             argument string
  * @param[out] *arg_count       number of argument
  *
  * @return argument table pointer if success, otherwise NULL
  */
 //==============================================================================
-static char **new_argument_table(const char *arg, const char *name, int *argc)
+static char **new_argument_table(const char *str, int *argc)
 {
         int     arg_count  = 0;
         char  **arg_table  = NULL;
         list_t *arg_list   = NULL;
         char   *arg_string = NULL;
+        bool    first_quos = false;
+        bool    first_quod = false;
 
-        if (arg == NULL || name == NULL || argc == NULL) {
+        if (str == NULL || argc == NULL) {
                 goto exit_error;
         }
 
@@ -320,25 +352,41 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                 goto exit_error;
         }
 
-        if (list_add_item(arg_list, ++arg_count, (char*)name) < 0) {
+        if (str[0] == '\0') {
                 goto exit_error;
         }
 
-        if (arg[0] == '\0') {
-                goto add_args_to_table;
+        const char *arg_start = str;
+        while (*arg_start == ' ') {
+                arg_start++;
         }
 
-        if ((arg_string = sysm_syscalloc(strlen(arg) + 1, sizeof(char))) == NULL) {
+        if (*arg_start == '\'') {
+                arg_start++;
+                first_quos = true;
+        } else if (*arg_start == '"') {
+                arg_start++;
+                first_quod = true;
+        }
+
+        if ((arg_string = sysm_syscalloc(strlen(arg_start) + 1, sizeof(char))) == NULL) {
                 goto exit_error;
         }
 
-        strcpy(arg_string, arg);
+        strcpy(arg_string, arg_start);
+        arg_start = arg_string;
 
         while (*arg_string != '\0') {
                 char *arg_to_add = NULL;
 
-                if (*arg_string == '\'') {
-                        arg_to_add = ++arg_string;
+                if (*arg_string == '\'' || first_quos) {
+                        if (first_quos) {
+                                first_quos = false;
+                        } else {
+                                ++arg_string;
+                        }
+
+                        arg_to_add = arg_string;
 
                         while (*arg_string != '\0') {
                                 if ( *arg_string == '\''
@@ -354,8 +402,14 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                                 goto exit_error;
                         }
 
-                } else if (*arg_string == '"') {
-                        arg_to_add = ++arg_string;
+                } else if (*arg_string == '"' || first_quod) {
+                        if (first_quod) {
+                                first_quod = false;
+                        } else {
+                                ++arg_string;
+                        }
+
+                        arg_to_add = arg_string;
 
                         while (*arg_string != '\0') {
                                 if ( *arg_string == '"'
@@ -387,7 +441,7 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                         goto exit_error;
                 }
 
-                if (list_add_item(arg_list, ++arg_count, arg_to_add) < 0) {
+                if (list_add_item(arg_list, arg_count++, arg_to_add) < 0) {
                         goto exit_error;
                 }
 
@@ -399,7 +453,7 @@ static char **new_argument_table(const char *arg, const char *name, int *argc)
                 }
         }
 
-add_args_to_table:
+        /* add args to table */
         if ((arg_table = sysm_syscalloc(arg_count + 1, sizeof(char*))) == NULL) {
                 goto exit_error;
         }
@@ -438,7 +492,7 @@ exit_error:
         }
 
         if (arg_string) {
-                sysm_sysfree(arg_string);
+                sysm_sysfree((char *)arg_start);
         }
 
         *argc = 0;
@@ -450,22 +504,46 @@ exit_error:
  * @brief Function remove argument table
  *
  * @param **argv        pointer to argument table
- * @param   argc        argument count
  */
 //==============================================================================
-static void delete_argument_table(char **argv, int argc)
+static void delete_argument_table(char **argv)
 {
         if (argv == NULL) {
                 return;
         }
 
-        if (argc > 1) {
-                if (argv[1]) {
-                        sysm_sysfree(argv[1]);
-                }
+        if (argv[0]) {
+                sysm_sysfree(argv[0]);
         }
 
         sysm_sysfree(argv);
+}
+
+//==============================================================================
+/**
+ * @brief Function returns pointer to all program data necessary to start program
+ *
+ * @param [in]  *name           program name
+ * @param [out] *pdata          program data
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
+{
+        if (!prg_data || !name) {
+                return STD_RET_ERROR;
+        }
+
+        for (int i = 0; i < _prog_table_size; i++) {
+                if (strcmp(name, _prog_table[i].program_name) == 0) {
+                        *prg_data = _prog_table[i];
+                        return STD_RET_OK;
+                }
+        }
+
+        return STD_RET_ERROR;
 }
 
 #ifdef __cplusplus

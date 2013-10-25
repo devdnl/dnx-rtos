@@ -31,10 +31,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "terminal.h"
-#include "drivers/ioctl.h"
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+#include "system/dnx.h"
+#include "system/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -60,7 +60,9 @@ extern "C" {
 enum cmd_status {
         CMD_STATUS_EXECUTED,
         CMD_STATUS_NOT_EXIST,
-        CMD_STATUS_NOT_ENOUGH_FREE_MEMORY
+        CMD_STATUS_NOT_ENOUGH_FREE_MEMORY,
+        CMD_STATUS_LINE_PARSE_ERROR,
+        CMD_STATUS_DO_EXIT
 };
 
 struct cmd_entry {
@@ -72,8 +74,8 @@ struct cmd_entry {
   Local function prototypes
 ==============================================================================*/
 static void            print_prompt             (void);
-static enum cmd_status find_internal_command    (char *cmd, char *arg);
-static enum cmd_status find_external_command    (char *cmd, char *arg);
+static enum cmd_status find_internal_command    (const char *cmd);
+static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
 static enum cmd_status cmd_ls                   (char *arg);
 static enum cmd_status cmd_mkdir                (char *arg);
@@ -93,10 +95,10 @@ static enum cmd_status cmd_help                 (char *arg);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
-        char line[PROMPT_LINE_LEN];
-        char cwd[CWD_PATH_LEN];
-};
+GLOBAL_VARIABLES_SECTION_BEGIN
+char line[PROMPT_LINE_LEN];
+char cwd[CWD_PATH_LEN];
+GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
@@ -119,7 +121,6 @@ static const struct cmd_entry commands[] = {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW,);
 
 /*==============================================================================
   Function definitions
@@ -130,18 +131,12 @@ PROGRAM_PARAMS(terminal, STACK_DEPTH_LOW,);
  * @brief Terminal main function
  */
 //==============================================================================
-int PROGRAM_MAIN(terminal, int argc, char *argv[])
+PROGRAM_MAIN(terminal, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
 
-//        strcpy(global->cwd, "/");
         getcwd(global->cwd, CWD_PATH_LEN);
-
-        int tty = 0;
-        ioctl(stdin, TTY_IORQ_GET_CURRENT_TTY, &tty);
-
-        printf("Welcome to %s/%s (tty%u)\n", get_OS_name(), get_kernel_name(), tty);
 
         for (;;) {
                 /* clear input line and print prompt */
@@ -149,48 +144,39 @@ int PROGRAM_MAIN(terminal, int argc, char *argv[])
                 print_prompt();
 
                 /* waiting for command */
-                scanf("%100s", global->line);
+                if (!fgets(global->line, PROMPT_LINE_LEN, stdin))
+                        continue;
+
+                LAST_CHARACTER(global->line) = '\0';
 
                 /* finds all spaces before command */
                 char *cmd  = global->line;
                 cmd += strspn(global->line, " ");
 
-                /* finds first space after command */
-                char *arg;
-                if ((arg = strchr(cmd, ' ')) != NULL) {
-                        *(arg++) = '\0';
-                        arg += strspn(arg, " ");
-                } else {
-                        arg = strchr(cmd, '\0');
-                }
-
-                /* terminal exit */
-                if (strcmp("exit", cmd) == 0) {
-                        break;
-                }
-
-                if (strcmp("", cmd) == 0) {
+                if (cmd[0] == '\0') {
                         continue;
                 }
 
-                /* identify program localization */
-                enum cmd_status cmd_status = find_internal_command(cmd, arg);
+                enum cmd_status cmd_status = find_external_command(cmd);
 
                 if (cmd_status == CMD_STATUS_NOT_EXIST) {
-                        cmd_status = find_external_command(cmd, arg);
+                        cmd_status = find_internal_command(cmd);
                 }
 
                 switch (cmd_status) {
                 case CMD_STATUS_EXECUTED:
                         continue;
-
                 case CMD_STATUS_NOT_EXIST:
-                        printf("\"%s\" is unknown command.\n", cmd);
+                        printf("\'%s\' is unknown command.\n", cmd);
                         break;
-
                 case CMD_STATUS_NOT_ENOUGH_FREE_MEMORY:
                         printf("Not enough free memory.\n");
                         break;
+                case CMD_STATUS_LINE_PARSE_ERROR:
+                        puts("Line parse error.");
+                        break;
+                case CMD_STATUS_DO_EXIT:
+                        return 0;
                 }
         }
 
@@ -218,12 +204,12 @@ static void print_prompt(void)
  * @return operation status
  */
 //==============================================================================
-static enum cmd_status find_external_command(char *cmd, char *arg)
+static enum cmd_status find_external_command(const char *cmd)
 {
         enum prog_state state  = PROGRAM_UNKNOWN_STATE;
         enum cmd_status status = CMD_STATUS_NOT_EXIST;
 
-        new_program(cmd, arg, global->cwd, stdin, stdout, &state, NULL);
+        new_program(cmd, global->cwd, stdin, stdout, &state, NULL);
 
         while (state == PROGRAM_RUNNING) {
                 suspend_this_task();
@@ -233,17 +219,16 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
         case PROGRAM_UNKNOWN_STATE:
         case PROGRAM_RUNNING:
                 break;
-
         case PROGRAM_ENDED:
                 status = CMD_STATUS_EXECUTED;
                 break;
-
-        case PROGRAM_HANDLE_ERROR:
         case PROGRAM_ARGUMENTS_PARSE_ERROR:
+                status = CMD_STATUS_LINE_PARSE_ERROR;
+                break;
+        case PROGRAM_HANDLE_ERROR:
         case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
                 status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY;
                 break;
-
         case PROGRAM_DOES_NOT_EXIST:
                 status = CMD_STATUS_NOT_EXIST;
                 break;
@@ -265,8 +250,22 @@ static enum cmd_status find_external_command(char *cmd, char *arg)
  * @return operation status
  */
 //==============================================================================
-static enum cmd_status find_internal_command(char *cmd, char *arg)
+static enum cmd_status find_internal_command(const char *cmd)
 {
+        /* finds first space after command */
+        char *arg;
+        if ((arg = strchr(cmd, ' ')) != NULL) {
+                *(arg++) = '\0';
+                arg += strspn(arg, " ");
+        } else {
+                arg = strchr(cmd, '\0');
+        }
+
+        /* terminal exit */
+        if (strcmp("exit", cmd) == 0) {
+                return CMD_STATUS_DO_EXIT;
+        }
+
         enum cmd_status status = CMD_STATUS_NOT_EXIST;
 
         for (uint i = 0; i < ARRAY_SIZE(commands); i++) {
@@ -324,7 +323,7 @@ static enum cmd_status cmd_cd(char *arg)
         }
 
         if (newpath) {
-                dir_t *dir = opendir(newpath);
+                DIR *dir = opendir(newpath);
                 if (dir) {
                         closedir(dir);
 
@@ -350,23 +349,19 @@ static enum cmd_status cmd_cd(char *arg)
 //==============================================================================
 static enum cmd_status cmd_ls(char *arg)
 {
-        dir_t *dir = opendir(arg);
+        DIR *dir = opendir(arg);
         if (dir) {
                 dirent_t dirent;
 
-                char *ccolor = FONT_COLOR_YELLOW"c";
-                char *rcolor = FONT_COLOR_MAGENTA"-";
-                char *lcolor = FONT_COLOR_CYAN"l";
-                char *dcolor = FONT_COLOR_GREEN"d";
-
                 while ((dirent = readdir(dir)).name != NULL) {
-                        char *type = NULL;
+                        const char *type = NULL;
 
                         switch (dirent.filetype) {
-                        case FILE_TYPE_DIR:     type = dcolor; break;
-                        case FILE_TYPE_DRV:     type = ccolor; break;
-                        case FILE_TYPE_LINK:    type = lcolor; break;
-                        case FILE_TYPE_REGULAR: type = rcolor; break;
+                        case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"d";  break;
+                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA"m"; break;
+                        case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
+                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN" ";   break;
+                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"x";          break;
                         default: type = "?";
                         }
 
@@ -742,8 +737,6 @@ static enum cmd_status cmd_uname(char *arg)
 //==============================================================================
 static enum cmd_status cmd_detect_card(char *arg)
 {
-#include "drivers/sdspi_def.h"
-
         FILE *sd = fopen(arg, "r");
         if (sd) {
                 bool status = false;

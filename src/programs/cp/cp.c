@@ -34,7 +34,6 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "cp.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -54,13 +53,13 @@ extern "C" {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-GLOBAL_VARIABLES {
-};
+GLOBAL_VARIABLES_SECTION_BEGIN
+
+GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-PROGRAM_PARAMS(cp, STACK_DEPTH_LOW,);
 
 /*==============================================================================
   Function definitions
@@ -71,7 +70,7 @@ PROGRAM_PARAMS(cp, STACK_DEPTH_LOW,);
  * @brief Cat main function
  */
 //==============================================================================
-int PROGRAM_MAIN(cp, int argc, char *argv[])
+PROGRAM_MAIN(cp, int argc, char *argv[])
 {
         if (argc != 3) {
                 printf("Usage: %s <source file> <destination file>\n", argv[0]);

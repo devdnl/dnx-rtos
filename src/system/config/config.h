@@ -1,5 +1,3 @@
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
 /*=========================================================================*//**
 @file    config.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,12 +64,12 @@ extern "C" {
 /**
  * Task minimal stack depth [levels]
  */
-#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (64)
+#define CONFIG_RTOS_TASK_MIN_STACK_DEPTH                (48)
 
 /**
  * File system stack depth [levels]
  */
-#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (48)
+#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (32)
 
 /**
  * Interrupt stack depth [levels]
@@ -123,7 +124,7 @@ extern "C" {
 #define CONFIG_SCANF_ENABLE                             (1)
 
 /**
- * Enable (1) or disable (0) system messages
+ * Enable (1) or disable (0) system messages (printk())
  */
 #define CONFIG_SYSTEM_MSG_ENABLE                        (1)
 

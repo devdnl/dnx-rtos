@@ -1,5 +1,3 @@
-#ifndef _PROGMAN_H_
-#define _PROGMAN_H_
 /*=========================================================================*//**
 @file    progman.h
 
@@ -26,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _PROGMAN_H_
+#define _PROGMAN_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,33 +35,27 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <stdio.h>
+#include "core/vfs.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define new_program(const_char__pname, const_char__pargs, const_char__pcwd,\
-                    FILE__pfstdin, FILE__pfstdout, enum_prog_state__pstatus, int__pexit_code) \
-        prgm_new_program(const_char__pname, const_char__pargs, const_char__pcwd, FILE__pfstdin,\
-                         FILE__pfstdout, enum_prog_state__pstatus, int__pexit_code)
-
-#define delete_program(task_t__ptaskhdl) \
-        prgm_delete_program(task_t__ptaskhdl, EXIT_SUCCESS)
-
-#define GLOBAL_VARIABLES \
-        struct __global_vars__
-
-#define FS_STACK_NOT_USED  0 *
-#define PROGRAM_PARAMS(name, stack_base, fs_switch)\
-        const uint prog_##name##_gs = sizeof(struct __global_vars__);\
-        const uint prog_##name##_stack = (stack_base) + (fs_switch (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH)) + (CONFIG_RTOS_IRQ_STACK_DEPTH)
-
-#define EXPORT_PROGRAM_PARAMS(name)\
-        extern const uint prog_##name##_gs;\
-        extern const uint prog_##name##_stack
+#define GLOBAL_VARIABLES_SECTION_BEGIN  struct __global_vars__ {
+#define GLOBAL_VARIABLES_SECTION_END    };
 
 #define PROGRAM_MAIN(name, argc, argv) \
-        program_##name##_main(argc, argv)
+        const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
+        int program_##name##_main(argc, argv)
+
+#define _IMPORT_PROGRAM(name)\
+        extern const int __prog_##name##_gs__;\
+        extern int program_##name##_main(int, char**)
+
+#define _PROGRAM_CONFIG(name, stack_size) \
+        {.program_name  = #name,\
+         .main_function = program_##name##_main,\
+         .globals_size  = &__prog_##name##_gs__,\
+         .stack_depth   = stack_size}
 
 #define stdin \
         _get_this_task_data()->f_stdin
@@ -77,15 +72,15 @@ extern "C" {
 #define create_fast_global(name) \
         struct __global_vars__*name = global
 
-#define exit(int__status) \
-        prgm_exit(int__status)
-
-#define abort() \
-        prgm_abort()
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+struct _prog_data {
+        char      *program_name;
+        int      (*main_function)(int, char**);
+        const int *globals_size;
+        int        stack_depth;
+};
 
 /*==============================================================================
   Exported object declarations
@@ -103,10 +98,26 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *prgm_new_program(const char*, const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
-extern void    prgm_delete_program(task_t*, int);
-extern void    prgm_exit(int);
-extern void    prgm_abort(void);
+extern task_t   *new_program       (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
+extern void      delete_program    (task_t*, int);
+extern void      exit              (int);
+extern void      abort             (void);
+extern int       system            (const char*);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+static inline const struct _prog_data *_get_programs_table(void)
+{
+        extern const struct _prog_data _prog_table[];
+        return _prog_table;
+}
+
+static inline int _get_programs_table_size(void)
+{
+        extern const int _prog_table_size;
+        return _prog_table_size;
+}
 
 #ifdef __cplusplus
 }

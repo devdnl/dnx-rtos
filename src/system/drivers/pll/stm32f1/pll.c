@@ -31,7 +31,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "drivers/pll.h"
+#include "system/dnxmodule.h"
+#include "stm32f1/pll_cfg.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
@@ -60,10 +61,17 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief Initialize PLL module
+ * @brief Initialize device
+ *
+ * @param[out]          **device_handle        device allocated memory
+ * @param[in ]            major                major device number
+ * @param[in ]            minor                minor device number
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_INIT(PLL)
+API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(major);
@@ -144,10 +152,15 @@ MODULE__DEVICE_INIT(PLL)
 
 //==============================================================================
 /**
- * @brief Release PLL device
+ * @brief Release device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(PLL)
+API_MOD_RELEASE(PLL, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
@@ -157,11 +170,18 @@ MODULE__DEVICE_RELEASE(PLL)
 //==============================================================================
 /**
  * @brief Open device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_OPEN(PLL)
+API_MOD_OPEN(PLL, void *device_handle, int flags)
 {
         UNUSED_ARG(device_handle);
+        UNUSED_ARG(flags);
 
         return STD_RET_ERROR;
 }
@@ -169,11 +189,20 @@ MODULE__DEVICE_OPEN(PLL)
 //==============================================================================
 /**
  * @brief Close device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           force                  device force close (true)
+ * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(PLL)
+API_MOD_CLOSE(PLL, void *device_handle, bool force, const task_t *opened_by_task)
 {
         UNUSED_ARG(device_handle);
+        UNUSED_ARG(force);
+        UNUSED_ARG(opened_by_task);
 
         return STD_RET_ERROR;
 }
@@ -181,15 +210,21 @@ MODULE__DEVICE_CLOSE(PLL)
 //==============================================================================
 /**
  * @brief Write data to device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]          *src                    data source
+ * @param[in ]           count                  number of bytes to write
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of written bytes
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(PLL)
+API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
@@ -197,29 +232,43 @@ MODULE__DEVICE_WRITE(PLL)
 //==============================================================================
 /**
  * @brief Read data from device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *dst                    data destination
+ * @param[in ]           count                  number of bytes to read
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of read bytes
  */
 //==============================================================================
-MODULE__DEVICE_READ(PLL)
+API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
-        UNUSED_ARG(item_size);
-        UNUSED_ARG(lseek);
-        UNUSED_ARG(n_items);
+        UNUSED_ARG(count);
+        UNUSED_ARG(fpos);
 
         return 0;
 }
 
 //==============================================================================
 /**
- * @brief Device control
+ * @brief IO control
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           request                request
+ * @param[in ][out]     *arg                    request's argument
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ * @retval ...
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(PLL)
+API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 {
         UNUSED_ARG(device_handle);
-        UNUSED_ARG(iorq);
-        UNUSED_ARG(args);
+        UNUSED_ARG(request);
+        UNUSED_ARG(arg);
 
         return STD_RET_ERROR;
 }
@@ -227,9 +276,14 @@ MODULE__DEVICE_IOCTL(PLL)
 //==============================================================================
 /**
  * @brief Flush device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(PLL)
+API_MOD_FLUSH(PLL, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
@@ -238,14 +292,22 @@ MODULE__DEVICE_FLUSH(PLL)
 
 //==============================================================================
 /**
- * @brief Interface returns device informations
+ * @brief Device information
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *device_stat            device status
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_INFO(PLL)
+API_MOD_STAT(PLL, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG(device_handle);
 
-        device_info->st_size = 0;
+        device_stat->st_size  = 0;
+        device_stat->st_major = 0;
+        device_stat->st_minor = 0;
 
         return STD_RET_OK;
 }

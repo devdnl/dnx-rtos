@@ -1,5 +1,3 @@
-#ifndef SYSTYPES_H_
-#define SYSTYPES_H_
 /*=========================================================================*//**
 @file    systypes.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef SYSTYPES_H_
+#define SYSTYPES_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,7 +67,7 @@ typedef enum stdret_enum
 } stdret_t;
 
 /** directory object */
-typedef struct vfs_dir dir_t;
+typedef struct vfs_dir DIR;
 
 /*==============================================================================
   Exported object declarations
