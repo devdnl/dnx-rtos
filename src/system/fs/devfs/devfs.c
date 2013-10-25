@@ -467,11 +467,9 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
                         if (node->drvif && node->path) {
                                 *node->drvif = *drv_if;
                                 strcpy(node->path, path + 1);
-                                node->gid   = 0;
-                                node->uid   = 0;
-                                node->mode  = OWNER_MODE(MODE_R | MODE_W)
-                                            | GROUP_MODE(MODE_R | MODE_W)
-                                            | OTHER_MODE(MODE_R | MODE_W);
+                                node->gid  = 0;
+                                node->uid  = 0;
+                                node->mode = S_IRUSR | S_IWUSR | S_IRGRO | S_IWGRO | S_IROTH | S_IWOTH;
 
                                 devfs->number_of_used_nodes++;
 

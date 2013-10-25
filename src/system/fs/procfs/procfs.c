@@ -571,7 +571,7 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
         }
 
         stat->st_dev   = 0;
-        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
+        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
         stat->st_mtime = 0;
         stat->st_size  = 0;
         stat->st_gid   = 0;
@@ -869,7 +869,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 
         stat->st_dev   = 0;
         stat->st_gid   = 0;
-        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
+        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
         stat->st_mtime = 0;
         stat->st_size  = 0;
         stat->st_uid   = 0;

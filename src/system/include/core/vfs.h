@@ -1,5 +1,3 @@
-#ifndef _VFS_H_
-#define _VFS_H_
 /*=========================================================================*//**
 @file    vfs.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _VFS_H_
+#define _VFS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,12 +63,15 @@ extern "C" {
 #endif
 
 /* modes */
-#define OWNER_MODE(mode)        ((mode) << 0)
-#define GROUP_MODE(mode)        ((mode) << 3)
-#define OTHER_MODE(mode)        ((mode) << 6)
-#define MODE_R                  4
-#define MODE_W                  2
-#define MODE_X                  1
+#define S_IRUSR                 (4 << 0)
+#define S_IWUSR                 (2 << 0)
+#define S_IXUSR                 (1 << 0)
+#define S_IRGRO                 (4 << 3)
+#define S_IWGRO                 (2 << 3)
+#define S_IXGRO                 (1 << 3)
+#define S_IROTH                 (4 << 6)
+#define S_IWOTH                 (2 << 6)
+#define S_IXOTH                 (1 << 6)
 
 /* open file modes flags */
 #define O_RDONLY                (1 << 0)                /* read only    */

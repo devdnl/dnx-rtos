@@ -1,5 +1,3 @@
-#ifndef _MEMMAN_H_
-#define _MEMMAN_H_
 /*=========================================================================*//**
 @file    memman.h
 
@@ -57,6 +55,9 @@
 *
 * Modified: Daniel Zorychta
 *//*==========================================================================*/
+
+#ifndef _MEMMAN_H_
+#define _MEMMAN_H_
 
 #ifdef __cplusplus
 extern "C" {

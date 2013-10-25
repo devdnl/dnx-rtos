@@ -640,7 +640,7 @@ API_FS_CHMOD(fatfs, void *fs_handle, const char *path, int mode)
 
         struct fatfs *hdl = fs_handle;
 
-        uint8_t dosmode = mode & OWNER_MODE(MODE_W) ? 0 : LIBFAT_AM_RDO;
+        uint8_t dosmode = mode & S_IWUSR ? 0 : LIBFAT_AM_RDO;
         if (libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO) == FR_OK) {
                 return STD_RET_OK;
         }

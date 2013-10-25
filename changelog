@@ -1,0 +1,32 @@
+dnx/FreeRTOS 1.1.0
+==================
+New Features, Improvements:
+- simplified Makefile
+- created fast devfs file system
+- ioctl requests are calculated by special macros
+- applied inline functions instead of macros (where possible)
+- implemented queue support
+- implemented "X" and "i" flags in printf() family functions
+- simplified file system and driver layers (many changes)
+- some paths are corrected with CWD path
+- added init level to initd
+- improved CPU load measurement
+- removed not completed posix port
+- removed appfs and moved this functionality to procfs
+- added modules and file system templates
+- big improvement of GPIO driver, simplified pin configuration and usage
+- implemented system() function
+- corrected stdio.h library
+
+Fixed Bugs:
+- TTY initialization fault
+- fprintf() string terminator
+- NULL pointer bug if module does not allocate memory region
+- SDSPI: added interface function to mutex section
+- system crash if program parameters start with " and ' characters
+- fatfs memory leakage
+
+dnx/FreeRTOS 1.0.0
+==================
+New Features, Improvements:
+- first system release, basic features

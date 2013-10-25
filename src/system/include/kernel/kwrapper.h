@@ -1,5 +1,3 @@
-#ifndef _KWRAPPER_H_
-#define _KWRAPPER_H_
 /*=========================================================================*//**
 @file    kwrapper.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _KWRAPPER_H_
+#define _KWRAPPER_H_
 
 #ifdef __cplusplus
 extern "C" {

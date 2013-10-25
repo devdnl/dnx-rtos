@@ -250,5 +250,5 @@ API_MOD_STAT(GENERICMOD, void *device_handle, struct vfs_dev_stat *device_stat)
 #endif
 
 /*==============================================================================
-                                             End of file
+  End of file
 ==============================================================================*/

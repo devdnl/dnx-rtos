@@ -1,5 +1,3 @@
-#ifndef SYSTYPES_H_
-#define SYSTYPES_H_
 /*=========================================================================*//**
 @file    systypes.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef SYSTYPES_H_
+#define SYSTYPES_H_
 
 #ifdef __cplusplus
 extern "C" {

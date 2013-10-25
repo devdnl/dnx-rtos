@@ -1,5 +1,3 @@
-#ifndef _LIBFAT_H_
-#define _LIBFAT_H_
 /*=========================================================================*//**
 @file    libfat.h
 
@@ -40,6 +38,9 @@
 / * Redistributions of source code must retain the above copyright notice.
 /
 /-----------------------------------------------------------------------------*/
+
+#ifndef _LIBFAT_H_
+#define _LIBFAT_H_
 
 #ifdef __cplusplus
 extern "C" {

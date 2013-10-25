@@ -1,5 +1,3 @@
-#ifndef _DNXMODULE_H_
-#define _DNXMODULE_H_
 /*=========================================================================*//**
 @file    dnxmodule.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _DNXMODULE_H_
+#define _DNXMODULE_H_
 
 #ifdef __cplusplus
 extern "C" {

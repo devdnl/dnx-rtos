@@ -25,8 +25,8 @@
 #
 ####################################################################################################
 
-include src/programs/Makefile.in
-include src/system/Makefile.in
+include src/programs/Makefile.include
+include src/system/Makefile.include
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -43,7 +43,7 @@ CPU_stm32f1       = cortex-m3
 MCU_stm32f1       = STM32F10X_CL
 DEFINE_stm32f1    = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
 CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
-                    -Wstrict-prototypes -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINE_stm32f1)
+                    -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINE_stm32f1)
 CXXFLAGS_stm32f1  =
 LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
                     -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \

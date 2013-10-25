@@ -1,5 +1,3 @@
-#ifndef _GENERICMOD_DEF_H_
-#define _GENERICMOD_DEF_H_
 /*=========================================================================*//**
 @file    genericmod_def.h
 
@@ -26,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _GENERICMOD_DEF_H_
+#define _GENERICMOD_DEF_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,10 +34,16 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "genericmod_cfg.h"
+#include "system/ioctl_macros.h"
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define GENERICMOD_IORQ_EX1         _IO('M', 0x00)
+#define GENERICMOD_IORQ_EX2         _IOR('M', 0x01, int*)
+#define GENERICMOD_IORQ_EX3         _IOW('M', 0x02, int)
+#define GENERICMOD_IORQ_EX4         _IOWR('M', 0x03, int*)
 
 /*==============================================================================
   Exported object types

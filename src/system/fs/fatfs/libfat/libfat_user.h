@@ -1,5 +1,3 @@
-#ifndef _LIBFAT_USER_H_
-#define _LIBFAT_USER_H_
 /*=========================================================================*//**
 @file    libfat_user.h
 
@@ -28,6 +26,9 @@
 /*------------------------------------------------------------------------------
 /  Low level disk interface module include file   (C)ChaN, 2013
 /-----------------------------------------------------------------------------*/
+
+#ifndef _LIBFAT_USER_H_
+#define _LIBFAT_USER_H_
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,5 +1,3 @@
-#ifndef _GENERICMOD_CFG_H_
-#define _GENERICMOD_CFG_H_
 /*=========================================================================*//**
 @file    genericmod_cfg.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _GENERICMOD_CFG_H_
+#define _GENERICMOD_CFG_H_
 
 #ifdef __cplusplus
 extern "C" {

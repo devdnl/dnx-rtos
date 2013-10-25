@@ -1,5 +1,3 @@
-#ifndef _STDIO_H_
-#define _STDIO_H_
 /*=========================================================================*//**
 @file    dnxio.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _STDIO_H_
+#define _STDIO_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -144,6 +145,11 @@ static inline int rewind(FILE *file)
 static inline int ferror(FILE *file)
 {
         return file != NULL ? 0 : (int)file;
+}
+
+static inline void perror(const char *s)
+{
+        sys_fprintf(stderr, "%s : Unable to open file or directory", s);
 }
 
 static inline stdret_t getmntentry(size_t item, struct vfs_mntent *mntent)

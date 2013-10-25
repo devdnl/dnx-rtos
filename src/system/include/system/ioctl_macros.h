@@ -1,5 +1,3 @@
-#ifndef _IOCTL_MACROS_H_
-#define _IOCTL_MACROS_H_
 /*=========================================================================*//**
 @file    ioctl_macros.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _IOCTL_MACROS_H_
+#define _IOCTL_MACROS_H_
 
 #ifdef __cplusplus
 extern "C" {

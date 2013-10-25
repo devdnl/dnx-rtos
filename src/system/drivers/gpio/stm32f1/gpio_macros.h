@@ -1,5 +1,3 @@
-#ifndef _GPIO_MACROS_H_
-#define _GPIO_MACROS_H_
 /*=========================================================================*//**
 @file    gpio_macros.h
 
@@ -25,6 +23,9 @@
 
 
 *//*==========================================================================*/
+
+#ifndef _GPIO_MACROS_H_
+#define _GPIO_MACROS_H_
 
 #ifdef __cplusplus
 extern "C" {
