@@ -75,8 +75,8 @@ extern "C" {
 //==============================================================================
 task_t *new_task(void (*func)(void*), const char *name, uint stack_depth, void *argv)
 {
-        task_t           *task          = NULL;
-        uint             child_priority = PRIORITY(0);
+        task_t           *task           = NULL;
+        uint              child_priority = PRIORITY(0);
         struct task_data *data;
 
         if (!(data = sysm_kcalloc(1, sizeof(struct task_data)))) {
