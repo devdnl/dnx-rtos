@@ -33,6 +33,7 @@
 #define __LWIPOPTS_H__
 
 #include "config.h"
+#include "system/dnx.h"
 
 /*
    -----------------------------------------------
@@ -89,12 +90,25 @@
 #define MEM_SIZE                (4*1024)
 
 /*
-* MEMP_MEM_MALLOC==1: Use mem_malloc/mem_free instead of the lwip pool allocator.
-* Especially useful with MEM_LIBC_MALLOC but handle with care regarding execution
-* speed and usage from interrupts!
-*/
-#define MEMP_MEM_MALLOC         0
+ * MEM_LIBC_MALLOC==1: Use malloc/free/realloc provided by your C-library
+ * instead of the lwip internal allocator. Can save code size if you
+ * already use it.
+ */
+#define MEM_LIBC_MALLOC         1
 
+/*
+ * MEMP_MEM_MALLOC==1: Use mem_malloc/mem_free instead of the lwip pool allocator.
+ * Especially useful with MEM_LIBC_MALLOC but handle with care regarding execution
+ * speed and usage from interrupts!
+ */
+#define MEMP_MEM_MALLOC         1
+
+/*
+ * Memory allocation functions
+ */
+#define mem_free                sysm_tskfree
+#define mem_malloc              sysm_tskmalloc
+#define mem_calloc              sysm_tskcalloc
 
 /*
    ------------------------------------------------

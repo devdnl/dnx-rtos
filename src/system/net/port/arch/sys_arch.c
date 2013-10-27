@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    dnx.c
+@file    sys_arch.c
 
 @author  Daniel Zorychta
 
@@ -31,19 +31,15 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "sys_arch.h"
 #include "system/dnx.h"
-#include "user/initd.h"
-
-#if (CONFIG_NETWORK_ENABLE != 0)
-#include "lwip/init.h" /* FIXME "core/netconn.h" */
-#endif
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -51,11 +47,15 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Local objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object definitions
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -64,19 +64,49 @@ extern "C" {
 
 //==============================================================================
 /**
- * @brief Initialize dnx system
+ * @brief
  */
 //==============================================================================
-void _dnx_init(void)
+void sys_init()
 {
-        _cpuctl_init();
-        memman_init();
-        _stop_if(vfs_init() != STD_RET_OK);
-        _stop_if(sysm_init() != STD_RET_OK);
-#if (CONFIG_NETWORK_ENABLE != 0)
-        lwip_init(); /* FIXME netconn_init() */
-#endif
-        new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+
+}
+
+//==============================================================================
+/**
+ * @brief Protect thread
+ *
+ * Perform a "fast" protect. This could be implemented by
+ * disabling interrupts for an embedded system or by using a semaphore or
+ * mutex. The implementation should allow calling SYS_ARCH_PROTECT when
+ * already protected. The old protection level is returned in the variable
+ * "lev". This macro will default to calling the sys_arch_protect() function
+ * which should be implemented in sys_arch.c. If a particular port needs a
+ * different implementation, then this macro may be defined in sys_arch.h
+ */
+//==============================================================================
+sys_prot_t sys_arch_protect()
+{
+        enter_critical_section();
+        return 1;
+}
+
+//==============================================================================
+/**
+ * @brief Unprotect thread
+ *
+ * Perform a "fast" set of the protection level to "lev". This could be
+ * implemented by setting the interrupt level to "lev" within the MACRO or by
+ * using a semaphore or mutex.  This macro will default to calling the
+ * sys_arch_unprotect() function which should be implemented in
+ * sys_arch.c. If a particular port needs a different implementation, then
+ * this macro may be defined in sys_arch.h
+ */
+//==============================================================================
+void sys_arch_unprotect(sys_prot_t lev)
+{
+        (void) lev;
+        exit_critical_section();
 }
 
 #ifdef __cplusplus

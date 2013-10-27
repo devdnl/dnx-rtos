@@ -100,6 +100,8 @@ CSRC_CORE += net/core/ipv4/inet_chksum.c
 CSRC_CORE += net/core/ipv4/ip.c
 CSRC_CORE += net/core/ipv4/ip_addr.c
 CSRC_CORE += net/core/ipv4/ip_frag.c
+CSRC_CORE += net/netif/etharp.c
+CSRC_CORE += net/port/arch/sys_arch.c
 
 HDRLOC_CORE += kernel/FreeRTOS/Source/include
 HDRLOC_CORE += kernel
