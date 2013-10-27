@@ -34,6 +34,10 @@ extern "C" {
 #include "system/dnx.h"
 #include "user/initd.h"
 
+#if (CONFIG_NETWORK_ENABLE != 0)
+#include "lwip/init.h"
+#endif
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -69,6 +73,9 @@ void _dnx_init(void)
         memman_init();
         _stop_if(vfs_init() != STD_RET_OK);
         _stop_if(sysm_init() != STD_RET_OK);
+#if (CONFIG_NETWORK_ENABLE != 0)
+        lwip_init();
+#endif
         new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
 }
 

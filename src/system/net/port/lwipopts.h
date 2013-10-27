@@ -44,7 +44,7 @@
  * critical regions during buffer allocation, deallocation and memory
  * allocation and deallocation.
  */
-#define SYS_LIGHTWEIGHT_PROT    0
+#define SYS_LIGHTWEIGHT_PROT    1
 
 /*
  * NO_SYS==1: Provides VERY minimal functionality. Otherwise,
@@ -296,7 +296,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 /*
  * LWIP_NETCONN==1: Enable Netconn API (require to use api_lib.c)
  */
-#define LWIP_NETCONN                    0
+#define LWIP_NETCONN                    1
 
 /*
    ------------------------------------
