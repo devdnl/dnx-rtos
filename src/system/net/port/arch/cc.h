@@ -1,9 +1,3 @@
-/**
- * @file
- *
- * lwIP Options Configuration
- */
-
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -35,12 +29,50 @@
  * Author: Adam Dunkels <adam@sics.se>
  *
  */
-#ifndef __LWIP_POPT_H__
-#define __LWIP_POPT_H__
+#ifndef __CC_H__
+#define __CC_H__
 
-#include "config.h"
+#include "core/basic_types.h"
 
-#define MEM_ALIGNMENT           4
-#define LWIP_SOCKET             0
+typedef i8_t    s8_t;
+typedef i16_t   s16_t;
+typedef i32_t   s32_t;
+typedef u32_t   mem_ptr_t;
 
-#endif /* __LWIP_POPT_H__ */
+#define BYTE_ORDER                      LITTLE_ENDIAN
+
+/* define compiler specific symbols */
+#if defined (__ICCARM__)
+
+#define PACK_STRUCT_BEGIN
+#define PACK_STRUCT_STRUCT
+#define PACK_STRUCT_END
+#define PACK_STRUCT_FIELD(x) x
+#define PACK_STRUCT_USE_INCLUDES
+
+#elif defined (__CC_ARM)
+
+#define PACK_STRUCT_BEGIN __packed
+#define PACK_STRUCT_STRUCT
+#define PACK_STRUCT_END
+#define PACK_STRUCT_FIELD(x) x
+
+#elif defined (__GNUC__)
+
+#define PACK_STRUCT_BEGIN
+#define PACK_STRUCT_STRUCT __attribute__ ((__packed__))
+#define PACK_STRUCT_END
+#define PACK_STRUCT_FIELD(x) x
+
+#elif defined (__TASKING__)
+
+#define PACK_STRUCT_BEGIN
+#define PACK_STRUCT_STRUCT
+#define PACK_STRUCT_END
+#define PACK_STRUCT_FIELD(x) x
+
+#endif
+
+#define LWIP_PLATFORM_ASSERT(x) do { if(!(x)) while(1); } while(0)
+
+#endif /* __CC_H__ */
