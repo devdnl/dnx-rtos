@@ -112,6 +112,7 @@ extern "C" {
  */
 #define CONFIG_RTOS_SLEEP_ON_IDLE                       (0)
 
+
 /**=== PRINT CONFIGURATION ===================================================*/
 /**
  * Enable (1) or disable (0) printf() family functions
@@ -137,6 +138,7 @@ extern "C" {
  * Maximum stream buffer size
  */
 #define CONFIG_FSCANF_STREAM_BUFFER_SIZE                (100)
+
 
 /**=== SYSTEM MONITOR CONFIGURATION ==========================================*/
 /**
@@ -169,17 +171,27 @@ extern "C" {
  */
 #define CONFIG_MONITOR_CPU_LOAD                         (1)
 
+
 /**=== SYSTEM ENVIRONMENT CONFIGURATION ======================================*/
 /**
  * Define the host name
  */
 #define CONFIG_HOSTNAME                                 "localhost"
 
-/**=== PROGRAMING OPTIONS ====================================================*/
+
+/**=== NETWORK CONFIGURATION =================================================*/
+/**
+ * Enable (1) or disable (0) network interface
+ */
+#define CONFIG_NETWORK_ENABLE                           (1)
+
+
+/**=== DEVELOPMENT OPTIONS ===================================================*/
 /**
  * Enable (1) or disable (0) system assert macro (stop system if condition met)
  */
 #define CONFIG_SYSTEM_STOP_MACRO                        (1)
+
 
 #ifdef __cplusplus
 }

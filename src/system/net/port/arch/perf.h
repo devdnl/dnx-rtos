@@ -29,10 +29,10 @@
  * Author: Adam Dunkels <adam@sics.se>
  *
  */
-#ifndef __LWIP_PERF_H__
-#define __LWIP_PERF_H__
+#ifndef _PERF_H_
+#define _PERF_H_
 
 #define PERF_START
 #define PERF_STOP(x)
 
-#endif /* __LWIP_PERF_H__ */
+#endif /* _PERF_H_ */

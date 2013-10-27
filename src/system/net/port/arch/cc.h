@@ -29,8 +29,8 @@
  * Author: Adam Dunkels <adam@sics.se>
  *
  */
-#ifndef __CC_H__
-#define __CC_H__
+#ifndef _CC_H_
+#define _CC_H_
 
 #include "core/basic_types.h"
 
@@ -75,4 +75,4 @@ typedef u32_t   mem_ptr_t;
 
 #define LWIP_PLATFORM_ASSERT(x) do { if(!(x)) while(1); } while(0)
 
-#endif /* __CC_H__ */
+#endif /* _CC_H_ */
