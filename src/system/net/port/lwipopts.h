@@ -36,6 +36,15 @@
 #include "system/dnx.h"
 
 /*
+   -----------------------------------
+   ---------- Miscellaneous ----------
+   -----------------------------------
+*/
+
+#define LWIP_ERROR(message, expression, handler)
+#define LWIP_PLATFORM_ASSERT(x)
+
+/*
    -----------------------------------------------
    ---------- Platform specific locking ----------
    -----------------------------------------------

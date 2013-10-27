@@ -73,6 +73,4 @@ typedef u32_t   mem_ptr_t;
 
 #endif
 
-#define LWIP_PLATFORM_ASSERT(x) do { if(!(x)) while(1); } while(0)
-
 #endif /* _CC_H_ */
