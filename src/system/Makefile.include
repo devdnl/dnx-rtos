@@ -16,6 +16,7 @@ CSRC_stm32f1   += drivers/gpio/stm32f1/gpio.c
 CSRC_stm32f1   += drivers/uart/stm32f1/uart.c
 CSRC_stm32f1   += drivers/pll/stm32f1/pll.c
 CSRC_stm32f1   += drivers/sdspi/stm32f1/sdspi.c
+CSRC_stm32f1   += drivers/eth/stm32f1/eth.c
 CSRC_stm32f1   += portable/stm32f1/cpuctl.c
 CSRC_stm32f1   += portable/stm32f1/cpuhooks.c
 CSRC_stm32f1   += portable/stm32f1/stm32f10x_vectors.c
@@ -31,6 +32,7 @@ HDRLOC_stm32f1 += drivers/gpio/stm32f1
 HDRLOC_stm32f1 += drivers/pll
 HDRLOC_stm32f1 += drivers/uart
 HDRLOC_stm32f1 += drivers/sdspi
+HDRLOC_stm32f1 += drivers/eth
 HDRLOC_stm32f1 += portable/lib/CMSIS
 HDRLOC_stm32f1 += portable/stm32f1
 

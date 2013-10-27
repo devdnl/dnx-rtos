@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    eth_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   This driver support Ethernet interface.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _ETH_CFG_H_
+#define _ETH_CFG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,25 +34,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/ioctl_macros.h"
-
-/* include here drivers definitions */
-#include "tty_def.h"
-#ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#       include "stm32f1/eth_def.h"
-#else
-#       error "Unknown architecture!"
-#endif
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/* ioctl function-like macro */
-#define ioctl(file, ...)                vfs_ioctl(file, __VA_ARGS__)
 
 /*==============================================================================
   Exported object types
@@ -66,11 +51,15 @@ extern "C" {
   Exported functions
 ==============================================================================*/
 
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _ETH_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
