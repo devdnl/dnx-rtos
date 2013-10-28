@@ -43,7 +43,7 @@ extern "C" {
 #       include "stm32f1/pll_def.h"
 #       include "stm32f1/sdspi_def.h"
 #       include "stm32f1/uart_def.h"
-#       include "stm32f1/eth_def.h"
+#       include "stm32f1/ethmac_def.h"
 #else
 #       error "Unknown architecture!"
 #endif

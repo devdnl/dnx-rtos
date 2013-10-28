@@ -20,7 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32_eth.h"
-#include "stm32f10x_rcc.h"
+#include "lib/stm32f10x_rcc.h"
 
 /** @addtogroup STM32_ETH_Driver
   * @brief ETH driver modules

@@ -158,8 +158,8 @@ static int run_level_0(void)
         init_driver("tty1", "/dev/tty1");
         init_driver("tty2", "/dev/tty2");
         init_driver("tty3", "/dev/tty3");
-
         init_driver("sdspi", "/dev/sda");
+        init_driver("ethmac", "/dev/eth0");
 
         return STD_RET_OK;
 }

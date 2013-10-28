@@ -83,6 +83,7 @@ extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef task_t *dev_lock_t;
 
 /*==============================================================================
   Exported object declarations
@@ -95,6 +96,111 @@ extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 /*==============================================================================
   Exported inline function
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function lock device for this task
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if device is successfully locked, otherwise false
+ */
+//==============================================================================
+static inline bool lock_device(dev_lock_t *dev_lock)
+{
+        bool status = false;
+
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock == NULL) {
+                        *dev_lock = get_task_handle();
+                        status = true;
+                }
+                exit_critical_section();
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief Function unlock before locked device
+ *
+ * @param *dev_lock     pointer to device lock object
+ * @param  force        true: force unlock
+ */
+//==============================================================================
+static inline void unlock_device(dev_lock_t *dev_lock, bool force)
+{
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock == get_task_handle() || force) {
+                        *dev_lock = NULL;
+                }
+                exit_critical_section();
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function check that current task has access to device
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if access granted, otherwise false
+ */
+//==============================================================================
+static inline bool is_device_access_granted(dev_lock_t *dev_lock)
+{
+        bool status = false;
+
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock == get_task_handle()) {
+                        status = true;
+                }
+                exit_critical_section();
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief Function check that device is locked
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if locked, otherwise false
+ */
+//==============================================================================
+static inline bool is_device_locked(dev_lock_t *dev_lock)
+{
+        bool status = false;
+
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock != NULL) {
+                        status = true;
+                }
+                exit_critical_section();
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief Function check that device is unlocked
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if unlocked, otherwise false
+ */
+//==============================================================================
+static inline bool is_device_unlocked(dev_lock_t *dev_lock)
+{
+        return !is_device_locked(dev_lock);
+}
 
 #ifdef __cplusplus
 }
