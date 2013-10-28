@@ -41,7 +41,7 @@ extern "C" {
 #include "core/memman.h"
 #include "core/progman.h"
 #include "core/sysmoni.h"
-#include "core/drivers.h"
+#include "core/modctrl.h"
 #include "core/fsctrl.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    drivers.h
+@file    modctrl.h
 
 @author  Daniel Zorychta
 
-@brief   Drivers support.
+@brief   Modules support.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _DRIVERS_H_
-#define _DRIVERS_H_
+#ifndef _MODCTRL_H_
+#define _MODCTRL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -86,7 +86,7 @@ extern int         _get_module_number     (const char *module_name);
 }
 #endif
 
-#endif /* _DRIVERS_H_ */
+#endif /* _MODCTRL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    drivers.c
+@file    modctrl.c
 
 @author  Daniel Zorychta
 
-@brief   Drivers support.
+@brief   Modules support.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -32,10 +32,11 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "core/systypes.h"
-#include "core/drivers.h"
+#include "core/modctrl.h"
 #include "core/vfs.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Local macros
@@ -44,6 +45,7 @@ extern "C" {
 /*==============================================================================
   Local object types
 ==============================================================================*/
+typedef task_t *dev_lock_t;
 
 /*==============================================================================
   Local function prototypes
@@ -231,6 +233,97 @@ int _get_module_number(const char *module_name)
         return _regdrv_number_of_modules;
 }
 
+//==============================================================================
+/**
+ * @brief Function lock device for this task
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if device is successfully locked, otherwise false
+ */
+//==============================================================================
+bool _lock_device(dev_lock_t *dev_lock)
+{
+        bool status = false;
+
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock == NULL) {
+                        *dev_lock = get_task_handle();
+                        status = true;
+                }
+                exit_critical_section();
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief Function unlock before locked device
+ *
+ * @param *dev_lock     pointer to device lock object
+ * @param  force        true: force unlock
+ */
+//==============================================================================
+void _unlock_device(dev_lock_t *dev_lock, bool force)
+{
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock == get_task_handle() || force) {
+                        *dev_lock = NULL;
+                }
+                exit_critical_section();
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function check that current task has access to device
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if access granted, otherwise false
+ */
+//==============================================================================
+bool _is_device_access_granted(dev_lock_t *dev_lock)
+{
+        bool status = false;
+
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock == get_task_handle()) {
+                        status = true;
+                }
+                exit_critical_section();
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief Function check that device is locked
+ *
+ * @param *dev_lock     pointer to device lock object
+ *
+ * @return true if locked, otherwise false
+ */
+//==============================================================================
+bool _is_device_locked(dev_lock_t *dev_lock)
+{
+        bool status = false;
+
+        if (dev_lock) {
+                enter_critical_section();
+                if (*dev_lock != NULL) {
+                        status = true;
+                }
+                exit_critical_section();
+        }
+
+        return status;
+}
 
 #ifdef __cplusplus
 }

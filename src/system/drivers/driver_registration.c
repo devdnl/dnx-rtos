@@ -31,7 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/drivers.h"
+#include "core/modctrl.h"
 #include "system/dnxmodule.h"
 
 #include "stm32f1/uart_def.h"

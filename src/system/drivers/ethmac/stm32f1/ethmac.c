@@ -239,7 +239,7 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force, const task_t *opened_by_t
 
         struct eth_mem *hdl = device_handle;
 
-        if (is_device_access_granted(&hdl->dev_lock)) {
+        if (is_device_access_granted(&hdl->dev_lock) || force) {
                 unlock_device(&hdl->dev_lock, force);
                 return STD_RET_OK;
         }
