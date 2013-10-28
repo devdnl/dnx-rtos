@@ -5,7 +5,7 @@ New Features, Improvements:
 - added network support using lwIP library
 
 Fixed Bugs:
-- 
+- init_driver() function doesn't color messages
 
 dnx/FreeRTOS 1.1.0
 ==================

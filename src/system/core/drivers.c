@@ -112,13 +112,14 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                 for (int mod = 0; mod < _regdrv_number_of_modules; mod++) {
                         if (strcmp(_regdrv_module_name[mod], _regdrv_driver_table[drvid].mod_name) == 0) {
 
+                                printk("Initializing %s... ", drv_name);
+
                                 if (_regdrv_driver_table[drvid].drv_init(&driver_memory_region[drvid],
                                                                          _regdrv_driver_table[drvid].major,
                                                                          _regdrv_driver_table[drvid].minor)
                                                                          != STD_RET_OK) {
 
-                                        printk(FONT_COLOR_RED"Driver %s initialization error!"
-                                               RESET_ATTRIBUTES"\n", drv_name);
+                                        printk(FONT_COLOR_RED"error"RESET_ATTRIBUTES"\n", drv_name);
 
                                         return STD_RET_ERROR;
                                 }
@@ -131,19 +132,19 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
                                         drv_if.handle = driver_memory_region[drvid];
 
                                         if (vfs_mknod(node_path, &drv_if) == STD_RET_OK) {
-                                                printk("Created node %s\n", node_path);
+                                                printk("%s node created\n", node_path);
                                                 return STD_RET_OK;
                                         } else {
                                                 _regdrv_driver_table[drvid].drv_release(driver_memory_region[drvid]);
 
-                                                printk(FONT_COLOR_RED"Create node %s failed"
+                                                printk(FONT_COLOR_RED"%s node create fail"
                                                        RESET_ATTRIBUTES"\n", node_path);
 
                                                 return STD_RET_ERROR;
                                         }
 
                                 } else {
-                                        printk("Driver %s initialized\n", drv_name);
+                                        printk("initialized\n", drv_name);
                                         return STD_RET_OK;
                                 }
                         }

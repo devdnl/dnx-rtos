@@ -491,7 +491,7 @@ static enum cmd_status cmd_free(char *arg)
 
         printf("Detailed modules memory usage:\n");
         for (uint module = 0; module < drv_count; module++) {
-                printf("  %s\t: %d\n", get_module_name(module), modmem[module]);
+                printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", get_module_name(module), modmem[module]);
         }
 
         free(modmem);

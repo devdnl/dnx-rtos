@@ -100,8 +100,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 return STD_RET_ERROR;
         }
 
-        /* enable Ethernet clock */ /* FIXME moze niepotrzebne bo to robi biblioteka STM32 */
-        RCC->AHBENR |= RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN;
+        SET_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
 
         /* enable Ethernet IRQ */
         NVIC_EnableIRQ(ETH_IRQn);
@@ -159,10 +158,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
               return STD_RET_OK;
         } else {
                 free(hdl);
-
-                /* enable Ethernet clock */ /* FIXME moze niepotrzebne bo to robi biblioteka STM32 wyłaczyc ETH */
-                RCC->AHBENR &= ~(RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
-
+                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
                 return STD_RET_ERROR;
         }
 }
