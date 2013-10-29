@@ -76,12 +76,11 @@ void dnx_init(void)
                 memman_init();
                 _stop_if(vfs_init() != STD_RET_OK);
                 _stop_if(sysm_init() != STD_RET_OK);
+                new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
 
 #if (CONFIG_NETWORK_ENABLE != 0)
                 lwip_init(); /* FIXME netconn_init() */
 #endif
-                new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
-
                 initialized = true;
         }
 }

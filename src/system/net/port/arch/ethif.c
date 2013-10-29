@@ -44,7 +44,7 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define LWIPD_STACK_SIZE                STACK_DEPTH_HUGE
+#define LWIPD_STACK_SIZE                STACK_DEPTH_VERY_LOW
 #define ETH_FILE                        "/dev/eth0"
 
 /*==============================================================================
@@ -58,8 +58,10 @@ typedef struct {
         FILE           *ethif;
         u32_t           TCP_timer;
         u32_t           ARP_timer;
+#if LWIP_DHCP
         u32_t           DHCP_fine_timer;
         u32_t           DHCP_coarse_timer;
+#endif
         struct netif    netif;
 } ethif_mem;
 
