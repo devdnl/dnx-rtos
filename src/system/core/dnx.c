@@ -67,16 +67,22 @@ extern "C" {
  * @brief Initialize dnx system
  */
 //==============================================================================
-void _dnx_init(void)
+void dnx_init(void)
 {
-        _cpuctl_init();
-        memman_init();
-        _stop_if(vfs_init() != STD_RET_OK);
-        _stop_if(sysm_init() != STD_RET_OK);
+        static bool initialized = false;
+
+        if (!initialized) {
+                _cpuctl_init();
+                memman_init();
+                _stop_if(vfs_init() != STD_RET_OK);
+                _stop_if(sysm_init() != STD_RET_OK);
 #if (CONFIG_NETWORK_ENABLE != 0)
-        lwip_init(); /* FIXME netconn_init() */
+                lwip_init(); /* FIXME netconn_init() */
 #endif
-        new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+                new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+
+                initialized = true;
+        }
 }
 
 #ifdef __cplusplus

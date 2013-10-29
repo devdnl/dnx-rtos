@@ -126,7 +126,6 @@ static inline bool is_device_unlocked(dev_lock_t *dev_lock)
         return !_is_device_locked(dev_lock);
 }
 
-
 #ifdef __cplusplus
 }
 #endif
