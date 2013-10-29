@@ -45,11 +45,11 @@ extern "C" {
 /*==============================================================================
   Local object types
 ==============================================================================*/
-struct eth_mem { /* FIXME refaktoryzacja */
+struct eth_mem {
         ETH_DMADESCTypeDef     *DMA_tx_descriptor_tab;
-        u8_t                    tx_buffer_count; /* FIXME niepotrzbne, uzyte w 1 miejscu */
         ETH_DMADESCTypeDef     *DMA_rx_descriptor_tab;
-        u8_t                    rx_buffer_count; /* FIXME niepotrzbne, uzyte w 1 miejscu */
+        u8_t                    tx_buffer_count;
+        u8_t                    rx_buffer_count;
         bool                    rx_data_ready;
         dev_lock_t              dev_lock;
 };
@@ -126,7 +126,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
         ETH_InitStructure.ETH_UnicastFramesFilter      = ETH_UnicastFramesFilter_Perfect;
         ETH_InitStructure.ETH_Speed                    = ETHMAC_SPEED;
         if (ETHMAC_CHECKSUM_BY_HARDWARE != 0) {
-              ETH_InitStructure.ETH_ChecksumOffload    = ETH_ChecksumOffload_Enable;
+                ETH_InitStructure.ETH_ChecksumOffload  = ETH_ChecksumOffload_Enable;
         }
 
         /*

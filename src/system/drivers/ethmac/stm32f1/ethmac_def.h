@@ -68,8 +68,8 @@ struct ethmac_DMA_description {
 };
 
 struct ethmac_frame {
-        u32_t length;
         u8_t *buffer;
+        u32_t length;
 };
 
 /*==============================================================================
