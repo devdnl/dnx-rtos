@@ -44,8 +44,25 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define LWIPD_STACK_SIZE                STACK_DEPTH_VERY_LOW
 #define ETH_FILE                        "/dev/eth0"
+#define LWIPD_STACK_SIZE                STACK_DEPTH_VERY_LOW
+#define MTU                             1500
+
+#define MAC_ADDR_0                      0x01
+#define MAC_ADDR_1                      0x00
+#define MAC_ADDR_2                      0x00
+#define MAC_ADDR_3                      0x00
+#define MAC_ADDR_4                      0x00
+#define MAC_ADDR_5                      0x00
+
+/* ETH_HEADER + ETH_EXTRA + MAX_ETH_PAYLOAD + ETH_CRC */
+#define ETH_MAX_PACKET_SIZE             1520
+
+/* number of Rx buffers */
+#define ETH_NUMBER_OF_RX_BUFFERS        3
+
+/* number of Tx buffers */
+#define ETH_NUMBER_OF_TX_BUFFERS        2
 
 /*==============================================================================
   Local object types
@@ -55,7 +72,9 @@ extern "C" {
   Local function prototypes
 ==============================================================================*/
 typedef struct {
-        FILE           *ethif;
+        FILE           *eth_file;
+        u8_t           *rx_buffer;
+        u8_t           *tx_buffer;
         u32_t           TCP_timer;
         u32_t           ARP_timer;
 #if LWIP_DHCP
@@ -64,6 +83,10 @@ typedef struct {
 #endif
         struct netif    netif;
 } ethif_mem;
+
+struct ethif {
+      struct eth_addr *ethaddr;
+};
 
 /*==============================================================================
   Local objects
@@ -93,7 +116,7 @@ static ethif_mem *mem;
 static struct pbuf *low_level_input()
 {
       struct ethmac_frame frame = {.buffer = NULL, .length = 0};
-      if (ioctl(mem->ethif, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
+      if (ioctl(mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
               return NULL;
       }
 
@@ -112,14 +135,172 @@ static struct pbuf *low_level_input()
       }
 
       bool flag = false;
-      ioctl(mem->ethif, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
+      ioctl(mem->eth_file, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
 
       if (flag) {
-            ioctl(mem->ethif, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS);
-            ioctl(mem->ethif, ETHMAC_IORQ_RESUME_DMA_RECEPTION);
+            ioctl(mem->eth_file, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS);
+            ioctl(mem->eth_file, ETHMAC_IORQ_RESUME_DMA_RECEPTION);
       }
 
       return p;
+}
+
+//==============================================================================
+/**
+ * @brief This function should do the actual transmission of the packet. The packet is
+ * contained in the pbuf that is passed to the function. This pbuf might be chained.
+ *
+ * @param netif         the lwip network interface structure for this ethernetif
+ * @param p             the MAC packet to send (e.g. IP packet including MAC addresses and type)
+ *
+ * @return ERR_OK if the packet could be sent an err_t value if the packet couldn't be sent
+ *
+ * @note Returning ERR_MEM here if a DMA queue of your MAC is full can lead to
+ *       strange results. You might consider waiting for space in the DMA queue
+ *       to become availale since the stack doesn't retry to send a packet
+ *       dropped because of memory failure (except for the TCP timers).
+ */
+//==============================================================================
+static err_t low_level_output(struct netif *netif, struct pbuf *p)
+{
+      (void)netif;
+
+      u8_t *buffer = NULL;
+      ioctl(mem->eth_file, ETHMAC_IORQ_GET_CURRENT_TX_BUFFER, &buffer);
+
+      int len = 0;
+      for (struct pbuf *q = p; q != NULL; q = q->next) {
+            memcpy((u8_t*)&buffer[len], q->payload, q->len);
+            len += q->len;
+      }
+
+      ioctl(mem->eth_file, ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE, &len);
+
+      return ERR_OK;
+}
+
+//==============================================================================
+/**
+ * @brief Should be called at the beginning of the program to set up the
+ * network interface. It calls the function low_level_init() to do the
+ * actual setup of the hardware.
+ *
+ * This function should be passed as a parameter to netif_add().
+ *
+ * @param netif         the lwip network interface structure for this ethernetif
+ *
+ * @return ERR_OK       if the loopif is initialized
+ *         ERR_MEM      if private data couldn't be allocated any other err_t on error
+ */
+//==============================================================================
+static err_t ethif_init(struct netif *netif)
+{
+        struct ethif *ethif = malloc(sizeof(struct ethif));
+        if (!ethif) {
+                return ERR_MEM;
+        }
+
+#if LWIP_NETIF_HOSTNAME
+        netif->hostname = (char *)get_host_name();
+#endif
+
+        /*
+         * Initialize the snmp variables and counters inside the struct netif.  The last argument
+         * should be replaced with your link speed, in units of bits per second.
+         */
+        NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 100000000);
+
+        netif->state   = ethif;
+        netif->name[0] = 'E';
+        netif->name[1] = 'T';
+
+        /*
+         * we directly use etharp_output() here to save a function call. You can instead declare your
+         * own function an call etharp_output() from it if you have to do some checks before sending
+         * (e.g. if linkis available...)
+         */
+        netif->output     = etharp_output;
+        netif->linkoutput = low_level_output;
+
+        /* maximum transfer unit */
+        netif->mtu = MTU;
+
+        /* device capabilities */
+        /* don't set NETIF_FLAG_ETHARP if this device is not an Ethernet one */
+        netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
+
+        /* set MAC hardware address length */
+        netif->hwaddr_len = ETHARP_HWADDR_LEN;
+
+        /* set MAC hardware address */
+        netif->hwaddr[0] = MAC_ADDR_0;
+        netif->hwaddr[1] = MAC_ADDR_1;
+        netif->hwaddr[2] = MAC_ADDR_2;
+        netif->hwaddr[3] = MAC_ADDR_3;
+        netif->hwaddr[4] = MAC_ADDR_4;
+        netif->hwaddr[5] = MAC_ADDR_5;
+
+        ethif->ethaddr = (struct eth_addr*)&(netif->hwaddr[0]);
+
+        if (ioctl(mem->eth_file, ETHMAC_IORQ_SET_MAC_ADR, netif->hwaddr) != STD_RET_OK) {
+                goto exit_error;
+        }
+
+        /* allocate Rx and Tx buffers */
+        mem->rx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_RX_BUFFERS * ETH_MAX_PACKET_SIZE);
+        mem->tx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_TX_BUFFERS * ETH_MAX_PACKET_SIZE);
+
+        if (!mem->rx_buffer || !mem->tx_buffer) {
+                goto exit_error;
+        }
+
+        /* initialize Tx Descriptors list: Chain Mode */
+        struct ethmac_DMA_description DMA_description;
+        DMA_description.buffer       = mem->tx_buffer;
+        DMA_description.buffer_count = ETH_NUMBER_OF_TX_BUFFERS;
+
+        if (ioctl(mem->eth_file, ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
+                goto exit_error;
+        }
+
+        /* initialize Rx Descriptors list: Chain Mode */
+        DMA_description.buffer       = mem->rx_buffer;
+        DMA_description.buffer_count = ETH_NUMBER_OF_RX_BUFFERS;
+
+        if (ioctl(mem->eth_file, ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
+                goto exit_error;
+        }
+
+        /* enable Ethernet Rx interrrupt */
+        if (ioctl(mem->eth_file, ETHMAC_IORQ_ENABLE_RX_IRQ) != STD_RET_OK) {
+                goto exit_error;
+        }
+
+        if (ETHMAC_CHECKSUM_BY_HARDWARE != 0) {
+                if (ioctl(mem->eth_file, ETHMAC_IORQ_ENABLE_TX_HARDWARE_CHECKSUM) != STD_RET_OK) {
+                        goto exit_error;
+                }
+        }
+
+        /* start Ethernet interface */
+        if (ioctl(mem->eth_file, ETHMAC_IORQ_ETHERNET_START) != STD_RET_OK) {
+                goto exit_error;
+        }
+
+        return ERR_OK;
+
+      /* initialization error */
+exit_error:
+        if (ethif)
+                free(ethif);
+
+        if (mem->rx_buffer)
+                free(mem->rx_buffer);
+
+        if (mem->tx_buffer)
+                free(mem->tx_buffer);
+
+        return ERR_MEM;
 }
 
 //==============================================================================
@@ -169,12 +350,12 @@ static void receive_packet()
                 return;
 
         bool rx_flag = false;
-        ioctl(mem->ethif, ETHMAC_IORQ_GET_RX_FLAG, &rx_flag);
+        ioctl(mem->eth_file, ETHMAC_IORQ_GET_RX_FLAG, &rx_flag);
         if (!rx_flag)
                 return;
 
         u32_t rx_packet_size = 0;
-        ioctl(mem->ethif, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
+        ioctl(mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
         while (rx_packet_size) {
                 /*
                  * read a received packet from the Ethernet buffers and send it to the
@@ -189,7 +370,7 @@ static void receive_packet()
                         }
                 }
 
-                ioctl(mem->ethif, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
+                ioctl(mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
         }
 
 //                u32_t rx_packet_size;
@@ -214,7 +395,7 @@ static void receive_packet()
 //
 //                } while (rx_packet_size != 0);
 
-        ioctl(mem->ethif, ETHMAC_IORQ_CLEAR_RX_FLAG);
+        ioctl(mem->eth_file, ETHMAC_IORQ_CLEAR_RX_FLAG);
 }
 
 //==============================================================================
@@ -231,7 +412,7 @@ static void lwIP_daemon(void *arg)
                 task_exit();
         }
 
-        while (!(mem->ethif = fopen(ETH_FILE, "r+"))) {
+        while (!(mem->eth_file = fopen(ETH_FILE, "r+"))) {
                 sleep_ms(500);
         }
 
@@ -247,7 +428,7 @@ static void lwIP_daemon(void *arg)
  * @brief Function starts lwIP deamon
  */
 //==============================================================================
-void ethif_start_lwIP_daemon()
+void _ethif_start_lwIP_daemon()
 {
         new_task(lwIP_daemon, "lwipd", LWIPD_STACK_SIZE, NULL);
 }

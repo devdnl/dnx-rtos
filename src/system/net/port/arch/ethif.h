@@ -50,12 +50,15 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void ethif_start_lwIP_daemon();
-/* extern status ethif_DHCP_up(); */
-/* extern status ethif_DHCP_down(); */
-/* extern status ethif_get_DHCP_status(); */
-/* extern status ethif_get_DHCP_config(*ip, *ip, *ip); */
-/* extern status ethif_configure(ip, ip, ip); */
+extern void _ethif_start_lwIP_daemon();
+/* extern status _ethif_set_MAC(); */
+/* extern status _ethif_get_MAC(); */
+/* extern status _ethif_start_DHCP_client(); */
+/* extern status _ethif_stop_DHCP_client(); */
+/* extern status _ethif_get_DHCP_client_status(*); */
+/* extern status _ethif_if_up(ip, ip, ip); */
+/* extern status _ethif_if_down(); */
+/* extern status _ethif_get_if_status(); */
 /* ... */
 
 /*==============================================================================
