@@ -34,14 +34,37 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "core/basic_types.h"
+#include "lwip/api.h"
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _ETHIF_FILE                     "/dev/eth0"
+#define _ETHIF_MAC_ADDR_0               0x01
+#define _ETHIF_MAC_ADDR_1               0x00
+#define _ETHIF_MAC_ADDR_2               0x00
+#define _ETHIF_MAC_ADDR_3               0x00
+#define _ETHIF_MAC_ADDR_4               0x00
+#define _ETHIF_MAC_ADDR_5               0x00
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef enum ifmode {
+        IFMODE_NOT_CONFIGURED,
+        IFMODE_STATIC_IP,
+        IFMODE_DHCP_CONFIGURING,
+        IFMODE_DHCP_CONFIGURED,
+} ifmode_t;
+
+typedef struct ifconfig {
+        ip_addr_t IP_address;
+        ip_addr_t net_mask;
+        ip_addr_t gateway;
+        u8_t      hw_address[6];
+        ifmode_t  mode;
+} ifconfig;
 
 /*==============================================================================
   Exported objects
@@ -51,15 +74,12 @@ extern "C" {
   Exported functions
 ==============================================================================*/
 extern void _ethif_start_lwIP_daemon();
-/* extern status _ethif_set_MAC(); */
-/* extern status _ethif_get_MAC(); */
-/* extern status _ethif_start_DHCP_client(); */
-/* extern status _ethif_stop_DHCP_client(); */
-/* extern status _ethif_get_DHCP_client_status(*); */
-/* extern status _ethif_if_up(ip, ip, ip); */
-/* extern status _ethif_if_down(); */
-/* extern status _ethif_get_if_status(); */
-/* ... */
+extern int  _ethif_start_DHCP_client();
+extern int  _ethif_stop_DHCP_client();
+extern int  _ethif_renew_DHCP_client();
+extern int  _ethif_if_up(ip_addr_t*, ip_addr_t*, ip_addr_t*);
+extern int  _ethif_if_down();
+extern int  _ethif_get_ifconfig(ifconfig*);
 
 /*==============================================================================
   Exported inline functions
