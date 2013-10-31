@@ -35,7 +35,7 @@ extern "C" {
 #include "user/initd.h"
 
 #if (CONFIG_NETWORK_ENABLE != 0)
-#include "lwip/init.h" /* FIXME "core/netconn.h" */
+#include "arch/ethif.h" /* FIXME "net/netif?.h" */
 #endif
 
 /*==============================================================================
@@ -79,7 +79,7 @@ void dnx_init(void)
                 new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
 
 #if (CONFIG_NETWORK_ENABLE != 0)
-                lwip_init(); /* FIXME netconn_init() */
+                _ethif_start_lwIP_daemon(); /* FIXME something like that */
 #endif
                 initialized = true;
         }

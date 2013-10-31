@@ -41,12 +41,12 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 #define _ETHIF_FILE                     "/dev/eth0"
-#define _ETHIF_MAC_ADDR_0               0x01
-#define _ETHIF_MAC_ADDR_1               0x00
-#define _ETHIF_MAC_ADDR_2               0x00
-#define _ETHIF_MAC_ADDR_3               0x00
-#define _ETHIF_MAC_ADDR_4               0x00
-#define _ETHIF_MAC_ADDR_5               0x00
+#define _ETHIF_MAC_ADDR_0               0xAA
+#define _ETHIF_MAC_ADDR_1               0xAA
+#define _ETHIF_MAC_ADDR_2               0xAA
+#define _ETHIF_MAC_ADDR_3               0xAA
+#define _ETHIF_MAC_ADDR_4               0xAA
+#define _ETHIF_MAC_ADDR_5               0xAA
 
 /*==============================================================================
   Exported object types

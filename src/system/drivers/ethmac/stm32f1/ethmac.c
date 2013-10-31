@@ -333,7 +333,8 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                 case ETHMAC_IORQ_GET_RX_PACKET_SIZE:
                         if (arg) {
-                                *(u32_t *)arg = ETH_GetRxPktSize();
+                                u32_t *packet_size = arg;
+                                *packet_size = ETH_GetRxPktSize();
                                 return STD_RET_OK;
                         }
                         break;
@@ -387,11 +388,11 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                 case ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS:
                         if (arg) {
-                                if (ETH->DMASR & ETH_DMASR_RBUS) {
-                                        *(bool *)arg = true;
-                                } else {
-                                        *(bool *)arg = false;
-                                }
+                                bool *status = arg;
+                                if (ETH->DMASR & ETH_DMASR_RBUS)
+                                        *status = true;
+                                else
+                                        *status = false;
 
                                 return STD_RET_OK;
                         }
