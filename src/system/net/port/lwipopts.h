@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "system/dnx.h"
+#include "core/printx.h"
 
 /*
    -----------------------------------
@@ -331,6 +332,18 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  * LWIP_SOCKET==1: Enable Socket API (require to use sockets.c)
  */
 #define LWIP_SOCKET                     0
+
+
+#define LWIP_DEBUG
+#define LWIP_PLATFORM_DIAG(message)     printk message
+#define U16_F                           "u"
+#define U32_F                           "u"
+#define S16_F                           "i"
+#define S32_F                           "i"
+#define X16_F                           "x"
+#define X32_F                           "x"
+
+#define DHCP_DEBUG                      LWIP_DBG_ON
 
 #endif /* __LWIPOPTS_H__ */
 
