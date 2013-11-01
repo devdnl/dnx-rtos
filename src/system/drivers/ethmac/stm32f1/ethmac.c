@@ -105,7 +105,6 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 
         SET_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
 
-        /* enable Ethernet IRQ */
         NVIC_EnableIRQ(ETH_IRQn);
         NVIC_SetPriority(ETH_IRQn, ETHMAC_IRQ_PRIORITY);
 
@@ -135,6 +134,10 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 free(hdl);
                 eth_mem = NULL;
                 ETH_DeInit();
+                ETH_SoftwareReset();
+                while (ETH_GetSoftwareResetStatus() == SET);
+                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
+                NVIC_DisableIRQ(ETH_IRQn);
 
                 status = STD_RET_OK;
         }
