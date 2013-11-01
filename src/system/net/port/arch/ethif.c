@@ -92,7 +92,7 @@ typedef struct {
 #endif
         struct netif    netif;
         int             ifman_step;
-} ethif_mem;
+} ethif_data;
 
 /*==============================================================================
   Local function prototypes
@@ -101,7 +101,7 @@ typedef struct {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static ethif_mem *if_mem;
+static ethif_data *ethif_mem;
 
 /*==============================================================================
   Exported objects
@@ -122,7 +122,7 @@ static ethif_mem *if_mem;
 //==============================================================================
 static inline void send_request(request *request)
 {
-        if_mem->request = request;
+        ethif_mem->request = request;
 }
 
 //==============================================================================
@@ -133,7 +133,7 @@ static inline void send_request(request *request)
 static void send_response_success()
 {
         static const int response = 0;
-        send_queue(if_mem->response_queue, &response, MAX_DELAY);
+        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
 }
 
 //==============================================================================
@@ -144,7 +144,7 @@ static void send_response_success()
 static void send_response_fail()
 {
         static const int response = -1;
-        send_queue(if_mem->response_queue, &response, MAX_DELAY);
+        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
 }
 
 //==============================================================================
@@ -158,19 +158,19 @@ static int send_request_and_wait_for_response(request *request)
                 return -1;
 
         u32_t time = get_OS_time_ms();
-        while (!if_mem->eth_file) {
+        while (!ethif_mem->eth_file) {
                 if (get_OS_time_ms() - time >= REQUEST_TIMEOUT_MS)
                         return -1;
                 sleep_ms(250);
         }
 
         int response = -1;
-        if (lock_mutex(if_mem->protect_request_mtx, REQUEST_TIMEOUT_MS)) {
+        if (lock_mutex(ethif_mem->protect_request_mtx, REQUEST_TIMEOUT_MS)) {
 
                 send_request(request);
-                receive_queue(if_mem->response_queue, &response, MAX_DELAY);
+                receive_queue(ethif_mem->response_queue, &response, MAX_DELAY);
 
-                unlock_mutex(if_mem->protect_request_mtx);
+                unlock_mutex(ethif_mem->protect_request_mtx);
         }
 
         return response;
@@ -187,7 +187,7 @@ static int send_request_and_wait_for_response(request *request)
 static struct pbuf *low_level_input()
 {
       struct ethmac_frame frame = {.buffer = NULL, .length = 0};
-      if (ioctl(if_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
+      if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
               return NULL;
       }
 
@@ -206,11 +206,11 @@ static struct pbuf *low_level_input()
       }
 
       bool flag = false;
-      ioctl(if_mem->eth_file, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
+      ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
 
       if (flag) {
-            ioctl(if_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS);
-            ioctl(if_mem->eth_file, ETHMAC_IORQ_RESUME_DMA_RECEPTION);
+            ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS);
+            ioctl(ethif_mem->eth_file, ETHMAC_IORQ_RESUME_DMA_RECEPTION);
       }
 
       return p;
@@ -237,7 +237,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
       (void)netif;
 
       u8_t *buffer = NULL;
-      ioctl(if_mem->eth_file, ETHMAC_IORQ_GET_CURRENT_TX_BUFFER, &buffer);
+      ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_CURRENT_TX_BUFFER, &buffer);
 
       int len = 0;
       for (struct pbuf *q = p; q != NULL; q = q->next) {
@@ -245,7 +245,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
             len += q->len;
       }
 
-      ioctl(if_mem->eth_file, ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE, &len);
+      ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE, &len);
 
       return ERR_OK;
 }
@@ -266,6 +266,11 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 //==============================================================================
 static err_t ethif_init(struct netif *netif)
 {
+        /* initialize Ethernet */
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_INIT) != STD_RET_OK) {
+                return ERR_IF;
+        }
+
 #if LWIP_NETIF_HOSTNAME
         netif->hostname = (char *)get_host_name();
 #endif
@@ -305,62 +310,62 @@ static err_t ethif_init(struct netif *netif)
         netif->hwaddr[4] = _ETHIF_MAC_ADDR_4;
         netif->hwaddr[5] = _ETHIF_MAC_ADDR_5;
 
-        if (ioctl(if_mem->eth_file, ETHMAC_IORQ_SET_MAC_ADR, netif->hwaddr) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_MAC_ADR, netif->hwaddr) != STD_RET_OK) {
                 goto exit_error;
         }
 
         /* allocate Rx and Tx buffers */
-        if_mem->rx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_RX_BUFFERS * ETH_MAX_PACKET_SIZE);
-        if_mem->tx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_TX_BUFFERS * ETH_MAX_PACKET_SIZE);
+        ethif_mem->rx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_RX_BUFFERS * ETH_MAX_PACKET_SIZE);
+        ethif_mem->tx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_TX_BUFFERS * ETH_MAX_PACKET_SIZE);
 
-        if (!if_mem->rx_buffer || !if_mem->tx_buffer) {
+        if (!ethif_mem->rx_buffer || !ethif_mem->tx_buffer) {
                 goto exit_error;
         }
 
         /* initialize Tx Descriptors list: Chain Mode */
         struct ethmac_DMA_description DMA_description;
-        DMA_description.buffer       = if_mem->tx_buffer;
+        DMA_description.buffer       = ethif_mem->tx_buffer;
         DMA_description.buffer_count = ETH_NUMBER_OF_TX_BUFFERS;
 
-        if (ioctl(if_mem->eth_file, ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
                 goto exit_error;
         }
 
         /* initialize Rx Descriptors list: Chain Mode */
-        DMA_description.buffer       = if_mem->rx_buffer;
+        DMA_description.buffer       = ethif_mem->rx_buffer;
         DMA_description.buffer_count = ETH_NUMBER_OF_RX_BUFFERS;
 
-        if (ioctl(if_mem->eth_file, ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
                 goto exit_error;
         }
 
         /* enable Ethernet Rx interrrupt */
-        if (ioctl(if_mem->eth_file, ETHMAC_IORQ_ENABLE_RX_IRQ) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ENABLE_RX_IRQ) != STD_RET_OK) {
                 goto exit_error;
         }
 
         if (ETHMAC_CHECKSUM_BY_HARDWARE != 0) {
-                if (ioctl(if_mem->eth_file, ETHMAC_IORQ_ENABLE_TX_HARDWARE_CHECKSUM) != STD_RET_OK) {
+                if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ENABLE_TX_HARDWARE_CHECKSUM) != STD_RET_OK) {
                         goto exit_error;
                 }
         }
 
         /* start Ethernet interface */
-        if (ioctl(if_mem->eth_file, ETHMAC_IORQ_ETHERNET_START) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_START) != STD_RET_OK) {
                 goto exit_error;
         }
 
         return ERR_OK;
 
 exit_error:
-        if (if_mem->rx_buffer) {
-                free(if_mem->rx_buffer);
-                if_mem->rx_buffer = NULL;
+        if (ethif_mem->rx_buffer) {
+                free(ethif_mem->rx_buffer);
+                ethif_mem->rx_buffer = NULL;
         }
 
-        if (if_mem->tx_buffer) {
-                free(if_mem->tx_buffer);
-                if_mem->tx_buffer = NULL;
+        if (ethif_mem->tx_buffer) {
+                free(ethif_mem->tx_buffer);
+                ethif_mem->tx_buffer = NULL;
         }
 
         return ERR_MEM;
@@ -373,17 +378,20 @@ exit_error:
 //==============================================================================
 static void ethif_deinit()
 {
-        netif_remove(&if_mem->netif);
+        netif_remove(&ethif_mem->netif);
 
-        if (if_mem->rx_buffer) {
-                free(if_mem->rx_buffer);
-                if_mem->rx_buffer = NULL;
+        if (ethif_mem->rx_buffer) {
+                free(ethif_mem->rx_buffer);
+                ethif_mem->rx_buffer = NULL;
         }
 
-        if (if_mem->tx_buffer) {
-                free(if_mem->tx_buffer);
-                if_mem->tx_buffer = NULL;
+        if (ethif_mem->tx_buffer) {
+                free(ethif_mem->tx_buffer);
+                ethif_mem->tx_buffer = NULL;
         }
+
+        fflush(ethif_mem->eth_file);
+        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_DEINIT);
 }
 
 //==============================================================================
@@ -396,27 +404,27 @@ static void lwIP_handle()
         u32_t time = get_OS_time_ms();
 
         /* TCP periodic process every 250 ms */
-        if (time - if_mem->TCP_timer >= TCP_TMR_INTERVAL) {
-                if_mem->TCP_timer = time;
+        if (time - ethif_mem->TCP_timer >= TCP_TMR_INTERVAL) {
+                ethif_mem->TCP_timer = time;
                 tcp_tmr();
         }
 
         /* ARP periodic process every 5s */
-        if (time - if_mem->ARP_timer >= ARP_TMR_INTERVAL) {
-                if_mem->ARP_timer = time;
+        if (time - ethif_mem->ARP_timer >= ARP_TMR_INTERVAL) {
+                ethif_mem->ARP_timer = time;
                 etharp_tmr();
         }
 
 #if LWIP_DHCP
         /* fine DHCP periodic process every 500ms */
-        if (time - if_mem->DHCP_fine_timer >= DHCP_FINE_TIMER_MSECS) {
-                if_mem->DHCP_fine_timer = time;
+        if (time - ethif_mem->DHCP_fine_timer >= DHCP_FINE_TIMER_MSECS) {
+                ethif_mem->DHCP_fine_timer = time;
                 dhcp_fine_tmr();
         }
 
         /* DHCP Coarse periodic process every 60s */
-        if (time - if_mem->DHCP_coarse_timer >= DHCP_COARSE_TIMER_MSECS) {
-                if_mem->DHCP_coarse_timer = time;
+        if (time - ethif_mem->DHCP_coarse_timer >= DHCP_COARSE_TIMER_MSECS) {
+                ethif_mem->DHCP_coarse_timer = time;
                 dhcp_coarse_tmr();
         }
 #endif
@@ -429,16 +437,16 @@ static void lwIP_handle()
 //==============================================================================
 static void receive_packet()
 {
-        if (!netif_is_up(&if_mem->netif))
+        if (!netif_is_up(&ethif_mem->netif))
                 return;
 
         bool rx_flag = false;
-        ioctl(if_mem->eth_file, ETHMAC_IORQ_GET_RX_FLAG, &rx_flag);
+        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_FLAG, &rx_flag);
         if (!rx_flag)
                 return;
 
         u32_t rx_packet_size = 0;
-        ioctl(if_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
+        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
         while (rx_packet_size) {
                 /*
                  * read a received packet from the Ethernet buffers and send it to the
@@ -448,15 +456,15 @@ static void receive_packet()
                 /* move received packet into a new pbuf */
                 struct pbuf *p = low_level_input();
                 if (p) {
-                        if (if_mem->netif.input(p, &if_mem->netif) != ERR_OK) {
+                        if (ethif_mem->netif.input(p, &ethif_mem->netif) != ERR_OK) {
                                 pbuf_free(p);
                         }
                 }
 
-                ioctl(if_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
+                ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
         }
 
-        ioctl(if_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_FLAG);
+        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_FLAG);
 }
 
 //==============================================================================
@@ -468,17 +476,17 @@ static void receive_packet()
 //==============================================================================
 static bool configure_netif()
 {
-        if (netif_add(&if_mem->netif,
-                      &if_mem->request->ip_address,
-                      &if_mem->request->net_mask,
-                      &if_mem->request->gateway,
+        if (netif_add(&ethif_mem->netif,
+                      &ethif_mem->request->ip_address,
+                      &ethif_mem->request->net_mask,
+                      &ethif_mem->request->gateway,
                       NULL,
                       ethif_init,
                       ethernet_input) == NULL) {
 
                 return false;
         } else {
-                netif_set_default(&if_mem->netif);
+                netif_set_default(&ethif_mem->netif);
                 return true;
         }
 }
@@ -490,14 +498,14 @@ static bool configure_netif()
 //==============================================================================
 static void manage_interface()
 {
-        if (if_mem->request) {
-                switch (if_mem->request->cmd) {
+        if (ethif_mem->request) {
+                switch (ethif_mem->request->cmd) {
                 case RQ_START_DHCP:
-                        if (if_mem->ifman_step == 0) {
+                        if (ethif_mem->ifman_step == 0) {
                                 if (configure_netif()) {
-                                        if (dhcp_start(&if_mem->netif) == ERR_OK) {
-                                                netif_set_up(&if_mem->netif);
-                                                if_mem->ifman_step++;
+                                        if (dhcp_start(&ethif_mem->netif) == ERR_OK) {
+                                                netif_set_up(&ethif_mem->netif);
+                                                ethif_mem->ifman_step++;
                                         } else {
                                                 ethif_deinit();
                                                 send_response_fail();
@@ -506,52 +514,56 @@ static void manage_interface()
                                         send_response_fail();
                                 }
                         } else {
-                                if (if_mem->netif.dhcp->state == DHCP_BOUND) {
-                                        if_mem->ifman_step = 0;
-                                        if_mem->request    = NULL;
+                                if (ethif_mem->netif.dhcp->state == DHCP_BOUND) {
+                                        ethif_mem->ifman_step = 0;
+                                        ethif_mem->request    = NULL;
                                         send_response_success();
                                 }
                         }
                         break;
 
                 case RQ_RENEW_DHCP:
-                        if (if_mem->ifman_step == 0) {
-                                if (dhcp_renew(&if_mem->netif) == ERR_OK) {
-                                        if_mem->ifman_step++;
+                        if (ethif_mem->ifman_step == 0) {
+                                if (dhcp_renew(&ethif_mem->netif) == ERR_OK) {
+                                        ethif_mem->ifman_step++;
                                 } else {
                                         send_response_fail();
                                 }
                         } else {
-                                if (if_mem->netif.dhcp->state == DHCP_BOUND) {
-                                        if_mem->ifman_step = 0;
-                                        if_mem->request    = NULL;
+                                if (ethif_mem->netif.dhcp->state == DHCP_BOUND) {
+                                        ethif_mem->ifman_step = 0;
+                                        ethif_mem->request    = NULL;
                                         send_response_success();
                                 }
                         }
                         break;
 
                 case RQ_STOP_DHCP:
-                        if_mem->request = NULL;
+                        dhcp_release(&ethif_mem->netif);
+                        dhcp_stop(&ethif_mem->netif);
+                        ethif_deinit();
+                        send_response_success();
+                        ethif_mem->request = NULL;
                         break;
 
                 case RQ_UP_STATIC:
                         if (configure_netif()) {
-                                netif_set_up(&if_mem->netif);
+                                netif_set_up(&ethif_mem->netif);
                                 send_response_success();
                         } else {
                                 send_response_fail();
                         }
-                        if_mem->request = NULL;
+                        ethif_mem->request = NULL;
                         break;
 
                 case RQ_DOWN_STATIC:
                         ethif_deinit();
-                        if_mem->request = NULL;
                         send_response_success();
+                        ethif_mem->request = NULL;
                         break;
 
                 default:
-                        if_mem->request = NULL;
+                        ethif_mem->request = NULL;
                         break;
                 }
         }
@@ -568,25 +580,25 @@ static void lwIP_daemon(void *arg)
 
         lwip_init();
 
-        if_mem = calloc(1, sizeof(ethif_mem));
-        if (!if_mem) {
+        ethif_mem = calloc(1, sizeof(ethif_mem));
+        if (!ethif_mem) {
                 task_exit();
         }
 
-        if_mem->protect_request_mtx = new_mutex();
-        if (!if_mem->protect_request_mtx) {
-                free(if_mem);
+        ethif_mem->protect_request_mtx = new_mutex();
+        if (!ethif_mem->protect_request_mtx) {
+                free(ethif_mem);
                 task_exit();
         }
 
-        if_mem->response_queue = new_queue(1, sizeof(int));
-        if (!if_mem->response_queue) {
-                delete_mutex(if_mem->protect_request_mtx);
-                free(if_mem);
+        ethif_mem->response_queue = new_queue(1, sizeof(int));
+        if (!ethif_mem->response_queue) {
+                delete_mutex(ethif_mem->protect_request_mtx);
+                free(ethif_mem);
                 task_exit();
         }
 
-        while (!(if_mem->eth_file = fopen(_ETHIF_FILE, "r+"))) {
+        while (!(ethif_mem->eth_file = fopen(_ETHIF_FILE, "r+"))) {
                 sleep_ms(500);
         }
 
@@ -605,7 +617,7 @@ static void lwIP_daemon(void *arg)
 //==============================================================================
 void _ethif_start_lwIP_daemon()
 {
-        if (!if_mem) {
+        if (!ethif_mem) {
                 new_task(lwIP_daemon, "lwipd", LWIPD_STACK_SIZE, NULL);
         }
 }
@@ -622,14 +634,14 @@ void _ethif_start_lwIP_daemon()
 //==============================================================================
 int _ethif_start_DHCP_client()
 {
-        if (netif_is_up(&if_mem->netif))
+        if (netif_is_up(&ethif_mem->netif))
                 return -1;
 
         request rq;
-        rq.cmd             = RQ_START_DHCP;
-        rq.ip_address.addr = IPADDR_ANY;
-        rq.net_mask.addr   = IPADDR_ANY;
-        rq.gateway.addr    = IPADDR_ANY;
+        rq.cmd        = RQ_START_DHCP;
+        rq.ip_address = ip_addr_any;
+        rq.net_mask   = ip_addr_any;
+        rq.gateway    = ip_addr_any;
 
         return send_request_and_wait_for_response(&rq);
 }
@@ -646,6 +658,14 @@ int _ethif_start_DHCP_client()
 //==============================================================================
 int _ethif_stop_DHCP_client()
 {
+        if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
+
+                request rq;
+                rq.cmd = RQ_STOP_DHCP;
+
+                return send_request_and_wait_for_response(&rq);
+        }
+
         return -1;
 }
 
@@ -661,7 +681,7 @@ int _ethif_stop_DHCP_client()
 //==============================================================================
 int _ethif_renew_DHCP_client()
 {
-        if (netif_is_up(&if_mem->netif) && (if_mem->netif.flags & NETIF_FLAG_DHCP)) {
+        if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
                 request rq;
                 rq.cmd = RQ_RENEW_DHCP;
@@ -688,7 +708,7 @@ int _ethif_renew_DHCP_client()
 //==============================================================================
 int _ethif_if_up(ip_addr_t *ip_address, ip_addr_t *net_mask, ip_addr_t *gateway)
 {
-        if (!ip_address || !net_mask || !gateway || netif_is_up(&if_mem->netif))
+        if (!ip_address || !net_mask || !gateway || netif_is_up(&ethif_mem->netif))
                 return -1;
 
         request rq;
@@ -712,6 +732,14 @@ int _ethif_if_up(ip_addr_t *ip_address, ip_addr_t *net_mask, ip_addr_t *gateway)
 //==============================================================================
 int _ethif_if_down()
 {
+        if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
+
+                request rq;
+                rq.cmd = RQ_DOWN_STATIC;
+
+                return send_request_and_wait_for_response(&rq);
+        }
+
         return -1;
 }
 
@@ -729,9 +757,9 @@ int _ethif_get_ifconfig(ifconfig *ifcfg)
         if (!ifcfg)
                 return -1;
 
-        if (netif_is_up(&if_mem->netif)) {
-                if (if_mem->netif.flags & NETIF_FLAG_DHCP) {
-                        if (if_mem->netif.dhcp->state != DHCP_BOUND) {
+        if (netif_is_up(&ethif_mem->netif)) {
+                if (ethif_mem->netif.flags & NETIF_FLAG_DHCP) {
+                        if (ethif_mem->netif.dhcp->state != DHCP_BOUND) {
                                 ifcfg->mode = IFMODE_DHCP_CONFIGURING;
                         } else {
                                 ifcfg->mode = IFMODE_DHCP_CONFIGURED;
@@ -740,9 +768,9 @@ int _ethif_get_ifconfig(ifconfig *ifcfg)
                         ifcfg->mode = IFMODE_STATIC_IP;
                 }
 
-                ifcfg->IP_address = if_mem->netif.ip_addr;
-                ifcfg->net_mask   = if_mem->netif.netmask;
-                ifcfg->gateway    = if_mem->netif.gw;
+                ifcfg->IP_address = ethif_mem->netif.ip_addr;
+                ifcfg->net_mask   = ethif_mem->netif.netmask;
+                ifcfg->gateway    = ethif_mem->netif.gw;
         } else {
                 ifcfg->mode            = IFMODE_NOT_CONFIGURED;
                 ifcfg->IP_address.addr = IPADDR_ANY;

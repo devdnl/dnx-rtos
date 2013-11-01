@@ -100,67 +100,16 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 return STD_RET_ERROR;
         }
 
+        eth_mem        = hdl;
+        *device_handle = hdl;
+
         SET_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
 
         /* enable Ethernet IRQ */
         NVIC_EnableIRQ(ETH_IRQn);
         NVIC_SetPriority(ETH_IRQn, ETHMAC_IRQ_PRIORITY);
 
-        /* configure Ethernet */
-        ETH_DeInit();
-        ETH_SoftwareReset();
-        while (ETH_GetSoftwareResetStatus() == SET);
-
-        ETH_InitTypeDef ETH_InitStructure;
-        ETH_StructInit(&ETH_InitStructure);
-
-        /* MAC configuration */
-        ETH_InitStructure.ETH_AutoNegotiation          = ETH_AutoNegotiation_Enable;
-        ETH_InitStructure.ETH_LoopbackMode             = ETH_LoopbackMode_Disable;
-        ETH_InitStructure.ETH_RetryTransmission        = ETH_RetryTransmission_Disable;
-        ETH_InitStructure.ETH_AutomaticPadCRCStrip     = ETH_AutomaticPadCRCStrip_Disable;
-        ETH_InitStructure.ETH_ReceiveAll               = ETH_ReceiveAll_Disable;
-        ETH_InitStructure.ETH_BroadcastFramesReception = ETH_BroadcastFramesReception_Enable;
-        ETH_InitStructure.ETH_PromiscuousMode          = ETH_PromiscuousMode_Disable;
-        ETH_InitStructure.ETH_MulticastFramesFilter    = ETH_MulticastFramesFilter_Perfect;
-        ETH_InitStructure.ETH_UnicastFramesFilter      = ETH_UnicastFramesFilter_Perfect;
-        ETH_InitStructure.ETH_Speed                    = ETHMAC_SPEED;
-        if (ETHMAC_CHECKSUM_BY_HARDWARE != 0) {
-                ETH_InitStructure.ETH_ChecksumOffload  = ETH_ChecksumOffload_Enable;
-        }
-
-        /*
-         * Ethernet DMA configuration
-         * When we use the Checksum offload feature, we need to enable the Store and Forward mode:
-         * the store and forward guarantee that a whole frame is stored in the FIFO, so the MAC can
-         * insert/verify the checksum, if the checksum is OK the DMA can handle the frame otherwise
-         * the frame is dropped
-         */
-        ETH_InitStructure.ETH_DropTCPIPChecksumErrorFrame = ETH_DropTCPIPChecksumErrorFrame_Enable;
-        ETH_InitStructure.ETH_ReceiveStoreForward         = ETH_ReceiveStoreForward_Enable;
-        ETH_InitStructure.ETH_TransmitStoreForward        = ETH_TransmitStoreForward_Enable;
-        ETH_InitStructure.ETH_ForwardErrorFrames          = ETH_ForwardErrorFrames_Disable;
-        ETH_InitStructure.ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Disable;
-        ETH_InitStructure.ETH_SecondFrameOperate          = ETH_SecondFrameOperate_Enable;
-        ETH_InitStructure.ETH_AddressAlignedBeats         = ETH_AddressAlignedBeats_Enable;
-        ETH_InitStructure.ETH_FixedBurst                  = ETH_FixedBurst_Enable;
-        ETH_InitStructure.ETH_RxDMABurstLength            = ETH_RxDMABurstLength_32Beat;
-        ETH_InitStructure.ETH_TxDMABurstLength            = ETH_TxDMABurstLength_32Beat;
-        ETH_InitStructure.ETH_DMAArbitration              = ETH_DMAArbitration_RoundRobin_RxTx_2_1;
-
-        if (ETH_Init(&ETH_InitStructure, ETHMAC_PHY_ADDRESS))
-        {
-              ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
-
-              eth_mem        = hdl;
-              *device_handle = hdl;
-
-              return STD_RET_OK;
-        } else {
-                free(hdl);
-                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
-                return STD_RET_ERROR;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -312,6 +261,56 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
         if (is_device_access_granted(&hdl->dev_lock)) {
                 switch (request) {
+                case ETHMAC_IORQ_ETHERNET_INIT:
+                        /* configure Ethernet */
+                        ETH_DeInit();
+                        ETH_SoftwareReset();
+                        while (ETH_GetSoftwareResetStatus() == SET);
+
+                        ETH_InitTypeDef ETH_InitStructure;
+                        ETH_StructInit(&ETH_InitStructure);
+
+                        /* MAC configuration */
+                        ETH_InitStructure.ETH_AutoNegotiation          = ETH_AutoNegotiation_Enable;
+                        ETH_InitStructure.ETH_LoopbackMode             = ETH_LoopbackMode_Disable;
+                        ETH_InitStructure.ETH_RetryTransmission        = ETH_RetryTransmission_Disable;
+                        ETH_InitStructure.ETH_AutomaticPadCRCStrip     = ETH_AutomaticPadCRCStrip_Disable;
+                        ETH_InitStructure.ETH_ReceiveAll               = ETH_ReceiveAll_Disable;
+                        ETH_InitStructure.ETH_BroadcastFramesReception = ETH_BroadcastFramesReception_Enable;
+                        ETH_InitStructure.ETH_PromiscuousMode          = ETH_PromiscuousMode_Disable;
+                        ETH_InitStructure.ETH_MulticastFramesFilter    = ETH_MulticastFramesFilter_Perfect;
+                        ETH_InitStructure.ETH_UnicastFramesFilter      = ETH_UnicastFramesFilter_Perfect;
+                        ETH_InitStructure.ETH_Speed                    = ETHMAC_SPEED;
+                        if (ETHMAC_CHECKSUM_BY_HARDWARE != 0) {
+                                ETH_InitStructure.ETH_ChecksumOffload  = ETH_ChecksumOffload_Enable;
+                        }
+
+                        /*
+                         * Ethernet DMA configuration
+                         * When we use the Checksum offload feature, we need to enable the Store and Forward mode:
+                         * the store and forward guarantee that a whole frame is stored in the FIFO, so the MAC can
+                         * insert/verify the checksum, if the checksum is OK the DMA can handle the frame otherwise
+                         * the frame is dropped
+                         */
+                        ETH_InitStructure.ETH_DropTCPIPChecksumErrorFrame = ETH_DropTCPIPChecksumErrorFrame_Enable;
+                        ETH_InitStructure.ETH_ReceiveStoreForward         = ETH_ReceiveStoreForward_Enable;
+                        ETH_InitStructure.ETH_TransmitStoreForward        = ETH_TransmitStoreForward_Enable;
+                        ETH_InitStructure.ETH_ForwardErrorFrames          = ETH_ForwardErrorFrames_Disable;
+                        ETH_InitStructure.ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Disable;
+                        ETH_InitStructure.ETH_SecondFrameOperate          = ETH_SecondFrameOperate_Enable;
+                        ETH_InitStructure.ETH_AddressAlignedBeats         = ETH_AddressAlignedBeats_Enable;
+                        ETH_InitStructure.ETH_FixedBurst                  = ETH_FixedBurst_Enable;
+                        ETH_InitStructure.ETH_RxDMABurstLength            = ETH_RxDMABurstLength_32Beat;
+                        ETH_InitStructure.ETH_TxDMABurstLength            = ETH_TxDMABurstLength_32Beat;
+                        ETH_InitStructure.ETH_DMAArbitration              = ETH_DMAArbitration_RoundRobin_RxTx_2_1;
+
+                        if (ETH_Init(&ETH_InitStructure, ETHMAC_PHY_ADDRESS))
+                        {
+                              ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
+                              return STD_RET_OK;
+                        }
+                        break;
+
                 case ETHMAC_IORQ_GET_RX_FLAG:
                         if (arg) {
                                 *(bool *)arg = hdl->rx_data_ready;
@@ -508,6 +507,12 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                 case ETHMAC_IORQ_ETHERNET_START:
                         ETH_Start();
                         return STD_RET_OK;
+
+                case ETHMAC_IORQ_ETHERNET_DEINIT:
+                        ETH_DeInit();
+                        ETH_SoftwareReset();
+                        while (ETH_GetSoftwareResetStatus() == SET);
+                        break;
                 }
         }
 
@@ -527,6 +532,12 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 API_MOD_FLUSH(ETHMAC, void *device_handle)
 {
         STOP_IF(!device_handle);
+
+        struct eth_mem *hdl = device_handle;
+
+        if (is_device_access_granted(&hdl->dev_lock)) {
+                ETH_FlushTransmitFIFO();
+        }
 
         return STD_RET_OK;
 }
