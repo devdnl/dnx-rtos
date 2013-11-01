@@ -606,7 +606,11 @@ static void lwIP_daemon(void *arg)
                 lwIP_handle();
                 receive_packet();
                 manage_interface();
-                sleep_ms(TCP_TMR_INTERVAL);
+
+                if (netif_is_up(&ethif_mem->netif))
+                        sleep_ms(TCP_TMR_INTERVAL);
+                else
+                        sleep(1);
         }
 }
 
@@ -679,7 +683,7 @@ int _ethif_stop_DHCP_client()
  * @return 0 if success, otherwise -1
  */
 //==============================================================================
-int _ethif_renew_DHCP_client()
+int _ethif_renew_DHCP_connection()
 {
         if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
@@ -706,7 +710,7 @@ int _ethif_renew_DHCP_client()
  * @return 0 if success, otherwise -1
  */
 //==============================================================================
-int _ethif_if_up(ip_addr_t *ip_address, ip_addr_t *net_mask, ip_addr_t *gateway)
+int _ethif_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway)
 {
         if (!ip_address || !net_mask || !gateway || netif_is_up(&ethif_mem->netif))
                 return -1;

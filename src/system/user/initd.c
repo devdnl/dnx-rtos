@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include "user/initd.h"
 #include "system/ioctl.h"
+#include "system/netapi.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -194,30 +195,29 @@ static int run_level_1(void)
         }
 
         /* network up */
-#include "arch/ethif.h"
-
         printk("Configuring DHCP client... ");
 
-        if (_ethif_start_DHCP_client() == 0) {
+        if (netapi_start_DHCP_client() == 0) {
                 printk("OK\n");
         } else {
-                printk("fail\n");
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+
                 printk("Configuring static IP... ");
 
-                ip_addr_t ip, mask, gateway;
-                IP4_ADDR(&ip, 192,168,0,120);
-                IP4_ADDR(&mask, 255,255,255,0);
-                IP4_ADDR(&gateway, 192,168,0,1);
+                ip_t ip, mask, gateway;
+                netapi_set_ip(&ip, 192,168,0,120);
+                netapi_set_ip(&mask, 255,255,255,0);
+                netapi_set_ip(&gateway, 192,168,0,1);
 
-                if (_ethif_if_up(&ip, &mask, &gateway) == 0) {
+                if (netapi_ifup(&ip, &mask, &gateway) == 0) {
                         printk("OK\n");
                 } else {
-                        printk("fail\n");
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
         }
 
         ifconfig ifcfg;
-        _ethif_get_ifconfig(&ifcfg);
+        netapi_get_ifconfig(&ifcfg);
         if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
                        "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
@@ -227,12 +227,12 @@ static int run_level_1(void)
                        get_host_name(),
                        ifcfg.hw_address[5], ifcfg.hw_address[4], ifcfg.hw_address[3],
                        ifcfg.hw_address[2], ifcfg.hw_address[1], ifcfg.hw_address[0],
-                       ip4_addr1(&ifcfg.IP_address),  ip4_addr2(&ifcfg.IP_address),
-                       ip4_addr3(&ifcfg.IP_address),  ip4_addr4(&ifcfg.IP_address),
-                       ip4_addr1(&ifcfg.net_mask), ip4_addr2(&ifcfg.net_mask),
-                       ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask),
-                       ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway),
-                       ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway));
+                       ip4_addr1(&ifcfg.IP_address),  ip4_addr2(&ifcfg.IP_address), /* FIXME */
+                       ip4_addr3(&ifcfg.IP_address),  ip4_addr4(&ifcfg.IP_address), /* FIXME */
+                       ip4_addr1(&ifcfg.net_mask), ip4_addr2(&ifcfg.net_mask), /* FIXME */
+                       ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask), /* FIXME */
+                       ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway), /* FIXME */
+                       ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway)); /* FIXME */
         }
 
         return STD_RET_OK;
