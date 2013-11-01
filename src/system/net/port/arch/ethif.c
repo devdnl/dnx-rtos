@@ -91,7 +91,7 @@ typedef struct {
         u32_t           DHCP_coarse_timer;
 #endif
         struct netif    netif;
-        int             DHCP_step;
+        int             ifman_step;
 } ethif_mem;
 
 /*==============================================================================
@@ -130,7 +130,7 @@ static inline void send_request(request *request)
  * @brief Function send success response
  */
 //==============================================================================
-static void send_success_response()
+static void send_response_success()
 {
         static const int response = 0;
         send_queue(if_mem->response_queue, &response, MAX_DELAY);
@@ -141,7 +141,7 @@ static void send_success_response()
  * @brief Function send fail response
  */
 //==============================================================================
-static void send_fail_response()
+static void send_response_fail()
 {
         static const int response = -1;
         send_queue(if_mem->response_queue, &response, MAX_DELAY);
@@ -491,40 +491,43 @@ static bool configure_netif()
 static void manage_interface()
 {
         if (if_mem->request) {
-
                 switch (if_mem->request->cmd) {
                 case RQ_START_DHCP:
-                        switch (if_mem->DHCP_step) {
-                        case 0:
+                        if (if_mem->ifman_step == 0) {
                                 if (configure_netif()) {
                                         if (dhcp_start(&if_mem->netif) == ERR_OK) {
                                                 netif_set_up(&if_mem->netif);
-
-                                                if_mem->DHCP_step++;
+                                                if_mem->ifman_step++;
                                         } else {
                                                 ethif_deinit();
-                                                send_fail_response();
+                                                send_response_fail();
                                         }
                                 } else {
-                                        send_fail_response();
+                                        send_response_fail();
                                 }
-                                break;
-
-                        case 1:
+                        } else {
                                 if (if_mem->netif.dhcp->state == DHCP_BOUND) {
-
-                                        if_mem->DHCP_step = 0;
-                                        if_mem->request   = NULL;
-
-                                        send_success_response();
+                                        if_mem->ifman_step = 0;
+                                        if_mem->request    = NULL;
+                                        send_response_success();
                                 }
-                                break;
                         }
-
                         break;
 
                 case RQ_RENEW_DHCP:
-                        if_mem->request = NULL;
+                        if (if_mem->ifman_step == 0) {
+                                if (dhcp_renew(&if_mem->netif) == ERR_OK) {
+                                        if_mem->ifman_step++;
+                                } else {
+                                        send_response_fail();
+                                }
+                        } else {
+                                if (if_mem->netif.dhcp->state == DHCP_BOUND) {
+                                        if_mem->ifman_step = 0;
+                                        if_mem->request    = NULL;
+                                        send_response_success();
+                                }
+                        }
                         break;
 
                 case RQ_STOP_DHCP:
@@ -534,9 +537,9 @@ static void manage_interface()
                 case RQ_UP_STATIC:
                         if (configure_netif()) {
                                 netif_set_up(&if_mem->netif);
-                                send_success_response();
+                                send_response_success();
                         } else {
-                                send_fail_response();
+                                send_response_fail();
                         }
                         if_mem->request = NULL;
                         break;
@@ -544,7 +547,7 @@ static void manage_interface()
                 case RQ_DOWN_STATIC:
                         ethif_deinit();
                         if_mem->request = NULL;
-                        send_success_response();
+                        send_response_success();
                         break;
 
                 default:
@@ -623,7 +626,7 @@ int _ethif_start_DHCP_client()
                 return -1;
 
         request rq;
-        rq.cmd         = RQ_START_DHCP;
+        rq.cmd             = RQ_START_DHCP;
         rq.ip_address.addr = IPADDR_ANY;
         rq.net_mask.addr   = IPADDR_ANY;
         rq.gateway.addr    = IPADDR_ANY;
@@ -658,6 +661,14 @@ int _ethif_stop_DHCP_client()
 //==============================================================================
 int _ethif_renew_DHCP_client()
 {
+        if (netif_is_up(&if_mem->netif) && (if_mem->netif.flags & NETIF_FLAG_DHCP)) {
+
+                request rq;
+                rq.cmd = RQ_RENEW_DHCP;
+
+                return send_request_and_wait_for_response(&rq);
+        }
+
         return -1;
 }
 
@@ -681,7 +692,7 @@ int _ethif_if_up(ip_addr_t *ip_address, ip_addr_t *net_mask, ip_addr_t *gateway)
                 return -1;
 
         request rq;
-        rq.cmd    = RQ_UP_STATIC;
+        rq.cmd        = RQ_UP_STATIC;
         rq.ip_address = *ip_address;
         rq.net_mask   = *net_mask;
         rq.gateway    = *gateway;
