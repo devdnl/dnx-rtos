@@ -408,7 +408,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                 case ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE:
                         if (arg) {
-                                u16_t frame_length = (int)arg;
+                                u16_t frame_length = *(int*)arg;
 
                                 /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
                                 if ((DMATxDescToSet->Status & ETH_DMATxDesc_OWN) != (u32) RESET) {
@@ -471,7 +471,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                 case ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE:
                         if (arg) {
                                 struct ethmac_DMA_description DMA_desc = *(struct ethmac_DMA_description *)arg;
-                                eth_mem->rx_buffer_count   = DMA_desc.buffer_count;
+                                eth_mem->rx_buffer_count       = DMA_desc.buffer_count;
                                 eth_mem->DMA_rx_descriptor_tab = malloc(sizeof(ETH_DMADESCTypeDef) * eth_mem->rx_buffer_count);
 
                                 if (eth_mem->DMA_rx_descriptor_tab) {

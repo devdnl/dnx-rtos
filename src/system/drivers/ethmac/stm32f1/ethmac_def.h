@@ -51,7 +51,7 @@ extern "C" {
 #define ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS    _IOR('E', 0x05, bool*)
 #define ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS  _IO ('E', 0x06)
 #define ETHMAC_IORQ_RESUME_DMA_RECEPTION                _IO ('E', 0x07)
-#define ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE      _IOW('E', 0x08, int)
+#define ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE      _IOW('E', 0x08, int*)
 #define ETHMAC_IORQ_GET_CURRENT_TX_BUFFER               _IOR('E', 0x09, u8_t*)
 #define ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE    _IOW('E', 0x0A, struct ethmac_DMA_description*)
 #define ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE    _IOW('E', 0x0B, struct ethmac_DMA_description*)
