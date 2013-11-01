@@ -760,22 +760,22 @@ int _ethif_get_ifconfig(ifconfig *ifcfg)
         if (netif_is_up(&ethif_mem->netif)) {
                 if (ethif_mem->netif.flags & NETIF_FLAG_DHCP) {
                         if (ethif_mem->netif.dhcp->state != DHCP_BOUND) {
-                                ifcfg->mode = IFMODE_DHCP_CONFIGURING;
+                                ifcfg->status = IFSTATUS_DHCP_CONFIGURING;
                         } else {
-                                ifcfg->mode = IFMODE_DHCP_CONFIGURED;
+                                ifcfg->status = IFSTATUS_DHCP_CONFIGURED;
                         }
                 } else {
-                        ifcfg->mode = IFMODE_STATIC_IP;
+                        ifcfg->status = IFSTATUS_STATIC_IP;
                 }
 
                 ifcfg->IP_address = ethif_mem->netif.ip_addr;
                 ifcfg->net_mask   = ethif_mem->netif.netmask;
                 ifcfg->gateway    = ethif_mem->netif.gw;
         } else {
-                ifcfg->mode            = IFMODE_NOT_CONFIGURED;
-                ifcfg->IP_address.addr = IPADDR_ANY;
-                ifcfg->net_mask.addr   = IPADDR_ANY;
-                ifcfg->gateway.addr    = IPADDR_ANY;
+                ifcfg->status     = IFSTATUS_NOT_CONFIGURED;
+                ifcfg->IP_address = ip_addr_any;
+                ifcfg->net_mask   = ip_addr_any;
+                ifcfg->gateway    = ip_addr_any;
         }
 
         ifcfg->hw_address[0] = _ETHIF_MAC_ADDR_0;

@@ -51,19 +51,19 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef enum ifmode {
-        IFMODE_NOT_CONFIGURED,
-        IFMODE_STATIC_IP,
-        IFMODE_DHCP_CONFIGURING,
-        IFMODE_DHCP_CONFIGURED,
-} ifmode_t;
+typedef enum ifstatus {
+        IFSTATUS_NOT_CONFIGURED,
+        IFSTATUS_STATIC_IP,
+        IFSTATUS_DHCP_CONFIGURING,
+        IFSTATUS_DHCP_CONFIGURED,
+} ifstatus_t;
 
 typedef struct ifconfig {
-        ip_addr_t IP_address;
-        ip_addr_t net_mask;
-        ip_addr_t gateway;
-        u8_t      hw_address[6];
-        ifmode_t  mode;
+        ip_addr_t       IP_address;
+        ip_addr_t       net_mask;
+        ip_addr_t       gateway;
+        u8_t            hw_address[6];
+        ifstatus_t      status;
 } ifconfig;
 
 /*==============================================================================

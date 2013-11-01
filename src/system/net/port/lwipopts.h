@@ -333,7 +333,11 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  */
 #define LWIP_SOCKET                     0
 
-
+/*
+   ---------------------------------------
+   ---------- Debugging options ----------
+   ---------------------------------------
+*/
 #define LWIP_DEBUG
 #define LWIP_PLATFORM_DIAG(message)     printk message
 #define U16_F                           "u"
@@ -343,7 +347,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define X16_F                           "x"
 #define X32_F                           "x"
 
-#define DHCP_DEBUG                      LWIP_DBG_ON
+#define DHCP_DEBUG                      LWIP_DBG_OFF
 
 #endif /* __LWIPOPTS_H__ */
 

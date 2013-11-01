@@ -196,59 +196,29 @@ static int run_level_1(void)
         /* network up */
 #include "arch/ethif.h"
 
-        printk("Configuring network... ");
-        ip_addr_t ip, mask, gateway;
-        IP4_ADDR(&ip, 192,168,0,120);
-        IP4_ADDR(&mask, 255,255,255,0);
-        IP4_ADDR(&gateway, 192,168,0,1);
-
-        int status;
-
-//        status = _ethif_if_up(&ip, &mask, &gateway);
-        status = _ethif_start_DHCP_client();
-
-        if (status == 0) {
-                printk("OK\n");
-
-                ifconfig ifcfg;
-                _ethif_get_ifconfig(&ifcfg);
-
-                printk("  Hostname  : %s\n"
-                       "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
-                       "  IP Address: %d.%d.%d.%d\n"
-                       "  Net Mask  : %d.%d.%d.%d\n"
-                       "  Gateway   : %d.%d.%d.%d\n",
-                       get_host_name(),
-                       ifcfg.hw_address[5], ifcfg.hw_address[4], ifcfg.hw_address[3],
-                       ifcfg.hw_address[2], ifcfg.hw_address[1], ifcfg.hw_address[0],
-                       ip4_addr1(&ifcfg.IP_address),  ip4_addr2(&ifcfg.IP_address),
-                       ip4_addr3(&ifcfg.IP_address),  ip4_addr4(&ifcfg.IP_address),
-                       ip4_addr1(&ifcfg.net_mask), ip4_addr2(&ifcfg.net_mask),
-                       ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask),
-                       ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway),
-                       ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway));
-        } else {
-                printk("fail\n");
-        }
-
-        sleep(2);
-        printk("DHCP stop: ");
-
-        if (_ethif_stop_DHCP_client() == 0) {
-                printk("OK\n");
-        } else {
-                printk("fail\n");
-        }
-
-        sleep(5);
-        printk("DHCP start: ");
+        printk("Configuring DHCP client... ");
 
         if (_ethif_start_DHCP_client() == 0) {
                 printk("OK\n");
+        } else {
+                printk("fail\n");
+                printk("Configuring static IP... ");
 
-                ifconfig ifcfg;
-                _ethif_get_ifconfig(&ifcfg);
+                ip_addr_t ip, mask, gateway;
+                IP4_ADDR(&ip, 192,168,0,120);
+                IP4_ADDR(&mask, 255,255,255,0);
+                IP4_ADDR(&gateway, 192,168,0,1);
 
+                if (_ethif_if_up(&ip, &mask, &gateway) == 0) {
+                        printk("OK\n");
+                } else {
+                        printk("fail\n");
+                }
+        }
+
+        ifconfig ifcfg;
+        _ethif_get_ifconfig(&ifcfg);
+        if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
                 printk("  Hostname  : %s\n"
                        "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
                        "  IP Address: %d.%d.%d.%d\n"
@@ -263,117 +233,6 @@ static int run_level_1(void)
                        ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask),
                        ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway),
                        ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway));
-        } else {
-                printk("fail\n");
-        }
-
-
-        sleep(4);
-        printk("DHCP stop: ");
-
-        if (_ethif_stop_DHCP_client() == 0) {
-                printk("OK\n");
-        } else {
-                printk("fail\n");
-        }
-
-        sleep(4);
-        printk("Static up: ");
-
-        if (_ethif_if_up(&ip, &mask, &gateway)) {
-                printk("OK\n");
-
-                ifconfig ifcfg;
-                _ethif_get_ifconfig(&ifcfg);
-
-                printk("  Hostname  : %s\n"
-                       "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
-                       "  IP Address: %d.%d.%d.%d\n"
-                       "  Net Mask  : %d.%d.%d.%d\n"
-                       "  Gateway   : %d.%d.%d.%d\n",
-                       get_host_name(),
-                       ifcfg.hw_address[5], ifcfg.hw_address[4], ifcfg.hw_address[3],
-                       ifcfg.hw_address[2], ifcfg.hw_address[1], ifcfg.hw_address[0],
-                       ip4_addr1(&ifcfg.IP_address),  ip4_addr2(&ifcfg.IP_address),
-                       ip4_addr3(&ifcfg.IP_address),  ip4_addr4(&ifcfg.IP_address),
-                       ip4_addr1(&ifcfg.net_mask), ip4_addr2(&ifcfg.net_mask),
-                       ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask),
-                       ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway),
-                       ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway));
-        } else {
-                printk("fail\n");
-        }
-
-
-        sleep(3);
-        printk("Static down: ");
-        if (_ethif_if_down() == 0) {
-                printk("OK\n");
-        } else {
-                printk("fail\n");
-        }
-
-        sleep(4);
-        printk("Static up: ");
-
-        if (_ethif_if_up(&ip, &mask, &gateway)) {
-                printk("OK\n");
-
-                ifconfig ifcfg;
-                _ethif_get_ifconfig(&ifcfg);
-
-                printk("  Hostname  : %s\n"
-                       "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
-                       "  IP Address: %d.%d.%d.%d\n"
-                       "  Net Mask  : %d.%d.%d.%d\n"
-                       "  Gateway   : %d.%d.%d.%d\n",
-                       get_host_name(),
-                       ifcfg.hw_address[5], ifcfg.hw_address[4], ifcfg.hw_address[3],
-                       ifcfg.hw_address[2], ifcfg.hw_address[1], ifcfg.hw_address[0],
-                       ip4_addr1(&ifcfg.IP_address),  ip4_addr2(&ifcfg.IP_address),
-                       ip4_addr3(&ifcfg.IP_address),  ip4_addr4(&ifcfg.IP_address),
-                       ip4_addr1(&ifcfg.net_mask), ip4_addr2(&ifcfg.net_mask),
-                       ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask),
-                       ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway),
-                       ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway));
-        } else {
-                printk("fail\n");
-        }
-
-        sleep(3);
-        printk("Static down: ");
-        if (_ethif_if_down() == 0) {
-                printk("OK\n");
-        } else {
-                printk("fail\n");
-        }
-
-
-        sleep(5);
-        printk("DHCP start: ");
-
-        if (_ethif_start_DHCP_client() == 0) {
-                printk("OK\n");
-
-                ifconfig ifcfg;
-                _ethif_get_ifconfig(&ifcfg);
-
-                printk("  Hostname  : %s\n"
-                       "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
-                       "  IP Address: %d.%d.%d.%d\n"
-                       "  Net Mask  : %d.%d.%d.%d\n"
-                       "  Gateway   : %d.%d.%d.%d\n",
-                       get_host_name(),
-                       ifcfg.hw_address[5], ifcfg.hw_address[4], ifcfg.hw_address[3],
-                       ifcfg.hw_address[2], ifcfg.hw_address[1], ifcfg.hw_address[0],
-                       ip4_addr1(&ifcfg.IP_address),  ip4_addr2(&ifcfg.IP_address),
-                       ip4_addr3(&ifcfg.IP_address),  ip4_addr4(&ifcfg.IP_address),
-                       ip4_addr1(&ifcfg.net_mask), ip4_addr2(&ifcfg.net_mask),
-                       ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask),
-                       ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway),
-                       ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway));
-        } else {
-                printk("fail\n");
         }
 
         return STD_RET_OK;
