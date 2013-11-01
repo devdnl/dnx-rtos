@@ -580,7 +580,7 @@ static void lwIP_daemon(void *arg)
 
         lwip_init();
 
-        ethif_mem = calloc(1, sizeof(ethif_mem));
+        ethif_mem = calloc(1, sizeof(ethif_data));
         if (!ethif_mem) {
                 task_exit();
         }
