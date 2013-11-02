@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    ethif.c
+@file    ethif_stm32f1.c
 
 @author  Daniel Zorychta
 
@@ -40,13 +40,13 @@ extern "C" {
 #include "lwip/tcp_impl.h"
 #include "lwip/dhcp.h"
 #include "lwip/init.h"
+#include "lwip/tcpip.h"
 #include "netif/etharp.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define LWIPD_STACK_SIZE                STACK_DEPTH_LOW
-#define MTU                             1500
+#define LWIPD_STACK_SIZE                STACK_DEPTH_HUGE
 #define REQUEST_TIMEOUT_MS              2000
 
 /* ETH_HEADER + ETH_EXTRA + MAX_ETH_PAYLOAD + ETH_CRC */
@@ -84,14 +84,10 @@ typedef struct {
         mutex_t        *protect_request_mtx;
         request        *request;
         queue_t        *response_queue;
-        u32_t           TCP_timer;
-        u32_t           ARP_timer;
-#if LWIP_DHCP
-        u32_t           DHCP_fine_timer;
-        u32_t           DHCP_coarse_timer;
-#endif
         struct netif    netif;
+
         int             ifman_step;
+        bool            init_done;
 } ethif_data;
 
 /*==============================================================================
@@ -114,68 +110,6 @@ static ethif_data *ethif_mem;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Function send request to daemon
- */
-//==============================================================================
-static inline void send_request(request *request)
-{
-        ethif_mem->request = request;
-}
-
-//==============================================================================
-/**
- * @brief Function send success response
- */
-//==============================================================================
-static void send_response_success()
-{
-        static const int response = 0;
-        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
-}
-
-//==============================================================================
-/**
- * @brief Function send fail response
- */
-//==============================================================================
-static void send_response_fail()
-{
-        static const int response = -1;
-        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
-}
-
-//==============================================================================
-/**
- * @brief Function send request and wait for response
- */
-//==============================================================================
-static int send_request_and_wait_for_response(request *request)
-{
-        if (!request)
-                return -1;
-
-        u32_t time = get_OS_time_ms();
-        while (!ethif_mem->eth_file) {
-                if (get_OS_time_ms() - time >= REQUEST_TIMEOUT_MS)
-                        return -1;
-                sleep_ms(250);
-        }
-
-        int response = -1;
-        if (lock_mutex(ethif_mem->protect_request_mtx, REQUEST_TIMEOUT_MS)) {
-
-                send_request(request);
-                receive_queue(ethif_mem->response_queue, &response, MAX_DELAY);
-
-                unlock_mutex(ethif_mem->protect_request_mtx);
-        }
-
-        return response;
-}
-
 //==============================================================================
 /**
  * @brief Should allocate a pbuf and transfer the bytes of the incoming packet
@@ -186,34 +120,34 @@ static int send_request_and_wait_for_response(request *request)
 //==============================================================================
 static struct pbuf *low_level_input()
 {
-      struct ethmac_frame frame = {.buffer = NULL, .length = 0};
-      if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
-              return NULL;
-      }
+        struct ethmac_frame frame = {.buffer = NULL, .length = 0};
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
+                return NULL;
+        }
 
-      if (frame.length == 0) {
-              return NULL;
-      }
+        if (frame.length == 0) {
+                return NULL;
+        }
 
-      /* We allocate a pbuf chain of pbufs from the pool */
-      struct pbuf *p = pbuf_alloc(PBUF_RAW, frame.length, PBUF_POOL);
-      if (p != NULL) {
-              uint len = 0;
-              for (struct pbuf *q = p; q != NULL; q = q->next) {
-                      memcpy((u8_t *)q->payload, &frame.buffer[len], q->len);
-                      len += q->len;
-              }
-      }
+        /* We allocate a pbuf chain of pbufs from the pool */
+        struct pbuf *p = pbuf_alloc(PBUF_RAW, frame.length, PBUF_POOL);
+        if (p != NULL) {
+                uint len = 0;
+                for (struct pbuf *q = p; q != NULL; q = q->next) {
+                        memcpy((u8_t *)q->payload, &frame.buffer[len], q->len);
+                        len += q->len;
+                }
+        }
 
-      bool flag = false;
-      ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
+        bool flag = false;
+        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
 
-      if (flag) {
-            ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS);
-            ioctl(ethif_mem->eth_file, ETHMAC_IORQ_RESUME_DMA_RECEPTION);
-      }
+        if (flag) {
+              ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS);
+              ioctl(ethif_mem->eth_file, ETHMAC_IORQ_RESUME_DMA_RECEPTION);
+        }
 
-      return p;
+        return p;
 }
 
 //==============================================================================
@@ -228,7 +162,7 @@ static struct pbuf *low_level_input()
  *
  * @note Returning ERR_MEM here if a DMA queue of your MAC is full can lead to
  *       strange results. You might consider waiting for space in the DMA queue
- *       to become availale since the stack doesn't retry to send a packet
+ *       to become available since the stack doesn't retry to send a packet
  *       dropped because of memory failure (except for the TCP timers).
  */
 //==============================================================================
@@ -237,7 +171,10 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
       (void)netif;
 
       u8_t *buffer = NULL;
-      ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_CURRENT_TX_BUFFER, &buffer);
+      if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_CURRENT_TX_BUFFER, &buffer) != STD_RET_OK) {
+              printk("Access denied. Buffer: 0x%x\n", buffer);
+              while (true);
+      }
 
       int len = 0;
       for (struct pbuf *q = p; q != NULL; q = q->next) {
@@ -252,63 +189,21 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 
 //==============================================================================
 /**
- * @brief Should be called at the beginning of the program to set up the
- * network interface. It calls the function low_level_init() to do the
- * actual setup of the hardware.
+ * @brief Low level initialization function
  *
- * This function should be passed as a parameter to netif_add().
+ * @param netif         the netif object
  *
- * @param netif         the lwip network interface structure for this ethernetif
- *
- * @return ERR_OK       if the loopif is initialized
- *         ERR_MEM      if private data couldn't be allocated any other err_t on error
+ * @return ERR_OK if success, otherwise other value
  */
 //==============================================================================
-static err_t ethif_init(struct netif *netif)
+static err_t low_level_init(struct netif *netif)
 {
-        /* initialize Ethernet */
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_INIT) != STD_RET_OK) {
-                return ERR_IF;
-        }
-
-#if LWIP_NETIF_HOSTNAME
-        netif->hostname = (char *)get_host_name();
-#endif
-
-        /*
-         * Initialize the snmp variables and counters inside the struct netif.  The last argument
-         * should be replaced with your link speed, in units of bits per second.
-         */
-        NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 100000000);
-
-        netif->name[0] = 'E';
-        netif->name[1] = 'T';
-
-        /*
-         * we directly use etharp_output() here to save a function call. You can instead declare your
-         * own function an call etharp_output() from it if you have to do some checks before sending
-         * (e.g. if linkis available...)
-         */
-        netif->output     = etharp_output;
-        netif->linkoutput = low_level_output;
-
-        /* maximum transfer unit */
-        netif->mtu = MTU;
-
-        /* device capabilities */
-        /* don't set NETIF_FLAG_ETHARP if this device is not an Ethernet one */
-        netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
-
-        /* set MAC hardware address length */
-        netif->hwaddr_len = ETHARP_HWADDR_LEN;
-
-        /* set MAC hardware address */
-        netif->hwaddr[0] = _ETHIF_MAC_ADDR_0;
-        netif->hwaddr[1] = _ETHIF_MAC_ADDR_1;
-        netif->hwaddr[2] = _ETHIF_MAC_ADDR_2;
-        netif->hwaddr[3] = _ETHIF_MAC_ADDR_3;
-        netif->hwaddr[4] = _ETHIF_MAC_ADDR_4;
-        netif->hwaddr[5] = _ETHIF_MAC_ADDR_5;
+        netif->hwaddr[0]  = _ETHIF_MAC_ADDR_0;
+        netif->hwaddr[1]  = _ETHIF_MAC_ADDR_1;
+        netif->hwaddr[2]  = _ETHIF_MAC_ADDR_2;
+        netif->hwaddr[3]  = _ETHIF_MAC_ADDR_3;
+        netif->hwaddr[4]  = _ETHIF_MAC_ADDR_4;
+        netif->hwaddr[5]  = _ETHIF_MAC_ADDR_5;
 
         if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_MAC_ADR, netif->hwaddr) != STD_RET_OK) {
                 goto exit_error;
@@ -373,6 +268,42 @@ exit_error:
 
 //==============================================================================
 /**
+ * @brief Should be called at the beginning of the program to set up the
+ * network interface. It calls the function low_level_init() to do the
+ * actual setup of the hardware.
+ *
+ * This function should be passed as a parameter to netif_add().
+ *
+ * @param netif         the lwip network interface structure for this ethernetif
+ *
+ * @return ERR_OK       if the loopif is initialized
+ *         ERR_MEM      if private data couldn't be allocated any other err_t on error
+ */
+//==============================================================================
+static err_t ethif_init(struct netif *netif)
+{
+        /* initialize Ethernet */
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_INIT) != STD_RET_OK) {
+                return ERR_IF;
+        }
+
+        netif->state      = ethif_mem;
+        netif->hostname   = (char *)get_host_name();
+        netif->name[0]    = 'E';
+        netif->name[1]    = 'T';
+        netif->output     = etharp_output;
+        netif->linkoutput = low_level_output;
+        netif->mtu        = 1500;
+        netif->hwaddr_len = ETHARP_HWADDR_LEN;
+        netif->flags      = NETIF_FLAG_BROADCAST
+                          | NETIF_FLAG_ETHARP
+                          | /*NETIF_FLAG_LINK_UP*/ NETIF_FLAG_IGMP;
+
+        return low_level_init(&ethif_mem->netif);
+}
+
+//==============================================================================
+/**
  * @brief Function deinitalize ethif
  */
 //==============================================================================
@@ -396,48 +327,19 @@ static void ethif_deinit()
 
 //==============================================================================
 /**
- * @brief Function handle lwIP
- */
-//==============================================================================
-static void lwIP_handle()
-{
-        u32_t time = get_OS_time_ms();
-
-        /* TCP periodic process every 250 ms */
-        if (time - ethif_mem->TCP_timer >= TCP_TMR_INTERVAL) {
-                ethif_mem->TCP_timer = time;
-                tcp_tmr();
-        }
-
-        /* ARP periodic process every 5s */
-        if (time - ethif_mem->ARP_timer >= ARP_TMR_INTERVAL) {
-                ethif_mem->ARP_timer = time;
-                etharp_tmr();
-        }
-
-#if LWIP_DHCP
-        /* fine DHCP periodic process every 500ms */
-        if (time - ethif_mem->DHCP_fine_timer >= DHCP_FINE_TIMER_MSECS) {
-                ethif_mem->DHCP_fine_timer = time;
-                dhcp_fine_tmr();
-        }
-
-        /* DHCP Coarse periodic process every 60s */
-        if (time - ethif_mem->DHCP_coarse_timer >= DHCP_COARSE_TIMER_MSECS) {
-                ethif_mem->DHCP_coarse_timer = time;
-                dhcp_coarse_tmr();
-        }
-#endif
-}
-
-//==============================================================================
-/**
  * @brief Function receive packet from MAC
+ *
+ * This function should be called when a packet is ready to be read
+ * from the interface. It uses the function low_level_input() that
+ * should handle the actual reception of bytes from the network
+ * interface.
  */
 //==============================================================================
-static void receive_packet()
+static void ethif_input(struct netif *netif)
 {
-        if (!netif_is_up(&ethif_mem->netif))
+        /* TEST mozna powsadzac wszystko odwolania do pliku do low_level_input() */
+
+        if (!netif_is_up(netif))
                 return;
 
         bool rx_flag = false;
@@ -482,7 +384,7 @@ static bool configure_netif()
                       &ethif_mem->request->gateway,
                       NULL,
                       ethif_init,
-                      ethernet_input) == NULL) {
+                      tcpip_input) == NULL) {
 
                 return false;
         } else {
@@ -490,6 +392,29 @@ static bool configure_netif()
                 return true;
         }
 }
+
+//==============================================================================
+/**
+ * @brief Function send success response
+ */
+//==============================================================================
+static void send_response_success()
+{
+        static const int response = 0;
+        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
+}
+
+//==============================================================================
+/**
+ * @brief Function send fail response
+ */
+//==============================================================================
+static void send_response_fail()
+{
+        static const int response = -1;
+        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
+}
+
 
 //==============================================================================
 /**
@@ -571,14 +496,24 @@ static void manage_interface()
 
 //==============================================================================
 /**
+ * @brief Function is called when tcpip task is started
+ */
+//==============================================================================
+static void tcp_init_done(void *arg)
+{
+        (void)arg;
+
+        ethif_mem->init_done = true;
+}
+
+//==============================================================================
+/**
  * @brief lwIP daemon
  */
 //==============================================================================
 static void lwIP_daemon(void *arg)
 {
         (void)arg;
-
-        lwip_init();
 
         ethif_mem = calloc(1, sizeof(ethif_data));
         if (!ethif_mem) {
@@ -602,9 +537,14 @@ static void lwIP_daemon(void *arg)
                 sleep_ms(500);
         }
 
+        tcpip_init(tcp_init_done, NULL);
+
+        while (!ethif_mem->init_done) {
+                sleep_ms(250);
+        }
+
         while (true) {
-                lwIP_handle();
-                receive_packet();
+                ethif_input(&ethif_mem->netif);
                 manage_interface();
 
                 if (netif_is_up(&ethif_mem->netif))
@@ -612,6 +552,45 @@ static void lwIP_daemon(void *arg)
                 else
                         sleep(1);
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function send request to daemon
+ */
+//==============================================================================
+static inline void send_request(request *request)
+{
+        ethif_mem->request = request;
+}
+
+//==============================================================================
+/**
+ * @brief Function send request and wait for response
+ */
+//==============================================================================
+static int send_request_and_wait_for_response(request *request)
+{
+        if (!request)
+                return -1;
+
+        u32_t time = get_OS_time_ms();
+        while (!ethif_mem->eth_file) {
+                if (get_OS_time_ms() - time >= REQUEST_TIMEOUT_MS)
+                        return -1;
+                sleep_ms(250);
+        }
+
+        int response = -1;
+        if (lock_mutex(ethif_mem->protect_request_mtx, REQUEST_TIMEOUT_MS)) {
+
+                send_request(request);
+                receive_queue(ethif_mem->response_queue, &response, MAX_DELAY);
+
+                unlock_mutex(ethif_mem->protect_request_mtx);
+        }
+
+        return response;
 }
 
 //==============================================================================

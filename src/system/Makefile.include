@@ -24,6 +24,7 @@ CSRC_stm32f1   += portable/stm32f1/stm32f10x_vectors.c
 CSRC_stm32f1   += portable/stm32f1/lib/misc.c
 CSRC_stm32f1   += portable/stm32f1/lib/stm32f10x_rcc.c
 CSRC_stm32f1   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c
+CSRC_stm32f1   += net/port/arch/ethif_stm32f1.c
 
 CXXSRC_stm32f1 += 
 
@@ -106,7 +107,6 @@ CSRC_CORE += net/core/ipv4/ip_addr.c
 CSRC_CORE += net/core/ipv4/ip_frag.c
 CSRC_CORE += net/netif/etharp.c
 CSRC_CORE += net/port/arch/sys_arch.c
-CSRC_CORE += net/port/arch/ethif.c
 
 HDRLOC_CORE += kernel/FreeRTOS/Source/include
 HDRLOC_CORE += kernel

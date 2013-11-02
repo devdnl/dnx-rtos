@@ -158,6 +158,8 @@ u32_t sys_now()
 //==============================================================================
 err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 {
+        _stop_if(!sem);
+
         if (sem) {
                 *sem = new_semaphore();
                 if (*sem) {
@@ -183,6 +185,8 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 //==============================================================================
 void sys_sem_free(sys_sem_t *sem)
 {
+        _stop_if(!sem);
+
         if (sem) {
                 delete_semaphore(*sem);
         }
@@ -197,6 +201,8 @@ void sys_sem_free(sys_sem_t *sem)
 //==============================================================================
 void sys_sem_signal(sys_sem_t *sem)
 {
+        _stop_if(!sem);
+
         if (sem) {
                 give_semaphore(*sem);
         }
@@ -214,6 +220,8 @@ void sys_sem_signal(sys_sem_t *sem)
 //==============================================================================
 u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
+        _stop_if(!sem);
+
         if (sem) {
                 u32_t start_time = get_OS_time_ms();
                 bool  sem_status = false;
@@ -241,6 +249,8 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 //==============================================================================
 int sys_sem_valid(sys_sem_t *sem)
 {
+        _stop_if(!sem);
+
         if (sem) {
                 if (*sem) {
                         return 1;
@@ -257,6 +267,8 @@ int sys_sem_valid(sys_sem_t *sem)
 //==============================================================================
 void sys_sem_set_invalid(sys_sem_t *sem)
 {
+        _stop_if(!sem);
+
         if (sem) {
                 *sem = NULL;
         }
@@ -274,6 +286,8 @@ void sys_sem_set_invalid(sys_sem_t *sem)
 //==============================================================================
 err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 {
+        _stop_if(!mbox);
+
         if (mbox && size) {
                 *mbox = new_queue(size, sizeof(void*));
                 if (*mbox) {
@@ -295,6 +309,8 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 //==============================================================================
 void sys_mbox_free(sys_mbox_t *mbox)
 {
+        _stop_if(!mbox);
+
         if (mbox) {
                 _stop_if(get_number_of_items_in_queue(*mbox));
                 delete_queue(*mbox);
@@ -312,8 +328,10 @@ void sys_mbox_free(sys_mbox_t *mbox)
 //==============================================================================
 void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 {
+        _stop_if(!mbox || !msg);
+
         if (mbox) {
-                send_queue(*mbox, msg, MAX_DELAY);
+                send_queue(*mbox, &msg, MAX_DELAY);
         }
 }
 
@@ -329,8 +347,10 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 //==============================================================================
 err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 {
+        _stop_if(!mbox || !msg);
+
         if (mbox) {
-                if (send_queue(*mbox, msg, 0)) {
+                if (send_queue(*mbox, &msg, 0)) {
                         return ERR_OK;
                 }
 
@@ -355,14 +375,16 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 //==============================================================================
 u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 {
+        _stop_if(!mbox || !msg);
+
         if (mbox) {
                 u32_t start_time = get_OS_time_ms();
                 bool  received   = false;
 
                 if (timeout) {
-                        received = receive_queue(*mbox, *msg, timeout);
+                        received = receive_queue(*mbox, &(*msg), timeout);
                 } else {
-                        received = receive_queue(*mbox, *msg, MAX_DELAY);
+                        received = receive_queue(*mbox, &(*msg), MAX_DELAY);
                 }
 
                 if (received) {
@@ -387,8 +409,10 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 //==============================================================================
 u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 {
+        _stop_if(!mbox || !msg);
+
         if (mbox) {
-                if (receive_queue(*mbox, *msg, 0)) {
+                if (receive_queue(*mbox, &(*msg), 0)) {
                         return 0;
                 }
         }
@@ -405,6 +429,8 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 //==============================================================================
 int sys_mbox_valid(sys_mbox_t *mbox)
 {
+        _stop_if(!mbox);
+
         if (mbox) {
                 if (*mbox) {
                         return 1;
@@ -421,6 +447,8 @@ int sys_mbox_valid(sys_mbox_t *mbox)
 //==============================================================================
 void sys_mbox_set_invalid(sys_mbox_t *mbox)
 {
+        _stop_if(!mbox);
+
         if (mbox) {
                 *mbox = NULL;
         }
