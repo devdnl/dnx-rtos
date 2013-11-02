@@ -163,7 +163,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
         if (sem) {
                 *sem = new_semaphore();
                 if (*sem) {
-                        if (count) {
+                        if (count == 0) {
                                 take_semaphore(*sem, 0);
                         }
 
