@@ -86,9 +86,9 @@ typedef enum netapi_err {
 } netapi_err_t;
 
 typedef enum netapi_flags {
-        NETAPI_CONN_COPY                        = NETCONN_COPY,
-        NETAPI_CONN_MORE                        = NETCONN_MORE,
-        NETAPI_CONN_DONTBLOCK                   = NETCONN_DONTBLOCK
+        NETAPI_CONN_FLAG_COPY                   = NETCONN_COPY,
+        NETAPI_CONN_FLAG_MORE                   = NETCONN_MORE,
+        NETAPI_CONN_FLAG_DONTBLOCK              = NETCONN_DONTBLOCK
 } netapi_flags_t;
 
 /*==============================================================================
@@ -298,9 +298,9 @@ static inline void netapi_set_ip_to_broadcast(netapi_ip_t *ip)
  * @return a newly allocated object or NULL on memory error
  */
 //==============================================================================
-static inline netapi_conn_t *netapi_new_conn(netapi_conn_type_t *type)
+static inline netapi_conn_t *netapi_new_conn(netapi_conn_type_t type)
 {
-        return netconn_new((enum netconn_type)type);
+        return netconn_new(type);
 }
 
 //==============================================================================
@@ -499,9 +499,9 @@ static inline netapi_err_t netapi_send(netapi_conn_t *conn, netapi_buf_t *buf)
  * @param data          pointer to the application buffer that contains the data to send
  * @param size          size of the application data to send
  * @param flags         combination of following flags :
- * - NETCONN_COPY: data will be copied into memory belonging to the stack
- * - NETCONN_MORE: for TCP connection, PSH flag will be set on last segment sent
- * - NETCONN_DONTBLOCK: only write the data if all dat can be written at once
+ * - NETAPI_CONN_FALG_COPY: data will be copied into memory belonging to the stack
+ * - NETAPI_CONN_FALG_MORE: for TCP connection, PSH flag will be set on last segment sent
+ * - NETAPI_CONN_FALG_DONTBLOCK: only write the data if all dat can be written at once
  * @param bytes_written pointer to a location that receives the number of written bytes
  *
  * @return NETAPI_ERR_OK if data was sent, any other on error
@@ -522,9 +522,9 @@ static inline netapi_err_t netapi_write_partly(netapi_conn_t *conn, const void *
  * @param data          pointer to the application buffer that contains the data to send
  * @param size          size of the application data to send
  * @param flags         combination of following flags :
- * - NETCONN_COPY: data will be copied into memory belonging to the stack
- * - NETCONN_MORE: for TCP connection, PSH flag will be set on last segment sent
- * - NETCONN_DONTBLOCK: only write the data if all dat can be written at once
+ * - NETAPI_CONN_FALG_COPY: data will be copied into memory belonging to the stack
+ * - NETAPI_CONN_FALG_MORE: for TCP connection, PSH flag will be set on last segment sent
+ * - NETAPI_CONN_FALG_DONTBLOCK: only write the data if all dat can be written at once
  *
  * @return NETAPI_ERR_OK if data was sent, any other on error
  */
@@ -667,7 +667,7 @@ static inline void netapi_buf_chain(netapi_buf_t *head, netapi_buf_t *tail)
  * @brief Get the data pointer and length of the data inside a netbuf.
  *
  * @param buf           netbuf to get the data from
- * @param dataptr       pointer to a void pointer where to store the data pointer
+ * @param data          pointer to a void pointer where to store the data pointer
  * @param len           pointer to an u16_t where the length of the data is stored
  *
  * @return NETAPI_ERR_OK        if the information was retreived,

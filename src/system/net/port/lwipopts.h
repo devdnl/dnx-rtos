@@ -335,6 +335,124 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  */
 #define LWIP_SOCKET                     0
 
+
+/*
+   ------------------------------------
+   ---------- Thread options ----------
+   ------------------------------------
+*/
+/*
+ * TCPIP_THREAD_NAME: The name assigned to the main tcpip thread.
+ */
+#define TCPIP_THREAD_NAME              "tcpip_thread"
+
+/*
+ * TCPIP_THREAD_STACKSIZE: The stack size used by the main tcpip thread.
+ * The stack size value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define TCPIP_THREAD_STACKSIZE          STACK_DEPTH_LOW
+
+/*
+ * TCPIP_THREAD_PRIO: The priority assigned to the main tcpip thread.
+ * The priority value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define TCPIP_THREAD_PRIO               0
+
+/*
+ * TCPIP_MBOX_SIZE: The mailbox size for the tcpip thread messages
+ * The queue size value itself is platform-dependent, but is passed to
+ * sys_mbox_new() when tcpip_init is called.
+ */
+#define TCPIP_MBOX_SIZE                 8
+
+/*
+ * SLIPIF_THREAD_NAME: The name assigned to the slipif_loop thread.
+ */
+#define SLIPIF_THREAD_NAME             "slipif_loop"
+
+/*
+ * SLIP_THREAD_STACKSIZE: The stack size used by the slipif_loop thread.
+ * The stack size value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define SLIPIF_THREAD_STACKSIZE         STACK_DEPTH_LOW
+
+/*
+ * SLIPIF_THREAD_PRIO: The priority assigned to the slipif_loop thread.
+ * The priority value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define SLIPIF_THREAD_PRIO              0
+
+/*
+ * PPP_THREAD_NAME: The name assigned to the pppInputThread.
+ */
+#define PPP_THREAD_NAME                "pppInput"
+
+/*
+ * PPP_THREAD_STACKSIZE: The stack size used by the pppInputThread.
+ * The stack size value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define PPP_THREAD_STACKSIZE            STACK_DEPTH_LOW
+
+/*
+ * PPP_THREAD_PRIO: The priority assigned to the pppInputThread.
+ * The priority value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define PPP_THREAD_PRIO                 0
+
+/**
+ * DEFAULT_THREAD_NAME: The name assigned to any other lwIP thread.
+ */
+#define DEFAULT_THREAD_NAME            "lwIP"
+
+/*
+ * DEFAULT_THREAD_STACKSIZE: The stack size used by any other lwIP thread.
+ * The stack size value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define DEFAULT_THREAD_STACKSIZE        STACK_DEPTH_LOW
+
+/*
+ * DEFAULT_THREAD_PRIO: The priority assigned to any other lwIP thread.
+ * The priority value itself is platform-dependent, but is passed to
+ * sys_thread_new() when the thread is created.
+ */
+#define DEFAULT_THREAD_PRIO             0
+
+/*
+ * DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming packets on a
+ * NETCONN_RAW. The queue size value itself is platform-dependent, but is passed
+ * to sys_mbox_new() when the recvmbox is created.
+ */
+#define DEFAULT_RAW_RECVMBOX_SIZE       8
+
+/*
+ * DEFAULT_UDP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a
+ * NETCONN_UDP. The queue size value itself is platform-dependent, but is passed
+ * to sys_mbox_new() when the recvmbox is created.
+ */
+#define DEFAULT_UDP_RECVMBOX_SIZE       8
+
+/*
+ * DEFAULT_TCP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a
+ * NETCONN_TCP. The queue size value itself is platform-dependent, but is passed
+ * to sys_mbox_new() when the recvmbox is created.
+ */
+#define DEFAULT_TCP_RECVMBOX_SIZE       8
+
+/*
+ * DEFAULT_ACCEPTMBOX_SIZE: The mailbox size for the incoming connections.
+ * The queue size value itself is platform-dependent, but is passed to
+ * sys_mbox_new() when the acceptmbox is created.
+ */
+#define DEFAULT_ACCEPTMBOX_SIZE         8
+
+
 /*
    ---------------------------------------
    ---------- Debugging options ----------

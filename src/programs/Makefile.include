@@ -8,6 +8,7 @@ CSRC_PROGRAMS += cp/cp.c
 CSRC_PROGRAMS += helloworld/helloworld.c
 CSRC_PROGRAMS += top/top.c
 CSRC_PROGRAMS += terminal/terminal.c
+CSRC_PROGRAMS += telnet/telnet.c
 
 CXXSRC_PROGRAMS += 
 
