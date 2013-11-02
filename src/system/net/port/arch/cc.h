@@ -33,6 +33,7 @@
 #define _CC_H_
 
 #include "core/basic_types.h"
+#include "core/printx.h"
 
 typedef i8_t    s8_t;
 typedef i16_t   s16_t;
@@ -40,6 +41,22 @@ typedef i32_t   s32_t;
 typedef u32_t   mem_ptr_t;
 
 #define BYTE_ORDER                      LITTLE_ENDIAN
+
+#define LWIP_DEBUG
+#define LWIP_PLATFORM_DIAG(message)     printk message
+#define U16_F                           "u"
+#define U32_F                           "u"
+#define S16_F                           "i"
+#define S32_F                           "i"
+#define X16_F                           "x"
+#define X32_F                           "x"
+
+#define LWIP_ERROR(message, expression, handler)
+#define LWIP_PLATFORM_ASSERT(x)         while(true);
+
+/* type which describe error (must be signed) */
+#define LWIP_ERR_T                      int
+
 
 /* define compiler specific symbols */
 #if defined (__ICCARM__)

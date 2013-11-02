@@ -42,12 +42,12 @@ extern "C" {
 /**
  * Size of RAM memory [bytes]
  */
-#define CONFIG_RAM_SIZE                                 (64 * 1024)
+#define CONFIG_RAM_SIZE                                 (65536)
 
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (62.8 * 1024)
+#define CONFIG_HEAP_SIZE                                (64340)
 
 /**
  * Heap memory alignment
