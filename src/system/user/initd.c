@@ -204,7 +204,7 @@ static int run_level_1(void)
 
                 printk("Configuring static IP... ");
 
-                ip_t ip, mask, gateway;
+                netapi_ip_t ip, mask, gateway;
                 netapi_set_ip(&ip, 192,168,0,120);
                 netapi_set_ip(&mask, 255,255,255,0);
                 netapi_set_ip(&gateway, 192,168,0,1);
@@ -227,12 +227,12 @@ static int run_level_1(void)
                        get_host_name(),
                        ifcfg.hw_address[5], ifcfg.hw_address[4], ifcfg.hw_address[3],
                        ifcfg.hw_address[2], ifcfg.hw_address[1], ifcfg.hw_address[0],
-                       ip4_addr1(&ifcfg.IP_address),  ip4_addr2(&ifcfg.IP_address), /* FIXME */
-                       ip4_addr3(&ifcfg.IP_address),  ip4_addr4(&ifcfg.IP_address), /* FIXME */
-                       ip4_addr1(&ifcfg.net_mask), ip4_addr2(&ifcfg.net_mask), /* FIXME */
-                       ip4_addr3(&ifcfg.net_mask), ip4_addr4(&ifcfg.net_mask), /* FIXME */
-                       ip4_addr1(&ifcfg.gateway), ip4_addr2(&ifcfg.gateway), /* FIXME */
-                       ip4_addr3(&ifcfg.gateway), ip4_addr4(&ifcfg.gateway)); /* FIXME */
+                       netapi_get_ip_part_a(&ifcfg.IP_address),  netapi_get_ip_part_b(&ifcfg.IP_address),
+                       netapi_get_ip_part_c(&ifcfg.IP_address),  netapi_get_ip_part_d(&ifcfg.IP_address),
+                       netapi_get_ip_part_a(&ifcfg.net_mask), netapi_get_ip_part_b(&ifcfg.net_mask),
+                       netapi_get_ip_part_c(&ifcfg.net_mask), netapi_get_ip_part_d(&ifcfg.net_mask),
+                       netapi_get_ip_part_a(&ifcfg.gateway), netapi_get_ip_part_b(&ifcfg.gateway),
+                       netapi_get_ip_part_c(&ifcfg.gateway), netapi_get_ip_part_d(&ifcfg.gateway));
         }
 
         return STD_RET_OK;

@@ -41,9 +41,11 @@
    ---------- Miscellaneous ----------
    -----------------------------------
 */
-
 #define LWIP_ERROR(message, expression, handler)
 #define LWIP_PLATFORM_ASSERT(x)
+
+/* type which describe error (must be signed) */
+#define LWIP_ERR_T              int
 
 /*
    -----------------------------------------------
