@@ -46,7 +46,6 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define LWIPD_STACK_SIZE                STACK_DEPTH_HUGE
 #define REQUEST_TIMEOUT_MS              2000
 
 /* ETH_HEADER + ETH_EXTRA + MAX_ETH_PAYLOAD + ETH_CRC */
@@ -61,17 +60,16 @@ extern "C" {
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef enum request {
-        RQ_NOP,
-        RQ_START_DHCP,
-        RQ_STOP_DHCP,
-        RQ_RENEW_DHCP,
-        RQ_UP_STATIC,
-        RQ_DOWN_STATIC
-} request_cmd;
-
 typedef struct request_msg {
-        request_cmd     cmd;
+        enum request {
+                RQ_NOP,
+                RQ_START_DHCP,
+                RQ_STOP_DHCP,
+                RQ_RENEW_DHCP,
+                RQ_UP_STATIC,
+                RQ_DOWN_STATIC
+        } cmd;
+
         ip_addr_t       ip_address;
         ip_addr_t       net_mask;
         ip_addr_t       gateway;
@@ -85,9 +83,7 @@ typedef struct {
         request        *request;
         queue_t        *response_queue;
         struct netif    netif;
-
-        int             ifman_step;
-        bool            init_done;
+        int             manager_step;
 } ethif_data;
 
 /*==============================================================================
@@ -307,23 +303,23 @@ static err_t ethif_init(struct netif *netif)
  * @brief Function deinitalize ethif
  */
 //==============================================================================
-static void ethif_deinit()
-{
-        netif_remove(&ethif_mem->netif);
-
-        if (ethif_mem->rx_buffer) {
-                free(ethif_mem->rx_buffer);
-                ethif_mem->rx_buffer = NULL;
-        }
-
-        if (ethif_mem->tx_buffer) {
-                free(ethif_mem->tx_buffer);
-                ethif_mem->tx_buffer = NULL;
-        }
-
-        fflush(ethif_mem->eth_file);
-        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_DEINIT);
-}
+//static void ethif_deinit()
+//{
+//        netif_remove(&ethif_mem->netif);
+//
+//        if (ethif_mem->rx_buffer) {
+//                free(ethif_mem->rx_buffer);
+//                ethif_mem->rx_buffer = NULL;
+//        }
+//
+//        if (ethif_mem->tx_buffer) {
+//                free(ethif_mem->tx_buffer);
+//                ethif_mem->tx_buffer = NULL;
+//        }
+//
+//        fflush(ethif_mem->eth_file);
+//        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_DEINIT);
+//}
 
 //==============================================================================
 /**
@@ -371,30 +367,6 @@ static void ethif_input(struct netif *netif)
 
 //==============================================================================
 /**
- * @brief Function create netif and add to stack
- *
- * @return true if success, otherwise false
- */
-//==============================================================================
-static bool configure_netif()
-{
-        if (netif_add(&ethif_mem->netif,
-                      &ethif_mem->request->ip_address,
-                      &ethif_mem->request->net_mask,
-                      &ethif_mem->request->gateway,
-                      NULL,
-                      ethif_init,
-                      tcpip_input) == NULL) {
-
-                return false;
-        } else {
-                netif_set_default(&ethif_mem->netif);
-                return true;
-        }
-}
-
-//==============================================================================
-/**
  * @brief Function send success response
  */
 //==============================================================================
@@ -415,6 +387,16 @@ static void send_response_fail()
         send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
 }
 
+//==============================================================================
+/**
+ * @brief Set request as finished
+ */
+//==============================================================================
+static inline void request_finished()
+{
+        ethif_mem->manager_step = 0;
+        ethif_mem->request      = NULL;
+}
 
 //==============================================================================
 /**
@@ -426,38 +408,39 @@ static void manage_interface()
         if (ethif_mem->request) {
                 switch (ethif_mem->request->cmd) {
                 case RQ_START_DHCP:
-                        if (ethif_mem->ifman_step == 0) {
-                                if (configure_netif()) {
-                                        if (dhcp_start(&ethif_mem->netif) == ERR_OK) {
-                                                netif_set_up(&ethif_mem->netif);
-                                                ethif_mem->ifman_step++;
-                                        } else {
-                                                ethif_deinit();
-                                                send_response_fail();
-                                        }
+                        if (ethif_mem->manager_step == 0) {
+                                netif_set_down(&ethif_mem->netif);
+                                netif_set_addr(&ethif_mem->netif,
+                                               (ip_addr_t *)&ip_addr_any,
+                                               (ip_addr_t *)&ip_addr_any,
+                                               (ip_addr_t *)&ip_addr_any);
+
+                                if (dhcp_start(&ethif_mem->netif) == ERR_OK) {
+                                        netif_set_up(&ethif_mem->netif);
+                                        ethif_mem->manager_step++;
                                 } else {
+                                        request_finished();
                                         send_response_fail();
                                 }
                         } else {
                                 if (ethif_mem->netif.dhcp->state == DHCP_BOUND) {
-                                        ethif_mem->ifman_step = 0;
-                                        ethif_mem->request    = NULL;
+                                        request_finished();
                                         send_response_success();
                                 }
                         }
                         break;
 
                 case RQ_RENEW_DHCP:
-                        if (ethif_mem->ifman_step == 0) {
+                        if (ethif_mem->manager_step == 0) {
                                 if (dhcp_renew(&ethif_mem->netif) == ERR_OK) {
-                                        ethif_mem->ifman_step++;
+                                        ethif_mem->manager_step++;
                                 } else {
+                                        request_finished();
                                         send_response_fail();
                                 }
                         } else {
                                 if (ethif_mem->netif.dhcp->state == DHCP_BOUND) {
-                                        ethif_mem->ifman_step = 0;
-                                        ethif_mem->request    = NULL;
+                                        request_finished();
                                         send_response_success();
                                 }
                         }
@@ -466,29 +449,30 @@ static void manage_interface()
                 case RQ_STOP_DHCP:
                         dhcp_release(&ethif_mem->netif);
                         dhcp_stop(&ethif_mem->netif);
-                        ethif_deinit();
+                        netif_set_down(&ethif_mem->netif);
+                        request_finished();
                         send_response_success();
-                        ethif_mem->request = NULL;
                         break;
 
                 case RQ_UP_STATIC:
-                        if (configure_netif()) {
-                                netif_set_up(&ethif_mem->netif);
-                                send_response_success();
-                        } else {
-                                send_response_fail();
-                        }
-                        ethif_mem->request = NULL;
+                        netif_set_down(&ethif_mem->netif);
+                        netif_set_addr(&ethif_mem->netif,
+                                       &ethif_mem->request->ip_address,
+                                       &ethif_mem->request->net_mask,
+                                       &ethif_mem->request->gateway);
+                        netif_set_up(&ethif_mem->netif);
+                        request_finished();
+                        send_response_success();
                         break;
 
                 case RQ_DOWN_STATIC:
-                        ethif_deinit();
+                        netif_set_down(&ethif_mem->netif);
+                        request_finished();
                         send_response_success();
-                        ethif_mem->request = NULL;
                         break;
 
                 default:
-                        ethif_mem->request = NULL;
+                        request_finished();
                         break;
                 }
         }
@@ -496,62 +480,68 @@ static void manage_interface()
 
 //==============================================================================
 /**
- * @brief Function is called when tcpip task is started
+ * @brief Function is called from tcpip thread
  */
 //==============================================================================
-static void tcp_init_done(void *arg)
-{
-        (void)arg;
-
-        ethif_mem->init_done = true;
-}
-
-//==============================================================================
-/**
- * @brief lwIP daemon
- */
-//==============================================================================
-static void lwIP_daemon(void *arg)
+static void tcpip_init_done(void *arg)
 {
         (void)arg;
 
         ethif_mem = calloc(1, sizeof(ethif_data));
         if (!ethif_mem) {
-                task_exit();
+                goto release_resources;
         }
 
         ethif_mem->protect_request_mtx = new_mutex();
         if (!ethif_mem->protect_request_mtx) {
-                free(ethif_mem);
-                task_exit();
+                goto release_resources;
         }
 
         ethif_mem->response_queue = new_queue(1, sizeof(int));
         if (!ethif_mem->response_queue) {
-                delete_mutex(ethif_mem->protect_request_mtx);
-                free(ethif_mem);
-                task_exit();
+                goto release_resources;
         }
 
         while (!(ethif_mem->eth_file = fopen(_ETHIF_FILE, "r+"))) {
-                sleep_ms(500);
+                sleep_ms(100);
         }
 
-        tcpip_init(tcp_init_done, NULL);
+        netif_set_default(netif_add(&ethif_mem->netif,
+                                    (ip_addr_t *)&ip_addr_any,
+                                    (ip_addr_t *)&ip_addr_any,
+                                    (ip_addr_t *)&ip_addr_any,
+                                    NULL,
+                                    ethif_init,
+                                    tcpip_input));
 
-        while (!ethif_mem->init_done) {
-                sleep_ms(250);
-        }
+        return;
 
-        while (true) {
-                ethif_input(&ethif_mem->netif);
-                manage_interface();
+release_resources:
+        printk(TCPIP_THREAD_NAME": no enough free memory!\n");
 
-                if (netif_is_up(&ethif_mem->netif))
-                        sleep_ms(TCP_TMR_INTERVAL);
-                else
-                        sleep(1);
-        }
+        if (ethif_mem->protect_request_mtx)
+                delete_mutex(ethif_mem->protect_request_mtx);
+
+        if (ethif_mem)
+                free(ethif_mem);
+
+        task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief Function manage packets and read user requests
+ *
+ * Function shall be called from tcpip_thread() using LWIP_TCPIP_THREAD_ALIVE()
+ * macro. Macro shall be defined in sys_arch.h file.
+ */
+//==============================================================================
+void _ethif_manager(void)
+{
+        printk("ethif_manager()\n");
+
+        ethif_input(&ethif_mem->netif);
+        manage_interface();
 }
 
 //==============================================================================
@@ -600,9 +590,7 @@ static int send_request_and_wait_for_response(request *request)
 //==============================================================================
 void _ethif_start_lwIP_daemon()
 {
-        if (!ethif_mem) {
-                new_task(lwIP_daemon, "lwipd", LWIPD_STACK_SIZE, NULL);
-        }
+        tcpip_init(tcpip_init_done, NULL);
 }
 
 //==============================================================================

@@ -39,8 +39,11 @@ extern "C" {
 /*==============================================================================
   Exported macros
 =============================================================================*/
-#define SYS_MBOX_NULL           NULL
-#define SYS_SEM_NULL            NULL
+#define SYS_MBOX_NULL                   NULL
+#define SYS_SEM_NULL                    NULL
+
+extern void _ethif_manager(void);
+#define LWIP_TCPIP_THREAD_ALIVE()       _ethif_manager()
 
 /*==============================================================================
   Exported object types
