@@ -112,7 +112,11 @@ typedef enum netapi_flags {
 //==============================================================================
 static inline int netapi_start_DHCP_client(void)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_start_DHCP_client();
+#else
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -124,7 +128,11 @@ static inline int netapi_start_DHCP_client(void)
 //==============================================================================
 static inline int netapi_stop_DHCP_client(void)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_stop_DHCP_client();
+#else
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -136,7 +144,11 @@ static inline int netapi_stop_DHCP_client(void)
 //==============================================================================
 static inline int netapi_renew_DHCP_connection(void)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_renew_DHCP_connection();
+#else
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -148,7 +160,11 @@ static inline int netapi_renew_DHCP_connection(void)
 //==============================================================================
 static inline int netapi_inform_DHCP_server(void)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_inform_DHCP_server();
+#else
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -164,7 +180,14 @@ static inline int netapi_inform_DHCP_server(void)
 //==============================================================================
 static inline int netapi_ifup(const netapi_ip_t *ip, const netapi_ip_t *netmask, const netapi_ip_t *gateway)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_if_up(ip, netmask, gateway);
+#else
+        (void) ip;
+        (void) netmask;
+        (void) gateway;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -176,7 +199,11 @@ static inline int netapi_ifup(const netapi_ip_t *ip, const netapi_ip_t *netmask,
 //==============================================================================
 static inline int netapi_ifdown(void)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_if_down();
+#else
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -190,7 +217,12 @@ static inline int netapi_ifdown(void)
 //==============================================================================
 static inline int netapi_get_ifconfig(ifconfig *ifcfg)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return _ethif_get_ifconfig(ifcfg);
+#else
+        (void) ifcfg;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -206,7 +238,15 @@ static inline int netapi_get_ifconfig(ifconfig *ifcfg)
 //==============================================================================
 static inline void netapi_set_ip(netapi_ip_t *ip, const u8_t a, const u8_t b, const u8_t c, const u8_t d)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         IP4_ADDR(ip, a, b ,c ,d);
+#else
+        (void) ip;
+        (void) a;
+        (void) b;
+        (void) c;
+        (void) d;
+#endif
 }
 
 //==============================================================================
@@ -220,7 +260,12 @@ static inline void netapi_set_ip(netapi_ip_t *ip, const u8_t a, const u8_t b, co
 //==============================================================================
 static inline u8_t netapi_get_ip_part_a(netapi_ip_t *ip)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return ip4_addr1(ip);
+#else
+        (void) ip;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -234,7 +279,12 @@ static inline u8_t netapi_get_ip_part_a(netapi_ip_t *ip)
 //==============================================================================
 static inline u8_t netapi_get_ip_part_b(netapi_ip_t *ip)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return ip4_addr2(ip);
+#else
+        (void) ip;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -248,7 +298,12 @@ static inline u8_t netapi_get_ip_part_b(netapi_ip_t *ip)
 //==============================================================================
 static inline u8_t netapi_get_ip_part_c(netapi_ip_t *ip)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return ip4_addr3(ip);
+#else
+        (void) ip;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -262,7 +317,12 @@ static inline u8_t netapi_get_ip_part_c(netapi_ip_t *ip)
 //==============================================================================
 static inline u8_t netapi_get_ip_part_d(netapi_ip_t *ip)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return ip4_addr4(ip);
+#else
+        (void) ip;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -274,7 +334,11 @@ static inline u8_t netapi_get_ip_part_d(netapi_ip_t *ip)
 //==============================================================================
 static inline void netapi_set_ip_to_any(netapi_ip_t *ip)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         *ip = ip_addr_any;
+#else
+        (void) ip;
+#endif
 }
 
 //==============================================================================
@@ -286,7 +350,11 @@ static inline void netapi_set_ip_to_any(netapi_ip_t *ip)
 //==============================================================================
 static inline void netapi_set_ip_to_loopback(netapi_ip_t *ip)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         ip_addr_set_loopback(ip);
+#else
+        (void) ip;
+#endif
 }
 
 //==============================================================================
@@ -298,7 +366,11 @@ static inline void netapi_set_ip_to_loopback(netapi_ip_t *ip)
 //==============================================================================
 static inline void netapi_set_ip_to_broadcast(netapi_ip_t *ip)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         *ip = ip_addr_broadcast;
+#else
+        (void) ip;
+#endif
 }
 
 //==============================================================================
@@ -313,7 +385,12 @@ static inline void netapi_set_ip_to_broadcast(netapi_ip_t *ip)
 //==============================================================================
 static inline netapi_conn_t *netapi_new_conn(netapi_conn_type_t type)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_new(type);
+#else
+        (void) type;
+        return NULL;
+#endif
 }
 
 //==============================================================================
@@ -329,7 +406,12 @@ static inline netapi_conn_t *netapi_new_conn(netapi_conn_type_t type)
 //==============================================================================
 static inline netapi_err_t netapi_delete_conn(netapi_conn_t *conn)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_delete(conn);
+#else
+        (void) conn;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -343,7 +425,12 @@ static inline netapi_err_t netapi_delete_conn(netapi_conn_t *conn)
 //==============================================================================
 static inline netapi_conn_type_t netapi_get_conn_type(netapi_conn_t *conn)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_type(conn);
+#else
+        (void) conn;
+        return NETAPI_CONN_TYPE_INVALID;
+#endif
 }
 
 //==============================================================================
@@ -357,7 +444,12 @@ static inline netapi_conn_type_t netapi_get_conn_type(netapi_conn_t *conn)
 //==============================================================================
 static inline bool netapi_is_fatal_error(netapi_err_t error)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return ERR_IS_FATAL(error) ? true : false;
+#else
+        (void) error;
+        return true;
+#endif
 }
 
 //==============================================================================
@@ -376,7 +468,15 @@ static inline bool netapi_is_fatal_error(netapi_err_t error)
 //==============================================================================
 static inline netapi_err_t netapi_get_conn_address(netapi_conn_t *conn, netapi_ip_t *addr, u16_t *port, bool local)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_getaddr(conn, addr, port, local);
+#else
+        (void) conn;
+        (void) addr;
+        (void) port;
+        (void) local;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -394,7 +494,14 @@ static inline netapi_err_t netapi_get_conn_address(netapi_conn_t *conn, netapi_i
 //==============================================================================
 static inline netapi_err_t netapi_bind(netapi_conn_t *conn, netapi_ip_t *addr, u16_t port)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_bind(conn, addr, port);
+#else
+        (void) conn;
+        (void) addr;
+        (void) port;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -410,7 +517,14 @@ static inline netapi_err_t netapi_bind(netapi_conn_t *conn, netapi_ip_t *addr, u
 //==============================================================================
 static inline netapi_err_t netapi_connect(netapi_conn_t *conn, netapi_ip_t *addr, u16_t port)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_connect(conn, addr, port);
+#else
+        (void) conn;
+        (void) addr;
+        (void) port;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -424,7 +538,12 @@ static inline netapi_err_t netapi_connect(netapi_conn_t *conn, netapi_ip_t *addr
 //==============================================================================
 static inline netapi_err_t netapi_disconnect(netapi_conn_t *conn)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_disconnect(conn);
+#else
+        (void) conn;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -438,7 +557,12 @@ static inline netapi_err_t netapi_disconnect(netapi_conn_t *conn)
 //==============================================================================
 static inline netapi_err_t netapi_listen(netapi_conn_t *conn)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_listen(conn);
+#else
+        (void) conn;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -453,7 +577,13 @@ static inline netapi_err_t netapi_listen(netapi_conn_t *conn)
 //==============================================================================
 static inline netapi_err_t netapi_accept(netapi_conn_t *conn, netapi_conn_t ** new_conn)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_accept(conn, new_conn);
+#else
+        (void) conn;
+        (void) new_conn;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -468,7 +598,13 @@ static inline netapi_err_t netapi_accept(netapi_conn_t *conn, netapi_conn_t ** n
 //==============================================================================
 static inline netapi_err_t netapi_recv(netapi_conn_t *conn, netapi_buf_t **new_buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_recv(conn, new_buf);
+#else
+        (void) conn;
+        (void) new_buf;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -486,7 +622,15 @@ static inline netapi_err_t netapi_recv(netapi_conn_t *conn, netapi_buf_t **new_b
 //==============================================================================
 static inline netapi_err_t netapi_sendto(netapi_conn_t *conn, netapi_buf_t *buf, netapi_ip_t *addr, u16_t port)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_sendto(conn, buf, addr, port);
+#else
+        (void) conn;
+        (void) buf;
+        (void) addr;
+        (void) port;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -501,7 +645,13 @@ static inline netapi_err_t netapi_sendto(netapi_conn_t *conn, netapi_buf_t *buf,
 //==============================================================================
 static inline netapi_err_t netapi_send(netapi_conn_t *conn, netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_send(conn, buf);
+#else
+        (void) conn;
+        (void) buf;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -512,6 +662,7 @@ static inline netapi_err_t netapi_send(netapi_conn_t *conn, netapi_buf_t *buf)
  * @param data          pointer to the application buffer that contains the data to send
  * @param size          size of the application data to send
  * @param flags         combination of following flags :
+ * - NETAPI_CONN_FLAG_NOCOPY: data will not be copied into stack memory (ROM source)
  * - NETAPI_CONN_FALG_COPY: data will be copied into memory belonging to the stack
  * - NETAPI_CONN_FALG_MORE: for TCP connection, PSH flag will be set on last segment sent
  * - NETAPI_CONN_FALG_DONTBLOCK: only write the data if all dat can be written at once
@@ -524,7 +675,16 @@ static inline netapi_err_t netapi_write_partly(netapi_conn_t *conn, const void *
                                                size_t size, netapi_flags_t flags,
                                                size_t *bytes_written)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_write_partly(conn, data, size, flags, bytes_written);
+#else
+        (void) conn;
+        (void) data;
+        (void) size;
+        (void) flags;
+        (void) bytes_written;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -535,9 +695,10 @@ static inline netapi_err_t netapi_write_partly(netapi_conn_t *conn, const void *
  * @param data          pointer to the application buffer that contains the data to send
  * @param size          size of the application data to send
  * @param flags         combination of following flags :
- * - NETAPI_CONN_FALG_COPY: data will be copied into memory belonging to the stack
- * - NETAPI_CONN_FALG_MORE: for TCP connection, PSH flag will be set on last segment sent
- * - NETAPI_CONN_FALG_DONTBLOCK: only write the data if all dat can be written at once
+ * - NETAPI_CONN_FLAG_NOCOPY: data will not be copied into stack memory (ROM source)
+ * - NETAPI_CONN_FLAG_COPY: data will be copied into memory belonging to the stack
+ * - NETAPI_CONN_FLAG_MORE: for TCP connection, PSH flag will be set on last segment sent
+ * - NETAPI_CONN_FLAG_DONTBLOCK: only write the data if all data can be written at once
  *
  * @return NETAPI_ERR_OK if data was sent, any other on error
  */
@@ -545,7 +706,15 @@ static inline netapi_err_t netapi_write_partly(netapi_conn_t *conn, const void *
 static inline netapi_err_t netapi_write(netapi_conn_t *conn, const void *data,
                                         size_t size, netapi_flags_t flags)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_write(conn, data, size, flags);
+#else
+        (void) conn;
+        (void) data;
+        (void) size;
+        (void) flags;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -559,7 +728,12 @@ static inline netapi_err_t netapi_write(netapi_conn_t *conn, const void *data,
 //==============================================================================
 static inline netapi_err_t netapi_close(netapi_conn_t *conn)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_close(conn);
+#else
+        (void) conn;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -575,7 +749,14 @@ static inline netapi_err_t netapi_close(netapi_conn_t *conn)
 //==============================================================================
 static inline netapi_err_t netapi_shutdown(netapi_conn_t *conn, bool shut_rx, bool shut_tx)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_shutdown(conn, shut_rx, shut_tx);
+#else
+        (void) conn;
+        (void) shut_rx;
+        (void) shut_tx;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -589,7 +770,12 @@ static inline netapi_err_t netapi_shutdown(netapi_conn_t *conn, bool shut_rx, bo
 //==============================================================================
 static inline netapi_err_t netapi_get_last_conn_error(netapi_conn_t *conn)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netconn_err(conn);
+#else
+        (void) conn;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -602,7 +788,11 @@ static inline netapi_err_t netapi_get_last_conn_error(netapi_conn_t *conn)
 //==============================================================================
 static inline netapi_buf_t *netapi_new_buf(void)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_new();
+#else
+        return NULL;
+#endif
 }
 
 //==============================================================================
@@ -614,7 +804,11 @@ static inline netapi_buf_t *netapi_new_buf(void)
 //==============================================================================
 static inline void netapi_delete_buf(netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         netbuf_delete(buf);
+#else
+        (void) buf;
+#endif
 }
 
 //==============================================================================
@@ -629,7 +823,13 @@ static inline void netapi_delete_buf(netapi_buf_t *buf)
 //==============================================================================
 static inline void *netapi_alloc_buf(netapi_buf_t *buf, u16_t size)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_alloc(buf, size);
+#else
+        (void) buf;
+        (void) size;
+        return NULL;
+#endif
 }
 
 //==============================================================================
@@ -641,7 +841,11 @@ static inline void *netapi_alloc_buf(netapi_buf_t *buf, u16_t size)
 //==============================================================================
 static inline void netapi_free_buf(netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         netbuf_free(buf);
+#else
+        (void) buf;
+#endif
 }
 
 //==============================================================================
@@ -658,7 +862,14 @@ static inline void netapi_free_buf(netapi_buf_t *buf)
 //==============================================================================
 static inline netapi_err_t netapi_ref_buf(netapi_buf_t *buf, const void *data, u16_t size)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_ref(buf, data, size);
+#else
+        (void) buf;
+        (void) data;
+        (void) size;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -672,7 +883,12 @@ static inline netapi_err_t netapi_ref_buf(netapi_buf_t *buf, const void *data, u
 //==============================================================================
 static inline void netapi_buf_chain(netapi_buf_t *head, netapi_buf_t *tail)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         netbuf_chain(head, tail);
+#else
+        (void) head;
+        (void) tail;
+#endif
 }
 
 //==============================================================================
@@ -689,7 +905,14 @@ static inline void netapi_buf_chain(netapi_buf_t *head, netapi_buf_t *tail)
 //==============================================================================
 static inline netapi_err_t netapi_buf_data(netapi_buf_t *buf, void **data, u16_t *len)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_data(buf, data, len);
+#else
+        (void) buf;
+        (void) data;
+        (void) len;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -707,7 +930,12 @@ static inline netapi_err_t netapi_buf_data(netapi_buf_t *buf, void **data, u16_t
 //==============================================================================
 static inline int netapi_next_buf(netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_next(buf);
+#else
+        (void) buf;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -721,7 +949,11 @@ static inline int netapi_next_buf(netapi_buf_t *buf)
 //==============================================================================
 static inline void netapi_first_buf(netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         netbuf_first(buf);
+#else
+        (void) buf;
+#endif
 }
 
 //==============================================================================
@@ -739,7 +971,15 @@ static inline void netapi_first_buf(netapi_buf_t *buf)
 //==============================================================================
 static inline int netapi_copy_buf_partial(netapi_buf_t *buf, void *data, u16_t len, u16_t offset)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_copy_partial(buf, data, len, offset);
+#else
+        (void) buf;
+        (void) data;
+        (void) len;
+        (void) offset;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -756,7 +996,14 @@ static inline int netapi_copy_buf_partial(netapi_buf_t *buf, void *data, u16_t l
 //==============================================================================
 static inline int netapi_copy_buf(netapi_buf_t *buf, void *data, u16_t len)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_copy(buf, data, len);
+#else
+        (void) buf;
+        (void) data;
+        (void) len;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -774,7 +1021,14 @@ static inline int netapi_copy_buf(netapi_buf_t *buf, void *data, u16_t len)
 //==============================================================================
 static inline netapi_err_t netapi_take_buf(netapi_buf_t *buf, void *data, u16_t len)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_take(buf, data, len);
+#else
+        (void) buf;
+        (void) data;
+        (void) len;
+        return NETAPI_ERR_INTERFACE_ERROR;
+#endif
 }
 
 //==============================================================================
@@ -783,12 +1037,17 @@ static inline netapi_err_t netapi_take_buf(netapi_buf_t *buf, void *data, u16_t 
  *
  * @param buf           the netbuf for which length is getting
  *
- * return netbuf length
+ * @return netbuf length
  */
 //==============================================================================
 static inline u16_t netapi_get_buf_length(netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_len(buf);
+#else
+        (void) buf;
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -802,7 +1061,14 @@ static inline u16_t netapi_get_buf_length(netapi_buf_t *buf)
 //==============================================================================
 static inline netapi_ip_t netapi_get_buf_origin_address(netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return *netbuf_fromaddr(buf);
+#else
+        (void) buf;
+        netapi_ip_t ip;
+        ip.addr = 0;
+        return ip;
+#endif
 }
 
 //==============================================================================
@@ -816,7 +1082,12 @@ static inline netapi_ip_t netapi_get_buf_origin_address(netapi_buf_t *buf)
 //==============================================================================
 static inline u16_t netapi_get_buf_port(netapi_buf_t *buf)
 {
+#if (CONFIG_NETWORK_ENABLE > 0)
         return netbuf_fromport(buf);
+#else
+        (void) buf;
+        return 0;
+#endif
 }
 
 #ifdef __cplusplus

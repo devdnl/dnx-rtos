@@ -184,7 +184,7 @@ extern "C" {
 #define CONFIG_MONITOR_NETWORK_MEMORY_USAGE             (1)
 
 /**
- * Maximum amount of memory that can be used by network [bytes]. Set to 0 to disable.
+ * Maximum amount of memory that can be used by network [bytes]. Set to 0 to disable limit.
  */
 #define CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT       (0)
 

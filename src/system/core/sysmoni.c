@@ -628,10 +628,17 @@ void sysm_sysfree(void *mem)
 void *sysm_netmalloc(size_t size)
 {
 #if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
-        size_t allocated;
-        void *p = memman_malloc(size, &allocated);
-        sysm_network_memory_usage += allocated;
-        return p;
+
+        if (  CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT == 0
+           || sysm_network_memory_usage + size <= CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT ) {
+
+                size_t allocated;
+                void *p = memman_malloc(size, &allocated);
+                sysm_network_memory_usage += allocated;
+                return p;
+        } else {
+                return NULL;
+        }
 #else
         return memman_malloc(size, NULL);
 #endif
@@ -650,10 +657,17 @@ void *sysm_netmalloc(size_t size)
 void *sysm_netcalloc(size_t count, size_t size)
 {
 #if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
-        size_t allocated;
-        void *p = memman_calloc(count, size, &allocated);
-        sysm_network_memory_usage += allocated;
-        return p;
+
+        if (  CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT == 0
+           || sysm_network_memory_usage + size <= CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT ) {
+
+                size_t allocated;
+                void *p = memman_calloc(count, size, &allocated);
+                sysm_network_memory_usage += allocated;
+                return p;
+        } else {
+                return NULL;
+        }
 #else
         return memman_calloc(count, size, NULL);
 #endif
@@ -668,7 +682,7 @@ void *sysm_netcalloc(size_t count, size_t size)
 //==============================================================================
 void sysm_netfree(void *mem)
 {
-#if (CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0)
+#if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
         sysm_network_memory_usage -= memman_free(mem);
 #else
         memman_free(mem);
