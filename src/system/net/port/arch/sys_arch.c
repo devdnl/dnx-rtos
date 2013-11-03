@@ -39,6 +39,7 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define VALID_VALUE             0x56CAEEDE
 
 /*==============================================================================
   Local object types
@@ -163,7 +164,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
         if (sem) {
                 sem->sem = new_semaphore();
                 if (sem->sem) {
-                        sem->valid = true;
+                        sem->valid = VALID_VALUE;
 
                         if (count == 0) {
                                 take_semaphore(sem->sem, 0);
@@ -190,7 +191,7 @@ void sys_sem_free(sys_sem_t *sem)
         _stop_if(!sem);
 
         if (sem) {
-                if (sem->sem && sem->valid) {
+                if (sem->sem && sem->valid == VALID_VALUE) {
                         delete_semaphore(sem->sem);
                 }
         }
@@ -208,7 +209,7 @@ void sys_sem_signal(sys_sem_t *sem)
         _stop_if(!sem);
 
         if (sem) {
-                if (sem->sem && sem->valid) {
+                if (sem->sem && sem->valid == VALID_VALUE) {
                         give_semaphore(sem->sem);
                 }
         }
@@ -229,7 +230,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
         _stop_if(!sem);
 
         if (sem) {
-                if (sem->sem && sem->valid) {
+                if (sem->sem && sem->valid == VALID_VALUE) {
                         u32_t start_time = get_OS_time_ms();
                         bool  sem_status = false;
 
@@ -260,7 +261,7 @@ int sys_sem_valid(sys_sem_t *sem)
         _stop_if(!sem);
 
         if (sem) {
-                if (sem->sem && sem->valid) {
+                if (sem->sem && sem->valid == VALID_VALUE) {
                         return 1;
                 }
         }
@@ -300,7 +301,7 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
         if (mbox && size) {
                 mbox->queue = new_queue(size, sizeof(void*));
                 if (mbox->queue) {
-                        mbox->valid = true;
+                        mbox->valid = VALID_VALUE;
                         return ERR_OK;
                 }
 
@@ -322,7 +323,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
         _stop_if(!mbox);
 
         if (mbox) {
-                if (mbox->queue && mbox->valid) {
+                if (mbox->queue && mbox->valid == VALID_VALUE) {
                         _stop_if(get_number_of_items_in_queue(mbox->queue));
                         delete_queue(mbox->queue);
                 }
@@ -343,7 +344,7 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
         _stop_if(!mbox);
 
         if (mbox) {
-                if (mbox->queue && mbox->valid) {
+                if (mbox->queue && mbox->valid == VALID_VALUE) {
                         send_queue(mbox->queue, &msg, MAX_DELAY);
                 }
         }
@@ -364,7 +365,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
         _stop_if(!mbox);
 
         if (mbox) {
-                if (mbox->queue && mbox->valid) {
+                if (mbox->queue && mbox->valid == VALID_VALUE) {
                         if (send_queue(mbox->queue, &msg, 0)) {
                                 return ERR_OK;
                         }
@@ -394,7 +395,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
         _stop_if(!mbox || !msg);
 
         if (mbox) {
-                if (mbox->queue && mbox->valid) {
+                if (mbox->queue && mbox->valid == VALID_VALUE) {
                         u32_t start_time = get_OS_time_ms();
                         bool  received   = false;
 
@@ -430,7 +431,7 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
         _stop_if(!mbox || !msg);
 
         if (mbox) {
-                if (mbox->queue && mbox->valid) {
+                if (mbox->queue && mbox->valid == VALID_VALUE) {
                         if (receive_queue(mbox->queue, &(*msg), 0)) {
                                 return 0;
                         }
@@ -452,7 +453,7 @@ int sys_mbox_valid(sys_mbox_t *mbox)
         _stop_if(!mbox);
 
         if (mbox) {
-                if (mbox->queue && mbox->valid) {
+                if (mbox->queue && mbox->valid == VALID_VALUE) {
                         return 1;
                 }
         }
@@ -471,7 +472,7 @@ void sys_mbox_set_invalid(sys_mbox_t *mbox)
 
         if (mbox) {
                 mbox->queue = NULL;
-                mbox->valid = false;
+                mbox->valid = 0;
         }
 }
 
