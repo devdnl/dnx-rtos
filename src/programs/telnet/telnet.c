@@ -63,17 +63,11 @@ GLOBAL_VARIABLES_SECTION_END
   Function definitions
 ==============================================================================*/
 
-static void echo_request(netapi_conn_t *conn)
+static void shell_main(netapi_conn_t *conn)
 {
-        netapi_buf_t *rx_buffer;
         bool do_exit = false;
-        char *cmd = calloc(100, sizeof(char));
-        if (!cmd) {
-                return;
-        }
-        int cmd_len = 0;
-
         while (do_exit == false) {
+                netapi_buf_t *rx_buffer;
                 if (netapi_recv(conn, &rx_buffer) == NETAPI_ERR_OK) {
                         char *string;
                         u16_t len;
@@ -85,18 +79,12 @@ static void echo_request(netapi_conn_t *conn)
 
                                         const char *str = "::Test polaczenia::\n";
                                         netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_COPY);
-                                }
 
-//                                if (cmd_len + len <= 99) {
-//                                        strcat(cmd, string);
-//                                }
-//
-//                                if (string[len] == '\n' || string[len] == '\r') {
-//                                        puts("Byl enter i mozna komende przetworzyc!");
-//
-//                                        const char *str = "::Test polaczenia::\n";
-//                                        netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_COPY);
-//                                }
+                                        char *test = calloc(1, 50);
+                                        strcpy(test, "To jest testowy bufor...\n");
+                                        netapi_write(conn, test, strlen(test), NETAPI_CONN_FLAG_COPY);
+                                        free(test);
+                                }
                         }
 
                         netapi_delete_buf(rx_buffer);
@@ -105,8 +93,6 @@ static void echo_request(netapi_conn_t *conn)
                         do_exit = true;
                 }
         }
-
-        free(cmd);
 }
 
 //==============================================================================
@@ -138,7 +124,7 @@ PROGRAM_MAIN(telnet, int argc, char *argv[])
                                         netapi_conn_t *new_connection;
                                         if (netapi_accept(listener, &new_connection) == NETAPI_ERR_OK) {
                                                 printf("New connection: 0x%x\n", new_connection);
-                                                echo_request(new_connection);
+                                                shell_main(new_connection);
                                                 netapi_delete_conn(new_connection);
                                         } else {
                                                 puts("Acceptation error!");
