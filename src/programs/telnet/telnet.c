@@ -63,63 +63,50 @@ GLOBAL_VARIABLES_SECTION_END
   Function definitions
 ==============================================================================*/
 
-
-
-
-//static void EchoRequest( struct netconn *pxNetCon ) {
-//        struct  netbuf *pxRxBuffer;
-//        portCHAR *pcRxString;
-//        unsigned portSHORT usLength;
-//
-//        pxRxBuffer = netconn_recv( pxNetCon );< /FONT >
-//        if ( pxRxBuffer != NULL ){
-//                netbuf_data( pxRxBuffer, ( void  * ) &pcRxString, &usLength );
-//                if (  pcRxString != NULL){
-//                        netconn_write( pxNetCon, pcRxString, (u16_t) usLength, NETCONN_COPY );
-//                }
-//        netbuf_delete( pxRxBuffer );
-//        }
-//}
-//
-//portTASK_FUNCTION( vBasicTFTPServer, pvParameters ){
-//        struct netconn *pxTCPListener, *pxNewConnection;
-//        pxTCPListener = netconn_new( NETCONN_TCP );
-//
-//        netconn_bind(pxTCPListener, NULL, 23 );
-//        netconn_listen( pxTCPListener );
-//
-//        for( ;; ){
-//                pxNewConnection = netconn_accept(pxTCPListener);
-//                if(pxNewConnection != NULL){
-//                        EchoRequest(pxNewConnection);
-//                }
-//        }
-//}
-
-
 static void echo_request(netapi_conn_t *conn)
 {
         netapi_buf_t *rx_buffer;
-
-        if (netapi_recv(conn, &rx_buffer) == NETAPI_ERR_OK) {
-                puts("New rx buffer created");
-
-                char *data;
-                u16_t len;
-                if (netapi_buf_data(rx_buffer, (void *)&data, &len) == NETAPI_ERR_OK) {
-                        puts("Data read from netapi_buf_t object");
-
-                        puts(data);
-
-                        if (netapi_write(conn, data, len, NETAPI_CONN_FLAG_COPY) == NETAPI_ERR_OK) {
-                                puts("Data sent back");
-                        } else {
-                                puts("Unable to send data!");
-                        }
-                }
-        } else {
-                puts("Rx buffer creation error!");
+        bool do_exit = false;
+        char *cmd = calloc(100, sizeof(char));
+        if (!cmd) {
+                return;
         }
+        int cmd_len = 0;
+
+        while (do_exit == false) {
+                if (netapi_recv(conn, &rx_buffer) == NETAPI_ERR_OK) {
+                        char *string;
+                        u16_t len;
+                        if (netapi_buf_data(rx_buffer, (void *)&string, &len) == NETAPI_ERR_OK) {
+                                fwrite(string, 1, len, stdout);
+
+                                if (strncmp(string, "test\r\n", len) == 0) {
+                                        puts("Byl enter i mozna komende przetworzyc!");
+
+                                        const char *str = "::Test polaczenia::\n";
+                                        netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_COPY);
+                                }
+
+//                                if (cmd_len + len <= 99) {
+//                                        strcat(cmd, string);
+//                                }
+//
+//                                if (string[len] == '\n' || string[len] == '\r') {
+//                                        puts("Byl enter i mozna komende przetworzyc!");
+//
+//                                        const char *str = "::Test polaczenia::\n";
+//                                        netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_COPY);
+//                                }
+                        }
+
+                        netapi_delete_buf(rx_buffer);
+                } else {
+                        puts("Rx buffer creation error!");
+                        do_exit = true;
+                }
+        }
+
+        free(cmd);
 }
 
 //==============================================================================
@@ -150,7 +137,9 @@ PROGRAM_MAIN(telnet, int argc, char *argv[])
                                 for (;;) {
                                         netapi_conn_t *new_connection;
                                         if (netapi_accept(listener, &new_connection) == NETAPI_ERR_OK) {
+                                                printf("New connection: 0x%x\n", new_connection);
                                                 echo_request(new_connection);
+                                                netapi_delete_conn(new_connection);
                                         } else {
                                                 puts("Acceptation error!");
                                         }
