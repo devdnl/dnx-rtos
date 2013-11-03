@@ -140,6 +140,13 @@ extern "C" {
 #define CONFIG_FSCANF_STREAM_BUFFER_SIZE                (100)
 
 
+/**=== NETWORK CONFIGURATION =================================================*/
+/**
+ * Enable (1) or disable (0) network interface
+ */
+#define CONFIG_NETWORK_ENABLE                           (1)
+
+
 /**=== SYSTEM MONITOR CONFIGURATION ==========================================*/
 /**
  * Enable (1) or disable (0) task memory usage monitoring
@@ -171,6 +178,16 @@ extern "C" {
  */
 #define CONFIG_MONITOR_CPU_LOAD                         (1)
 
+/**
+ * Enable (1) or disable (0) network memory monitoring
+ */
+#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE             (1)
+
+/**
+ * Maximum amount of memory that can be used by network [bytes]. Set to 0 to disable.
+ */
+#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT       (0)
+
 
 /**=== SYSTEM ENVIRONMENT CONFIGURATION ======================================*/
 /**
@@ -179,16 +196,9 @@ extern "C" {
 #define CONFIG_HOSTNAME                                 "localhost"
 
 
-/**=== NETWORK CONFIGURATION =================================================*/
-/**
- * Enable (1) or disable (0) network interface
- */
-#define CONFIG_NETWORK_ENABLE                           (1)
-
-
 /**=== DEVELOPMENT OPTIONS ===================================================*/
 /**
- * Enable (1) or disable (0) system assert macro (stop system if condition met)
+ * Enable (1) or disable (0) system assert macro (stops system if condition met)
  */
 #define CONFIG_SYSTEM_STOP_MACRO                        (1)
 

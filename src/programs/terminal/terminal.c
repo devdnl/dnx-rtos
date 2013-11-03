@@ -430,7 +430,7 @@ static enum cmd_status cmd_touch(char *arg)
 
 //==============================================================================
 /**
- * @brief Function remove slected file
+ * @brief Function remove selected file
  *
  * @param *arg          argument
  */
@@ -482,12 +482,14 @@ static enum cmd_status cmd_free(char *arg)
         printf("Detailed memory usage:\n"
                "  Kernel  : %d\n"
                "  System  : %d\n"
-               "  Programs: %d\n"
-               "  Modules : %d\n\n",
+               "  Modules : %d\n"
+               "  Network : %d\n"
+               "  Programs: %d\n\n",
                sysmem.used_kernel_memory,
                sysmem.used_system_memory,
-               sysmem.used_programs_memory,
-               sysmem.used_modules_memory);
+               sysmem.used_modules_memory,
+               sysmem.used_network_memory,
+               sysmem.used_programs_memory);
 
         printf("Detailed modules memory usage:\n");
         for (uint module = 0; module < drv_count; module++) {

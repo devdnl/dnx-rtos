@@ -115,10 +115,11 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                        mem_used,
                        mem_free);
 
-                printf("Kernel  : %d\nSystem  : %d\nModules : %d\nPrograms: %d\n\n",
+                printf("Kernel  : %d\nSystem  : %d\nModules : %d\nNetwork : %d\nPrograms: %d\n\n",
                        mem.used_kernel_memory,
                        mem.used_system_memory,
                        mem.used_modules_memory,
+                       mem.used_network_memory,
                        mem.used_programs_memory);
 
                 printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");

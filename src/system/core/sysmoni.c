@@ -110,6 +110,10 @@ static i32_t *sysm_module_memory_usage;
 static i32_t sysm_programs_memory_usage;
 #endif
 
+#if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
+static i32_t sysm_network_memory_usage;
+#endif
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -463,6 +467,12 @@ stdret_t sysm_get_used_memory(struct sysmoni_used_memory *mem_info)
 #else
         mem_info->used_system_memory   = 0;
 #endif
+
+#if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
+        mem_info->used_network_memory  = sysm_network_memory_usage;
+#else
+        mem_info->used_network_memory  = 0;
+#endif
         return STD_RET_OK;
 }
 
@@ -601,6 +611,65 @@ void sysm_sysfree(void *mem)
 {
 #if (CONFIG_MONITOR_SYSTEM_MEMORY_USAGE > 0)
         sysm_system_memory_usage -= memman_free(mem);
+#else
+        memman_free(mem);
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of network
+ *
+ * @param  size         block size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+void *sysm_netmalloc(size_t size)
+{
+#if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
+        size_t allocated;
+        void *p = memman_malloc(size, &allocated);
+        sysm_network_memory_usage += allocated;
+        return p;
+#else
+        return memman_malloc(size, NULL);
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function monitor memory usage of network
+ *
+ * @param  count        count of items
+ * @param  size         item size
+ *
+ * @return pointer to allocated block or NULL if error
+ */
+//==============================================================================
+void *sysm_netcalloc(size_t count, size_t size)
+{
+#if ((CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0) && (CONFIG_NETWORK_ENABLE > 0))
+        size_t allocated;
+        void *p = memman_calloc(count, size, &allocated);
+        sysm_network_memory_usage += allocated;
+        return p;
+#else
+        return memman_calloc(count, size, NULL);
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Monitor memory freeing for network
+ *
+ * @param *mem          block to free
+ */
+//==============================================================================
+void sysm_netfree(void *mem)
+{
+#if (CONFIG_MONITOR_NETWORK_MEMORY_USAGE > 0)
+        sysm_network_memory_usage -= memman_free(mem);
 #else
         memman_free(mem);
 #endif
