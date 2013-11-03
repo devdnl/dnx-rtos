@@ -471,6 +471,12 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define LWIP_DBG_TYPES_ON                       LWIP_DBG_ON
 
 /*
+ * LOW_LEVEL_DEBUG: Enable debuggin in low level driver (ethif, etc)
+ */
+#define LOW_LEVEL_DEBUG                         LWIP_DBG_ON
+
+
+/*
  * ETHARP_DEBUG: Enable debugging in etharp.c.
  */
 #define ETHARP_DEBUG                            LWIP_DBG_OFF

@@ -117,11 +117,13 @@ static ethif_data *ethif_mem;
 static struct pbuf *low_level_input()
 {
         struct ethmac_frame frame = {.buffer = NULL, .length = 0};
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE, &frame) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_input: ioctl() fail\n"));
                 return NULL;
         }
 
         if (frame.length == 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_input: frame length = 0\n"));
                 return NULL;
         }
 
@@ -136,11 +138,18 @@ static struct pbuf *low_level_input()
         }
 
         bool flag = false;
-        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag);
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS, &flag) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_input: ioctl() fail\n"));
+        }
 
         if (flag) {
-              ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS);
-              ioctl(ethif_mem->eth_file, ETHMAC_IORQ_RESUME_DMA_RECEPTION);
+              if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS) != 0) {
+                      LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_input: ioctl() fail\n"));
+              }
+
+              if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_RESUME_DMA_RECEPTION) != 0) {
+                      LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_input: ioctl() fail\n"));
+              }
         }
 
         return p;
@@ -167,9 +176,14 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
       (void)netif;
 
       u8_t *buffer = NULL;
-      if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_CURRENT_TX_BUFFER, &buffer) != STD_RET_OK) {
-              printk("Access denied. Buffer: 0x%x\n", buffer);
-              while (true);
+      if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_CURRENT_TX_BUFFER, &buffer) != 0) {
+              LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_output: ioctl() fail\n"));
+              return ERR_MEM;
+      }
+
+      if (!buffer) {
+              LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_output: buffer NULL\n"));
+              return ERR_MEM;
       }
 
       int len = 0;
@@ -178,7 +192,10 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
             len += q->len;
       }
 
-      ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE, &len);
+      if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE, &len) != 0) {
+              LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_output: ioctl() fail\n"));
+              return ERR_MEM;
+      }
 
       return ERR_OK;
 }
@@ -201,7 +218,8 @@ static err_t low_level_init(struct netif *netif)
         netif->hwaddr[4]  = _ETHIF_MAC_ADDR_4;
         netif->hwaddr[5]  = _ETHIF_MAC_ADDR_5;
 
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_MAC_ADR, netif->hwaddr) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_MAC_ADR, netif->hwaddr) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
                 goto exit_error;
         }
 
@@ -210,6 +228,7 @@ static err_t low_level_init(struct netif *netif)
         ethif_mem->tx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_TX_BUFFERS * ETH_MAX_PACKET_SIZE);
 
         if (!ethif_mem->rx_buffer || !ethif_mem->tx_buffer) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: rx or tx buffer NULL\n"));
                 goto exit_error;
         }
 
@@ -218,7 +237,8 @@ static err_t low_level_init(struct netif *netif)
         DMA_description.buffer       = ethif_mem->tx_buffer;
         DMA_description.buffer_count = ETH_NUMBER_OF_TX_BUFFERS;
 
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE, &DMA_description) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
                 goto exit_error;
         }
 
@@ -226,23 +246,27 @@ static err_t low_level_init(struct netif *netif)
         DMA_description.buffer       = ethif_mem->rx_buffer;
         DMA_description.buffer_count = ETH_NUMBER_OF_RX_BUFFERS;
 
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE, &DMA_description) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE, &DMA_description) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
                 goto exit_error;
         }
 
         /* enable Ethernet Rx interrrupt */
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ENABLE_RX_IRQ) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ENABLE_RX_IRQ) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
                 goto exit_error;
         }
 
         if (ETHMAC_CHECKSUM_BY_HARDWARE != 0) {
-                if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ENABLE_TX_HARDWARE_CHECKSUM) != STD_RET_OK) {
+                if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ENABLE_TX_HARDWARE_CHECKSUM) != 0) {
+                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
                         goto exit_error;
                 }
         }
 
         /* start Ethernet interface */
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_START) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_START) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
                 goto exit_error;
         }
 
@@ -279,7 +303,8 @@ exit_error:
 static err_t ethif_init(struct netif *netif)
 {
         /* initialize Ethernet */
-        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_INIT) != STD_RET_OK) {
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_INIT) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("ethif_init: ioctl() fail\n"));
                 return ERR_IF;
         }
 
@@ -333,18 +358,21 @@ static err_t ethif_init(struct netif *netif)
 //==============================================================================
 static void ethif_input(struct netif *netif)
 {
-        /* TEST mozna powsadzac wszystko odwolania do pliku do low_level_input() */
-
-        if (!netif_is_up(netif))
-                return;
-
         bool rx_flag = false;
-        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_FLAG, &rx_flag);
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_FLAG, &rx_flag) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("ethif_input: ioctl() fail\n"));
+                return;
+        }
+
         if (!rx_flag)
                 return;
 
         u32_t rx_packet_size = 0;
-        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("ethif_input: ioctl() fail\n"));
+                return;
+        }
+
         while (rx_packet_size) {
                 /*
                  * read a received packet from the Ethernet buffers and send it to the
@@ -354,15 +382,21 @@ static void ethif_input(struct netif *netif)
                 /* move received packet into a new pbuf */
                 struct pbuf *p = low_level_input();
                 if (p) {
-                        if (ethif_mem->netif.input(p, &ethif_mem->netif) != ERR_OK) {
+                        if (ethif_mem->netif.input(p, netif) != ERR_OK) {
                                 pbuf_free(p);
                         }
                 }
 
-                ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size);
+                if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_GET_RX_PACKET_SIZE, &rx_packet_size) != 0) {
+                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("ethif_input: ioctl() fail\n"));
+                        return;
+                }
         }
 
-        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_FLAG);
+        if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_CLEAR_RX_FLAG) != 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("ethif_input: ioctl() fail\n"));
+                return;
+        }
 }
 
 //==============================================================================
@@ -489,16 +523,19 @@ static void tcpip_init_done(void *arg)
 
         ethif_mem = calloc(1, sizeof(ethif_data));
         if (!ethif_mem) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: out of memory\n"));
                 goto release_resources;
         }
 
         ethif_mem->protect_request_mtx = new_mutex();
         if (!ethif_mem->protect_request_mtx) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: new mutex fail\n"));
                 goto release_resources;
         }
 
         ethif_mem->response_queue = new_queue(1, sizeof(int));
         if (!ethif_mem->response_queue) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: new queue fail\n"));
                 goto release_resources;
         }
 
@@ -517,8 +554,6 @@ static void tcpip_init_done(void *arg)
         return;
 
 release_resources:
-        printk(TCPIP_THREAD_NAME": no enough free memory!\n");
-
         if (ethif_mem->protect_request_mtx)
                 delete_mutex(ethif_mem->protect_request_mtx);
 
@@ -577,8 +612,6 @@ static int send_request_and_wait_for_response(request *request)
 //==============================================================================
 void _ethif_manager(void)
 {
-        printk("ethif_manager()\n");
-
         ethif_input(&ethif_mem->netif);
         manage_interface();
 }
