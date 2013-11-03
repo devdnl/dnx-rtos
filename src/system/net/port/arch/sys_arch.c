@@ -328,7 +328,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
 //==============================================================================
 void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 {
-        _stop_if(!mbox || !msg);
+        _stop_if(!mbox);
 
         if (mbox) {
                 send_queue(*mbox, &msg, MAX_DELAY);
@@ -347,7 +347,7 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 //==============================================================================
 err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 {
-        _stop_if(!mbox || !msg);
+        _stop_if(!mbox);
 
         if (mbox) {
                 if (send_queue(*mbox, &msg, 0)) {
