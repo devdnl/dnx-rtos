@@ -206,36 +206,6 @@ static inline u32_t get_total_CPU_usage(void)
 
 //==============================================================================
 /**
- * @brief Function disable CPU load measurement
- */
-//==============================================================================
-static inline void disable_CPU_load_measurement(void)
-{
-        sysm_disable_CPU_load_measurement();
-}
-
-//==============================================================================
-/**
- * @brief Function enable CPU load measurement
- */
-//==============================================================================
-static inline void enable_CPU_load_measurement(void)
-{
-        sysm_enable_CPU_load_measurement();
-}
-
-//==============================================================================
-/**
- * @brief Function restart system
- */
-//==============================================================================
-static inline void restart(void)
-{
-        _cpuctl_restart_system();
-}
-
-//==============================================================================
-/**
  * @brief Function return name of CPU
  *
  * @return pointer to CPU name string
@@ -370,6 +340,36 @@ static inline uint get_number_of_modules(void)
 {
         extern const int _regdrv_number_of_modules;
         return _regdrv_number_of_modules;
+}
+
+//==============================================================================
+/**
+ * @brief Function disable CPU load measurement
+ */
+//==============================================================================
+static inline void disable_CPU_load_measurement(void)
+{
+        sysm_disable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable CPU load measurement
+ */
+//==============================================================================
+static inline void enable_CPU_load_measurement(void)
+{
+        sysm_enable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function restart system
+ */
+//==============================================================================
+static inline void restart(void)
+{
+        _cpuctl_restart_system();
 }
 
 #ifdef __cplusplus
