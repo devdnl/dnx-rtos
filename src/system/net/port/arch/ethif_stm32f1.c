@@ -480,7 +480,7 @@ static void manage_interface()
 
 //==============================================================================
 /**
- * @brief Function is called from tcpip thread
+ * @brief Function is called from tcpip thread when task was successfully started
  */
 //==============================================================================
 static void tcpip_init_done(void *arg)
@@ -530,22 +530,6 @@ release_resources:
 
 //==============================================================================
 /**
- * @brief Function manage packets and read user requests
- *
- * Function shall be called from tcpip_thread() using LWIP_TCPIP_THREAD_ALIVE()
- * macro. Macro shall be defined in sys_arch.h file.
- */
-//==============================================================================
-void _ethif_manager(void)
-{
-        printk("ethif_manager()\n");
-
-        ethif_input(&ethif_mem->netif);
-        manage_interface();
-}
-
-//==============================================================================
-/**
  * @brief Function send request to daemon
  */
 //==============================================================================
@@ -581,6 +565,22 @@ static int send_request_and_wait_for_response(request *request)
         }
 
         return response;
+}
+
+//==============================================================================
+/**
+ * @brief Function manage packets and read user requests
+ *
+ * Function shall be called from tcpip_thread() using LWIP_TCPIP_THREAD_ALIVE()
+ * macro. Macro shall be defined in sys_arch.h file.
+ */
+//==============================================================================
+void _ethif_manager(void)
+{
+        printk("ethif_manager()\n");
+
+        ethif_input(&ethif_mem->netif);
+        manage_interface();
 }
 
 //==============================================================================

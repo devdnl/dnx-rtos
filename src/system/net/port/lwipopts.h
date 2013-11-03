@@ -117,9 +117,9 @@
 /*
  * Memory allocation functions
  */
-#define mem_free                                sysm_sysfree//sysm_tskfree /* FIXME */
-#define mem_malloc                              sysm_sysmalloc//sysm_tskmalloc /* FIXME */
-#define mem_calloc                              sysm_syscalloc//sysm_tskcalloc /* FIXME */
+#define mem_free                                sysm_sysfree
+#define mem_malloc                              sysm_sysmalloc
+#define mem_calloc                              sysm_syscalloc
 
 /*
    ------------------------------------------------
@@ -343,7 +343,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 /*
  * TCPIP_THREAD_NAME: The name assigned to the main tcpip thread.
  */
-#define TCPIP_THREAD_NAME                      "tcpip_thread"
+#define TCPIP_THREAD_NAME                      "tcpipd"
 
 /*
  * TCPIP_THREAD_STACKSIZE: The stack size used by the main tcpip thread.
