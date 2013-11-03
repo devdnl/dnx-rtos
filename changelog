@@ -3,9 +3,11 @@ dnx/FreeRTOS 1.1.1
 New Features, Improvements:
 - added device lock, unlock functions
 - added network support using lwIP library
+- added netapi library which is supported by lwIP stack
 
 Fixed Bugs:
-- init_driver() function doesn't color messages
+- init_driver(): function doesn't color messages
+- tty driver: new lines was incorrect lengths (too long)
 
 dnx/FreeRTOS 1.1.0
 ==================
