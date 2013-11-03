@@ -86,6 +86,7 @@ typedef enum netapi_err {
 } netapi_err_t;
 
 typedef enum netapi_flags {
+        NETAPI_CONN_FLAG_NOCOPY                 = NETCONN_NOCOPY,
         NETAPI_CONN_FLAG_COPY                   = NETCONN_COPY,
         NETAPI_CONN_FLAG_MORE                   = NETCONN_MORE,
         NETAPI_CONN_FLAG_DONTBLOCK              = NETCONN_DONTBLOCK
