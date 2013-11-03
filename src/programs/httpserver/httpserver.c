@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    telnet.c
+@file    httpserver.c
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   The httpserver example
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -55,6 +55,10 @@ GLOBAL_VARIABLES_SECTION_BEGIN
 /* put here global variables */
 GLOBAL_VARIABLES_SECTION_END
 
+static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+static const char http_index_html[] = "<html><head><title>Congrats!</title></head><body><h1>Welcome to our lwIP HTTP server!</h1><p>This is a small test page, served by httpserver-netconn.</body></html>";
+
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -63,35 +67,33 @@ GLOBAL_VARIABLES_SECTION_END
   Function definitions
 ==============================================================================*/
 
-static void shell_main(netapi_conn_t *conn)
+//==============================================================================
+/**
+ * @brief HTTP server
+ */
+//==============================================================================
+static void serve(netapi_conn_t *conn)
 {
-        while (true) {
-                netapi_buf_t *rx_buffer;
-                if (netapi_recv(conn, &rx_buffer) == NETAPI_ERR_OK) {
-                        char *string;
-                        u16_t len;
-                        if (netapi_buf_data(rx_buffer, (void *)&string, &len) == NETAPI_ERR_OK) {
-                                fwrite(string, 1, len, stdout);
+        netapi_buf_t *inbuf;
 
-                                if (strncmp(string, "test\r\n", len) == 0) {
-                                        puts("Command detected!");
+        if (netapi_recv(conn, &inbuf) == NETAPI_ERR_OK) {
+                puts("Buffer received");
 
-                                        const char *str = "::Connection test::\n";
-                                        netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_COPY);
+                char *buf;
+                u16_t buf_len;
+                netapi_buf_data(inbuf, (void**)&buf, &buf_len);
 
-                                        char *test = calloc(1, 50);
-                                        strcpy(test, "Test buffer...\n");
-                                        netapi_write(conn, test, strlen(test), NETAPI_CONN_FLAG_COPY);
-                                        free(test);
-                                }
-                        }
-
-                        netapi_delete_buf(rx_buffer);
-                } else {
-                        puts("Rx buffer creation error!");
-                        return;
+                if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
+                        puts("Sending page");
+                        netapi_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NETAPI_CONN_FLAG_COPY);
+                        netapi_write(conn, http_index_html, sizeof(http_index_html) - 1, NETAPI_CONN_FLAG_COPY);
                 }
+
+                netapi_close(conn);
+                netapi_delete_buf(inbuf);
         }
+
+        puts("serve(): exit");
 }
 
 //==============================================================================
@@ -104,42 +106,35 @@ static void shell_main(netapi_conn_t *conn)
  * @return program status
  */
 //==============================================================================
-PROGRAM_MAIN(telnet, int argc, char *argv[])
+PROGRAM_MAIN(httpserver, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
 
-        netapi_conn_t *listener = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
-        if (listener) {
-                puts("New connection created");
+        netapi_conn_t *conn = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
+        if (conn) {
+                if (netapi_bind(conn, NULL, 80) == NETAPI_ERR_OK) {
+                        if (netapi_listen(conn) == NETAPI_ERR_OK) {
+                                puts("Listen connection");
 
-                if (netapi_bind(listener, (netapi_ip_t *)&ip_addr_any, 23) == NETAPI_ERR_OK) {
-                        puts("Binded successfully");
-
-                        if (netapi_listen(listener) == NETAPI_ERR_OK) {
-                                puts("Successfully goes to listen mode");
-
-                                for (;;) {
-                                        netapi_conn_t *new_connection;
-                                        if (netapi_accept(listener, &new_connection) == NETAPI_ERR_OK) {
-                                                printf("New connection: 0x%x\n", new_connection);
-                                                shell_main(new_connection);
-                                                netapi_delete_conn(new_connection);
-                                        } else {
-                                                puts("Acceptance error!");
+                                netapi_err_t err;
+                                do {
+                                        netapi_conn_t *new_conn;
+                                        err = netapi_accept(conn, &new_conn);
+                                        if (err == NETAPI_ERR_OK) {
+                                                puts("Accept connection");
+                                                serve(new_conn);
+                                                netapi_delete_conn(new_conn);
                                         }
-                                }
-                        } else {
-                                puts("Unable to start in listen mode!");
+
+                                } while (err == NETAPI_ERR_OK);
                         }
-                } else {
-                        puts("Address and port bind error!");
                 }
-        } else {
-                puts("Unable to create connection!");
+
+                netapi_delete_conn(conn);
         }
 
-        return -1;
+        return 0;
 }
 
 #ifdef __cplusplus

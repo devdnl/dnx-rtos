@@ -158,13 +158,6 @@
 #define MEMP_NUM_TCP_SEG                        12
 
 /*
- * MEMP_NUM_SYS_TIMEOUT: the number of simulateously active
- * timeouts.
- */
-#define MEMP_NUM_SYS_TIMEOUT                    5
-
-
-/*
    ----------------------------------
    ---------- Pbuf options ----------
    ----------------------------------
@@ -205,6 +198,11 @@
  * TCP Maximum segment size.
  */
 #define TCP_MSS                                 (1500 - 40)  /* TCP_MSS = (Ethernet MTU - IP header size - TCP header size) */
+
+/*
+ * TCP maximum segment lifetime in milliseconds
+ */
+#define TCP_MSL                                 5000
 
 /*
  * TCP sender buffer space (bytes).
