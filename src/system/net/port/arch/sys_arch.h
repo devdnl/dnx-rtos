@@ -48,11 +48,23 @@ extern void _ethif_manager(void);
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef mutex_t         *sys_mutex_t;
-typedef sem_t           *sys_sem_t;
-typedef queue_t         *sys_mbox_t;
 typedef task_t          *sys_thread_t;
 typedef int              sys_prot_t;
+
+typedef struct sys_mutex {
+        mutex_t *mutex;
+        bool     valid;
+} sys_mutex_t;
+
+typedef struct sys_sem {
+        sem_t *sem;
+        bool   valid;
+} sys_sem_t;
+
+typedef struct sys_mbox {
+        queue_t *queue;
+        bool     valid;
+} sys_mbox_t;
 
 /*==============================================================================
   Exported objects
