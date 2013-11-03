@@ -76,6 +76,7 @@ typedef struct ifconfig {
 extern void _ethif_start_lwIP_daemon();
 extern int  _ethif_start_DHCP_client();
 extern int  _ethif_stop_DHCP_client();
+extern int  _ethif_inform_DHCP_server();
 extern int  _ethif_renew_DHCP_connection();
 extern int  _ethif_if_up(const ip_addr_t*, const ip_addr_t*, const ip_addr_t*);
 extern int  _ethif_if_down();

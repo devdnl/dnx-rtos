@@ -140,6 +140,18 @@ static inline int netapi_renew_DHCP_connection(void)
 
 //==============================================================================
 /**
+ * @brief Function inform DHCP server about static IP configuration
+ *
+ * @return 0 if success, otherwise -1
+ */
+//==============================================================================
+static inline int netapi_inform_DHCP_server(void)
+{
+        return _ethif_inform_DHCP_server();
+}
+
+//==============================================================================
+/**
  * @brief Function configure network on static IP addresses
  *
  * @param ip            a IP address

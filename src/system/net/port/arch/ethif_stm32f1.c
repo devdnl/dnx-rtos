@@ -66,6 +66,7 @@ typedef struct request_msg {
                 RQ_START_DHCP,
                 RQ_STOP_DHCP,
                 RQ_RENEW_DHCP,
+                RQ_INFORM_DHCP,
                 RQ_UP_STATIC,
                 RQ_DOWN_STATIC
         } cmd;
@@ -325,29 +326,6 @@ static err_t ethif_init(struct netif *netif)
 
 //==============================================================================
 /**
- * @brief Function deinitalize ethif
- */
-//==============================================================================
-//static void ethif_deinit()
-//{
-//        netif_remove(&ethif_mem->netif);
-//
-//        if (ethif_mem->rx_buffer) {
-//                free(ethif_mem->rx_buffer);
-//                ethif_mem->rx_buffer = NULL;
-//        }
-//
-//        if (ethif_mem->tx_buffer) {
-//                free(ethif_mem->tx_buffer);
-//                ethif_mem->tx_buffer = NULL;
-//        }
-//
-//        fflush(ethif_mem->eth_file);
-//        ioctl(ethif_mem->eth_file, ETHMAC_IORQ_ETHERNET_DEINIT);
-//}
-
-//==============================================================================
-/**
  * @brief Function receive packet from MAC
  *
  * This function should be called when a packet is ready to be read
@@ -478,6 +456,12 @@ static void manage_interface()
                                         send_response_success();
                                 }
                         }
+                        break;
+
+                case RQ_INFORM_DHCP:
+                        dhcp_inform(&ethif_mem->netif);
+                        request_finished();
+                        send_response_success();
                         break;
 
                 case RQ_STOP_DHCP:
@@ -689,6 +673,29 @@ int _ethif_renew_DHCP_connection()
 
                 request rq;
                 rq.cmd = RQ_RENEW_DHCP;
+
+                return send_request_and_wait_for_response(&rq);
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
+ * @brief Function inform DHCP about current static configuration
+ *
+ * Function controls lwIP daemon via queue, because this function is called
+ * from other task.
+ *
+ * @return 0 if success, otherwise -1
+ */
+//==============================================================================
+int _ethif_inform_DHCP_server()
+{
+        if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
+
+                request rq;
+                rq.cmd = RQ_INFORM_DHCP;
 
                 return send_request_and_wait_for_response(&rq);
         }
