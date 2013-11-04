@@ -63,35 +63,48 @@ GLOBAL_VARIABLES_SECTION_END
   Function definitions
 ==============================================================================*/
 
-static void shell_main(netapi_conn_t *conn)
+//==============================================================================
+/**
+ * @brief Telnet thread
+ */
+//==============================================================================
+static void telnet_thread(void *arg)
 {
-        while (true) {
+        netapi_conn_t *conn = arg;
+        bool           run  = true;
+
+        while (run) {
                 netapi_buf_t *rx_buffer;
                 if (netapi_recv(conn, &rx_buffer) == NETAPI_ERR_OK) {
                         char *string;
                         u16_t len;
                         if (netapi_buf_data(rx_buffer, (void *)&string, &len) == NETAPI_ERR_OK) {
-                                fwrite(string, 1, len, stdout);
 
                                 if (strncmp(string, "test\r\n", len) == 0) {
-                                        puts("Command detected!");
-
                                         const char *str = "::Connection test::\n";
-                                        netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_COPY);
+                                        netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_NOCOPY);
 
                                         char *test = calloc(1, 50);
                                         strcpy(test, "Test buffer...\n");
                                         netapi_write(conn, test, strlen(test), NETAPI_CONN_FLAG_COPY);
                                         free(test);
+
+                                } else if (strncmp(string, "exit\r\n", len) == 0) {
+                                        const char *str = "Exiting...\n";
+                                        netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_NOCOPY);
+                                        run = false;
                                 }
                         }
 
                         netapi_delete_buf(rx_buffer);
                 } else {
-                        puts("Rx buffer creation error!");
-                        return;
+                        run = false;
                 }
         }
+
+        netapi_delete_conn(conn);
+
+        task_exit();
 }
 
 //==============================================================================
@@ -120,11 +133,13 @@ PROGRAM_MAIN(telnet, int argc, char *argv[])
                                 puts("Successfully goes to listen mode");
 
                                 for (;;) {
-                                        netapi_conn_t *new_connection;
-                                        if (netapi_accept(listener, &new_connection) == NETAPI_ERR_OK) {
-                                                printf("New connection: 0x%x\n", new_connection);
-                                                shell_main(new_connection);
-                                                netapi_delete_conn(new_connection);
+                                        netapi_conn_t *new_conn;
+                                        if (netapi_accept(listener, &new_conn) == NETAPI_ERR_OK) {
+                                                puts("Starting new thread");
+
+                                                if (!new_task(telnet_thread, "telnet*", STACK_DEPTH_LOW, new_conn)) {
+                                                        netapi_delete_conn(new_conn);
+                                                }
                                         } else {
                                                 puts("Acceptance error!");
                                         }
@@ -135,6 +150,8 @@ PROGRAM_MAIN(telnet, int argc, char *argv[])
                 } else {
                         puts("Address and port bind error!");
                 }
+
+                netapi_delete_conn(listener);
         } else {
                 puts("Unable to create connection!");
         }
