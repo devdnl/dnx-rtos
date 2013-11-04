@@ -460,12 +460,12 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
  * LWIP_DBG_TYPES_ON: A mask that can be used to globally enable/disable
  * debug messages of certain types.
  */
-#define LWIP_DBG_TYPES_ON                       LWIP_DBG_ON
+#define LWIP_DBG_TYPES_ON                       LWIP_DBG_OFF
 
 /*
  * LOW_LEVEL_DEBUG: Enable debugging in low level driver (ethif, etc)
  */
-#define LOW_LEVEL_DEBUG                         LWIP_DBG_ON
+#define LOW_LEVEL_DEBUG                         LWIP_DBG_OFF
 
 
 /*
@@ -551,7 +551,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 /*
  * TCP_DEBUG: Enable debugging for TCP.
  */
-#define TCP_DEBUG                               LWIP_DBG_ON
+#define TCP_DEBUG                               LWIP_DBG_OFF
 
 /*
  * TCP_INPUT_DEBUG: Enable debugging in tcp_in.c for incoming debug.
@@ -602,7 +602,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 /*
  * TCPIP_DEBUG: Enable debugging in tcpip.c.
  */
-#define TCPIP_DEBUG                             LWIP_DBG_ON
+#define TCPIP_DEBUG                             LWIP_DBG_OFF
 
 /*
  * PPP_DEBUG: Enable debugging for PPP.

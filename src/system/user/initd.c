@@ -226,8 +226,8 @@ static int run_level_1(void)
                        "  Net Mask  : %d.%d.%d.%d\n"
                        "  Gateway   : %d.%d.%d.%d\n",
                        get_host_name(),
-                       ifcfg.hw_address[5], ifcfg.hw_address[4], ifcfg.hw_address[3],
-                       ifcfg.hw_address[2], ifcfg.hw_address[1], ifcfg.hw_address[0],
+                       ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
+                       ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
                        netapi_get_ip_part_a(&ifcfg.IP_address),  netapi_get_ip_part_b(&ifcfg.IP_address),
                        netapi_get_ip_part_c(&ifcfg.IP_address),  netapi_get_ip_part_d(&ifcfg.IP_address),
                        netapi_get_ip_part_a(&ifcfg.net_mask), netapi_get_ip_part_b(&ifcfg.net_mask),
