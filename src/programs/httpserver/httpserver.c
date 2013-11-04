@@ -77,7 +77,6 @@ static void serve(netapi_conn_t *conn)
         netapi_buf_t *inbuf;
 
         if (netapi_recv(conn, &inbuf) == NETAPI_ERR_OK) {
-                puts("Buffer received");
 
                 char *buf;
                 u16_t buf_len;
@@ -85,10 +84,8 @@ static void serve(netapi_conn_t *conn)
 
                 if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
 
-                        char *path = malloc(PATH_LEN);
+                        char *path = calloc(1, PATH_LEN);
                         if (path) {
-
-                                memset(path, 0, PATH_LEN);
                                 getcwd(path, PATH_LEN);
                                 uint cwd_len = strlen(path);
 
@@ -98,7 +95,7 @@ static void serve(netapi_conn_t *conn)
                                 if (path_end) {
                                         strcat(path, buf + 4);
 
-                                        puts(path);
+                                        printf("Requested: %s\n", path);
 
                                         if (strlen(path) - 1 == cwd_len) {
                                                 strcat(path, "index.html");
@@ -137,11 +134,11 @@ static void serve(netapi_conn_t *conn)
                         }
                 }
 
+                puts("Connection closed");
+
                 netapi_close(conn);
                 netapi_delete_buf(inbuf);
         }
-
-        puts("serve(): exit");
 }
 
 //==============================================================================
