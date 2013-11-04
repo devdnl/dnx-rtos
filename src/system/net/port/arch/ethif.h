@@ -41,12 +41,12 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 #define _ETHIF_FILE                     "/dev/eth0"
-#define _ETHIF_MAC_ADDR_0               0xAA
-#define _ETHIF_MAC_ADDR_1               0xAA
-#define _ETHIF_MAC_ADDR_2               0xAA
-#define _ETHIF_MAC_ADDR_3               0xAA
-#define _ETHIF_MAC_ADDR_4               0xAA
-#define _ETHIF_MAC_ADDR_5               0xAA
+#define _ETHIF_MAC_ADDR_0               0x50
+#define _ETHIF_MAC_ADDR_1               0xE5
+#define _ETHIF_MAC_ADDR_2               0x49
+#define _ETHIF_MAC_ADDR_3               0x37
+#define _ETHIF_MAC_ADDR_4               0xB5
+#define _ETHIF_MAC_ADDR_5               0xBD
 
 /*==============================================================================
   Exported object types
@@ -59,11 +59,15 @@ typedef enum ifstatus {
 } ifstatus_t;
 
 typedef struct ifconfig {
+        ifstatus_t      status;
         ip_addr_t       IP_address;
         ip_addr_t       net_mask;
         ip_addr_t       gateway;
         u8_t            hw_address[6];
-        ifstatus_t      status;
+        uint            rx_packets;
+        uint            rx_bytes;
+        uint            tx_packets;
+        uint            tx_bytes;
 } ifconfig;
 
 /*==============================================================================

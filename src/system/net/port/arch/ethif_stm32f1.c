@@ -85,6 +85,10 @@ typedef struct {
         queue_t        *response_queue;
         struct netif    netif;
         int             manager_step;
+        uint            rx_packets;
+        uint            tx_packets;
+        uint            rx_bytes;
+        uint            tx_bytes;
 } ethif_data;
 
 /*==============================================================================
@@ -128,13 +132,16 @@ static struct pbuf *low_level_input()
                 return NULL;
         }
 
+        ethif_mem->rx_packets++;
+
         /* We allocate a pbuf chain of pbufs from the pool */
         struct pbuf *p = pbuf_alloc(PBUF_RAW, frame.length, PBUF_POOL);
         if (p != NULL) {
                 uint len = 0;
                 for (struct pbuf *q = p; q != NULL; q = q->next) {
                         memcpy((u8_t *)q->payload, &frame.buffer[len], q->len);
-                        len += q->len;
+                        len                 += q->len;
+                        ethif_mem->rx_bytes += q->len;
                 }
         }
 
@@ -187,10 +194,13 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
               return ERR_MEM;
       }
 
+      ethif_mem->tx_packets++;
+
       int len = 0;
       for (struct pbuf *q = p; q != NULL; q = q->next) {
             memcpy((u8_t*)&buffer[len], q->payload, q->len);
-            len += q->len;
+            len                 += q->len;
+            ethif_mem->tx_bytes += q->len;
       }
 
       if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE, &len) != 0) {
@@ -412,6 +422,19 @@ static inline void request_finished()
 
 //==============================================================================
 /**
+ * @brief Clear received and transmitted byte counters
+ */
+//==============================================================================
+static void clear_rx_tx_counters()
+{
+        ethif_mem->rx_bytes   = 0;
+        ethif_mem->tx_bytes   = 0;
+        ethif_mem->rx_packets = 0;
+        ethif_mem->tx_packets = 0;
+}
+
+//==============================================================================
+/**
  * @brief Function manage interface requests
  */
 //==============================================================================
@@ -421,6 +444,7 @@ static void manage_interface()
                 switch (ethif_mem->request->cmd) {
                 case RQ_START_DHCP:
                         if (ethif_mem->manager_step == 0) {
+                                clear_rx_tx_counters();
                                 netif_set_down(&ethif_mem->netif);
                                 netif_set_addr(&ethif_mem->netif,
                                                (ip_addr_t *)&ip_addr_any,
@@ -473,6 +497,7 @@ static void manage_interface()
                         break;
 
                 case RQ_UP_STATIC:
+                        clear_rx_tx_counters();
                         netif_set_down(&ethif_mem->netif);
                         netif_set_addr(&ethif_mem->netif,
                                        &ethif_mem->request->ip_address,
@@ -795,6 +820,10 @@ int _ethif_get_ifconfig(ifconfig *ifcfg)
         ifcfg->hw_address[3] = _ETHIF_MAC_ADDR_3;
         ifcfg->hw_address[4] = _ETHIF_MAC_ADDR_4;
         ifcfg->hw_address[5] = _ETHIF_MAC_ADDR_5;
+        ifcfg->rx_packets    = ethif_mem->rx_packets;
+        ifcfg->rx_bytes      = ethif_mem->rx_bytes;
+        ifcfg->tx_packets    = ethif_mem->tx_packets;
+        ifcfg->tx_bytes      = ethif_mem->tx_bytes;
 
         return 0;
 }
