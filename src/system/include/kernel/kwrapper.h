@@ -36,6 +36,7 @@ extern "C" {
 ==============================================================================*/
 #include "kernel/ktypes.h"
 #include "core/systypes.h"
+#include "core/vfs.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -58,7 +59,7 @@ extern "C" {
 #undef free
 #undef malloc
 
-/** STANDART STACK SIZES */
+/** STANDARD STACK SIZES */
 #define STACK_DEPTH_MINIMAL             ((1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_VERY_LOW            ((2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_LOW                 ((4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
@@ -106,9 +107,9 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        struct vfs_file *f_stdin;        /* stdin file                         */
-        struct vfs_file *f_stdout;       /* stdout file                        */
-        struct vfs_file *f_stderr;       /* stderr file                        */
+        FILE            *f_stdin;        /* stdin file                         */
+        FILE            *f_stdout;       /* stdout file                        */
+        FILE            *f_stderr;       /* stderr file                        */
         const char      *f_cwd;          /* current working path               */
         void            *f_global_vars;  /* address to global variables        */
         void            *f_user;         /* pointer to user data               */
@@ -492,7 +493,7 @@ static inline void set_global_variables(void *mem)
  * @param[in] *file
  */
 //==============================================================================
-static inline void set_stdin(struct vfs_file *file)
+static inline void set_stdin(FILE *file)
 {
         _get_task_data(THIS_TASK)->f_stdin = file;
 }
@@ -504,7 +505,7 @@ static inline void set_stdin(struct vfs_file *file)
  * @param[in] *file
  */
 //==============================================================================
-static inline void set_stdout(struct vfs_file *file)
+static inline void set_stdout(FILE *file)
 {
         _get_task_data(THIS_TASK)->f_stdout = file;
 }
@@ -516,7 +517,7 @@ static inline void set_stdout(struct vfs_file *file)
  * @param[in] *file
  */
 //==============================================================================
-static inline void set_stderr(struct vfs_file *file)
+static inline void set_stderr(FILE *file)
 {
         _get_task_data(THIS_TASK)->f_stderr = file;
 }
