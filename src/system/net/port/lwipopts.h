@@ -54,9 +54,9 @@
 #define NO_SYS                                  0
 
 /*
- * LWIP_NOASSERT=1: Disable asserts
+ * LWIP_NOASSERT: comment to enable asserts
  */
-#define LWIP_NOASSERT                           1
+#define LWIP_NOASSERT                           0
 
 /*
  * NO_SYS_NO_TIMERS==1: Drop support for sys_timeout when NO_SYS==1
@@ -93,12 +93,6 @@
  * byte alignment -> define MEM_ALIGNMENT to 2.
  */
 #define MEM_ALIGNMENT                           CONFIG_HEAP_ALIGN
-
-/*
- * MEM_SIZE: the size of the heap memory. If the application will send
- * a lot of data that needs to be copied, this should be set high.
- */
-#define MEM_SIZE                                (4*1024)
 
 /*
  * MEM_LIBC_MALLOC==1: Use malloc/free/realloc provided by your C-library
@@ -469,7 +463,7 @@ The STM32F107 allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define LWIP_DBG_TYPES_ON                       LWIP_DBG_ON
 
 /*
- * LOW_LEVEL_DEBUG: Enable debuggin in low level driver (ethif, etc)
+ * LOW_LEVEL_DEBUG: Enable debugging in low level driver (ethif, etc)
  */
 #define LOW_LEVEL_DEBUG                         LWIP_DBG_ON
 
