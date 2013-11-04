@@ -10,6 +10,7 @@ CSRC_PROGRAMS += top/top.c
 CSRC_PROGRAMS += terminal/terminal.c
 CSRC_PROGRAMS += telnet/telnet.c
 CSRC_PROGRAMS += httpserver/httpserver.c
+CSRC_PROGRAMS += ifconfig/ifconfig.c
 
 CXXSRC_PROGRAMS += 
 
