@@ -39,6 +39,8 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define CACHE_LEN               2048
+#define PATH_LEN                100
 
 /*==============================================================================
   Local types, enums definitions
@@ -52,11 +54,9 @@ extern "C" {
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
-/* put here global variables */
 GLOBAL_VARIABLES_SECTION_END
 
 static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
-static const char http_index_html[] = "<html><head><title>Congrats!</title></head><body><h1>Welcome to our lwIP HTTP server!</h1><p>This is a small test page, served by httpserver-netconn.</body></html>";
 
 
 /*==============================================================================
@@ -84,9 +84,57 @@ static void serve(netapi_conn_t *conn)
                 netapi_buf_data(inbuf, (void**)&buf, &buf_len);
 
                 if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
-                        puts("Sending page");
-                        netapi_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NETAPI_CONN_FLAG_COPY);
-                        netapi_write(conn, http_index_html, sizeof(http_index_html) - 1, NETAPI_CONN_FLAG_COPY);
+
+                        char *path = malloc(PATH_LEN);
+                        if (path) {
+
+                                memset(path, 0, PATH_LEN);
+                                getcwd(path, PATH_LEN);
+                                uint cwd_len = strlen(path);
+
+                                char *path_end = strchr(buf + 4, ' ');
+                                *path_end = '\0';
+
+                                if (path_end) {
+                                        strcat(path, buf + 4);
+
+                                        puts(path);
+
+                                        if (strlen(path) - 1 == cwd_len) {
+                                                strcat(path, "index.html");
+                                        }
+
+                                        FILE *file = fopen(path, "r");
+                                        if (file) {
+                                                fseek(file, 0, SEEK_END);
+                                                size_t file_size = ftell(file);
+                                                rewind(file);
+
+                                                netapi_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NETAPI_CONN_FLAG_NOCOPY);
+
+                                                char *cache = malloc(CACHE_LEN);
+                                                if (cache) {
+                                                        while (file_size) {
+                                                                int n = fread(cache, 1, CACHE_LEN, file);
+                                                                if (n == 0)
+                                                                        break;
+
+                                                                file_size -= n;
+
+                                                                netapi_write(conn, cache, n, NETAPI_CONN_FLAG_COPY);
+                                                        }
+
+                                                        free(cache);
+                                                }
+
+                                                fclose(file);
+                                        } else {
+                                                puts("File doesn't exist!");
+                                        }
+                                }
+
+                                free(path);
+                        }
                 }
 
                 netapi_close(conn);
