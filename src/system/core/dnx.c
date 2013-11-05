@@ -34,6 +34,10 @@ extern "C" {
 #include "system/dnx.h"
 #include "user/initd.h"
 
+#if (CONFIG_NETWORK_ENABLE != 0)
+#       include "arch/ethif.h"
+#endif
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -63,13 +67,22 @@ extern "C" {
  * @brief Initialize dnx system
  */
 //==============================================================================
-void _dnx_init(void)
+void dnx_init(void)
 {
-        _cpuctl_init();
-        memman_init();
-        _stop_if(vfs_init() != STD_RET_OK);
-        _stop_if(sysm_init() != STD_RET_OK);
-        new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+        static bool initialized = false;
+
+        if (!initialized) {
+                _cpuctl_init();
+                memman_init();
+                _stop_if(vfs_init() != STD_RET_OK);
+                _stop_if(sysm_init() != STD_RET_OK);
+                new_task(task_initd, INITD_NAME, INITD_STACK_DEPTH, INITD_ARGS);
+
+#if (CONFIG_NETWORK_ENABLE != 0)
+                _ethif_start_lwIP_daemon();
+#endif
+                initialized = true;
+        }
 }
 
 #ifdef __cplusplus

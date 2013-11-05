@@ -65,6 +65,7 @@ struct sysmoni_taskstat {
 struct sysmoni_used_memory {
         int used_kernel_memory;
         int used_system_memory;
+        int used_network_memory;
         int used_modules_memory;
         int used_programs_memory;
 };
@@ -90,6 +91,9 @@ extern void     sysm_kfree                              (void*);
 extern void    *sysm_sysmalloc                          (size_t);
 extern void    *sysm_syscalloc                          (size_t, size_t);
 extern void     sysm_sysfree                            (void*);
+extern void    *sysm_netmalloc                          (size_t);
+extern void    *sysm_netcalloc                          (size_t, size_t);
+extern void     sysm_netfree                            (void*);
 extern void    *sysm_modmalloc                          (size_t, int);
 extern void    *sysm_modcalloc                          (size_t, size_t, int);
 extern void     sysm_modfree                            (void*, int);

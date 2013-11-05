@@ -42,6 +42,9 @@ _IMPORT_PROGRAM(top);
 _IMPORT_PROGRAM(terminal);
 _IMPORT_PROGRAM(cat);
 _IMPORT_PROGRAM(cp);
+_IMPORT_PROGRAM(telnet);
+_IMPORT_PROGRAM(httpserver);
+_IMPORT_PROGRAM(ifconfig);
 
 /*==============================================================================
   Exported objects
@@ -52,6 +55,9 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(terminal  , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(cat       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(telnet    , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(httpserver, STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(ifconfig  , STACK_DEPTH_VERY_LOW),
 };
 
 const int _prog_table_size = ARRAY_SIZE(_prog_table);

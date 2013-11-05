@@ -36,6 +36,7 @@ extern "C" {
 ==============================================================================*/
 #include "kernel/ktypes.h"
 #include "core/systypes.h"
+#include "core/vfs.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -58,7 +59,7 @@ extern "C" {
 #undef free
 #undef malloc
 
-/** STANDART STACK SIZES */
+/** STANDARD STACK SIZES */
 #define STACK_DEPTH_MINIMAL             ((1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_VERY_LOW            ((2  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
 #define STACK_DEPTH_LOW                 ((4  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
@@ -106,9 +107,9 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 struct task_data {
-        struct vfs_file *f_stdin;        /* stdin file                         */
-        struct vfs_file *f_stdout;       /* stdout file                        */
-        struct vfs_file *f_stderr;       /* stderr file                        */
+        FILE            *f_stdin;        /* stdin file                         */
+        FILE            *f_stdout;       /* stdout file                        */
+        FILE            *f_stderr;       /* stderr file                        */
         const char      *f_cwd;          /* current working path               */
         void            *f_global_vars;  /* address to global variables        */
         void            *f_user;         /* pointer to user data               */
@@ -142,7 +143,7 @@ static inline void start_task_scheduler(void)
  * @param[in] milliseconds
  */
 //==============================================================================
-static inline void sleep_ms(uint milliseconds)
+static inline void sleep_ms(const uint milliseconds)
 {
         vTaskDelay(MS2TICK(milliseconds));
 }
@@ -154,7 +155,7 @@ static inline void sleep_ms(uint milliseconds)
  * @param[in] seconds
  */
 //==============================================================================
-static inline void sleep(uint seconds)
+static inline void sleep(const uint seconds)
 {
         vTaskDelay(MS2TICK(seconds * 1000UL));
 }
@@ -342,7 +343,7 @@ static inline int get_task_priority(task_t *taskhdl)
  * @param[in]  priority         priority
  */
 //==============================================================================
-static inline void set_task_priority(task_t *taskhdl, int priority)
+static inline void set_task_priority(task_t *taskhdl, const int priority)
 {
         vTaskPrioritySet(taskhdl, PRIORITY(priority));
 }
@@ -354,7 +355,7 @@ static inline void set_task_priority(task_t *taskhdl, int priority)
  * @param[in]  priority         priority
  */
 //==============================================================================
-static inline void set_priority(int priority)
+static inline void set_priority(const int priority)
 {
         vTaskPrioritySet(THIS_TASK, PRIORITY(priority));
 }
@@ -492,7 +493,7 @@ static inline void set_global_variables(void *mem)
  * @param[in] *file
  */
 //==============================================================================
-static inline void set_stdin(struct vfs_file *file)
+static inline void set_stdin(FILE *file)
 {
         _get_task_data(THIS_TASK)->f_stdin = file;
 }
@@ -504,7 +505,7 @@ static inline void set_stdin(struct vfs_file *file)
  * @param[in] *file
  */
 //==============================================================================
-static inline void set_stdout(struct vfs_file *file)
+static inline void set_stdout(FILE *file)
 {
         _get_task_data(THIS_TASK)->f_stdout = file;
 }
@@ -516,7 +517,7 @@ static inline void set_stdout(struct vfs_file *file)
  * @param[in] *file
  */
 //==============================================================================
-static inline void set_stderr(struct vfs_file *file)
+static inline void set_stderr(FILE *file)
 {
         _get_task_data(THIS_TASK)->f_stderr = file;
 }
@@ -595,7 +596,7 @@ static inline void delete_semaphore(sem_t *sem)
  * @retval false        semaphore not taken (SEMAPHORE_NOT_TAKEN)
  */
 //==============================================================================
-static inline bool take_semaphore(sem_t *sem, uint blocktime_ms)
+static inline bool take_semaphore(sem_t *sem, const uint blocktime_ms)
 {
         return xSemaphoreTake(sem, MS2TICK((portTickType)blocktime_ms));
 }
@@ -657,7 +658,7 @@ static inline bool give_semaphore_from_ISR(sem_t *sem, int *task_woken)
  * @param pointer to semaphore object, otherwise NULL if error
  */
 //==============================================================================
-static inline sem_t *new_counting_semaphore(uint cnt_max, uint cnt_init)
+static inline sem_t *new_counting_semaphore(const uint cnt_max, const uint cnt_init)
 {
         return xSemaphoreCreateCounting(cnt_max, cnt_init);
 }
@@ -685,7 +686,7 @@ static inline void delete_counting_semaphore(sem_t *sem)
  * @retval false        semaphore not taken (SEMAPHORE_NOT_TAKEN)
  */
 //==============================================================================
-static inline bool take_counting_semaphore(sem_t *sem, uint blocktime_ms)
+static inline bool take_counting_semaphore(sem_t *sem, const uint blocktime_ms)
 {
         return xSemaphoreTake(sem, MS2TICK((portTickType)blocktime_ms));
 }
@@ -772,7 +773,7 @@ static inline void delete_mutex(mutex_t *mutex)
  * @retval false        mutex not locked (MUTEX_NOT_LOCKED)
  */
 //==============================================================================
-static inline bool lock_mutex(mutex_t *mutex, uint blocktime_ms)
+static inline bool lock_mutex(mutex_t *mutex, const uint blocktime_ms)
 {
         return xSemaphoreTake(mutex, MS2TICK((portTickType)blocktime_ms));
 }
@@ -827,7 +828,7 @@ static inline void delete_recursive_mutex(mutex_t *mutex)
  * @retval false        mutex not locked (MUTEX_NOT_LOCKED)
  */
 //==============================================================================
-static inline bool lock_recursive_mutex(mutex_t *mutex, uint blocktime_ms)
+static inline bool lock_recursive_mutex(mutex_t *mutex, const uint blocktime_ms)
 {
         return xSemaphoreTakeRecursive(mutex, MS2TICK((portTickType)blocktime_ms));
 }
@@ -857,7 +858,7 @@ static inline bool unlock_recursive_mutex(mutex_t *mutex)
  * @return pointer to queue object, otherwise NULL if error
  */
 //==============================================================================
-static inline queue_t *new_queue(uint length, uint item_size)
+static inline queue_t *new_queue(uint length, const uint item_size)
 {
         return xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
 }
@@ -898,7 +899,7 @@ static inline void reset_queue(queue_t *queue)
  * @retval false        item not posted (QUEUE_ITEM_NOT_POSTED, QUEUE_FULL)
  */
 //==============================================================================
-static inline bool send_queue(queue_t *queue, void *item, uint waittime_ms)
+static inline bool send_queue(queue_t *queue, const void *item, const uint waittime_ms)
 {
         return xQueueSend(queue, item, MS2TICK((portTickType)waittime_ms));
 }
@@ -915,7 +916,7 @@ static inline bool send_queue(queue_t *queue, void *item, uint waittime_ms)
  * @retval false        item not posted (QUEUE_ITEM_NOT_POSTED, QUEUE_FULL)
  */
 //==============================================================================
-static inline bool send_queue_from_ISR(queue_t *queue, void *item, int *task_woken)
+static inline bool send_queue_from_ISR(queue_t *queue, const void *item, int *task_woken)
 {
         return xQueueSendFromISR(queue, item, (signed portBASE_TYPE *)task_woken);
 }
@@ -932,7 +933,7 @@ static inline bool send_queue_from_ISR(queue_t *queue, void *item, int *task_wok
  * @retval false        item not recieved (QUEUE_ITEM_NOT_RECEIVED)
  */
 //==============================================================================
-static inline bool receive_queue(queue_t *queue, void *item, uint waittime_ms)
+static inline bool receive_queue(queue_t *queue, void *item, const uint waittime_ms)
 {
         return xQueueReceive(queue, item, MS2TICK((portTickType)waittime_ms));
 }
@@ -966,7 +967,7 @@ static inline bool receive_queue_from_ISR(queue_t *queue, void *item, int *task_
  * @retval false        item not recieved (QUEUE_ITEM_NOT_RECEIVED)
  */
 //==============================================================================
-static inline bool receive_peek_queue(queue_t *queue, void *item, uint waittime_ms)
+static inline bool receive_peek_queue(queue_t *queue, void *item, const uint waittime_ms)
 {
         return xQueuePeek(queue, item, MS2TICK((portTickType)waittime_ms));
 }

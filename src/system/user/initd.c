@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include "user/initd.h"
 #include "system/ioctl.h"
+#include "system/netapi.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -158,8 +159,8 @@ static int run_level_0(void)
         init_driver("tty1", "/dev/tty1");
         init_driver("tty2", "/dev/tty2");
         init_driver("tty3", "/dev/tty3");
-
         init_driver("sdspi", "/dev/sda");
+        init_driver("ethmac", "/dev/eth0");
 
         return STD_RET_OK;
 }
@@ -183,14 +184,56 @@ static int run_level_1(void)
                 ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
 
                 if (status == true) {
-                        printk(FONT_COLOR_GREEN"Initialized."RESET_ATTRIBUTES"\n");
+                        printk("initialized\n");
+                        mount("fatfs", "/dev/sda1", "/mnt");
                 } else {
-                        printk(FONT_COLOR_RED"Fail\n"RESET_ATTRIBUTES);
+                        printk(FONT_COLOR_RED"fail\n"RESET_ATTRIBUTES);
                 }
 
                 fclose(sd);
         } else {
                 printk(FONT_COLOR_RED"Cannot open file!"RESET_ATTRIBUTES"\n");
+        }
+
+        /* network up */
+        printk("Configuring DHCP client... ");
+
+        if (netapi_start_DHCP_client() == 0) {
+                printk("OK\n");
+        } else {
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+
+                printk("Configuring static IP... ");
+
+                netapi_ip_t ip, mask, gateway;
+                netapi_set_ip(&ip, 192,168,0,120);
+                netapi_set_ip(&mask, 255,255,255,0);
+                netapi_set_ip(&gateway, 192,168,0,1);
+
+                if (netapi_ifup(&ip, &mask, &gateway) == 0) {
+                        printk("OK\n");
+                } else {
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                }
+        }
+
+        ifconfig ifcfg;
+        netapi_get_ifconfig(&ifcfg);
+        if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+                printk("  Hostname  : %s\n"
+                       "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
+                       "  IP Address: %d.%d.%d.%d\n"
+                       "  Net Mask  : %d.%d.%d.%d\n"
+                       "  Gateway   : %d.%d.%d.%d\n",
+                       get_host_name(),
+                       ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
+                       ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
+                       netapi_get_ip_part_a(&ifcfg.IP_address),  netapi_get_ip_part_b(&ifcfg.IP_address),
+                       netapi_get_ip_part_c(&ifcfg.IP_address),  netapi_get_ip_part_d(&ifcfg.IP_address),
+                       netapi_get_ip_part_a(&ifcfg.net_mask), netapi_get_ip_part_b(&ifcfg.net_mask),
+                       netapi_get_ip_part_c(&ifcfg.net_mask), netapi_get_ip_part_d(&ifcfg.net_mask),
+                       netapi_get_ip_part_a(&ifcfg.gateway), netapi_get_ip_part_b(&ifcfg.gateway),
+                       netapi_get_ip_part_c(&ifcfg.gateway), netapi_get_ip_part_d(&ifcfg.gateway));
         }
 
         return STD_RET_OK;

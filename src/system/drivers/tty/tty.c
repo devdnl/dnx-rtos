@@ -1050,9 +1050,9 @@ static char *new_CRLF_line(const char *line, uint line_len)
                 }
         }
 
-        char *new_line = malloc(line_len + (2 * LF_count) + 1);
+        char *new_line = malloc(line_len + LF_count + 1);
         if (new_line) {
-                strncpy_LF2CRLF(new_line, line, line_len + (2 * LF_count) + 1);
+                strncpy_LF2CRLF(new_line, line, line_len + LF_count + 1);
         }
 
         return new_line;

@@ -37,7 +37,7 @@ extern "C" {
 #include "core/systypes.h"
 #include "core/vfs.h"
 #include "core/sysmoni.h"
-#include "core/drivers.h"
+#include "core/modctrl.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -83,6 +83,7 @@ extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef task_t *dev_lock_t;
 
 /*==============================================================================
   Exported object declarations
@@ -95,6 +96,35 @@ extern API_MOD_STAT(modname, void*, struct vfs_dev_stat*)
 /*==============================================================================
   Exported inline function
 ==============================================================================*/
+static inline bool lock_device(dev_lock_t *dev_lock)
+{
+        extern bool _lock_device(dev_lock_t*);
+        return _lock_device(dev_lock);
+}
+
+static inline void unlock_device(dev_lock_t *dev_lock, bool force)
+{
+        extern void _unlock_device(dev_lock_t*, bool);
+        _unlock_device(dev_lock, force);
+}
+
+static inline bool is_device_access_granted(dev_lock_t *dev_lock)
+{
+        extern bool _is_device_access_granted(dev_lock_t*);
+        return _is_device_access_granted(dev_lock);
+}
+
+static inline bool is_device_locked(dev_lock_t *dev_lock)
+{
+        extern bool _is_device_locked(dev_lock_t*);
+        return _is_device_locked(dev_lock);
+}
+
+static inline bool is_device_unlocked(dev_lock_t *dev_lock)
+{
+        extern bool _is_device_locked(dev_lock_t*);
+        return !_is_device_locked(dev_lock);
+}
 
 #ifdef __cplusplus
 }

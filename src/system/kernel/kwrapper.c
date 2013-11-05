@@ -75,24 +75,27 @@ extern "C" {
 //==============================================================================
 task_t *new_task(void (*func)(void*), const char *name, uint stack_depth, void *argv)
 {
-        task_t           *task          = NULL;
-        uint             child_priority = PRIORITY(0);
-        struct task_data *data;
-
-        if (!(data = sysm_kcalloc(1, sizeof(struct task_data)))) {
+        struct task_data *data = sysm_kcalloc(1, sizeof(struct task_data));
+        if (!data) {
                 return NULL;
         }
 
-        data->f_parent_task = xTaskGetCurrentTaskHandle();
+        data->f_parent_task  = xTaskGetCurrentTaskHandle();
+        int scheduler_status = xTaskGetSchedulerState();
+        uint child_priority  = PRIORITY(0);
 
-        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+        if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
                 child_priority = uxTaskPriorityGet(THIS_TASK);
         }
 
         taskENTER_CRITICAL();
+        task_t *task = NULL;
         if (xTaskCreate(func, (signed char *)name, stack_depth, argv, child_priority, &task)) {
 
-                vTaskSuspend(task);
+                if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
+                        vTaskSuspend(task);
+                }
+
                 taskEXIT_CRITICAL();
                 vTaskSetApplicationTaskTag(task, (void *)data);
 

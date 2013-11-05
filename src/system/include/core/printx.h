@@ -37,6 +37,7 @@ extern "C" {
 #include <stdarg.h>
 #include <stddef.h>
 #include "core/vfs.h"
+#include "config.h"
 
 /*==============================================================================
   Exported macros

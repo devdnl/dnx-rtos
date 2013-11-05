@@ -41,7 +41,7 @@ extern "C" {
 #include "core/memman.h"
 #include "core/progman.h"
 #include "core/sysmoni.h"
-#include "core/drivers.h"
+#include "core/modctrl.h"
 #include "core/fsctrl.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
@@ -70,7 +70,7 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void _dnx_init(void);
+extern void dnx_init(void);
 
 /*==============================================================================
   Exported inline functions
@@ -206,36 +206,6 @@ static inline u32_t get_total_CPU_usage(void)
 
 //==============================================================================
 /**
- * @brief Function disable CPU load measurement
- */
-//==============================================================================
-static inline void disable_CPU_load_measurement(void)
-{
-        sysm_disable_CPU_load_measurement();
-}
-
-//==============================================================================
-/**
- * @brief Function enable CPU load measurement
- */
-//==============================================================================
-static inline void enable_CPU_load_measurement(void)
-{
-        sysm_enable_CPU_load_measurement();
-}
-
-//==============================================================================
-/**
- * @brief Function restart system
- */
-//==============================================================================
-static inline void restart(void)
-{
-        _cpuctl_restart_system();
-}
-
-//==============================================================================
-/**
  * @brief Function return name of CPU
  *
  * @return pointer to CPU name string
@@ -267,7 +237,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.1.0";
+        return "1.1.1";
 }
 
 //==============================================================================
@@ -370,6 +340,36 @@ static inline uint get_number_of_modules(void)
 {
         extern const int _regdrv_number_of_modules;
         return _regdrv_number_of_modules;
+}
+
+//==============================================================================
+/**
+ * @brief Function disable CPU load measurement
+ */
+//==============================================================================
+static inline void disable_CPU_load_measurement(void)
+{
+        sysm_disable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable CPU load measurement
+ */
+//==============================================================================
+static inline void enable_CPU_load_measurement(void)
+{
+        sysm_enable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function restart system
+ */
+//==============================================================================
+static inline void restart(void)
+{
+        _cpuctl_restart_system();
 }
 
 #ifdef __cplusplus
