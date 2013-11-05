@@ -82,7 +82,7 @@ extern void dnx_init(void);
  * @return used static memory (configured at precompilation time)
  */
 //==============================================================================
-static inline u32_t get_used_static_memory(void)
+static inline u32_t dnx_get_used_static_memory(void)
 {
         return (CONFIG_RAM_SIZE - CONFIG_HEAP_SIZE);
 }
@@ -94,7 +94,7 @@ static inline u32_t get_used_static_memory(void)
  * @return a free memory
  */
 //==============================================================================
-static inline u32_t get_free_memory(void)
+static inline u32_t dnx_get_free_memory(void)
 {
         return memman_get_free_heap();
 }
@@ -106,9 +106,9 @@ static inline u32_t get_free_memory(void)
  * @return used memory
  */
 //==============================================================================
-static inline u32_t get_used_memory(void)
+static inline u32_t dnx_get_used_memory(void)
 {
-        return (get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()));
+        return (dnx_get_used_static_memory() + (CONFIG_HEAP_SIZE - memman_get_free_heap()));
 }
 
 //==============================================================================
@@ -118,7 +118,7 @@ static inline u32_t get_used_memory(void)
  * @return a memory size
  */
 //==============================================================================
-static inline u32_t get_memory_size(void)
+static inline u32_t dnx_get_memory_size(void)
 {
         return CONFIG_RAM_SIZE;
 }
@@ -133,7 +133,7 @@ static inline u32_t get_memory_size(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t get_detailed_memory_usage(struct sysmoni_used_memory *stat)
+static inline stdret_t dnx_get_detailed_memory_usage(struct sysmoni_used_memory *stat)
 {
         return sysm_get_used_memory(stat);
 }
@@ -147,7 +147,7 @@ static inline stdret_t get_detailed_memory_usage(struct sysmoni_used_memory *sta
  * @return used memory by selected module
  */
 //==============================================================================
-static inline i32_t get_module_memory_usage(uint module_number)
+static inline i32_t dnx_get_module_memory_usage(uint module_number)
 {
         return sysm_get_used_memory_by_module(module_number);
 }
@@ -159,7 +159,7 @@ static inline i32_t get_module_memory_usage(uint module_number)
  * @return an uptime
  */
 //==============================================================================
-static inline u32_t get_uptime(void)
+static inline u32_t dnx_get_uptime(void)
 {
         return _get_uptime_counter();
 }
@@ -175,7 +175,7 @@ static inline u32_t get_uptime(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t get_task_stat(i32_t ntask, struct sysmoni_taskstat *stat)
+static inline stdret_t dnx_get_task_stat(i32_t ntask, struct sysmoni_taskstat *stat)
 {
         return sysm_get_ntask_stat(ntask, stat);
 }
@@ -187,7 +187,7 @@ static inline stdret_t get_task_stat(i32_t ntask, struct sysmoni_taskstat *stat)
  * @return a number of monitored task
  */
 //==============================================================================
-static inline int get_number_of_monitored_tasks(void)
+static inline int dnx_get_number_of_monitored_tasks(void)
 {
         return sysm_get_number_of_monitored_tasks();
 }
@@ -199,7 +199,7 @@ static inline int get_number_of_monitored_tasks(void)
  * @return a CPU usage value
  */
 //==============================================================================
-static inline u32_t get_total_CPU_usage(void)
+static inline u32_t dnx_get_total_CPU_usage(void)
 {
         return sysm_get_total_CPU_usage();
 }
@@ -211,7 +211,7 @@ static inline u32_t get_total_CPU_usage(void)
  * @return pointer to CPU name string
  */
 //==============================================================================
-static inline const char *get_platform_name(void)
+static inline const char *dnx_get_platform_name(void)
 {
         return CPUCTL_PLATFORM_NAME;
 }
@@ -223,7 +223,7 @@ static inline const char *get_platform_name(void)
  * @return pointer to string
  */
 //==============================================================================
-static inline const char *get_OS_name(void)
+static inline const char *dnx_get_OS_name(void)
 {
         return "dnx";
 }
@@ -235,9 +235,9 @@ static inline const char *get_OS_name(void)
  * @return pointer to string
  */
 //==============================================================================
-static inline const char *get_OS_version(void)
+static inline const char *dnx_get_OS_version(void)
 {
-        return "1.1.3";
+        return "1.1.4";
 }
 
 //==============================================================================
@@ -247,7 +247,7 @@ static inline const char *get_OS_version(void)
  * @return pointer to string
  */
 //==============================================================================
-static inline const char *get_kernel_name(void)
+static inline const char *dnx_get_kernel_name(void)
 {
         return "FreeRTOS";
 }
@@ -259,7 +259,7 @@ static inline const char *get_kernel_name(void)
  * @return pointer to string
  */
 //==============================================================================
-static inline const char *get_author_name(void)
+static inline const char *dnx_get_author_name(void)
 {
         return "Daniel Zorychta";
 }
@@ -271,7 +271,7 @@ static inline const char *get_author_name(void)
  * @return pointer to string
  */
 //==============================================================================
-static inline const char *get_author_email(void)
+static inline const char *dnx_get_author_email(void)
 {
         return "<daniel.zorychta@gmail.com>";
 }
@@ -283,7 +283,7 @@ static inline const char *get_author_email(void)
  * @return pointer to string
  */
 //==============================================================================
-static inline const char *get_kernel_version(void)
+static inline const char *dnx_get_kernel_version(void)
 {
         return tskKERNEL_VERSION_NUMBER;
 }
@@ -295,7 +295,7 @@ static inline const char *get_kernel_version(void)
  * @return pointer to string
  */
 //==============================================================================
-static inline const char *get_host_name(void)
+static inline const char *dnx_get_host_name(void)
 {
         return CONFIG_HOSTNAME;
 }
@@ -324,7 +324,7 @@ static inline char *getcwd(char *buf, size_t size)
  * @return module name
  */
 //==============================================================================
-static inline const char *get_module_name(uint modid)
+static inline const char *dnx_get_module_name(uint modid)
 {
         return _get_module_name(modid);
 }
@@ -336,7 +336,7 @@ static inline const char *get_module_name(uint modid)
  * @return number of modules
  */
 //==============================================================================
-static inline uint get_number_of_modules(void)
+static inline uint dnx_get_number_of_modules(void)
 {
         extern const int _regdrv_number_of_modules;
         return _regdrv_number_of_modules;
@@ -347,7 +347,7 @@ static inline uint get_number_of_modules(void)
  * @brief Function disable CPU load measurement
  */
 //==============================================================================
-static inline void disable_CPU_load_measurement(void)
+static inline void dnx_disable_CPU_load_measurement(void)
 {
         sysm_disable_CPU_load_measurement();
 }
@@ -357,7 +357,7 @@ static inline void disable_CPU_load_measurement(void)
  * @brief Function enable CPU load measurement
  */
 //==============================================================================
-static inline void enable_CPU_load_measurement(void)
+static inline void dnx_enable_CPU_load_measurement(void)
 {
         sysm_enable_CPU_load_measurement();
 }
@@ -367,7 +367,7 @@ static inline void enable_CPU_load_measurement(void)
  * @brief Function restart system
  */
 //==============================================================================
-static inline void restart(void)
+static inline void dnx_restart_system(void)
 {
         _cpuctl_restart_system();
 }

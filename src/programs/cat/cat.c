@@ -35,7 +35,6 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include "system/ioctl.h"
-#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros

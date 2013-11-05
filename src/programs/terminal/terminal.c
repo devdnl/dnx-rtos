@@ -35,6 +35,7 @@ extern "C" {
 #include <string.h>
 #include "system/dnx.h"
 #include "system/ioctl.h"
+#include "system/mount.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -190,7 +191,7 @@ PROGRAM_MAIN(terminal, int argc, char *argv[])
 //==============================================================================
 static void print_prompt(void)
 {
-        printf(FONT_COLOR_GREEN"root@%s:%s"RESET_ATTRIBUTES"\n", get_host_name(), global->cwd);
+        printf(FONT_COLOR_GREEN"root@%s:%s"RESET_ATTRIBUTES"\n", dnx_get_host_name(), global->cwd);
         printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
 }
 
@@ -209,7 +210,7 @@ static enum cmd_status find_external_command(const char *cmd)
         enum prog_state state  = PROGRAM_UNKNOWN_STATE;
         enum cmd_status status = CMD_STATUS_NOT_EXIST;
 
-        new_program(cmd, global->cwd, stdin, stdout, &state, NULL);
+        program_new(cmd, global->cwd, stdin, stdout, &state, NULL);
 
         while (state == PROGRAM_RUNNING) {
                 task_suspend_now();
@@ -455,7 +456,7 @@ static enum cmd_status cmd_free(char *arg)
 {
         (void) arg;
 
-        uint  drv_count = get_number_of_modules();
+        uint  drv_count = dnx_get_number_of_modules();
         int *modmem = malloc(drv_count * sizeof(int));
         if (!modmem) {
                 printf("Not enough free memory.\n");
@@ -463,21 +464,21 @@ static enum cmd_status cmd_free(char *arg)
         }
 
         struct sysmoni_used_memory sysmem;
-        get_detailed_memory_usage(&sysmem);
+        dnx_get_detailed_memory_usage(&sysmem);
 
         for (uint module = 0; module < drv_count; module++) {
-                modmem[module] = get_module_memory_usage(module);
+                modmem[module] = dnx_get_module_memory_usage(module);
         }
 
-        u32_t free = get_free_memory();
-        u32_t used = get_used_memory();
+        u32_t free = dnx_get_free_memory();
+        u32_t used = dnx_get_used_memory();
 
 
-        printf("Total: %d\n", get_memory_size());
+        printf("Total: %d\n", dnx_get_memory_size());
         printf("Free : %d\n", free);
         printf("Used : %d\n", used);
         printf("Memory usage: %d%%\n\n",
-               (used * 100)/get_memory_size());
+               (used * 100)/dnx_get_memory_size());
 
         printf("Detailed memory usage:\n"
                "  Kernel  : %d\n"
@@ -493,7 +494,7 @@ static enum cmd_status cmd_free(char *arg)
 
         printf("Detailed modules memory usage:\n");
         for (uint module = 0; module < drv_count; module++) {
-                printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", get_module_name(module), modmem[module]);
+                printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", dnx_get_module_name(module), modmem[module]);
         }
 
         free(modmem);
@@ -512,7 +513,7 @@ static enum cmd_status cmd_uptime(char *arg)
 {
         (void) arg;
 
-        u32_t uptime = get_uptime();
+        u32_t uptime = dnx_get_uptime();
         u32_t udays  = (uptime / (3600 * 24));
         u32_t uhrs   = (uptime / 3600) % 24;
         u32_t umins  = (uptime / 60) % 60;
@@ -549,7 +550,7 @@ static enum cmd_status cmd_reboot(char *arg)
 {
         (void) arg;
 
-        restart();
+        dnx_restart_system();
 
         return CMD_STATUS_EXECUTED;
 }
@@ -724,10 +725,10 @@ static enum cmd_status cmd_uname(char *arg)
         (void)arg;
 
         printf("%s/%s, %s %s, %s %s, %s\n",
-               get_OS_name(), get_kernel_name(),
-               get_OS_name(), get_OS_version(),
-               get_kernel_name(), get_kernel_version(),
-               get_platform_name());
+               dnx_get_OS_name(), dnx_get_kernel_name(),
+               dnx_get_OS_name(), dnx_get_OS_version(),
+               dnx_get_kernel_name(), dnx_get_kernel_version(),
+               dnx_get_platform_name());
 
         return CMD_STATUS_EXECUTED;
 }

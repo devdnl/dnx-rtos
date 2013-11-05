@@ -82,7 +82,7 @@ extern "C" {
 #define MS2TICK(ms)                     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
 
 /** TASK LEVEL DEFINITIONS */
-#define prepare_sleep_until()           unsigned long int __last_wake_time__ = kernel_get_tick_counter();
+#define sleep_until_prepare()           unsigned long int __last_wake_time__ = kernel_get_tick_counter();
 #define sleep_until(uint__seconds)      vTaskDelayUntil(&__last_wake_time__, MS2TICK((uint__seconds) * 1000UL))
 #define sleep_ms_until(uint__msdelay)   vTaskDelayUntil(&__last_wake_time__, MS2TICK(uint__msdelay))
 

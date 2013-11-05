@@ -101,7 +101,7 @@ extern const int               _prog_table_size;
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
+task_t *program_new(const char *cmd, const char *cwd, FILE *stdin,
                          FILE *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
@@ -163,7 +163,7 @@ task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
  * @param  exit_code            program exit value
  */
 //==============================================================================
-void delete_program(task_t *taskhdl, int exit_code)
+void program_delete(task_t *taskhdl, int exit_code)
 {
         if (taskhdl == NULL) {
                 return;
@@ -207,7 +207,7 @@ void delete_program(task_t *taskhdl, int exit_code)
 //==============================================================================
 void exit(int status)
 {
-        delete_program(task_get_handle(), status);
+        program_delete(task_get_handle(), status);
 
         /* wait to kill program */
         for (;;);
@@ -220,7 +220,7 @@ void exit(int status)
 //==============================================================================
 void abort(void)
 {
-        delete_program(task_get_handle(), -1);
+        program_delete(task_get_handle(), -1);
 
         /* wait to kill program */
         for (;;);
@@ -236,7 +236,7 @@ int system(const char *command)
         enum prog_state state     = PROGRAM_UNKNOWN_STATE;
         int             exit_code = EXIT_FAILURE;
 
-        new_program(command,
+        program_new(command,
                     _task_get_data()->f_cwd,
                     _task_get_data()->f_stdin,
                     _task_get_data()->f_stdout,

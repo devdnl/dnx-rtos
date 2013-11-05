@@ -45,15 +45,15 @@ extern "C" {
 
 #define PROGRAM_MAIN(name, argc, argv) \
         const int __prog_##name##_gs__ = sizeof(struct __global_vars__);\
-        int program_##name##_main(argc, argv)
+        int _program_##name##_main(argc, argv)
 
 #define _IMPORT_PROGRAM(name)\
         extern const int __prog_##name##_gs__;\
-        extern int program_##name##_main(int, char**)
+        extern int _program_##name##_main(int, char**)
 
 #define _PROGRAM_CONFIG(name, stack_size) \
         {.program_name  = #name,\
-         .main_function = program_##name##_main,\
+         .main_function = _program_##name##_main,\
          .globals_size  = &__prog_##name##_gs__,\
          .stack_depth   = stack_size}
 
@@ -98,8 +98,8 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t   *new_program       (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
-extern void      delete_program    (task_t*, int);
+extern task_t   *program_new       (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
+extern void      program_delete    (task_t*, int);
 extern void      exit              (int);
 extern void      abort             (void);
 extern int       system            (const char*);

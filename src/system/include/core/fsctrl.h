@@ -75,8 +75,8 @@ struct _FS_entry {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern stdret_t mount   (const char*, const char*, const char*);
-extern stdret_t umount  (const char*);
+extern stdret_t _mount   (const char*, const char*, const char*);
+extern stdret_t _umount  (const char*);
 
 #ifdef __cplusplus
 }

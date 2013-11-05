@@ -52,7 +52,7 @@ struct devfs_chain {
                 int                       opended;
         } devnode[CHAIN_NUMBER_OF_NODES];
 
-        struct devfs_chain       *next_chain;
+        struct devfs_chain *next;
 };
 
 struct devfs {
@@ -66,13 +66,13 @@ struct devfs {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t            closedir             (void *fs_handle, DIR *dir);
-static dirent_t            readdir              (void *fs_handle, DIR *dir);
-static struct devnode     *get_node_by_path     (struct devfs *devfs, const char *path);
-static struct devnode     *get_empty_node       (struct devfs *devfs);
-static struct devnode     *get_n_node           (struct devfs *devfs, int n);
-static struct devfs_chain *new_chain            (void);
-static void                delete_chain         (struct devfs_chain *chain);
+static stdret_t            closedir                     (void *fs_handle, DIR *dir);
+static dirent_t            readdir                      (void *fs_handle, DIR *dir);
+static struct devfs_chain *chain_new                    (void);
+static void                chain_delete                 (struct devfs_chain *chain);
+static struct devnode     *chain_get_node_by_path       (struct devfs_chain *chain, const char *path);
+static struct devnode     *chain_get_empty_node         (struct devfs_chain *chain);
+static struct devnode     *chain_get_n_node             (struct devfs_chain *chain, int n);
 
 /*==============================================================================
   Local objects
@@ -108,7 +108,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
 
         struct devfs       *devfs = malloc(sizeof(struct devfs));
         mutex_t            *mtx   = mutex_new();
-        struct devfs_chain *chain = new_chain();
+        struct devfs_chain *chain = chain_new();
 
         if (devfs && mtx && chain) {
                 devfs->root_chain               = chain;
@@ -130,7 +130,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         }
 
         if (chain) {
-                delete_chain(chain);
+                chain_delete(chain);
         }
 
         return STD_RET_ERROR;
@@ -161,7 +161,7 @@ API_FS_RELEASE(devfs, void *fs_handle)
                 critical_section_begin();
                 mutex_unlock(devfs->mutex);
 
-                delete_chain(devfs->root_chain);
+                chain_delete(devfs->root_chain);
                 mutex_delete(devfs->mutex);
                 free(devfs);
 
@@ -200,7 +200,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
 
         if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                struct devnode *node = get_node_by_path(devfs, path);
+                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         const struct vfs_drv_interface *drvif = node->drvif;
 
@@ -448,18 +448,18 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
 
                 if (devfs->number_of_chains * CHAIN_NUMBER_OF_NODES == devfs->number_of_used_nodes) {
                         struct devfs_chain *chain = devfs->root_chain;
-                        while (chain->next_chain != NULL) {
-                                chain = chain->next_chain;
+                        while (chain->next != NULL) {
+                                chain = chain->next;
                         }
 
-                        chain->next_chain = new_chain();
-                        if (!chain->next_chain)
+                        chain->next = chain_new();
+                        if (!chain->next)
                                 goto exit;
 
                         devfs->number_of_chains++;
                 }
 
-                struct devnode *node = get_empty_node(devfs);
+                struct devnode *node = chain_get_empty_node(devfs->root_chain);
                 if (node) {
                         node->drvif = malloc(sizeof(struct vfs_drv_interface));
                         node->path  = malloc(strlen(path + 1) + 1);
@@ -572,7 +572,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
 
         if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                struct devnode *node = get_n_node(devfs, dir->f_seek);
+                struct devnode *node = chain_get_n_node(devfs->root_chain, dir->f_seek);
                 if (node) {
                         struct vfs_dev_stat devstat;
                         devstat.st_size = 0;
@@ -611,7 +611,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 
         if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                struct devnode *node = get_node_by_path(devfs, path);
+                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         if (node->opended == 0) {
                                 free(node->drvif);
@@ -658,7 +658,7 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
 
         if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                struct devnode *node = get_node_by_path(devfs, old_name);
+                struct devnode *node = chain_get_node_by_path(devfs->root_chain, old_name);
                 if (node) {
                         char *name = malloc(strlen(new_name) + 1);
                         if (name) {
@@ -698,7 +698,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
 
         if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                struct devnode *node = get_node_by_path(devfs, path);
+                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         node->mode = mode;
                         status = STD_RET_OK;
@@ -733,7 +733,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
 
         if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                struct devnode *node = get_node_by_path(devfs, path);
+                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         node->uid = owner;
                         node->gid = group;
@@ -770,7 +770,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 
         if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
-                struct devnode *node = get_node_by_path(devfs, path);
+                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         struct vfs_dev_stat devstat;
                         devstat.st_size  = 0;
@@ -827,21 +827,21 @@ API_FS_STATFS(devfs, void *fs_handle, struct vfs_statfs *statfs)
 /**
  * @brief Return node pointer
  *
- * @param[in] *devfs            file system memory
- * @param[in] *path             node's path
+ * @param[in] chain             chain
+ * @param[in] path              node's path
  *
  * @return node pointer
  */
 //==============================================================================
-static struct devnode *get_node_by_path(struct devfs *devfs, const char *path)
+static struct devnode *chain_get_node_by_path(struct devfs_chain *chain, const char *path)
 {
-        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+        for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (chain->devnode[i].drvif == NULL)
+                        if (nchain->devnode[i].drvif == NULL)
                                 continue;
 
-                        if (strcmp(chain->devnode[i].path, path + 1) == 0)
-                                return &chain->devnode[i];
+                        if (strcmp(nchain->devnode[i].path, path + 1) == 0)
+                                return &nchain->devnode[i];
                 }
         }
 
@@ -852,17 +852,17 @@ static struct devnode *get_node_by_path(struct devfs *devfs, const char *path)
 /**
  * @brief Return node pointer
  *
- * @param[in] *devfs            file system memory
+ * @param[in] chain             chain
  *
  * @return node pointer
  */
 //==============================================================================
-static struct devnode *get_empty_node(struct devfs *devfs)
+static struct devnode *chain_get_empty_node(struct devfs_chain *chain)
 {
-        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+        for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (chain->devnode[i].drvif == NULL)
-                                return &chain->devnode[i];
+                        if (nchain->devnode[i].drvif == NULL)
+                                return &nchain->devnode[i];
                 }
         }
 
@@ -879,15 +879,15 @@ static struct devnode *get_empty_node(struct devfs *devfs)
  * @return node pointer
  */
 //==============================================================================
-static struct devnode *get_n_node(struct devfs *devfs, int n)
+static struct devnode *chain_get_n_node(struct devfs_chain *chain, int n)
 {
         int n_node = 0;
 
-        for (struct devfs_chain *chain = devfs->root_chain; chain != NULL; chain = chain->next_chain) {
+        for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (chain->devnode[i].drvif != NULL) {
+                        if (nchain->devnode[i].drvif != NULL) {
                                 if (n_node++ == n)
-                                        return &chain->devnode[i];
+                                        return &nchain->devnode[i];
                         }
                 }
         }
@@ -902,7 +902,7 @@ static struct devnode *get_n_node(struct devfs *devfs, int n)
  * @return pointer to new object or NULL if error
  */
 //==============================================================================
-static struct devfs_chain *new_chain(void)
+static struct devfs_chain *chain_new(void)
 {
         return calloc(1, sizeof(struct devfs_chain));
 }
@@ -914,10 +914,10 @@ static struct devfs_chain *new_chain(void)
  * @param[in] *chain            chain to delete
  */
 //==============================================================================
-static void delete_chain(struct devfs_chain *chain)
+static void chain_delete(struct devfs_chain *chain)
 {
-        if (chain->next_chain) {
-                delete_chain(chain->next_chain);
+        if (chain->next) {
+                chain_delete(chain->next);
         }
 
         for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {

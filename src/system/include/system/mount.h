@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    helloworld.c
+@file    mount.h
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   Library with mount file system tools
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _MOUNT_H_
+#define _MOUNT_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,67 +34,62 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include <string.h>
-#include "system/dnx.h"
+#include "core/fsctrl.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
-==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-/* put here global variables */
-GLOBAL_VARIABLES_SECTION_END
-
-/*==============================================================================
-  Exported object definitions
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Function definitions
+  Exported inline functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function mount file system
+ *
+ * @param FS_name        file system name
+ * @param src_path       path to file with source data
+ * @param mount_point    mount point of file system
+ *
+ * @return 0 if success, otherwise 1
+ */
+//==============================================================================
+static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
+{
+        return _mount(FS_name, src_path, mount_point);
+}
 
 //==============================================================================
 /**
- * @brief Program main function
+ * @brief Function unmount file system
  *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
+ * @param *mount_point   path to file system
  *
- * @return program status
+ * @return 0 if success, otherwise 1
  */
 //==============================================================================
-PROGRAM_MAIN(helloworld, int argc, char *argv[])
+static inline int umount(const char *mount_point)
 {
-        puts("Hello world!");
-        printf("Free stack: %d\n", task_get_free_stack());
-        printf("Static memory usage: %d\n", dnx_get_used_static_memory());
-        printf("Memory size: %d\n", dnx_get_memory_size());
-        printf("Free memory: %d\n", dnx_get_free_memory());
-
-        printf("Program arguments:\n");
-        for (int i = 0; i < argc; i++) {
-                printf("%d: %s\n", i + 1, argv[i]);
-        }
-
-        return 0;
+        return _umount(mount_point);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _MOUNT_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

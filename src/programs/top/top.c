@@ -90,13 +90,13 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         divider = 10;
                 }
 
-                u8_t n = get_number_of_monitored_tasks();
+                u8_t n = dnx_get_number_of_monitored_tasks();
 
                 printf(CLEAR_SCREEN"Press q to quit or k to kill program\n");
 
                 printf("Total tasks: %u\n", n);
 
-                u32_t uptime = get_uptime();
+                u32_t uptime = dnx_get_uptime();
                 u32_t udays  = (uptime / (3600 * 24));
                 u32_t uhrs   = (uptime / 3600) % 24;
                 u32_t umins  = (uptime / 60) % 60;
@@ -104,11 +104,11 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 printf("Up time: %ud %2u:%2u\n", udays, uhrs, umins);
 
                 struct sysmoni_used_memory mem;
-                get_detailed_memory_usage(&mem);
+                dnx_get_detailed_memory_usage(&mem);
 
-                int mem_total = get_memory_size();
-                int mem_used  = get_used_memory();
-                int mem_free  = get_free_memory();
+                int mem_total = dnx_get_memory_size();
+                int mem_used  = dnx_get_used_memory();
+                int mem_free  = dnx_get_free_memory();
 
                 printf("Memory:\t%u total,\t%u used,\t%u free\n",
                        mem_total,
@@ -124,11 +124,11 @@ PROGRAM_MAIN(top, int argc, char *argv[])
 
                 printf("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
-                u32_t total_cpu_load = get_total_CPU_usage();
-                disable_CPU_load_measurement();
+                u32_t total_cpu_load = dnx_get_total_CPU_usage();
+                dnx_disable_CPU_load_measurement();
                 for (int i = 0; i < n; i++) {
                         struct sysmoni_taskstat taskinfo;
-                        if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
+                        if (dnx_get_task_stat(i, &taskinfo) == STD_RET_OK) {
                                 printf("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                 taskinfo.task_handle,
                                 taskinfo.priority,
@@ -142,7 +142,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                                 break;
                         }
                 }
-                enable_CPU_load_measurement();
+                dnx_enable_CPU_load_measurement();
 
                 if (key == 'k') {
                         ioctl(stdin, TTY_IORQ_ECHO_ON);
@@ -154,7 +154,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
 
                         task_t *task = (task_t *)task_handle;
                         if (task != task_get_parent_handle()) {
-                                delete_program(task, EXIT_FAILURE);
+                                program_delete(task, EXIT_FAILURE);
                         }
 
                         ioctl(stdin, TTY_IORQ_ECHO_OFF);

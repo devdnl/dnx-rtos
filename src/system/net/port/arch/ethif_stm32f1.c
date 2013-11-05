@@ -320,7 +320,7 @@ static err_t ethif_init(struct netif *netif)
         }
 
         netif->state      = ethif_mem;
-        netif->hostname   = (char *)get_host_name();
+        netif->hostname   = (char *)dnx_get_host_name();
         netif->name[0]    = 'E';
         netif->name[1]    = 'T';
         netif->output     = etharp_output;
