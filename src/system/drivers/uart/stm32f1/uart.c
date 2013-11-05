@@ -42,8 +42,8 @@ extern "C" {
 #define MTX_BLOCK_TIME                          MAX_DELAY
 #define TXC_WAIT_TIME                           60000
 
-#define force_lock_recursive_mutex(mtx)         while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
-#define force_lock_mutex(mtx)                   while (lock_mutex(mtx, 10) != MUTEX_LOCKED)
+#define force_lock_recursive_mutex(mtx)         while (recursive_mutex_lock(mtx, 10) != MUTEX_LOCKED)
+#define force_lock_mutex(mtx)                   while (mutex_lock(mtx, 10) != MUTEX_LOCKED)
 
 /** translation of configuration bits to function-like macros */
 #define wakeup_USART_on_address_mark(usart)     usart->CR1 |=  USART_CR1_WAKE
@@ -167,16 +167,16 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
         *device_handle = USART_data[major];
 
         USART_data[major]->USART            = USART_peripherals[major];
-        USART_data[major]->data_write_sem   = new_semaphore();
-        USART_data[major]->port_lock_rx_mtx = new_mutex();
-        USART_data[major]->port_lock_tx_mtx = new_mutex();
+        USART_data[major]->data_write_sem   = semaphore_new();
+        USART_data[major]->port_lock_rx_mtx = mutex_new();
+        USART_data[major]->port_lock_tx_mtx = mutex_new();
 
         if (  !USART_data[major]->data_write_sem
            || !USART_data[major]->port_lock_rx_mtx
            || !USART_data[major]->port_lock_tx_mtx) {
                 goto error;
         } else {
-                take_semaphore(USART_data[major]->data_write_sem, 1);
+                semaphore_take(USART_data[major]->data_write_sem, 1);
 
                 if (turn_on_USART(USART_data[major]->USART) != STD_RET_OK) {
                         goto error;
@@ -269,15 +269,15 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 
 error:
         if (USART_data[major]->data_write_sem) {
-                delete_semaphore(USART_data[major]->data_write_sem);
+                semaphore_delete(USART_data[major]->data_write_sem);
         }
 
         if (USART_data[major]->port_lock_rx_mtx) {
-                delete_recursive_mutex(USART_data[major]->port_lock_rx_mtx);
+                recursive_mutex_delete(USART_data[major]->port_lock_rx_mtx);
         }
 
         if (USART_data[major]->port_lock_tx_mtx) {
-                delete_recursive_mutex(USART_data[major]->port_lock_tx_mtx);
+                recursive_mutex_delete(USART_data[major]->port_lock_tx_mtx);
         }
 
         free(USART_data[major]);
@@ -303,18 +303,18 @@ API_MOD_RELEASE(UART, void *device_handle)
         force_lock_mutex(hdl->port_lock_rx_mtx);
         force_lock_mutex(hdl->port_lock_tx_mtx);
 
-        enter_critical_section();
+        critical_section_begin();
 
-        unlock_mutex(hdl->port_lock_rx_mtx);
-        unlock_mutex(hdl->port_lock_tx_mtx);
+        mutex_unlock(hdl->port_lock_rx_mtx);
+        mutex_unlock(hdl->port_lock_tx_mtx);
 
-        delete_mutex(hdl->port_lock_rx_mtx);
-        delete_mutex(hdl->port_lock_tx_mtx);
+        mutex_delete(hdl->port_lock_rx_mtx);
+        mutex_delete(hdl->port_lock_tx_mtx);
 
-        delete_semaphore(hdl->data_write_sem);
+        semaphore_delete(hdl->data_write_sem);
         turn_off_USART(hdl->USART);
         free(hdl);
-        exit_critical_section();
+        critical_section_end();
 
         return STD_RET_OK;
 }
@@ -383,16 +383,16 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
-        if (lock_mutex(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
 
                 enable_TXE_IRQ(hdl->USART);
-                take_semaphore(hdl->data_write_sem, TXC_WAIT_TIME);
+                semaphore_take(hdl->data_write_sem, TXC_WAIT_TIME);
 
                 n = count;
 
-                unlock_mutex(hdl->port_lock_tx_mtx);
+                mutex_unlock(hdl->port_lock_tx_mtx);
         }
 
         return n;
@@ -421,13 +421,13 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
-        if (lock_mutex(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
                 u8_t  *dst_ptr   = dst;
                 size_t data_size = count;
-                hdl->task_rx     = get_task_handle();
+                hdl->task_rx     = task_get_handle();
 
                 do {
-                        enter_critical_section();
+                        critical_section_begin();
 
                         if (hdl->Rx_FIFO.buffer_level > 0) {
                                 *dst_ptr = hdl->Rx_FIFO.buffer[hdl->Rx_FIFO.read_index++];
@@ -439,14 +439,14 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
                                 data_size--;
                                 n++;
 
-                                exit_critical_section();
+                                critical_section_end();
                         } else {
-                                exit_critical_section();
-                                suspend_this_task();
+                                critical_section_end();
+                                task_suspend_now();
                         }
                 } while (data_size);
 
-                unlock_mutex(hdl->port_lock_rx_mtx);
+                mutex_unlock(hdl->port_lock_rx_mtx);
         }
 
         return n;
@@ -550,10 +550,10 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                 break;
 
         case UART_IORQ_GET_BYTE:
-                enter_critical_section();
+                critical_section_begin();
 
                 if (!arg) {
-                        exit_critical_section();
+                        critical_section_end();
                         status = STD_RET_ERROR;
                         break;
                 }
@@ -569,15 +569,15 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                         status = STD_RET_ERROR;
                 }
 
-                exit_critical_section();
+                critical_section_end();
                 break;
 
         case UART_IORQ_GET_BYTE_BLOCKING:
                 while (TRUE) {
-                        enter_critical_section();
+                        critical_section_begin();
 
                         if (!arg) {
-                                exit_critical_section();
+                                critical_section_end();
                                 status = STD_RET_ERROR;
                                 break;
                         }
@@ -590,11 +590,11 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 
                                 hdl->Rx_FIFO.buffer_level--;
 
-                                exit_critical_section();
+                                critical_section_end();
                                 break;
                         } else {
-                                exit_critical_section();
-                                suspend_this_task();
+                                critical_section_end();
+                                task_suspend_now();
                         }
                 }
                 break;
@@ -683,7 +683,7 @@ static void IRQ_handler(struct USART_data *USART_data)
 
                                 int woken;
                                 disable_TXE_IRQ(USART_data->USART);
-                                give_semaphore_from_ISR(USART_data->data_write_sem, &woken);
+                                semaphore_give_from_ISR(USART_data->data_write_sem, &woken);
                         }
                 } else {
                         disable_TXE_IRQ(USART_data->USART);
@@ -705,8 +705,8 @@ static void IRQ_handler(struct USART_data *USART_data)
                   }
 
                   if (USART_data->task_rx) {
-                        if (resume_task_from_ISR(USART_data->task_rx)) {
-                                yield_task();
+                        if (task_resume_from_ISR(USART_data->task_rx)) {
+                                task_yield();
                         }
                   }
             }

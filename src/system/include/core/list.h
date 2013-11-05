@@ -48,8 +48,8 @@ typedef struct list list_t;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern list_t  *new_list(void);
-extern stdret_t delete_list(list_t *list);
+extern list_t  *list_new(void);
+extern stdret_t list_delete(list_t *list);
 extern i32_t    list_add_item(list_t *list, u32_t id, void *data);
 extern stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id, void *data);
 extern stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *data);

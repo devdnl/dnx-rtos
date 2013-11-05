@@ -312,7 +312,7 @@ static inline const char *get_host_name(void)
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
 {
-        return strncpy(buf, _get_this_task_data()->f_cwd, size);
+        return strncpy(buf, _task_get_data()->f_cwd, size);
 }
 
 //==============================================================================

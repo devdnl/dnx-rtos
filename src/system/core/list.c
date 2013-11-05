@@ -78,7 +78,7 @@ static i32_t get_iaddr_by_ID(list_t *list, u32_t id, struct list_item **previtem
  * @return pointer to new list object
  */
 //==============================================================================
-list_t *new_list(void)
+list_t *list_new(void)
 {
       return calloc(1, sizeof(list_t));
 }
@@ -97,7 +97,7 @@ list_t *new_list(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t delete_list(list_t *list)
+stdret_t list_delete(list_t *list)
 {
         if (list) {
                 struct list_item *item      = list->head;

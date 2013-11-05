@@ -49,10 +49,10 @@ extern "C" {
 #define CONVERT_TO_MiB(_val)            (_val >> 20)
 #define CONVERT_TO_GiB(_val)            (_val >> 30)
 
-#define set_cwd(const_char__pstr)       const char *__real_cwd = _get_this_task_data()->f_cwd;\
-                                        _get_this_task_data()->f_cwd = const_char__pstr
+#define set_cwd(const_char__pstr)       const char *__real_cwd = _task_get_data()->f_cwd;\
+                                        _task_get_data()->f_cwd = const_char__pstr
 
-#define restore_original_cwd()          _get_this_task_data()->f_cwd = __real_cwd
+#define restore_original_cwd()          _task_get_data()->f_cwd = __real_cwd
 
 /*==============================================================================
   Local types, enums definitions
@@ -212,7 +212,7 @@ static enum cmd_status find_external_command(const char *cmd)
         new_program(cmd, global->cwd, stdin, stdout, &state, NULL);
 
         while (state == PROGRAM_RUNNING) {
-                suspend_this_task();
+                task_suspend_now();
         }
 
         switch (state) {

@@ -128,7 +128,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
         struct eth_mem *hdl    = device_handle;
         stdret_t        status = STD_RET_ERROR;
 
-        enter_critical_section();
+        critical_section_begin();
 
         if (is_device_unlocked(&hdl->dev_lock)) {
                 free(hdl);
@@ -142,7 +142,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 status = STD_RET_OK;
         }
 
-        exit_critical_section();
+        critical_section_end();
 
         return status;
 }

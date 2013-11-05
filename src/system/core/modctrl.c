@@ -83,7 +83,7 @@ extern const int                   _regdrv_number_of_modules;
  * @return driver depending value, everything not equal to STD_RET_OK are errors
  */
 //==============================================================================
-stdret_t init_driver(const char *drv_name, const char *node_path)
+stdret_t driver_init(const char *drv_name, const char *node_path)
 {
         struct vfs_drv_interface drv_if;
 
@@ -168,7 +168,7 @@ stdret_t init_driver(const char *drv_name, const char *node_path)
  * @return driver depending value, all not equal to STD_RET_OK are errors
  */
 //==============================================================================
-stdret_t release_driver(const char *drv_name)
+stdret_t driver_release(const char *drv_name)
 {
         stdret_t status;
 
@@ -247,12 +247,12 @@ bool _lock_device(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                enter_critical_section();
+                critical_section_begin();
                 if (*dev_lock == NULL) {
-                        *dev_lock = get_task_handle();
+                        *dev_lock = task_get_handle();
                         status = true;
                 }
-                exit_critical_section();
+                critical_section_end();
         }
 
         return status;
@@ -269,11 +269,11 @@ bool _lock_device(dev_lock_t *dev_lock)
 void _unlock_device(dev_lock_t *dev_lock, bool force)
 {
         if (dev_lock) {
-                enter_critical_section();
-                if (*dev_lock == get_task_handle() || force) {
+                critical_section_begin();
+                if (*dev_lock == task_get_handle() || force) {
                         *dev_lock = NULL;
                 }
-                exit_critical_section();
+                critical_section_end();
         }
 }
 
@@ -291,11 +291,11 @@ bool _is_device_access_granted(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                enter_critical_section();
-                if (*dev_lock == get_task_handle()) {
+                critical_section_begin();
+                if (*dev_lock == task_get_handle()) {
                         status = true;
                 }
-                exit_critical_section();
+                critical_section_end();
         }
 
         return status;
@@ -315,11 +315,11 @@ bool _is_device_locked(dev_lock_t *dev_lock)
         bool status = false;
 
         if (dev_lock) {
-                enter_critical_section();
+                critical_section_begin();
                 if (*dev_lock != NULL) {
                         status = true;
                 }
-                exit_critical_section();
+                critical_section_end();
         }
 
         return status;

@@ -107,7 +107,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         STOP_IF(!src_path);
 
         struct devfs       *devfs = malloc(sizeof(struct devfs));
-        mutex_t            *mtx   = new_mutex();
+        mutex_t            *mtx   = mutex_new();
         struct devfs_chain *chain = new_chain();
 
         if (devfs && mtx && chain) {
@@ -126,7 +126,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         }
 
         if (mtx) {
-                delete_mutex(mtx);
+                mutex_delete(mtx);
         }
 
         if (chain) {
@@ -152,20 +152,20 @@ API_FS_RELEASE(devfs, void *fs_handle)
 
         struct devfs *devfs = fs_handle;
 
-        if (lock_mutex(devfs->mutex, 100) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, 100) == MUTEX_LOCKED) {
                 if (devfs->number_of_opened_devices != 0) {
-                        unlock_mutex(devfs->mutex);
+                        mutex_unlock(devfs->mutex);
                         return STD_RET_ERROR;
                 }
 
-                enter_critical_section();
-                unlock_mutex(devfs->mutex);
+                critical_section_begin();
+                mutex_unlock(devfs->mutex);
 
                 delete_chain(devfs->root_chain);
-                delete_mutex(devfs->mutex);
+                mutex_delete(devfs->mutex);
                 free(devfs);
 
-                exit_critical_section();
+                critical_section_end();
                 return STD_RET_OK;
         }
 
@@ -198,7 +198,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 struct devnode *node = get_node_by_path(devfs, path);
                 if (node) {
@@ -213,7 +213,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
                         }
                 }
 
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -246,10 +246,10 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
 
         if (node->drvif->drv_close(node->drvif->handle, force, file_owner) == STD_RET_OK) {
 
-                if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+                if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
                         devfs->number_of_opened_devices--;
                         node->opended--;
-                        unlock_mutex(devfs->mutex);
+                        mutex_unlock(devfs->mutex);
                 }
 
                 return STD_RET_OK;
@@ -444,7 +444,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 if (devfs->number_of_chains * CHAIN_NUMBER_OF_NODES == devfs->number_of_used_nodes) {
                         struct devfs_chain *chain = devfs->root_chain;
@@ -489,7 +489,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
                 }
 
 exit:
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -570,7 +570,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
         dirent.name     = NULL;
         dirent.size     = 0;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 struct devnode *node = get_n_node(devfs, dir->f_seek);
                 if (node) {
@@ -584,7 +584,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                         dir->f_seek++;
                 }
 
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return dirent;
@@ -609,7 +609,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 struct devnode *node = get_node_by_path(devfs, path);
                 if (node) {
@@ -629,7 +629,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                         }
                 }
 
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -656,7 +656,7 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 struct devnode *node = get_node_by_path(devfs, old_name);
                 if (node) {
@@ -670,7 +670,7 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
                         }
                 }
 
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -696,7 +696,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 struct devnode *node = get_node_by_path(devfs, path);
                 if (node) {
@@ -704,7 +704,7 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, int mode)
                         status = STD_RET_OK;
                 }
 
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -731,7 +731,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 struct devnode *node = get_node_by_path(devfs, path);
                 if (node) {
@@ -741,7 +741,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
                         status = STD_RET_OK;
                 }
 
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return status;
@@ -768,7 +768,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct vfs_stat *stat)
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
 
-        if (lock_mutex(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
+        if (mutex_lock(devfs->mutex, TIMEOUT_MS) == MUTEX_LOCKED) {
 
                 struct devnode *node = get_node_by_path(devfs, path);
                 if (node) {
@@ -789,7 +789,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct vfs_stat *stat)
                         status = STD_RET_OK;
                 }
 
-                unlock_mutex(devfs->mutex);
+                mutex_unlock(devfs->mutex);
         }
 
         return status;

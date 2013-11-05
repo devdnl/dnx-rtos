@@ -395,7 +395,7 @@ static void ethif_input(struct netif *netif)
 static void send_response_success()
 {
         static const int response = 0;
-        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
+        queue_send(ethif_mem->response_queue, &response, MAX_DELAY);
 }
 
 //==============================================================================
@@ -406,7 +406,7 @@ static void send_response_success()
 static void send_response_fail()
 {
         static const int response = -1;
-        send_queue(ethif_mem->response_queue, &response, MAX_DELAY);
+        queue_send(ethif_mem->response_queue, &response, MAX_DELAY);
 }
 
 //==============================================================================
@@ -536,13 +536,13 @@ static void tcpip_init_done(void *arg)
                 goto release_resources;
         }
 
-        ethif_mem->protect_request_mtx = new_mutex();
+        ethif_mem->protect_request_mtx = mutex_new();
         if (!ethif_mem->protect_request_mtx) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: new mutex fail\n"));
                 goto release_resources;
         }
 
-        ethif_mem->response_queue = new_queue(1, sizeof(int));
+        ethif_mem->response_queue = queue_new(1, sizeof(int));
         if (!ethif_mem->response_queue) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: new queue fail\n"));
                 goto release_resources;
@@ -564,7 +564,7 @@ static void tcpip_init_done(void *arg)
 
 release_resources:
         if (ethif_mem->protect_request_mtx)
-                delete_mutex(ethif_mem->protect_request_mtx);
+                mutex_delete(ethif_mem->protect_request_mtx);
 
         if (ethif_mem)
                 free(ethif_mem);
@@ -592,20 +592,20 @@ static int send_request_and_wait_for_response(request *request)
         if (!request)
                 return -1;
 
-        u32_t time = get_OS_time_ms();
+        u32_t time = kernel_get_time_ms();
         while (!ethif_mem->eth_file) {
-                if (get_OS_time_ms() - time >= REQUEST_TIMEOUT_MS)
+                if (kernel_get_time_ms() - time >= REQUEST_TIMEOUT_MS)
                         return -1;
                 sleep_ms(250);
         }
 
         int response = -1;
-        if (lock_mutex(ethif_mem->protect_request_mtx, REQUEST_TIMEOUT_MS)) {
+        if (mutex_lock(ethif_mem->protect_request_mtx, REQUEST_TIMEOUT_MS)) {
 
                 send_request(request);
-                receive_queue(ethif_mem->response_queue, &response, MAX_DELAY);
+                queue_receive(ethif_mem->response_queue, &response, MAX_DELAY);
 
-                unlock_mutex(ethif_mem->protect_request_mtx);
+                mutex_unlock(ethif_mem->protect_request_mtx);
         }
 
         return response;

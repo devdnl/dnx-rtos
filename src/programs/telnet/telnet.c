@@ -137,7 +137,7 @@ PROGRAM_MAIN(telnet, int argc, char *argv[])
                                         if (netapi_accept(listener, &new_conn) == NETAPI_ERR_OK) {
                                                 puts("Starting new thread");
 
-                                                if (!new_task(telnet_thread, "telnet*", STACK_DEPTH_LOW, new_conn)) {
+                                                if (!task_new(telnet_thread, "telnet*", STACK_DEPTH_LOW, new_conn)) {
                                                         netapi_delete_conn(new_conn);
                                                 }
                                         } else {

@@ -58,16 +58,16 @@ extern "C" {
          .stack_depth   = stack_size}
 
 #define stdin \
-        _get_this_task_data()->f_stdin
+        _task_get_data()->f_stdin
 
 #define stdout \
-        _get_this_task_data()->f_stdout
+        _task_get_data()->f_stdout
 
 #define stderr \
-        _get_this_task_data()->f_stderr
+        _task_get_data()->f_stderr
 
 #define global \
-        ((struct __global_vars__*)_get_this_task_data()->f_global_vars)
+        ((struct __global_vars__*)_task_get_data()->f_global_vars)
 
 #define create_fast_global(name) \
         struct __global_vars__*name = global
