@@ -167,7 +167,7 @@ uint32_t _libfat_get_fattime(void)
 int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
         if (sobj) {
-                _LIBFAT_MUTEX_t mtx = new_mutex();
+                _LIBFAT_MUTEX_t mtx = mutex_new();
                 if (mtx) {
                         *sobj = mtx;
                         return 1;
@@ -190,7 +190,7 @@ int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                delete_mutex(sobj);
+                mutex_delete(sobj);
                 return 1;
         }
 
@@ -210,7 +210,7 @@ int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                if (lock_mutex(sobj, _LIBFAT_FS_TIMEOUT) == MUTEX_LOCKED) {
+                if (mutex_lock(sobj, _LIBFAT_FS_TIMEOUT) == MUTEX_LOCKED) {
                         return 1;
                 }
         }
@@ -228,7 +228,7 @@ int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 void _libfat_unlock_access(_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                unlock_mutex(sobj);
+                mutex_unlock(sobj);
         }
 }
 

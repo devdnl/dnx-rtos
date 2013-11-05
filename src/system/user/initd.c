@@ -35,6 +35,7 @@ extern "C" {
 #include "user/initd.h"
 #include "system/ioctl.h"
 #include "system/netapi.h"
+#include "system/mount.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -73,11 +74,11 @@ static int run_level_exit(void);
  * is an example to show how this can be implemented.
  */
 //==============================================================================
-void task_initd(void *arg)
+void initd(void *arg)
 {
         (void)arg;
 
-        set_priority(INITD_PRIORITY);
+        task_set_priority(INITD_PRIORITY);
 
         if (run_level_boot() != STD_RET_OK)
                 goto start_failure;
@@ -130,11 +131,11 @@ static int run_level_boot(void)
 //==============================================================================
 static int run_level_0(void)
 {
-        init_driver("gpio", "/dev/gpio");
+        driver_init("gpio", "/dev/gpio");
 
-        stdret_t pll_init = init_driver("pll", NULL);
+        stdret_t pll_init = driver_init("pll", NULL);
 
-        init_driver("uart1", "/dev/ttyS0");
+        driver_init("uart1", "/dev/ttyS0");
 
         if (pll_init != STD_RET_OK) {
                 FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
@@ -144,23 +145,23 @@ static int run_level_0(void)
                 }
         }
 
-        init_driver("tty0", "/dev/tty0");
+        driver_init("tty0", "/dev/tty0");
 
-        enable_printk("/dev/tty0");
+        printk_enable("/dev/tty0");
 
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
-               get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
+               dnx_get_OS_name(), dnx_get_kernel_name(), dnx_get_author_name(), dnx_get_author_email());
 
         if (pll_init != STD_RET_OK) {
                 printk(FONT_COLOR_RED"PLL not started, running no base frequency!"RESET_ATTRIBUTES"\n");
         }
 
-        init_driver("tty1", "/dev/tty1");
-        init_driver("tty2", "/dev/tty2");
-        init_driver("tty3", "/dev/tty3");
-        init_driver("sdspi", "/dev/sda");
-        init_driver("ethmac", "/dev/eth0");
+        driver_init("tty1", "/dev/tty1");
+        driver_init("tty2", "/dev/tty2");
+        driver_init("tty3", "/dev/tty3");
+        driver_init("sdspi", "/dev/sda");
+        driver_init("ethmac", "/dev/eth0");
 
         return STD_RET_OK;
 }
@@ -225,7 +226,7 @@ static int run_level_1(void)
                        "  IP Address: %d.%d.%d.%d\n"
                        "  Net Mask  : %d.%d.%d.%d\n"
                        "  Gateway   : %d.%d.%d.%d\n",
-                       get_host_name(),
+                       dnx_get_host_name(),
                        ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                        ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
                        netapi_get_ip_part_a(&ifcfg.IP_address),  netapi_get_ip_part_b(&ifcfg.IP_address),
@@ -261,10 +262,10 @@ static int run_level_2(void)
         }
 
         /* initd info about stack usage */
-        printk("[%d] initd: free stack: %d levels\n\n", get_OS_time_ms(), get_free_stack());
+        printk("[%d] initd: free stack: %d levels\n\n", kernel_get_time_ms(), task_get_free_stack());
 
         /* change TTY for printk */
-        enable_printk("/dev/tty3");
+        printk_enable("/dev/tty3");
 
         for (;;) {
                 ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
@@ -278,16 +279,16 @@ static int run_level_2(void)
                                 }
 
                                 fprintf(tty[current_tty], "Welcome to %s/%s (tty%d)\n",
-                                        get_OS_name(), get_kernel_name(), current_tty);
+                                        dnx_get_OS_name(), dnx_get_kernel_name(), current_tty);
 
-                                program[current_tty] = new_program("terminal", "/",
-                                                                   tty[current_tty],
-                                                                   tty[current_tty],
-                                                                   &state[current_tty],
-                                                                   NULL);
+                                program[current_tty] = program_start("terminal", "/",
+                                                                     tty[current_tty],
+                                                                     tty[current_tty],
+                                                                     &state[current_tty],
+                                                                     NULL);
 
                                 if (program[current_tty]) {
-                                        set_task_priority(program[current_tty], 0);
+                                        task_set_priority_of(program[current_tty], 0);
                                 }
 
                                 switch (state[current_tty]) {
@@ -351,8 +352,8 @@ static int run_level_2(void)
 //==============================================================================
 static int run_level_exit(void)
 {
-        enter_critical_section();
-        disable_ISR();
+        critical_section_begin();
+        ISR_disable();
 
         while (true) {
                 sleep_ms(MAX_DELAY);

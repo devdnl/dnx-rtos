@@ -101,7 +101,7 @@ extern const int               _prog_table_size;
  * @return NULL if error, otherwise task handle
  */
 //==============================================================================
-task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
+task_t *program_start(const char *cmd, const char *cwd, FILE *stdin,
                          FILE *stdout, enum prog_state *status, int *exit_code)
 {
         struct program_data *pdata   = NULL;
@@ -142,7 +142,7 @@ task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
 
         set_status(status, PROGRAM_RUNNING);
 
-        taskhdl = new_task(task_program_startup, regpdata.program_name,
+        taskhdl = task_new(task_program_startup, regpdata.program_name,
                            regpdata.stack_depth, pdata);
 
         if (taskhdl == NULL) {
@@ -163,13 +163,13 @@ task_t *new_program(const char *cmd, const char *cwd, FILE *stdin,
  * @param  exit_code            program exit value
  */
 //==============================================================================
-void delete_program(task_t *taskhdl, int exit_code)
+void program_kill(task_t *taskhdl, int exit_code)
 {
         if (taskhdl == NULL) {
                 return;
         }
 
-        struct task_data *tdata = _get_task_data(taskhdl);
+        struct task_data *tdata = _task_get_data_of(taskhdl);
         if (tdata) {
                 if (tdata->f_global_vars) {
                         sysm_tskfree_as(taskhdl, tdata->f_global_vars);
@@ -195,7 +195,7 @@ void delete_program(task_t *taskhdl, int exit_code)
                 }
         }
 
-        delete_task(taskhdl);
+        task_delete(taskhdl);
 }
 
 //==============================================================================
@@ -207,7 +207,7 @@ void delete_program(task_t *taskhdl, int exit_code)
 //==============================================================================
 void exit(int status)
 {
-        delete_program(get_task_handle(), status);
+        program_kill(task_get_handle(), status);
 
         /* wait to kill program */
         for (;;);
@@ -220,7 +220,7 @@ void exit(int status)
 //==============================================================================
 void abort(void)
 {
-        delete_program(get_task_handle(), -1);
+        program_kill(task_get_handle(), -1);
 
         /* wait to kill program */
         for (;;);
@@ -236,15 +236,15 @@ int system(const char *command)
         enum prog_state state     = PROGRAM_UNKNOWN_STATE;
         int             exit_code = EXIT_FAILURE;
 
-        new_program(command,
-                    _get_this_task_data()->f_cwd,
-                    _get_this_task_data()->f_stdin,
-                    _get_this_task_data()->f_stdout,
+        program_start(command,
+                    _task_get_data()->f_cwd,
+                    _task_get_data()->f_stdin,
+                    _task_get_data()->f_stdout,
                     &state,
                     &exit_code);
 
         while (state == PROGRAM_RUNNING) {
-                suspend_this_task();
+                task_suspend_now();
         }
 
         return exit_code;
@@ -264,7 +264,7 @@ static void task_program_startup(void *argv)
         void                *task_mem  = NULL;
         int                  exit_code = -1;
 
-        if (!(task_data = _get_this_task_data())) {
+        if (!(task_data = _task_get_data())) {
                 sysm_sysfree(prog_data);
                 set_status(prog_data->status, PROGRAM_HANDLE_ERROR);
                 task_exit();
@@ -348,7 +348,7 @@ static char **new_argument_table(const char *str, int *argc)
                 goto exit_error;
         }
 
-        if ((arg_list = new_list()) == NULL) {
+        if ((arg_list = list_new()) == NULL) {
                 goto exit_error;
         }
 
@@ -469,7 +469,7 @@ static char **new_argument_table(const char *str, int *argc)
                 list_rm_nitem(arg_list, 0);
         }
 
-        delete_list(arg_list);
+        list_delete(arg_list);
 
         *argc = arg_count;
         return arg_table;
@@ -488,7 +488,7 @@ exit_error:
                         list_rm_nitem(arg_list, 0);
                 }
 
-                delete_list(arg_list);
+                list_delete(arg_list);
         }
 
         if (arg_string) {

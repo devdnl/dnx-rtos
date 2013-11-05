@@ -77,7 +77,7 @@ extern const uint             _FS_table_size;
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t mount(const char *FS_name, const char *src_path, const char *mount_point)
+stdret_t _mount(const char *FS_name, const char *src_path, const char *mount_point)
 {
         if (!FS_name || !mount_point || !src_path) {
                 return STD_RET_ERROR;
@@ -103,7 +103,7 @@ stdret_t mount(const char *FS_name, const char *src_path, const char *mount_poin
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t umount(const char *mount_point)
+stdret_t _umount(const char *mount_point)
 {
         if (mount_point)
                 return vfs_umount(mount_point);

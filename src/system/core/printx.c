@@ -360,7 +360,7 @@ static int calc_format_size(const char *format, va_list arg)
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-void enable_printk(char *filename)
+void printk_enable(char *filename)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         /* close file if opened */
@@ -383,7 +383,7 @@ void enable_printk(char *filename)
  * @brief Disable printk functionality
  */
 //==============================================================================
-void disable_printk(void)
+void printk_disable(void)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         if (sys_printk_file) {

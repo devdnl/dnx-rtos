@@ -107,7 +107,7 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
         u64_t lfile_size = ftell(src_file);
         fseek(src_file, 0, SEEK_SET);
 
-        uint  start_time   = get_OS_time_ms();
+        uint  start_time   = kernel_get_time_ms();
         uint  refresh_time = start_time;
         u64_t lcopy_size   = 0;
         int   n;
@@ -115,8 +115,8 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
         while ((n = fread(buffer, sizeof(char), buffer_size, src_file))) {
                 lcopy_size += n;
 
-                if (get_OS_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
-                        refresh_time = get_OS_time_ms();
+                if (kernel_get_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
+                        refresh_time = kernel_get_time_ms();
 
                         u32_t file_size = lfile_size / 1024;
                         u32_t copy_size = lcopy_size / 1024;
@@ -132,7 +132,7 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                 }
         }
 
-        uint stop_time = get_OS_time_ms() - start_time;
+        uint stop_time = kernel_get_time_ms() - start_time;
         u32_t copy_size = lcopy_size;
 
         if (lcopy_size >= 1024) {

@@ -48,7 +48,7 @@
 */
 #if !defined(luai_makeseed)
 #include <time.h>
-#define luai_makeseed()		cast(unsigned int, get_tick_counter())
+#define luai_makeseed()		cast(unsigned int, kernel_get_tick_counter())
 #endif
 
 

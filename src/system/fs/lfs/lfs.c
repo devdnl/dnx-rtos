@@ -40,7 +40,7 @@ extern "C" {
 /* wait time for operation on FS */
 #define MTX_BLOCK_TIME                    10
 
-#define force_lock_recursive_mutex(mtx)   while (lock_recursive_mutex(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED)
+#define force_lock_recursive_mutex(mtx)   while (recursive_mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED)
 
 /*==============================================================================
   Local types, enums definitions
@@ -123,21 +123,21 @@ API_FS_INIT(lfs, void **fs_handle, const char *src_path)
                 return STD_RET_ERROR;
         }
 
-        lfs->resource_mtx  = new_mutex();
-        lfs->root_dir.data = new_list();
-        lfs->list_of_opended_files = new_list();
+        lfs->resource_mtx  = mutex_new();
+        lfs->root_dir.data = list_new();
+        lfs->list_of_opended_files = list_new();
 
         if (!lfs->resource_mtx || !lfs->root_dir.data || !lfs->list_of_opended_files) {
                 if (lfs->resource_mtx) {
-                        delete_mutex(lfs->resource_mtx);
+                        mutex_delete(lfs->resource_mtx);
                 }
 
                 if (lfs->root_dir.data) {
-                        delete_list(lfs->root_dir.data);
+                        list_delete(lfs->root_dir.data);
                 }
 
                 if (lfs->list_of_opended_files) {
-                        delete_list(lfs->list_of_opended_files);
+                        list_delete(lfs->list_of_opended_files);
                 }
 
                 free(lfs);
@@ -232,7 +232,7 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const struct vfs_drv_interf
 
                         /* add new driver to this folder */
                         if (list_add_item(node->data, lfs->id_counter++, drv_file) >= 0) {
-                                unlock_recursive_mutex(lfs->resource_mtx);
+                                recursive_mutex_unlock(lfs->resource_mtx);
                                 return STD_RET_OK;
                         }
                 }
@@ -250,7 +250,7 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const struct vfs_drv_interf
         }
 
 error:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -301,17 +301,17 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path)
                         goto error;
                 }
 
-                if ((new_dir->data = new_list())) {
+                if ((new_dir->data = list_new())) {
                         new_dir->name = new_dir_name;
                         new_dir->size = sizeof(node_t);
                         new_dir->type = NODE_TYPE_DIR;
 
                         /* add new folder to this folder */
                         if (list_add_item(base_node->data, lfs->id_counter++, new_dir) >= 0) {
-                                unlock_recursive_mutex(lfs->resource_mtx);
+                                recursive_mutex_unlock(lfs->resource_mtx);
                                 return STD_RET_OK;
                         } else {
-                                delete_list(new_dir->data);
+                                list_delete(new_dir->data);
                         }
                 } else {
                         free(new_dir);
@@ -323,7 +323,7 @@ error:
                 free(new_dir_name);
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -358,12 +358,12 @@ API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
                         dir->f_seek     = 0;
                         dir->f_dd       = node;
 
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -426,7 +426,7 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
                 dirent.size     = node->size;
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
 
         return dirent;
 }
@@ -483,16 +483,16 @@ API_FS_REMOVE(lfs, void *fs_handle, const char *path)
         if (remove_file == TRUE) {
                 u32_t item_ID;
                 if (list_get_nitem_ID(base_node->data, item, &item_ID) == STD_RET_OK) {
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
                         return delete_node(base_node, obj_node, item_ID);
                 }
         } else {
-                unlock_recursive_mutex(lfs->resource_mtx);
+                recursive_mutex_unlock(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
 error:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -554,7 +554,7 @@ API_FS_RENAME(lfs, void *fs_handle, const char *old_name, const char *new_name)
                         node->size = sizeof(node_t);
                 }
 
-                unlock_recursive_mutex(lfs->resource_mtx);
+                recursive_mutex_unlock(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
@@ -563,7 +563,7 @@ error:
                 free(new_node_name);
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -591,11 +591,11 @@ API_FS_CHMOD(lfs, void *fs_handle, const char *path, int mode)
         node_t *node = get_node(path, &lfs->root_dir, 0, NULL);
         if (node) {
                 node->mode = mode;
-                unlock_recursive_mutex(lfs->resource_mtx);
+                recursive_mutex_unlock(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -627,11 +627,11 @@ API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
                 node->uid = owner;
                 node->gid = group;
 
-                unlock_recursive_mutex(lfs->resource_mtx);
+                recursive_mutex_unlock(lfs->resource_mtx);
                 return STD_RET_OK;
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -680,12 +680,12 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct vfs_stat *stat)
                         stat->st_size  = node->size;
                         stat->st_uid   = node->uid;
 
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -734,12 +734,12 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
                         stat->st_size  = opened_file->node->size;
                         stat->st_uid   = opened_file->node->uid;
 
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
                 }
         }
 
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
 
         return STD_RET_ERROR;
 }
@@ -873,11 +873,11 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
         u32_t cfd;
         list_get_nitem_ID(lfs->list_of_opended_files, item, &cfd);
         *fd = (fd_t)cfd;
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_OK;
 
 error:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -961,7 +961,7 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_
         }
 
 exit:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return status;
 }
 
@@ -1007,7 +1007,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 struct vfs_drv_interface *drv_if = node->data;
 
                 if (drv_if->drv_write) {
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
 
                         return drv_if->drv_write(drv_if->handle, src, count, fpos);
                 }
@@ -1044,7 +1044,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
         }
 
 exit:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return n;
 }
 
@@ -1090,7 +1090,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 struct vfs_drv_interface *drv_if = node->data;
 
                 if (drv_if->drv_read) {
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
                         return drv_if->drv_read(drv_if->handle, dst, count, fpos);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
@@ -1120,7 +1120,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
         }
 
 exit:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return n;
 }
 
@@ -1162,13 +1162,13 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
                 struct vfs_drv_interface *drv_if = opened_file->node->data;
 
                 if (drv_if->drv_ioctl) {
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
                         return drv_if->drv_ioctl(drv_if->handle, request, arg);
                 }
         }
 
 error:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -1207,13 +1207,13 @@ API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
                 struct vfs_drv_interface *drv_if = opened_file->node->data;
 
                 if (drv_if->drv_flush) {
-                        unlock_recursive_mutex(lfs->resource_mtx);
+                        recursive_mutex_unlock(lfs->resource_mtx);
                         return drv_if->drv_flush(drv_if->handle);
                 }
         }
 
 error:
-        unlock_recursive_mutex(lfs->resource_mtx);
+        recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -1236,7 +1236,7 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
                 if (list_get_item_count(target->data) > 0) {
                         return STD_RET_ERROR;
                 } else {
-                        delete_list(target->data);
+                        list_delete(target->data);
                         target->data = NULL;
                 }
         }

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    list.h
+@file    mount.h
 
 @author  Daniel Zorychta
 
-@brief   This file support dynamically lists
+@brief   Library with mount file system tools
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _LIST_H_
-#define _LIST_H_
+#ifndef _MOUNT_H_
+#define _MOUNT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,42 +34,62 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
+#include "core/fsctrl.h"
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
-typedef struct list list_t;
 
 /*==============================================================================
-  Exported function prototypes
+  Exported objects
 ==============================================================================*/
-extern list_t  *list_new(void);
-extern stdret_t list_delete(list_t *list);
-extern i32_t    list_add_item(list_t *list, u32_t id, void *data);
-extern stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id, void *data);
-extern stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *data);
-extern stdret_t list_rm_nitem(list_t *list, i32_t nitem);
-extern stdret_t list_rm_iditem(list_t *list, u32_t id);
-extern stdret_t list_set_nitem_data(list_t *list, i32_t nitem, void *data);
-extern void    *list_get_nitem_data(list_t *list, i32_t nitem);
-extern stdret_t list_set_iditem_data(list_t *list, u32_t id, void *data);
-extern void    *list_get_iditem_data(list_t *list, u32_t id);
-extern stdret_t list_unlink_nitem_data(list_t *list, i32_t nitem);
-extern stdret_t list_unlink_iditem_data(list_t *list, u32_t id);
-extern stdret_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid);
-extern stdret_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem);
-extern i32_t    list_get_item_count(list_t *list);
+
+/*==============================================================================
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function mount file system
+ *
+ * @param FS_name        file system name
+ * @param src_path       path to file with source data
+ * @param mount_point    mount point of file system
+ *
+ * @return 0 if success, otherwise 1
+ */
+//==============================================================================
+static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
+{
+        return _mount(FS_name, src_path, mount_point);
+}
+
+//==============================================================================
+/**
+ * @brief Function unmount file system
+ *
+ * @param *mount_point   path to file system
+ *
+ * @return 0 if success, otherwise 1
+ */
+//==============================================================================
+static inline int umount(const char *mount_point)
+{
+        return _umount(mount_point);
+}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _LIST_H_ */
+#endif /* _MOUNT_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

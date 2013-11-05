@@ -119,8 +119,8 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
         STOP_IF(!fs_handle);
 
         struct procfs *procfs    = calloc(1, sizeof(struct procfs));
-        list_t        *file_list = new_list();
-        mutex_t       *mtx       = new_mutex();
+        list_t        *file_list = list_new();
+        mutex_t       *mtx       = mutex_new();
 
         if (procfs && file_list && mtx) {
                 procfs->file_list    = file_list;
@@ -132,11 +132,11 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
         }
 
         if (file_list) {
-                delete_list(file_list);
+                list_delete(file_list);
         }
 
         if (mtx) {
-                delete_mutex(mtx);
+                mutex_delete(mtx);
         }
 
         if (procfs) {
@@ -162,20 +162,20 @@ API_FS_RELEASE(procfs, void *fs_handle)
 
         struct procfs *procfs = fs_handle;
 
-        if (lock_mutex(procfs->resource_mtx, 100) == MUTEX_LOCKED) {
+        if (mutex_lock(procfs->resource_mtx, 100) == MUTEX_LOCKED) {
                 if (list_get_item_count(procfs->file_list) != 0) {
-                        unlock_mutex(procfs->resource_mtx);
+                        mutex_unlock(procfs->resource_mtx);
                         return STD_RET_ERROR;
                 }
 
-                enter_critical_section();
-                unlock_mutex(procfs->resource_mtx);
+                critical_section_begin();
+                mutex_unlock(procfs->resource_mtx);
 
-                delete_list(procfs->file_list);
-                delete_mutex(procfs->resource_mtx);
+                list_delete(procfs->file_list);
+                mutex_delete(procfs->resource_mtx);
                 free(procfs);
 
-                exit_critical_section();
+                critical_section_end();
                 return STD_RET_OK;
         }
 
@@ -256,17 +256,17 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                         return STD_RET_ERROR;
                 }
 
-                while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+                while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
                 if (list_add_item(procmem->file_list, procmem->ID_counter, fileInf) == 0) {
                         *fd    = procmem->ID_counter++;
                         *lseek = 0;
 
-                        unlock_mutex(procmem->resource_mtx);
+                        mutex_unlock(procmem->resource_mtx);
                         return STD_RET_OK;
                 }
 
-                unlock_mutex(procmem->resource_mtx);
+                mutex_unlock(procmem->resource_mtx);
                 free(fileInf);
                 return STD_RET_ERROR;
 
@@ -297,7 +297,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                         fileInf->taskhdl   = taskdata.task_handle;
                         fileInf->task_file = TASK_FILE_NONE;
 
-                        while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+                        while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
                         if (list_add_item(procmem->file_list,
                                         procmem->ID_counter, fileInf) == 0) {
@@ -305,11 +305,11 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                                 *fd = procmem->ID_counter++;
                                 *lseek = 0;
 
-                                unlock_mutex(procmem->resource_mtx);
+                                mutex_unlock(procmem->resource_mtx);
                                 return STD_RET_OK;
                         }
 
-                        unlock_mutex(procmem->resource_mtx);
+                        mutex_unlock(procmem->resource_mtx);
                         free(fileInf);
                         return STD_RET_ERROR;
                 }
@@ -342,14 +342,14 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *
 
         struct procfs *procmem = fs_handle;
         if (procmem) {
-                while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+                while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 
                 if (list_rm_iditem(procmem->file_list, fd) == STD_RET_OK) {
-                        unlock_mutex(procmem->resource_mtx);
+                        mutex_unlock(procmem->resource_mtx);
                         return STD_RET_OK;
                 }
 
-                unlock_mutex(procmem->resource_mtx);
+                mutex_unlock(procmem->resource_mtx);
         }
 
         return STD_RET_ERROR;
@@ -406,9 +406,9 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
 
         struct procfs *procmem = fs_handle;
 
-        while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
         struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
-        unlock_mutex(procmem->resource_mtx);
+        mutex_unlock(procmem->resource_mtx);
 
         if (fileInf == NULL) {
                 return 0;
@@ -553,9 +553,9 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
 
         struct procfs *procmem = fs_handle;
 
-        while (lock_mutex(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
         struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
-        unlock_mutex(procmem->resource_mtx);
+        mutex_unlock(procmem->resource_mtx);
 
         if (fileInf == NULL) {
                 return STD_RET_ERROR;

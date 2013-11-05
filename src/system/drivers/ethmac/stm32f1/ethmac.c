@@ -128,7 +128,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
         struct eth_mem *hdl    = device_handle;
         stdret_t        status = STD_RET_ERROR;
 
-        enter_critical_section();
+        critical_section_begin();
 
         if (is_device_unlocked(&hdl->dev_lock)) {
                 free(hdl);
@@ -142,7 +142,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 status = STD_RET_OK;
         }
 
-        exit_critical_section();
+        critical_section_end();
 
         return status;
 }
@@ -165,7 +165,7 @@ API_MOD_OPEN(ETHMAC, void *device_handle, int flags)
 
         struct eth_mem *hdl = device_handle;
 
-        if (lock_device(&hdl->dev_lock)) {
+        if (device_lock(&hdl->dev_lock)) {
                 return STD_RET_OK;
         }
 
@@ -191,8 +191,8 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force, const task_t *opened_by_t
 
         struct eth_mem *hdl = device_handle;
 
-        if (is_device_access_granted(&hdl->dev_lock) || force) {
-                unlock_device(&hdl->dev_lock, force);
+        if (device_is_access_granted(&hdl->dev_lock) || force) {
+                device_unlock(&hdl->dev_lock, force);
                 return STD_RET_OK;
         }
 
@@ -262,7 +262,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
         struct eth_mem *hdl = device_handle;
 
-        if (is_device_access_granted(&hdl->dev_lock)) {
+        if (device_is_access_granted(&hdl->dev_lock)) {
                 switch (request) {
                 case ETHMAC_IORQ_ETHERNET_INIT:
                         /* configure Ethernet */
@@ -538,7 +538,7 @@ API_MOD_FLUSH(ETHMAC, void *device_handle)
 
         struct eth_mem *hdl = device_handle;
 
-        if (is_device_access_granted(&hdl->dev_lock)) {
+        if (device_is_access_granted(&hdl->dev_lock)) {
                 ETH_FlushTransmitFIFO();
         }
 
