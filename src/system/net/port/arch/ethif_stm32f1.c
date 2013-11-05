@@ -222,12 +222,12 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 //==============================================================================
 static err_t low_level_init(struct netif *netif)
 {
-        netif->hwaddr[0]  = _ETHIF_MAC_ADDR_0;
-        netif->hwaddr[1]  = _ETHIF_MAC_ADDR_1;
-        netif->hwaddr[2]  = _ETHIF_MAC_ADDR_2;
-        netif->hwaddr[3]  = _ETHIF_MAC_ADDR_3;
-        netif->hwaddr[4]  = _ETHIF_MAC_ADDR_4;
-        netif->hwaddr[5]  = _ETHIF_MAC_ADDR_5;
+        netif->hwaddr[0] = ETHIF_MAC_ADDR_0;
+        netif->hwaddr[1] = ETHIF_MAC_ADDR_1;
+        netif->hwaddr[2] = ETHIF_MAC_ADDR_2;
+        netif->hwaddr[3] = ETHIF_MAC_ADDR_3;
+        netif->hwaddr[4] = ETHIF_MAC_ADDR_4;
+        netif->hwaddr[5] = ETHIF_MAC_ADDR_5;
 
         if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_SET_MAC_ADR, netif->hwaddr) != 0) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
@@ -548,7 +548,7 @@ static void tcpip_init_done(void *arg)
                 goto release_resources;
         }
 
-        while (!(ethif_mem->eth_file = fopen(_ETHIF_FILE, "r+"))) {
+        while (!(ethif_mem->eth_file = fopen(_ETHIF_INTERFACE_FILE, "r+"))) {
                 sleep_ms(100);
         }
 
@@ -814,12 +814,12 @@ int _ethif_get_ifconfig(ifconfig *ifcfg)
                 ifcfg->gateway    = ip_addr_any;
         }
 
-        ifcfg->hw_address[0] = _ETHIF_MAC_ADDR_0;
-        ifcfg->hw_address[1] = _ETHIF_MAC_ADDR_1;
-        ifcfg->hw_address[2] = _ETHIF_MAC_ADDR_2;
-        ifcfg->hw_address[3] = _ETHIF_MAC_ADDR_3;
-        ifcfg->hw_address[4] = _ETHIF_MAC_ADDR_4;
-        ifcfg->hw_address[5] = _ETHIF_MAC_ADDR_5;
+        ifcfg->hw_address[0] = ETHIF_MAC_ADDR_0;
+        ifcfg->hw_address[1] = ETHIF_MAC_ADDR_1;
+        ifcfg->hw_address[2] = ETHIF_MAC_ADDR_2;
+        ifcfg->hw_address[3] = ETHIF_MAC_ADDR_3;
+        ifcfg->hw_address[4] = ETHIF_MAC_ADDR_4;
+        ifcfg->hw_address[5] = ETHIF_MAC_ADDR_5;
         ifcfg->rx_packets    = ethif_mem->rx_packets;
         ifcfg->rx_bytes      = ethif_mem->rx_bytes;
         ifcfg->tx_packets    = ethif_mem->tx_packets;

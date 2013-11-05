@@ -40,6 +40,17 @@
    ---------- Platform specific locking ----------
    -----------------------------------------------
 */
+
+/*
+ * MAC address
+ */
+#define ETHIF_MAC_ADDR_0                        0x50
+#define ETHIF_MAC_ADDR_1                        0xE5
+#define ETHIF_MAC_ADDR_2                        0x49
+#define ETHIF_MAC_ADDR_3                        0x37
+#define ETHIF_MAC_ADDR_4                        0xB5
+#define ETHIF_MAC_ADDR_5                        0xBD
+
 /*
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain
  * critical regions during buffer allocation, deallocation and memory
