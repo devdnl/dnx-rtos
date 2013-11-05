@@ -154,7 +154,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
 
                         task_t *task = (task_t *)task_handle;
                         if (task != task_get_parent_handle()) {
-                                program_delete(task, EXIT_FAILURE);
+                                program_kill(task, EXIT_FAILURE);
                         }
 
                         ioctl(stdin, TTY_IORQ_ECHO_OFF);

@@ -210,7 +210,7 @@ static enum cmd_status find_external_command(const char *cmd)
         enum prog_state state  = PROGRAM_UNKNOWN_STATE;
         enum cmd_status status = CMD_STATUS_NOT_EXIST;
 
-        program_new(cmd, global->cwd, stdin, stdout, &state, NULL);
+        program_start(cmd, global->cwd, stdin, stdout, &state, NULL);
 
         while (state == PROGRAM_RUNNING) {
                 task_suspend_now();

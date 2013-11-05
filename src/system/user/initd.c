@@ -281,11 +281,11 @@ static int run_level_2(void)
                                 fprintf(tty[current_tty], "Welcome to %s/%s (tty%d)\n",
                                         dnx_get_OS_name(), dnx_get_kernel_name(), current_tty);
 
-                                program[current_tty] = program_new("terminal", "/",
-                                                                   tty[current_tty],
-                                                                   tty[current_tty],
-                                                                   &state[current_tty],
-                                                                   NULL);
+                                program[current_tty] = program_start("terminal", "/",
+                                                                     tty[current_tty],
+                                                                     tty[current_tty],
+                                                                     &state[current_tty],
+                                                                     NULL);
 
                                 if (program[current_tty]) {
                                         task_set_priority_of(program[current_tty], 0);

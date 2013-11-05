@@ -98,8 +98,8 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t   *program_new       (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
-extern void      program_delete    (task_t*, int);
+extern task_t   *program_start     (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
+extern void      program_kill      (task_t*, int);
 extern void      exit              (int);
 extern void      abort             (void);
 extern int       system            (const char*);
