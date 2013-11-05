@@ -469,19 +469,19 @@ static inline struct task_data *_get_task_data(task_t *taskhdl)
  * @return parent task handle
  */
 //==============================================================================
-static inline task_t *get_parent_handle(void)
+static inline task_t *get_parent_task_handle(void)
 {
         return _get_task_data(THIS_TASK)->f_parent_task;
 }
 
 //==============================================================================
 /**
- * @brief Function set global variables
+ * @brief Function set global variables address
  *
  * @param[in] *mem
  */
 //==============================================================================
-static inline void set_global_variables(void *mem)
+static inline void set_address_of_global_variables(void *mem)
 {
         _get_task_data(THIS_TASK)->f_global_vars = mem;
 }
