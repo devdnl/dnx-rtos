@@ -162,51 +162,12 @@ static inline void sleep(const uint seconds)
 
 //==============================================================================
 /**
- * @brief Function suspend selected task
- *
- * @param[in] *taskhdl          task handle
- */
-//==============================================================================
-static inline void suspend_task(task_t *taskhdl)
-{
-        vTaskSuspend(taskhdl);
-}
-
-//==============================================================================
-/**
  * @brief Function suspend current task
  */
 //==============================================================================
 static inline void suspend_this_task(void)
 {
         vTaskSuspend(THIS_TASK);
-}
-
-//==============================================================================
-/**
- * @brief Function resume selected task
- *
- * @param[in] *taskhdl          task handle
- */
-//==============================================================================
-static inline void resume_task(task_t *taskhdl)
-{
-        vTaskResume(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function resume selected task from ISR
- *
- * @param[in] *taskhdl          task handle
- *
- * @retval true                 if yield required
- * @retval false                if yield not required
- */
-//==============================================================================
-static inline int resume_task_from_ISR(task_t *taskhdl)
-{
-        return xTaskResumeFromISR(taskhdl);
 }
 
 //==============================================================================
@@ -285,20 +246,6 @@ static inline int get_OS_time_ms(void)
 
 //==============================================================================
 /**
- * @brief Function return name of selected task
- *
- * @param[in] *taskhdl          task handle
- *
- * @return name of selected task
- */
-//==============================================================================
-static inline char *get_task_name(task_t *taskhdl)
-{
-        return (char *)pcTaskGetTaskName(taskhdl);
-}
-
-//==============================================================================
-/**
  * @brief Function return name of current task
  *
  * @return name of current task
@@ -319,33 +266,6 @@ static inline char *get_this_task_name(void)
 static inline task_t *get_task_handle(void)
 {
         return xTaskGetCurrentTaskHandle();
-}
-
-//==============================================================================
-/**
- * @brief Function return task priority
- *
- * @param[in] *taskhdl          task handle
- *
- * @return priority of selected task
- */
-//==============================================================================
-static inline int get_task_priority(task_t *taskhdl)
-{
-        return (int)(uxTaskPriorityGet(taskhdl) - (CONFIG_RTOS_TASK_MAX_PRIORITIES / 2));
-}
-
-//==============================================================================
-/**
- * @brief Function set selected task priority
- *
- * @param[in] *taskhdl          task handle
- * @param[in]  priority         priority
- */
-//==============================================================================
-static inline void set_task_priority(task_t *taskhdl, const int priority)
-{
-        vTaskPrioritySet(taskhdl, PRIORITY(priority));
 }
 
 //==============================================================================
@@ -382,20 +302,6 @@ static inline int get_priority(void)
 static inline int get_free_stack(void)
 {
         return uxTaskGetStackHighWaterMark(THIS_TASK);
-}
-
-//==============================================================================
-/**
- * @brief Function return a free stack level of selected task
- *
- * @param[in] *taskhdl          task handle
- *
- * @return free stack level
- */
-//==============================================================================
-static inline int get_task_free_stack(task_t *taskhdl)
-{
-        return uxTaskGetStackHighWaterMark(taskhdl);
 }
 
 //==============================================================================
@@ -575,81 +481,6 @@ static inline void *_get_task_monitor_data(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Function delete semaphore
- *
- * @param[in] *sem      semaphore object
- */
-//==============================================================================
-static inline void delete_semaphore(sem_t *sem)
-{
-        vSemaphoreDelete(sem);
-}
-
-//==============================================================================
-/**
- * @brief Function take semaphore
- *
- * @param[in] *sem              semaphore object
- * @param[in]  blocktime_ms     semaphore polling time
- *
- * @retval true         semaphore taken (SEMAPHORE_TAKEN)
- * @retval false        semaphore not taken (SEMAPHORE_NOT_TAKEN)
- */
-//==============================================================================
-static inline bool take_semaphore(sem_t *sem, const uint blocktime_ms)
-{
-        return xSemaphoreTake(sem, MS2TICK((portTickType)blocktime_ms));
-}
-
-//==============================================================================
-/**
- * @brief Function give semaphore
- *
- * @param[in] *sem      semaphore object
- *
- * @retval true         semaphore taken (SEMAPHORE_GIVEN)
- * @retval false        semaphore not taken (SEMAPHORE_NOT_GIVEN)
- */
-//==============================================================================
-static inline bool give_semaphore(sem_t *sem)
-{
-        return xSemaphoreGive(sem);
-}
-
-//==============================================================================
-/**
- * @brief Function take semaphore from ISR
- *
- * @param[in]  *sem              semaphore object
- * @param[out] *task_woken       true if higher priority task woken, otherwise false
- *
- * @retval true         semaphore taken (SEMAPHORE_TAKEN)
- * @retval false        semaphore not taken (SEMAPHORE_NOT_TAKEN)
- */
-//==============================================================================
-static inline bool take_semaphore_from_ISR(sem_t *sem, bool *task_woken)
-{
-        return xSemaphoreTakeFromISR(sem, (signed portBASE_TYPE *)task_woken);
-}
-
-//==============================================================================
-/**
- * @brief Function give semaphore from ISR
- *
- * @param[in]  *sem              semaphore object
- * @param[out] *task_woken       1 if higher priority task woken, otherwise 0
- *
- * @retval true         semaphore taken (SEMAPHORE_GIVEN)
- * @retval false        semaphore not taken (SEMAPHORE_NOT_GIVEN)
- */
-//==============================================================================
-static inline bool give_semaphore_from_ISR(sem_t *sem, int *task_woken)
-{
-        return xSemaphoreGiveFromISR(sem, (signed portBASE_TYPE *)task_woken);
-}
-
-//==============================================================================
-/**
  * @brief Function create new counting semaphore
  *
  * @param[in] cnt_max           max counter
@@ -661,81 +492,6 @@ static inline bool give_semaphore_from_ISR(sem_t *sem, int *task_woken)
 static inline sem_t *new_counting_semaphore(const uint cnt_max, const uint cnt_init)
 {
         return xSemaphoreCreateCounting(cnt_max, cnt_init);
-}
-
-//==============================================================================
-/**
- * @brief Function delete semaphore
- *
- * @param[in] *sem      semaphore object
- */
-//==============================================================================
-static inline void delete_counting_semaphore(sem_t *sem)
-{
-        vSemaphoreDelete(sem);
-}
-
-//==============================================================================
-/**
- * @brief Function take semaphore
- *
- * @param[in] *sem              semaphore object
- * @param[in]  blocktime_ms     semaphore polling time
- *
- * @retval true         semaphore taken (SEMAPHORE_TAKEN)
- * @retval false        semaphore not taken (SEMAPHORE_NOT_TAKEN)
- */
-//==============================================================================
-static inline bool take_counting_semaphore(sem_t *sem, const uint blocktime_ms)
-{
-        return xSemaphoreTake(sem, MS2TICK((portTickType)blocktime_ms));
-}
-
-//==============================================================================
-/**
- * @brief Function give semaphore
- *
- * @param[in] *sem      semaphore object
- *
- * @retval true         semaphore given (SEMAPHORE_GIVEN)
- * @retval false        semaphore not given (SEMAPHORE_NOT_GIVEN)
- */
-//==============================================================================
-static inline bool give_counting_semaphore(sem_t *sem)
-{
-        return xSemaphoreGive(sem);
-}
-
-//==============================================================================
-/**
- * @brief Function take semaphore from ISR
- *
- * @param[in]  *sem              semaphore object
- * @param[out] *task_woken       true if higher priority task woken, otherwise false
- *
- * @retval true         semaphore taken (SEMAPHORE_TAKEN)
- * @retval false        semaphore not taken (SEMAPHORE_NOT_TAKEN)
- */
-//==============================================================================
-static inline bool take_counting_semaphore_from_ISR(sem_t *sem, int *task_woken)
-{
-        return xSemaphoreTakeFromISR(sem, (signed portBASE_TYPE *)task_woken);
-}
-
-//==============================================================================
-/**
- * @brief Function give semaphore from ISR
- *
- * @param[in]  *sem              semaphore object
- * @param[out] *task_woken       1 if higher priority task woken, otherwise 0
- *
- * @retval true         semaphore given (SEMAPHORE_GIVEN)
- * @retval false        semaphore not given (SEMAPHORE_NOT_GIVEN)
- */
-//==============================================================================
-static inline bool give_counting_semaphore_from_ISR(sem_t *sem, int *task_woken)
-{
-        return xSemaphoreGiveFromISR(sem, (signed portBASE_TYPE *)task_woken);
 }
 
 //==============================================================================
@@ -752,49 +508,6 @@ static inline mutex_t *new_mutex(void)
 
 //==============================================================================
 /**
- * @brief Function delete mutex
- *
- * @param[in] *mutex    mutex object
- */
-//==============================================================================
-static inline void delete_mutex(mutex_t *mutex)
-{
-        return vSemaphoreDelete(mutex);
-}
-
-//==============================================================================
-/**
- * @brief Function lock mutex
- *
- * @param[in] *mutex            mutex object
- * @param[in]  blocktime_ms     polling time
- *
- * @retval true         mutex locked (MUTEX_LOCKED)
- * @retval false        mutex not locked (MUTEX_NOT_LOCKED)
- */
-//==============================================================================
-static inline bool lock_mutex(mutex_t *mutex, const uint blocktime_ms)
-{
-        return xSemaphoreTake(mutex, MS2TICK((portTickType)blocktime_ms));
-}
-
-//==============================================================================
-/**
- * @brief Function unlock mutex
- *
- * @param[in] *mutex            mutex object
- *
- * @retval true         mutex unlocked
- * @retval false        mutex still locked
- */
-//==============================================================================
-static inline bool unlock_mutex(mutex_t *mutex)
-{
-        return xSemaphoreGive(mutex);
-}
-
-//==============================================================================
-/**
  * @brief Function create new mutex
  *
  * @return pointer to mutex object, otherwise NULL if error
@@ -803,49 +516,6 @@ static inline bool unlock_mutex(mutex_t *mutex)
 static inline mutex_t *new_recursive_mutex(void)
 {
         return xSemaphoreCreateRecursiveMutex();
-}
-
-//==============================================================================
-/**
- * @brief Function delete mutex
- *
- * @param[in] *mutex    mutex object
- */
-//==============================================================================
-static inline void delete_recursive_mutex(mutex_t *mutex)
-{
-        return vSemaphoreDelete(mutex);
-}
-
-//==============================================================================
-/**
- * @brief Function lock mutex
- *
- * @param[in] *mutex            mutex object
- * @param[in]  blocktime_ms     polling time
- *
- * @retval true         mutex locked (MUTEX_LOCKED)
- * @retval false        mutex not locked (MUTEX_NOT_LOCKED)
- */
-//==============================================================================
-static inline bool lock_recursive_mutex(mutex_t *mutex, const uint blocktime_ms)
-{
-        return xSemaphoreTakeRecursive(mutex, MS2TICK((portTickType)blocktime_ms));
-}
-
-//==============================================================================
-/**
- * @brief Function unlock mutex
- *
- * @param[in] *mutex            mutex object
- *
- * @retval true         mutex unlocked
- * @retval false        mutex still locked
- */
-//==============================================================================
-static inline bool unlock_recursive_mutex(mutex_t *mutex)
-{
-        return xSemaphoreGiveRecursive(mutex);
 }
 
 //==============================================================================
@@ -863,151 +533,45 @@ static inline queue_t *new_queue(uint length, const uint item_size)
         return xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
 }
 
-//==============================================================================
-/**
- * @brief Function delete queue
- *
- * @param[in] *queue            queue object
- */
-//==============================================================================
-static inline void delete_queue(queue_t *queue)
-{
-        vQueueDelete(queue);
-}
-
-//==============================================================================
-/**
- * @brief Function reset queue
- *
- * @param[in] *queue            queue object
- */
-//==============================================================================
-static inline void reset_queue(queue_t *queue)
-{
-        xQueueReset(queue);
-}
-
-//==============================================================================
-/**
- * @brief Function send queue
- *
- * @param[in] *queue            queue object
- * @param[in] *item             item
- * @param[in]  waittime_ms      wait time
- *
- * @retval true         item posted (QUEUE_ITEM_POSTED)
- * @retval false        item not posted (QUEUE_ITEM_NOT_POSTED, QUEUE_FULL)
- */
-//==============================================================================
-static inline bool send_queue(queue_t *queue, const void *item, const uint waittime_ms)
-{
-        return xQueueSend(queue, item, MS2TICK((portTickType)waittime_ms));
-}
-
-//==============================================================================
-/**
- * @brief Function send queue
- *
- * @param[in]  *queue            queue object
- * @param[in]  *item             item
- * @param[out] *task_woken       1 if higher priority task woken, otherwise 0
- *
- * @retval true         item posted (QUEUE_ITEM_POSTED)
- * @retval false        item not posted (QUEUE_ITEM_NOT_POSTED, QUEUE_FULL)
- */
-//==============================================================================
-static inline bool send_queue_from_ISR(queue_t *queue, const void *item, int *task_woken)
-{
-        return xQueueSendFromISR(queue, item, (signed portBASE_TYPE *)task_woken);
-}
-
-//==============================================================================
-/**
- * @brief Function send queue
- *
- * @param[in]  *queue            queue object
- * @param[out] *item             item
- * @param[in]   waittime_ms      wait time
- *
- * @retval true         item received (QUEUE_ITEM_RECEIVED)
- * @retval false        item not recieved (QUEUE_ITEM_NOT_RECEIVED)
- */
-//==============================================================================
-static inline bool receive_queue(queue_t *queue, void *item, const uint waittime_ms)
-{
-        return xQueueReceive(queue, item, MS2TICK((portTickType)waittime_ms));
-}
-
-//==============================================================================
-/**
- * @brief Function x queue
- *
- * @param[in]  *queue            queue object
- * @param[out] *item             item
- * @param[out] *task_woken       1 if higher priority task woken, otherwise 0
- *
- * @retval true         item received (QUEUE_ITEM_RECEIVED)
- * @retval false        item not recieved (QUEUE_ITEM_NOT_RECEIVED)
- */
-//==============================================================================
-static inline bool receive_queue_from_ISR(queue_t *queue, void *item, int *task_woken)
-{
-        return xQueueReceiveFromISR(queue, item, (signed portBASE_TYPE *)task_woken);
-}
-
-//==============================================================================
-/**
- * @brief Function x queue
- *
- * @param[in]  *queue            queue object
- * @param[out] *item             item
- * @param[in]   waittime_ms      wait time
- *
- * @retval true         item received (QUEUE_ITEM_RECEIVED)
- * @retval false        item not recieved (QUEUE_ITEM_NOT_RECEIVED)
- */
-//==============================================================================
-static inline bool receive_peek_queue(queue_t *queue, void *item, const uint waittime_ms)
-{
-        return xQueuePeek(queue, item, MS2TICK((portTickType)waittime_ms));
-}
-
-//==============================================================================
-/**
- * @brief Function x queue
- *
- * @param[in] *queue            queue object
- *
- * @return a number of items in queue
- */
-//==============================================================================
-static inline int get_number_of_items_in_queue(queue_t *queue)
-{
-        return uxQueueMessagesWaiting(queue);
-}
-
-//==============================================================================
-/**
- * @brief Function x queue
- *
- * @param[in] *queue            queue object
- *
- * @return a number of items in queue
- */
-//==============================================================================
-static inline int get_number_of_items_in_queue_from_ISR(queue_t *queue)
-{
-        return uxQueueMessagesWaitingFromISR(queue);
-}
-
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t *new_task         (void (*func)(void*), const char*, uint, void*);
-extern void    delete_task      (task_t *taskHdl);
-extern sem_t  *new_semaphore    (void);
-extern void    task_exit        (void);
-
+extern task_t  *new_task                                (void (*)(void*), const char*, uint, void*);
+extern void     delete_task                             (task_t*);
+extern void     task_exit                               (void);
+extern void     suspend_task                            (task_t*);
+extern void     resume_task                             (task_t*);
+extern int      resume_task_from_ISR                    (task_t*);
+extern char    *get_task_name                           (task_t*);
+extern int      get_task_priority                       (task_t*);
+extern void     set_task_priority                       (task_t*, const int);
+extern int      get_task_free_stack                     (task_t*);
+extern sem_t   *new_semaphore                           (void);
+extern void     delete_semaphore                        (sem_t*);
+extern bool     take_semaphore                          (sem_t*, const uint);
+extern bool     give_semaphore                          (sem_t*);
+extern bool     take_semaphore_from_ISR                 (sem_t*, bool*);
+extern bool     give_semaphore_from_ISR                 (sem_t*, int*);
+extern void     delete_counting_semaphore               (sem_t*);
+extern bool     take_counting_semaphore                 (sem_t*, const uint);
+extern bool     give_counting_semaphore                 (sem_t*);
+extern bool     take_counting_semaphore_from_ISR        (sem_t*, int*);
+extern bool     give_counting_semaphore_from_ISR        (sem_t*, int*);
+extern void     delete_mutex                            (mutex_t*);
+extern bool     lock_mutex                              (mutex_t*, const uint);
+extern bool     unlock_mutex                            (mutex_t*);
+extern void     delete_recursive_mutex                  (mutex_t*);
+extern bool     lock_recursive_mutex                    (mutex_t*, const uint);
+extern bool     unlock_recursive_mutex                  (mutex_t*);
+extern void     delete_queue                            (queue_t*);
+extern void     reset_queue                             (queue_t*);
+extern bool     send_queue                              (queue_t*, const void*, const uint);
+extern bool     send_queue_from_ISR                     (queue_t*, const void*, int*);
+extern bool     receive_queue                           (queue_t*, void*, const uint);
+extern bool     receive_queue_from_ISR                  (queue_t*, void*, int*);
+extern bool     receive_peek_queue                      (queue_t*, void*, const uint);
+extern int      get_number_of_items_in_queue            (queue_t*);
+extern int      get_number_of_items_in_queue_from_ISR   (queue_t*);
 #ifdef __cplusplus
 }
 #endif
