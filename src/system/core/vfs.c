@@ -35,6 +35,7 @@ extern "C" {
 #include "core/list.h"
 #include "core/sysmoni.h"
 #include "kernel/kwrapper.h"
+#include <errno.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -62,6 +63,7 @@ struct vfs_file
         void      *f_extra_data;
         fd_t       fd;
         u64_t      f_lseek;
+        int        f_errno;
 };
 
 struct FS_data {
@@ -1058,20 +1060,53 @@ int vfs_fflush(FILE *file)
  *
  * @param[in] *file     file
  *
- * @return 0 if there is not a file end, otherwise greather than 0
+ * @return 0 if there is not a file end, otherwise greater than 0
  */
 //==============================================================================
 int vfs_feof(FILE *file)
 {
         if (file) {
-                u32_t seek  = vfs_ftell(file);
+                i64_t seek  = vfs_ftell(file);
                 vfs_fseek(file, 0, SEEK_END);
-                u32_t fsize = vfs_ftell(file);
+                i64_t fsize = vfs_ftell(file);
                 vfs_fseek(file, seek, SEEK_SET);
 
                 if (seek >= fsize) {
+                        file->f_errno = EOFIL;
                         return 1;
                 }
+        }
+
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function clear file's error
+ *
+ * @param[in] *file     file
+ */
+//==============================================================================
+void vfs_clearerr(FILE *file)
+{
+        if (file) {
+                file->f_errno = 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function check that file has no errors
+ *
+ * @param[in] *file     file
+ *
+ * @return nonzero value if the file stream has errors occurred, 0 otherwise
+ */
+//==============================================================================
+int vfs_ferror(FILE *file)
+{
+        if (file) {
+                return file->f_errno != 0 ? 1 : 0;
         }
 
         return 0;

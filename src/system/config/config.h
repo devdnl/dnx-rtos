@@ -139,6 +139,14 @@ extern "C" {
  */
 #define CONFIG_FSCANF_STREAM_BUFFER_SIZE                (100)
 
+/**
+ * ERRNO string support (strerror(), perror(), etc)
+ * 0: disabled
+ * 1: only numbers
+ * 2: short names
+ * 3: full names
+ */
+#define CONFIG_ERRNO_STRING_LEN                         (3)
 
 /**=== NETWORK CONFIGURATION =================================================*/
 /**

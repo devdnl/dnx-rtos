@@ -117,6 +117,7 @@ struct task_data {
         task_t          *f_parent_task;  /* program's parent task              */
         u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
         bool             f_program;      /* true if task is complex program    */
+        int              f_errno;        /* program error number               */
 };
 
 /*==============================================================================

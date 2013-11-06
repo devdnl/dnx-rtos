@@ -225,6 +225,8 @@ extern int              vfs_ioctl               (FILE*, int, ...);
 extern int              vfs_fstat               (FILE*, struct vfs_stat*);
 extern int              vfs_fflush              (FILE*);
 extern int              vfs_feof                (FILE*);
+extern void             vfs_clearerr            (FILE*);
+extern int              vfs_ferror              (FILE*);
 extern int              vfs_rewind              (FILE*);
 
 #ifdef __cplusplus

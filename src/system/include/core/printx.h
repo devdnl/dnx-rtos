@@ -110,16 +110,18 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void   printk            (const char*, ...);
-extern void   printk_enable     (char*);
-extern void   printk_disable    (void);
-extern int    sys_snprintf      (char*, size_t, const char*, ...);
-extern int    sys_fprintf       (FILE*, const char*, ...);
-extern int    sys_vsnprintf     (char*, size_t, const char*, va_list);
-extern int    sys_fputc         (int, FILE*);
-extern int    sys_f_puts        (const char*, FILE*, bool);
-extern int    sys_getc          (FILE*);
-extern char  *sys_fgets         (char*, int, FILE*);
+extern void             printk                  (const char*, ...);
+extern void             printk_enable           (char*);
+extern void             printk_disable          (void);
+extern int              sys_snprintf            (char*, size_t, const char*, ...);
+extern int              sys_fprintf             (FILE*, const char*, ...);
+extern int              sys_vsnprintf           (char*, size_t, const char*, va_list);
+extern const char      *sys_strerror            (int);
+extern void             sys_perror              (const char*);
+extern int              sys_fputc               (int, FILE*);
+extern int              sys_f_puts              (const char*, FILE*, bool);
+extern int              sys_getc                (FILE*);
+extern char            *sys_fgets               (char*, int, FILE*);
 
 /*==============================================================================
   Exported inline functions
