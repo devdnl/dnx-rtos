@@ -952,11 +952,12 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
                                 n = 0;
                         } else if (n < (ssize_t)(size * nitems)) {
                                 file->f_errflag |= VFS_EFLAG_EOF;
-                        } else {
-                                file->f_lseek += (u64_t)n;
                         }
 
-                        n /= size;
+                        if (n >= 0) {
+                                file->f_lseek += (u64_t)n;
+                                n /= size;
+                        }
                 }
         } else {
                 errno = EINVAL;
@@ -992,11 +993,12 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
                                 n = 0;
                         } else if (n < (ssize_t)(size * nitems)) {
                                 file->f_errflag |= VFS_EFLAG_EOF;
-                        } else {
-                                file->f_lseek += (u64_t)n;
                         }
 
-                        n /= size;
+                        if (n >= 0) {
+                                file->f_lseek += (u64_t)n;
+                                n /= size;
+                        }
                 }
         } else {
                 errno = EINVAL;
