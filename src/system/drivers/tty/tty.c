@@ -428,7 +428,7 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
                 n = count;
 
-                *fpos = -n;
+                *fpos = 0;
 
                 recursive_mutex_unlock(tty->secure_resources_mtx);
         }
@@ -474,7 +474,7 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
                 str++;
         }
 
-        *fpos = -n;
+        *fpos = 0;
 
         return n;
 }
@@ -596,7 +596,7 @@ API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 
         struct tty_data *tty = device_handle;
 
-        device_stat->st_size  = 1;
+        device_stat->st_size  = 0;
         device_stat->st_major = tty->device_number;
         device_stat->st_minor = 0;
         return STD_RET_OK;

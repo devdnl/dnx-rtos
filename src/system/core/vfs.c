@@ -63,21 +63,21 @@ struct vfs_file
         void      *f_extra_data;
         fd_t       fd;
         u64_t      f_lseek;
-        int        f_errno;
+        int        f_errflag;
 };
 
 struct FS_data {
-          char                          *mount_point;
-          struct FS_data                *base_FS;
-          void                          *handle;
-          struct vfs_FS_interface        interface;
-          u8_t                           mounted_FS_counter;
+        char                          *mount_point;
+        struct FS_data                *base_FS;
+        void                          *handle;
+        struct vfs_FS_interface        interface;
+        u8_t                           mounted_FS_counter;
 };
 
 enum path_correction {
-          ADD_SLASH,
-          SUB_SLASH,
-          NO_SLASH_ACTION,
+        ADD_SLASH,
+        SUB_SLASH,
+        NO_SLASH_ACTION,
 };
 
 /*==============================================================================
@@ -890,6 +890,9 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
                                           ptr, size * nitems, &file->f_lseek);
                         file->f_lseek += (u64_t)n;
                         n /= size;
+
+                        if (n < nitems)
+                                file->f_errflag |= VFS_EFLAG_EOF;
                 }
         }
 
@@ -919,6 +922,9 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
                                          ptr, size * nitems, &file->f_lseek);
                         file->f_lseek += (u64_t)n;
                         n /= size;
+
+                        if (n < nitems)
+                                file->f_errflag |= VFS_EFLAG_EOF;
                 }
         }
 
@@ -1066,15 +1072,7 @@ int vfs_fflush(FILE *file)
 int vfs_feof(FILE *file)
 {
         if (file) {
-                i64_t seek  = vfs_ftell(file);
-                vfs_fseek(file, 0, SEEK_END);
-                i64_t fsize = vfs_ftell(file);
-                vfs_fseek(file, seek, SEEK_SET);
-
-                if (seek >= fsize) {
-                        file->f_errno = EOFIL;
-                        return 1;
-                }
+                return file->f_errflag & VFS_EFLAG_EOF ? 1 : 0;
         }
 
         return 0;
@@ -1090,7 +1088,7 @@ int vfs_feof(FILE *file)
 void vfs_clearerr(FILE *file)
 {
         if (file) {
-                file->f_errno = 0;
+                file->f_errflag = 0;
         }
 }
 
@@ -1106,7 +1104,7 @@ void vfs_clearerr(FILE *file)
 int vfs_ferror(FILE *file)
 {
         if (file) {
-                return file->f_errno != 0 ? 1 : 0;
+                return file->f_errflag & VFS_EFLAG_ERR ? 1 : 0;
         }
 
         return 0;

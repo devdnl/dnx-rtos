@@ -39,42 +39,43 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 #define EPERM           1       /* Operation not permitted */
-#define EOFIL           2       /* End of file */
-#define ENOENT          3       /* No such file or directory */
-#define ESRCH           4       /* No such process */
-#define EIO             5       /* I/O error */
-#define ENXIO           6       /* No such device or address */
-#define E2BIG           7       /* Argument list too long */
-#define ENOEXEC         8       /* Exec format error */
-#define EAGAIN          9       /* Try again */
-#define ENOMEM         10       /* Out of memory */
-#define EACCES         11       /* Permission denied */
-#define EFAULT         12       /* Bad address */
-#define EBUSY          13       /* Device or resource busy */
-#define EEXIST         14       /* File exists */
-#define ENODEV         15       /* No such device */
-#define ENOTDIR        16       /* Not a directory */
-#define EISDIR         17       /* Is a directory */
-#define EINVAL         18       /* Invalid argument */
-#define EMFILE         19       /* Too many open files */
-#define EFBIG          20       /* File too large */
-#define ENOSPC         21       /* No space left on device */
-#define ESPIPE         22       /* Illegal seek */
-#define EROFS          23       /* Read-only file system */
-#define EDOM           24       /* Math argument out of domain of func */
-#define ERANGE         25       /* Math result not representable */
-#define EILSEQ         26       /* Illegal byte sequence */
-#define ENAMETOOLONG   27       /* File name too long */
-#define ENOTEMPTY      28       /* Directory not empty */
-#define EBADRQC        29       /* Invalid request code */
-#define ETIME          30       /* Timer expired */
-#define ENONET         31       /* Machine is not on the network */
-#define EUSERS         32       /* Too many users */
-#define EADDRINUSE     33       /* Address already in use */
-#define ENOMEDIUM      34       /* No medium found */
-#define EMEDIUMTYPE    35       /* Wrong medium type */
-#define ECANCELED      36       /* Operation Canceled */
-#define _ENUMBER       37       /* total supported errors */
+#define ENOENT          2       /* No such file or directory */
+#define ESRCH           3       /* No such process */
+#define EIO             4       /* I/O error */
+#define ENXIO           5       /* No such device or address */
+#define E2BIG           6       /* Argument list too long */
+#define ENOEXEC         7       /* Exec format error */
+#define EAGAIN          8       /* Try again */
+#define ENOMEM          9       /* Out of memory */
+#define EACCES         10       /* Permission denied */
+#define EFAULT         11       /* Bad address */
+#define EBUSY          12       /* Device or resource busy */
+#define EEXIST         13       /* File exists */
+#define ENODEV         14       /* No such device */
+#define ENOTDIR        15       /* Not a directory */
+#define EISDIR         16       /* Is a directory */
+#define EINVAL         17       /* Invalid argument */
+#define EMFILE         18       /* Too many open files */
+#define EFBIG          19       /* File too large */
+#define ENOSPC         20       /* No space left on device */
+#define ESPIPE         21       /* Illegal seek */
+#define EROFS          22       /* Read-only file system */
+#define EDOM           23       /* Math argument out of domain of func */
+#define ERANGE         24       /* Math result not representable */
+#define EILSEQ         25       /* Illegal byte sequence */
+#define ENAMETOOLONG   26       /* File name too long */
+#define ENOTEMPTY      27       /* Directory not empty */
+#define EBADRQC        28       /* Invalid request code */
+#define ETIME          29       /* Timer expired */
+#define ENONET         30       /* Machine is not on the network */
+#define EUSERS         31       /* Too many users */
+#define EADDRINUSE     32       /* Address already in use */
+#define ENOMEDIUM      33       /* No medium found */
+#define EMEDIUMTYPE    34       /* Wrong medium type */
+#define ECANCELED      35       /* Operation Canceled */
+#define _ENUMBER       36       /* total supported errors */
+
+#define errno           _task_get_data()->f_errno
 
 /*==============================================================================
   Exported object types

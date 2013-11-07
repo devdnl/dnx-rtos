@@ -494,13 +494,12 @@ int sys_getc(FILE *stream)
                 return EOF;
         }
 
-        if (vfs_feof(stream)) {
-                return EOF;
-        }
-
         int chr = 0;
         while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                sleep_ms(10);
+                if (vfs_ferror(stream) || vfs_feof(stream))
+                        return EOF;
+                else
+                        sleep_ms(10);
         }
 
         return chr;
@@ -523,33 +522,31 @@ char *sys_fgets(char *str, int size, FILE *stream)
                 return NULL;
         }
 
-        if (vfs_feof(stream) == 0) {
-                u64_t lseek = vfs_ftell(stream);
+        u64_t fpos = vfs_ftell(stream);
 
-                int n;
-                while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0);
-
-                char *end;
-                if ((end = strchr(str, '\n'))) {
-                        end++;
-                        *end = '\0';
-                } else if ((end = strchr(str, EOF))) {
-                        *end = '\0';
-                } else {
-                        str[n] = '\0';
+        int n;
+        while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
+                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                        return NULL;
                 }
-
-                int len = strlen(str);
-
-                if (len == 0)
-                        len = 1;
-
-                vfs_fseek(stream, lseek + len, SEEK_SET);
-
-                return str;
         }
 
-        return NULL;
+        char *end;
+        if ((end = strchr(str, '\n'))) {
+                end++;
+                *end = '\0';
+        } else {
+                str[n] = '\0';
+        }
+
+        int len = strlen(str);
+
+        if (len == 0)
+                len = 1;
+
+        vfs_fseek(stream, fpos + len, SEEK_SET);
+
+        return str;
 }
 
 //==============================================================================
@@ -678,12 +675,10 @@ const char *sys_strerror(int errnum)
                 "32",
                 "33",
                 "34",
-                "35",
-                "36"
+                "35"
 #elif (CONFIG_ERRNO_STRING_LEN == 2)
                 "ESUCC",
                 "EPERM"
-                "EOFIL",
                 "ENOENT",
                 "ESRCH",
                 "EIO",
@@ -721,7 +716,6 @@ const char *sys_strerror(int errnum)
 #elif (CONFIG_ERRNO_STRING_LEN == 3)
                 "Success",
                 "Operation not permitted",
-                "End of file",
                 "No such file or directory",
                 "No such process",
                 "I/O error",

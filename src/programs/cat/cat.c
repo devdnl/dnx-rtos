@@ -65,6 +65,20 @@ GLOBAL_VARIABLES_SECTION_END
 
 //==============================================================================
 /**
+ * @brief Function remove control characters
+ */
+//==============================================================================
+static void remove_control_characters(char *str)
+{
+        for (uint i = 0; i < strlen(str); i++) {
+                if (str[i] < ' ' && str[i] != '\n') {
+                        str[i] = ' ';
+                }
+        }
+}
+
+//==============================================================================
+/**
  * @brief Cat main function
  */
 //==============================================================================
@@ -80,19 +94,18 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
         u32_t col = 80;
         ioctl(stdin, TTY_IORQ_GET_COL, &col);
 
-        char *data = calloc(col + 1, sizeof(char));
-
-        if (data) {
+        char *str = calloc(col + 1, sizeof(char));
+        if (str) {
                 FILE *file = fopen(argv[1], "r");
                 if (file) {
-                        while (fgets(data, col, file)) {
-                                for (uint i = 0; i < strlen(data); i++) {
-                                        if (data[i] < ' ' && data[i] != '\n') {
-                                                data[i] = ' ';
-                                        }
+                        while (fgets(str, col, file)) {
+                                remove_control_characters(str);
+
+                                if (LAST_CHARACTER(str) != '\n') {
+                                        strcat(str, "\n");
                                 }
 
-                                fputs(data, stdout);
+                                fputs(str, stdout);
                         }
                         fclose(file);
                 } else {
@@ -107,8 +120,8 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
                 status = EXIT_FAILURE;
         }
 
-        if (data) {
-                free(data);
+        if (str) {
+                free(str);
         }
 
         return status;

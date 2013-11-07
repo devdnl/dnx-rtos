@@ -58,6 +58,7 @@ extern "C" {
 /** UNDEFINE MEMORY MANAGEMENT DEFINITIONS LOCALIZED IN FreeRTOS.h file (IMPORTANT!) */
 #undef free
 #undef malloc
+#undef errno
 
 /** STANDARD STACK SIZES */
 #define STACK_DEPTH_MINIMAL             ((1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
@@ -371,6 +372,43 @@ static inline struct task_data *_task_get_data_of(task_t *taskhdl)
 
 //==============================================================================
 /**
+ * @brief Function set task monitor data
+ *
+ * @param[in] *taskhdl          task handle
+ * @param[in] *mem              task monitor data block
+ */
+//==============================================================================
+static inline void _task_set_monitor_data(task_t *taskhdl, void *mem)
+{
+        _task_get_data_of(taskhdl)->f_monitor = mem;
+}
+
+//==============================================================================
+/**
+ * @brief Function get task monitor data
+ *
+ * @param[in] *taskhdl          task handle
+ *
+ * @return task monitor data
+ */
+//==============================================================================
+static inline void *_task_get_monitor_data(task_t *taskhdl)
+{
+        return _task_get_data_of(taskhdl)->f_monitor;
+}
+
+//==============================================================================
+/**
+ * @brief Function set errno value
+ */
+//==============================================================================
+static inline void _task_set_error(int errno)
+{
+        _task_get_data()->f_errno = errno;
+}
+
+//==============================================================================
+/**
  * @brief Function return parent task handle
  *
  * @return parent task handle
@@ -451,33 +489,6 @@ static inline void task_set_user_data(void *mem)
 static inline void *task_get_user_data(void)
 {
         return _task_get_data_of(THIS_TASK)->f_user;
-}
-
-//==============================================================================
-/**
- * @brief Function set task monitor data
- *
- * @param[in] *taskhdl          task handle
- * @param[in] *mem              task monitor data block
- */
-//==============================================================================
-static inline void _task_set_monitor_data(task_t *taskhdl, void *mem)
-{
-        _task_get_data_of(taskhdl)->f_monitor = mem;
-}
-
-//==============================================================================
-/**
- * @brief Function get task monitor data
- *
- * @param[in] *taskhdl          task handle
- *
- * @return task monitor data
- */
-//==============================================================================
-static inline void *_task_get_monitor_data(task_t *taskhdl)
-{
-        return _task_get_data_of(taskhdl)->f_monitor;
 }
 
 //==============================================================================
