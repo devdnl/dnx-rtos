@@ -634,7 +634,7 @@ static stdret_t partition_close(void *device_handle, bool forced, const task_t *
  * @retval number of written bytes
  */
 //==============================================================================
-static size_t partition_write(void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+static ssize_t partition_write(void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
@@ -664,7 +664,7 @@ static size_t partition_write(void *device_handle, const u8_t *src, size_t count
  * @retval number of read bytes
  */
 //==============================================================================
-static size_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+static ssize_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
