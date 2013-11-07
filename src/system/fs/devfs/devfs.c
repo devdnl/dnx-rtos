@@ -133,6 +133,8 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
                 chain_delete(chain);
         }
 
+        errno = ENOMEM;
+
         return STD_RET_ERROR;
 }
 
@@ -155,6 +157,7 @@ API_FS_RELEASE(devfs, void *fs_handle)
         if (mutex_lock(devfs->mutex, 100) == MUTEX_LOCKED) {
                 if (devfs->number_of_opened_devices != 0) {
                         mutex_unlock(devfs->mutex);
+                        errno = EBUSY;
                         return STD_RET_ERROR;
                 }
 
@@ -168,6 +171,8 @@ API_FS_RELEASE(devfs, void *fs_handle)
                 critical_section_end();
                 return STD_RET_OK;
         }
+
+        errno = EBUSY;
 
         return STD_RET_ERROR;
 }
@@ -214,6 +219,8 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
                 }
 
                 mutex_unlock(devfs->mutex);
+        } else {
+                errno = EBUSY;
         }
 
         return status;
@@ -452,8 +459,10 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
                         }
 
                         chain->next = chain_new();
-                        if (!chain->next)
+                        if (!chain->next) {
+                                errno = ENOSPC;
                                 goto exit;
+                        }
 
                         devfs->number_of_chains++;
                 }
@@ -485,6 +494,8 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
                                 free(node->path);
                                 node->path = NULL;
                         }
+
+                        errno = ENOSPC;
                 }
 
 exit:
@@ -523,6 +534,8 @@ API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
                 dir->f_seek     = 0;
 
                 return STD_RET_OK;
+        } else {
+                errno = ENOENT;
         }
 
         return STD_RET_ERROR;
@@ -625,6 +638,8 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 
                                 devfs->number_of_used_nodes--;
                                 status = STD_RET_OK;
+                        } else {
+                                errno = EBUSY;
                         }
                 }
 
@@ -666,6 +681,8 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
                                 node->path = name;
 
                                 status = STD_RET_OK;
+                        } else {
+                                errno = ENOMEM;
                         }
                 }
 
@@ -825,6 +842,7 @@ API_FS_STATFS(devfs, void *fs_handle, struct vfs_statfs *statfs)
 //==============================================================================
 /**
  * @brief Return node pointer
+ *        Errno: ENOENT
  *
  * @param[in] chain             chain
  * @param[in] path              node's path
@@ -844,12 +862,15 @@ static struct devnode *chain_get_node_by_path(struct devfs_chain *chain, const c
                 }
         }
 
+        errno = ENOENT;
+
         return NULL;
 }
 
 //==============================================================================
 /**
  * @brief Return node pointer
+ *        Errno: ENOENT
  *
  * @param[in] chain             chain
  *
@@ -865,12 +886,15 @@ static struct devnode *chain_get_empty_node(struct devfs_chain *chain)
                 }
         }
 
+        errno = ENOENT;
+
         return NULL;
 }
 
 //==============================================================================
 /**
  * @brief Return node pointer
+ *        Errno: ENOENT
  *
  * @param[in] *devfs            file system memory
  * @param[in]  n                node number
@@ -890,6 +914,8 @@ static struct devnode *chain_get_n_node(struct devfs_chain *chain, int n)
                         }
                 }
         }
+
+        errno = ENOENT;
 
         return NULL;
 }
