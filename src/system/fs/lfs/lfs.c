@@ -877,6 +877,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
         return STD_RET_OK;
 
 error:
+        errno = ENOENT;
         recursive_mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
