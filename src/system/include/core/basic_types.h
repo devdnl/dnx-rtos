@@ -96,6 +96,8 @@ typedef uint64_t     u64_t;
 typedef int64_t      i64_t;
 typedef unsigned int uint;
 
+typedef int          ssize_t;
+
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/

@@ -54,8 +54,8 @@ struct vfs_file
 {
         void      *FS_hdl;
         stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
-        size_t   (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
-        size_t   (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
+        ssize_t  (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
+        ssize_t  (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
         stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
@@ -940,20 +940,23 @@ int vfs_fclose_force(FILE *file, task_t *opened_by_task)
 //==============================================================================
 size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
 {
-        size_t n = 0;
+        ssize_t n = 0;
 
         if (ptr && size && nitems && file) {
                 if (file->f_write) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
                                           ptr, size * nitems, &file->f_lseek);
-                        file->f_lseek += (u64_t)n;
-                        n /= size; /* FIXME */
 
-                        if (n < nitems)
-                                file->f_errflag |= VFS_EFLAG_EOF;
-
-                        if (n < 0)
+                        if (n < 0) {
                                 file->f_errflag |= VFS_EFLAG_ERR;
+                                n = 0;
+                        } else if (n < (ssize_t)(size * nitems)) {
+                                file->f_errflag |= VFS_EFLAG_EOF;
+                        } else {
+                                file->f_lseek += (u64_t)n;
+                        }
+
+                        n /= size;
                 }
         } else {
                 errno = EINVAL;
@@ -977,20 +980,23 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
 //==============================================================================
 size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
 {
-        size_t n = 0;
+        ssize_t n = 0;
 
         if (ptr && size && nitems && file) {
                 if (file->f_read) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
                                          ptr, size * nitems, &file->f_lseek);
-                        file->f_lseek += (u64_t)n;
-                        n /= size; /* FIXME */
 
-                        if (n < nitems)
-                                file->f_errflag |= VFS_EFLAG_EOF;
-
-                        if (n < 0)
+                        if (n < 0) {
                                 file->f_errflag |= VFS_EFLAG_ERR;
+                                n = 0;
+                        } else if (n < (ssize_t)(size * nitems)) {
+                                file->f_errflag |= VFS_EFLAG_EOF;
+                        } else {
+                                file->f_lseek += (u64_t)n;
+                        }
+
+                        n /= size;
                 }
         } else {
                 errno = EINVAL;

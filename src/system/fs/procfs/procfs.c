@@ -366,7 +366,7 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
 
- * @return number of written bytes
+ * @return number of written bytes, -1 if error
  */
 //==============================================================================
 API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
@@ -392,7 +392,7 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
 
- * @return number of read bytes
+ * @return number of read bytes, -1 if error
  */
 //==============================================================================
 API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
@@ -496,7 +496,6 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
- * @retval ...
  */
 //==============================================================================
 API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)

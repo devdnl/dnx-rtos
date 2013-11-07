@@ -252,7 +252,7 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *f
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
 
- * @return number of written bytes
+ * @return number of written bytes, -1 if error
  */
 //==============================================================================
 API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
@@ -287,7 +287,7 @@ API_FS_WRITE(fatfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
 
- * @return number of read bytes
+ * @return number of read bytes, -1 if error
  */
 //==============================================================================
 API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t count, u64_t *fpos)
@@ -323,7 +323,6 @@ API_FS_READ(fatfs, void *fs_handle, void *extra, fd_t fd, void *dst, size_t coun
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
- * @retval ...
  */
 //==============================================================================
 API_FS_IOCTL(fatfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
