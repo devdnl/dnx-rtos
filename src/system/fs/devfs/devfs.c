@@ -133,8 +133,6 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
                 chain_delete(chain);
         }
 
-        errno = ENOMEM;
-
         return STD_RET_ERROR;
 }
 
