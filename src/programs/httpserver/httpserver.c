@@ -33,6 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include "system/dnx.h"
 #include "system/netapi.h"
 
@@ -74,8 +75,9 @@ static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\
 //==============================================================================
 static void serve(netapi_conn_t *conn)
 {
-        netapi_buf_t *inbuf;
+        errno = 0;
 
+        netapi_buf_t *inbuf;
         if (netapi_recv(conn, &inbuf) == NETAPI_ERR_OK) {
 
                 char *buf;
@@ -103,34 +105,33 @@ static void serve(netapi_conn_t *conn)
 
                                         FILE *file = fopen(path, "r");
                                         if (file) {
-                                                fseek(file, 0, SEEK_END);
-                                                size_t file_size = ftell(file);
-                                                rewind(file);
-
                                                 netapi_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NETAPI_CONN_FLAG_NOCOPY);
 
                                                 char *cache = malloc(CACHE_LEN);
                                                 if (cache) {
-                                                        while (file_size) {
-                                                                int n = fread(cache, 1, CACHE_LEN, file);
-                                                                if (n == 0)
-                                                                        break;
-
-                                                                file_size -= n;
-
+                                                        size_t n;
+                                                        while ((n = fread(cache, 1, CACHE_LEN, file))) {
                                                                 netapi_write(conn, cache, n, NETAPI_CONN_FLAG_COPY);
                                                         }
 
+                                                        if (ferror(file)) {
+                                                                perror(path);
+                                                        }
+
                                                         free(cache);
+                                                } else {
+                                                        perror(NULL);
                                                 }
 
                                                 fclose(file);
                                         } else {
-                                                puts("File doesn't exist!");
+                                                perror(path);
                                         }
                                 }
 
                                 free(path);
+                        } else {
+                                perror(NULL);
                         }
                 }
 

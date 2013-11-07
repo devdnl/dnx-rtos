@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "system/ioctl.h"
 
 /*==============================================================================
@@ -91,6 +92,8 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
+        errno = 0;
+
         u32_t col = 80;
         ioctl(stdin, TTY_IORQ_GET_COL, &col);
 
@@ -109,14 +112,11 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
                         }
                         fclose(file);
                 } else {
-                        printf("No such file or file is protected\n");
-
+                        perror(argv[1]);
                         status = EXIT_FAILURE;
                 }
-
         } else {
-                puts("Not enough free memory");
-
+                perror(NULL);
                 status = EXIT_FAILURE;
         }
 
