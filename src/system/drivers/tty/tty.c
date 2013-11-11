@@ -213,6 +213,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
         STOP_IF(device_handle == NULL);
 
         if (major >= TTY_DEV_COUNT) {
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 
@@ -337,6 +338,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 free(tty);
                 return STD_RET_OK;
         } else {
+                errno = EBUSY;
                 return STD_RET_ERROR;
         }
 }
@@ -431,6 +433,8 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
                 *fpos = 0;
 
                 recursive_mutex_unlock(tty->secure_resources_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -545,6 +549,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         default:
+                errno = EBADRQC;
                 return STD_RET_ERROR;
         }
 
@@ -571,9 +576,11 @@ API_MOD_FLUSH(TTY, void *device_handle)
         if (recursive_mutex_lock(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 move_editline_to_streams(tty, true);
                 recursive_mutex_unlock(tty->secure_resources_mtx);
+                return STD_RET_OK;
+        } else {
+                errno = EBUSY;
+                return STD_RET_ERROR;
         }
-
-        return STD_RET_OK;
 }
 
 //==============================================================================
