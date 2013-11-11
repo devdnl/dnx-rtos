@@ -140,6 +140,8 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 NVIC_DisableIRQ(ETH_IRQn);
 
                 status = STD_RET_OK;
+        } else {
+                errno = EBUSY;
         }
 
         critical_section_end();
@@ -167,6 +169,8 @@ API_MOD_OPEN(ETHMAC, void *device_handle, int flags)
 
         if (device_lock(&hdl->dev_lock)) {
                 return STD_RET_OK;
+        } else {
+                errno = EBUSY;
         }
 
         return STD_RET_ERROR;
@@ -194,6 +198,8 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force, const task_t *opened_by_t
         if (device_is_access_granted(&hdl->dev_lock) || force) {
                 device_unlock(&hdl->dev_lock, force);
                 return STD_RET_OK;
+        } else {
+                errno = EBUSY;
         }
 
         return STD_RET_ERROR;
@@ -218,6 +224,8 @@ API_MOD_WRITE(ETHMAC, void *device_handle, const u8_t *src, size_t count, u64_t 
         STOP_IF(!fpos);
         UNUSED_ARG(count);
 
+        errno = EPERM;
+
         return 0;
 }
 
@@ -239,6 +247,8 @@ API_MOD_READ(ETHMAC, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         STOP_IF(!dst);
         STOP_IF(!fpos);
         UNUSED_ARG(count);
+
+        errno = EPERM;
 
         return 0;
 }
@@ -311,6 +321,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                               ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
                               return STD_RET_OK;
                         }
+                        errno = EIO;
                         break;
 
                 case ETHMAC_IORQ_GET_RX_FLAG:
@@ -318,6 +329,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                 *(bool *)arg = hdl->rx_data_ready;
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_CLEAR_RX_FLAG:
@@ -330,6 +342,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                 ETH_MACAddressConfig(ETH_MAC_Address0, MAC);
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_GET_RX_PACKET_SIZE:
@@ -338,6 +351,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                 *packet_size = ETH_GetRxPktSize();
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE:
@@ -385,6 +399,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                 *(struct ethmac_frame *)arg = frame;
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS:
@@ -397,6 +412,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS:
@@ -441,6 +457,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                         return STD_RET_OK;
                                 }
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_GET_CURRENT_TX_BUFFER:
@@ -451,6 +468,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE:
@@ -466,6 +484,8 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                         return STD_RET_OK;
                                 }
+                        } else {
+                                errno = EINVAL;
                         }
                         break;
 
@@ -482,6 +502,8 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                         return STD_RET_OK;
                                 }
+                        } else {
+                                errno = EINVAL;
                         }
                         break;
 
@@ -493,6 +515,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_ENABLE_TX_HARDWARE_CHECKSUM:
@@ -504,6 +527,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                 return STD_RET_OK;
                         }
+                        errno = EINVAL;
                         break;
 
                 case ETHMAC_IORQ_ETHERNET_START:
@@ -515,7 +539,12 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                         ETH_SoftwareReset();
                         while (ETH_GetSoftwareResetStatus() == SET);
                         break;
+
+                default:
+                        errno = EBADRQC;
                 }
+        } else {
+                errno = EBUSY;
         }
 
         return STD_RET_ERROR;
@@ -539,6 +568,8 @@ API_MOD_FLUSH(ETHMAC, void *device_handle)
 
         if (device_is_access_granted(&hdl->dev_lock)) {
                 ETH_FlushTransmitFIFO();
+        } else {
+                errno = EBUSY;
         }
 
         return STD_RET_OK;
