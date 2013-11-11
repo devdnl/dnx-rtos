@@ -239,6 +239,7 @@ stdret_t vfs_umount(const char *path)
         sysm_sysfree(cwd_path);
 
         if (mount_fs == NULL) {
+                errno = ENOENT;
                 goto vfs_umount_error;
         }
 
