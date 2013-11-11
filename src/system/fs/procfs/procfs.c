@@ -81,13 +81,14 @@ struct file_info {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t procfs_closedir_freedd  (void *fs_handle, DIR *dir);
-static stdret_t procfs_closedir_generic (void *fs_handle, DIR *dir);
-static dirent_t procfs_readdir_root     (void *fs_handle, DIR *dir);
-static dirent_t procfs_readdir_taskname (void *fs_handle, DIR *dir);
-static dirent_t procfs_readdir_bin      (void *fs_handle, DIR *dir);
-static dirent_t procfs_readdir_taskid   (void *fs_handle, DIR *dir);
-static dirent_t procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
+static stdret_t    procfs_closedir_freedd  (void *fs_handle, DIR *dir);
+static stdret_t    procfs_closedir_generic (void *fs_handle, DIR *dir);
+static dirent_t    procfs_readdir_root     (void *fs_handle, DIR *dir);
+static dirent_t    procfs_readdir_taskname (void *fs_handle, DIR *dir);
+static dirent_t    procfs_readdir_bin      (void *fs_handle, DIR *dir);
+static dirent_t    procfs_readdir_taskid   (void *fs_handle, DIR *dir);
+static dirent_t    procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
+static inline void mutex_force_lock        (mutex_t *mtx);
 
 /*==============================================================================
   Local object definitions
@@ -165,18 +166,19 @@ API_FS_RELEASE(procfs, void *fs_handle)
         if (mutex_lock(procfs->resource_mtx, 100) == MUTEX_LOCKED) {
                 if (list_get_item_count(procfs->file_list) != 0) {
                         mutex_unlock(procfs->resource_mtx);
+                        errno = EBUSY;
                         return STD_RET_ERROR;
                 }
 
                 critical_section_begin();
                 mutex_unlock(procfs->resource_mtx);
-
-                list_delete(procfs->file_list);
                 mutex_delete(procfs->resource_mtx);
+                list_delete(procfs->file_list);
                 free(procfs);
-
                 critical_section_end();
                 return STD_RET_OK;
+        } else {
+                errno = EBUSY;
         }
 
         return STD_RET_ERROR;
@@ -211,6 +213,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
         struct file_info       *fileInf;
 
         if (flags != O_RDONLY) {
+                errno = EROFS;
                 return STD_RET_ERROR;
         }
 
@@ -218,6 +221,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                 path = strchr(path + 1, '/') + 1;
 
                 if (path == NULL) {
+                        errno = ENOENT;
                         return STD_RET_ERROR;
                 }
 
@@ -229,6 +233,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                 }
 
                 if ((path = strrchr(path, '/')) == NULL) {
+                        errno = ENOENT;
                         return STD_RET_ERROR;
                 } else {
                         path++;
@@ -253,10 +258,11 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                         fileInf->task_file = TASK_FILE_USEDMEM;
                 } else {
                         free(fileInf);
+                        errno = ENOENT;
                         return STD_RET_ERROR;
                 }
 
-                while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+                mutex_force_lock(procmem->resource_mtx);
 
                 if (list_add_item(procmem->file_list, procmem->ID_counter, fileInf) == 0) {
                         *fd    = procmem->ID_counter++;
@@ -276,6 +282,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                 path = strrchr(path, '/');
 
                 if (path == NULL) {
+                        errno = ENOENT;
                         return STD_RET_ERROR;
                 } else {
                         path++;
@@ -297,7 +304,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                         fileInf->taskhdl   = taskdata.task_handle;
                         fileInf->task_file = TASK_FILE_NONE;
 
-                        while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+                        mutex_force_lock(procmem->resource_mtx);
 
                         if (list_add_item(procmem->file_list,
                                         procmem->ID_counter, fileInf) == 0) {
@@ -314,6 +321,8 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                         return STD_RET_ERROR;
                 }
         }
+
+        errno = ENOENT;
 
         return STD_RET_ERROR;
 }
@@ -342,7 +351,7 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *
 
         struct procfs *procmem = fs_handle;
         if (procmem) {
-                while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+                mutex_force_lock(procmem->resource_mtx);
 
                 if (list_rm_iditem(procmem->file_list, fd) == STD_RET_OK) {
                         mutex_unlock(procmem->resource_mtx);
@@ -378,6 +387,8 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
 
+        errno = EPERM;
+
         return 0;
 }
 
@@ -406,15 +417,17 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
 
         struct procfs *procmem = fs_handle;
 
-        while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        mutex_force_lock(procmem->resource_mtx);
         struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
         mutex_unlock(procmem->resource_mtx);
 
         if (fileInf == NULL) {
+                errno = ENOENT;
                 return 0;
         }
 
         if (fileInf->task_file >= TASK_FILE_COUNT) {
+                errno = ENOENT;
                 return 0;
         }
 
@@ -506,6 +519,8 @@ API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *a
         UNUSED_ARG(request);
         UNUSED_ARG(arg);
 
+        errno = EPERM;
+
         return STD_RET_ERROR;
 }
 
@@ -526,6 +541,8 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
+
+        errno = EPERM;
 
         return STD_RET_ERROR;
 }
@@ -552,15 +569,17 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
 
         struct procfs *procmem = fs_handle;
 
-        while (mutex_lock(procmem->resource_mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        mutex_force_lock(procmem->resource_mtx);
         struct file_info *fileInf = list_get_iditem_data(procmem->file_list, fd);
         mutex_unlock(procmem->resource_mtx);
 
         if (fileInf == NULL) {
+                errno = ENOENT;
                 return STD_RET_ERROR;
         }
 
         if (fileInf->task_file >= TASK_FILE_COUNT) {
+                errno = ENOENT;
                 return STD_RET_ERROR;
         }
 
@@ -619,6 +638,8 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
 
+        errno = EPERM;
+
         return STD_RET_ERROR;
 }
 
@@ -639,6 +660,8 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const struct vfs_drv_int
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
         UNUSED_ARG(drv_if);
+
+        errno = EPERM;
 
         return STD_RET_ERROR;
 }
@@ -691,8 +714,8 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
         } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
 
                 path = strchr(path + 1, '/') + 1;
-
                 if (path == NULL) {
+                        errno = ENOENT;
                         return STD_RET_ERROR;
                 }
 
@@ -712,6 +735,8 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                         return STD_RET_OK;
                 }
         }
+
+        errno = ENOENT;
 
         return STD_RET_ERROR;
 }
@@ -779,6 +804,8 @@ API_FS_REMOVE(procfs, void *fs_handle, const char *path)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
 
+        errno = EPERM;
+
         return STD_RET_ERROR;
 }
 
@@ -800,6 +827,8 @@ API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_nam
         UNUSED_ARG(old_name);
         UNUSED_ARG(new_name);
 
+        errno = EPERM;
+
         return STD_RET_ERROR;
 }
 
@@ -820,6 +849,8 @@ API_FS_CHMOD(procfs, void *fs_handle, const char *path, int mode)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
         UNUSED_ARG(mode);
+
+        errno = EPERM;
 
         return STD_RET_ERROR;
 }
@@ -843,6 +874,8 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, int owner, int group)
         UNUSED_ARG(path);
         UNUSED_ARG(owner);
         UNUSED_ARG(group);
+
+        errno = EPERM;
 
         return STD_RET_ERROR;
 }
@@ -1101,6 +1134,18 @@ static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
 
         dir->f_seek++;
         return dirent;
+}
+
+//==============================================================================
+/**
+ * @brief Force lock mutex
+ *
+ * @param mtx           mutex
+ */
+//==============================================================================
+static inline void mutex_force_lock(mutex_t *mtx)
+{
+        while (mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 }
 
 #ifdef __cplusplus
