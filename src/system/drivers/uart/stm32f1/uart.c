@@ -157,6 +157,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
         STOP_IF(device_handle == NULL);
 
         if (major >= UART_DEV_COUNT) {
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 
@@ -393,6 +394,8 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
                 n = count;
 
                 mutex_unlock(hdl->port_lock_tx_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -447,6 +450,8 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
                 } while (data_size);
 
                 mutex_unlock(hdl->port_lock_rx_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -553,6 +558,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 
                 if (!arg) {
                         critical_section_end();
+                        errno  = EINVAL;
                         status = STD_RET_ERROR;
                         break;
                 }
@@ -565,6 +571,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 
                         hdl->Rx_FIFO.buffer_level--;
                 } else {
+                        errno  = EIO;
                         status = STD_RET_ERROR;
                 }
 
@@ -577,6 +584,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 
                         if (!arg) {
                                 critical_section_end();
+                                errno  = EINVAL;
                                 status = STD_RET_ERROR;
                                 break;
                         }
@@ -615,6 +623,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                 break;
 
         default:
+                errno = EBADRQC;
                 status = STD_RET_ERROR;
                 break;
         }
@@ -751,6 +760,7 @@ static stdret_t turn_on_USART(USART_t *USART)
                 break;
 #endif
         default:
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 
@@ -811,6 +821,7 @@ static stdret_t turn_off_USART(USART_t *USART)
                 break;
 #endif
         default:
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 
@@ -861,6 +872,7 @@ static stdret_t enable_USART_interrupts(USART_t *USART)
                 break;
 #endif
         default:
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 
