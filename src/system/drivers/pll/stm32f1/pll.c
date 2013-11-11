@@ -77,6 +77,8 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
+        (void) _module_name_;
+
         u32_t wait;
 
         /* turn on HSE oscillator */
@@ -88,8 +90,10 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                 wait--;
         }
 
-        if (wait == 0)
-                return PLL_STATUS_HSE_ERROR;
+        if (wait == 0) {
+                errno = ETIME;
+                return STD_RET_ERROR;
+        }
 
         /* wait states */
         if (PLL_CPU_TARGET_FREQ <= 24000000UL)
@@ -132,8 +136,10 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                 wait--;
         }
 
-        if (wait == 0)
-                return PLL_STATUS_PLL_ERROR;
+        if (wait == 0) {
+                errno = ETIME;
+                return STD_RET_ERROR;
+        }
 
         /* set PLL as system clock */
         RCC->CFGR |= RCC_CFGR_SW_PLL;
@@ -143,8 +149,10 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                 wait--;
         }
 
-        if (wait == 0)
-                return PLL_STATUS_PLL_SW_ERROR;
+        if (wait == 0) {
+                errno = ETIME;
+                return STD_RET_ERROR;
+        }
 
         return STD_RET_OK;
 }
@@ -183,6 +191,8 @@ API_MOD_OPEN(PLL, void *device_handle, int flags)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
 
+        errno = EPERM;
+
         return STD_RET_ERROR;
 }
 
@@ -203,6 +213,8 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force, const task_t *opened_by_task
         UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
+
+        errno = EPERM;
 
         return STD_RET_ERROR;
 }
@@ -226,6 +238,8 @@ API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fp
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
 
+        errno = EPERM;
+
         return 0;
 }
 
@@ -248,6 +262,8 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
 
+        errno = EPERM;
+
         return 0;
 }
 
@@ -268,6 +284,8 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(request);
         UNUSED_ARG(arg);
+
+        errno = EBADRQC;
 
         return STD_RET_ERROR;
 }
