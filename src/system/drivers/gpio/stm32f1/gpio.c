@@ -115,6 +115,8 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
+        (void) _module_name_;
+
 #if (_AFIO_EN > 0)
         init_AFIO();
 #endif
@@ -226,6 +228,8 @@ API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, u64_t *f
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
 
+        errno = EPERM;
+
         return 0;
 }
 
@@ -247,6 +251,8 @@ API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         UNUSED_ARG(dst);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+
+        errno = EPERM;
 
         return 0;
 }
@@ -270,6 +276,7 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
 
         switch (request) {
         default:
+                errno = EBADRQC;
                 return STD_RET_ERROR;
         }
 
