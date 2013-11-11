@@ -387,7 +387,7 @@ API_FS_WRITE(procfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return 0;
 }
@@ -542,7 +542,7 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
         UNUSED_ARG(extra);
         UNUSED_ARG(fd);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return STD_RET_ERROR;
 }
@@ -638,7 +638,7 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return STD_RET_ERROR;
 }
@@ -661,7 +661,7 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const struct vfs_drv_int
         UNUSED_ARG(path);
         UNUSED_ARG(drv_if);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return STD_RET_ERROR;
 }
@@ -723,6 +723,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 path = sys_strtoi((char*)path, 16, (i32_t*)&taskHdl);
 
                 if (!((*path == '/' && *(path + 1) == '\0') || *path == '\0')) {
+                        errno = ENOENT;
                         return STD_RET_ERROR;
                 }
 
@@ -804,7 +805,7 @@ API_FS_REMOVE(procfs, void *fs_handle, const char *path)
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return STD_RET_ERROR;
 }
@@ -827,7 +828,7 @@ API_FS_RENAME(procfs, void *fs_handle, const char *old_name, const char *new_nam
         UNUSED_ARG(old_name);
         UNUSED_ARG(new_name);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return STD_RET_ERROR;
 }
@@ -850,7 +851,7 @@ API_FS_CHMOD(procfs, void *fs_handle, const char *path, int mode)
         UNUSED_ARG(path);
         UNUSED_ARG(mode);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return STD_RET_ERROR;
 }
@@ -875,7 +876,7 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, int owner, int group)
         UNUSED_ARG(owner);
         UNUSED_ARG(group);
 
-        errno = EPERM;
+        errno = EROFS;
 
         return STD_RET_ERROR;
 }
