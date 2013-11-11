@@ -58,7 +58,6 @@ extern "C" {
 /** UNDEFINE MEMORY MANAGEMENT DEFINITIONS LOCALIZED IN FreeRTOS.h file (IMPORTANT!) */
 #undef free
 #undef malloc
-#undef errno
 
 /** STANDARD STACK SIZES */
 #define STACK_DEPTH_MINIMAL             ((1  * (CONFIG_RTOS_TASK_MIN_STACK_DEPTH)) + (CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH) + (CONFIG_RTOS_IRQ_STACK_DEPTH))
@@ -399,12 +398,12 @@ static inline void *_task_get_monitor_data(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Function set errno value
+ * @brief Function set errn value
  */
 //==============================================================================
-static inline void _task_set_error(int errno)
+static inline void _task_set_error(int errn)
 {
-        _task_get_data()->f_errno = errno;
+        _task_get_data()->f_errno = errn;
 }
 
 //==============================================================================
