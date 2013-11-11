@@ -33,6 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/mount.h"
@@ -272,6 +273,7 @@ static enum cmd_status find_internal_command(const char *cmd)
         for (uint i = 0; i < ARRAY_SIZE(commands); i++) {
                 if (strcmp(cmd, commands[i].name) == 0) {
 
+                        errno = 0;
                         set_cwd(global->cwd);
                         status = commands[i].cmd(arg);
                         restore_original_cwd();
@@ -295,7 +297,6 @@ static enum cmd_status cmd_cd(char *arg)
 
         if (strcmp(arg, "..") == 0) {
                 char *lastslash = strrchr(global->cwd, '/');
-
                 if (lastslash) {
                         if (lastslash != global->cwd) {
                                 *lastslash = '\0';
@@ -305,7 +306,6 @@ static enum cmd_status cmd_cd(char *arg)
                 }
         } else if (arg[0] != '/') {
                 newpath = calloc(strlen(arg) + strlen(global->cwd) + 2, sizeof(global->cwd[0]));
-
                 if (newpath) {
                         strcpy(newpath, global->cwd);
 
@@ -316,6 +316,8 @@ static enum cmd_status cmd_cd(char *arg)
                         strcat(newpath, arg);
 
                         freePath = TRUE;
+                } else {
+                        perror(NULL);
                 }
         } else if (arg[0] == '/') {
                 newpath = arg;
@@ -327,10 +329,9 @@ static enum cmd_status cmd_cd(char *arg)
                 DIR *dir = opendir(newpath);
                 if (dir) {
                         closedir(dir);
-
                         strncpy(global->cwd, newpath, CWD_PATH_LEN);
                 } else {
-                        printf("No such directory\n");
+                        perror(newpath);
                 }
 
                 if (freePath) {
@@ -388,7 +389,7 @@ static enum cmd_status cmd_ls(char *arg)
 
                 closedir(dir);
         } else {
-                printf("No such directory\n");
+                perror(arg);
         }
 
         return CMD_STATUS_EXECUTED;
@@ -404,7 +405,7 @@ static enum cmd_status cmd_ls(char *arg)
 static enum cmd_status cmd_mkdir(char *arg)
 {
         if (mkdir(arg) != 0) {
-                printf("Cannot create directory \"%s\"\n", arg);
+                perror(arg);
         }
 
         return CMD_STATUS_EXECUTED;
@@ -423,7 +424,7 @@ static enum cmd_status cmd_touch(char *arg)
         if (file) {
                 fclose(file);
         } else {
-                printf("Cannot touch \"%s\"\n", arg);
+                perror(arg);
         }
 
         return CMD_STATUS_EXECUTED;
@@ -439,7 +440,7 @@ static enum cmd_status cmd_touch(char *arg)
 static enum cmd_status cmd_rm(char *arg)
 {
         if (remove(arg) != 0) {
-                printf("Cannot remove \"%s\"\n", arg);
+                perror(arg);
         }
 
         return CMD_STATUS_EXECUTED;
@@ -459,7 +460,7 @@ static enum cmd_status cmd_free(char *arg)
         uint  drv_count = dnx_get_number_of_modules();
         int *modmem = malloc(drv_count * sizeof(int));
         if (!modmem) {
-                printf("Not enough free memory.\n");
+                perror(NULL);
                 return CMD_STATUS_EXECUTED;
         }
 
@@ -614,9 +615,14 @@ static enum cmd_status cmd_df(char *arg)
                                 memset(mnt.mnt_dir, 0, 64);
                                 memset(mnt.mnt_fsname, 0, 64);
                         } else {
+                                if (i == 0)
+                                        perror(NULL);
+
                                 break;
                         }
                 }
+        } else {
+                perror(NULL);
         }
 
         if (mnt.mnt_dir)
@@ -680,7 +686,7 @@ static enum cmd_status cmd_mount(char *arg)
         strcpy(mntpt, arg3);
 
         if (mount(fstype, srcfile, mntpt) != STD_RET_OK) {
-                printf("Error while mounting file system!\n");
+                perror("Mount error");
         }
 
         free(fstype);
@@ -706,7 +712,7 @@ static enum cmd_status cmd_umount(char *arg)
                 printf("Usage: umount [mount point]\n");
         } else {
                 if (umount(arg) != STD_RET_OK) {
-                        printf("Cannot unmount file system!\n");
+                        perror(arg);
                 }
         }
 
@@ -743,7 +749,10 @@ static enum cmd_status cmd_detect_card(char *arg)
         FILE *sd = fopen(arg, "r");
         if (sd) {
                 bool status = false;
-                ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
+                if (ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status) != 0) {
+                        perror(arg);
+                        return CMD_STATUS_EXECUTED;
+                }
 
                 if (status == true) {
                         printf("Card initialized.\n");
@@ -751,7 +760,7 @@ static enum cmd_status cmd_detect_card(char *arg)
                         printf("Card not detected.\n");
                 }
         } else {
-                printf("Cannot open file specified.\n");
+                perror(arg);
         }
 
         return CMD_STATUS_EXECUTED;
