@@ -106,7 +106,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-struct task_data {
+typedef struct task_data {
         FILE            *f_stdin;        /* stdin file                         */
         FILE            *f_stdout;       /* stdout file                        */
         FILE            *f_stderr;       /* stderr file                        */
@@ -118,11 +118,52 @@ struct task_data {
         u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
         bool             f_program;      /* true if task is complex program    */
         int              f_errno;        /* program error number               */
-};
+} task_data_t;
 
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
+
+/*==============================================================================
+  Exported function prototypes
+==============================================================================*/
+extern task_t      *task_new                            (void (*)(void*), const char*, uint, void*);
+extern void         task_delete                         (task_t*);
+extern void         task_exit                           (void);
+extern void         task_suspend                        (task_t*);
+extern void         task_resume                         (task_t*);
+extern int          task_resume_from_ISR                (task_t*);
+extern char        *task_get_name_of                    (task_t*);
+extern int          task_get_priority_of                (task_t*);
+extern void         task_set_priority_of                (task_t*, const int);
+extern int          task_get_free_stack_of              (task_t*);
+extern task_data_t *_task_get_data                      (void);
+extern sem_t       *semaphore_new                       (void);
+extern void         semaphore_delete                    (sem_t*);
+extern bool         semaphore_take                      (sem_t*, const uint);
+extern bool         semaphore_give                      (sem_t*);
+extern bool         semaphore_take_from_ISR             (sem_t*, bool*);
+extern bool         semaphore_give_from_ISR             (sem_t*, int*);
+extern void         counting_semaphore_delete           (sem_t*);
+extern bool         counting_semaphore_take             (sem_t*, const uint);
+extern bool         counting_semaphore_give             (sem_t*);
+extern bool         counting_semaphore_take_from_ISR    (sem_t*, int*);
+extern bool         counting_semaphore_give_from_ISR    (sem_t*, int*);
+extern void         mutex_delete                        (mutex_t*);
+extern bool         mutex_lock                          (mutex_t*, const uint);
+extern bool         mutex_unlock                        (mutex_t*);
+extern void         recursive_mutex_delete              (mutex_t*);
+extern bool         recursive_mutex_lock                (mutex_t*, const uint);
+extern bool         recursive_mutex_unlock              (mutex_t*);
+extern void         queue_delete                        (queue_t*);
+extern void         queue_reset                         (queue_t*);
+extern bool         queue_send                          (queue_t*, const void*, const uint);
+extern bool         queue_send_from_ISR                 (queue_t*, const void*, int*);
+extern bool         queue_receive                       (queue_t*, void*, const uint);
+extern bool         queue_receive_from_ISR              (queue_t*, void*, int*);
+extern bool         queue_receive_peek                  (queue_t*, void*, const uint);
+extern int          queue_get_number_of_items           (queue_t*);
+extern int          queue_get_number_of_items_from_ISR  (queue_t*);
 
 /*==============================================================================
   Exported inline functions
@@ -345,14 +386,12 @@ static inline void *_task_get_tag(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Function return data of this task
- *
- * @return this task data
+ * @brief Function set errn value
  */
 //==============================================================================
-static inline struct task_data *_task_get_data(void)
+static inline void _task_set_error(int errn)
 {
-        return (struct task_data*)_task_get_tag(THIS_TASK);
+        _task_get_data()->f_errno = errn;
 }
 
 //==============================================================================
@@ -394,16 +433,6 @@ static inline void _task_set_monitor_data(task_t *taskhdl, void *mem)
 static inline void *_task_get_monitor_data(task_t *taskhdl)
 {
         return _task_get_data_of(taskhdl)->f_monitor;
-}
-
-//==============================================================================
-/**
- * @brief Function set errn value
- */
-//==============================================================================
-static inline void _task_set_error(int errn)
-{
-        _task_get_data()->f_errno = errn;
 }
 
 //==============================================================================
@@ -544,45 +573,6 @@ static inline queue_t *queue_new(uint length, const uint item_size)
         return xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
 }
 
-/*==============================================================================
-  Exported function prototypes
-==============================================================================*/
-extern task_t  *task_new                                (void (*)(void*), const char*, uint, void*);
-extern void     task_delete                             (task_t*);
-extern void     task_exit                               (void);
-extern void     task_suspend                            (task_t*);
-extern void     task_resume                             (task_t*);
-extern int      task_resume_from_ISR                    (task_t*);
-extern char    *task_get_name_of                        (task_t*);
-extern int      task_get_priority_of                    (task_t*);
-extern void     task_set_priority_of                    (task_t*, const int);
-extern int      task_get_free_stack_of                  (task_t*);
-extern sem_t   *semaphore_new                           (void);
-extern void     semaphore_delete                        (sem_t*);
-extern bool     semaphore_take                          (sem_t*, const uint);
-extern bool     semaphore_give                          (sem_t*);
-extern bool     semaphore_take_from_ISR                 (sem_t*, bool*);
-extern bool     semaphore_give_from_ISR                 (sem_t*, int*);
-extern void     counting_semaphore_delete               (sem_t*);
-extern bool     counting_semaphore_take                 (sem_t*, const uint);
-extern bool     counting_semaphore_give                 (sem_t*);
-extern bool     counting_semaphore_take_from_ISR        (sem_t*, int*);
-extern bool     counting_semaphore_give_from_ISR        (sem_t*, int*);
-extern void     mutex_delete                            (mutex_t*);
-extern bool     mutex_lock                              (mutex_t*, const uint);
-extern bool     mutex_unlock                            (mutex_t*);
-extern void     recursive_mutex_delete                  (mutex_t*);
-extern bool     recursive_mutex_lock                    (mutex_t*, const uint);
-extern bool     recursive_mutex_unlock                  (mutex_t*);
-extern void     queue_delete                            (queue_t*);
-extern void     queue_reset                             (queue_t*);
-extern bool     queue_send                              (queue_t*, const void*, const uint);
-extern bool     queue_send_from_ISR                     (queue_t*, const void*, int*);
-extern bool     queue_receive                           (queue_t*, void*, const uint);
-extern bool     queue_receive_from_ISR                  (queue_t*, void*, int*);
-extern bool     queue_receive_peek                      (queue_t*, void*, const uint);
-extern int      queue_get_number_of_items               (queue_t*);
-extern int      queue_get_number_of_items_from_ISR      (queue_t*);
 #ifdef __cplusplus
 }
 #endif

@@ -748,6 +748,18 @@ int queue_get_number_of_items_from_ISR(queue_t *queue)
         }
 }
 
+//==============================================================================
+/**
+ * @brief Function return data of this task
+ *
+ * @return this task data
+ */
+//==============================================================================
+task_data_t *_task_get_data(void)
+{
+        return (struct task_data*)_task_get_tag(THIS_TASK);
+}
+
 #ifdef __cplusplus
 }
 #endif
