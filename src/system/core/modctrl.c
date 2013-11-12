@@ -31,6 +31,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <errno.h>
 #include "core/systypes.h"
 #include "core/modctrl.h"
 #include "core/vfs.h"
@@ -88,6 +89,7 @@ stdret_t driver_init(const char *drv_name, const char *node_path)
         struct vfs_drv_interface drv_if;
 
         if (drv_name == NULL) {
+                errno = EINVAL;
                 return STD_RET_ERROR;
         }
 
@@ -108,6 +110,7 @@ stdret_t driver_init(const char *drv_name, const char *node_path)
                         printk(FONT_COLOR_RED"Driver %s is already initialized!"
                                RESET_ATTRIBUTES"\n", drv_name);
 
+                        errno = EADDRINUSE;
                         return STD_RET_ERROR;
                 }
 
@@ -156,6 +159,8 @@ stdret_t driver_init(const char *drv_name, const char *node_path)
         printk(FONT_COLOR_RED"Driver %s does not exist!"
                RESET_ATTRIBUTES"\n", drv_name);
 
+        errno = EINVAL;
+
         return STD_RET_ERROR;
 }
 
@@ -173,6 +178,7 @@ stdret_t driver_release(const char *drv_name)
         stdret_t status;
 
         if (!drv_name) {
+                errno = EINVAL;
                 return STD_RET_ERROR;
         }
 
@@ -189,6 +195,7 @@ stdret_t driver_release(const char *drv_name)
                 }
         }
 
+        errno = EINVAL;
         return STD_RET_ERROR;
 }
 

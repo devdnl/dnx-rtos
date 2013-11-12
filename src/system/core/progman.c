@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdlib.h>
+#include <errno.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"
@@ -110,6 +111,7 @@ task_t *program_start(const char *cmd, const char *cwd, FILE *stdin,
 
         if (!cmd || !cwd) {
                 set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
+                errno = EINVAL;
                 return NULL;
         }
 
@@ -166,6 +168,7 @@ task_t *program_start(const char *cmd, const char *cwd, FILE *stdin,
 void program_kill(task_t *taskhdl, int exit_code)
 {
         if (taskhdl == NULL) {
+                errno = EINVAL;
                 return;
         }
 
@@ -345,6 +348,7 @@ static char **new_argument_table(const char *str, int *argc)
         bool    first_quod = false;
 
         if (str == NULL || argc == NULL) {
+                errno = EINVAL;
                 goto exit_error;
         }
 
@@ -353,6 +357,7 @@ static char **new_argument_table(const char *str, int *argc)
         }
 
         if (str[0] == '\0') {
+                errno = EINVAL;
                 goto exit_error;
         }
 
@@ -533,6 +538,7 @@ static void delete_argument_table(char **argv)
 static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 {
         if (!prg_data || !name) {
+                errno = EINVAL;
                 return STD_RET_ERROR;
         }
 
@@ -543,6 +549,7 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
                 }
         }
 
+        errno = EINVAL;
         return STD_RET_ERROR;
 }
 

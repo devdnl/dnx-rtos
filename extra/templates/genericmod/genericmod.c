@@ -198,6 +198,7 @@ API_MOD_IOCTL(GENERICMOD, void *device_handle, int request, void *arg)
 
         switch (request) {
         default:
+                errno = EBADRQC;
                 return STD_RET_ERROR;
         }
 
