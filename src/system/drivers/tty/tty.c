@@ -213,6 +213,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
         STOP_IF(device_handle == NULL);
 
         if (major >= TTY_DEV_COUNT) {
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 
@@ -337,6 +338,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 free(tty);
                 return STD_RET_OK;
         } else {
+                errno = EBUSY;
                 return STD_RET_ERROR;
         }
 }
@@ -394,7 +396,7 @@ API_MOD_CLOSE(TTY, void *device_handle, bool force, const task_t *opened_by_task
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
  *
- * @return number of written bytes
+ * @return number of written bytes, -1 if error
  */
 //==============================================================================
 API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
@@ -428,9 +430,11 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
                 n = count;
 
-                *fpos = -n;
+                *fpos = 0;
 
                 recursive_mutex_unlock(tty->secure_resources_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -445,7 +449,7 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
  *
- * @return number of read bytes
+ * @return number of read bytes, -1 if error
  */
 //==============================================================================
 API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
@@ -474,7 +478,7 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
                 str++;
         }
 
-        *fpos = -n;
+        *fpos = 0;
 
         return n;
 }
@@ -489,7 +493,6 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
- * @retval ...
  */
 //==============================================================================
 API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
@@ -546,6 +549,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         default:
+                errno = EBADRQC;
                 return STD_RET_ERROR;
         }
 
@@ -572,9 +576,11 @@ API_MOD_FLUSH(TTY, void *device_handle)
         if (recursive_mutex_lock(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 move_editline_to_streams(tty, true);
                 recursive_mutex_unlock(tty->secure_resources_mtx);
+                return STD_RET_OK;
+        } else {
+                errno = EBUSY;
+                return STD_RET_ERROR;
         }
-
-        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -596,7 +602,7 @@ API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 
         struct tty_data *tty = device_handle;
 
-        device_stat->st_size  = 1;
+        device_stat->st_size  = 0;
         device_stat->st_major = tty->device_number;
         device_stat->st_minor = 0;
         return STD_RET_OK;

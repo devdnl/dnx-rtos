@@ -72,6 +72,8 @@ extern "C" {
 #define fscanf(FILE__stream, const_char__format, ...)           sys_fscanf(FILE__stream, const_char__format, __VA_ARGS__)
 #define sscanf(const_char__str, const_char__format, ...)        sys_sscanf(const_char__str, const_char__format, __VA_ARGS__)
 
+#define strerror(int__errnum)                                   sys_strerror(int__errnum)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -137,19 +139,23 @@ static inline int feof(FILE *file)
         return vfs_feof(file);
 }
 
-static inline int rewind(FILE *file)
-{
-        return vfs_rewind(file);
+static inline void clearerr(FILE *file) {
+        return vfs_clearerr(file);
 }
 
 static inline int ferror(FILE *file)
 {
-        return file != NULL ? 0 : (int)file;
+        return vfs_ferror(file);
 }
 
 static inline void perror(const char *s)
 {
-        sys_fprintf(stderr, "%s : Unable to open file or directory", s);
+        sys_perror(s);
+}
+
+static inline int rewind(FILE *file)
+{
+        return vfs_rewind(file);
 }
 
 static inline stdret_t getmntentry(size_t item, struct vfs_mntent *mntent)
@@ -250,6 +256,11 @@ static inline int putchar(int c)
 static inline int getchar(void)
 {
         return sys_getc(stdin);
+}
+
+static inline int fgetc(FILE *stream)
+{
+        return sys_getc(stream);
 }
 
 static inline int getc(FILE *stream)

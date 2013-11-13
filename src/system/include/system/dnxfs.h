@@ -38,6 +38,7 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/vfs.h"
 #include "kernel/kwrapper.h"
+#include <errno.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -61,8 +62,8 @@ extern "C" {
 #define API_FS_RELEASE(fsname, ...)             stdret_t _##fsname##_release(__VA_ARGS__)
 #define API_FS_OPEN(fsname, ...)                stdret_t _##fsname##_open(__VA_ARGS__)
 #define API_FS_CLOSE(fsname, ...)               stdret_t _##fsname##_close(__VA_ARGS__)
-#define API_FS_WRITE(fsname, ...)               size_t _##fsname##_write(__VA_ARGS__)
-#define API_FS_READ(fsname, ...)                size_t _##fsname##_read(__VA_ARGS__)
+#define API_FS_WRITE(fsname, ...)               ssize_t _##fsname##_write(__VA_ARGS__)
+#define API_FS_READ(fsname, ...)                ssize_t _##fsname##_read(__VA_ARGS__)
 #define API_FS_IOCTL(fsname, ...)               stdret_t _##fsname##_ioctl(__VA_ARGS__)
 #define API_FS_FSTAT(fsname, ...)               stdret_t _##fsname##_fstat(__VA_ARGS__)
 #define API_FS_FLUSH(fsname, ...)               stdret_t _##fsname##_flush(__VA_ARGS__)
@@ -106,6 +107,10 @@ extern API_FS_STATFS(fsname, void*, struct vfs_statfs*)
 
 /*==============================================================================
   Exported function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline function
 ==============================================================================*/
 
 #ifdef __cplusplus

@@ -131,7 +131,10 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 
         switch (cmd) {
         case CTRL_SYNC:
-                return RES_OK;
+                if (vfs_fflush(srcfile) == 0)
+                        return RES_OK;
+                else
+                        return RES_ERROR;
         }
 
         return RES_PARERR;

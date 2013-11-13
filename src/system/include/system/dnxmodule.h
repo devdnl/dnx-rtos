@@ -39,6 +39,7 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/modctrl.h"
 #include "kernel/kwrapper.h"
+#include <errno.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -63,8 +64,8 @@ extern "C" {
 #define API_MOD_RELEASE(modname, ...)           stdret_t _##modname##_release(__VA_ARGS__)
 #define API_MOD_OPEN(modname, ...)              stdret_t _##modname##_open(__VA_ARGS__)
 #define API_MOD_CLOSE(modname, ...)             stdret_t _##modname##_close(__VA_ARGS__)
-#define API_MOD_WRITE(modname, ...)             size_t _##modname##_write(__VA_ARGS__)
-#define API_MOD_READ(modname, ...)              size_t _##modname##_read(__VA_ARGS__)
+#define API_MOD_WRITE(modname, ...)             ssize_t _##modname##_write(__VA_ARGS__)
+#define API_MOD_READ(modname, ...)              ssize_t _##modname##_read(__VA_ARGS__)
 #define API_MOD_IOCTL(modname, ...)             stdret_t _##modname##_ioctl(__VA_ARGS__)
 #define API_MOD_FLUSH(modname, ...)             stdret_t _##modname##_flush(__VA_ARGS__)
 #define API_MOD_STAT(modname, ...)              stdret_t _##modname##_stat(__VA_ARGS__)

@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -77,6 +78,8 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
+        errno = 0;
+
         char *buffer   = NULL;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
@@ -86,20 +89,20 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                 buffer_size /= 2;
 
                 if (buffer_size < 512) {
-                        puts("Not enough free memory");
+                        perror(NULL);
                         goto exit_error;
                 }
         }
 
         src_file = fopen(argv[1], "r");
         if (!src_file) {
-                printf("Cannot open file %s\n", argv[1]);
+                perror(argv[1]);
                 goto exit_error;
         }
 
         dst_file = fopen(argv[2], "w");
         if (!dst_file) {
-                printf("Cannot create file %s\n", argv[2]);
+                perror(argv[2]);
                 goto exit_error;
         }
 
@@ -113,6 +116,11 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
         int   n;
 
         while ((n = fread(buffer, sizeof(char), buffer_size, src_file))) {
+                if (ferror(src_file)) {
+                        perror(argv[1]);
+                        break;
+                }
+
                 lcopy_size += n;
 
                 if (kernel_get_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
@@ -126,8 +134,9 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                                ((copy_size*10000)/file_size) % 100);
                 }
 
-                if (fwrite(buffer, sizeof(char), n, dst_file) == 0) {
-                        printf("\rCoping error\n");
+                fwrite(buffer, sizeof(char), n, dst_file);
+                if (ferror(dst_file)) {
+                        perror(argv[2]);
                         break;
                 }
         }

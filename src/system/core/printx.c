@@ -34,7 +34,9 @@ extern "C" {
 #include "config.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
+#include "core/progman.h"
 #include "kernel/kwrapper.h"
+#include <errno.h>
 
 /*==============================================================================
   Local macros
@@ -492,13 +494,12 @@ int sys_getc(FILE *stream)
                 return EOF;
         }
 
-        if (vfs_feof(stream)) {
-                return EOF;
-        }
-
         int chr = 0;
         while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                sleep_ms(10);
+                if (vfs_ferror(stream) || vfs_feof(stream))
+                        return EOF;
+                else
+                        sleep_ms(10);
         }
 
         return chr;
@@ -521,33 +522,31 @@ char *sys_fgets(char *str, int size, FILE *stream)
                 return NULL;
         }
 
-        if (vfs_feof(stream) == 0) {
-                u64_t lseek = vfs_ftell(stream);
+        u64_t fpos = vfs_ftell(stream);
 
-                int n;
-                while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0);
-
-                char *end;
-                if ((end = strchr(str, '\n'))) {
-                        end++;
-                        *end = '\0';
-                } else if ((end = strchr(str, EOF))) {
-                        *end = '\0';
-                } else {
-                        str[n] = '\0';
+        int n;
+        while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
+                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                        return NULL;
                 }
-
-                int len = strlen(str);
-
-                if (len == 0)
-                        len = 1;
-
-                vfs_fseek(stream, lseek + len, SEEK_SET);
-
-                return str;
         }
 
-        return NULL;
+        char *end;
+        if ((end = strchr(str, '\n'))) {
+                end++;
+                *end = '\0';
+        } else {
+                str[n] = '\0';
+        }
+
+        int len = strlen(str);
+
+        if (len == 0)
+                len = 1;
+
+        vfs_fseek(stream, fpos + len, SEEK_SET);
+
+        return str;
 }
 
 //==============================================================================
@@ -623,6 +622,169 @@ int sys_fprintf(FILE *file, const char *format, ...)
         UNUSED_ARG(file);
         UNUSED_ARG(format);
         return 0;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function returns error string
+ *
+ * @param errnum        error number
+ *
+ * @return error number string
+ */
+//==============================================================================
+const char *sys_strerror(int errnum)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        static const char *errstr[] = {
+#if   (CONFIG_ERRNO_STRING_LEN == 0)
+                "",
+#elif (CONFIG_ERRNO_STRING_LEN == 1)
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21",
+                "22",
+                "23",
+                "24",
+                "25",
+                "26",
+                "27",
+                "28",
+                "29",
+                "30",
+                "31",
+                "32",
+                "33",
+                "34",
+                "35"
+#elif (CONFIG_ERRNO_STRING_LEN == 2)
+                "ESUCC",
+                "EPERM"
+                "ENOENT",
+                "ESRCH",
+                "EIO",
+                "ENXIO",
+                "E2BIG",
+                "ENOEXEC",
+                "EAGAIN",
+                "ENOMEM",
+                "EACCES",
+                "EFAULT",
+                "EBUSY",
+                "EEXIST",
+                "ENODEV",
+                "ENOTDIR",
+                "EISDIR",
+                "EINVAL",
+                "EMFILE",
+                "EFBIG",
+                "ENOSPC",
+                "ESPIPE",
+                "EROFS",
+                "EDOM",
+                "ERANGE",
+                "EILSEQ",
+                "ENAMETOOLONG",
+                "ENOTEMPTY",
+                "EBADRQC",
+                "ETIME",
+                "ENONET",
+                "EUSERS",
+                "EADDRINUSE",
+                "ENOMEDIUM",
+                "EMEDIUMTYPE",
+                "ECANCELED"
+#elif (CONFIG_ERRNO_STRING_LEN == 3)
+                "Success",
+                "Operation not permitted",
+                "No such file or directory",
+                "No such process",
+                "I/O error",
+                "No such device or address",
+                "Argument list too long",
+                "Exec format error",
+                "Try again",
+                "Out of memory",
+                "Permission denied",
+                "Bad address",
+                "Device or resource busy",
+                "File exists",
+                "No such device",
+                "Not a directory",
+                "Is a directory",
+                "Invalid argument",
+                "Too many open files",
+                "File too large",
+                "No space left on device",
+                "Illegal seek",
+                "Read-only file system",
+                "Math argument out of domain of func",
+                "Math result not representable",
+                "Illegal byte sequence",
+                "File name too long",
+                "Directory not empty",
+                "Invalid request code",
+                "Timer expired",
+                "Machine is not on the network",
+                "Too many users",
+                "Address already in use",
+                "No medium found",
+                "Wrong medium type",
+                "Operation Canceled"
+#else
+#error "CONFIG_ERRNO_STRING_LEN should be in range 0 - 3!"
+#endif
+        };
+
+        if (CONFIG_ERRNO_STRING_LEN == 0) {
+                return errstr[0];
+        } else if (errnum < _ENUMBER) {
+                return errstr[errnum];
+        } else {
+                return "Unknown error";
+        }
+#else
+        (void) errnum;
+        return "";
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function prints error string
+ *
+ * @param str           string to print or NULL
+ */
+//==============================================================================
+void sys_perror(const char *str)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (str) {
+                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(_task_get_data()->f_errno));
+        } else {
+                sys_fprintf(stderr, "%s\n", sys_strerror(_task_get_data()->f_errno));
+        }
+#else
+        (void) str
 #endif
 }
 

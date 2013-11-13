@@ -46,6 +46,8 @@ extern "C" {
 #define MTX_BLOCK_TIME_LONG                             200
 #define force_lock_recursive_mutex(mtx)                 while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
 
+#define RELEASE_TIMEOUT_MS                              1000
+
 /* SPI configuration macros */
 #define enable_bidirectional_data_mode()                SDSPI_PORT->CR1 |=  SPI_CR1_BIDIMODE
 #define enable_unidirectional_data_mode()               SDSPI_PORT->CR1 &= ~SPI_CR1_BIDIMODE
@@ -229,10 +231,8 @@ static struct sdspi_data *sdspi_data;
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
         STOP_IF(device_handle == NULL);
-
-        if (major != SDSPI_MAJOR_NUMBER || minor != SDSPI_MINOR_NUMBER) {
-                return STD_RET_ERROR;
-        }
+        UNUSED_ARG(major);
+        UNUSED_ARG(minor);
 
         struct sdspi_data *sdspi;
         if (!(sdspi = calloc(1, sizeof(struct sdspi_data)))) {
@@ -321,14 +321,16 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         struct sdspi_data *hdl = device_handle;
 
         /* wait for all partition are released */
-        int timeout = 50;
+        int os_time = kernel_get_time_ms();
         while (  hdl->partition[0].in_use == true
               || hdl->partition[1].in_use == true
               || hdl->partition[2].in_use == true
               || hdl->partition[3].in_use == true) {
 
-                if (--timeout == 0)
+                if (os_time - kernel_get_time_ms() >= RELEASE_TIMEOUT_MS) {
+                        errno = EBUSY;
                         return STD_RET_ERROR;
+                }
 
                 sleep_ms(100);
         }
@@ -394,7 +396,7 @@ API_MOD_CLOSE(SDSPI, void *device_handle, bool force, const task_t *opened_by_ta
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
  *
- * @return number of written bytes
+ * @return number of written bytes, -1 if error
  */
 //==============================================================================
 API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
@@ -410,6 +412,8 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
         if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_write(hdl, src, count, *fpos);
                 mutex_unlock(hdl->card_protect_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -424,7 +428,7 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
  *
- * @return number of read bytes
+ * @return number of read bytes, -1 if error
  */
 //==============================================================================
 API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
@@ -440,6 +444,8 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_read(hdl, dst, count, *fpos);
                 mutex_unlock(hdl->card_protect_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -455,7 +461,6 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
- * @retval ...
  */
 //==============================================================================
 API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
@@ -485,11 +490,13 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
                         mutex_unlock(hdl->card_protect_mtx);
                 } else {
+                        errno  = EBUSY;
                         status = STD_RET_ERROR;
                 }
                 break;
 
         default:
+                errno = EBADRQC;
                 status = STD_RET_ERROR;
                 break;
         }
@@ -530,7 +537,8 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         STOP_IF(device_handle == NULL);
         STOP_IF(device_stat == NULL);
 
-        struct sdspi_data *hdl = device_handle;
+        struct sdspi_data *hdl    = device_handle;
+        stdret_t           status = STD_RET_ERROR;
 
         if (mutex_lock(hdl->card_protect_mtx, MTX_BLOCK_TIME_LONG) == MUTEX_LOCKED) {
                 /* size info */
@@ -540,38 +548,44 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
                         uint  try = 1000000;
 
                         while ((token = spi_rw(0xFF)) == 0xFF && --try);
-                        if (token != 0xFE)
-                                return STD_RET_ERROR;
 
-                        u8_t *ptr = &csd[0];
-                        for (int i = 0; i < 4; i++) {
-                                *ptr++ = spi_rw(0xFF);
-                                *ptr++ = spi_rw(0xFF);
-                                *ptr++ = spi_rw(0xFF);
-                                *ptr++ = spi_rw(0xFF);
-                        }
-                        spi_rw(0xFF);
-                        spi_rw(0xFF);
+                        if (token == 0xFE) {
+                                u8_t *ptr = &csd[0];
+                                for (int i = 0; i < 4; i++) {
+                                        *ptr++ = spi_rw(0xFF);
+                                        *ptr++ = spi_rw(0xFF);
+                                        *ptr++ = spi_rw(0xFF);
+                                        *ptr++ = spi_rw(0xFF);
+                                }
+                                spi_rw(0xFF);
+                                spi_rw(0xFF);
 
-                        /* SDC version 2.00 */
-                        device_stat->st_size = 0;
-                        if ((csd[0] >> 6) == 1) {
-                                int csize     = csd[9] + ((u16_t)csd[8] << 8) + 1;
-                                device_stat->st_size = (u64_t)csize << 10;
-                        } else { /* SDC version 1.XX or MMC*/
-                                int n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
-                                int csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
-                                device_stat->st_size = (u64_t)csize << (n - 9);
+                                /* SDC version 2.00 */
+                                device_stat->st_size = 0;
+                                if ((csd[0] >> 6) == 1) {
+                                        int csize            = csd[9] + ((u16_t)csd[8] << 8) + 1;
+                                        device_stat->st_size = (u64_t)csize << 10;
+                                } else { /* SDC version 1.XX or MMC*/
+                                        int n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
+                                        int csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
+                                        device_stat->st_size = (u64_t)csize << (n - 9);
+                                }
+                                device_stat->st_size *= SECTOR_SIZE;
+                                device_stat->st_major = 0;
+                                device_stat->st_minor = 0;
+                        } else {
+                                errno = EIO;
                         }
-                        device_stat->st_size *= SECTOR_SIZE;
-                        device_stat->st_major = 0;
-                        device_stat->st_minor = 0;
+                } else {
+                        errno = EIO;
                 }
 
                 mutex_unlock(hdl->card_protect_mtx);
+        } else {
+                errno = EBUSY;
         }
 
-        return STD_RET_OK;
+        return status;
 }
 
 //==============================================================================
@@ -592,10 +606,12 @@ static stdret_t partition_open(void *device_handle, int flags)
 
         struct partition *hdl = device_handle;
 
-        if (hdl->in_use == true)
+        if (hdl->in_use == true) {
+                errno = EBUSY;
                 return STD_RET_ERROR;
-        else
+        } else {
                 return STD_RET_OK;
+        }
 }
 
 //==============================================================================
@@ -635,7 +651,7 @@ static stdret_t partition_close(void *device_handle, bool forced, const task_t *
  * @retval number of written bytes
  */
 //==============================================================================
-static size_t partition_write(void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+static ssize_t partition_write(void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
@@ -648,6 +664,8 @@ static size_t partition_write(void *device_handle, const u8_t *src, size_t count
         if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_write(sdspi_data, src, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 mutex_unlock(sdspi_data->card_protect_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -665,7 +683,7 @@ static size_t partition_write(void *device_handle, const u8_t *src, size_t count
  * @retval number of read bytes
  */
 //==============================================================================
-static size_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+static ssize_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
@@ -678,6 +696,8 @@ static size_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t
         if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
                 n = card_read(sdspi_data, dst, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 mutex_unlock(sdspi_data->card_protect_mtx);
+        } else {
+                errno = EBUSY;
         }
 
         return n;
@@ -700,6 +720,8 @@ static stdret_t partition_ioctl(void *device_handle, int iorq, void *arg)
         STOP_IF(device_handle == NULL);
         UNUSED_ARG(iorq);
         UNUSED_ARG(arg);
+
+        errno = EBADRQC;
 
         return STD_RET_ERROR;
 }
@@ -771,6 +793,7 @@ static stdret_t turn_on_SPI_clock(void)
                 return STD_RET_OK;
         #endif
         default:
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 }
@@ -808,6 +831,7 @@ static stdret_t turn_off_SPI_clock(void)
                 return STD_RET_OK;
         #endif
         default:
+                errno = EIO;
                 return STD_RET_ERROR;
         }
 }
@@ -873,6 +897,7 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
         select_SD_card();
 
         if (wait_ready() != 0xFF) {
+                errno = EIO;
                 return 0xFF;
         }
 
@@ -920,8 +945,10 @@ static bool receive_data_block(u8_t *buff)
 
         while ((token = spi_rw(0xFF)) == 0xFF && --try);
 
-        if (token != 0xFE)
+        if (token != 0xFE) {
+                errno = EIO;
                 return false;
+        }
 
 #if (SDSPI_ENABLE_DMA != 0)
         SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
@@ -973,8 +1000,10 @@ static bool receive_data_block(u8_t *buff)
 //==============================================================================
 static bool transmit_data_block(const u8_t *buff, u8_t token)
 {
-        if (wait_ready() != 0xFF)
+        if (wait_ready() != 0xFF) {
+                errno = EIO;
                 return false;
+        }
 
         spi_rw(token);
 
@@ -1013,8 +1042,10 @@ static bool transmit_data_block(const u8_t *buff, u8_t token)
                 spi_rw(0xFF);
 
                 /* receive data response */
-                if ((spi_rw(0xFF) & 0x1F) != 0x05)
+                if ((spi_rw(0xFF) & 0x1F) != 0x05) {
+                        errno = EIO;
                         return false;
+                }
         }
 
         return true;
@@ -1314,13 +1345,13 @@ static stdret_t detect_partitions(struct sdspi_data *hdl)
         stdret_t status = STD_RET_ERROR;
 
         u8_t *MBR = malloc(SECTOR_SIZE);
-
         if (MBR) {
                 if (card_read(hdl, MBR, SECTOR_SIZE, 0) != SECTOR_SIZE) {
                         goto error;
                 }
 
                 if (MBR_GET_BOOT_SIGNATURE(MBR) != 0xAA55) {
+                        errno = EMEDIUMTYPE;
                         goto error;
                 }
 
