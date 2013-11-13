@@ -170,7 +170,7 @@ uint32_t _libfat_get_fattime(void)
 int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
         if (sobj) {
-                _LIBFAT_MUTEX_t mtx = mutex_new();
+                _LIBFAT_MUTEX_t mtx = mutex_new(MUTEX_NORMAL);
                 if (mtx) {
                         *sobj = mtx;
                         return 1;

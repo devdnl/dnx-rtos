@@ -82,7 +82,7 @@ enum path_correction {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static inline void      recursive_mutex_force_lock      (mutex_t *mtx);
+static inline void      mutex_force_lock      (mutex_t *mtx);
 static int              file_mode_str_to_flags          (const char *str);
 static struct FS_data  *find_mounted_FS                 (const char *path, u16_t len, u32_t *itemid);
 static struct FS_data  *find_base_FS                    (const char *path, char **extPath);
@@ -110,7 +110,7 @@ static u32_t    vfs_id_counter;
 stdret_t vfs_init(void)
 {
         vfs_mnt_list     = list_new();
-        vfs_resource_mtx = recursive_mutex_new();
+        vfs_resource_mtx = mutex_new(MUTEX_RECURSIVE);
 
         if (!vfs_mnt_list || !vfs_resource_mtx)
                 return STD_RET_ERROR;
@@ -148,7 +148,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                 return STD_RET_ERROR;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         struct FS_data *mount_fs = find_mounted_FS(cwd_mount_point, -1, NULL);
 
         char *external_path      = NULL;
@@ -192,7 +192,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                         new_fs->mounted_FS_counter = 0;
 
                         if (list_add_item(vfs_mnt_list, vfs_id_counter++, new_fs) >= 0) {
-                                recursive_mutex_unlock(vfs_resource_mtx);
+                                mutex_unlock(vfs_resource_mtx);
                                 sysm_sysfree(cwd_src_path);
                                 return STD_RET_OK;
                         } else {
@@ -207,7 +207,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                 errno = ENOENT;
         }
 
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -233,7 +233,7 @@ stdret_t vfs_umount(const char *path)
                 return STD_RET_ERROR;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         u32_t           item_id;
         struct FS_data *mount_fs = find_mounted_FS(cwd_path, -1, &item_id);
         sysm_sysfree(cwd_path);
@@ -261,7 +261,7 @@ stdret_t vfs_umount(const char *path)
                 }
 
                 if (list_rm_iditem(vfs_mnt_list, item_id) == STD_RET_OK) {
-                        recursive_mutex_unlock(vfs_resource_mtx);
+                        mutex_unlock(vfs_resource_mtx);
                         return STD_RET_OK;
                 }
         } else {
@@ -269,7 +269,7 @@ stdret_t vfs_umount(const char *path)
         }
 
 vfs_umount_error:
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -291,9 +291,9 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 return STD_RET_ERROR;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         struct FS_data *fs = list_get_nitem_data(vfs_mnt_list, item);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         if (fs) {
                 struct vfs_statfs stat_fs = {.f_fsname = NULL};
@@ -345,10 +345,10 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -383,10 +383,10 @@ int vfs_mkdir(const char *path)
                        return -1;
                 }
 
-                recursive_mutex_force_lock(vfs_resource_mtx);
+                mutex_force_lock(vfs_resource_mtx);
                 char *external_path = NULL;
                 struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-                recursive_mutex_unlock(vfs_resource_mtx);
+                mutex_unlock(vfs_resource_mtx);
 
                 if (fs) {
                         if (fs->interface.fs_mkdir) {
@@ -426,10 +426,10 @@ DIR *vfs_opendir(const char *path)
 
                 char *cwd_path = new_corrected_path(path, ADD_SLASH);
                 if (cwd_path) {
-                        recursive_mutex_force_lock(vfs_resource_mtx);
+                        mutex_force_lock(vfs_resource_mtx);
                         char *external_path = NULL;
                         struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-                        recursive_mutex_unlock(vfs_resource_mtx);
+                        mutex_unlock(vfs_resource_mtx);
 
                         if (fs) {
                                 dir->f_handle = fs->handle;
@@ -532,12 +532,12 @@ int vfs_remove(const char *path)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path      = NULL;
         struct FS_data *mount_fs = find_mounted_FS(cwd_path, -1, NULL);
         last_character(cwd_path) = '\0';
         struct FS_data *base_fs  = find_base_FS(cwd_path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (base_fs && !mount_fs) {
@@ -580,12 +580,12 @@ int vfs_rename(const char *old_name, const char *new_name)
                 goto exit;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *old_extern_path  = NULL;
         char *new_extern_path  = NULL;
         struct FS_data *old_fs = find_base_FS(cwd_old_name, &old_extern_path);
         struct FS_data *new_fs = find_base_FS(cwd_new_name, &new_extern_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         if (!old_fs || !new_fs) {
                 goto exit;
@@ -637,10 +637,10 @@ int vfs_chmod(const char *path, int mode)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -677,10 +677,10 @@ int vfs_chown(const char *path, int owner, int group)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -716,10 +716,10 @@ int vfs_stat(const char *path, struct vfs_stat *stat)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -755,9 +755,9 @@ int vfs_statfs(const char *path, struct vfs_statfs *statfs)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         struct FS_data *fs = find_mounted_FS(cwd_path, -1, NULL);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
         sysm_sysfree(cwd_path);
 
         if (!fs) {
@@ -805,10 +805,10 @@ FILE *vfs_fopen(const char *path, const char *mode)
 
         FILE *file = sysm_syscalloc(1, sizeof(FILE));
         if (file) {
-                recursive_mutex_force_lock(vfs_resource_mtx);
+                mutex_force_lock(vfs_resource_mtx);
                 char *external_path = NULL;
                 struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-                recursive_mutex_unlock(vfs_resource_mtx);
+                mutex_unlock(vfs_resource_mtx);
 
                 if (fs == NULL) {
                         goto vfs_open_error;
@@ -1220,9 +1220,9 @@ int vfs_rewind(FILE *file)
  * @param mtx           mutex to lock
  */
 //==============================================================================
-static inline void recursive_mutex_force_lock(mutex_t *mtx)
+static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (recursive_mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
 }
 
 //==============================================================================

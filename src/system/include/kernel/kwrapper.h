@@ -95,6 +95,8 @@ extern "C" {
 /** MUTEX */
 #define MUTEX_LOCKED                    true
 #define MUTEX_NOT_LOCKED                false
+#define MUTEX_RECURSIVE                 true
+#define MUTEX_NORMAL                    false
 
 /** QUEUE */
 #define QUEUE_ITEM_POSTED               true
@@ -138,23 +140,16 @@ extern int          task_get_priority_of                (task_t*);
 extern void         task_set_priority_of                (task_t*, const int);
 extern int          task_get_free_stack_of              (task_t*);
 extern task_data_t *_task_get_data                      (void);
-extern sem_t       *semaphore_new                       (void);
+extern sem_t       *semaphore_new                       (const uint, const uint);
 extern void         semaphore_delete                    (sem_t*);
 extern bool         semaphore_take                      (sem_t*, const uint);
 extern bool         semaphore_give                      (sem_t*);
 extern bool         semaphore_take_from_ISR             (sem_t*, bool*);
 extern bool         semaphore_give_from_ISR             (sem_t*, int*);
-extern void         counting_semaphore_delete           (sem_t*);
-extern bool         counting_semaphore_take             (sem_t*, const uint);
-extern bool         counting_semaphore_give             (sem_t*);
-extern bool         counting_semaphore_take_from_ISR    (sem_t*, int*);
-extern bool         counting_semaphore_give_from_ISR    (sem_t*, int*);
+extern mutex_t     *mutex_new                           (bool);
 extern void         mutex_delete                        (mutex_t*);
 extern bool         mutex_lock                          (mutex_t*, const uint);
 extern bool         mutex_unlock                        (mutex_t*);
-extern void         recursive_mutex_delete              (mutex_t*);
-extern bool         recursive_mutex_lock                (mutex_t*, const uint);
-extern bool         recursive_mutex_unlock              (mutex_t*);
 extern void         queue_delete                        (queue_t*);
 extern void         queue_reset                         (queue_t*);
 extern bool         queue_send                          (queue_t*, const void*, const uint);
@@ -517,45 +512,6 @@ static inline void task_set_user_data(void *mem)
 static inline void *task_get_user_data(void)
 {
         return _task_get_data_of(THIS_TASK)->f_user;
-}
-
-//==============================================================================
-/**
- * @brief Function create new counting semaphore
- *
- * @param[in] cnt_max           max counter
- * @param[in] cnt_init          counter init value
- *
- * @param pointer to semaphore object, otherwise NULL if error
- */
-//==============================================================================
-static inline sem_t *counting_semaphore_new(const uint cnt_max, const uint cnt_init)
-{
-        return xSemaphoreCreateCounting(cnt_max, cnt_init);
-}
-
-//==============================================================================
-/**
- * @brief Function create new mutex
- *
- * @return pointer to mutex object, otherwise NULL if error
- */
-//==============================================================================
-static inline mutex_t *mutex_new(void)
-{
-        return xSemaphoreCreateMutex();
-}
-
-//==============================================================================
-/**
- * @brief Function create new mutex
- *
- * @return pointer to mutex object, otherwise NULL if error
- */
-//==============================================================================
-static inline mutex_t *recursive_mutex_new(void)
-{
-        return xSemaphoreCreateRecursiveMutex();
 }
 
 //==============================================================================

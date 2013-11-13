@@ -252,7 +252,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         NVIC_SetPriority(SDSPI_DMA_IRQ_NUMBER, SDSPI_DMA_IRQ_PRIORITY);
 #endif
 
-        if (!(sdspi->card_protect_mtx = mutex_new())) {
+        if (!(sdspi->card_protect_mtx = mutex_new(MUTEX_NORMAL))) {
                 goto error;
         }
 

@@ -168,9 +168,9 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
         *device_handle = USART_data[major];
 
         USART_data[major]->USART            = USART_peripherals[major];
-        USART_data[major]->data_write_sem   = semaphore_new();
-        USART_data[major]->port_lock_rx_mtx = mutex_new();
-        USART_data[major]->port_lock_tx_mtx = mutex_new();
+        USART_data[major]->data_write_sem   = semaphore_new(1, 0);
+        USART_data[major]->port_lock_rx_mtx = mutex_new(MUTEX_NORMAL);
+        USART_data[major]->port_lock_tx_mtx = mutex_new(MUTEX_NORMAL);
 
         if (  !USART_data[major]->data_write_sem
            || !USART_data[major]->port_lock_rx_mtx
@@ -274,11 +274,11 @@ error:
         }
 
         if (USART_data[major]->port_lock_rx_mtx) {
-                recursive_mutex_delete(USART_data[major]->port_lock_rx_mtx);
+                mutex_delete(USART_data[major]->port_lock_rx_mtx);
         }
 
         if (USART_data[major]->port_lock_tx_mtx) {
-                recursive_mutex_delete(USART_data[major]->port_lock_tx_mtx);
+                mutex_delete(USART_data[major]->port_lock_tx_mtx);
         }
 
         free(USART_data[major]);

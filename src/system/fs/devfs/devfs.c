@@ -107,7 +107,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
         STOP_IF(!src_path);
 
         struct devfs       *devfs = malloc(sizeof(struct devfs));
-        mutex_t            *mtx   = mutex_new();
+        mutex_t            *mtx   = mutex_new(MUTEX_NORMAL);
         struct devfs_chain *chain = chain_new();
 
         if (devfs && mtx && chain) {

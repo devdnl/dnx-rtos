@@ -34,6 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "core/basic_types.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -48,8 +49,12 @@ extern "C" {
 ==============================================================================*/
 typedef void task_t;
 typedef void sem_t;
-typedef void mutex_t;
 typedef void queue_t;
+
+typedef struct {
+        void *mutex;
+        bool  recursive;
+} mutex_t;
 
 /*==============================================================================
    Exported object declarations

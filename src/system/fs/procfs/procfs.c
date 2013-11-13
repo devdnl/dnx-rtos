@@ -121,7 +121,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
 
         struct procfs *procfs    = calloc(1, sizeof(struct procfs));
         list_t        *file_list = list_new();
-        mutex_t       *mtx       = mutex_new();
+        mutex_t       *mtx       = mutex_new(MUTEX_NORMAL);
 
         if (procfs && file_list && mtx) {
                 procfs->file_list    = file_list;

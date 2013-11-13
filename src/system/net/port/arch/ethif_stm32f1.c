@@ -536,7 +536,7 @@ static void tcpip_init_done(void *arg)
                 goto release_resources;
         }
 
-        ethif_mem->protect_request_mtx = mutex_new();
+        ethif_mem->protect_request_mtx = mutex_new(MUTEX_NORMAL);
         if (!ethif_mem->protect_request_mtx) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: new mutex fail\n"));
                 goto release_resources;
