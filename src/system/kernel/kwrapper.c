@@ -404,11 +404,11 @@ bool semaphore_give_from_ISR(sem_t *sem, int *task_woken)
  * @return pointer to mutex object, otherwise NULL if error
  */
 //==============================================================================
-mutex_t *mutex_new(bool recursive)
+mutex_t *mutex_new(enum mutex_type type)
 {
         mutex_t *mtx = sysm_kmalloc(sizeof(mutex_t));
         if (mtx) {
-                if (recursive) {
+                if (type == MUTEX_RECURSIVE) {
                         mtx->mutex     = xSemaphoreCreateRecursiveMutex();
                         mtx->recursive = true;
                 } else {

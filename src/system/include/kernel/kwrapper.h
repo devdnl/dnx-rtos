@@ -95,8 +95,6 @@ extern "C" {
 /** MUTEX */
 #define MUTEX_LOCKED                    true
 #define MUTEX_NOT_LOCKED                false
-#define MUTEX_RECURSIVE                 true
-#define MUTEX_NORMAL                    false
 
 /** QUEUE */
 #define QUEUE_ITEM_POSTED               true
@@ -122,6 +120,11 @@ typedef struct task_data {
         int              f_errno;        /* program error number               */
 } task_data_t;
 
+enum mutex_type {
+        MUTEX_RECURSIVE,
+        MUTEX_NORMAL
+};
+
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
@@ -146,7 +149,7 @@ extern bool         semaphore_take                      (sem_t*, const uint);
 extern bool         semaphore_give                      (sem_t*);
 extern bool         semaphore_take_from_ISR             (sem_t*, bool*);
 extern bool         semaphore_give_from_ISR             (sem_t*, int*);
-extern mutex_t     *mutex_new                           (bool);
+extern mutex_t     *mutex_new                           (enum mutex_type);
 extern void         mutex_delete                        (mutex_t*);
 extern bool         mutex_lock                          (mutex_t*, const uint);
 extern bool         mutex_unlock                        (mutex_t*);
