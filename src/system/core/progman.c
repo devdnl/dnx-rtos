@@ -142,8 +142,6 @@ task_t *program_start(const char *cmd, const char *cwd, FILE *stdin,
         pdata->status       = status;
         pdata->exit_code    = exit_code;
 
-        set_status(status, PROGRAM_RUNNING);
-
         taskhdl = task_new(task_program_startup, regpdata.program_name,
                            regpdata.stack_depth, pdata);
 
@@ -152,6 +150,8 @@ task_t *program_start(const char *cmd, const char *cwd, FILE *stdin,
                 delete_argument_table(pdata->argv);
                 sysm_sysfree(pdata);
                 return NULL;
+        } else {
+                set_status(status, PROGRAM_RUNNING);
         }
 
         return taskhdl;

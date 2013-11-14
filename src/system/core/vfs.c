@@ -43,9 +43,6 @@ extern "C" {
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                          10
 
-#define first_character(str)                    str[0]
-#define last_character(str)                     str[strlen(str) - 1]
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -175,7 +172,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                 }
         } else if (  list_get_item_count(vfs_mnt_list) == 0
                   && strlen(cwd_mount_point) == 1
-                  && first_character(cwd_mount_point) == '/' ) {
+                  && FIRST_CHARACTER(cwd_mount_point) == '/' ) {
 
                 new_fs = sysm_syscalloc(1, sizeof(struct FS_data));
         }
@@ -535,7 +532,7 @@ int vfs_remove(const char *path)
         mutex_force_lock(vfs_resource_mtx);
         char *external_path      = NULL;
         struct FS_data *mount_fs = find_mounted_FS(cwd_path, -1, NULL);
-        last_character(cwd_path) = '\0';
+        LAST_CHARACTER(cwd_path) = '\0';
         struct FS_data *base_fs  = find_base_FS(cwd_path, &external_path);
         mutex_unlock(vfs_resource_mtx);
 
@@ -788,7 +785,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if (last_character(path) == '/') { /* path is a directory */
+        if (LAST_CHARACTER(path) == '/') { /* path is a directory */
                 errno = EISDIR;
                 return NULL;
         }
@@ -1372,20 +1369,20 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
         uint        cwd_len = 0;
 
         /* correct ending slash */
-        if (corr == SUB_SLASH && last_character(path) == '/') {
+        if (corr == SUB_SLASH && LAST_CHARACTER(path) == '/') {
                 new_path_len--;
-        } else if (corr == ADD_SLASH && last_character(path) != '/') {
+        } else if (corr == ADD_SLASH && LAST_CHARACTER(path) != '/') {
                 new_path_len++;
         }
 
         /* correct cwd */
-        if (first_character(path) != '/') {
+        if (FIRST_CHARACTER(path) != '/') {
                 cwd = _task_get_data()->f_cwd;
                 if (cwd) {
                         cwd_len       = strlen(cwd);
                         new_path_len += cwd_len;
 
-                        if (last_character(cwd) != '/' && cwd_len) {
+                        if (LAST_CHARACTER(cwd) != '/' && cwd_len) {
                                 new_path_len++;
                                 cwd_len++;
                         }
@@ -1397,7 +1394,7 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
                 if (cwd_len && cwd) {
                         strcpy(new_path, cwd);
 
-                        if (last_character(cwd) != '/') {
+                        if (LAST_CHARACTER(cwd) != '/') {
                                 strcat(new_path, "/");
                         }
                 }
@@ -1407,7 +1404,7 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
                 } else if (corr == ADD_SLASH) {
                         strcat(new_path, path);
 
-                        if (last_character(new_path) != '/') {
+                        if (LAST_CHARACTER(new_path) != '/') {
                                 strcat(new_path, "/");
                         }
                 } else {

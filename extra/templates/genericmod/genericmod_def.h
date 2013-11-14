@@ -35,7 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "genericmod_cfg.h"
-#include "system/ioctl_macros.h"
+#include "core/ioctl_macros.h"
 
 /*==============================================================================
   Exported macros

@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/ioctl_macros.h"
+#include "core/ioctl_macros.h"
 
 /* include here drivers definitions */
 #include "tty_def.h"
