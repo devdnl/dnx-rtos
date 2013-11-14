@@ -32,12 +32,10 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <errno.h>
-#include "core/systypes.h"
 #include "core/modctrl.h"
-#include "core/vfs.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
-#include "kernel/kwrapper.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local macros

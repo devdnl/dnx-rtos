@@ -33,6 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include "sys_arch.h"
 #include "system/dnx.h"
+#include "system/thread.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
@@ -148,7 +149,7 @@ void sys_arch_unprotect(sys_prot_t lev)
 //==============================================================================
 u32_t sys_now()
 {
-        return kernel_get_time_ms();
+        return get_time_ms();
 }
 
 //==============================================================================
@@ -171,7 +172,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
                         sem->valid = VALID_VALUE;
 
                         if (count == 0) {
-                                semaphore_take(sem->sem, 0);
+                                semaphore_wait(sem->sem, 0);
                         }
 
                         return ERR_OK;
@@ -214,7 +215,7 @@ void sys_sem_signal(sys_sem_t *sem)
 
         if (sem) {
                 if (sem->sem && sem->valid == VALID_VALUE) {
-                        semaphore_give(sem->sem);
+                        semaphore_signal(sem->sem);
                 }
         }
 }
@@ -235,17 +236,17 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 
         if (sem) {
                 if (sem->sem && sem->valid == VALID_VALUE) {
-                        u32_t start_time = kernel_get_time_ms();
+                        u32_t start_time = get_time_ms();
                         bool  sem_status = false;
 
                         if (timeout) {
-                                sem_status = semaphore_take(sem->sem, timeout);
+                                sem_status = semaphore_wait(sem->sem, timeout);
                         } else {
-                                sem_status = semaphore_take(sem->sem, MAX_DELAY);
+                                sem_status = semaphore_wait(sem->sem, MAX_DELAY);
                         }
 
-                        if (sem_status == SEMAPHORE_TAKEN) {
-                                return (u32_t)kernel_get_time_ms() - start_time;
+                        if (sem_status) {
+                                return (u32_t)get_time_ms() - start_time;
                         }
                 }
         }
@@ -401,7 +402,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 
         if (mbox) {
                 if (mbox->queue && mbox->valid == VALID_VALUE) {
-                        u32_t start_time = kernel_get_time_ms();
+                        u32_t start_time = get_time_ms();
                         bool  received   = false;
 
                         if (timeout) {
@@ -411,7 +412,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
                         }
 
                         if (received) {
-                                return (u32_t)kernel_get_time_ms() - start_time;
+                                return (u32_t)get_time_ms() - start_time;
                         }
                 }
         }

@@ -36,6 +36,7 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "kernel/kwrapper.h"
+#include "system/unistd.h"
 #include <errno.h>
 
 /*==============================================================================

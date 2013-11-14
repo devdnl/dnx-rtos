@@ -32,6 +32,9 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
+#include "system/thread.h"
+#include "system/unistd.h"
+#include "system/dnx.h"
 #include "tty_cfg.h"
 #include "tty_def.h"
 
@@ -319,7 +322,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
 
         struct tty_data *tty = device_handle;
 
-        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME)) {
                 clear_tty(tty);
 
                 critical_section_begin();
@@ -414,13 +417,13 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
         while (  tty_ctrl->tty[tty_ctrl->current_TTY]->screen.refresh_last_line
               && tty_ctrl->current_TTY == tty->device_number) {
 
-                semaphore_give(tty_ctrl->process_output_sem);
+                semaphore_signal(tty_ctrl->process_output_sem);
                 sleep_ms(10);
         }
 
         /* wait for secure access to data */
         size_t n = 0;
-        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME)) {
                 /* check if screen is cleared */
                 if (strncmp(VT100_CLEAR_SCREEN, (char *)src, 4) == 0) {
                         clear_tty(tty);
@@ -573,7 +576,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         struct tty_data *tty = device_handle;
 
-        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY)) {
                 move_editline_to_streams(tty, true);
                 mutex_unlock(tty->secure_resources_mtx);
                 return STD_RET_OK;
@@ -744,7 +747,7 @@ static void output_service_task(void *arg)
                         continue;
                 }
 
-                if (semaphore_take(tty_ctrl->process_output_sem, MAX_DELAY) == SEMAPHORE_TAKEN) {
+                if (semaphore_wait(tty_ctrl->process_output_sem, MAX_DELAY)) {
                         struct tty_data *tty = current_tty_handle();
 
                         if (tty->screen.new_line_counter > 0) {
@@ -942,7 +945,7 @@ static void switch_tty_to(int tty_number)
 {
         if (tty_number < TTY_DEV_COUNT && tty_ctrl->current_TTY != tty_number) {
                 tty_ctrl->change_to_TTY = tty_number;
-                semaphore_give(tty_ctrl->process_output_sem);
+                semaphore_signal(tty_ctrl->process_output_sem);
         }
 }
 
@@ -955,7 +958,7 @@ static void switch_tty_to(int tty_number)
 //==============================================================================
 static void show_new_lines(struct tty_data *tty)
 {
-        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY)) {
 
                 while (tty->screen.new_line_counter) {
                         if (tty->screen.new_line_counter > tty_ctrl->row_count) {
@@ -986,7 +989,7 @@ static void show_new_lines(struct tty_data *tty)
 //==============================================================================
 static void refresh_last_line(struct tty_data *tty)
 {
-        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY)) {
 
                 const char *data = VT100_CURSOR_OFF
                                    VT100_CARRIAGE_RETURN
@@ -1018,7 +1021,7 @@ static void refresh_last_line(struct tty_data *tty)
 //==============================================================================
 static void clear_tty(struct tty_data *tty)
 {
-        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME)) {
                 for (uint i = 0; i < TTY_MAX_LINES; i++) {
                         if (tty->screen.line[i]) {
                                 free(tty->screen.line[i]);
@@ -1030,7 +1033,7 @@ static void clear_tty(struct tty_data *tty)
                 tty->screen.write_index       = 0;
                 tty->screen.refresh_last_line = RESET;
 
-                semaphore_give(tty_ctrl->process_output_sem);
+                semaphore_signal(tty_ctrl->process_output_sem);
 
                 mutex_unlock(tty->secure_resources_mtx);
         }
@@ -1225,7 +1228,7 @@ static void add_line(struct tty_data *tty, const char *line, uint line_len)
                 free(crlf_line);
         }
 
-        semaphore_give(tty_ctrl->process_output_sem);
+        semaphore_signal(tty_ctrl->process_output_sem);
 }
 
 //==============================================================================
@@ -1275,7 +1278,7 @@ static enum vt100cmd capture_VT100_commands(char chr)
 {
         enum vt100cmd vt100cmd = KEY_CAPTURE_PENDING;
 
-        if (  kernel_get_time_ms() - tty_ctrl->VT100_cmd_capture.timer >= VT100_CMD_TIMEOUT
+        if (  get_time_ms() - tty_ctrl->VT100_cmd_capture.timer >= VT100_CMD_TIMEOUT
            && tty_ctrl->VT100_cmd_capture.is_pending == true) {
 
                 if (  tty_ctrl->VT100_cmd_capture.buffer_index == 1
@@ -1359,7 +1362,7 @@ static enum vt100cmd capture_VT100_commands(char chr)
                 if (chr == '\e') {
                         tty_ctrl->VT100_cmd_capture.is_pending   = true;
                         tty_ctrl->VT100_cmd_capture.buffer_index = 0;
-                        tty_ctrl->VT100_cmd_capture.timer        = kernel_get_time_ms();
+                        tty_ctrl->VT100_cmd_capture.timer        = get_time_ms();
                 }
 
                 if (tty_ctrl->VT100_cmd_capture.is_pending == false) {
@@ -1395,7 +1398,7 @@ static void refresh_tty(struct tty_data *tty)
 
         vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
-        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME)) {
                 int rows;
 
                 if (tty_ctrl->row_count < TTY_MAX_LINES) {
@@ -1467,7 +1470,7 @@ static void read_vt100_size(void)
 //==============================================================================
 static void write_key_stream(struct tty_data *tty, char chr)
 {
-        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, BLOCK_TIME)) {
                 tty->key_stream.buffer[tty->key_stream.write_index++] = chr;
 
                 if (tty->key_stream.write_index >= TTY_STREAM_SIZE) {
@@ -1484,7 +1487,7 @@ static void write_key_stream(struct tty_data *tty, char chr)
                         }
                 }
 
-                semaphore_give(tty->edit_line.read_sem);
+                semaphore_signal(tty->edit_line.read_sem);
 
                 mutex_unlock(tty->secure_resources_mtx);
         }
@@ -1503,11 +1506,11 @@ static void write_key_stream(struct tty_data *tty, char chr)
 //==============================================================================
 static stdret_t read_key_stream(struct tty_data *tty, char *chr)
 {
-        if (semaphore_take(tty->edit_line.read_sem, MAX_DELAY) == SEMAPHORE_TAKEN) {
+        if (semaphore_wait(tty->edit_line.read_sem, MAX_DELAY)) {
                 if (tty->key_stream.level == 0)
                         return STD_RET_ERROR;
 
-                if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+                if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY)) {
                         *chr = tty->key_stream.buffer[tty->key_stream.read_index++];
 
                         if (tty->key_stream.read_index >= TTY_STREAM_SIZE) {
@@ -1534,7 +1537,7 @@ static stdret_t read_key_stream(struct tty_data *tty, char *chr)
 //==============================================================================
 static void move_editline_to_streams(struct tty_data *tty, bool flush)
 {
-        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(tty->secure_resources_mtx, MAX_DELAY)) {
                 tty->edit_line.buffer[tty->edit_line.length++] = flush ? ' ' : '\n';
 
                 uint line_len = tty->edit_line.length;

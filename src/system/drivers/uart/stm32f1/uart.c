@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
+#include "system/thread.h"
+#include "system/unistd.h"
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/uart_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -42,8 +44,8 @@ extern "C" {
 #define MTX_BLOCK_TIME                          MAX_DELAY
 #define TXC_WAIT_TIME                           60000
 
-#define force_lock_recursive_mutex(mtx)         while (recursive_mutex_lock(mtx, 10) != MUTEX_LOCKED)
-#define force_lock_mutex(mtx)                   while (mutex_lock(mtx, 10) != MUTEX_LOCKED)
+#define force_lock_recursive_mutex(mtx)         while (recursive_mutex_lock(mtx, 10) != true)
+#define force_lock_mutex(mtx)                   while (mutex_lock(mtx, 10) != true)
 
 /** translation of configuration bits to function-like macros */
 #define wakeup_USART_on_address_mark(usart)     usart->CR1 |=  USART_CR1_WAKE
@@ -177,7 +179,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
            || !USART_data[major]->port_lock_tx_mtx) {
                 goto error;
         } else {
-                semaphore_take(USART_data[major]->data_write_sem, 1);
+                semaphore_wait(USART_data[major]->data_write_sem, 0);
 
                 if (turn_on_USART(USART_data[major]->USART) != STD_RET_OK) {
                         goto error;
@@ -384,12 +386,12 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIME)) {
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
 
                 enable_TXE_IRQ(hdl->USART);
-                semaphore_take(hdl->data_write_sem, TXC_WAIT_TIME);
+                semaphore_wait(hdl->data_write_sem, TXC_WAIT_TIME);
 
                 n = count;
 
@@ -424,7 +426,7 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         struct USART_data *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        if (mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIME)) {
                 u8_t  *dst_ptr   = dst;
                 size_t data_size = count;
                 hdl->task_rx     = task_get_handle();
@@ -689,9 +691,9 @@ static void IRQ_handler(struct USART_data *USART_data)
                         if (--USART_data->Tx_buffer.data_size == 0) {
                                 USART_data->Tx_buffer.src_ptr = NULL;
 
-                                int woken;
+                                bool woken;
                                 disable_TXE_IRQ(USART_data->USART);
-                                semaphore_give_from_ISR(USART_data->data_write_sem, &woken);
+                                semaphore_signal_from_ISR(USART_data->data_write_sem, &woken);
                         }
                 } else {
                         disable_TXE_IRQ(USART_data->USART);

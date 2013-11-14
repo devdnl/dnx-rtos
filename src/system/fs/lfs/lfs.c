@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxfs.h"
+#include "system/thread.h"
 #include "core/list.h"
 
 /*==============================================================================
@@ -1262,7 +1263,7 @@ static inline char get_first_char(const char *str)
 //==============================================================================
 static void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 //==============================================================================

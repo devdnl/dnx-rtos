@@ -37,6 +37,7 @@ extern "C" {
 #include "core/printx.h"
 #include "kernel/kwrapper.h"
 #include "portable/cpuctl.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -135,7 +136,7 @@ extern const int _regdrv_number_of_modules;
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 //==============================================================================

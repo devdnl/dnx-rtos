@@ -36,6 +36,7 @@ extern "C" {
 #include <errno.h>
 #include "system/dnx.h"
 #include "system/netapi.h"
+#include "system/unistd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -179,6 +180,8 @@ PROGRAM_MAIN(httpserver, int argc, char *argv[])
 
                 netapi_delete_conn(conn);
         }
+
+        puts("Exit");
 
         return 0;
 }

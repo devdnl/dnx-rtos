@@ -41,6 +41,7 @@ extern "C" {
 ==============================================================================*/
 #include "libfat_user.h"
 #include "libfat_conf.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -213,7 +214,7 @@ int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                if (mutex_lock(sobj, _LIBFAT_FS_TIMEOUT) == MUTEX_LOCKED) {
+                if (mutex_lock(sobj, _LIBFAT_FS_TIMEOUT)) {
                         return 1;
                 }
         }

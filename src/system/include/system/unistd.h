@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    helloworld.c
+@file    unistd.h
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   Unix standard library.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _UNISTD_H_
+#define _UNISTD_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,68 +34,71 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include <string.h>
-#include "system/dnx.h"
-#include "system/thread.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
-==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-/* put here global variables */
-GLOBAL_VARIABLES_SECTION_END
-
-/*==============================================================================
-  Exported object definitions
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Function definitions
+  Exported inline functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Suspend task for defined time in seconds
+ *
+ * @param[in] seconds
+ */
+//==============================================================================
+static inline void sleep(const uint seconds)
+{
+        _sleep(seconds);
+}
 
 //==============================================================================
 /**
- * @brief Program main function
+ * @brief Suspend task for defined time in milliseconds
  *
- * @param  argc         count of arguments
- * @param *argv[]       argument table
- *
- * @return program status
+ * @param[in] milliseconds
  */
 //==============================================================================
-PROGRAM_MAIN(helloworld, int argc, char *argv[])
+static inline void sleep_ms(const uint milliseconds)
 {
-        puts("Hello world!");
-        printf("Free stack: %d\n", task_get_free_stack());
-        printf("Static memory usage: %d\n", get_used_static_memory());
-        printf("Memory size: %d\n", get_memory_size());
-        printf("Free memory: %d\n", get_free_memory());
+        _sleep_ms(milliseconds);
+}
 
-        printf("Program arguments:\n");
-        for (int i = 0; i < argc; i++) {
-                printf("%d: %s\n", i + 1, argv[i]);
-        }
-
-        return 0;
+//==============================================================================
+/**
+ * @brief Function return x name
+ *
+ * @param[out] *buf     output buffer
+ * @param[in]   size    buffer size
+ *
+ * @return buf pointer on success, otherwise NULL pointer
+ */
+//==============================================================================
+static inline char *getcwd(char *buf, size_t size)
+{
+        return strncpy(buf, _task_get_data()->f_cwd, size);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _UNISTD_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

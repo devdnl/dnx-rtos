@@ -37,16 +37,11 @@ extern "C" {
 #include "core/systypes.h"
 #include "core/sysmoni.h"
 #include "core/vfs.h"
-#include "kernel/kwrapper.h"
 #include <errno.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#ifdef _DNX_H_
-#error "dnx.h and dnxfs.h cannot never included together!"
-#endif
-
 #undef  calloc
 #define calloc(size_t__nmemb, size_t__msize)    sysm_syscalloc(size_t__nmemb, size_t__msize)
 

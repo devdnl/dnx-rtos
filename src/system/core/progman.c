@@ -37,6 +37,7 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "kernel/kwrapper.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros

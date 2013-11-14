@@ -36,6 +36,7 @@ extern "C" {
 #include "core/conv.h"
 #include "core/list.h"
 #include "core/progman.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -163,7 +164,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
 
         struct procfs *procfs = fs_handle;
 
-        if (mutex_lock(procfs->resource_mtx, 100) == MUTEX_LOCKED) {
+        if (mutex_lock(procfs->resource_mtx, 100)) {
                 if (list_get_item_count(procfs->file_list) != 0) {
                         mutex_unlock(procfs->resource_mtx);
                         errno = EBUSY;
@@ -1146,7 +1147,7 @@ static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 #ifdef __cplusplus

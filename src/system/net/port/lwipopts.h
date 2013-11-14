@@ -33,7 +33,7 @@
 #define __LWIPOPTS_H__
 
 #include "config.h"
-#include "system/dnx.h"
+#include "core/sysmoni.h"
 
 /*
    -----------------------------------------------

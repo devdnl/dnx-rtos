@@ -5,6 +5,8 @@ New Features, Improvements:
 - added network support using lwIP library
 - added netapi library which is supported by lwIP stack
 - changed names of API functions to be more intuitive (e.g. mutex_new(), mutex_lock, etc)
+- implemented errno.h and error support
+- divided API functions to few libraries (easier to obtain needed functions)
 
 Fixed Bugs:
 - init_driver(): function doesn't color messages

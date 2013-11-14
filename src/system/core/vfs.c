@@ -34,7 +34,7 @@ extern "C" {
 #include "core/vfs.h"
 #include "core/list.h"
 #include "core/sysmoni.h"
-#include "kernel/kwrapper.h"
+#include "system/thread.h"
 #include <errno.h>
 
 /*==============================================================================
@@ -1219,7 +1219,7 @@ int vfs_rewind(FILE *file)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 //==============================================================================

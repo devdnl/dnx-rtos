@@ -31,6 +31,7 @@
 #include "kernel/khooks.h"
 #include "core/printx.h"
 #include "portable/cpuctl.h"
+#include "system/thread.h"
 
 #ifdef __cplusplus
 extern "C" {

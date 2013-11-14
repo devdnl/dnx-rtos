@@ -38,16 +38,11 @@ extern "C" {
 #include "core/vfs.h"
 #include "core/sysmoni.h"
 #include "core/modctrl.h"
-#include "kernel/kwrapper.h"
 #include <errno.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#ifdef _DNX_H_
-#error "dnx.h and dnxmodule.h shall never included together!"
-#endif
-
 #undef  calloc
 #define calloc(size_t__nmemb, size_t__msize)    sysm_modcalloc(size_t__nmemb, size_t__msize, _get_module_number(_module_name_))
 

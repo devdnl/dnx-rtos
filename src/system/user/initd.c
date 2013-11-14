@@ -33,9 +33,12 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include "user/initd.h"
+#include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/netapi.h"
 #include "system/mount.h"
+#include "system/thread.h"
+#include "system/unistd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -151,7 +154,7 @@ static int run_level_0(void)
 
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
-               dnx_get_OS_name(), dnx_get_kernel_name(), dnx_get_author_name(), dnx_get_author_email());
+               get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
 
         if (pll_init != STD_RET_OK) {
                 printk(FONT_COLOR_RED"PLL not started, running no base frequency!"RESET_ATTRIBUTES"\n");
@@ -226,7 +229,7 @@ static int run_level_1(void)
                        "  IP Address: %d.%d.%d.%d\n"
                        "  Net Mask  : %d.%d.%d.%d\n"
                        "  Gateway   : %d.%d.%d.%d\n",
-                       dnx_get_host_name(),
+                       get_host_name(),
                        ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                        ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
                        netapi_get_ip_part_a(&ifcfg.IP_address),  netapi_get_ip_part_b(&ifcfg.IP_address),
@@ -262,7 +265,7 @@ static int run_level_2(void)
         }
 
         /* initd info about stack usage */
-        printk("[%d] initd: free stack: %d levels\n\n", kernel_get_time_ms(), task_get_free_stack());
+        printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
 
         /* change TTY for printk */
         printk_enable("/dev/tty3");
@@ -279,7 +282,7 @@ static int run_level_2(void)
                                 }
 
                                 fprintf(tty[current_tty], "Welcome to %s/%s (tty%d)\n",
-                                        dnx_get_OS_name(), dnx_get_kernel_name(), current_tty);
+                                        get_OS_name(), get_kernel_name(), current_tty);
 
                                 program[current_tty] = program_start("terminal", "/",
                                                                      tty[current_tty],
