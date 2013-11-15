@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "core/fsctrl.h"
+#include "core/modctrl.h"
 
 /*==============================================================================
   Exported macros
@@ -83,6 +84,35 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
 static inline int umount(const char *mount_point)
 {
         return _umount(mount_point);
+}
+
+//==============================================================================
+/**
+ * @brief Function find driver name and then initialize device
+ *
+ * @param drv_name            driver name
+ * @param node_path           path name to create in the file system or NULL
+ *
+ * @return 0 on success, otherwise other value
+ */
+//==============================================================================
+static inline int driver_init(const char *drv_name, const char *node_path)
+{
+        return _driver_init(drv_name, node_path);
+}
+
+//==============================================================================
+/**
+ * @brief Function find driver name and then release device
+ *
+ * @param drv_name           driver name
+ *
+ * @return 0 on success, otherwise other value
+ */
+//==============================================================================
+static inline int driver_release(const char *drv_name)
+{
+        return _driver_release(drv_name);
 }
 
 #ifdef __cplusplus

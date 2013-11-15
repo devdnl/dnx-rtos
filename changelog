@@ -7,6 +7,7 @@ New Features, Improvements:
 - changed names of API functions to be more intuitive (e.g. mutex_new(), mutex_lock, etc)
 - implemented errno.h and error support
 - divided API functions to few libraries (easier to obtain needed functions)
+- implemented thread functions in thread.h library
 
 Fixed Bugs:
 - init_driver(): function doesn't color messages
