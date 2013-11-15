@@ -62,6 +62,18 @@ struct program_data {
         uint             globals_size;
 };
 
+struct thread {
+        void   *arg;
+        void  (*func)(void*);
+        void   *mem;
+        FILE   *fin;
+        FILE   *fout;
+        FILE   *ferr;
+        sem_t  *exit;
+        task_t *task;
+        int     priority;
+};
+
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -173,7 +185,7 @@ void program_kill(task_t *taskhdl, int exit_code)
                 return;
         }
 
-        struct task_data *tdata = _task_get_data_of(taskhdl);
+        struct _task_data *tdata = _task_get_data_of(taskhdl);
         if (tdata) {
                 if (tdata->f_global_vars) {
                         sysm_tskfree_as(taskhdl, tdata->f_global_vars);
@@ -264,7 +276,7 @@ int system(const char *command)
 static void task_program_startup(void *argv)
 {
         struct program_data *prog_data = argv;
-        struct task_data    *task_data = NULL;
+        struct _task_data   *task_data = NULL;
         void                *task_mem  = NULL;
         int                  exit_code = -1;
 
@@ -274,12 +286,12 @@ static void task_program_startup(void *argv)
                 task_exit();
         }
 
-        task_data->f_user    = prog_data;
-        task_data->f_stdin   = prog_data->stdin;
-        task_data->f_stdout  = prog_data->stdout;
-        task_data->f_stderr  = prog_data->stdout;
-        task_data->f_cwd     = prog_data->cwd;
-        task_data->f_program = true;
+        task_data->f_user      = prog_data;
+        task_data->f_stdin     = prog_data->stdin;
+        task_data->f_stdout    = prog_data->stdout;
+        task_data->f_stderr    = prog_data->stdout;
+        task_data->f_cwd       = prog_data->cwd;
+        task_data->f_task_type = _TASK_TYPE_PROCESS;
 
         if (prog_data->globals_size) {
                 if (!(task_mem = sysm_tskcalloc(1, prog_data->globals_size))) {
@@ -552,6 +564,176 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 
         errno = EINVAL;
         return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Start user thread function
+ *
+ * @param arg           function argument
+ */
+//==============================================================================
+static void thread_startup(void *arg)
+{
+        if (arg) {
+                thread_t *thread = arg;
+
+                task_set_priority(thread->priority);
+                _task_set_address_of_global_variables(thread->mem);
+                task_set_stdin(thread->fin);
+                task_set_stdout(thread->fout);
+                task_set_stderr(thread->ferr);
+
+                thread->func(thread->arg);
+
+                _task_set_address_of_global_variables(NULL);
+                task_set_stdin(NULL);
+                task_set_stdout(NULL);
+                task_set_stderr(NULL);
+
+                semaphore_signal(thread->exit);
+        }
+
+        task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief Create new thread of configured task (program or RAW task)
+ *
+ * @param func          thread function
+ * @param stack_depth   stack depth
+ * @param arg           thread argument
+ *
+ * @return thread object if success, otherwise NULL
+ */
+//==============================================================================
+thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
+{
+        thread_t *thread = sysm_tskmalloc(sizeof(thread_t));
+        sem_t    *sem    = semaphore_new(1, 1);
+        if (thread && sem) {
+                thread->arg      = arg;
+                thread->exit     = sem;
+                thread->mem      = _task_get_data()->f_global_vars;
+                thread->fin      = _task_get_data()->f_stdin;
+                thread->fout     = _task_get_data()->f_stdout;
+                thread->ferr     = _task_get_data()->f_stderr;
+                thread->func     = func;
+                thread->priority = task_get_priority();
+                thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
+
+                if (thread->task) {
+                        return thread;
+                }
+        }
+
+        if (sem) {
+                semaphore_delete(sem);
+        }
+
+        if (thread) {
+                sysm_tskfree(thread);
+                thread = NULL;
+        }
+
+        return thread;
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for thread exit
+ *
+ * @param thread        thread object
+ *
+ * @return 0 on success, otherwise -EINVAL
+ */
+//==============================================================================
+int _thread_join(thread_t *thread)
+{
+        if (thread) {
+                if (semaphore_wait(thread->exit, MAX_DELAY)) {
+                        semaphore_signal(thread->exit);
+                        return 0;
+                }
+        }
+
+        return -EINVAL;
+}
+
+//==============================================================================
+/**
+ * @brief Cancel current working thread
+ *
+ * @return 0 on success, otherwise other
+ */
+//==============================================================================
+int _thread_cancel(thread_t *thread)
+{
+        if (thread) {
+                if (semaphore_wait(thread->exit, 0)) {
+                        semaphore_signal(thread->exit);
+                        return 0;
+                } else {
+                        task_suspend(thread->task);
+                        _task_get_data_of(thread->task)->f_global_vars = NULL;
+                        _task_get_data_of(thread->task)->f_stdin       = NULL;
+                        _task_get_data_of(thread->task)->f_stdout      = NULL;
+                        _task_get_data_of(thread->task)->f_stderr      = NULL;
+                        semaphore_signal(thread->exit);
+                        task_delete(thread->task);
+                        return 0;
+                }
+        }
+
+        return -EINVAL;
+}
+
+//==============================================================================
+/**
+ * @brief Check if thread is finished
+ *
+ * @param thread        thread object
+ *
+ * @return true if finished, otherwise false
+ */
+//==============================================================================
+bool _thread_is_finished(thread_t *thread)
+{
+        if (thread) {
+                if (semaphore_wait(thread->exit, 0)) {
+                        semaphore_signal(thread->exit);
+                        return true;
+                }
+        }
+
+        return false;
+}
+
+//==============================================================================
+/**
+ * @brief Delete thread object
+ *
+ * @param thread        thread object
+ *
+ * @return 0 on success
+ * @return -EAGAIN if thread is running, try later
+ * @return -EINVAL if argument is invalid
+ */
+//==============================================================================
+int _thread_delete(thread_t *thread)
+{
+        if (thread) {
+                if (semaphore_wait(thread->exit, 0)) {
+                        semaphore_delete(thread->exit);
+                        sysm_tskfree(thread);
+                        return 0;
+                } else {
+                        return -EAGAIN;
+                }
+        }
+
+        return -EINVAL;
 }
 
 #ifdef __cplusplus

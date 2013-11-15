@@ -89,7 +89,13 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-typedef struct task_data {
+typedef enum _task_type {
+        _TASK_TYPE_RAW,
+        _TASK_TYPE_PROCESS,
+        _TASK_TYPE_THREAD
+} _task_type_t;
+
+typedef struct _task_data {
         FILE            *f_stdin;        /* stdin file                         */
         FILE            *f_stdout;       /* stdout file                        */
         FILE            *f_stderr;       /* stderr file                        */
@@ -99,9 +105,9 @@ typedef struct task_data {
         void            *f_monitor;      /* pointer to task monitor data       */
         task_t          *f_parent_task;  /* program's parent task              */
         u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
-        bool             f_program;      /* true if task is complex program    */
+        _task_type_t     f_task_type;    /* task type                          */
         int              f_errno;        /* program error number               */
-} task_data_t;
+} _task_data_t;
 
 enum mutex_type {
         MUTEX_RECURSIVE,
@@ -115,36 +121,36 @@ enum mutex_type {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t      *_task_new                           (void (*)(void*), const char*, const uint, void*);
-extern void         _task_delete                        (task_t*);
-extern void         _task_exit                          (void);
-extern void         _task_suspend                       (task_t*);
-extern void         _task_resume                        (task_t*);
-extern int          _task_resume_from_ISR               (task_t*);
-extern char        *_task_get_name_of                   (task_t*);
-extern int          _task_get_priority_of               (task_t*);
-extern void         _task_set_priority_of               (task_t*, const int);
-extern int          _task_get_free_stack_of             (task_t*);
-extern task_data_t *_task_get_data                      (void);
-extern sem_t       *_semaphore_new                      (const uint, const uint);
-extern void         _semaphore_delete                   (sem_t*);
-extern bool         _semaphore_take                     (sem_t*, const uint);
-extern bool         _semaphore_give                     (sem_t*);
-extern bool         _semaphore_take_from_ISR            (sem_t*, bool*);
-extern bool         _semaphore_give_from_ISR            (sem_t*, bool*);
-extern mutex_t     *_mutex_new                          (enum mutex_type);
-extern void         _mutex_delete                       (mutex_t*);
-extern bool         _mutex_lock                         (mutex_t*, const uint);
-extern bool         _mutex_unlock                       (mutex_t*);
-extern void         _queue_delete                       (queue_t*);
-extern void         _queue_reset                        (queue_t*);
-extern bool         _queue_send                         (queue_t*, const void*, const uint);
-extern bool         _queue_send_from_ISR                (queue_t*, const void*, bool*);
-extern bool         _queue_receive                      (queue_t*, void*, const uint);
-extern bool         _queue_receive_from_ISR             (queue_t*, void*, bool*);
-extern bool         _queue_receive_peek                 (queue_t*, void*, const uint);
-extern int          _queue_get_number_of_items          (queue_t*);
-extern int          _queue_get_number_of_items_from_ISR (queue_t*);
+extern task_t       *_task_new                          (void (*)(void*), const char*, const uint, void*);
+extern void          _task_delete                       (task_t*);
+extern void          _task_exit                         (void);
+extern void          _task_suspend                      (task_t*);
+extern void          _task_resume                       (task_t*);
+extern int           _task_resume_from_ISR              (task_t*);
+extern char         *_task_get_name_of                  (task_t*);
+extern int           _task_get_priority_of              (task_t*);
+extern void          _task_set_priority_of              (task_t*, const int);
+extern int           _task_get_free_stack_of            (task_t*);
+extern _task_data_t *_task_get_data                     (void);
+extern sem_t        *_semaphore_new                     (const uint, const uint);
+extern void          _semaphore_delete                  (sem_t*);
+extern bool          _semaphore_take                    (sem_t*, const uint);
+extern bool          _semaphore_give                    (sem_t*);
+extern bool          _semaphore_take_from_ISR           (sem_t*, bool*);
+extern bool          _semaphore_give_from_ISR           (sem_t*, bool*);
+extern mutex_t      *_mutex_new                         (enum mutex_type);
+extern void          _mutex_delete                      (mutex_t*);
+extern bool          _mutex_lock                        (mutex_t*, const uint);
+extern bool          _mutex_unlock                      (mutex_t*);
+extern void          _queue_delete                      (queue_t*);
+extern void          _queue_reset                       (queue_t*);
+extern bool          _queue_send                        (queue_t*, const void*, const uint);
+extern bool          _queue_send_from_ISR               (queue_t*, const void*, bool*);
+extern bool          _queue_receive                     (queue_t*, void*, const uint);
+extern bool          _queue_receive_from_ISR            (queue_t*, void*, bool*);
+extern bool          _queue_receive_peek                (queue_t*, void*, const uint);
+extern int           _queue_get_number_of_items         (queue_t*);
+extern int           _queue_get_number_of_items_from_ISR(queue_t*);
 
 /*==============================================================================
   Exported inline functions
@@ -384,9 +390,9 @@ static inline void _task_set_error(int errn)
  * @return task data
  */
 //==============================================================================
-static inline struct task_data *_task_get_data_of(task_t *taskhdl)
+static inline struct _task_data *_task_get_data_of(task_t *taskhdl)
 {
-        return (struct task_data*)_task_get_tag(taskhdl);
+        return _task_get_tag(taskhdl);
 }
 
 //==============================================================================

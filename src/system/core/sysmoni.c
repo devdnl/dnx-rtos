@@ -314,7 +314,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
                 }
         } while ((chain = chain->prev) != NULL);
 
-        if (_task_get_data()->f_program) {
+        if (_task_get_data()->f_task_type != _TASK_TYPE_RAW) {
                 sysm_programs_memory_usage -= to_free;
         }
 #endif
@@ -1342,8 +1342,8 @@ void sysm_task_switched_out(void)
 {
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
         if (CPU_load_enabled) {
-                struct task_data *tdata = _task_get_data();
-                u32_t             cnt   = _cpuctl_get_CPU_load_timer();
+                struct _task_data *tdata = _task_get_data();
+                u32_t              cnt   = _cpuctl_get_CPU_load_timer();
 
                 if (tdata) {
                         tdata->f_cpu_usage += cnt;

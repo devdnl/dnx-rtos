@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "kernel/kwrapper.h"
+#include "core/progman.h"
 
 /*==============================================================================
   Exported macros
@@ -326,6 +327,78 @@ static inline void task_set_stderr(FILE *stream)
 static inline void task_yield(void)
 {
         _task_yield();
+}
+
+//==============================================================================
+/**
+ * @brief Create new thread of configured task (program or RAW task)
+ *
+ * @param func          thread function
+ * @param stack_depth   stack depth
+ * @param arg           thread argument
+ *
+ * @return thread object if success, otherwise NULL
+ */
+//==============================================================================
+static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
+{
+        return _thread_new(func, stack_depth, arg);
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for thread exit
+ *
+ * @param thread        thread object
+ *
+ * @return 0 on success, otherwise -EINVAL
+ */
+//==============================================================================
+static inline int thread_join(thread_t *thread)
+{
+        return _thread_join(thread);
+}
+
+//==============================================================================
+/**
+ * @brief Cancel current working thread
+ *
+ * @return 0 on success, otherwise other
+ */
+//==============================================================================
+static inline int thread_cancel(thread_t *thread)
+{
+        return _thread_cancel(thread);
+}
+
+//==============================================================================
+/**
+ * @brief Check if thread is finished
+ *
+ * @param thread        thread object
+ *
+ * @return true if finished, otherwise false
+ */
+//==============================================================================
+static inline bool thread_is_finished(thread_t *thread)
+{
+        return _thread_is_finished(thread);
+}
+
+//==============================================================================
+/**
+ * @brief Delete thread object
+ *
+ * @param thread        thread object
+ *
+ * @return 0 on success
+ * @return -EAGAIN if thread is running, try later
+ * @return -EINVAL if argument is invalid
+ */
+//==============================================================================
+static inline int thread_delete(thread_t *thread)
+{
+        return _thread_delete(thread);
 }
 
 //==============================================================================

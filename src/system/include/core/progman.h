@@ -82,6 +82,8 @@ struct _prog_data {
         int        stack_depth;
 };
 
+typedef struct thread thread_t;
+
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
@@ -98,11 +100,16 @@ enum prog_state {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t   *program_start     (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
-extern void      program_kill      (task_t*, int);
-extern void      exit              (int);
-extern void      abort             (void);
-extern int       system            (const char*);
+extern task_t   *program_start          (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
+extern void      program_kill           (task_t*, int);
+extern void      exit                   (int);
+extern void      abort                  (void);
+extern int       system                 (const char*);
+extern thread_t *_thread_new            (void (*)(void*), const int, void*);
+extern int       _thread_join           (thread_t*);
+extern bool      _thread_is_finished    (thread_t*);
+extern int       _thread_delete         (thread_t*);
+extern int       _thread_cancel         (thread_t*);
 
 /*==============================================================================
   Exported inline functions

@@ -74,7 +74,7 @@ extern "C" {
 //==============================================================================
 task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth, void *argv)
 {
-        struct task_data *data = sysm_kcalloc(1, sizeof(struct task_data));
+        struct _task_data *data = sysm_kcalloc(1, sizeof(struct _task_data));
         if (!data) {
                 return NULL;
         }
@@ -128,7 +128,7 @@ void _task_delete(task_t *taskHdl)
                 (void)sysm_stop_task_monitoring(taskHdl);
 
                 taskENTER_CRITICAL();
-                struct task_data *data;
+                struct _task_data *data;
                 if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
 
                         vTaskSetApplicationTaskTag(taskHdl, NULL);
@@ -669,9 +669,9 @@ int _queue_get_number_of_items_from_ISR(queue_t *queue)
  * @return this task data
  */
 //==============================================================================
-task_data_t *_task_get_data(void)
+_task_data_t *_task_get_data(void)
 {
-        return (struct task_data*)_task_get_tag(THIS_TASK);
+        return (struct _task_data*)_task_get_tag(THIS_TASK);
 }
 
 #ifdef __cplusplus
