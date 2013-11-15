@@ -100,10 +100,11 @@ typedef struct _task_data {
         FILE            *f_stdout;       /* stdout file                        */
         FILE            *f_stderr;       /* stderr file                        */
         const char      *f_cwd;          /* current working path               */
-        void            *f_global_vars;  /* address to global variables        */
+        void            *f_mem;          /* address to global variables        */
         void            *f_user;         /* pointer to user data               */
         void            *f_monitor;      /* pointer to task monitor data       */
         task_t          *f_parent_task;  /* program's parent task              */
+        void            *f_thread;       /* thread object                      */
         u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
         _task_type_t     f_task_type;    /* task type                          */
         int              f_errno;        /* program error number               */
@@ -443,7 +444,7 @@ static inline task_t *_task_get_parent_handle(void)
 //==============================================================================
 static inline void _task_set_address_of_global_variables(void *mem)
 {
-        _task_get_data_of(THIS_TASK)->f_global_vars = mem;
+        _task_get_data_of(THIS_TASK)->f_mem = mem;
 }
 
 //==============================================================================

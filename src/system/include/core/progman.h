@@ -67,7 +67,7 @@ extern "C" {
         _task_get_data()->f_stderr
 
 #define global \
-        ((struct __global_vars__*)_task_get_data()->f_global_vars)
+        ((struct __global_vars__*)_task_get_data()->f_mem)
 
 #define create_fast_global(name) \
         struct __global_vars__*name = global

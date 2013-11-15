@@ -80,7 +80,7 @@ struct thread {
 static void     set_status              (enum prog_state *status_ptr, enum prog_state status);
 static char   **new_argument_table      (const char *str, int *argc);
 static void     delete_argument_table   (char **argv);
-static void     task_program_startup    (void *argv);
+static void     program_startup         (void *argv);
 static stdret_t get_program_data        (const char *name, struct _prog_data *prg_data);
 
 /*==============================================================================
@@ -100,172 +100,6 @@ extern const int               _prog_table_size;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Function start new program by name
- *
- * @param *cmd          program name
- * @param *cwd          current working dir
- * @param *stdin        stdin file
- * @param *stdout       stdout file
- * @param *status       program status
- * @param *exit_code    exit code
- *
- * @return NULL if error, otherwise task handle
- */
-//==============================================================================
-task_t *program_start(const char *cmd, const char *cwd, FILE *stdin,
-                         FILE *stdout, enum prog_state *status, int *exit_code)
-{
-        struct program_data *pdata   = NULL;
-        task_t              *taskhdl = NULL;
-        struct _prog_data    regpdata;
-
-        if (!cmd || !cwd) {
-                set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
-                errno = EINVAL;
-                return NULL;
-        }
-
-        if ((pdata = sysm_syscalloc(1, sizeof(struct program_data))) == NULL) {
-                set_status(status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
-                return NULL;
-        }
-
-        if ((pdata->argv = new_argument_table(cmd, &pdata->argc)) == NULL) {
-                sysm_sysfree(pdata);
-                set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
-                return NULL;
-        }
-
-        if (get_program_data(pdata->argv[0], &regpdata) != STD_RET_OK) {
-                delete_argument_table(pdata->argv);
-                sysm_sysfree(pdata);
-                set_status(status, PROGRAM_DOES_NOT_EXIST);
-                return NULL;
-        }
-
-        pdata->main         = regpdata.main_function;
-        pdata->cwd          = cwd;
-        pdata->stdin        = stdin;
-        pdata->stdout       = stdout;
-        pdata->stderr       = stdout;
-        pdata->globals_size = *regpdata.globals_size;
-        pdata->status       = status;
-        pdata->exit_code    = exit_code;
-
-        taskhdl = task_new(task_program_startup, regpdata.program_name,
-                           regpdata.stack_depth, pdata);
-
-        if (taskhdl == NULL) {
-                set_status(status, PROGRAM_HANDLE_ERROR);
-                delete_argument_table(pdata->argv);
-                sysm_sysfree(pdata);
-                return NULL;
-        } else {
-                set_status(status, PROGRAM_RUNNING);
-        }
-
-        return taskhdl;
-}
-
-//==============================================================================
-/**
- * @brief Function delete running program
- *
- * @param *taskhdl              task handle
- * @param  exit_code            program exit value
- */
-//==============================================================================
-void program_kill(task_t *taskhdl, int exit_code)
-{
-        if (taskhdl == NULL) {
-                errno = EINVAL;
-                return;
-        }
-
-        struct _task_data *tdata = _task_get_data_of(taskhdl);
-        if (tdata) {
-                if (tdata->f_global_vars) {
-                        sysm_tskfree_as(taskhdl, tdata->f_global_vars);
-                        tdata->f_global_vars = NULL;
-                }
-
-                struct program_data *pdata = tdata->f_user;
-                if (pdata) {
-                        if (pdata->argv) {
-                                delete_argument_table(pdata->argv);
-                        }
-
-                        if (pdata->exit_code) {
-                                *pdata->exit_code = exit_code;
-                        }
-
-                        if (pdata->status) {
-                                *pdata->status = PROGRAM_ENDED;
-                        }
-
-                        sysm_sysfree(pdata);
-                        tdata->f_user = NULL;
-                }
-        }
-
-        task_delete(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function close program immediately and set exit code
- *
- * @param status        exit value
- */
-//==============================================================================
-void exit(int status)
-{
-        program_kill(task_get_handle(), status);
-
-        /* wait to kill program */
-        for (;;);
-}
-
-//==============================================================================
-/**
- * @brief Function close program with error code
- */
-//==============================================================================
-void abort(void)
-{
-        program_kill(task_get_handle(), -1);
-
-        /* wait to kill program */
-        for (;;);
-}
-
-//==============================================================================
-/**
- * @brief Function start program in shell
- */
-//==============================================================================
-int system(const char *command)
-{
-        enum prog_state state     = PROGRAM_UNKNOWN_STATE;
-        int             exit_code = EXIT_FAILURE;
-
-        program_start(command,
-                    _task_get_data()->f_cwd,
-                    _task_get_data()->f_stdin,
-                    _task_get_data()->f_stdout,
-                    &state,
-                    &exit_code);
-
-        while (state == PROGRAM_RUNNING) {
-                task_suspend_now();
-        }
-
-        return exit_code;
-}
-
 //==============================================================================
 /**
  * @brief Program startup
@@ -273,7 +107,7 @@ int system(const char *command)
  * @param *argv         pointer to program's informations
  */
 //==============================================================================
-static void task_program_startup(void *argv)
+static void program_startup(void *argv)
 {
         struct program_data *prog_data = argv;
         struct _task_data   *task_data = NULL;
@@ -299,7 +133,7 @@ static void task_program_startup(void *argv)
                         goto task_exit;
                 }
 
-                task_data->f_global_vars = task_mem;
+                task_data->f_mem = task_mem;
         }
 
         exit_code = prog_data->main(prog_data->argc, prog_data->argv);
@@ -311,9 +145,9 @@ static void task_program_startup(void *argv)
                 *prog_data->exit_code = exit_code;
         }
 
-        if (task_data->f_global_vars) {
-                sysm_tskfree(task_data->f_global_vars);
-                task_data->f_global_vars = NULL;
+        if (task_data->f_mem) {
+                sysm_tskfree(task_data->f_mem);
+                task_data->f_mem = NULL;
         }
 
         if (prog_data->argv) {
@@ -568,6 +402,21 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 
 //==============================================================================
 /**
+ * @brief Make thread as orphan task
+ *
+ * @param taskhdl       task handle
+ */
+//==============================================================================
+static void thread_make_orphan(task_t *taskhdl)
+{
+        _task_get_data_of(taskhdl)->f_mem = NULL;
+        _task_get_data_of(taskhdl)->f_stdin       = NULL;
+        _task_get_data_of(taskhdl)->f_stdout      = NULL;
+        _task_get_data_of(taskhdl)->f_stderr      = NULL;
+}
+
+//==============================================================================
+/**
  * @brief Start user thread function
  *
  * @param arg           function argument
@@ -579,22 +428,195 @@ static void thread_startup(void *arg)
                 thread_t *thread = arg;
 
                 task_set_priority(thread->priority);
-                _task_set_address_of_global_variables(thread->mem);
+                _task_get_data()->f_task_type = _TASK_TYPE_THREAD;
+                _task_get_data()->f_thread    = thread;
+                _task_get_data()->f_mem       = thread->mem;
                 task_set_stdin(thread->fin);
                 task_set_stdout(thread->fout);
                 task_set_stderr(thread->ferr);
 
                 thread->func(thread->arg);
 
-                _task_set_address_of_global_variables(NULL);
-                task_set_stdin(NULL);
-                task_set_stdout(NULL);
-                task_set_stderr(NULL);
-
+                thread_make_orphan(thread->task);
                 semaphore_signal(thread->exit);
         }
 
         task_exit();
+}
+
+//==============================================================================
+/**
+ * @brief Function start new program by name
+ *
+ * @param *cmd          program name
+ * @param *cwd          current working dir
+ * @param *stdin        stdin file
+ * @param *stdout       stdout file
+ * @param *status       program status
+ * @param *exit_code    exit code
+ *
+ * @return NULL if error, otherwise task handle
+ */
+//==============================================================================
+task_t *program_start(const char *cmd, const char *cwd, FILE *stdin,
+                         FILE *stdout, enum prog_state *status, int *exit_code)
+{
+        struct program_data *pdata   = NULL;
+        task_t              *taskhdl = NULL;
+        struct _prog_data    regpdata;
+
+        if (!cmd || !cwd) {
+                set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
+                errno = EINVAL;
+                return NULL;
+        }
+
+        if ((pdata = sysm_syscalloc(1, sizeof(struct program_data))) == NULL) {
+                set_status(status, PROGRAM_NOT_ENOUGH_FREE_MEMORY);
+                return NULL;
+        }
+
+        if ((pdata->argv = new_argument_table(cmd, &pdata->argc)) == NULL) {
+                sysm_sysfree(pdata);
+                set_status(status, PROGRAM_ARGUMENTS_PARSE_ERROR);
+                return NULL;
+        }
+
+        if (get_program_data(pdata->argv[0], &regpdata) != STD_RET_OK) {
+                delete_argument_table(pdata->argv);
+                sysm_sysfree(pdata);
+                set_status(status, PROGRAM_DOES_NOT_EXIST);
+                return NULL;
+        }
+
+        pdata->main         = regpdata.main_function;
+        pdata->cwd          = cwd;
+        pdata->stdin        = stdin;
+        pdata->stdout       = stdout;
+        pdata->stderr       = stdout;
+        pdata->globals_size = *regpdata.globals_size;
+        pdata->status       = status;
+        pdata->exit_code    = exit_code;
+
+        taskhdl = task_new(program_startup, regpdata.program_name,
+                           regpdata.stack_depth, pdata);
+
+        if (taskhdl == NULL) {
+                set_status(status, PROGRAM_HANDLE_ERROR);
+                delete_argument_table(pdata->argv);
+                sysm_sysfree(pdata);
+                return NULL;
+        } else {
+                set_status(status, PROGRAM_RUNNING);
+        }
+
+        return taskhdl;
+}
+
+//==============================================================================
+/**
+ * @brief Function delete running program
+ *
+ * @param *taskhdl              task handle
+ * @param  exit_code            program exit value
+ */
+//==============================================================================
+void program_kill(task_t *taskhdl, int exit_code)
+{
+        if (taskhdl == NULL) {
+                errno = EINVAL;
+                return;
+        }
+
+        struct _task_data *tdata = _task_get_data_of(taskhdl);
+        if (tdata) {
+                if (tdata->f_mem) {
+                        sysm_tskfree_as(taskhdl, tdata->f_mem);
+                        tdata->f_mem = NULL;
+                }
+
+                struct program_data *pdata = tdata->f_user;
+                if (pdata) {
+                        if (pdata->argv) {
+                                delete_argument_table(pdata->argv);
+                        }
+
+                        if (pdata->exit_code) {
+                                *pdata->exit_code = exit_code;
+                        }
+
+                        if (pdata->status) {
+                                *pdata->status = PROGRAM_ENDED;
+                        }
+
+                        sysm_sysfree(pdata);
+                        tdata->f_user = NULL;
+                }
+        }
+
+        task_delete(taskhdl);
+}
+
+//==============================================================================
+/**
+ * @brief Function close program immediately and set exit code
+ *
+ * @param status        exit value
+ */
+//==============================================================================
+void exit(int status)
+{
+        switch (_task_get_data()->f_task_type) {
+        case _TASK_TYPE_RAW:
+                task_delete(task_get_handle());
+                break;
+        case _TASK_TYPE_PROCESS:
+                program_kill(task_get_handle(), status);
+                break;
+        case _TASK_TYPE_THREAD:
+                _thread_cancel(_task_get_data()->f_thread);
+                break;
+        }
+
+        /* wait to kill program */
+        for (;;);
+}
+
+//==============================================================================
+/**
+ * @brief Function close program with error code
+ */
+//==============================================================================
+void abort(void)
+{
+        exit(-1);
+
+        /* wait to kill program */
+        for (;;);
+}
+
+//==============================================================================
+/**
+ * @brief Function start program in shell
+ */
+//==============================================================================
+int system(const char *command)
+{
+        enum prog_state state     = PROGRAM_UNKNOWN_STATE;
+        int             exit_code = EXIT_FAILURE;
+
+        program_start(command,
+                    _task_get_data()->f_cwd,
+                    _task_get_data()->f_stdin,
+                    _task_get_data()->f_stdout,
+                    &state,
+                    &exit_code);
+
+        while (state == PROGRAM_RUNNING) {
+                task_suspend_now();
+        }
+
+        return exit_code;
 }
 
 //==============================================================================
@@ -615,7 +637,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
         if (thread && sem) {
                 thread->arg      = arg;
                 thread->exit     = sem;
-                thread->mem      = _task_get_data()->f_global_vars;
+                thread->mem      = _task_get_data()->f_mem;
                 thread->fin      = _task_get_data()->f_stdin;
                 thread->fout     = _task_get_data()->f_stdout;
                 thread->ferr     = _task_get_data()->f_stderr;
@@ -675,11 +697,11 @@ int _thread_cancel(thread_t *thread)
                         semaphore_signal(thread->exit);
                         return 0;
                 } else {
-                        task_suspend(thread->task);
-                        _task_get_data_of(thread->task)->f_global_vars = NULL;
-                        _task_get_data_of(thread->task)->f_stdin       = NULL;
-                        _task_get_data_of(thread->task)->f_stdout      = NULL;
-                        _task_get_data_of(thread->task)->f_stderr      = NULL;
+                        if (thread->task != task_get_handle()) {
+                                task_suspend(thread->task);
+                        }
+
+                        thread_make_orphan(thread->task);
                         semaphore_signal(thread->exit);
                         task_delete(thread->task);
                         return 0;
