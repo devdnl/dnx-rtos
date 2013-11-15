@@ -34,10 +34,10 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/mount.h"
-#include "system/unistd.h"
 #include "system/thread.h"
 
 /*==============================================================================
@@ -210,30 +210,30 @@ static void print_prompt(void)
 //==============================================================================
 static enum cmd_status find_external_command(const char *cmd)
 {
-        enum prog_state state  = PROGRAM_UNKNOWN_STATE;
-        enum cmd_status status = CMD_STATUS_NOT_EXIST;
+        enum program_state state  = PROGRAM_STATE_UNKNOWN;
+        enum cmd_status    status = CMD_STATUS_NOT_EXIST;
 
         program_start(cmd, global->cwd, stdin, stdout, &state, NULL);
 
-        while (state == PROGRAM_RUNNING) {
+        while (state == PROGRAM_STATE_RUNNING) {
                 task_suspend_now();
         }
 
         switch (state) {
-        case PROGRAM_UNKNOWN_STATE:
-        case PROGRAM_RUNNING:
+        case PROGRAM_STATE_UNKNOWN:
+        case PROGRAM_STATE_RUNNING:
                 break;
-        case PROGRAM_ENDED:
+        case PROGRAM_STATE_ENDED:
                 status = CMD_STATUS_EXECUTED;
                 break;
-        case PROGRAM_ARGUMENTS_PARSE_ERROR:
+        case PROGRAM_STATE_ARGUMENTS_PARSE_ERROR:
                 status = CMD_STATUS_LINE_PARSE_ERROR;
                 break;
-        case PROGRAM_HANDLE_ERROR:
-        case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
+        case PROGRAM_STATE_HANDLE_ERROR:
+        case PROGRAM_STATE_NOT_ENOUGH_FREE_MEMORY:
                 status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY;
                 break;
-        case PROGRAM_DOES_NOT_EXIST:
+        case PROGRAM_STATE_DOES_NOT_EXIST:
                 status = CMD_STATUS_NOT_EXIST;
                 break;
         }

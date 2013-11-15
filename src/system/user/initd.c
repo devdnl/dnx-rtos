@@ -32,13 +32,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <unistd.h>
 #include "user/initd.h"
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/netapi.h"
 #include "system/mount.h"
 #include "system/thread.h"
-#include "system/unistd.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -136,11 +136,11 @@ static int run_level_0(void)
 {
         driver_init("gpio", "/dev/gpio");
 
-        stdret_t pll_init = driver_init("pll", NULL);
+        int pll_init = driver_init("pll", NULL);
 
         driver_init("uart1", "/dev/ttyS0");
 
-        if (pll_init != STD_RET_OK) {
+        if (pll_init != 0) {
                 FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
                 if (ttyS0) {
                         ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / PLL_CPU_BASE_FREQ));
@@ -156,7 +156,7 @@ static int run_level_0(void)
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
 
-        if (pll_init != STD_RET_OK) {
+        if (pll_init != 0) {
                 printk(FONT_COLOR_RED"PLL not started, running no base frequency!"RESET_ATTRIBUTES"\n");
         }
 
@@ -254,11 +254,11 @@ static int run_level_1(void)
 static int run_level_2(void)
 {
         /* stdio program control */
-        FILE            *tty[TTY_DEV_COUNT]             = {NULL};
-        FILE            *tty0                           =  NULL;
-        task_t          *program[TTY_DEV_COUNT - 1]     = {NULL};
-        enum prog_state  state[TTY_DEV_COUNT - 1]       = {PROGRAM_UNKNOWN_STATE};
-        int              current_tty                    = -1;
+        FILE               *tty[TTY_DEV_COUNT]         = {NULL};
+        FILE               *tty0                       =  NULL;
+        task_t             *program[TTY_DEV_COUNT - 1] = {NULL};
+        enum program_state  state[TTY_DEV_COUNT - 1]   = {PROGRAM_STATE_UNKNOWN};
+        int                 current_tty                = -1;
 
         while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
@@ -295,25 +295,25 @@ static int run_level_2(void)
                                 }
 
                                 switch (state[current_tty]) {
-                                case PROGRAM_UNKNOWN_STATE:
+                                case PROGRAM_STATE_UNKNOWN:
                                         printk("Program does not start!\n");
                                         break;
-                                case PROGRAM_RUNNING:
+                                case PROGRAM_STATE_RUNNING:
                                         printk("Program started.\n");
                                         break;
-                                case PROGRAM_ENDED:
+                                case PROGRAM_STATE_ENDED:
                                         printk("Program finished.\n");
                                         break;
-                                case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
+                                case PROGRAM_STATE_NOT_ENOUGH_FREE_MEMORY:
                                         printk("No enough free memory!\n");
                                         break;
-                                case PROGRAM_ARGUMENTS_PARSE_ERROR:
+                                case PROGRAM_STATE_ARGUMENTS_PARSE_ERROR:
                                         printk("Bad arguments!\n");
                                         break;
-                                case PROGRAM_DOES_NOT_EXIST:
+                                case PROGRAM_STATE_DOES_NOT_EXIST:
                                         printk("Program does not exist!\n");
                                         break;
-                                case PROGRAM_HANDLE_ERROR:
+                                case PROGRAM_STATE_HANDLE_ERROR:
                                         printk("Handle error!\n");
                                         break;
                                 }
@@ -325,11 +325,11 @@ static int run_level_2(void)
                                 continue;
                         }
 
-                        if (state[i] != PROGRAM_RUNNING) {
+                        if (state[i] != PROGRAM_STATE_RUNNING) {
                                 printk("Program closed.\n");
 
                                 program[i] = NULL;
-                                state[i]   = PROGRAM_UNKNOWN_STATE;
+                                state[i]   = PROGRAM_STATE_UNKNOWN;
 
                                 ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
                                 fclose(tty[i]);

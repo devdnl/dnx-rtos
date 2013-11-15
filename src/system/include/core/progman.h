@@ -87,21 +87,21 @@ typedef struct thread thread_t;
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
-enum prog_state {
-        PROGRAM_UNKNOWN_STATE,
-        PROGRAM_RUNNING,
-        PROGRAM_ENDED,
-        PROGRAM_NOT_ENOUGH_FREE_MEMORY,
-        PROGRAM_ARGUMENTS_PARSE_ERROR,
-        PROGRAM_DOES_NOT_EXIST,
-        PROGRAM_HANDLE_ERROR,
+enum program_state {
+        PROGRAM_STATE_UNKNOWN,
+        PROGRAM_STATE_RUNNING,
+        PROGRAM_STATE_ENDED,
+        PROGRAM_STATE_NOT_ENOUGH_FREE_MEMORY,
+        PROGRAM_STATE_ARGUMENTS_PARSE_ERROR,
+        PROGRAM_STATE_DOES_NOT_EXIST,
+        PROGRAM_STATE_HANDLE_ERROR,
 };
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t   *program_start          (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
-extern void      program_kill           (task_t*, int);
+extern task_t   *_program_start         (const char*, const char*, FILE*, FILE*, enum program_state*, int*);
+extern int       _program_kill          (task_t*, int);
 extern void      exit                   (int);
 extern void      abort                  (void);
 extern int       system                 (const char*);

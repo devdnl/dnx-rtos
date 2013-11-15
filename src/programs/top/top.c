@@ -33,10 +33,10 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/thread.h"
-#include "system/unistd.h"
 
 /*==============================================================================
   Local symbolic constants/macros

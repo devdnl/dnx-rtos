@@ -40,8 +40,8 @@ extern "C" {
 #include "core/printx.h"
 #include "core/scanx.h"
 #include "core/progman.h"
-#include "kernel/kwrapper.h"
 #include "core/conv.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Exported macros

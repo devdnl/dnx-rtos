@@ -33,10 +33,10 @@ extern "C" {
 ==============================================================================*/
 #include "system/dnxmodule.h"
 #include "system/thread.h"
-#include "system/unistd.h"
 #include "system/dnx.h"
 #include "tty_cfg.h"
 #include "tty_def.h"
+#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -34,10 +34,10 @@ extern "C" {
 #include "system/dnxmodule.h"
 #include "system/thread.h"
 #include "system/dnx.h"
-#include "system/unistd.h"
 #include "stm32f1/sdspi_cfg.h"
 #include "stm32f1/sdspi_def.h"
 #include "stm32f1/stm32f10x.h"
+#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -40,6 +40,7 @@ extern "C" {
 #include "core/systypes.h"
 #include "core/sysmoni.h"
 #include "core/modctrl.h"
+#include "core/progman.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "portable/cpuctl.h"
@@ -382,6 +383,41 @@ static inline void enable_CPU_load_measurement(void)
 static inline void restart_system(void)
 {
         _cpuctl_restart_system();
+}
+
+//==============================================================================
+/**
+ * @brief Function start new program by name
+ *
+ * @param cmd           program name
+ * @param cwd           current working dir
+ * @param sin           stdin file
+ * @param sout          stdout file
+ * @param status        program status
+ * @param exit_code     exit code
+ *
+ * @return NULL if error, otherwise task handle
+ */
+//==============================================================================
+static inline task_t *program_start(const char *cmd, const char *cwd, FILE *sin,
+                                    FILE *sout, enum program_state *status, int *exit_code)
+{
+        return _program_start(cmd, cwd, sin, sout, status, exit_code);
+}
+
+//==============================================================================
+/**
+ * @brief Function delete running program
+ *
+ * @param taskhdl               task handle
+ * @param exit_code             program exit value
+ *
+ * @return 0 on success, otherwise other value
+ */
+//==============================================================================
+static inline int program_kill(task_t *taskhdl, int exit_code)
+{
+        return _program_kill(taskhdl, exit_code);
 }
 
 #ifdef __cplusplus

@@ -33,11 +33,11 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "ethif.h"
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/thread.h"
-#include "system/unistd.h"
 #include "lwipopts.h"
 #include "lwip/tcp_impl.h"
 #include "lwip/dhcp.h"
