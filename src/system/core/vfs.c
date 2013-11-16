@@ -43,6 +43,8 @@ extern "C" {
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                          10
 
+#define FILE_VALIDATION_NUMBER                  0x495D47CB
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -60,6 +62,7 @@ struct vfs_file
         fd_t       fd;
         u64_t      f_lseek;
         int        f_errflag;
+        int        validation;
 };
 
 struct FS_data {
@@ -834,6 +837,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                                 file->f_read  = fs->interface.fs_read;
                         }
 
+                        file->validation = FILE_VALIDATION_NUMBER;
                         sysm_sysfree(cwd_path);
                         return file;
                 }
@@ -884,11 +888,14 @@ FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
 int vfs_fclose(FILE *file)
 {
         if (file) {
-                if (file->f_close) {
+                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, false, task_get_handle()) == STD_RET_OK) {
+                                file->validation = 0;
                                 sysm_sysfree(file);
                                 return 0;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -910,11 +917,14 @@ int vfs_fclose(FILE *file)
 int vfs_fclose_force(FILE *file, task_t *opened_by_task)
 {
         if (file) {
-                if (file->f_close) {
+                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, true, opened_by_task) == STD_RET_OK) {
+                                file->validation = 0;
                                 sysm_sysfree(file);
                                 return 0;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -941,7 +951,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && nitems && file) {
-                if (file->f_write) {
+                if (file->f_write && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
                                           ptr, size * nitems, &file->f_lseek);
 
@@ -956,6 +966,8 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
                                 file->f_lseek += (u64_t)n;
                                 n /= size;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -982,7 +994,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && nitems && file) {
-                if (file->f_read) {
+                if (file->f_read && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
                                          ptr, size * nitems, &file->f_lseek);
 
@@ -997,6 +1009,8 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
                                 file->f_lseek += (u64_t)n;
                                 n /= size;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -1022,6 +1036,11 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
 
         if (!file || mode > VFS_SEEK_END) {
                 errno = EINVAL;
+                return -1;
+        }
+
+        if (file->validation == FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
@@ -1082,7 +1101,8 @@ int vfs_ioctl(FILE *file, int rq, ...)
                 return -1;
         }
 
-        if (!file->f_ioctl) {
+        if (!file->f_ioctl && file->validation == FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
@@ -1110,7 +1130,8 @@ int vfs_fstat(FILE *file, struct vfs_stat *stat)
                 return -1;
         }
 
-        if (!file->f_stat) {
+        if (!file->f_stat && file->validation == FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
@@ -1133,7 +1154,8 @@ int vfs_fflush(FILE *file)
                 return -1;
         }
 
-        if (!file->f_flush) {
+        if (!file->f_flush && file->validation == FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
@@ -1152,7 +1174,12 @@ int vfs_fflush(FILE *file)
 int vfs_feof(FILE *file)
 {
         if (file) {
-                return file->f_errflag & VFS_EFLAG_EOF ? 1 : 0;
+                if (file->validation == FILE_VALIDATION_NUMBER) {
+                        return file->f_errflag & VFS_EFLAG_EOF ? 1 : 0;
+                } else {
+                        errno = ENOENT;
+                        return -1;
+                }
         } else {
                 errno = EINVAL;
         }
@@ -1170,7 +1197,11 @@ int vfs_feof(FILE *file)
 void vfs_clearerr(FILE *file)
 {
         if (file) {
-                file->f_errflag = 0;
+                if (file->validation == FILE_VALIDATION_NUMBER) {
+                        file->f_errflag = 0;
+                } else {
+                        errno = ENOENT;
+                }
         } else {
                 errno = EINVAL;
         }
@@ -1188,7 +1219,11 @@ void vfs_clearerr(FILE *file)
 int vfs_ferror(FILE *file)
 {
         if (file) {
-                return file->f_errflag & VFS_EFLAG_ERR ? 1 : 0;
+                if (file->validation == FILE_VALIDATION_NUMBER) {
+                        return file->f_errflag & VFS_EFLAG_ERR ? 1 : 0;
+                } else {
+                        errno = ENOENT;
+                }
         } else {
                 errno = EINVAL;
         }
