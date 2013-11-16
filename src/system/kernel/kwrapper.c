@@ -132,12 +132,6 @@ void _task_delete(task_t *taskHdl)
                 if ((data = (void *)xTaskGetApplicationTaskTag(taskHdl))) {
 
                         vTaskSetApplicationTaskTag(taskHdl, NULL);
-
-//                        taskYIELD(); /* FIXME unnecessary */
-//                        if (data->f_parent_task) {
-//                                vTaskResume(data->f_parent_task);
-//                        }
-
                         sysm_kfree(data);
                 }
 

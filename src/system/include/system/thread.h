@@ -36,6 +36,7 @@ extern "C" {
 ==============================================================================*/
 #include "kernel/kwrapper.h"
 #include "core/progman.h"
+#include "core/sysmoni.h"
 
 /*==============================================================================
   Exported macros
@@ -82,7 +83,7 @@ static inline task_t *task_new(void (*func)(void*), const char *name, const uint
 //==============================================================================
 static inline void task_delete(task_t *taskhdl)
 {
-        return _task_delete(taskhdl);
+        return _task_kill(taskhdl);
 }
 
 //==============================================================================
@@ -341,6 +342,20 @@ static inline void task_set_cwd(const char *str)
 static inline void task_yield(void)
 {
         _task_yield();
+}
+
+//==============================================================================
+/**
+ * @brief Check if task exist and is registered in system
+ *
+ * @param taskhdl       task handle
+ *
+ * @return true if task exist, otherwise false
+ */
+//==============================================================================
+static inline bool task_is_exist(task_t *taskhdl)
+{
+        return sysm_is_task_exist(taskhdl);
 }
 
 //==============================================================================

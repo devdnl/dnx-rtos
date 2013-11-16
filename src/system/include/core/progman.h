@@ -91,6 +91,7 @@ extern int       _program_kill                                  (prog_t*);
 extern int       _program_delete                                (prog_t*);
 extern int       _program_wait_for_close                        (prog_t*, const uint);
 extern bool      _program_is_closed                             (prog_t*);
+extern void      _task_kill                                     (task_t*);
 extern thread_t *_thread_new                                    (void (*)(void*), const int, void*);
 extern int       _thread_join                                   (thread_t*);
 extern bool      _thread_is_finished                            (thread_t*);

@@ -441,6 +441,40 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 
 //==============================================================================
 /**
+ * @brief Kill process
+ *
+ * @param taskhdl       task handle
+ * @param status        process kill status
+ *
+ * @return 0 on success, otherwise other value
+ */
+//==============================================================================
+static int process_kill(task_t *taskhdl, int status)
+{
+        if (taskhdl) {
+                switch (_task_get_data()->f_task_type) {
+                case TASK_TYPE_RAW:
+                        task_delete(taskhdl);
+                        break;
+                case TASK_TYPE_PROCESS: {
+                        prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;
+                        prog->exit_code = status;
+                        _program_kill(prog);
+                        break;
+                }
+                case TASK_TYPE_THREAD:
+                        _thread_cancel(_task_get_data_of(taskhdl)->f_task_object);
+                        break;
+                default:
+                        return -ESRCH;
+                }
+        }
+
+        return -EINVAL;
+}
+
+//==============================================================================
+/**
  * @brief Function start new program by name
  *
  * Errno: EINVAL, ENOMEM, ENOENT
@@ -558,13 +592,13 @@ int _program_kill(prog_t *prog)
                         }
 
                         if (prog->mem) {
-                                sysm_tskfree(prog->mem);
+                                sysm_tskfree_as(prog->task, prog->mem);
                                 prog->mem = NULL;
                         }
 
                         make_RAW_task(prog->task);
                         semaphore_signal(prog->exit_sem);
-                        task_delete(prog->task);
+                        _task_delete(prog->task);
                         return 0;
                 }
         }
@@ -622,6 +656,18 @@ bool _program_is_closed(prog_t *prog)
 
 //==============================================================================
 /**
+ * @brief Function delete any kind of task
+ *
+ * @param taskhdl       task handle
+ */
+//==============================================================================
+void _task_kill(task_t *taskhdl)
+{
+        process_kill(taskhdl, -1);
+}
+
+//==============================================================================
+/**
  * @brief Function close program immediately and set exit code
  *
  * @param status        exit value
@@ -629,17 +675,7 @@ bool _program_is_closed(prog_t *prog)
 //==============================================================================
 void exit(int status)
 {
-        switch (_task_get_data()->f_task_type) {
-        case TASK_TYPE_RAW:
-                task_delete(task_get_handle());
-                break;
-        case TASK_TYPE_PROCESS:
-                _program_kill(_task_get_data()->f_task_object);
-                break;
-        case TASK_TYPE_THREAD:
-                _thread_cancel(_task_get_data()->f_task_object);
-                break;
-        }
+        process_kill(task_get_handle(), status);
 
         /* wait to kill program */
         for (;;);
@@ -652,7 +688,7 @@ void exit(int status)
 //==============================================================================
 void abort(void)
 {
-        exit(-1);
+        process_kill(task_get_handle(), -1);
 
         /* wait to kill program */
         for (;;);
@@ -787,7 +823,7 @@ int _thread_cancel(thread_t *thread)
 
                         make_RAW_task(thread->task);
                         semaphore_signal(thread->exit_sem);
-                        task_delete(thread->task);
+                        _task_delete(thread->task);
                         return 0;
                 }
         }

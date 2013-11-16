@@ -780,9 +780,9 @@ void sys_perror(const char *str)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (str) {
-                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(_task_get_data()->f_errno));
+                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(errno));
         } else {
-                sys_fprintf(stderr, "%s\n", sys_strerror(_task_get_data()->f_errno));
+                sys_fprintf(stderr, "%s\n", sys_strerror(errno));
         }
 #else
         (void) str

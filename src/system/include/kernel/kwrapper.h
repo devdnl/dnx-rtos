@@ -81,11 +81,6 @@ extern "C" {
 #define _CEILING(x,y)                   (((x) + (y) - 1) / (y))
 #define MS2TICK(ms)                     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
 
-/** TASK LEVEL DEFINITIONS */ /* FIXME create inline functions */
-#define sleep_until_prepare()           unsigned long int __last_wake_time__ = kernel_get_tick_counter();
-#define sleep_until(uint__seconds)      vTaskDelayUntil(&__last_wake_time__, MS2TICK((uint__seconds) * 1000UL))
-#define sleep_ms_until(uint__msdelay)   vTaskDelayUntil(&__last_wake_time__, MS2TICK(uint__msdelay))
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -201,7 +196,7 @@ static inline int _kernel_get_time_ms(void)
 //==============================================================================
 static inline int _kernel_get_tick_counter(void)
 {
-        return xTaskGetTickCount();
+        return (int)xTaskGetTickCount();
 }
 
 //==============================================================================
@@ -438,34 +433,6 @@ static inline void _task_set_cwd(const char *str)
 
 //==============================================================================
 /**
- * @brief Return task type
- *
- * @param taskhdl               task object
- *
- * @return task type
- */
-//==============================================================================
-static inline task_type_t _task_get_type_of(task_t *taskhdl) /* FIXME necessary? */
-{
-        return _task_get_data_of(taskhdl)->f_task_type;
-}
-
-//==============================================================================
-/**
- * @brief Return task object pointer
- *
- * @param taskhdl               task object
- *
- * @return pointer to task object
- */
-//==============================================================================
-static inline void *_task_get_object_of(task_t *taskhdl) /* FIXME necessary? */
-{
-        return _task_get_data_of(taskhdl)->f_task_object;
-}
-
-//==============================================================================
-/**
  * @brief Function enter to critical section
  */
 //==============================================================================
@@ -528,6 +495,31 @@ static inline void _sleep(const uint seconds)
         vTaskDelay(MS2TICK(seconds * 1000UL));
 }
 
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param milliseconds          milliseconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void _sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+{
+        vTaskDelayUntil((portTickType *)ref_time_ticks, MS2TICK(milliseconds));
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param seconds       seconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void _sleep_until(const uint seconds, int *ref_time_ticks)
+{
+        vTaskDelayUntil((portTickType *)ref_time_ticks, MS2TICK(seconds * 1000UL));
+}
 
 #ifdef __cplusplus
 }

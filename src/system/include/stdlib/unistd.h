@@ -81,6 +81,32 @@ static inline void sleep_ms(const uint milliseconds)
 
 //==============================================================================
 /**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param milliseconds          milliseconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+{
+        _sleep_until_ms(milliseconds, ref_time_ticks);
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param seconds       seconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void sleep_until(const uint seconds, int *ref_time_ticks)
+{
+        _sleep_until(seconds, ref_time_ticks);
+}
+
+//==============================================================================
+/**
  * @brief Function return x name
  *
  * @param[out] *buf     output buffer
