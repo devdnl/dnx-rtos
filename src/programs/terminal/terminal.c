@@ -210,32 +210,19 @@ static void print_prompt(void)
 //==============================================================================
 static enum cmd_status find_external_command(const char *cmd)
 {
-        enum program_state state  = PROGRAM_STATE_UNKNOWN;
-        enum cmd_status    status = CMD_STATUS_NOT_EXIST;
+        enum cmd_status status = CMD_STATUS_EXECUTED;
 
-        program_start(cmd, global->cwd, stdin, stdout, &state, NULL);
+        task_set_cwd(global->cwd);
 
-        while (state == PROGRAM_STATE_RUNNING) {
-                task_suspend_now();
-        }
-
-        switch (state) {
-        case PROGRAM_STATE_UNKNOWN:
-        case PROGRAM_STATE_RUNNING:
-                break;
-        case PROGRAM_STATE_ENDED:
-                status = CMD_STATUS_EXECUTED;
-                break;
-        case PROGRAM_STATE_ARGUMENTS_PARSE_ERROR:
-                status = CMD_STATUS_LINE_PARSE_ERROR;
-                break;
-        case PROGRAM_STATE_HANDLE_ERROR:
-        case PROGRAM_STATE_NOT_ENOUGH_FREE_MEMORY:
-                status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY;
-                break;
-        case PROGRAM_STATE_DOES_NOT_EXIST:
-                status = CMD_STATUS_NOT_EXIST;
-                break;
+        errno   = 0;
+        int ret = system(cmd);
+        if (ret < 0 && errno) {
+                switch (ret) {
+                case -ENOMEM: status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY; break;
+                case -EINVAL: status = CMD_STATUS_LINE_PARSE_ERROR; break;
+                case -ENOENT: status = CMD_STATUS_NOT_EXIST; break;
+                default: break;
+                }
         }
 
         /* enable echo if disabled by program */

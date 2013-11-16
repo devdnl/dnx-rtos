@@ -389,35 +389,76 @@ static inline void restart_system(void)
 /**
  * @brief Function start new program by name
  *
- * @param cmd           program name
- * @param cwd           current working dir
- * @param sin           stdin file
- * @param sout          stdout file
- * @param status        program status
- * @param exit_code     exit code
+ * Errno: EINVAL, ENOMEM, ENOENT
  *
- * @return NULL if error, otherwise task handle
+ * @param cmd           program name and argument list
+ * @param stin          standard input file
+ * @param stout         standard output file
+ * @param sterr         standard error file
+ *
+ * @return NULL if error, otherwise program handle
  */
 //==============================================================================
-static inline task_t *program_start(const char *cmd, const char *cwd, FILE *sin,
-                                    FILE *sout, enum program_state *status, int *exit_code)
+static inline task_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
 {
-        return _program_start(cmd, cwd, sin, sout, status, exit_code);
+        return _program_new(cmd, cwd, stin, stout, sterr);
+}
+
+//==============================================================================
+/**
+ * @brief Kill started program
+ *
+ * @param prog                  program object
+ *
+ * @return 0 if success, otherwise other value
+ */
+//==============================================================================
+static inline int program_kill(prog_t *prog)
+{
+        return _program_kill(prog);
 }
 
 //==============================================================================
 /**
  * @brief Function delete running program
  *
- * @param taskhdl               task handle
- * @param exit_code             program exit value
+ * @param prog                  program object
  *
  * @return 0 on success, otherwise other value
  */
 //==============================================================================
-static inline int program_kill(task_t *taskhdl, int exit_code)
+static inline int program_delete(prog_t *prog)
 {
-        return _program_kill(taskhdl, exit_code);
+        return _program_delete(prog);
+}
+
+//==============================================================================
+/**
+ * @brief Wait for program close
+ *
+ * @param prog                  program object
+ * @param timeout               wait timeout
+ *
+ * @return 0 if closed, otherwise other value
+ */
+//==============================================================================
+static inline int program_wait_for_close(prog_t *prog, const uint timeout)
+{
+        return _program_wait_for_close(prog, timeout);
+}
+
+//==============================================================================
+/**
+ * @brief Check if program is closed
+ *
+ * @param prog                  program object
+ *
+ * @return true if program closed, otherwise false
+ */
+//==============================================================================
+static inline bool program_is_closed(prog_t *prog)
+{
+        return _program_is_closed(prog);
 }
 
 #ifdef __cplusplus

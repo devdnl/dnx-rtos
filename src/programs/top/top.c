@@ -156,7 +156,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
 
                         task_t *task = (task_t *)task_handle;
                         if (task != task_get_parent_handle()) {
-                                program_kill(task, EXIT_FAILURE);
+//                                task_delete(task); /* FIXME top */
                         }
 
                         ioctl(stdin, TTY_IORQ_ECHO_OFF);

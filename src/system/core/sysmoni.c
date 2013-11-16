@@ -221,8 +221,10 @@ bool sysm_is_task_exist(task_t *taskhdl)
 
         return exist;
 #else
-        UNUSED_ARG(taskhdl);
-        return true;
+        if (taskhdl)
+                return true;
+        else
+                return false;
 #endif
 }
 
@@ -314,7 +316,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
                 }
         } while ((chain = chain->prev) != NULL);
 
-        if (_task_get_data()->f_task_type != _TASK_TYPE_RAW) {
+        if (_task_get_data()->f_task_type != TASK_TYPE_RAW) {
                 sysm_programs_memory_usage -= to_free;
         }
 #endif

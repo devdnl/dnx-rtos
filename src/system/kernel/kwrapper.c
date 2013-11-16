@@ -133,10 +133,10 @@ void _task_delete(task_t *taskHdl)
 
                         vTaskSetApplicationTaskTag(taskHdl, NULL);
 
-                        taskYIELD();
-                        if (data->f_parent_task) {
-                                vTaskResume(data->f_parent_task);
-                        }
+//                        taskYIELD(); /* FIXME unnecessary */
+//                        if (data->f_parent_task) {
+//                                vTaskResume(data->f_parent_task);
+//                        }
 
                         sysm_kfree(data);
                 }
@@ -153,13 +153,11 @@ void _task_delete(task_t *taskHdl)
 //==============================================================================
 void _task_exit(void)
 {
-        do {
-                /* request to delete task */
-                _task_delete(_task_get_handle());
+        /* request to delete task */
+        _task_delete(_task_get_handle());
 
-                /* wait for exit */
-                for (;;) {}
-        } while(0);
+        /* wait for exit */
+        for (;;) {}
 }
 
 //==============================================================================
@@ -271,6 +269,20 @@ int _task_get_free_stack_of(task_t *taskhdl)
                 return uxTaskGetStackHighWaterMark(taskhdl);
         else
                 return -1;
+}
+
+//==============================================================================
+/**
+ * @brief Function return data of this task
+ *
+ * @return this task data
+ */
+//==============================================================================
+_task_data_t *_task_get_data(void)
+{
+        /* TODO cache */
+
+        return (struct _task_data*)_task_get_tag(THIS_TASK);
 }
 
 //==============================================================================
@@ -660,18 +672,6 @@ int _queue_get_number_of_items_from_ISR(queue_t *queue)
         } else {
                 return -1;
         }
-}
-
-//==============================================================================
-/**
- * @brief Function return data of this task
- *
- * @return this task data
- */
-//==============================================================================
-_task_data_t *_task_get_data(void)
-{
-        return (struct _task_data*)_task_get_tag(THIS_TASK);
 }
 
 #ifdef __cplusplus

@@ -283,6 +283,8 @@ static inline int task_get_number_of_tasks(void)
         return _kernel_get_number_of_tasks();
 }
 
+/* TODO task_kill() -- general routine to kill task of any kind */
+
 //==============================================================================
 /**
  * @brief Function set stdin file
@@ -317,6 +319,18 @@ static inline void task_set_stdout(FILE *stream)
 static inline void task_set_stderr(FILE *stream)
 {
         _task_set_stderr(stream);
+}
+
+//==============================================================================
+/**
+ * @brief Function set cwd path
+ *
+ * @param str           cwd string
+ */
+//==============================================================================
+static inline void task_set_cwd(const char *str)
+{
+        _task_set_cwd(str);
 }
 
 //==============================================================================

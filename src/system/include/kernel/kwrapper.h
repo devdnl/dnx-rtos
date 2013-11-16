@@ -81,7 +81,7 @@ extern "C" {
 #define _CEILING(x,y)                   (((x) + (y) - 1) / (y))
 #define MS2TICK(ms)                     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
 
-/** TASK LEVEL DEFINITIONS */
+/** TASK LEVEL DEFINITIONS */ /* FIXME create inline functions */
 #define sleep_until_prepare()           unsigned long int __last_wake_time__ = kernel_get_tick_counter();
 #define sleep_until(uint__seconds)      vTaskDelayUntil(&__last_wake_time__, MS2TICK((uint__seconds) * 1000UL))
 #define sleep_ms_until(uint__msdelay)   vTaskDelayUntil(&__last_wake_time__, MS2TICK(uint__msdelay))
@@ -90,10 +90,10 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 typedef enum _task_type {
-        _TASK_TYPE_RAW,
-        _TASK_TYPE_PROCESS,
-        _TASK_TYPE_THREAD
-} _task_type_t;
+        TASK_TYPE_RAW,
+        TASK_TYPE_PROCESS,
+        TASK_TYPE_THREAD
+} task_type_t;
 
 typedef struct _task_data {
         FILE            *f_stdin;        /* stdin file                         */
@@ -101,12 +101,11 @@ typedef struct _task_data {
         FILE            *f_stderr;       /* stderr file                        */
         const char      *f_cwd;          /* current working path               */
         void            *f_mem;          /* address to global variables        */
-        void            *f_user;         /* pointer to user data               */
         void            *f_monitor;      /* pointer to task monitor data       */
         task_t          *f_parent_task;  /* program's parent task              */
-        void            *f_thread;       /* thread object                      */
+        void            *f_task_object;  /* thread object                      */
         u32_t            f_cpu_usage;    /* counter used to calculate CPU load */
-        _task_type_t     f_task_type;    /* task type                          */
+        task_type_t      f_task_type;    /* task type                          */
         int              f_errno;        /* program error number               */
 } _task_data_t;
 
@@ -158,6 +157,21 @@ extern int           _queue_get_number_of_items_from_ISR(queue_t*);
 ==============================================================================*/
 //==============================================================================
 /**
+ * @brief Function create new queue
+ *
+ * @param[in] length            queue length
+ * @param[in] item_size         queue item size
+ *
+ * @return pointer to queue object, otherwise NULL if error
+ */
+//==============================================================================
+static inline queue_t *_queue_new(const uint length, const uint item_size)
+{
+        return xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
+}
+
+//==============================================================================
+/**
  * @brief Function start kernel scheduler
  */
 //==============================================================================
@@ -168,26 +182,38 @@ static inline void _kernel_start(void)
 
 //==============================================================================
 /**
- * @brief Function put to sleep task in milliseconds
+ * @brief Function return OS time in milliseconds
  *
- * @param[in] milliseconds
+ * @return a OS time in milliseconds
  */
 //==============================================================================
-static inline void _sleep_ms(const uint milliseconds)
+static inline int _kernel_get_time_ms(void)
 {
-        vTaskDelay(MS2TICK(milliseconds));
+        return (xTaskGetTickCount() * ((1000/(configTICK_RATE_HZ))));
 }
 
 //==============================================================================
 /**
- * @brief Function put to sleep task in seconds
+ * @brief Function return tick counter
  *
- * @param[in] seconds
+ * @return a tick counter value
  */
 //==============================================================================
-static inline void _sleep(const uint seconds)
+static inline int _kernel_get_tick_counter(void)
 {
-        vTaskDelay(MS2TICK(seconds * 1000UL));
+        return xTaskGetTickCount();
+}
+
+//==============================================================================
+/**
+ * @brief Function return a number of task
+ *
+ * @return a number of tasks
+ */
+//==============================================================================
+static inline int _kernel_get_number_of_tasks(void)
+{
+        return uxTaskGetNumberOfTasks();
 }
 
 //==============================================================================
@@ -208,70 +234,6 @@ static inline void _task_suspend_now(void)
 static inline void _task_yield(void)
 {
         taskYIELD();
-}
-
-//==============================================================================
-/**
- * @brief Function enter to critical section
- */
-//==============================================================================
-static inline void _critical_section_begin(void)
-{
-        taskENTER_CRITICAL();
-}
-
-//==============================================================================
-/**
- * @brief Function exit from critical section
- */
-//==============================================================================
-static inline void _critical_section_end(void)
-{
-        taskEXIT_CRITICAL();
-}
-
-//==============================================================================
-/**
- * @brief Function disable interrupts
- */
-//==============================================================================
-static inline void _ISR_disable(void)
-{
-        taskDISABLE_INTERRUPTS();
-}
-
-//==============================================================================
-/**
- * @brief Function enable interrupts
- */
-//==============================================================================
-static inline void _ISR_enable(void)
-{
-        taskENABLE_INTERRUPTS();
-}
-
-//==============================================================================
-/**
- * @brief Function return tick counter
- *
- * @return a tick counter value
- */
-//==============================================================================
-static inline int _kernel_get_tick_counter(void)
-{
-        return xTaskGetTickCount();
-}
-
-//==============================================================================
-/**
- * @brief Function return OS time in milliseconds
- *
- * @return a OS time in milliseconds
- */
-//==============================================================================
-static inline int _kernel_get_time_ms(void)
-{
-        return (xTaskGetTickCount() * ((1000/(configTICK_RATE_HZ))));
 }
 
 //==============================================================================
@@ -336,21 +298,10 @@ static inline int _task_get_free_stack(void)
 
 //==============================================================================
 /**
- * @brief Function return a number of task
- *
- * @return a number of tasks
- */
-//==============================================================================
-static inline int _kernel_get_number_of_tasks(void)
-{
-        return uxTaskGetNumberOfTasks();
-}
-
-//==============================================================================
-/**
  * @brief Function set task tag
  *
- * @param[in] *taskhdl          task handle
+ * @param[in] taskhdl           task handle
+ * @param[in] tag               task tag
  */
 //==============================================================================
 static inline void _task_set_tag(task_t *taskhdl, void *tag)
@@ -370,16 +321,6 @@ static inline void _task_set_tag(task_t *taskhdl, void *tag)
 static inline void *_task_get_tag(task_t *taskhdl)
 {
         return (void*)xTaskGetApplicationTaskTag(taskhdl);
-}
-
-//==============================================================================
-/**
- * @brief Function set errn value
- */
-//==============================================================================
-static inline void _task_set_error(int errn)
-{
-        _task_get_data()->f_errno = errn;
 }
 
 //==============================================================================
@@ -442,7 +383,7 @@ static inline task_t *_task_get_parent_handle(void)
  * @param[in] *mem
  */
 //==============================================================================
-static inline void _task_set_address_of_global_variables(void *mem)
+static inline void _task_set_memory_address(void *mem)
 {
         _task_get_data_of(THIS_TASK)->f_mem = mem;
 }
@@ -485,42 +426,108 @@ static inline void _task_set_stderr(FILE *file)
 
 //==============================================================================
 /**
- * @brief Function set task user data
+ * @brief Function set cwd path
  *
- * @param[in] *mem
+ * @param str           cwd string
  */
 //==============================================================================
-static inline void _task_set_user_data(void *mem)
+static inline void _task_set_cwd(const char *str)
 {
-        _task_get_data_of(THIS_TASK)->f_user = mem;
+        _task_get_data()->f_cwd = str;
 }
 
 //==============================================================================
 /**
- * @brief Function get user data
+ * @brief Return task type
  *
- * @return user data pointer
+ * @param taskhdl               task object
+ *
+ * @return task type
  */
 //==============================================================================
-static inline void *_task_get_user_data(void)
+static inline task_type_t _task_get_type_of(task_t *taskhdl) /* FIXME necessary? */
 {
-        return _task_get_data_of(THIS_TASK)->f_user;
+        return _task_get_data_of(taskhdl)->f_task_type;
 }
 
 //==============================================================================
 /**
- * @brief Function create new queue
+ * @brief Return task object pointer
  *
- * @param[in] length            queue length
- * @param[in] item_size         queue item size
+ * @param taskhdl               task object
  *
- * @return pointer to queue object, otherwise NULL if error
+ * @return pointer to task object
  */
 //==============================================================================
-static inline queue_t *_queue_new(const uint length, const uint item_size)
+static inline void *_task_get_object_of(task_t *taskhdl) /* FIXME necessary? */
 {
-        return xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
+        return _task_get_data_of(taskhdl)->f_task_object;
 }
+
+//==============================================================================
+/**
+ * @brief Function enter to critical section
+ */
+//==============================================================================
+static inline void _critical_section_begin(void)
+{
+        taskENTER_CRITICAL();
+}
+
+//==============================================================================
+/**
+ * @brief Function exit from critical section
+ */
+//==============================================================================
+static inline void _critical_section_end(void)
+{
+        taskEXIT_CRITICAL();
+}
+
+//==============================================================================
+/**
+ * @brief Function disable interrupts
+ */
+//==============================================================================
+static inline void _ISR_disable(void)
+{
+        taskDISABLE_INTERRUPTS();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable interrupts
+ */
+//==============================================================================
+static inline void _ISR_enable(void)
+{
+        taskENABLE_INTERRUPTS();
+}
+
+//==============================================================================
+/**
+ * @brief Function put to sleep task in milliseconds
+ *
+ * @param[in] milliseconds
+ */
+//==============================================================================
+static inline void _sleep_ms(const uint milliseconds)
+{
+        vTaskDelay(MS2TICK(milliseconds));
+}
+
+//==============================================================================
+/**
+ * @brief Function put to sleep task in seconds
+ *
+ * @param[in] seconds
+ */
+//==============================================================================
+static inline void _sleep(const uint seconds)
+{
+        vTaskDelay(MS2TICK(seconds * 1000UL));
+}
+
 
 #ifdef __cplusplus
 }

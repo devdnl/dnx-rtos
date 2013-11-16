@@ -254,11 +254,10 @@ static int run_level_1(void)
 static int run_level_2(void)
 {
         /* stdio program control */
-        FILE               *tty[TTY_DEV_COUNT]         = {NULL};
-        FILE               *tty0                       =  NULL;
-        task_t             *program[TTY_DEV_COUNT - 1] = {NULL};
-        enum program_state  state[TTY_DEV_COUNT - 1]   = {PROGRAM_STATE_UNKNOWN};
-        int                 current_tty                = -1;
+        FILE   *tty[TTY_DEV_COUNT]         = {NULL};
+        FILE   *tty0                       =  NULL;
+        prog_t *program[TTY_DEV_COUNT - 1] = {NULL};
+        int     current_tty                = -1;
 
         while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
@@ -284,58 +283,32 @@ static int run_level_2(void)
                                 fprintf(tty[current_tty], "Welcome to %s/%s (tty%d)\n",
                                         get_OS_name(), get_kernel_name(), current_tty);
 
-                                program[current_tty] = program_start("terminal", "/",
-                                                                     tty[current_tty],
-                                                                     tty[current_tty],
-                                                                     &state[current_tty],
-                                                                     NULL);
 
-                                if (program[current_tty]) {
-                                        task_set_priority_of(program[current_tty], 0);
-                                }
-
-                                switch (state[current_tty]) {
-                                case PROGRAM_STATE_UNKNOWN:
-                                        printk("Program does not start!\n");
-                                        break;
-                                case PROGRAM_STATE_RUNNING:
-                                        printk("Program started.\n");
-                                        break;
-                                case PROGRAM_STATE_ENDED:
-                                        printk("Program finished.\n");
-                                        break;
-                                case PROGRAM_STATE_NOT_ENOUGH_FREE_MEMORY:
-                                        printk("No enough free memory!\n");
-                                        break;
-                                case PROGRAM_STATE_ARGUMENTS_PARSE_ERROR:
-                                        printk("Bad arguments!\n");
-                                        break;
-                                case PROGRAM_STATE_DOES_NOT_EXIST:
-                                        printk("Program does not exist!\n");
-                                        break;
-                                case PROGRAM_STATE_HANDLE_ERROR:
-                                        printk("Handle error!\n");
-                                        break;
+                                program[current_tty] = program_new("terminal", "/",
+                                                                   tty[current_tty],
+                                                                   tty[current_tty],
+                                                                   tty[current_tty]);
+                                if (!program[current_tty]) {
+                                        perror("initd");
+                                } else {
+                                        printk("initd: terminal started\n");
                                 }
                         }
                 }
 
                 for (uint i = 0; i < TTY_DEV_COUNT - 1; i++) {
-                        if (program[i] == NULL) {
-                                continue;
-                        }
+                        if (program[i]) {
+                                if (program_is_closed(program[i])) {
+                                        printk("initd: terminal closed\n");
+                                        program_delete(program[i]);
+                                        program[i] = NULL;
 
-                        if (state[i] != PROGRAM_STATE_RUNNING) {
-                                printk("Program closed.\n");
+                                        ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
+                                        fclose(tty[i]);
+                                        tty[i] = NULL;
 
-                                program[i] = NULL;
-                                state[i]   = PROGRAM_STATE_UNKNOWN;
-
-                                ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
-                                fclose(tty[i]);
-                                tty[i] = NULL;
-
-                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                        ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                }
                         }
                 }
 

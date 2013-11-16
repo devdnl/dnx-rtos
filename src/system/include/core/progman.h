@@ -84,27 +84,23 @@ struct _prog_data {
 
 typedef struct thread thread_t;
 
+typedef struct prog prog_t;
+
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
-enum program_state {
-        PROGRAM_STATE_UNKNOWN,
-        PROGRAM_STATE_RUNNING,
-        PROGRAM_STATE_ENDED,
-        PROGRAM_STATE_NOT_ENOUGH_FREE_MEMORY,
-        PROGRAM_STATE_ARGUMENTS_PARSE_ERROR,
-        PROGRAM_STATE_DOES_NOT_EXIST,
-        PROGRAM_STATE_HANDLE_ERROR,
-};
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t   *_program_start         (const char*, const char*, FILE*, FILE*, enum program_state*, int*);
-extern int       _program_kill          (task_t*, int);
 extern void      exit                   (int);
 extern void      abort                  (void);
 extern int       system                 (const char*);
+extern task_t   *_program_new           (const char*, const char*, FILE*, FILE*, FILE*);
+extern int       _program_kill          (prog_t*);
+extern int       _program_delete        (prog_t*);
+extern int       _program_wait_for_close(prog_t*, const uint);
+extern bool      _program_is_closed     (prog_t*);
 extern thread_t *_thread_new            (void (*)(void*), const int, void*);
 extern int       _thread_join           (thread_t*);
 extern bool      _thread_is_finished    (thread_t*);
