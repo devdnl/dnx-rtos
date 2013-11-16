@@ -280,8 +280,6 @@ int _task_get_free_stack_of(task_t *taskhdl)
 //==============================================================================
 _task_data_t *_task_get_data(void)
 {
-        /* TODO cache */
-
         return (struct _task_data*)_task_get_tag(THIS_TASK);
 }
 

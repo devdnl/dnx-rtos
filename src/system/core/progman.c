@@ -42,9 +42,6 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#undef stdin
-#undef stdout
-#undef stderr
 
 /*==============================================================================
   Local types, enums definitions
@@ -90,6 +87,20 @@ static stdret_t get_program_data        (const char *name, struct _prog_data *pr
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+/* standard input */
+FILE                    *stdin;
+
+/* standard output */
+FILE                    *stdout;
+
+/* standard error */
+FILE                    *stderr;
+
+/* global variables */
+struct __global_vars__  *global;
+
+/* error number */
+int                      errno;
 
 /*==============================================================================
   External object definitions
@@ -111,6 +122,7 @@ static void make_RAW_task(task_t *taskhdl)
 {
         _task_data_t *task_data = _task_get_data_of(taskhdl);
 
+        global                   = NULL;
         task_data->f_mem         = NULL;
         task_data->f_stdin       = NULL;
         task_data->f_stdout      = NULL;
@@ -143,6 +155,12 @@ static void program_startup(void *arg)
                         task_data->f_stdout      = prog->stdout;
                         task_data->f_task_object = prog;
                         task_data->f_task_type   = TASK_TYPE_PROCESS;
+
+                        stdin  = prog->stdin;
+                        stdout = prog->stdout;
+                        stderr = prog->stderr;
+                        global = prog->mem;
+                        errno  = 0;
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
 
@@ -180,6 +198,12 @@ static void thread_startup(void *arg)
                 task_data->f_stdin       = thread->stdin;
                 task_data->f_stdout      = thread->stdout;
                 task_data->f_stderr      = thread->stderr;
+
+                stdin  = thread->stdin;
+                stdout = thread->stdout;
+                stderr = thread->stderr;
+                global = thread->mem;
+                errno  = 0;
 
                 thread->func(thread->arg);
 
@@ -819,6 +843,48 @@ int _thread_delete(thread_t *thread)
 
         errno = EINVAL;
         return -EINVAL;
+}
+
+//==============================================================================
+/**
+ * @brief Function copy task context to standard variables (stdin, stdout, stderr,
+ *        global, errno)
+ */
+//==============================================================================
+void _copy_task_context_to_standard_variables(void)
+{
+        _task_data_t *task_data = _task_get_data();
+        if (task_data) {
+                stdin  = task_data->f_stdin;
+                stdout = task_data->f_stdout;
+                stderr = task_data->f_stderr;
+                global = task_data->f_mem;
+                errno  = task_data->f_errno;
+        } else {
+                stdin  = NULL;
+                stdout = NULL;
+                stderr = NULL;
+                global = NULL;
+                errno  = 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function copy standard variables (stdin, stdout, stderr, global, errno)
+ *        to task context
+ */
+//==============================================================================
+void _copy_standard_variables_to_task_context(void)
+{
+        _task_data_t *task_data = _task_get_data();
+        if (task_data) {
+                task_data->f_stdin  = stdin;
+                task_data->f_stdout = stdout;
+                task_data->f_stderr = stderr;
+                task_data->f_errno  = errno;
+                task_data->f_mem    = global;
+        }
 }
 
 #ifdef __cplusplus
