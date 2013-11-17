@@ -44,6 +44,7 @@ extern "C" {
 #define MTX_BLOCK_TIME                          10
 
 #define FILE_VALIDATION_NUMBER                  (int)0x495D47CB
+#define DIR_VALIDATION_NUMBER                   (int)0x297E823D
 
 /*==============================================================================
   Local types, enums definitions
@@ -447,6 +448,8 @@ DIR *vfs_opendir(const char *path)
                 if (status == STD_RET_ERROR) {
                         sysm_sysfree(dir);
                         dir = NULL;
+                } else {
+                        dir->validation = DIR_VALIDATION_NUMBER;
                 }
         } else {
                 errno = ENOMEM;
@@ -467,18 +470,16 @@ DIR *vfs_opendir(const char *path)
 int vfs_closedir(DIR *dir)
 {
         if (dir) {
-                if (dir->f_closedir) {
+                if (dir->f_closedir && dir->validation == DIR_VALIDATION_NUMBER) {
                         if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
+                                dir->validation = 0;
                                 sysm_sysfree(dir);
                                 return 0;
                         }
                 }
-
-                errno = ENXIO;
-        } else {
-                errno = EINVAL;
         }
 
+        errno = EINVAL;
         return -1;
 }
 
@@ -498,7 +499,7 @@ dirent_t vfs_readdir(DIR *dir)
         direntry.size = 0;
 
         if (dir) {
-                if (dir->f_readdir) {
+                if (dir->f_readdir && dir->validation == DIR_VALIDATION_NUMBER) {
                         direntry = dir->f_readdir(dir->f_handle, dir);
                 } else {
                         errno = EINVAL;

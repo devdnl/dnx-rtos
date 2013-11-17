@@ -100,8 +100,7 @@ typedef struct vfs_file FILE;
 typedef uint fd_t;
 
 /** file type */
-typedef enum tfile
-{
+typedef enum tfile {
         FILE_TYPE_REGULAR,
         FILE_TYPE_DIR,
         FILE_TYPE_DRV,
@@ -110,22 +109,21 @@ typedef enum tfile
 } tfile_t;
 
 /** directory entry */
-typedef struct dirent
-{
+typedef struct dirent {
         char   *name;
         u64_t   size;
         tfile_t filetype;
 } dirent_t;
 
 /** directory type */
-struct vfs_dir
-{
+struct vfs_dir {
         dirent_t (*f_readdir)(void *fshdl, struct vfs_dir *dir);
         stdret_t (*f_closedir)(void *fshdl, struct vfs_dir *dir);
         void      *f_dd;
         void      *f_handle;
         size_t     f_items;
         size_t     f_seek;
+        int        validation;  /* only for system purposes */
 };
 
 /** file statistics */
