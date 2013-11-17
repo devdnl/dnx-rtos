@@ -49,7 +49,8 @@ enum node_type {
         NODE_TYPE_DIR  = FILE_TYPE_DIR,
         NODE_TYPE_FILE = FILE_TYPE_REGULAR,
         NODE_TYPE_DRV  = FILE_TYPE_DRV,
-        NODE_TYPE_LINK = FILE_TYPE_LINK
+        NODE_TYPE_LINK = FILE_TYPE_LINK,
+        NODE_TYPE_PIPE = FILE_TYPE_PIPE
 };
 
 /** node structure */
@@ -263,12 +264,13 @@ error:
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created directory
+ * @param[in ]           mode                   dir mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(lfs, void *fs_handle, const char *path)
+API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);

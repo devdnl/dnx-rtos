@@ -629,12 +629,13 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created directory
+ * @param[in ]           mode                   dir mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(procfs, void *fs_handle, const char *path)
+API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);

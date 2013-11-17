@@ -353,6 +353,7 @@ static enum cmd_status cmd_ls(char *arg)
                         case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
                         case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN" ";   break;
                         case FILE_TYPE_PROGRAM: type = FONT_BOLD"x";          break;
+                        case FILE_TYPE_PIPE:    type = FONT_COLOR_BROWN"p";   break;
                         default: type = "?";
                         }
 
@@ -393,7 +394,7 @@ static enum cmd_status cmd_ls(char *arg)
 //==============================================================================
 static enum cmd_status cmd_mkdir(char *arg)
 {
-        if (mkdir(arg) != 0) {
+        if (mkdir(arg, 0666) != 0) {
                 perror(arg);
         }
 

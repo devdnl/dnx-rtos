@@ -160,9 +160,9 @@ static inline int mknod(const char *path, struct vfs_drv_interface *drvif)
         return vfs_mknod(path, drvif);
 }
 
-static inline int mkdir(const char *path)
+static inline int mkdir(const char *path, mode_t mode)
 {
-        return vfs_mkdir(path);
+        return vfs_mkdir(path, mode);
 }
 
 static inline DIR *opendir(const char *path)

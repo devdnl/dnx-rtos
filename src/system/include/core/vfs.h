@@ -99,13 +99,17 @@ typedef struct vfs_file FILE;
 /** file descriptor */
 typedef uint fd_t;
 
+/** file mode */
+typedef int mode_t;
+
 /** file type */
 typedef enum tfile {
         FILE_TYPE_REGULAR,
         FILE_TYPE_DIR,
         FILE_TYPE_DRV,
         FILE_TYPE_LINK,
-        FILE_TYPE_PROGRAM
+        FILE_TYPE_PROGRAM,
+        FILE_TYPE_PIPE
 } tfile_t;
 
 /** directory entry */
@@ -186,7 +190,8 @@ struct vfs_FS_interface {
         stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct vfs_stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
-        stdret_t (*fs_mkdir  )(void *fshdl, const char *path);
+        stdret_t (*fs_mkdir  )(void *fshdl, const char *path, mode_t);
+        stdret_t (*fs_mkfifo )(void *fshdl, const char *path, mode_t);
         stdret_t (*fs_mknod  )(void *fshdl, const char *path, const struct vfs_drv_interface *drv_if);
         stdret_t (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
         stdret_t (*fs_remove )(void *fshdl, const char *path);
@@ -205,7 +210,8 @@ extern stdret_t         vfs_mount               (const char*, const char*, struc
 extern stdret_t         vfs_umount              (const char*);
 extern stdret_t         vfs_getmntentry         (size_t, struct vfs_mntent*);
 extern int              vfs_mknod               (const char*, struct vfs_drv_interface*);
-extern int              vfs_mkdir               (const char*);
+extern int              vfs_mkdir               (const char*, mode_t);
+extern int              vfs_mkfifo              (const char*, mode_t); /* TODO */
 extern DIR             *vfs_opendir             (const char*);
 extern int              vfs_closedir            (DIR*);
 extern dirent_t         vfs_readdir             (DIR*);

@@ -369,12 +369,13 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
 /**
  * @brief Create directory
  *
- * @param[in] *path                 path to new directory
+ * @param[in] path              path to new directory
+ * @param[in] mode              directory mode
  *
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_mkdir(const char *path)
+int vfs_mkdir(const char *path, mode_t mode)
 {
         stdret_t status = -1;
 
@@ -391,7 +392,7 @@ int vfs_mkdir(const char *path)
 
                 if (fs) {
                         if (fs->interface.fs_mkdir) {
-                                status = fs->interface.fs_mkdir(fs->handle, external_path) == STD_RET_OK ? 0 : -1;
+                                status = fs->interface.fs_mkdir(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
                         }
                 } else {
                         errno = ENXIO;
@@ -403,6 +404,21 @@ int vfs_mkdir(const char *path)
         }
 
         return status;
+}
+
+//==============================================================================
+/**
+ * @brief Create pipe
+ *
+ * @param[in] path              path to pipe
+ * @param[in] mode              directory mode
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+int vfs_mkfifo(const char *path, mode_t mode)
+{
+        /* TODO */
 }
 
 //==============================================================================

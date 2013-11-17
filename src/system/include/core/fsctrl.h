@@ -47,6 +47,7 @@ extern "C" {
              .fs_close   = _##fs_name##_close,\
              .fs_ioctl   = _##fs_name##_ioctl,\
              .fs_mkdir   = _##fs_name##_mkdir,\
+             .fs_mkfifo  = _##fs_name##_mkfifo,\
              .fs_mknod   = _##fs_name##_mknod,\
              .fs_open    = _##fs_name##_open,\
              .fs_opendir = _##fs_name##_opendir,\
