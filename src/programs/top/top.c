@@ -155,7 +155,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         scanf("%8X", &task_handle);
 
                         task_t *task = (task_t *)task_handle;
-                        if (task != task_get_parent_handle()) {
+                        if (task != task_get_handle()) {
                                 errno = 0;
                                 if (task_is_exist(task)) {
                                         task_delete(task);

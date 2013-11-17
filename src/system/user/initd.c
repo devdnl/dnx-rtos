@@ -296,7 +296,7 @@ static int run_level_2(void)
                         }
                 }
 
-                for (uint i = 0; i < TTY_DEV_COUNT - 1; i++) {
+                for (int i = 0; i < TTY_DEV_COUNT - 1; i++) {
                         if (program[i]) {
                                 if (program_is_closed(program[i])) {
                                         printk("initd: terminal closed\n");
@@ -307,7 +307,9 @@ static int run_level_2(void)
                                         fclose(tty[i]);
                                         tty[i] = NULL;
 
-                                        ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                        if (current_tty == i) {
+                                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                        }
                                 }
                         }
                 }

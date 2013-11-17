@@ -452,7 +452,7 @@ static stdret_t get_program_data(const char *name, struct _prog_data *prg_data)
 static int process_kill(task_t *taskhdl, int status)
 {
         if (taskhdl) {
-                switch (_task_get_data()->f_task_type) {
+                switch (_task_get_data_of(taskhdl)->f_task_type) {
                 case TASK_TYPE_RAW:
                         task_delete(taskhdl);
                         break;
@@ -468,6 +468,8 @@ static int process_kill(task_t *taskhdl, int status)
                 default:
                         return -ESRCH;
                 }
+
+                return 0;
         }
 
         return -EINVAL;
