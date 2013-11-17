@@ -1035,6 +1035,8 @@ static void clear_tty(struct tty_data *tty)
 
                 semaphore_signal(tty_ctrl->process_output_sem);
 
+                read_vt100_size();
+
                 mutex_unlock(tty->secure_resources_mtx);
         }
 }

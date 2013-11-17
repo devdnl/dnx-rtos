@@ -122,7 +122,6 @@ static void make_RAW_task(task_t *taskhdl)
 {
         _task_data_t *task_data = _task_get_data_of(taskhdl);
 
-        global                   = NULL;
         task_data->f_mem         = NULL;
         task_data->f_stdin       = NULL;
         task_data->f_stdout      = NULL;

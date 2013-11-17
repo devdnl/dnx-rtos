@@ -585,7 +585,7 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief Function send on a standard output string
+ * @brief Function write to file formatted string
  *
  * @param *file               file
  * @param *format             formated text
@@ -597,23 +597,46 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 int sys_fprintf(FILE *file, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        va_list args;
         int n = 0;
 
         if (file && format) {
+                va_list args;
                 va_start(args, format);
-                u32_t size = calc_format_size(format, args);
+                n = sys_vfprintf(file, format, args);
                 va_end(args);
+        }
+
+        return n;
+#else
+        UNUSED_ARG(file);
+        UNUSED_ARG(format);
+        return 0;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function write to file formatted string
+ *
+ * @param file                file
+ * @param format              formated text
+ * @param arg                 arguments
+ *
+ * @retval number of written characters
+ */
+//==============================================================================
+int sys_vfprintf(FILE *file, const char *format, va_list arg)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        int n = 0;
+
+        if (file && format) {
+                u32_t size = calc_format_size(format, arg);
 
                 char *str = sysm_syscalloc(1, size);
-
                 if (str) {
-                        va_start(args, format);
-                        n = sys_vsnprintf(str, size, format, args);
-                        va_end(args);
-
+                        n = sys_vsnprintf(str, size, format, arg);
                         vfs_fwrite(str, sizeof(char), n, file);
-
                         sysm_sysfree(str);
                 }
         }
@@ -622,6 +645,7 @@ int sys_fprintf(FILE *file, const char *format, ...)
 #else
         UNUSED_ARG(file);
         UNUSED_ARG(format);
+        UNUSED_ARG(arg);
         return 0;
 #endif
 }

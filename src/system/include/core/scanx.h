@@ -53,6 +53,7 @@ extern "C" {
   Exported function prototypes
 ==============================================================================*/
 extern int      sys_fscanf      (FILE*, const char*, ...);
+extern int      sys_vfscanf     (FILE*, const char*, va_list);
 extern int      sys_sscanf      (const char*, const char*, ...);
 extern int      sys_vsscanf     (const char*, const char*, va_list);
 

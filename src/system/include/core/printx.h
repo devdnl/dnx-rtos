@@ -115,6 +115,7 @@ extern void             printk_enable           (char*);
 extern void             printk_disable          (void);
 extern int              sys_snprintf            (char*, size_t, const char*, ...);
 extern int              sys_fprintf             (FILE*, const char*, ...);
+extern int              sys_vfprintf            (FILE*, const char*, va_list);
 extern int              sys_vsnprintf           (char*, size_t, const char*, va_list);
 extern const char      *sys_strerror            (int);
 extern void             sys_perror              (const char*);

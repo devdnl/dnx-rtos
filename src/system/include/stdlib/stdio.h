@@ -46,7 +46,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/* MEMORY MANAGEMENT DEFINTIONS */
+/** MEMORY MANAGEMENT DEFINTIONS */
 #ifndef malloc
 #define malloc(size_t__size)                                    sysm_tskmalloc(size_t__size)
 #endif
@@ -63,15 +63,6 @@ extern "C" {
 #define BUFSIZ                                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
 
 /** function-like macros */
-#define printf(...)                                             sys_fprintf(stdout, __VA_ARGS__)
-#define fprintf(FILE__stream, ...)                              sys_fprintf(FILE__stream, __VA_ARGS__)
-#define snprintf(char__bfr, size_t__size, ...)                  sys_snprintf(char__bfr, size_t__size, __VA_ARGS__)
-#define sprintf(char__bfr, ...)                                 sys_snprintf(char__bfr, UINT16_MAX, __VA_ARGS__)
-
-#define scanf(const_char__format, ...)                          sys_fscanf(stdin, const_char__format, __VA_ARGS__)
-#define fscanf(FILE__stream, const_char__format, ...)           sys_fscanf(FILE__stream, const_char__format, __VA_ARGS__)
-#define sscanf(const_char__str, const_char__format, ...)        sys_sscanf(const_char__str, const_char__format, __VA_ARGS__)
-
 #define strerror(int__errnum)                                   sys_strerror(int__errnum)
 
 /*==============================================================================
@@ -218,9 +209,83 @@ static inline int statfs(const char *path, struct vfs_statfs *statfs)
         return vfs_statfs(path, statfs);
 }
 
+static inline int printf(const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        return sys_vfprintf(stdout, format, arg);
+}
+
+static inline int vprintf(const char *format, va_list arg)
+{
+        return sys_vfprintf(stdout, format, arg);
+}
+
+static inline int fprintf(FILE *stream, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        return sys_vfprintf(stream, format, arg);
+}
+
+static inline int vfprintf(FILE *stream, const char *format, va_list arg)
+{
+        return sys_vfprintf(stream, format, arg);
+}
+
+static inline int snprintf(char *s, size_t n, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        return sys_vsnprintf(s, n, format, arg);
+}
+
 static inline int vsnprintf(char *bfr, size_t size, const char *format, va_list args)
 {
         return sys_vsnprintf(bfr, size, format, args);
+}
+
+static inline int sprintf(char *s, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        return sys_vsnprintf(s, UINT16_MAX, format, arg);
+}
+
+static inline int vsprintf(char *s, const char *format, va_list arg)
+{
+        return sys_vsnprintf(s, UINT16_MAX, format, arg);
+}
+
+static inline int scanf(const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        return sys_vfscanf(stdin, format, arg);
+}
+
+static inline int vscanf(const char *format, va_list arg)
+{
+        return sys_vfscanf(stdin, format, arg);
+}
+
+static inline int fscanf(FILE *stream, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        return sys_vfscanf(stream, format, arg);
+}
+
+static inline int vfscanf(FILE *stream, const char *format, va_list arg)
+{
+        return sys_vfscanf(stream, format, arg);
+}
+
+static inline int sscanf(const char *s, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        return sys_vsscanf(s, format, arg);
 }
 
 static inline int vsscanf(const char *str, const char *format, va_list args)
