@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   The simple example program
+@brief   Telnet example program
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -33,12 +33,15 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+#include <stdlib.h>
 #include "system/netapi.h"
 #include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define NUMBER_OF_CONNECTIONS           4
 
 /*==============================================================================
   Local types, enums definitions
@@ -71,11 +74,12 @@ GLOBAL_VARIABLES_SECTION_END
 static void telnet_thread(void *arg)
 {
         netapi_conn_t *conn = arg;
-        bool           run  = true;
+        netapi_err_t   err  = NETAPI_ERR_OK;
 
-        while (run) {
+        while (err == NETAPI_ERR_OK) {
                 netapi_buf_t *rx_buffer;
-                if (netapi_recv(conn, &rx_buffer) == NETAPI_ERR_OK) {
+                err = netapi_recv(conn, &rx_buffer);
+                if (err == NETAPI_ERR_OK) {
                         char *string;
                         u16_t len;
                         if (netapi_buf_data(rx_buffer, (void *)&string, &len) == NETAPI_ERR_OK) {
@@ -92,19 +96,16 @@ static void telnet_thread(void *arg)
                                 } else if (strncmp(string, "exit\r\n", len) == 0) {
                                         const char *str = "Exiting...\n";
                                         netapi_write(conn, str, strlen(str), NETAPI_CONN_FLAG_NOCOPY);
-                                        run = false;
+                                        err = NETAPI_ERR_CONNECTION_CLOSED;
                                 }
                         }
 
                         netapi_delete_buf(rx_buffer);
-                } else {
-                        run = false;
                 }
         }
 
         netapi_delete_conn(conn);
-
-        task_exit();
+        puts("Thread closed");
 }
 
 //==============================================================================
@@ -122,41 +123,68 @@ PROGRAM_MAIN(telnet, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
+        errno = 0;
+
+        thread_t *thread[NUMBER_OF_CONNECTIONS] = {NULL};
+
         netapi_conn_t *listener = netapi_new_conn(NETAPI_CONN_TYPE_TCP);
-        if (listener) {
-                puts("New connection created");
-
-                if (netapi_bind(listener, (netapi_ip_t *)&ip_addr_any, 23) == NETAPI_ERR_OK) {
-                        puts("Binded successfully");
-
-                        if (netapi_listen(listener) == NETAPI_ERR_OK) {
-                                puts("Successfully goes to listen mode");
-
-                                for (;;) {
-                                        netapi_conn_t *new_conn;
-                                        if (netapi_accept(listener, &new_conn) == NETAPI_ERR_OK) {
-                                                puts("Starting new thread");
-
-                                                if (!task_new(telnet_thread, "telnet*", STACK_DEPTH_LOW, new_conn)) {
-                                                        netapi_delete_conn(new_conn);
-                                                }
-                                        } else {
-                                                puts("Acceptance error!");
-                                        }
-                                }
-                        } else {
-                                puts("Unable to start in listen mode!");
-                        }
-                } else {
-                        puts("Address and port bind error!");
-                }
-
-                netapi_delete_conn(listener);
-        } else {
-                puts("Unable to create connection!");
+        if (!listener) {
+                puts("Connection failed");
+                goto exit;
         }
 
-        return -1;
+        if (netapi_bind(listener, (netapi_ip_t *)&ip_addr_any, 23) != NETAPI_ERR_OK) {
+                puts("Bind failed");
+                goto exit;
+        }
+
+        if (netapi_listen(listener) != NETAPI_ERR_OK) {
+                puts("Listen error");
+                goto exit;
+        }
+
+        for (;;) {
+                netapi_conn_t *new_conn ;
+                if (netapi_accept(listener, &new_conn) != NETAPI_ERR_OK) {
+                        puts("Connection accept error");
+                        continue;
+                }
+
+                bool thread_created = false;
+                for (int i = 0; i < NUMBER_OF_CONNECTIONS; i++) {
+                        if (thread[i] == NULL) {
+                                errno = 0;
+                                thread[i] = thread_new(telnet_thread, STACK_DEPTH_LOW, new_conn);
+                                if (thread[i] == NULL) {
+                                        perror("New thread");
+                                        netapi_delete_conn(new_conn);
+                                } else {
+                                        puts("Started new thread");
+                                        thread_created = true;
+                                        break;
+                                }
+                        } else {
+                                if (thread_is_finished(thread[i])) {
+                                        thread_delete(thread[i]);
+                                        thread[i] = NULL;
+                                        i--;
+                                }
+                        }
+                }
+
+                if (!thread_created) {
+                        puts("Reached maximum number of connections");
+                        netapi_delete_conn(new_conn);
+                }
+        }
+
+exit:
+        if (listener) {
+                netapi_delete_conn(listener);
+        }
+
+
+        return EXIT_FAILURE;
 }
 
 #ifdef __cplusplus
