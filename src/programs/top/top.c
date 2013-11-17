@@ -35,6 +35,7 @@ extern "C" {
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/thread.h"
@@ -81,7 +82,6 @@ static void println(const char *fmt, ...)
         }
 }
 
-
 //==============================================================================
 /**
  * @brief Main function
@@ -94,26 +94,30 @@ PROGRAM_MAIN(top, int argc, char *argv[])
 
         int key     = 0;
         int divider = 0;
+        int shift   = 0;
 
         ioctl(stdin, TTY_IORQ_ECHO_OFF);
+        ioctl(stdout, TTY_IORQ_CLEAR_SCR);
 
         while (key != 'q') {
                 fflush(stdin);
                 key = getchar();
 
-                if (divider != 0 && key != 'k') {
-                        divider--;
-                        sleep_ms(100);
-                        continue;
-                } else {
-                        divider = 10;
+                if (!strchr("k,.", key)) {
+                        if (divider) {
+                                divider--;
+                                sleep_ms(10);
+                                continue;
+                        }
                 }
 
+                divider = 100;
+
                 global->term_row = 24;
-                ioctl(stdin, TTY_IORQ_GET_ROW, &global->term_row);
+                ioctl(stdout, TTY_IORQ_GET_ROW, &global->term_row);
                 global->term_row--;
 
-                u8_t n = get_number_of_monitored_tasks();
+                int task_number = get_number_of_monitored_tasks();
 
                 u32_t uptime = get_uptime();
                 u32_t udays  = (uptime / (3600 * 24));
@@ -128,7 +132,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 int mem_free  = get_free_memory();
 
                 println(CLEAR_SCREEN"Press q to quit or k to kill program\n");
-                println("Total tasks: %u\n", n);
+                println("Total tasks: %u\n", task_number);
                 println("Up time: %ud %2u:%2u\n", udays, uhrs, umins);
                 println("Memory:\t%u total,\t%u used,\t%u free\n", mem_total, mem_used, mem_free);
                 println("Kernel  : %d\n", mem.used_kernel_memory);
@@ -138,9 +142,19 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 println("Programs: %d\n", mem.used_programs_memory);
                 println("\x1B[30;47m TSKHDL   PRI   FRSTK   MEM     OPFI    %%CPU    NAME \x1B[0m\n");
 
+                if (key == '.') {
+                        if (shift + global->term_row < task_number) {
+                                shift++;
+                        }
+                } else if (key == ',') {
+                        if (shift) {
+                                shift--;
+                        }
+                }
+
                 u32_t total_cpu_load = get_total_CPU_usage();
                 disable_CPU_load_measurement();
-                for (int i = 0; i < n && global->term_row > 0; i++) {
+                for (int i = shift; i < task_number && global->term_row > 0; i++) {
                         struct sysmoni_taskstat taskinfo;
                         if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
                                 println("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
