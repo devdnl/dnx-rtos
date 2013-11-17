@@ -1040,7 +1040,7 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
                 return -1;
         }
 
-        if (file->validation == FILE_VALIDATION_NUMBER) {
+        if (file->validation != FILE_VALIDATION_NUMBER) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1119,7 +1119,7 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
                 return -1;
         }
 
-        if (!file->f_ioctl && file->validation == FILE_VALIDATION_NUMBER) {
+        if (!file->f_ioctl && file->validation != FILE_VALIDATION_NUMBER) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1144,7 +1144,7 @@ int vfs_fstat(FILE *file, struct vfs_stat *stat)
                 return -1;
         }
 
-        if (!file->f_stat && file->validation == FILE_VALIDATION_NUMBER) {
+        if (!file->f_stat && file->validation != FILE_VALIDATION_NUMBER) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1168,7 +1168,7 @@ int vfs_fflush(FILE *file)
                 return -1;
         }
 
-        if (!file->f_flush && file->validation == FILE_VALIDATION_NUMBER) {
+        if (!file->f_flush && file->validation != FILE_VALIDATION_NUMBER) {
                 errno = ENOENT;
                 return -1;
         }
