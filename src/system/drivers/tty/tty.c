@@ -59,7 +59,6 @@ extern "C" {
 #define VT100_CARRIAGE_RETURN                   "\r"
 #define VT100_ERASE_LINE_FROM_CUR               "\e[K"
 #define VT100_SAVE_CURSOR_POSITION              "\e7"
-#define VT100_CURSOR_OFF                        "\e[?25l"
 #define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
 #define VT100_QUERY_CURSOR_POSITION             "\e[6n"
 #define VT100_RESTORE_CURSOR_POSITION           "\e8"
