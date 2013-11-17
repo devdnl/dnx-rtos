@@ -37,6 +37,7 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define MUTEX_VALID_NUMBER              0x4379A85C
 
 /*==============================================================================
   Local types, enums definitions
@@ -425,6 +426,13 @@ mutex_t *_mutex_new(enum mutex_type type)
                         mtx->mutex     = xSemaphoreCreateMutex();
                         mtx->recursive = false;
                 }
+
+                if (mtx->mutex) {
+                        mtx->valid = MUTEX_VALID_NUMBER;
+                } else {
+                        sysm_kfree(mtx);
+                        mtx = NULL;
+                }
         }
 
         return mtx;
@@ -440,7 +448,11 @@ mutex_t *_mutex_new(enum mutex_type type)
 void _mutex_delete(mutex_t *mutex)
 {
         if (mutex) {
-                return vSemaphoreDelete(mutex);
+                if (mutex->mutex && mutex->valid == MUTEX_VALID_NUMBER) {
+                        vSemaphoreDelete(mutex);
+                        mutex->valid = 0;
+                        sysm_kfree(mutex);
+                }
         }
 }
 
@@ -458,14 +470,16 @@ void _mutex_delete(mutex_t *mutex)
 bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 {
         if (mutex) {
-                if (mutex->recursive) {
-                        return xSemaphoreTakeRecursive(mutex->mutex, MS2TICK((portTickType)blocktime_ms));
-                } else {
-                        return xSemaphoreTake(mutex->mutex, MS2TICK((portTickType)blocktime_ms));
+                if (mutex->mutex && mutex->valid == MUTEX_VALID_NUMBER) {
+                        if (mutex->recursive) {
+                                return xSemaphoreTakeRecursive(mutex->mutex, MS2TICK((portTickType)blocktime_ms));
+                        } else {
+                                return xSemaphoreTake(mutex->mutex, MS2TICK((portTickType)blocktime_ms));
+                        }
                 }
-        } else {
-                return false;
         }
+
+        return false;
 }
 
 //==============================================================================
@@ -481,14 +495,16 @@ bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 bool _mutex_unlock(mutex_t *mutex)
 {
         if (mutex) {
-                if (mutex->recursive) {
-                        return xSemaphoreGiveRecursive(mutex->mutex);
-                } else {
-                        return xSemaphoreGive(mutex->mutex);
+                if (mutex->mutex && mutex->valid == MUTEX_VALID_NUMBER) {
+                        if (mutex->recursive) {
+                                return xSemaphoreGiveRecursive(mutex->mutex);
+                        } else {
+                                return xSemaphoreGive(mutex->mutex);
+                        }
                 }
-        } else {
-                return false;
         }
+
+        return false;
 }
 
 //==============================================================================

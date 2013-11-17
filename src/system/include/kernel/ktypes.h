@@ -54,6 +54,7 @@ typedef void queue_t;
 typedef struct {
         void *mutex;
         bool  recursive;
+        int   valid;
 } mutex_t;
 
 /*==============================================================================
