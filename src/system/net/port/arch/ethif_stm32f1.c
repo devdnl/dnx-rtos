@@ -33,9 +33,11 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "ethif.h"
 #include "system/dnx.h"
 #include "system/ioctl.h"
+#include "system/thread.h"
 #include "lwipopts.h"
 #include "lwip/tcp_impl.h"
 #include "lwip/dhcp.h"
@@ -320,7 +322,7 @@ static err_t ethif_init(struct netif *netif)
         }
 
         netif->state      = ethif_mem;
-        netif->hostname   = (char *)dnx_get_host_name();
+        netif->hostname   = (char *)get_host_name();
         netif->name[0]    = 'E';
         netif->name[1]    = 'T';
         netif->output     = etharp_output;
@@ -536,7 +538,7 @@ static void tcpip_init_done(void *arg)
                 goto release_resources;
         }
 
-        ethif_mem->protect_request_mtx = mutex_new();
+        ethif_mem->protect_request_mtx = mutex_new(MUTEX_NORMAL);
         if (!ethif_mem->protect_request_mtx) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: new mutex fail\n"));
                 goto release_resources;
@@ -592,9 +594,9 @@ static int send_request_and_wait_for_response(request *request)
         if (!request)
                 return -1;
 
-        u32_t time = kernel_get_time_ms();
+        u32_t time = get_time_ms();
         while (!ethif_mem->eth_file) {
-                if (kernel_get_time_ms() - time >= REQUEST_TIMEOUT_MS)
+                if (get_time_ms() - time >= REQUEST_TIMEOUT_MS)
                         return -1;
                 sleep_ms(250);
         }

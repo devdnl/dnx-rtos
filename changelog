@@ -5,10 +5,15 @@ New Features, Improvements:
 - added network support using lwIP library
 - added netapi library which is supported by lwIP stack
 - changed names of API functions to be more intuitive (e.g. mutex_new(), mutex_lock, etc)
+- implemented errno.h and error support
+- divided API functions to few libraries (easier to obtain needed functions)
+- implemented thread functions in thread.h library
+- accelerated program execution, applied shared global variables with standard objects (stdin etc)
 
 Fixed Bugs:
 - init_driver(): function doesn't color messages
-- tty driver: new lines was incorrect lengths (too long)
+- tty driver: new lines have incorrect lengths (too long)
+- kernel configuration: switched in/out macros are inversely assigned
 
 dnx/FreeRTOS 1.1.0
 ==================

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    mount.h
+@file    unistd.h
 
 @author  Daniel Zorychta
 
-@brief   Library with mount file system tools
+@brief   Unix standard library.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _MOUNT_H_
-#define _MOUNT_H_
+#ifndef _UNISTD_H_
+#define _UNISTD_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,8 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fsctrl.h"
-#include "core/modctrl.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Exported macros
@@ -58,68 +57,74 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function mount file system
+ * @brief Suspend task for defined time in seconds
  *
- * @param FS_name        file system name
- * @param src_path       path to file with source data
- * @param mount_point    mount point of file system
- *
- * @return 0 if success, otherwise 1
+ * @param[in] seconds
  */
 //==============================================================================
-static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
+static inline void sleep(const uint seconds)
 {
-        return _mount(FS_name, src_path, mount_point);
+        _sleep(seconds);
 }
 
 //==============================================================================
 /**
- * @brief Function unmount file system
+ * @brief Suspend task for defined time in milliseconds
  *
- * @param *mount_point   path to file system
- *
- * @return 0 if success, otherwise 1
+ * @param[in] milliseconds
  */
 //==============================================================================
-static inline int umount(const char *mount_point)
+static inline void sleep_ms(const uint milliseconds)
 {
-        return _umount(mount_point);
+        _sleep_ms(milliseconds);
 }
 
 //==============================================================================
 /**
- * @brief Function find driver name and then initialize device
+ * @brief Function sleep task in regular periods (reference argument)
  *
- * @param drv_name            driver name
- * @param node_path           path name to create in the file system or NULL
- *
- * @return 0 on success, otherwise other value
+ * @param milliseconds          milliseconds
+ * @param ref_time_ticks        reference time in OS ticks
  */
 //==============================================================================
-static inline int driver_init(const char *drv_name, const char *node_path)
+static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 {
-        return _driver_init(drv_name, node_path);
+        _sleep_until_ms(milliseconds, ref_time_ticks);
 }
 
 //==============================================================================
 /**
- * @brief Function find driver name and then release device
+ * @brief Function sleep task in regular periods (reference argument)
  *
- * @param drv_name           driver name
- *
- * @return 0 on success, otherwise other value
+ * @param seconds       seconds
+ * @param ref_time_ticks        reference time in OS ticks
  */
 //==============================================================================
-static inline int driver_release(const char *drv_name)
+static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 {
-        return _driver_release(drv_name);
+        _sleep_until(seconds, ref_time_ticks);
+}
+
+//==============================================================================
+/**
+ * @brief Function return x name
+ *
+ * @param[out] *buf     output buffer
+ * @param[in]   size    buffer size
+ *
+ * @return buf pointer on success, otherwise NULL pointer
+ */
+//==============================================================================
+static inline char *getcwd(char *buf, size_t size)
+{
+        return strncpy(buf, _task_get_data()->f_cwd, size);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _MOUNT_H_ */
+#endif /* _UNISTD_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

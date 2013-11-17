@@ -36,11 +36,14 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "kernel/kwrapper.h"
+#include <unistd.h>
 #include <errno.h>
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define TO_STR(str)                     #str
+#define NUMBER_TO_STR(val)              TO_STR(val)
 
 /*==============================================================================
   Local object types
@@ -584,7 +587,7 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief Function send on a standard output string
+ * @brief Function write to file formatted string
  *
  * @param *file               file
  * @param *format             formated text
@@ -596,23 +599,46 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 int sys_fprintf(FILE *file, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        va_list args;
         int n = 0;
 
         if (file && format) {
+                va_list args;
                 va_start(args, format);
-                u32_t size = calc_format_size(format, args);
+                n = sys_vfprintf(file, format, args);
                 va_end(args);
+        }
+
+        return n;
+#else
+        UNUSED_ARG(file);
+        UNUSED_ARG(format);
+        return 0;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function write to file formatted string
+ *
+ * @param file                file
+ * @param format              formated text
+ * @param arg                 arguments
+ *
+ * @retval number of written characters
+ */
+//==============================================================================
+int sys_vfprintf(FILE *file, const char *format, va_list arg)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        int n = 0;
+
+        if (file && format) {
+                u32_t size = calc_format_size(format, arg);
 
                 char *str = sysm_syscalloc(1, size);
-
                 if (str) {
-                        va_start(args, format);
-                        n = sys_vsnprintf(str, size, format, args);
-                        va_end(args);
-
+                        n = sys_vsnprintf(str, size, format, arg);
                         vfs_fwrite(str, sizeof(char), n, file);
-
                         sysm_sysfree(str);
                 }
         }
@@ -621,6 +647,7 @@ int sys_fprintf(FILE *file, const char *format, ...)
 #else
         UNUSED_ARG(file);
         UNUSED_ARG(format);
+        UNUSED_ARG(arg);
         return 0;
 #endif
 }
@@ -638,125 +665,126 @@ const char *sys_strerror(int errnum)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         static const char *errstr[] = {
-#if   (CONFIG_ERRNO_STRING_LEN == 0)
-                "",
+#if (CONFIG_ERRNO_STRING_LEN == 0)
+                /* empty */
 #elif (CONFIG_ERRNO_STRING_LEN == 1)
-                "1",
-                "2",
-                "3",
-                "4",
-                "5",
-                "6",
-                "7",
-                "8",
-                "9",
-                "10",
-                "11",
-                "12",
-                "13",
-                "14",
-                "15",
-                "16",
-                "17",
-                "18",
-                "19",
-                "20",
-                "21",
-                "22",
-                "23",
-                "24",
-                "25",
-                "26",
-                "27",
-                "28",
-                "29",
-                "30",
-                "31",
-                "32",
-                "33",
-                "34",
-                "35"
+                [ESUCC       ] NUMBER_TO_STR(ESUCC),
+                [EPERM       ] NUMBER_TO_STR(EPERM),
+                [ENOENT      ] NUMBER_TO_STR(ENOENT),
+                [ESRCH       ] NUMBER_TO_STR(ESRCH),
+                [EIO         ] NUMBER_TO_STR(EIO),
+                [ENXIO       ] NUMBER_TO_STR(ENXIO),
+                [E2BIG       ] NUMBER_TO_STR(E2BIG),
+                [ENOEXEC     ] NUMBER_TO_STR(ENOEXEC),
+                [EAGAIN      ] NUMBER_TO_STR(EAGAIN),
+                [ENOMEM      ] NUMBER_TO_STR(ENOMEM),
+                [EACCES      ] NUMBER_TO_STR(EACCES),
+                [EFAULT      ] NUMBER_TO_STR(EFAULT),
+                [EBUSY       ] NUMBER_TO_STR(EBUSY),
+                [EEXIST      ] NUMBER_TO_STR(EEXIST),
+                [ENODEV      ] NUMBER_TO_STR(ENODEV),
+                [ENOTDIR     ] NUMBER_TO_STR(ENOTDIR),
+                [EISDIR      ] NUMBER_TO_STR(EISDIR),
+                [EINVAL      ] NUMBER_TO_STR(EINVAL),
+                [EMFILE      ] NUMBER_TO_STR(EMFILE),
+                [EFBIG       ] NUMBER_TO_STR(EFBIG),
+                [ENOSPC      ] NUMBER_TO_STR(ENOSPC),
+                [ESPIPE      ] NUMBER_TO_STR(ESPIPE),
+                [EROFS       ] NUMBER_TO_STR(EROFS),
+                [EDOM        ] NUMBER_TO_STR(EDOM),
+                [ERANGE      ] NUMBER_TO_STR(ERANGE),
+                [EILSEQ      ] NUMBER_TO_STR(EILSEQ),
+                [ENAMETOOLONG] NUMBER_TO_STR(ENAMETOOLONG),
+                [ENOTEMPTY   ] NUMBER_TO_STR(ENOTEMPTY),
+                [EBADRQC     ] NUMBER_TO_STR(EBADRQC),
+                [ETIME       ] NUMBER_TO_STR(ETIME),
+                [ENONET      ] NUMBER_TO_STR(ENONET),
+                [EUSERS      ] NUMBER_TO_STR(EUSERS),
+                [EADDRINUSE  ] NUMBER_TO_STR(EADDRINUSE),
+                [ENOMEDIUM   ] NUMBER_TO_STR(ENOMEDIUM),
+                [EMEDIUMTYPE ] NUMBER_TO_STR(EMEDIUMTYPE),
+                [ECANCELED   ] NUMBER_TO_STR(ECANCELED)
 #elif (CONFIG_ERRNO_STRING_LEN == 2)
-                "ESUCC",
-                "EPERM"
-                "ENOENT",
-                "ESRCH",
-                "EIO",
-                "ENXIO",
-                "E2BIG",
-                "ENOEXEC",
-                "EAGAIN",
-                "ENOMEM",
-                "EACCES",
-                "EFAULT",
-                "EBUSY",
-                "EEXIST",
-                "ENODEV",
-                "ENOTDIR",
-                "EISDIR",
-                "EINVAL",
-                "EMFILE",
-                "EFBIG",
-                "ENOSPC",
-                "ESPIPE",
-                "EROFS",
-                "EDOM",
-                "ERANGE",
-                "EILSEQ",
-                "ENAMETOOLONG",
-                "ENOTEMPTY",
-                "EBADRQC",
-                "ETIME",
-                "ENONET",
-                "EUSERS",
-                "EADDRINUSE",
-                "ENOMEDIUM",
-                "EMEDIUMTYPE",
-                "ECANCELED"
+                [ESUCC       ] TO_STR(ESUCC),
+                [EPERM       ] TO_STR(EPERM),
+                [ENOENT      ] TO_STR(ENOENT),
+                [ESRCH       ] TO_STR(ESRCH),
+                [EIO         ] TO_STR(EIO),
+                [ENXIO       ] TO_STR(ENXIO),
+                [E2BIG       ] TO_STR(E2BIG),
+                [ENOEXEC     ] TO_STR(ENOEXEC),
+                [EAGAIN      ] TO_STR(EAGAIN),
+                [ENOMEM      ] TO_STR(ENOMEM),
+                [EACCES      ] TO_STR(EACCES),
+                [EFAULT      ] TO_STR(EFAULT),
+                [EBUSY       ] TO_STR(EBUSY),
+                [EEXIST      ] TO_STR(EEXIST),
+                [ENODEV      ] TO_STR(ENODEV),
+                [ENOTDIR     ] TO_STR(ENOTDIR),
+                [EISDIR      ] TO_STR(EISDIR),
+                [EINVAL      ] TO_STR(EINVAL),
+                [EMFILE      ] TO_STR(EMFILE),
+                [EFBIG       ] TO_STR(EFBIG),
+                [ENOSPC      ] TO_STR(ENOSPC),
+                [ESPIPE      ] TO_STR(ESPIPE),
+                [EROFS       ] TO_STR(EROFS),
+                [EDOM        ] TO_STR(EDOM),
+                [ERANGE      ] TO_STR(ERANGE),
+                [EILSEQ      ] TO_STR(EILSEQ),
+                [ENAMETOOLONG] TO_STR(ENAMETOOLONG),
+                [ENOTEMPTY   ] TO_STR(ENOTEMPTY),
+                [EBADRQC     ] TO_STR(EBADRQC),
+                [ETIME       ] TO_STR(ETIME),
+                [ENONET      ] TO_STR(ENONET),
+                [EUSERS      ] TO_STR(EUSERS),
+                [EADDRINUSE  ] TO_STR(EADDRINUSE),
+                [ENOMEDIUM   ] TO_STR(ENOMEDIUM),
+                [EMEDIUMTYPE ] TO_STR(EMEDIUMTYPE),
+                [ECANCELED   ] TO_STR(ECANCELED)
 #elif (CONFIG_ERRNO_STRING_LEN == 3)
-                "Success",
-                "Operation not permitted",
-                "No such file or directory",
-                "No such process",
-                "I/O error",
-                "No such device or address",
-                "Argument list too long",
-                "Exec format error",
-                "Try again",
-                "Out of memory",
-                "Permission denied",
-                "Bad address",
-                "Device or resource busy",
-                "File exists",
-                "No such device",
-                "Not a directory",
-                "Is a directory",
-                "Invalid argument",
-                "Too many open files",
-                "File too large",
-                "No space left on device",
-                "Illegal seek",
-                "Read-only file system",
-                "Math argument out of domain of func",
-                "Math result not representable",
-                "Illegal byte sequence",
-                "File name too long",
-                "Directory not empty",
-                "Invalid request code",
-                "Timer expired",
-                "Machine is not on the network",
-                "Too many users",
-                "Address already in use",
-                "No medium found",
-                "Wrong medium type",
-                "Operation Canceled"
+                [ESUCC       ] "Success",
+                [EPERM       ] "Operation not permitted",
+                [ENOENT      ] "No such file or directory",
+                [ESRCH       ] "No such process",
+                [EIO         ] "I/O error",
+                [ENXIO       ] "No such device or address",
+                [E2BIG       ] "Argument list too long",
+                [ENOEXEC     ] "Exec format error",
+                [EAGAIN      ] "Try again",
+                [ENOMEM      ] "Out of memory",
+                [EACCES      ] "Permission denied",
+                [EFAULT      ] "Bad address",
+                [EBUSY       ] "Device or resource busy",
+                [EEXIST      ] "File exists",
+                [ENODEV      ] "No such device",
+                [ENOTDIR     ] "Not a directory",
+                [EISDIR      ] "Is a directory",
+                [EINVAL      ] "Invalid argument",
+                [EMFILE      ] "Too many open files",
+                [EFBIG       ] "File too large",
+                [ENOSPC      ] "No space left on device",
+                [ESPIPE      ] "Illegal seek",
+                [EROFS       ] "Read-only file system",
+                [EDOM        ] "Math argument out of domain of function",
+                [ERANGE      ] "Math result not representable",
+                [EILSEQ      ] "Illegal byte sequence",
+                [ENAMETOOLONG] "File name too long",
+                [ENOTEMPTY   ] "Directory not empty",
+                [EBADRQC     ] "Invalid request code",
+                [ETIME       ] "Timer expired",
+                [ENONET      ] "Machine is not on the network",
+                [EUSERS      ] "Too many users",
+                [EADDRINUSE  ] "Address already in use",
+                [ENOMEDIUM   ] "No medium found",
+                [EMEDIUMTYPE ] "Wrong medium type",
+                [ECANCELED   ] "Operation Canceled"
 #else
 #error "CONFIG_ERRNO_STRING_LEN should be in range 0 - 3!"
 #endif
         };
 
         if (CONFIG_ERRNO_STRING_LEN == 0) {
-                return errstr[0];
+                return "";
         } else if (errnum < _ENUMBER) {
                 return errstr[errnum];
         } else {
@@ -779,9 +807,9 @@ void sys_perror(const char *str)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
         if (str) {
-                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(_task_get_data()->f_errno));
+                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(errno));
         } else {
-                sys_fprintf(stderr, "%s\n", sys_strerror(_task_get_data()->f_errno));
+                sys_fprintf(stderr, "%s\n", sys_strerror(errno));
         }
 #else
         (void) str

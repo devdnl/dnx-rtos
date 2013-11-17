@@ -35,6 +35,7 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -84,16 +85,6 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
 
-        int buffer_size = BUFFER_MAX_SIZE;
-        while ((buffer = malloc(buffer_size * sizeof(char))) == NULL) {
-                buffer_size /= 2;
-
-                if (buffer_size < 512) {
-                        perror(NULL);
-                        goto exit_error;
-                }
-        }
-
         src_file = fopen(argv[1], "r");
         if (!src_file) {
                 perror(argv[1]);
@@ -106,11 +97,21 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                 goto exit_error;
         }
 
+        int buffer_size = BUFFER_MAX_SIZE;
+        while ((buffer = malloc(buffer_size * sizeof(char))) == NULL) {
+                buffer_size /= 2;
+
+                if (buffer_size < 512) {
+                        perror(NULL);
+                        goto exit_error;
+                }
+        }
+
         fseek(src_file, 0, SEEK_END);
         u64_t lfile_size = ftell(src_file);
         fseek(src_file, 0, SEEK_SET);
 
-        uint  start_time   = kernel_get_time_ms();
+        uint  start_time   = get_time_ms();
         uint  refresh_time = start_time;
         u64_t lcopy_size   = 0;
         int   n;
@@ -123,8 +124,8 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
 
                 lcopy_size += n;
 
-                if (kernel_get_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
-                        refresh_time = kernel_get_time_ms();
+                if (get_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
+                        refresh_time = get_time_ms();
 
                         u32_t file_size = lfile_size / 1024;
                         u32_t copy_size = lcopy_size / 1024;
@@ -141,7 +142,7 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                 }
         }
 
-        uint stop_time = kernel_get_time_ms() - start_time;
+        uint stop_time = get_time_ms() - start_time;
         u32_t copy_size = lcopy_size;
 
         if (lcopy_size >= 1024) {

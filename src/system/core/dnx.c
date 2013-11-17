@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnx.h"
+#include "system/thread.h"
 #include "user/initd.h"
 
 #if (CONFIG_NETWORK_ENABLE != 0)

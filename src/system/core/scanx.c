@@ -76,6 +76,32 @@ extern "C" {
 int sys_fscanf(FILE *stream, const char *format, ...)
 {
 #if (CONFIG_SCANF_ENABLE > 0)
+        va_list arg;
+        va_start(arg, format);
+        int n = sys_vfscanf(stream, format, arg);
+        va_end(arg);
+        return n;
+#else
+        UNUSED_ARG(stream);
+        UNUSED_ARG(format);
+        return 0;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function scan stream
+ *
+ * @param[in]  *stream        file
+ * @param[in]  *format        message format
+ * @param[out]  arg           output arguments
+ *
+ * @return number of scanned elements
+ */
+//==============================================================================
+int sys_vfscanf(FILE *stream, const char *format, va_list arg)
+{
+#if (CONFIG_SCANF_ENABLE > 0)
         char *str = sysm_syscalloc(BUFSIZ, sizeof(char));
         if (!str)
                 return 0;
@@ -87,10 +113,7 @@ int sys_fscanf(FILE *stream, const char *format, ...)
                         *lf = '\0';
                 }
 
-                va_list args;
-                va_start(args, format);
-                n = sys_vsscanf(str, format, args);
-                va_end(args);
+                n = sys_vsscanf(str, format, arg);
         }
 
         sysm_sysfree(str);
@@ -98,6 +121,7 @@ int sys_fscanf(FILE *stream, const char *format, ...)
 #else
         UNUSED_ARG(stream);
         UNUSED_ARG(format);
+        UNUSED_ARG(arg);
         return 0;
 #endif
 }

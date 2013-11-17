@@ -39,6 +39,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define ESUCC           0       /* Success */
 #define EPERM           1       /* Operation not permitted */
 #define ENOENT          2       /* No such file or directory */
 #define ESRCH           3       /* No such process */
@@ -76,16 +77,14 @@ extern "C" {
 #define ECANCELED      35       /* Operation Canceled */
 #define _ENUMBER       36       /* total supported errors */
 
-#define errno           _task_get_data()->f_errno
-
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef int errno_t;
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern int errno;
 
 /*==============================================================================
   Exported functions

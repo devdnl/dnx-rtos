@@ -52,6 +52,8 @@ extern "C" {
 #define CURSOR_HOME                             "\e[H"
 #define CURSOR_FORWARD(n)                       "\e["#n"C"
 #define CURSOR_BACKWARD(n)                      "\e["#n"D"
+#define CURSOR_OFF                              "\e[?25l"
+#define CURSOR_ON                               "\e[?25h"
 
 #if (CONFIG_COLOR_TERMINAL_ENABLE > 0)
 #       define RESET_ATTRIBUTES                 "\e[0m"
@@ -115,6 +117,7 @@ extern void             printk_enable           (char*);
 extern void             printk_disable          (void);
 extern int              sys_snprintf            (char*, size_t, const char*, ...);
 extern int              sys_fprintf             (FILE*, const char*, ...);
+extern int              sys_vfprintf            (FILE*, const char*, va_list);
 extern int              sys_vsnprintf           (char*, size_t, const char*, va_list);
 extern const char      *sys_strerror            (int);
 extern void             sys_perror              (const char*);

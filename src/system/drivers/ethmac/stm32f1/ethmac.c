@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
+#include "system/thread.h"
 #include "ethmac_cfg.h"
 #include "ethmac_def.h"
 #include "stm32f10x.h"

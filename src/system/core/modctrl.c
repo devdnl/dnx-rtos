@@ -32,12 +32,10 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <errno.h>
-#include "core/systypes.h"
 #include "core/modctrl.h"
-#include "core/vfs.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
-#include "kernel/kwrapper.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local macros
@@ -78,25 +76,25 @@ extern const int                   _regdrv_number_of_modules;
 /**
  * @brief Function find driver name and then initialize device
  *
- * @param *drv_name           driver name
- * @param *node_path          path name to create in the file system or NULL
+ * @param drv_name            driver name
+ * @param node_path           path name to create in the file system or NULL
  *
- * @return driver depending value, everything not equal to STD_RET_OK are errors
+ * @return 0 on success, otherwise other value
  */
 //==============================================================================
-stdret_t driver_init(const char *drv_name, const char *node_path)
+int _driver_init(const char *drv_name, const char *node_path)
 {
         struct vfs_drv_interface drv_if;
 
         if (drv_name == NULL) {
                 errno = EINVAL;
-                return STD_RET_ERROR;
+                return -EINVAL;
         }
 
         if (!driver_memory_region) {
                 driver_memory_region = sysm_syscalloc(_regdrv_driver_table_array_size, sizeof(void*));
                 if (!driver_memory_region) {
-                        return STD_RET_ERROR;
+                        return -ENOMEM;
                 }
         }
 
@@ -111,7 +109,7 @@ stdret_t driver_init(const char *drv_name, const char *node_path)
                                RESET_ATTRIBUTES"\n", drv_name);
 
                         errno = EADDRINUSE;
-                        return STD_RET_ERROR;
+                        return -EADDRINUSE;
                 }
 
                 for (int mod = 0; mod < _regdrv_number_of_modules; mod++) {
@@ -126,7 +124,7 @@ stdret_t driver_init(const char *drv_name, const char *node_path)
 
                                         printk(FONT_COLOR_RED"error"RESET_ATTRIBUTES"\n", drv_name);
 
-                                        return STD_RET_ERROR;
+                                        return 1;
                                 }
 
                                 if (driver_memory_region[drvid] == NULL)
@@ -145,12 +143,12 @@ stdret_t driver_init(const char *drv_name, const char *node_path)
                                                 printk(FONT_COLOR_RED"%s node create fail"
                                                        RESET_ATTRIBUTES"\n", node_path);
 
-                                                return STD_RET_ERROR;
+                                                return 1;
                                         }
 
                                 } else {
                                         printk("initialized\n", drv_name);
-                                        return STD_RET_OK;
+                                        return 0;
                                 }
                         }
                 }
@@ -161,32 +159,29 @@ stdret_t driver_init(const char *drv_name, const char *node_path)
 
         errno = EINVAL;
 
-        return STD_RET_ERROR;
+        return -EINVAL;
 }
 
 //==============================================================================
 /**
  * @brief Function find driver name and then release device
  *
- * @param *drv_name           driver name
+ * @param drv_name            driver name
  *
- * @return driver depending value, all not equal to STD_RET_OK are errors
+ * @return 0 on success, otherwise other value
  */
 //==============================================================================
-stdret_t driver_release(const char *drv_name)
+int _driver_release(const char *drv_name)
 {
-        stdret_t status;
-
         if (!drv_name) {
                 errno = EINVAL;
-                return STD_RET_ERROR;
+                return -EINVAL;
         }
 
         for (int i = 0; i < _regdrv_driver_table_array_size; i++) {
                 if (strcmp(_regdrv_driver_table[i].drv_name, drv_name) == 0) {
 
-                        status = _regdrv_driver_table[i].drv_release(driver_memory_region[i]);
-
+                        stdret_t status = _regdrv_driver_table[i].drv_release(driver_memory_region[i]);
                         if (status == STD_RET_OK) {
                                 driver_memory_region[i] = NULL;
                         }
@@ -196,7 +191,7 @@ stdret_t driver_release(const char *drv_name)
         }
 
         errno = EINVAL;
-        return STD_RET_ERROR;
+        return -EINVAL;
 }
 
 //==============================================================================

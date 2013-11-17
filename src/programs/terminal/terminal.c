@@ -34,9 +34,11 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/mount.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -192,7 +194,7 @@ PROGRAM_MAIN(terminal, int argc, char *argv[])
 //==============================================================================
 static void print_prompt(void)
 {
-        printf(FONT_COLOR_GREEN"root@%s:%s"RESET_ATTRIBUTES"\n", dnx_get_host_name(), global->cwd);
+        printf(FONT_COLOR_GREEN"root@%s:%s"RESET_ATTRIBUTES"\n", get_host_name(), global->cwd);
         printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
 }
 
@@ -208,32 +210,19 @@ static void print_prompt(void)
 //==============================================================================
 static enum cmd_status find_external_command(const char *cmd)
 {
-        enum prog_state state  = PROGRAM_UNKNOWN_STATE;
-        enum cmd_status status = CMD_STATUS_NOT_EXIST;
+        enum cmd_status status = CMD_STATUS_EXECUTED;
 
-        program_start(cmd, global->cwd, stdin, stdout, &state, NULL);
+        task_set_cwd(global->cwd);
 
-        while (state == PROGRAM_RUNNING) {
-                task_suspend_now();
-        }
-
-        switch (state) {
-        case PROGRAM_UNKNOWN_STATE:
-        case PROGRAM_RUNNING:
-                break;
-        case PROGRAM_ENDED:
-                status = CMD_STATUS_EXECUTED;
-                break;
-        case PROGRAM_ARGUMENTS_PARSE_ERROR:
-                status = CMD_STATUS_LINE_PARSE_ERROR;
-                break;
-        case PROGRAM_HANDLE_ERROR:
-        case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
-                status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY;
-                break;
-        case PROGRAM_DOES_NOT_EXIST:
-                status = CMD_STATUS_NOT_EXIST;
-                break;
+        errno   = 0;
+        int ret = system(cmd);
+        if (ret < 0 && errno) {
+                switch (ret) {
+                case -ENOMEM: status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY; break;
+                case -EINVAL: status = CMD_STATUS_LINE_PARSE_ERROR; break;
+                case -ENOENT: status = CMD_STATUS_NOT_EXIST; break;
+                default: break;
+                }
         }
 
         /* enable echo if disabled by program */
@@ -457,7 +446,7 @@ static enum cmd_status cmd_free(char *arg)
 {
         (void) arg;
 
-        uint  drv_count = dnx_get_number_of_modules();
+        uint  drv_count = get_number_of_modules();
         int *modmem = malloc(drv_count * sizeof(int));
         if (!modmem) {
                 perror(NULL);
@@ -465,21 +454,21 @@ static enum cmd_status cmd_free(char *arg)
         }
 
         struct sysmoni_used_memory sysmem;
-        dnx_get_detailed_memory_usage(&sysmem);
+        get_detailed_memory_usage(&sysmem);
 
         for (uint module = 0; module < drv_count; module++) {
-                modmem[module] = dnx_get_module_memory_usage(module);
+                modmem[module] = get_module_memory_usage(module);
         }
 
-        u32_t free = dnx_get_free_memory();
-        u32_t used = dnx_get_used_memory();
+        u32_t free = get_free_memory();
+        u32_t used = get_used_memory();
 
 
-        printf("Total: %d\n", dnx_get_memory_size());
+        printf("Total: %d\n", get_memory_size());
         printf("Free : %d\n", free);
         printf("Used : %d\n", used);
         printf("Memory usage: %d%%\n\n",
-               (used * 100)/dnx_get_memory_size());
+               (used * 100)/get_memory_size());
 
         printf("Detailed memory usage:\n"
                "  Kernel  : %d\n"
@@ -495,7 +484,7 @@ static enum cmd_status cmd_free(char *arg)
 
         printf("Detailed modules memory usage:\n");
         for (uint module = 0; module < drv_count; module++) {
-                printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", dnx_get_module_name(module), modmem[module]);
+                printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", get_module_name(module), modmem[module]);
         }
 
         free(modmem);
@@ -514,7 +503,7 @@ static enum cmd_status cmd_uptime(char *arg)
 {
         (void) arg;
 
-        u32_t uptime = dnx_get_uptime();
+        u32_t uptime = get_uptime();
         u32_t udays  = (uptime / (3600 * 24));
         u32_t uhrs   = (uptime / 3600) % 24;
         u32_t umins  = (uptime / 60) % 60;
@@ -551,7 +540,7 @@ static enum cmd_status cmd_reboot(char *arg)
 {
         (void) arg;
 
-        dnx_restart_system();
+        restart_system();
 
         return CMD_STATUS_EXECUTED;
 }
@@ -731,10 +720,10 @@ static enum cmd_status cmd_uname(char *arg)
         (void)arg;
 
         printf("%s/%s, %s %s, %s %s, %s\n",
-               dnx_get_OS_name(), dnx_get_kernel_name(),
-               dnx_get_OS_name(), dnx_get_OS_version(),
-               dnx_get_kernel_name(), dnx_get_kernel_version(),
-               dnx_get_platform_name());
+               get_OS_name(), get_kernel_name(),
+               get_OS_name(), get_OS_version(),
+               get_kernel_name(), get_kernel_version(),
+               get_platform_name());
 
         return CMD_STATUS_EXECUTED;
 }

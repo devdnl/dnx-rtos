@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "system/dnx.h"
 #include "system/netapi.h"
 
@@ -179,6 +180,8 @@ PROGRAM_MAIN(httpserver, int argc, char *argv[])
 
                 netapi_delete_conn(conn);
         }
+
+        puts("Exit");
 
         return 0;
 }

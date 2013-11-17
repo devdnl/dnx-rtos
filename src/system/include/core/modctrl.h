@@ -77,8 +77,8 @@ struct _driver_entry {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern stdret_t    driver_init            (const char *drvName, const char *nodeName);
-extern stdret_t    driver_release         (const char *drvName);
+extern int         _driver_init           (const char *drvName, const char *nodeName);
+extern int         _driver_release        (const char *drvName);
 extern const char *_get_module_name       (int module_number);
 extern int         _get_module_number     (const char *module_name);
 

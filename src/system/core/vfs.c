@@ -34,7 +34,7 @@ extern "C" {
 #include "core/vfs.h"
 #include "core/list.h"
 #include "core/sysmoni.h"
-#include "kernel/kwrapper.h"
+#include "system/thread.h"
 #include <errno.h>
 
 /*==============================================================================
@@ -43,8 +43,8 @@ extern "C" {
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                          10
 
-#define first_character(str)                    str[0]
-#define last_character(str)                     str[strlen(str) - 1]
+#define FILE_VALIDATION_NUMBER                  (int)0x495D47CB
+#define DIR_VALIDATION_NUMBER                   (int)0x297E823D
 
 /*==============================================================================
   Local types, enums definitions
@@ -63,6 +63,7 @@ struct vfs_file
         fd_t       fd;
         u64_t      f_lseek;
         int        f_errflag;
+        int        validation;
 };
 
 struct FS_data {
@@ -82,7 +83,7 @@ enum path_correction {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static inline void      recursive_mutex_force_lock      (mutex_t *mtx);
+static inline void      mutex_force_lock      (mutex_t *mtx);
 static int              file_mode_str_to_flags          (const char *str);
 static struct FS_data  *find_mounted_FS                 (const char *path, u16_t len, u32_t *itemid);
 static struct FS_data  *find_base_FS                    (const char *path, char **extPath);
@@ -110,7 +111,7 @@ static u32_t    vfs_id_counter;
 stdret_t vfs_init(void)
 {
         vfs_mnt_list     = list_new();
-        vfs_resource_mtx = recursive_mutex_new();
+        vfs_resource_mtx = mutex_new(MUTEX_RECURSIVE);
 
         if (!vfs_mnt_list || !vfs_resource_mtx)
                 return STD_RET_ERROR;
@@ -148,7 +149,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                 return STD_RET_ERROR;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         struct FS_data *mount_fs = find_mounted_FS(cwd_mount_point, -1, NULL);
 
         char *external_path      = NULL;
@@ -175,7 +176,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                 }
         } else if (  list_get_item_count(vfs_mnt_list) == 0
                   && strlen(cwd_mount_point) == 1
-                  && first_character(cwd_mount_point) == '/' ) {
+                  && FIRST_CHARACTER(cwd_mount_point) == '/' ) {
 
                 new_fs = sysm_syscalloc(1, sizeof(struct FS_data));
         }
@@ -192,7 +193,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                         new_fs->mounted_FS_counter = 0;
 
                         if (list_add_item(vfs_mnt_list, vfs_id_counter++, new_fs) >= 0) {
-                                recursive_mutex_unlock(vfs_resource_mtx);
+                                mutex_unlock(vfs_resource_mtx);
                                 sysm_sysfree(cwd_src_path);
                                 return STD_RET_OK;
                         } else {
@@ -207,7 +208,7 @@ stdret_t vfs_mount(const char *src_path, const char *mount_point, struct vfs_FS_
                 errno = ENOENT;
         }
 
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -233,7 +234,7 @@ stdret_t vfs_umount(const char *path)
                 return STD_RET_ERROR;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         u32_t           item_id;
         struct FS_data *mount_fs = find_mounted_FS(cwd_path, -1, &item_id);
         sysm_sysfree(cwd_path);
@@ -261,7 +262,7 @@ stdret_t vfs_umount(const char *path)
                 }
 
                 if (list_rm_iditem(vfs_mnt_list, item_id) == STD_RET_OK) {
-                        recursive_mutex_unlock(vfs_resource_mtx);
+                        mutex_unlock(vfs_resource_mtx);
                         return STD_RET_OK;
                 }
         } else {
@@ -269,7 +270,7 @@ stdret_t vfs_umount(const char *path)
         }
 
 vfs_umount_error:
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
         return STD_RET_ERROR;
 }
 
@@ -291,9 +292,9 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 return STD_RET_ERROR;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         struct FS_data *fs = list_get_nitem_data(vfs_mnt_list, item);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         if (fs) {
                 struct vfs_statfs stat_fs = {.f_fsname = NULL};
@@ -345,10 +346,10 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -383,10 +384,10 @@ int vfs_mkdir(const char *path)
                        return -1;
                 }
 
-                recursive_mutex_force_lock(vfs_resource_mtx);
+                mutex_force_lock(vfs_resource_mtx);
                 char *external_path = NULL;
                 struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-                recursive_mutex_unlock(vfs_resource_mtx);
+                mutex_unlock(vfs_resource_mtx);
 
                 if (fs) {
                         if (fs->interface.fs_mkdir) {
@@ -426,10 +427,10 @@ DIR *vfs_opendir(const char *path)
 
                 char *cwd_path = new_corrected_path(path, ADD_SLASH);
                 if (cwd_path) {
-                        recursive_mutex_force_lock(vfs_resource_mtx);
+                        mutex_force_lock(vfs_resource_mtx);
                         char *external_path = NULL;
                         struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-                        recursive_mutex_unlock(vfs_resource_mtx);
+                        mutex_unlock(vfs_resource_mtx);
 
                         if (fs) {
                                 dir->f_handle = fs->handle;
@@ -447,6 +448,8 @@ DIR *vfs_opendir(const char *path)
                 if (status == STD_RET_ERROR) {
                         sysm_sysfree(dir);
                         dir = NULL;
+                } else {
+                        dir->validation = DIR_VALIDATION_NUMBER;
                 }
         } else {
                 errno = ENOMEM;
@@ -467,18 +470,16 @@ DIR *vfs_opendir(const char *path)
 int vfs_closedir(DIR *dir)
 {
         if (dir) {
-                if (dir->f_closedir) {
+                if (dir->f_closedir && dir->validation == DIR_VALIDATION_NUMBER) {
                         if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
+                                dir->validation = 0;
                                 sysm_sysfree(dir);
                                 return 0;
                         }
                 }
-
-                errno = ENXIO;
-        } else {
-                errno = EINVAL;
         }
 
+        errno = EINVAL;
         return -1;
 }
 
@@ -498,7 +499,7 @@ dirent_t vfs_readdir(DIR *dir)
         direntry.size = 0;
 
         if (dir) {
-                if (dir->f_readdir) {
+                if (dir->f_readdir && dir->validation == DIR_VALIDATION_NUMBER) {
                         direntry = dir->f_readdir(dir->f_handle, dir);
                 } else {
                         errno = EINVAL;
@@ -532,12 +533,12 @@ int vfs_remove(const char *path)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path      = NULL;
         struct FS_data *mount_fs = find_mounted_FS(cwd_path, -1, NULL);
-        last_character(cwd_path) = '\0';
+        LAST_CHARACTER(cwd_path) = '\0';
         struct FS_data *base_fs  = find_base_FS(cwd_path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (base_fs && !mount_fs) {
@@ -580,12 +581,12 @@ int vfs_rename(const char *old_name, const char *new_name)
                 goto exit;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *old_extern_path  = NULL;
         char *new_extern_path  = NULL;
         struct FS_data *old_fs = find_base_FS(cwd_old_name, &old_extern_path);
         struct FS_data *new_fs = find_base_FS(cwd_new_name, &new_extern_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         if (!old_fs || !new_fs) {
                 goto exit;
@@ -637,10 +638,10 @@ int vfs_chmod(const char *path, int mode)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -677,10 +678,10 @@ int vfs_chown(const char *path, int owner, int group)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -716,10 +717,10 @@ int vfs_stat(const char *path, struct vfs_stat *stat)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         char *external_path = NULL;
         struct FS_data *fs  = find_base_FS(path, &external_path);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
 
         int status = -1;
         if (fs) {
@@ -755,9 +756,9 @@ int vfs_statfs(const char *path, struct vfs_statfs *statfs)
                 return -1;
         }
 
-        recursive_mutex_force_lock(vfs_resource_mtx);
+        mutex_force_lock(vfs_resource_mtx);
         struct FS_data *fs = find_mounted_FS(cwd_path, -1, NULL);
-        recursive_mutex_unlock(vfs_resource_mtx);
+        mutex_unlock(vfs_resource_mtx);
         sysm_sysfree(cwd_path);
 
         if (!fs) {
@@ -788,7 +789,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                 return NULL;
         }
 
-        if (last_character(path) == '/') { /* path is a directory */
+        if (LAST_CHARACTER(path) == '/') { /* path is a directory */
                 errno = EISDIR;
                 return NULL;
         }
@@ -805,10 +806,10 @@ FILE *vfs_fopen(const char *path, const char *mode)
 
         FILE *file = sysm_syscalloc(1, sizeof(FILE));
         if (file) {
-                recursive_mutex_force_lock(vfs_resource_mtx);
+                mutex_force_lock(vfs_resource_mtx);
                 char *external_path = NULL;
                 struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
-                recursive_mutex_unlock(vfs_resource_mtx);
+                mutex_unlock(vfs_resource_mtx);
 
                 if (fs == NULL) {
                         goto vfs_open_error;
@@ -837,6 +838,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                                 file->f_read  = fs->interface.fs_read;
                         }
 
+                        file->validation = FILE_VALIDATION_NUMBER;
                         sysm_sysfree(cwd_path);
                         return file;
                 }
@@ -884,14 +886,17 @@ FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose(FILE *file)
+int vfs_fclose(FILE *file) /* FIXME */
 {
         if (file) {
-                if (file->f_close) {
+                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, false, task_get_handle()) == STD_RET_OK) {
+                                file->validation = 0;
                                 sysm_sysfree(file);
                                 return 0;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -910,14 +915,17 @@ int vfs_fclose(FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose_force(FILE *file, task_t *opened_by_task)
+int vfs_fclose_force(FILE *file, task_t *opened_by_task) /* FIXME */
 {
         if (file) {
-                if (file->f_close) {
+                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, true, opened_by_task) == STD_RET_OK) {
+                                file->validation = 0;
                                 sysm_sysfree(file);
                                 return 0;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -944,7 +952,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && nitems && file) {
-                if (file->f_write) {
+                if (file->f_write && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
                                           ptr, size * nitems, &file->f_lseek);
 
@@ -959,6 +967,8 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
                                 file->f_lseek += (u64_t)n;
                                 n /= size;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -985,7 +995,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && nitems && file) {
-                if (file->f_read) {
+                if (file->f_read && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
                                          ptr, size * nitems, &file->f_lseek);
 
@@ -1000,6 +1010,8 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
                                 file->f_lseek += (u64_t)n;
                                 n /= size;
                         }
+                } else {
+                        errno = ENOENT;
                 }
         } else {
                 errno = EINVAL;
@@ -1025,6 +1037,11 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
 
         if (!file || mode > VFS_SEEK_END) {
                 errno = EINVAL;
+                return -1;
+        }
+
+        if (file->validation != FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
@@ -1066,7 +1083,7 @@ i64_t vfs_ftell(FILE *file)
 
 //==============================================================================
 /**
- * @brief Function support not standard operations
+ * @brief Function support not standard operations on devices
  *
  * @param[in]     *file         file
  * @param[in]      rq           request
@@ -1077,23 +1094,37 @@ i64_t vfs_ftell(FILE *file)
 //==============================================================================
 int vfs_ioctl(FILE *file, int rq, ...)
 {
-        va_list  args;
-        stdret_t status;
+        va_list arg;
+        va_start(arg, rq);
+        int status = vfs_vioctl(file, rq, arg);
+        va_end(arg);
+        return status;
+}
 
+//==============================================================================
+/**
+ * @brief Function support not standard operations on devices
+ *
+ * @param[in]     *file         file
+ * @param[in]      rq           request
+ * @param[in,out]  arg          arguments
+ *
+ * @return 0 on success. On error, different from 0 is returned
+ */
+//==============================================================================
+int vfs_vioctl(FILE *file, int rq, va_list arg)
+{
         if (!file) {
                 errno = EINVAL;
                 return -1;
         }
 
-        if (!file->f_ioctl) {
+        if (!file->f_ioctl && file->validation != FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
-        va_start(args, rq);
-        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(args, void*));
-        va_end(args);
-
-        return status;
+        return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
 }
 
 //==============================================================================
@@ -1113,7 +1144,8 @@ int vfs_fstat(FILE *file, struct vfs_stat *stat)
                 return -1;
         }
 
-        if (!file->f_stat) {
+        if (!file->f_stat && file->validation != FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
@@ -1136,7 +1168,8 @@ int vfs_fflush(FILE *file)
                 return -1;
         }
 
-        if (!file->f_flush) {
+        if (!file->f_flush && file->validation != FILE_VALIDATION_NUMBER) {
+                errno = ENOENT;
                 return -1;
         }
 
@@ -1155,12 +1188,16 @@ int vfs_fflush(FILE *file)
 int vfs_feof(FILE *file)
 {
         if (file) {
-                return file->f_errflag & VFS_EFLAG_EOF ? 1 : 0;
+                if (file->validation == FILE_VALIDATION_NUMBER) {
+                        return file->f_errflag & VFS_EFLAG_EOF ? 1 : 0;
+                } else {
+                        errno = ENOENT;
+                }
         } else {
                 errno = EINVAL;
         }
 
-        return 0;
+        return 1;
 }
 
 //==============================================================================
@@ -1173,7 +1210,11 @@ int vfs_feof(FILE *file)
 void vfs_clearerr(FILE *file)
 {
         if (file) {
-                file->f_errflag = 0;
+                if (file->validation == FILE_VALIDATION_NUMBER) {
+                        file->f_errflag = 0;
+                } else {
+                        errno = ENOENT;
+                }
         } else {
                 errno = EINVAL;
         }
@@ -1191,12 +1232,16 @@ void vfs_clearerr(FILE *file)
 int vfs_ferror(FILE *file)
 {
         if (file) {
-                return file->f_errflag & VFS_EFLAG_ERR ? 1 : 0;
+                if (file->validation == FILE_VALIDATION_NUMBER) {
+                        return file->f_errflag & VFS_EFLAG_ERR ? 1 : 0;
+                } else {
+                        errno = ENOENT;
+                }
         } else {
                 errno = EINVAL;
         }
 
-        return 0;
+        return 1;
 }
 
 //==============================================================================
@@ -1220,9 +1265,9 @@ int vfs_rewind(FILE *file)
  * @param mtx           mutex to lock
  */
 //==============================================================================
-static inline void recursive_mutex_force_lock(mutex_t *mtx)
+static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (recursive_mutex_lock(mtx, MTX_BLOCK_TIME) != MUTEX_LOCKED);
+        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
 }
 
 //==============================================================================
@@ -1372,20 +1417,20 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
         uint        cwd_len = 0;
 
         /* correct ending slash */
-        if (corr == SUB_SLASH && last_character(path) == '/') {
+        if (corr == SUB_SLASH && LAST_CHARACTER(path) == '/') {
                 new_path_len--;
-        } else if (corr == ADD_SLASH && last_character(path) != '/') {
+        } else if (corr == ADD_SLASH && LAST_CHARACTER(path) != '/') {
                 new_path_len++;
         }
 
         /* correct cwd */
-        if (first_character(path) != '/') {
+        if (FIRST_CHARACTER(path) != '/') {
                 cwd = _task_get_data()->f_cwd;
                 if (cwd) {
                         cwd_len       = strlen(cwd);
                         new_path_len += cwd_len;
 
-                        if (last_character(cwd) != '/' && cwd_len) {
+                        if (LAST_CHARACTER(cwd) != '/' && cwd_len) {
                                 new_path_len++;
                                 cwd_len++;
                         }
@@ -1397,7 +1442,7 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
                 if (cwd_len && cwd) {
                         strcpy(new_path, cwd);
 
-                        if (last_character(cwd) != '/') {
+                        if (LAST_CHARACTER(cwd) != '/') {
                                 strcat(new_path, "/");
                         }
                 }
@@ -1407,7 +1452,7 @@ static char *new_corrected_path(const char *path, enum path_correction corr)
                 } else if (corr == ADD_SLASH) {
                         strcat(new_path, path);
 
-                        if (last_character(new_path) != '/') {
+                        if (LAST_CHARACTER(new_path) != '/') {
                                 strcat(new_path, "/");
                         }
                 } else {

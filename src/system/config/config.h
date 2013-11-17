@@ -47,7 +47,7 @@ extern "C" {
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (64340)
+#define CONFIG_HEAP_SIZE                                (64316)
 
 /**
  * Heap memory alignment

@@ -57,21 +57,6 @@ extern "C" {
          .globals_size  = &__prog_##name##_gs__,\
          .stack_depth   = stack_size}
 
-#define stdin \
-        _task_get_data()->f_stdin
-
-#define stdout \
-        _task_get_data()->f_stdout
-
-#define stderr \
-        _task_get_data()->f_stderr
-
-#define global \
-        ((struct __global_vars__*)_task_get_data()->f_global_vars)
-
-#define create_fast_global(name) \
-        struct __global_vars__*name = global
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -82,27 +67,38 @@ struct _prog_data {
         int        stack_depth;
 };
 
+typedef struct thread thread_t;
+
+typedef struct prog prog_t;
+
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
-enum prog_state {
-        PROGRAM_UNKNOWN_STATE,
-        PROGRAM_RUNNING,
-        PROGRAM_ENDED,
-        PROGRAM_NOT_ENOUGH_FREE_MEMORY,
-        PROGRAM_ARGUMENTS_PARSE_ERROR,
-        PROGRAM_DOES_NOT_EXIST,
-        PROGRAM_HANDLE_ERROR,
-};
+extern FILE                     *stdin;
+extern FILE                     *stdout;
+extern FILE                     *stderr;
+extern struct __global_vars__   *global;
+extern int                       errno;
 
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern task_t   *program_start     (const char*, const char*, FILE*, FILE*, enum prog_state*, int*);
-extern void      program_kill      (task_t*, int);
-extern void      exit              (int);
-extern void      abort             (void);
-extern int       system            (const char*);
+extern void      exit                                           (int);
+extern void      abort                                          (void);
+extern int       system                                         (const char*);
+extern task_t   *_program_new                                   (const char*, const char*, FILE*, FILE*, FILE*);
+extern int       _program_kill                                  (prog_t*);
+extern int       _program_delete                                (prog_t*);
+extern int       _program_wait_for_close                        (prog_t*, const uint);
+extern bool      _program_is_closed                             (prog_t*);
+extern void      _task_kill                                     (task_t*);
+extern thread_t *_thread_new                                    (void (*)(void*), const int, void*);
+extern int       _thread_join                                   (thread_t*);
+extern bool      _thread_is_finished                            (thread_t*);
+extern int       _thread_delete                                 (thread_t*);
+extern int       _thread_cancel                                 (thread_t*);
+extern void      _copy_task_context_to_standard_variables       (void);
+extern void      _copy_standard_variables_to_task_context       (void);
 
 /*==============================================================================
   Exported inline functions

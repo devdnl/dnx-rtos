@@ -32,9 +32,12 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "system/dnxmodule.h"
+#include "system/thread.h"
+#include "system/dnx.h"
 #include "stm32f1/sdspi_cfg.h"
 #include "stm32f1/sdspi_def.h"
 #include "stm32f1/stm32f10x.h"
+#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -252,7 +255,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         NVIC_SetPriority(SDSPI_DMA_IRQ_NUMBER, SDSPI_DMA_IRQ_PRIORITY);
 #endif
 
-        if (!(sdspi->card_protect_mtx = mutex_new())) {
+        if (!(sdspi->card_protect_mtx = mutex_new(MUTEX_NORMAL))) {
                 goto error;
         }
 
@@ -321,13 +324,13 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         struct sdspi_data *hdl = device_handle;
 
         /* wait for all partition are released */
-        int os_time = kernel_get_time_ms();
+        int os_time = get_time_ms();
         while (  hdl->partition[0].in_use == true
               || hdl->partition[1].in_use == true
               || hdl->partition[2].in_use == true
               || hdl->partition[3].in_use == true) {
 
-                if (os_time - kernel_get_time_ms() >= RELEASE_TIMEOUT_MS) {
+                if (os_time - get_time_ms() >= RELEASE_TIMEOUT_MS) {
                         errno = EBUSY;
                         return STD_RET_ERROR;
                 }
@@ -409,7 +412,7 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
         struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY)) {
                 n = card_write(hdl, src, count, *fpos);
                 mutex_unlock(hdl->card_protect_mtx);
         } else {
@@ -441,7 +444,7 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY)) {
                 n = card_read(hdl, dst, count, *fpos);
                 mutex_unlock(hdl->card_protect_mtx);
         } else {
@@ -473,7 +476,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         switch (request) {
         case SDSPI_IORQ_INITIALIZE_CARD:
-                if (mutex_lock(hdl->card_protect_mtx, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+                if (mutex_lock(hdl->card_protect_mtx, MTX_BLOCK_TIME)) {
                         bool *result = arg;
                         *result      = false;
 
@@ -540,7 +543,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         struct sdspi_data *hdl    = device_handle;
         stdret_t           status = STD_RET_ERROR;
 
-        if (mutex_lock(hdl->card_protect_mtx, MTX_BLOCK_TIME_LONG) == MUTEX_LOCKED) {
+        if (mutex_lock(hdl->card_protect_mtx, MTX_BLOCK_TIME_LONG)) {
                 /* size info */
                 if (send_cmd(hdl, CMD9, 0) == 0) {
                         u8_t  csd[16];
@@ -661,7 +664,7 @@ static ssize_t partition_write(void *device_handle, const u8_t *src, size_t coun
         struct partition *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY)) {
                 n = card_write(sdspi_data, src, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 mutex_unlock(sdspi_data->card_protect_mtx);
         } else {
@@ -693,7 +696,7 @@ static ssize_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_
         struct partition *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY) == MUTEX_LOCKED) {
+        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY)) {
                 n = card_read(sdspi_data, dst, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 mutex_unlock(sdspi_data->card_protect_mtx);
         } else {

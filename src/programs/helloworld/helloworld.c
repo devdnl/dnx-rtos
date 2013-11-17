@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include "system/dnx.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -76,9 +77,9 @@ PROGRAM_MAIN(helloworld, int argc, char *argv[])
 {
         puts("Hello world!");
         printf("Free stack: %d\n", task_get_free_stack());
-        printf("Static memory usage: %d\n", dnx_get_used_static_memory());
-        printf("Memory size: %d\n", dnx_get_memory_size());
-        printf("Free memory: %d\n", dnx_get_free_memory());
+        printf("Static memory usage: %d\n", get_used_static_memory());
+        printf("Memory size: %d\n", get_memory_size());
+        printf("Free memory: %d\n", get_free_memory());
 
         printf("Program arguments:\n");
         for (int i = 0; i < argc; i++) {
