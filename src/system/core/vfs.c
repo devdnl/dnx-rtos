@@ -43,7 +43,7 @@ extern "C" {
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                          10
 
-#define FILE_VALIDATION_NUMBER                  0x495D47CB
+#define FILE_VALIDATION_NUMBER                  (int)0x495D47CB
 
 /*==============================================================================
   Local types, enums definitions
@@ -885,7 +885,7 @@ FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose(FILE *file)
+int vfs_fclose(FILE *file) /* FIXME */
 {
         if (file) {
                 if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
@@ -1191,13 +1191,12 @@ int vfs_feof(FILE *file)
                         return file->f_errflag & VFS_EFLAG_EOF ? 1 : 0;
                 } else {
                         errno = ENOENT;
-                        return -1;
                 }
         } else {
                 errno = EINVAL;
         }
 
-        return 0;
+        return 1;
 }
 
 //==============================================================================
@@ -1241,7 +1240,7 @@ int vfs_ferror(FILE *file)
                 errno = EINVAL;
         }
 
-        return 0;
+        return 1;
 }
 
 //==============================================================================
