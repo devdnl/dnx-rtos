@@ -226,6 +226,7 @@ extern size_t           vfs_fread               (void*, size_t, size_t, FILE*);
 extern int              vfs_fseek               (FILE*, i64_t, int);
 extern i64_t            vfs_ftell               (FILE*);
 extern int              vfs_ioctl               (FILE*, int, ...);
+extern int              vfs_vioctl              (FILE*, int, va_list arg);
 extern int              vfs_fstat               (FILE*, struct vfs_stat*);
 extern int              vfs_fflush              (FILE*);
 extern int              vfs_feof                (FILE*);

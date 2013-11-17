@@ -130,7 +130,8 @@ static inline int feof(FILE *file)
         return vfs_feof(file);
 }
 
-static inline void clearerr(FILE *file) {
+static inline void clearerr(FILE *file)
+{
         return vfs_clearerr(file);
 }
 
@@ -209,6 +210,7 @@ static inline int statfs(const char *path, struct vfs_statfs *statfs)
         return vfs_statfs(path, statfs);
 }
 
+//#define printf(...) sys_fprintf(stdout, __VA_ARGS__)
 static inline int printf(const char *format, ...)
 {
         va_list arg;

@@ -51,8 +51,6 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/* ioctl function-like macro */
-#define ioctl(file, ...)                vfs_ioctl(file, __VA_ARGS__)
 
 /*==============================================================================
   Exported object types
@@ -65,6 +63,12 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+static inline int ioctl(FILE *stream, int request, ...)
+{
+        va_list arg;
+        va_start(arg, request);
+        return vfs_vioctl(stream, request, arg);
+}
 
 #ifdef __cplusplus
 }

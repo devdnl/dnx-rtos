@@ -914,7 +914,7 @@ int vfs_fclose(FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose_force(FILE *file, task_t *opened_by_task)
+int vfs_fclose_force(FILE *file, task_t *opened_by_task) /* FIXME */
 {
         if (file) {
                 if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
@@ -1082,7 +1082,7 @@ i64_t vfs_ftell(FILE *file)
 
 //==============================================================================
 /**
- * @brief Function support not standard operations
+ * @brief Function support not standard operations on devices
  *
  * @param[in]     *file         file
  * @param[in]      rq           request
@@ -1093,9 +1093,26 @@ i64_t vfs_ftell(FILE *file)
 //==============================================================================
 int vfs_ioctl(FILE *file, int rq, ...)
 {
-        va_list  args;
-        stdret_t status;
+        va_list arg;
+        va_start(arg, rq);
+        int status = vfs_vioctl(file, rq, arg);
+        va_end(arg);
+        return status;
+}
 
+//==============================================================================
+/**
+ * @brief Function support not standard operations on devices
+ *
+ * @param[in]     *file         file
+ * @param[in]      rq           request
+ * @param[in,out]  arg          arguments
+ *
+ * @return 0 on success. On error, different from 0 is returned
+ */
+//==============================================================================
+int vfs_vioctl(FILE *file, int rq, va_list arg)
+{
         if (!file) {
                 errno = EINVAL;
                 return -1;
@@ -1106,11 +1123,7 @@ int vfs_ioctl(FILE *file, int rq, ...)
                 return -1;
         }
 
-        va_start(args, rq);
-        status = file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(args, void*));
-        va_end(args);
-
-        return status;
+        return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
 }
 
 //==============================================================================
