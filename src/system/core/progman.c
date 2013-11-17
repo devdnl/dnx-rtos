@@ -42,6 +42,8 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define PROG_VALID_NUMBER               (int)0x3B6BF19D
+#define THREAD_VALID_NUMBER             (int)0x8843D463
 
 /*==============================================================================
   Local types, enums definitions
@@ -59,6 +61,7 @@ struct prog {
         int              argc;
         uint             mem_size;
         int              exit_code;
+        int              valid;
 };
 
 struct thread {
@@ -70,6 +73,7 @@ struct thread {
         FILE            *stderr;
         sem_t           *exit_sem;
         task_t          *task;
+        int              valid;
 };
 
 /*==============================================================================
@@ -476,6 +480,52 @@ static int process_kill(task_t *taskhdl, int status)
 
 //==============================================================================
 /**
+ * @brief Function validate program object
+ *
+ * Errno: EINVAL
+ *
+ * @param prog          program object
+ *
+ * @return true if object is valid, otherwise false
+ */
+//==============================================================================
+static bool prog_is_valid(prog_t *prog)
+{
+        if (prog) {
+                if (prog->valid == PROG_VALID_NUMBER) {
+                        return true;
+                }
+        }
+
+        errno = EINVAL;
+        return false;
+}
+
+//==============================================================================
+/**
+ * @brief Function validate thread object
+ *
+ * Errno: EINVAL
+ *
+ * @param thread        thread object
+ *
+ * @return true if object is valid, otherwise false
+ */
+//==============================================================================
+static bool thread_is_valid(thread_t *thread)
+{
+        if (thread) {
+                if (thread->valid == THREAD_VALID_NUMBER) {
+                        return true;
+                }
+        }
+
+        errno = EINVAL;
+        return false;
+}
+
+//==============================================================================
+/**
  * @brief Function start new program by name
  *
  * Errno: EINVAL, ENOMEM, ENOENT
@@ -520,6 +570,7 @@ task_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                                                   prog);
 
                                         if (prog->task) {
+                                                prog->valid = PROG_VALID_NUMBER;
                                                 return prog;
                                         }
                                 }
@@ -556,10 +607,11 @@ task_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
 //==============================================================================
 int _program_delete(prog_t *prog)
 {
-        if (prog) {
+        if (prog_is_valid(prog)) {
                 if (semaphore_wait(prog->exit_sem, 0)) {
                         semaphore_delete(prog->exit_sem);
                         delete_argument_table(prog->argv);
+                        prog->valid = 0;
                         sysm_tskfree(prog);
                         return 0;
                 } else {
@@ -568,7 +620,6 @@ int _program_delete(prog_t *prog)
                 }
         }
 
-        errno = EINVAL;
         return -EINVAL;
 }
 
@@ -583,7 +634,7 @@ int _program_delete(prog_t *prog)
 //==============================================================================
 int _program_kill(prog_t *prog)
 {
-        if (prog) {
+        if (prog_is_valid(prog)) {
                 if (semaphore_wait(prog->exit_sem, 0)) {
                         semaphore_signal(prog->exit_sem);
                         return 0;
@@ -604,7 +655,6 @@ int _program_kill(prog_t *prog)
                 }
         }
 
-        errno = EINVAL;
         return -EINVAL;
 }
 
@@ -620,7 +670,7 @@ int _program_kill(prog_t *prog)
 //==============================================================================
 int _program_wait_for_close(prog_t *prog, const uint timeout)
 {
-        if (prog) {
+        if (prog_is_valid(prog)) {
                 if (semaphore_wait(prog->exit_sem, timeout)) {
                         semaphore_signal(prog->exit_sem);
                         return 0;
@@ -630,7 +680,6 @@ int _program_wait_for_close(prog_t *prog, const uint timeout)
                 }
         }
 
-        errno = EINVAL;
         return -EINVAL;
 }
 
@@ -645,7 +694,7 @@ int _program_wait_for_close(prog_t *prog, const uint timeout)
 //==============================================================================
 bool _program_is_closed(prog_t *prog)
 {
-        if (prog) {
+        if (prog_is_valid(prog)) {
                 if (semaphore_wait(prog->exit_sem, 0)) {
                         semaphore_signal(prog->exit_sem);
                         return true;
@@ -763,6 +812,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
+                        thread->valid = THREAD_VALID_NUMBER;
                         return thread;
                 }
         }
@@ -790,7 +840,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
 //==============================================================================
 int _thread_join(thread_t *thread)
 {
-        if (thread) {
+        if (thread_is_valid(thread)) {
                 if (semaphore_wait(thread->exit_sem, MAX_DELAY)) {
                         semaphore_signal(thread->exit_sem);
                         return 0;
@@ -800,7 +850,6 @@ int _thread_join(thread_t *thread)
                 }
         }
 
-        errno = EINVAL;
         return -EINVAL;
 }
 
@@ -813,7 +862,7 @@ int _thread_join(thread_t *thread)
 //==============================================================================
 int _thread_cancel(thread_t *thread)
 {
-        if (thread) {
+        if (thread_is_valid(thread)) {
                 if (semaphore_wait(thread->exit_sem, 0)) {
                         semaphore_signal(thread->exit_sem);
                         return 0;
@@ -829,7 +878,6 @@ int _thread_cancel(thread_t *thread)
                 }
         }
 
-        errno = EINVAL;
         return -EINVAL;
 }
 
@@ -844,13 +892,12 @@ int _thread_cancel(thread_t *thread)
 //==============================================================================
 bool _thread_is_finished(thread_t *thread)
 {
-        if (thread) {
+        if (thread_is_valid(thread)) {
                 if (semaphore_wait(thread->exit_sem, 0)) {
                         semaphore_signal(thread->exit_sem);
                         return true;
                 }
         }
-
         return false;
 }
 
@@ -867,9 +914,10 @@ bool _thread_is_finished(thread_t *thread)
 //==============================================================================
 int _thread_delete(thread_t *thread)
 {
-        if (thread) {
+        if (thread_is_valid(thread)) {
                 if (semaphore_wait(thread->exit_sem, 0)) {
                         semaphore_delete(thread->exit_sem);
+                        thread->valid = 0;
                         sysm_tskfree(thread);
                         return 0;
                 } else {
@@ -878,7 +926,6 @@ int _thread_delete(thread_t *thread)
                 }
         }
 
-        errno = EINVAL;
         return -EINVAL;
 }
 
