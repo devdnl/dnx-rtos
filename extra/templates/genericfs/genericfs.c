@@ -272,7 +272,7 @@ API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
+API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);

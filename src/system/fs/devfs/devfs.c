@@ -425,6 +425,7 @@ API_FS_MKDIR(devfs, void *fs_handle, const char *path, mode_t mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
+        UNUSED_ARG(mode);
 
         return STD_RET_ERROR;
 }

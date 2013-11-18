@@ -211,7 +211,7 @@ extern stdret_t         vfs_umount              (const char*);
 extern stdret_t         vfs_getmntentry         (size_t, struct vfs_mntent*);
 extern int              vfs_mknod               (const char*, struct vfs_drv_interface*);
 extern int              vfs_mkdir               (const char*, mode_t);
-extern int              vfs_mkfifo              (const char*, mode_t); /* TODO */
+extern int              vfs_mkfifo              (const char*, mode_t);
 extern DIR             *vfs_opendir             (const char*);
 extern int              vfs_closedir            (DIR*);
 extern dirent_t         vfs_readdir             (DIR*);

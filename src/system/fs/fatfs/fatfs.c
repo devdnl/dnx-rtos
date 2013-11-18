@@ -438,10 +438,14 @@ API_FS_MKDIR(fatfs, void *fs_handle, const char *path, mode_t mode)
 
         STOP_IF(!path);
 
-        if (handle_error(libfat_mkdir(&hdl->fatfs, path)) == 0)
-                return STD_RET_OK;
-        else
-                return STD_RET_ERROR;
+        if (handle_error(libfat_mkdir(&hdl->fatfs, path)) == 0) {
+                uint8_t dosmode = mode & S_IWUSR ? 0 : LIBFAT_AM_RDO;
+                if (handle_error(libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO)) == 0) {
+                        return STD_RET_OK;
+                }
+        }
+
+        return STD_RET_ERROR;
 }
 
 //==============================================================================

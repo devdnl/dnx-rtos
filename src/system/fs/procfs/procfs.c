@@ -639,6 +639,7 @@ API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
+        UNUSED_ARG(mode);
 
         errno = EROFS;
 

@@ -418,7 +418,33 @@ int vfs_mkdir(const char *path, mode_t mode)
 //==============================================================================
 int vfs_mkfifo(const char *path, mode_t mode)
 {
-        /* TODO */
+        if (!path) {
+                errno = EINVAL;
+                return -1;
+        }
+
+        char *cwd_path = new_corrected_path(path, NO_SLASH_ACTION);
+        if (!cwd_path) {
+                return -1;
+        }
+
+        mutex_force_lock(vfs_resource_mtx);
+        char *external_path = NULL;
+        struct FS_data *fs  = find_base_FS(cwd_path, &external_path);
+        mutex_unlock(vfs_resource_mtx);
+
+        int status = -1;
+        if (fs) {
+                if (fs->interface.fs_mkfifo) {
+                        status = fs->interface.fs_mkfifo(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
+                }
+        } else {
+                errno = ENXIO;
+        }
+
+        sysm_sysfree(cwd_path);
+
+        return status;
 }
 
 //==============================================================================

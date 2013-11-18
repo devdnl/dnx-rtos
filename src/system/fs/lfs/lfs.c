@@ -58,7 +58,7 @@ typedef struct node {
         char            *name;                  /* file name                 */
         enum node_type   type;                  /* file type                 */
         fd_t             fd;                    /* file descriptor           */
-        u32_t            mode;                  /* protection                */
+        mode_t           mode;                  /* protection                */
         u32_t            uid;                   /* user ID of owner          */
         u32_t            gid;                   /* group ID of owner         */
         u64_t            size;                  /* file size                 */
@@ -310,6 +310,7 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
                         new_dir->name = new_dir_name;
                         new_dir->size = sizeof(node_t);
                         new_dir->type = NODE_TYPE_DIR;
+                        new_dir->mode = mode;
 
                         /* add new folder to this folder */
                         if (list_add_item(base_node->data, lfs->id_counter++, new_dir) >= 0) {
