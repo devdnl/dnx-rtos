@@ -450,6 +450,30 @@ API_FS_MKDIR(fatfs, void *fs_handle, const char *path, mode_t mode)
 
 //==============================================================================
 /**
+ * @brief Create pipe
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of created pipe
+ * @param[in ]           mode                   pipe mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+API_FS_MKFIFO(fatfs, void *fs_handle, const char *path, mode_t mode)
+{
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        UNUSED_ARG(mode);
+
+        /* not supported by this file system */
+        errno = EPERM;
+
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
  * @brief Create node for driver file
  *
  * @param[in ]          *fs_handle              file system allocated memory

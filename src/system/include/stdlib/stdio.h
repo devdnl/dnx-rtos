@@ -165,6 +165,11 @@ static inline int mkdir(const char *path, mode_t mode)
         return vfs_mkdir(path, mode);
 }
 
+static inline int mkfifo(const char *path, mode_t mode)
+{
+        return vfs_mkfifo(path, mode);
+}
+
 static inline DIR *opendir(const char *path)
 {
         return sysm_opendir(path);

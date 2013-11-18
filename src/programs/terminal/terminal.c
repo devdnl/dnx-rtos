@@ -83,6 +83,7 @@ static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
 static enum cmd_status cmd_ls                   (char *arg);
 static enum cmd_status cmd_mkdir                (char *arg);
+static enum cmd_status cmd_mkfifo               (char *arg);
 static enum cmd_status cmd_touch                (char *arg);
 static enum cmd_status cmd_rm                   (char *arg);
 static enum cmd_status cmd_free                 (char *arg);
@@ -108,6 +109,7 @@ static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
         {"ls"    , cmd_ls         },
         {"mkdir" , cmd_mkdir      },
+        {"mkfifo", cmd_mkfifo     },
         {"touch" , cmd_touch      },
         {"rm"    , cmd_rm         },
         {"free"  , cmd_free       },
@@ -395,6 +397,22 @@ static enum cmd_status cmd_ls(char *arg)
 static enum cmd_status cmd_mkdir(char *arg)
 {
         if (mkdir(arg, 0666) != 0) {
+                perror(arg);
+        }
+
+        return CMD_STATUS_EXECUTED;
+}
+
+//==============================================================================
+/**
+ * @brief Function create new directory
+ *
+ * @param *arg          arguments
+ */
+//==============================================================================
+static enum cmd_status cmd_mkfifo(char *arg)
+{
+        if (mkfifo(arg, 0666) != 0) {
                 perror(arg);
         }
 

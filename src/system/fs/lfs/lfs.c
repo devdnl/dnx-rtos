@@ -38,8 +38,10 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-/* wait time for operation on FS */
-#define MTX_BLOCK_TIME                    10
+#define MTX_BLOCK_TIME                  10
+#define PIPE_LENGTH                     64
+#define PIPE_WRITE_TIMEOUT              MAX_DELAY
+#define PIPE_READ_TIMEOUT               MAX_DELAY
 
 /*==============================================================================
   Local types, enums definitions
@@ -329,6 +331,86 @@ error:
                 free(new_dir_name);
         }
 
+        mutex_unlock(lfs->resource_mtx);
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Create pipe
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of created pipe
+ * @param[in ]           mode                   pipe mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
+{
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+
+        struct LFS_data *lfs = fs_handle;
+
+        if (FIRST_CHARACTER(path) != '/') {
+                errno = ENOENT;
+                return STD_RET_ERROR;
+        }
+
+        mutex_force_lock(lfs->resource_mtx);
+        node_t *dir_node  = get_node(path, &lfs->root_dir, -1, NULL);
+        node_t *fifo_node = get_node(strrchr(path, '/'), dir_node, 0, NULL);
+
+        /* directory must exist and driver's file not */
+        if (!dir_node || fifo_node) {
+                goto error;
+        }
+
+        if (dir_node->type != NODE_TYPE_DIR) {
+                goto error;
+        }
+
+        char *fifo_name     = strrchr(path, '/') + 1;
+        uint  fifo_name_len = strlen(fifo_name);
+
+        char *fifo_file_name = calloc(fifo_name_len + 1, sizeof(char));
+        if (fifo_file_name) {
+                strcpy(fifo_file_name, fifo_name);
+
+                node_t  *fifo_file  = calloc(1, sizeof(node_t));
+                queue_t *fifo_queue = queue_new(PIPE_LENGTH, sizeof(u8_t));
+
+                if (fifo_file && fifo_queue) {
+
+                        fifo_file->name = fifo_file_name;
+                        fifo_file->size = 0;
+                        fifo_file->type = NODE_TYPE_PIPE;
+                        fifo_file->data = fifo_queue;
+                        fifo_file->fd   = 0;
+                        fifo_file->mode = mode;
+
+                        /* add pipe to folder */
+                        if (list_add_item(dir_node->data, lfs->id_counter++, fifo_file) >= 0) {
+                                mutex_unlock(lfs->resource_mtx);
+                                return STD_RET_OK;
+                        }
+                }
+
+                /* free memory when error */
+                if (fifo_file) {
+                        free(fifo_file);
+                }
+
+                if (fifo_queue) {
+                        queue_delete(fifo_queue);
+                }
+
+                free(fifo_file_name);
+        }
+
+error:
         mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
@@ -678,7 +760,7 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct vfs_stat *stat)
                                 struct vfs_dev_stat dev_stat;
                                 dev_stat.st_size = 0;
                                 drv_if->drv_stat(drv_if->handle, &dev_stat);
-                                node->size = dev_stat.st_size;
+                                node->size   = dev_stat.st_size;
                                 stat->st_dev = dev_stat.st_major;
                         } else {
                                 stat->st_dev = node->fd;
@@ -1059,6 +1141,22 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                         memcpy(node->data + seek, src, write_size);
                         n = count;
                 }
+        } else if (node->type == NODE_TYPE_PIPE) {
+                mutex_unlock(lfs->resource_mtx);
+                if (node->data) {
+                        for (uint i = 0; i < count; i++) {
+                                if (queue_send(node->data, src + i, PIPE_WRITE_TIMEOUT)) {
+                                        n++;
+                                } else {
+                                        i--;
+                                }
+                        }
+
+                        node->size += n;
+                        return n;
+                } else {
+                        errno = EIO;
+                }
         }
 
 exit:
@@ -1134,6 +1232,20 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                                 memcpy(dst, node->data + seek, items_to_read);
                                 n = items_to_read;
                         }
+                }
+        } else if (node->type == NODE_TYPE_PIPE) {
+                mutex_unlock(lfs->resource_mtx);
+                if (node->data) {
+                        for (uint i = 0; i < count; i++) {
+                                if (queue_receive(node->data, dst + i, PIPE_READ_TIMEOUT)) {
+                                        n++;
+                                }
+                        }
+
+                        node->size -= n;
+                        return n;
+                } else {
+                        errno = EIO;
                 }
         }
 
@@ -1289,6 +1401,12 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
                         return STD_RET_ERROR;
                 } else {
                         list_delete(target->data);
+                        target->data = NULL;
+                }
+        } else if (target->type == NODE_TYPE_PIPE) {
+
+                if (target->data) {
+                        queue_delete(target->data);
                         target->data = NULL;
                 }
         }
