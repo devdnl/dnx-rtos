@@ -42,8 +42,8 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PROG_VALID_NUMBER               (int)0x3B6BF19D
-#define THREAD_VALID_NUMBER             (int)0x8843D463
+#define PROG_VALID_NUMBER               (u32_t)0x3B6BF19D
+#define THREAD_VALID_NUMBER             (u32_t)0x8843D463
 
 /*==============================================================================
   Local types, enums definitions
@@ -61,7 +61,7 @@ struct prog {
         int              argc;
         uint             mem_size;
         int              exit_code;
-        int              valid;
+        u32_t            valid;
 };
 
 struct thread {
@@ -73,7 +73,7 @@ struct thread {
         FILE            *stderr;
         sem_t           *exit_sem;
         task_t          *task;
-        int              valid;
+        u32_t            valid;
 };
 
 /*==============================================================================

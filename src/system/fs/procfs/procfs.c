@@ -561,7 +561,7 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(extra);
 
@@ -595,6 +595,7 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
         stat->st_size  = 0;
         stat->st_gid   = 0;
         stat->st_uid   = 0;
+        stat->st_type  = FILE_TYPE_REGULAR;
 
         char data[12] = {0};
 
@@ -629,17 +630,43 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *sta
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created directory
+ * @param[in ]           mode                   dir mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(procfs, void *fs_handle, const char *path)
+API_FS_MKDIR(procfs, void *fs_handle, const char *path, mode_t mode)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
+        UNUSED_ARG(mode);
 
         errno = EROFS;
+
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Create pipe
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   name of created pipe
+ * @param[in ]           mode                   pipe mode
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
+{
+        STOP_IF(!fs_handle);
+        STOP_IF(!path);
+        UNUSED_ARG(mode);
+
+        /* not supported by this file system */
+        errno = EPERM;
 
         return STD_RET_ERROR;
 }
@@ -894,7 +921,7 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(procfs, void *fs_handle, const char *path, struct vfs_stat *stat)
+API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
@@ -907,6 +934,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct vfs_stat *stat)
         stat->st_mtime = 0;
         stat->st_size  = 0;
         stat->st_uid   = 0;
+        stat->st_type  = FILE_TYPE_REGULAR;
 
         return STD_RET_OK;
 }

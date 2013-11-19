@@ -112,11 +112,11 @@ start_failure:
 static int run_level_boot(void)
 {
         mount("lfs", "", "/");
-        mkdir("/bin");
-        mkdir("/dev");
-        mkdir("/mnt");
-        mkdir("/proc");
-        mkdir("/tmp");
+        mkdir("/bin", 0666);
+        mkdir("/dev", 0666);
+        mkdir("/mnt", 0666);
+        mkdir("/proc", 0666);
+        mkdir("/tmp", 0666);
 
         mount("procfs", "", "/proc");
         mount("devfs", "", "/dev");

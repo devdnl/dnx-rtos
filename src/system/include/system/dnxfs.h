@@ -63,6 +63,7 @@ extern "C" {
 #define API_FS_FSTAT(fsname, ...)               stdret_t _##fsname##_fstat(__VA_ARGS__)
 #define API_FS_FLUSH(fsname, ...)               stdret_t _##fsname##_flush(__VA_ARGS__)
 #define API_FS_MKDIR(fsname, ...)               stdret_t _##fsname##_mkdir(__VA_ARGS__)
+#define API_FS_MKFIFO(fsname, ...)              stdret_t _##fsname##_mkfifo(__VA_ARGS__)
 #define API_FS_MKNOD(fsname, ...)               stdret_t _##fsname##_mknod(__VA_ARGS__)
 #define API_FS_OPENDIR(fsname, ...)             stdret_t _##fsname##_opendir(__VA_ARGS__)
 #define API_FS_REMOVE(fsname, ...)              stdret_t _##fsname##_remove(__VA_ARGS__)
@@ -80,16 +81,17 @@ extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool, const task_t*);           
 extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, u64_t*);       \
 extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, u64_t*);              \
 extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, void*);                        \
-extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct vfs_stat*);                  \
+extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct stat*);                      \
 extern API_FS_FLUSH(fsname, void*, void*, fd_t);                                    \
-extern API_FS_MKDIR(fsname, void*, const char*);                                    \
+extern API_FS_MKDIR(fsname, void*, const char*, mode_t);                            \
+extern API_FS_MKFIFO(fsname, void*, const char*, mode_t);                           \
 extern API_FS_MKNOD(fsname, void*, const char*, const struct vfs_drv_interface*);   \
 extern API_FS_OPENDIR(fsname, void*, const char*, struct vfs_dir*);                 \
 extern API_FS_REMOVE(fsname, void*, const char*);                                   \
 extern API_FS_RENAME(fsname, void*, const char*, const char*);                      \
 extern API_FS_CHMOD(fsname, void*, const char*, int);                               \
 extern API_FS_CHOWN(fsname, void*, const char*, int, int);                          \
-extern API_FS_STAT(fsname, void*, const char*, struct vfs_stat*);                   \
+extern API_FS_STAT(fsname, void*, const char*, struct stat*);                       \
 extern API_FS_STATFS(fsname, void*, struct vfs_statfs*)
 
 /*==============================================================================

@@ -251,7 +251,7 @@ API_FS_FLUSH(genericfs, void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -266,12 +266,13 @@ API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created directory
+ * @param[in ]           mode                   dir mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(genericfs, void *fs_handle, const char *path)
+API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -453,7 +454,7 @@ API_FS_CHOWN(genericfs, void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(genericfs, void *fs_handle, const char *path, struct vfs_stat *stat)
+API_FS_STAT(genericfs, void *fs_handle, const char *path, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);

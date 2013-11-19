@@ -115,7 +115,7 @@ static inline i64_t ftell(FILE *file)
         return vfs_ftell(file);
 }
 
-static inline int fstat(FILE *file, struct vfs_stat *stat)
+static inline int fstat(FILE *file, struct stat *stat)
 {
         return vfs_fstat(file, stat);
 }
@@ -160,9 +160,14 @@ static inline int mknod(const char *path, struct vfs_drv_interface *drvif)
         return vfs_mknod(path, drvif);
 }
 
-static inline int mkdir(const char *path)
+static inline int mkdir(const char *path, mode_t mode)
 {
-        return vfs_mkdir(path);
+        return vfs_mkdir(path, mode);
+}
+
+static inline int mkfifo(const char *path, mode_t mode)
+{
+        return vfs_mkfifo(path, mode);
 }
 
 static inline DIR *opendir(const char *path)
@@ -200,7 +205,7 @@ static inline int chown(const char *path, int owner, int group)
         return vfs_chown(path, owner, group);
 }
 
-static inline int stat(const char *path, struct vfs_stat *stat)
+static inline int stat(const char *path, struct stat *stat)
 {
         return vfs_stat(path, stat);
 }

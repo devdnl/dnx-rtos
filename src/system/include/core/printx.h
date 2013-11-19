@@ -62,19 +62,25 @@ extern "C" {
 #       define FONT_NORMAL                      "\e[0m"
 #       define FONT_BOLD                        "\e[1m"
 #       define FONT_COLOR_BLACK                 "\e[30m"
+#       define FONT_COLOR_GRAY                  "\e[1;30m"
 #       define FONT_COLOR_RED                   "\e[31m"
 #       define FONT_COLOR_GREEN                 "\e[32m"
-#       define FONT_COLOR_YELLOW                "\e[33m"
+#       define FONT_COLOR_YELLOW                "\e[1;33m"
+#       define FONT_COLOR_BROWN                 "\e[33m"
 #       define FONT_COLOR_BLUE                  "\e[34m"
 #       define FONT_COLOR_MAGENTA               "\e[35m"
+#       define FONT_COLOR_PINK                  "\e[1;35m"
 #       define FONT_COLOR_CYAN                  "\e[36m"
 #       define FONT_COLOR_WHITE                 "\e[37m"
 #       define BACK_COLOR_BLACK                 "\e[40m"
+#       define BACK_COLOR_GRAY                  "\e[1;40m"
 #       define BACK_COLOR_RED                   "\e[41m"
 #       define BACK_COLOR_GREEN                 "\e[42m"
 #       define BACK_COLOR_YELLOW                "\e[43m"
+#       define BACK_COLOR_BROWN                 "\e[1;43m"
 #       define BACK_COLOR_BLUE                  "\e[44m"
 #       define BACK_COLOR_MAGENTA               "\e[45m"
+#       define BACK_COLOR_PINK                  "\e[1;45m"
 #       define BACK_COLOR_CYAN                  "\e[46m"
 #       define BACK_COLOR_WHITE                 "\e[47m"
 #else
@@ -84,19 +90,25 @@ extern "C" {
 #       define FONT_NORMAL
 #       define FONT_BOLD
 #       define FONT_COLOR_BLACK
+#       define FONT_COLOR_GRAY
 #       define FONT_COLOR_RED
 #       define FONT_COLOR_GREEN
 #       define FONT_COLOR_YELLOW
+#       define FONT_COLOR_BROWN
 #       define FONT_COLOR_BLUE
 #       define FONT_COLOR_MAGENTA
+#       define FONT_COLOR_PINK
 #       define FONT_COLOR_CYAN
 #       define FONT_COLOR_WHITE
 #       define BACK_COLOR_BLACK
+#       define BACK_COLOR_GRAY
 #       define BACK_COLOR_RED
 #       define BACK_COLOR_GREEN
 #       define BACK_COLOR_YELLOW
+#       define BACK_COLOR_BROWN
 #       define BACK_COLOR_BLUE
 #       define BACK_COLOR_MAGENTA
+#       define BACK_COLOR_PINK
 #       define BACK_COLOR_CYAN
 #       define BACK_COLOR_WHITE
 #endif

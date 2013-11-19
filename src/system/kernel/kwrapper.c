@@ -32,16 +32,22 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "kernel/kwrapper.h"
+#include "kernel/ktypes.h"
 #include "core/sysmoni.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define MUTEX_VALID_NUMBER              0x4379A85C
+#define MUTEX_VALID_NUMBER              (u32_t)0x4379A85C
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+struct mutex {
+        void *mutex;
+        bool  recursive;
+        u32_t valid;
+};
 
 /*==============================================================================
   Local function prototypes
