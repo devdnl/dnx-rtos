@@ -32,10 +32,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define INIT_REQUEST                    SDSPI_IORQ_INITIALIZE_CARD
 
 /*==============================================================================
   Local types, enums definitions
@@ -66,7 +69,31 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(card_init, int argc, char *argv[])
 {
+        if (argc == 1) {
+                printf("Usage: %s [file]\n", argv[0]);
+                return EXIT_FAILURE;
+        }
 
+        FILE *sd = fopen(argv[1], "r");
+        if (sd) {
+                bool status = false;
+                if (ioctl(sd, INIT_REQUEST, &status) != 0) {
+                        perror(argv[1]);
+                        return EXIT_FAILURE;
+                }
+
+                if (status == true) {
+                        puts("Card initialized.\n");
+                        return EXIT_SUCCESS;
+                } else {
+                        puts("Card not detected.\n");
+                        return EXIT_FAILURE;
+                }
+        } else {
+                perror(argv[1]);
+        }
+
+        return EXIT_FAILURE;
 }
 
 #ifdef __cplusplus

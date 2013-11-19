@@ -74,7 +74,6 @@ static void            print_prompt             (void);
 static enum cmd_status find_internal_command    (const char *cmd);
 static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
-static enum cmd_status cmd_detect_card          (char *arg);
 static enum cmd_status cmd_help                 (char *arg);
 
 /*==============================================================================
@@ -87,7 +86,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
-        {"detect", cmd_detect_card},
         {"help"  , cmd_help       },
 };
 
@@ -295,33 +293,6 @@ static enum cmd_status cmd_cd(char *arg)
                 if (freePath) {
                         free(newpath);
                 }
-        }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief Function initialize and detect partitions on selected file (e.g. SD card)
- */
-//==============================================================================
-static enum cmd_status cmd_detect_card(char *arg)
-{
-        FILE *sd = fopen(arg, "r");
-        if (sd) {
-                bool status = false;
-                if (ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status) != 0) {
-                        perror(arg);
-                        return CMD_STATUS_EXECUTED;
-                }
-
-                if (status == true) {
-                        printf("Card initialized.\n");
-                } else {
-                        printf("Card not detected.\n");
-                }
-        } else {
-                perror(arg);
         }
 
         return CMD_STATUS_EXECUTED;
