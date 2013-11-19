@@ -81,7 +81,6 @@ static void            print_prompt             (void);
 static enum cmd_status find_internal_command    (const char *cmd);
 static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
-static enum cmd_status cmd_ls                   (char *arg);
 static enum cmd_status cmd_mkdir                (char *arg);
 static enum cmd_status cmd_mkfifo               (char *arg);
 static enum cmd_status cmd_touch                (char *arg);
@@ -107,7 +106,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
-        {"ls"    , cmd_ls         },
         {"mkdir" , cmd_mkdir      },
         {"mkfifo", cmd_mkfifo     },
         {"touch" , cmd_touch      },
@@ -328,60 +326,6 @@ static enum cmd_status cmd_cd(char *arg)
                 if (freePath) {
                         free(newpath);
                 }
-        }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief Function listing all files in the selected directory
- *
- * @param *arg          arguments
- */
-//==============================================================================
-static enum cmd_status cmd_ls(char *arg)
-{
-        DIR *dir = opendir(arg);
-        if (dir) {
-                dirent_t dirent;
-
-                while ((dirent = readdir(dir)).name != NULL) {
-                        const char *type = NULL;
-
-                        switch (dirent.filetype) {
-                        case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"d";  break;
-                        case FILE_TYPE_DRV:     type = FONT_COLOR_MAGENTA"m"; break;
-                        case FILE_TYPE_LINK:    type = FONT_COLOR_CYAN"l";    break;
-                        case FILE_TYPE_REGULAR: type = FONT_COLOR_GREEN" ";   break;
-                        case FILE_TYPE_PROGRAM: type = FONT_BOLD"x";          break;
-                        case FILE_TYPE_PIPE:    type = FONT_COLOR_BROWN"p";   break;
-                        default: type = "?";
-                        }
-
-                        u32_t size;
-                        const char *unit;
-                        if (dirent.size >= (u64_t)(10*GiB)) {
-                                size = CONVERT_TO_GiB(dirent.size);
-                                unit = "GiB";
-                        } else if (dirent.size >= 10*MiB) {
-                                size = CONVERT_TO_MiB(dirent.size);
-                                unit = "MiB";
-                        } else if (dirent.size >= 10*KiB) {
-                                size = CONVERT_TO_KiB(dirent.size);
-                                unit = "KiB";
-                        } else {
-                                size = dirent.size;
-                                unit = "B";
-                        }
-
-                        printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(11)"%s"RESET_ATTRIBUTES"\n",
-                               type, size, unit, dirent.name);
-                }
-
-                closedir(dir);
-        } else {
-                perror(arg);
         }
 
         return CMD_STATUS_EXECUTED;
