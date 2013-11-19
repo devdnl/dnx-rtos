@@ -83,10 +83,10 @@ PROGRAM_MAIN(card_init, int argc, char *argv[])
                 }
 
                 if (status == true) {
-                        puts("Card initialized.\n");
+                        puts("Card initialized.");
                         return EXIT_SUCCESS;
                 } else {
-                        puts("Card not detected.\n");
+                        puts("Card not detected.");
                         return EXIT_FAILURE;
                 }
         } else {

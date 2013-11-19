@@ -79,8 +79,10 @@ static enum cmd_status cmd_help                 (char *arg);
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
+
 char line[PROMPT_LINE_LEN];
 char cwd[CWD_PATH_LEN];
+
 GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
@@ -178,8 +180,7 @@ static enum cmd_status find_external_command(const char *cmd)
 {
         prog_t *prog = program_new(cmd, global->cwd, stdin, stdout, stderr);
         if (!prog) {
-                perror(NULL);
-                return CMD_STATUS_EXECUTED;
+                return CMD_STATUS_NOT_EXIST;
         }
 
         while (program_wait_for_close(prog, MAX_DELAY) != 0);
