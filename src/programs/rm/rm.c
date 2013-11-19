@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +67,14 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(rm, int argc, char *argv[])
 {
-        return 0;
+        (void) argc;
+
+        if (remove(argv[1]) != 0) {
+                perror(argv[1]);
+                return EXIT_FAILURE;
+        }
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
