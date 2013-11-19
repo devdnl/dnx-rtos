@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +68,46 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(free, int argc, char *argv[])
 {
+        (void) argc;
+        (void) argv;
 
+        uint  drv_count = get_number_of_modules();
+        int *modmem = malloc(drv_count * sizeof(int));
+        if (!modmem) {
+                perror(NULL);
+                return EXIT_FAILURE;
+        }
+
+        struct sysmoni_used_memory sysmem;
+        get_detailed_memory_usage(&sysmem);
+
+        for (uint module = 0; module < drv_count; module++) {
+                modmem[module] = get_module_memory_usage(module);
+        }
+
+        u32_t free = get_free_memory();
+        u32_t used = get_used_memory();
+
+        printf("Total: %d\n", get_memory_size());
+        printf("Free : %d\n", free);
+        printf("Used : %d\n", used);
+        printf("Memory usage: %d%%\n\n", (used * 100)/get_memory_size());
+
+        printf("Detailed memory usage:\n");
+        printf("  Kernel  : %d\n", sysmem.used_kernel_memory);
+        printf("  System  : %d\n", sysmem.used_system_memory);
+        printf("  Modules : %d\n", sysmem.used_modules_memory);
+        printf("  Network : %d\n", sysmem.used_network_memory);
+        printf("  Programs: %d\n\n", sysmem.used_programs_memory);
+
+        printf("Detailed modules memory usage:\n");
+        for (uint module = 0; module < drv_count; module++) {
+                printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", get_module_name(module), modmem[module]);
+        }
+
+        free(modmem);
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus

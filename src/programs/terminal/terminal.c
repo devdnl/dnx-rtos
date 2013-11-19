@@ -81,7 +81,6 @@ static void            print_prompt             (void);
 static enum cmd_status find_internal_command    (const char *cmd);
 static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
-static enum cmd_status cmd_free                 (char *arg);
 static enum cmd_status cmd_uptime               (char *arg);
 static enum cmd_status cmd_clear                (char *arg);
 static enum cmd_status cmd_reboot               (char *arg);
@@ -102,7 +101,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
-        {"free"  , cmd_free       },
         {"uptime", cmd_uptime     },
         {"clear" , cmd_clear      },
         {"reboot", cmd_reboot     },
@@ -319,63 +317,6 @@ static enum cmd_status cmd_cd(char *arg)
                         free(newpath);
                 }
         }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief Function shows the free memory
- *
- * @param *arg          arguments
- */
-//==============================================================================
-static enum cmd_status cmd_free(char *arg)
-{
-        (void) arg;
-
-        uint  drv_count = get_number_of_modules();
-        int *modmem = malloc(drv_count * sizeof(int));
-        if (!modmem) {
-                perror(NULL);
-                return CMD_STATUS_EXECUTED;
-        }
-
-        struct sysmoni_used_memory sysmem;
-        get_detailed_memory_usage(&sysmem);
-
-        for (uint module = 0; module < drv_count; module++) {
-                modmem[module] = get_module_memory_usage(module);
-        }
-
-        u32_t free = get_free_memory();
-        u32_t used = get_used_memory();
-
-
-        printf("Total: %d\n", get_memory_size());
-        printf("Free : %d\n", free);
-        printf("Used : %d\n", used);
-        printf("Memory usage: %d%%\n\n",
-               (used * 100)/get_memory_size());
-
-        printf("Detailed memory usage:\n"
-               "  Kernel  : %d\n"
-               "  System  : %d\n"
-               "  Modules : %d\n"
-               "  Network : %d\n"
-               "  Programs: %d\n\n",
-               sysmem.used_kernel_memory,
-               sysmem.used_system_memory,
-               sysmem.used_modules_memory,
-               sysmem.used_network_memory,
-               sysmem.used_programs_memory);
-
-        printf("Detailed modules memory usage:\n");
-        for (uint module = 0; module < drv_count; module++) {
-                printf("  %s"CURSOR_BACKWARD(99)CURSOR_FORWARD(14)": %d\n", get_module_name(module), modmem[module]);
-        }
-
-        free(modmem);
 
         return CMD_STATUS_EXECUTED;
 }
