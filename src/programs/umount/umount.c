@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/mount.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +68,15 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(umount, int argc, char *argv[])
 {
-        return 0;
+        if (argc == 1) {
+                printf("Usage: umount [mount point]\n");
+        } else {
+                if (umount(argv[1]) != 0) {
+                        perror(argv[1]);
+                }
+        }
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus

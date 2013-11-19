@@ -46,13 +46,6 @@ extern "C" {
 #define PROMPT_LINE_LEN                 100
 #define CWD_PATH_LEN                    128
 
-#define KiB                             (u32_t)(1024)
-#define MiB                             (u32_t)(1024*1024)
-#define GiB                             (u64_t)(1024*1024*1024)
-#define CONVERT_TO_KiB(_val)            (_val >> 10)
-#define CONVERT_TO_MiB(_val)            (_val >> 20)
-#define CONVERT_TO_GiB(_val)            (_val >> 30)
-
 #define set_cwd(const_char__pstr)       const char *__real_cwd = _task_get_data()->f_cwd;\
                                         _task_get_data()->f_cwd = const_char__pstr
 
@@ -81,7 +74,6 @@ static void            print_prompt             (void);
 static enum cmd_status find_internal_command    (const char *cmd);
 static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
-static enum cmd_status cmd_umount               (char *arg);
 static enum cmd_status cmd_uname                (char *arg);
 static enum cmd_status cmd_detect_card          (char *arg);
 static enum cmd_status cmd_help                 (char *arg);
@@ -96,7 +88,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
-        {"umount", cmd_umount     },
         {"uname" , cmd_uname      },
         {"detect", cmd_detect_card},
         {"help"  , cmd_help       },
@@ -305,26 +296,6 @@ static enum cmd_status cmd_cd(char *arg)
 
                 if (freePath) {
                         free(newpath);
-                }
-        }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief Function umount mounted file system
- *
- * @param *arg          arguments
- */
-//==============================================================================
-static enum cmd_status cmd_umount(char *arg)
-{
-        if (arg[0] == '\0') {
-                printf("Usage: umount [mount point]\n");
-        } else {
-                if (umount(arg) != STD_RET_OK) {
-                        perror(arg);
                 }
         }
 
