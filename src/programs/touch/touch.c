@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +67,17 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(touch, int argc, char *argv[])
 {
-        return 0;
+        (void) argc;
+
+        FILE *file = fopen(argv[1], "a+");
+        if (file) {
+                fclose(file);
+        } else {
+                perror(argv[1]);
+                return EXIT_FAILURE;
+        }
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
