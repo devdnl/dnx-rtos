@@ -81,7 +81,6 @@ static void            print_prompt             (void);
 static enum cmd_status find_internal_command    (const char *cmd);
 static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
-static enum cmd_status cmd_uptime               (char *arg);
 static enum cmd_status cmd_clear                (char *arg);
 static enum cmd_status cmd_reboot               (char *arg);
 static enum cmd_status cmd_df                   (char *arg);
@@ -101,7 +100,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
-        {"uptime", cmd_uptime     },
         {"clear" , cmd_clear      },
         {"reboot", cmd_reboot     },
         {"df"    , cmd_df         },
@@ -317,27 +315,6 @@ static enum cmd_status cmd_cd(char *arg)
                         free(newpath);
                 }
         }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief Function show uptime
- *
- * @param *arg          arguments
- */
-//==============================================================================
-static enum cmd_status cmd_uptime(char *arg)
-{
-        (void) arg;
-
-        u32_t uptime = get_uptime();
-        u32_t udays  = (uptime / (3600 * 24));
-        u32_t uhrs   = (uptime / 3600) % 24;
-        u32_t umins  = (uptime / 60) % 60;
-
-        printf("up %ud %2u:%2u\n", udays, uhrs, umins);
 
         return CMD_STATUS_EXECUTED;
 }

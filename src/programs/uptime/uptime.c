@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +68,17 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(uptime, int argc, char *argv[])
 {
-        return 0;
+        (void) argc;
+        (void) argv;
+
+        u32_t uptime = get_uptime();
+        u32_t udays  = (uptime / (3600 * 24));
+        u32_t uhrs   = (uptime / 3600) % 24;
+        u32_t umins  = (uptime / 60) % 60;
+
+        printf("up %ud %2u:%2u\n", udays, uhrs, umins);
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
