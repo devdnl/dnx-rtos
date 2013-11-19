@@ -289,7 +289,12 @@ API_FS_MKDIR(lfs, void *fs_handle, const char *path, mode_t mode)
         node_t *file_node = get_node(strrchr(path, '/'), base_node, 0, NULL);
 
         /* base node must exist and created node not */
-        if (base_node == NULL || file_node != NULL) {
+        if (base_node == NULL) {
+                goto error;
+        }
+
+        if (file_node != NULL) {
+                errno = EEXIST;
                 goto error;
         }
 
@@ -364,7 +369,12 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
         node_t *fifo_node = get_node(strrchr(path, '/'), dir_node, 0, NULL);
 
         /* directory must exist and driver's file not */
-        if (!dir_node || fifo_node) {
+        if (!dir_node) {
+                goto error;
+        }
+
+        if (fifo_node) {
+                errno = EEXIST;
                 goto error;
         }
 
@@ -740,7 +750,7 @@ API_FS_CHOWN(lfs, void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(lfs, void *fs_handle, const char *path, struct vfs_stat *stat)
+API_FS_STAT(lfs, void *fs_handle, const char *path, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -771,6 +781,7 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct vfs_stat *stat)
                         stat->st_mtime = node->mtime;
                         stat->st_size  = node->size;
                         stat->st_uid   = node->uid;
+                        stat->st_type  = node->type;
 
                         mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
@@ -795,7 +806,7 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct vfs_stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(extra);
 
@@ -825,6 +836,7 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
                         stat->st_mtime = opened_file->node->mtime;
                         stat->st_size  = opened_file->node->size;
                         stat->st_uid   = opened_file->node->uid;
+                        stat->st_type  = opened_file->node->type;
 
                         mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
@@ -1152,7 +1164,9 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                                 }
                         }
 
+                        critical_section_begin();
                         node->size += n;
+                        critical_section_end();
                         return n;
                 } else {
                         errno = EIO;
@@ -1242,7 +1256,9 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                                 }
                         }
 
+                        critical_section_begin();
                         node->size -= n;
+                        critical_section_end();
                         return n;
                 } else {
                         errno = EIO;

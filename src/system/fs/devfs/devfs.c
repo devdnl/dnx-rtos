@@ -383,7 +383,7 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -402,6 +402,7 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat
                 stat->st_uid   = node->uid;
                 stat->st_mode  = node->mode;
                 stat->st_size  = devstat.st_size;
+                stat->st_type  = FILE_TYPE_DRV;
 
                 return STD_RET_OK;
         }
@@ -799,7 +800,7 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(devfs, void *fs_handle, const char *path, struct vfs_stat *stat)
+API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -825,6 +826,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct vfs_stat *stat)
                         stat->st_uid   = node->uid;
                         stat->st_mode  = node->mode;
                         stat->st_size  = devstat.st_size;
+                        stat->st_type  = FILE_TYPE_DRV;
 
                         status = STD_RET_OK;
                 }

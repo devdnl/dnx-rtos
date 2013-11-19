@@ -401,7 +401,7 @@ API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(fd);
@@ -416,6 +416,7 @@ API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat
         stat->st_mtime = 0;
         stat->st_size  = fat_file->fsize;
         stat->st_uid   = 0;
+        stat->st_type  = FILE_TYPE_REGULAR;
 
         return STD_RET_OK;
 }
@@ -739,7 +740,7 @@ API_FS_CHOWN(fatfs, void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(fatfs, void *fs_handle, const char *path, struct vfs_stat *stat)
+API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -755,6 +756,7 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct vfs_stat *stat)
                 stat->st_mtime = file_info.ftime;
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
+                stat->st_type  = FILE_TYPE_REGULAR;
 
                 return STD_RET_OK;
         }
@@ -781,7 +783,7 @@ API_FS_STATFS(fatfs, void *fs_handle, struct vfs_statfs *statfs)
         struct fatfs *hdl    = fs_handle;
         u32_t  free_clusters = 0;
 
-        struct vfs_stat fstat;
+        struct stat fstat;
         fstat.st_size = 0;
         if (vfs_fstat(hdl->fsfile, &fstat) != 0)
                 return STD_RET_ERROR;

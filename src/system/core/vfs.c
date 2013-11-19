@@ -43,8 +43,8 @@ extern "C" {
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                          10
 
-#define FILE_VALIDATION_NUMBER                  (int)0x495D47CB
-#define DIR_VALIDATION_NUMBER                   (int)0x297E823D
+#define FILE_VALIDATION_NUMBER                  (u32_t)0x495D47CB
+#define DIR_VALIDATION_NUMBER                   (u32_t)0x297E823D
 
 /*==============================================================================
   Local types, enums definitions
@@ -57,13 +57,13 @@ struct vfs_file
         ssize_t  (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
         ssize_t  (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
         stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
-        stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct vfs_stat *stat);
+        stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
         stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
         void      *f_extra_data;
         fd_t       fd;
         u64_t      f_lseek;
         int        f_errflag;
-        int        validation;
+        u32_t      validation;
 };
 
 struct FS_data {
@@ -356,8 +356,6 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
                 if (fs->interface.fs_mknod) {
                         status = fs->interface.fs_mknod(fs->handle, external_path, drv_interface) == STD_RET_OK ? 0 : -1;
                 }
-        } else {
-                errno = ENXIO;
         }
 
         sysm_sysfree(cwd_path);
@@ -394,13 +392,9 @@ int vfs_mkdir(const char *path, mode_t mode)
                         if (fs->interface.fs_mkdir) {
                                 status = fs->interface.fs_mkdir(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
                         }
-                } else {
-                        errno = ENXIO;
                 }
 
                 sysm_sysfree(cwd_path);
-        } else {
-                errno = EINVAL;
         }
 
         return status;
@@ -438,8 +432,6 @@ int vfs_mkfifo(const char *path, mode_t mode)
                 if (fs->interface.fs_mkfifo) {
                         status = fs->interface.fs_mkfifo(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
                 }
-        } else {
-                errno = ENXIO;
         }
 
         sysm_sysfree(cwd_path);
@@ -480,8 +472,6 @@ DIR *vfs_opendir(const char *path)
                                 if (fs->interface.fs_opendir) {
                                         status = fs->interface.fs_opendir(fs->handle, external_path, dir);
                                 }
-                        } else {
-                                errno = ENXIO;
                         }
 
                         sysm_sysfree(cwd_path);
@@ -493,8 +483,6 @@ DIR *vfs_opendir(const char *path)
                 } else {
                         dir->validation = DIR_VALIDATION_NUMBER;
                 }
-        } else {
-                errno = ENOMEM;
         }
 
         return dir;
@@ -542,14 +530,11 @@ dirent_t vfs_readdir(DIR *dir)
 
         if (dir) {
                 if (dir->f_readdir && dir->validation == DIR_VALIDATION_NUMBER) {
-                        direntry = dir->f_readdir(dir->f_handle, dir);
-                } else {
-                        errno = EINVAL;
+                        return dir->f_readdir(dir->f_handle, dir);
                 }
-        } else {
-                errno = EINVAL;
         }
 
+        errno = EINVAL;
         return direntry;
 }
 
@@ -588,8 +573,6 @@ int vfs_remove(const char *path)
                         status = base_fs->interface.fs_remove(base_fs->handle,
                                                               external_path) == STD_RET_OK ? 0 : -1;
                 }
-        } else {
-                errno = ENOENT;
         }
 
         sysm_sysfree(cwd_path);
@@ -747,7 +730,7 @@ int vfs_chown(const char *path, int owner, int group)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_stat(const char *path, struct vfs_stat *stat)
+int vfs_stat(const char *path, struct stat *stat)
 {
         if (!path || !stat) {
                 errno = EINVAL;
@@ -887,8 +870,6 @@ FILE *vfs_fopen(const char *path, const char *mode)
 
                 vfs_open_error:
                 sysm_sysfree(file);
-        } else {
-                errno = ENOMEM;
         }
 
         sysm_sysfree(cwd_path);
@@ -1075,7 +1056,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
 //==============================================================================
 int vfs_fseek(FILE *file, i64_t offset, int mode)
 {
-        struct vfs_stat stat;
+        struct stat stat;
 
         if (!file || mode > VFS_SEEK_END) {
                 errno = EINVAL;
@@ -1179,7 +1160,7 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fstat(FILE *file, struct vfs_stat *stat)
+int vfs_fstat(FILE *file, struct stat *stat)
 {
         if (!file || !stat) {
                 errno = EINVAL;

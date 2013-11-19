@@ -525,31 +525,52 @@ char *sys_fgets(char *str, int size, FILE *stream)
                 return NULL;
         }
 
-        u64_t fpos = vfs_ftell(stream);
+        struct stat file_stat;
+        if (vfs_fstat(stream, &file_stat) == 0) {
+                if (file_stat.st_type == FILE_TYPE_PIPE) {
+                        for (int i = 0; i < size - 1; i++) {
+                                vfs_fread(str + i, sizeof(char), 1, stream);
+                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                                        return NULL;
+                                }
 
-        int n;
-        while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
-                if (vfs_ferror(stream) || vfs_feof(stream)) {
-                        return NULL;
+                                if (*(str + i) == '\n') {
+                                        *(str + i + 1) = '\0';
+                                        break;
+                                }
+                        }
+
+                        return str;
+                } else {
+                        u64_t fpos = vfs_ftell(stream);
+
+                        int n;
+                        while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
+                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                                        return NULL;
+                                }
+                        }
+
+                        char *end;
+                        if ((end = strchr(str, '\n'))) {
+                                end++;
+                                *end = '\0';
+                        } else {
+                                str[n] = '\0';
+                        }
+
+                        int len = strlen(str);
+
+                        if (len == 0)
+                                len = 1;
+
+                        vfs_fseek(stream, fpos + len, SEEK_SET);
+
+                        return str;
                 }
         }
 
-        char *end;
-        if ((end = strchr(str, '\n'))) {
-                end++;
-                *end = '\0';
-        } else {
-                str[n] = '\0';
-        }
-
-        int len = strlen(str);
-
-        if (len == 0)
-                len = 1;
-
-        vfs_fseek(stream, fpos + len, SEEK_SET);
-
-        return str;
+        return NULL;
 }
 
 //==============================================================================
