@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +68,16 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(uname, int argc, char *argv[])
 {
-        return 0;
+        (void) argc;
+        (void) argv;
+
+        printf("%s/%s, %s %s, %s %s, %s\n",
+               get_OS_name(), get_kernel_name(),
+               get_OS_name(), get_OS_version(),
+               get_kernel_name(), get_kernel_version(),
+               get_platform_name());
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
