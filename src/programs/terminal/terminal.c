@@ -81,7 +81,6 @@ static void            print_prompt             (void);
 static enum cmd_status find_internal_command    (const char *cmd);
 static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
-static enum cmd_status cmd_reboot               (char *arg);
 static enum cmd_status cmd_df                   (char *arg);
 static enum cmd_status cmd_mount                (char *arg);
 static enum cmd_status cmd_umount               (char *arg);
@@ -99,7 +98,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
-        {"reboot", cmd_reboot     },
         {"df"    , cmd_df         },
         {"mount" , cmd_mount      },
         {"umount", cmd_umount     },
@@ -313,22 +311,6 @@ static enum cmd_status cmd_cd(char *arg)
                         free(newpath);
                 }
         }
-
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief Function reboot system
- *
- * @param *arg          arguments
- */
-//==============================================================================
-static enum cmd_status cmd_reboot(char *arg)
-{
-        (void) arg;
-
-        restart_system();
 
         return CMD_STATUS_EXECUTED;
 }

@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +68,12 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(reboot, int argc, char *argv[])
 {
-        return 0;
+        (void) argc;
+        (void) argv;
+
+        restart_system();
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
