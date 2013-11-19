@@ -32,13 +32,12 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include "system/dnx.h"
 #include "system/ioctl.h"
-#include "system/mount.h"
-#include "system/thread.h"
+#include "system/dnx.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -85,8 +84,8 @@ char cwd[CWD_PATH_LEN];
 GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
-        {"cd"    , cmd_cd         },
-        {"help"  , cmd_help       },
+        {"cd"  , cmd_cd  },
+        {"help", cmd_help},
 };
 
 /*==============================================================================
@@ -177,25 +176,19 @@ static void print_prompt(void)
 //==============================================================================
 static enum cmd_status find_external_command(const char *cmd)
 {
-        enum cmd_status status = CMD_STATUS_EXECUTED;
-
-        task_set_cwd(global->cwd);
-
-        errno   = 0;
-        int ret = system(cmd);
-        if (ret < 0 && errno) {
-                switch (ret) {
-                case -ENOMEM: status = CMD_STATUS_NOT_ENOUGH_FREE_MEMORY; break;
-                case -EINVAL: status = CMD_STATUS_LINE_PARSE_ERROR; break;
-                case -ENOENT: status = CMD_STATUS_NOT_EXIST; break;
-                default: break;
-                }
+        prog_t *prog = program_new(cmd, global->cwd, stdin, stdout, stderr);
+        if (!prog) {
+                perror(NULL);
+                return CMD_STATUS_EXECUTED;
         }
 
-        /* enable echo if disabled by program */
-        ioctl(stdin, TTY_IORQ_ECHO_ON);
+        while (program_wait_for_close(prog, MAX_DELAY) != 0);
 
-        return status;
+        program_delete(prog);
+
+        ioctl(stdout, TTY_IORQ_ECHO_ON);
+
+        return CMD_STATUS_EXECUTED;
 }
 
 //==============================================================================
