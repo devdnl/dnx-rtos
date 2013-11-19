@@ -50,12 +50,7 @@ extern "C" {
 typedef void task_t;
 typedef void sem_t;
 typedef void queue_t;
-
-typedef struct {
-        void *mutex;
-        bool  recursive;
-        int   valid;
-} mutex_t;
+typedef struct mutex mutex_t;
 
 /*==============================================================================
    Exported object declarations
