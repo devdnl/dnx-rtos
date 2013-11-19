@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +68,12 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(clear, int argc, char *argv[])
 {
+        (void) argc;
+        (void) argv;
 
+        ioctl(stdout, TTY_IORQ_CLEAR_SCR);
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
