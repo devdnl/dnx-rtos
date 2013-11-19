@@ -32,6 +32,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <stdlib.h>
+#include "system/mount.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -66,7 +68,16 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(mount, int argc, char *argv[])
 {
-        return 0;
+        if (argc <= 4) {
+                printf("Usage: mount [file system name] [source path|-] [mount point]\n");
+                return EXIT_FAILURE;
+        }
+
+        if (mount(argv[1], argv[2], argv[3]) != 0) {
+                perror("Mount error");
+        }
+
+        return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus

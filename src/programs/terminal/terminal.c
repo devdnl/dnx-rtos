@@ -81,7 +81,6 @@ static void            print_prompt             (void);
 static enum cmd_status find_internal_command    (const char *cmd);
 static enum cmd_status find_external_command    (const char *cmd);
 static enum cmd_status cmd_cd                   (char *arg);
-static enum cmd_status cmd_mount                (char *arg);
 static enum cmd_status cmd_umount               (char *arg);
 static enum cmd_status cmd_uname                (char *arg);
 static enum cmd_status cmd_detect_card          (char *arg);
@@ -97,7 +96,6 @@ GLOBAL_VARIABLES_SECTION_END
 
 static const struct cmd_entry commands[] = {
         {"cd"    , cmd_cd         },
-        {"mount" , cmd_mount      },
         {"umount", cmd_umount     },
         {"uname" , cmd_uname      },
         {"detect", cmd_detect_card},
@@ -310,71 +308,6 @@ static enum cmd_status cmd_cd(char *arg)
                 }
         }
 
-        return CMD_STATUS_EXECUTED;
-}
-
-//==============================================================================
-/**
- * @brief Function mount file system
- *
- * @param *arg          arguments
- */
-//==============================================================================
-static enum cmd_status cmd_mount(char *arg)
-{
-        char *arg1 = arg;
-        if (!arg1) {
-                goto usage;
-        }
-
-        char *arg2 = strchr(arg1, ' ');
-        if (!arg2) {
-                goto usage;
-        }
-        arg2++;
-
-        char *arg3 = strchr(arg2, ' ');
-        if (!arg3) {
-                goto usage;
-        }
-        arg3++;
-
-        char *fstype  = calloc(arg2 - arg1, 1);
-        char *srcfile = calloc(arg3 - arg2, 1);
-        char *mntpt   = calloc(strlen(arg3) + 1, 1);
-
-        if (!fstype || !srcfile || !mntpt) {
-                if (fstype) {
-                        free(fstype);
-                }
-
-                if (srcfile) {
-                        free(srcfile);
-                }
-
-                if (mntpt) {
-                        free(mntpt);
-                }
-
-                printf("Bad arguments!\n");
-                return CMD_STATUS_EXECUTED;
-        }
-
-        strncpy(fstype , arg1, arg2 - arg1 - 1);
-        strncpy(srcfile, arg2, arg3 - arg2 - 1);
-        strcpy(mntpt, arg3);
-
-        if (mount(fstype, srcfile, mntpt) != STD_RET_OK) {
-                perror("Mount error");
-        }
-
-        free(fstype);
-        free(srcfile);
-        free(mntpt);
-        return CMD_STATUS_EXECUTED;
-
-usage:
-        printf("Usage: mount [file system name] [source path|-] [mount point]\n");
         return CMD_STATUS_EXECUTED;
 }
 
