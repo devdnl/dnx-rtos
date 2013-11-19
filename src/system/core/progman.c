@@ -104,7 +104,7 @@ FILE                    *stderr;
 struct __global_vars__  *global;
 
 /* error number */
-int                      errno;
+int                      _errno;
 
 /*==============================================================================
   External object definitions
