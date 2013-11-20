@@ -39,7 +39,7 @@ extern "C" {
   Local symbolic constants/macros
 ==============================================================================*/
 #define MTX_BLOCK_TIME                  10
-#define PIPE_LENGTH                     64
+#define PIPE_LENGTH                     CONFIG_FSCANF_STREAM_BUFFER_SIZE
 #define PIPE_WRITE_TIMEOUT              MAX_DELAY
 #define PIPE_READ_TIMEOUT               MAX_DELAY
 

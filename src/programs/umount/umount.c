@@ -69,7 +69,7 @@ GLOBAL_VARIABLES_SECTION_END
 PROGRAM_MAIN(umount, int argc, char *argv[])
 {
         if (argc == 1) {
-                printf("Usage: umount [mount point]\n");
+                printf("Usage: %s [mount point]\n", argv[0]);
         } else {
                 if (umount(argv[1]) != 0) {
                         perror(argv[1]);
