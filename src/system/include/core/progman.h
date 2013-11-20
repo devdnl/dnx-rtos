@@ -78,7 +78,7 @@ extern FILE                     *stdin;
 extern FILE                     *stdout;
 extern FILE                     *stderr;
 extern struct __global_vars__   *global;
-extern int                       errno;
+extern int                      _errno;
 
 /*==============================================================================
   Exported function prototypes
