@@ -68,7 +68,7 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(mount, int argc, char *argv[])
 {
-        if (argc <= 4) {
+        if (argc != 4) {
                 printf("Usage: %s [file system name] [source path|-] [mount point]\n", argv[0]);
                 return EXIT_FAILURE;
         }
