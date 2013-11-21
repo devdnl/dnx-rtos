@@ -83,11 +83,12 @@
 #endif
 
 
+GLOBAL_VARIABLES_SECTION_BEGIN
 
-GLOBAL_VARIABLES {
-        lua_State *globalL;
-        const char *progname;
-};
+lua_State *globalL;
+const char *progname;
+
+GLOBAL_VARIABLES_SECTION_END
 
 
 
@@ -476,8 +477,7 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
-PROGRAM_PARAMS(lua, STACK_DEPTH_VERY_HUGE);
-int PROGRAM_MAIN(lua, int argc, char **argv)
+PROGRAM_MAIN(lua, int argc, char **argv)
 {
   global->globalL = NULL;
   global->progname = LUA_PROGNAME;
