@@ -41,7 +41,7 @@ extern "C" {
 /*==============================================================================
  Local symbolic constants/macros
 ==============================================================================*/
-#define BUFSIZ                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
+#define BUFSIZ                  CONFIG_STREAM_BUFFER_LENGTH
 
 /*==============================================================================
  Local types, enums definitions
