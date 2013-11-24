@@ -80,7 +80,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(reboot    , STACK_DEPTH_MINIMAL ),
         _PROGRAM_CONFIG(rm        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(telnet    , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(terminal  , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(terminal  , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(top       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(touch     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(umount    , STACK_DEPTH_LOW     ),
