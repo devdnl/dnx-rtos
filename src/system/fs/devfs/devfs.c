@@ -65,7 +65,7 @@ struct devfs_chain {
 struct devfs {
         struct devfs_chain *root_chain;
         mutex_t            *mutex;
-        int                 number_of_opened_devices;
+        int                 number_of_opened_files;
         int                 number_of_chains;
         int                 number_of_used_nodes;
 };
@@ -122,7 +122,7 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
                 devfs->root_chain               = chain;
                 devfs->mutex                    = mtx;
                 devfs->number_of_chains         = 1;
-                devfs->number_of_opened_devices = 0;
+                devfs->number_of_opened_files   = 0;
                 devfs->number_of_used_nodes     = 0;
 
                 *fs_handle = devfs;
@@ -161,7 +161,7 @@ API_FS_RELEASE(devfs, void *fs_handle)
         struct devfs *devfs = fs_handle;
 
         if (mutex_lock(devfs->mutex, 100)) {
-                if (devfs->number_of_opened_devices != 0) {
+                if (devfs->number_of_opened_files != 0) {
                         mutex_unlock(devfs->mutex);
                         errno = EBUSY;
                         return STD_RET_ERROR;
@@ -223,7 +223,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
                         if (open == STD_RET_OK) {
                                 *extra = node;
                                 *fpos  = 0;
-                                devfs->number_of_opened_devices++;
+                                devfs->number_of_opened_files++;
                                 node->opended++;
                                 status = STD_RET_OK;
                         }
@@ -272,7 +272,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
         if (close == STD_RET_OK) {
 
                 if (mutex_lock(devfs->mutex, TIMEOUT_MS)) {
-                        devfs->number_of_opened_devices--;
+                        devfs->number_of_opened_files--;
                         node->opended--;
                         mutex_unlock(devfs->mutex);
                 }
