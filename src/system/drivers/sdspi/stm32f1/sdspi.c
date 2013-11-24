@@ -576,6 +576,8 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
                                 device_stat->st_size *= SECTOR_SIZE;
                                 device_stat->st_major = 0;
                                 device_stat->st_minor = 0;
+
+                                status = STD_RET_OK;
                         } else {
                                 errno = EIO;
                         }
