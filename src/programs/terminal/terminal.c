@@ -242,8 +242,8 @@ static enum cmd_status find_internal_command(const char *cmd)
 //==============================================================================
 static enum cmd_status cmd_cd(char *arg)
 {
-        char  *newpath  = NULL;
-        bool   freePath = FALSE;
+        char  *newpath   = NULL;
+        bool   free_path = false;
 
         if (strcmp(arg, "..") == 0) {
                 char *lastslash = strrchr(global->cwd, '/');
@@ -254,8 +254,8 @@ static enum cmd_status cmd_cd(char *arg)
                                  *(lastslash + 1) = '\0';
                          }
                 }
-        } else if (arg[0] != '/') {
-                newpath = calloc(strlen(arg) + strlen(global->cwd) + 2, sizeof(global->cwd[0]));
+        } else if (FIRST_CHARACTER(arg) != '/') {
+                newpath = calloc(strlen(arg) + strlen(global->cwd) + 2, ARRAY_ITEM_SIZE(global->cwd));
                 if (newpath) {
                         strcpy(newpath, global->cwd);
 
@@ -265,14 +265,14 @@ static enum cmd_status cmd_cd(char *arg)
 
                         strcat(newpath, arg);
 
-                        freePath = TRUE;
+                        free_path = true;
                 } else {
                         perror(NULL);
                 }
-        } else if (arg[0] == '/') {
+        } else if (FIRST_CHARACTER(arg) == '/') {
                 newpath = arg;
         } else {
-                printf("No such directory\n");
+                puts(strerror(ENOENT));
         }
 
         if (newpath) {
@@ -281,10 +281,10 @@ static enum cmd_status cmd_cd(char *arg)
                         closedir(dir);
                         strncpy(global->cwd, newpath, CWD_PATH_LEN);
                 } else {
-                        perror(newpath);
+                        perror(arg);
                 }
 
-                if (freePath) {
+                if (free_path) {
                         free(newpath);
                 }
         }
