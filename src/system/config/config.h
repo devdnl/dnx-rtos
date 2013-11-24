@@ -137,7 +137,7 @@ extern "C" {
 /**
  * Maximum stream buffer size
  */
-#define CONFIG_FSCANF_STREAM_BUFFER_SIZE                (100)
+#define CONFIG_STREAM_BUFFER_LENGTH                     (100)
 
 /**
  * ERRNO string support (strerror(), perror(), etc)

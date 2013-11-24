@@ -60,7 +60,7 @@ extern "C" {
 #endif
 
 /** stdio buffer size */
-#define BUFSIZ                                                  CONFIG_FSCANF_STREAM_BUFFER_SIZE
+#define BUFSIZ                                                  CONFIG_STREAM_BUFFER_LENGTH
 
 /** function-like macros */
 #define strerror(int__errnum)                                   sys_strerror(int__errnum)
