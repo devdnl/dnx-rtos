@@ -96,7 +96,7 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
 
         taskENTER_CRITICAL();
         task_t *task = NULL;
-        if (xTaskCreate(func, (signed char *)name, stack_depth, argv, child_priority, &task)) {
+        if (xTaskCreate(func, (signed char *)name, stack_depth, argv, child_priority, &task) == pdPASS) {
 
                 if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
                         vTaskSuspend(task);
@@ -115,6 +115,7 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
         } else {
                 taskEXIT_CRITICAL();
                 sysm_kfree(data);
+                task = NULL;
         }
 
         return task;

@@ -56,8 +56,6 @@ extern "C" {
 enum cmd_status {
         CMD_STATUS_EXECUTED,
         CMD_STATUS_NOT_EXIST,
-        CMD_STATUS_NOT_ENOUGH_FREE_MEMORY,
-        CMD_STATUS_LINE_PARSE_ERROR,
         CMD_STATUS_DO_EXIT
 };
 
@@ -141,12 +139,6 @@ PROGRAM_MAIN(terminal, int argc, char *argv[])
                 case CMD_STATUS_NOT_EXIST:
                         printf("\'%s\' is unknown command.\n", cmd);
                         break;
-                case CMD_STATUS_NOT_ENOUGH_FREE_MEMORY:
-                        printf("Not enough free memory.\n");
-                        break;
-                case CMD_STATUS_LINE_PARSE_ERROR:
-                        puts("Line parse error.");
-                        break;
                 case CMD_STATUS_DO_EXIT:
                         return 0;
                 }
@@ -178,9 +170,15 @@ static void print_prompt(void)
 //==============================================================================
 static enum cmd_status find_external_command(const char *cmd)
 {
+        errno = 0;
         prog_t *prog = program_new(cmd, global->cwd, stdin, stdout, stderr);
         if (!prog) {
-                return CMD_STATUS_NOT_EXIST;
+                if (errno == ENOENT) {
+                        return CMD_STATUS_NOT_EXIST;
+                } else {
+                        perror(cmd);
+                        return CMD_STATUS_EXECUTED;
+                }
         }
 
         while (program_wait_for_close(prog, MAX_DELAY) != 0);
