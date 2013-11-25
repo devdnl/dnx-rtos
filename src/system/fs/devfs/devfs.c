@@ -255,7 +255,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
-        STOP_IF(!file_owner);
+        STOP_IF(force && !file_owner);
 
         UNUSED_ARG(fd);
 
@@ -728,6 +728,8 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
 
                         dirent.name = node->path;
                         dir->f_seek++;
+                } else {
+                        errno = 0;
                 }
 
                 mutex_unlock(devfs->mutex);

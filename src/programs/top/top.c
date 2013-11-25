@@ -92,26 +92,25 @@ PROGRAM_MAIN(top, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        int key     = 0;
-        int divider = 0;
-        int shift   = 0;
-
         ioctl(stdin, TTY_IORQ_ECHO_OFF);
         ioctl(stdout, TTY_IORQ_CLEAR_SCR);
+
+        int key   = 0;
+        int shift = 0;
+        int time  = 0;
 
         while (key != 'q') {
                 fflush(stdin);
                 key = getchar();
 
                 if (!strchr("k,.", key)) {
-                        if (divider) {
-                                divider--;
+                        if (get_time_ms() - time < 1000) {
                                 sleep_ms(10);
                                 continue;
+                        } else {
+                                time = get_time_ms();
                         }
                 }
-
-                divider = 100;
 
                 global->term_row = 24;
                 ioctl(stdout, TTY_IORQ_GET_ROW, &global->term_row);

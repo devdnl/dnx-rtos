@@ -83,11 +83,14 @@ enum path_correction {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static inline void      mutex_force_lock      (mutex_t *mtx);
-static int              file_mode_str_to_flags          (const char *str);
-static struct FS_data  *find_mounted_FS                 (const char *path, u16_t len, u32_t *itemid);
-static struct FS_data  *find_base_FS                    (const char *path, char **extPath);
-static char            *new_corrected_path              (const char *path, enum path_correction corr);
+static int              fclose                  (FILE *file, bool force, task_t *opened_by_task);
+static int              increase_task_priority  (void);
+static inline void      restore_priority        (int priority);
+static inline void      mutex_force_lock        (mutex_t *mtx);
+static int              file_mode_str_to_flags  (const char *str);
+static struct FS_data  *find_mounted_FS         (const char *path, u16_t len, u32_t *itemid);
+static struct FS_data  *find_base_FS            (const char *path, char **extPath);
+static char            *new_corrected_path      (const char *path, enum path_correction corr);
 
 /*==============================================================================
   Local object definitions
@@ -300,7 +303,9 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                 struct vfs_statfs stat_fs = {.f_fsname = NULL};
 
                 if (fs->interface.fs_statfs) {
+                        int priority = increase_task_priority();
                         fs->interface.fs_statfs(fs->handle, &stat_fs);
+                        restore_priority(priority);
                 }
 
                 if (stat_fs.f_fsname) {
@@ -393,7 +398,9 @@ int vfs_mkdir(const char *path, mode_t mode)
         int status = -1;
         if (fs) {
                 if (fs->interface.fs_mkdir) {
+                        int priority = increase_task_priority();
                         status = fs->interface.fs_mkdir(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
+                        restore_priority(priority);
                 }
         }
 
@@ -432,7 +439,9 @@ int vfs_mkfifo(const char *path, mode_t mode)
         int status = -1;
         if (fs) {
                 if (fs->interface.fs_mkfifo) {
+                        int priority = increase_task_priority();
                         status = fs->interface.fs_mkfifo(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
+                        restore_priority(priority);
                 }
         }
 
@@ -472,7 +481,9 @@ DIR *vfs_opendir(const char *path)
                                 dir->f_handle = fs->handle;
 
                                 if (fs->interface.fs_opendir) {
+                                        int priority = increase_task_priority();
                                         status = fs->interface.fs_opendir(fs->handle, external_path, dir);
+                                        restore_priority(priority);
                                 }
                         }
 
@@ -532,7 +543,10 @@ dirent_t vfs_readdir(DIR *dir)
 
         if (dir) {
                 if (dir->f_readdir && dir->validation == DIR_VALIDATION_NUMBER) {
-                        return dir->f_readdir(dir->f_handle, dir);
+                        int priority = increase_task_priority();
+                        direntry = dir->f_readdir(dir->f_handle, dir);
+                        restore_priority(priority);
+                        return direntry;
                 }
         }
 
@@ -572,8 +586,10 @@ int vfs_remove(const char *path)
         int status = -1;
         if (base_fs && !mount_fs) {
                 if (base_fs->interface.fs_remove) {
+                        int priority = increase_task_priority();
                         status = base_fs->interface.fs_remove(base_fs->handle,
                                                               external_path) == STD_RET_OK ? 0 : -1;
+                        restore_priority(priority);
                 }
         }
 
@@ -628,8 +644,10 @@ int vfs_rename(const char *old_name, const char *new_name)
                 goto exit;
         }
 
+        int priority = increase_task_priority();
         status = old_fs->interface.fs_rename(old_fs->handle, old_extern_path,
                                              new_extern_path) == STD_RET_OK ? 0 : -1;
+        restore_priority(priority);
 
 exit:
         if (cwd_old_name) {
@@ -673,7 +691,9 @@ int vfs_chmod(const char *path, int mode)
         int status = -1;
         if (fs) {
                 if (fs->interface.fs_chmod) {
+                        int priority = increase_task_priority();
                         status = fs->interface.fs_chmod(fs->handle, external_path, mode) == STD_RET_OK ? 0 : -1;
+                        restore_priority(priority);
                 }
         }
 
@@ -712,8 +732,10 @@ int vfs_chown(const char *path, int owner, int group)
 
         int status = -1;
         if (fs) {
-                if (fs->interface.fs_chown){
+                if (fs->interface.fs_chown) {
+                        int priority = increase_task_priority();
                         status = fs->interface.fs_chown(fs->handle, external_path, owner, group) == STD_RET_OK ? 0 : -1;
+                        restore_priority(priority);
                 }
         }
 
@@ -752,7 +774,9 @@ int vfs_stat(const char *path, struct stat *stat)
         int status = -1;
         if (fs) {
                 if (fs->interface.fs_stat){
+                        int priority = increase_task_priority();
                         status = fs->interface.fs_stat(fs->handle, external_path, stat) == STD_RET_OK ? 0 : -1;
+                        restore_priority(priority);
                 }
         }
 
@@ -788,15 +812,16 @@ int vfs_statfs(const char *path, struct vfs_statfs *statfs)
         mutex_unlock(vfs_resource_mtx);
         sysm_sysfree(cwd_path);
 
-        if (!fs) {
-                return -1;
+        int status = -1;
+        if (fs) {
+                if (fs->interface.fs_statfs) {
+                        int priority = increase_task_priority();
+                        status = fs->interface.fs_statfs(fs->handle, statfs) == STD_RET_OK ? 0 : -1;
+                        restore_priority(priority);
+                }
         }
 
-        if (!fs->interface.fs_statfs) {
-                return -1;
-        }
-
-        return fs->interface.fs_statfs(fs->handle, statfs) == STD_RET_OK ? 0 : -1;
+        return status;
 }
 
 //==============================================================================
@@ -846,9 +871,13 @@ FILE *vfs_fopen(const char *path, const char *mode)
                         goto vfs_open_error;
                 }
 
+                int priority = increase_task_priority();
+
                 if (fs->interface.fs_open(fs->handle, &file->f_extra_data,
                                           &file->fd,  &file->f_lseek,
                                           external_path, flags) == STD_RET_OK) {
+
+                        restore_priority(priority);
 
                         file->FS_hdl  = fs->handle;
                         file->f_close = fs->interface.fs_close;
@@ -869,6 +898,8 @@ FILE *vfs_fopen(const char *path, const char *mode)
                         sysm_sysfree(cwd_path);
                         return file;
                 }
+
+                restore_priority(priority);
 
                 vfs_open_error:
                 sysm_sysfree(file);
@@ -911,23 +942,9 @@ FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose(FILE *file) /* FIXME */
+int vfs_fclose(FILE *file)
 {
-        if (file) {
-                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
-                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, false, task_get_handle()) == STD_RET_OK) {
-                                file->validation = 0;
-                                sysm_sysfree(file);
-                                return 0;
-                        }
-                } else {
-                        errno = ENOENT;
-                }
-        } else {
-                errno = EINVAL;
-        }
-
-        return -1;
+        return fclose(file, false, NULL);
 }
 
 //==============================================================================
@@ -940,23 +957,9 @@ int vfs_fclose(FILE *file) /* FIXME */
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose_force(FILE *file, task_t *opened_by_task) /* FIXME */
+int vfs_fclose_force(FILE *file, task_t *opened_by_task)
 {
-        if (file) {
-                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
-                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, true, opened_by_task) == STD_RET_OK) {
-                                file->validation = 0;
-                                sysm_sysfree(file);
-                                return 0;
-                        }
-                } else {
-                        errno = ENOENT;
-                }
-        } else {
-                errno = EINVAL;
-        }
-
-        return -1;
+        return fclose(file, true, opened_by_task);
 }
 
 //==============================================================================
@@ -1174,7 +1177,11 @@ int vfs_fstat(FILE *file, struct stat *stat)
                 return -1;
         }
 
-        return file->f_stat(file->FS_hdl, file->f_extra_data, file->fd, stat) == STD_RET_OK ? 0 : -1;
+        int priority = increase_task_priority();
+        int status = file->f_stat(file->FS_hdl, file->f_extra_data, file->fd, stat) == STD_RET_OK ? 0 : -1;
+        restore_priority(priority);
+
+        return status;
 }
 
 //==============================================================================
@@ -1198,7 +1205,11 @@ int vfs_fflush(FILE *file)
                 return -1;
         }
 
-        return file->f_flush(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK ? 0 : -1;
+        int priority = increase_task_priority();
+        int status = file->f_flush(file->FS_hdl, file->f_extra_data, file->fd) == STD_RET_OK ? 0 : -1;
+        restore_priority(priority);
+
+        return status;
 }
 
 //==============================================================================
@@ -1285,6 +1296,66 @@ int vfs_rewind(FILE *file)
 
 //==============================================================================
 /**
+ * @brief Generic file close
+ *
+ * @param[in] file              pinter to file
+ * @param[in] force             force close
+ * @param[in] opened_by_task    task which opened file
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+static int fclose(FILE *file, bool force, task_t *opened_by_task)
+{
+        if (file) {
+                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force, opened_by_task) == STD_RET_OK) {
+                                file->validation = 0;
+                                sysm_sysfree(file);
+                                return 0;
+                        }
+                } else {
+                        errno = ENOENT;
+                }
+        } else {
+                errno = EINVAL;
+        }
+
+        return -1;
+}
+
+//==============================================================================
+/**
+ * @brief Function increase task priority and return original priority value
+ *
+ * @return original task priority
+ */
+//==============================================================================
+static int increase_task_priority(void)
+{
+        int priority = task_get_priority();
+
+        if (priority < HIGHEST_PRIORITY) {
+                task_set_priority(priority + 1);
+        }
+
+        return priority;
+}
+
+//==============================================================================
+/**
+ * @brief Function restore original priority
+ *
+ * @param priority
+ */
+//==============================================================================
+static inline void restore_priority(int priority)
+{
+        task_set_priority(priority);
+}
+
+//==============================================================================
+/**
  * @brief Force lock mutex
  *
  * @param mtx           mutex to lock
@@ -1307,27 +1378,27 @@ static inline void mutex_force_lock(mutex_t *mtx)
 //==============================================================================
 static int file_mode_str_to_flags(const char *str)
 {
-        if (strncmp("r", str, 2) == 0) {
+        if (strcmp("r", str) == 0) {
                 return (O_RDONLY);
         }
 
-        if (strncmp("r+", str, 2) == 0) {
+        if (strcmp("r+", str) == 0) {
                 return (O_RDWR);
         }
 
-        if (strncmp("w", str, 2) == 0) {
+        if (strcmp("w", str) == 0) {
                 return (O_WRONLY | O_CREAT);
         }
 
-        if (strncmp("w+", str, 2) == 0) {
+        if (strcmp("w+", str) == 0) {
                 return (O_RDWR | O_CREAT);
         }
 
-        if (strncmp("a", str, 2) == 0) {
+        if (strcmp("a", str) == 0) {
                 return (O_WRONLY | O_CREAT | O_APPEND);
         }
 
-        if (strncmp("a+", str, 2) == 0) {
+        if (strcmp("a+", str) == 0) {
                 return (O_RDWR | O_CREAT | O_APPEND);
         }
 

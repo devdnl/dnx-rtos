@@ -145,12 +145,9 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
         uint stop_time = get_time_ms() - start_time;
         u32_t copy_size = lcopy_size;
 
+        const char *pre = "";
         if (lcopy_size >= 1024) {
                 copy_size = lcopy_size / 1024;
-        }
-
-        const char *pre = "";
-        if (copy_size >= 1024) {
                 pre = "Ki";
         }
 

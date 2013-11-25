@@ -35,6 +35,7 @@ extern "C" {
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -91,10 +92,11 @@ PROGRAM_MAIN(ls, int argc, char *argv[])
 
         DIR *dir = opendir(path);
         if (dir) {
-                dirent_t dirent;
+                errno = 0;
+                dirent_t dirent = readdir(dir);
+                while (dirent.name != NULL) {
 
-                while ((dirent = readdir(dir)).name != NULL) {
-                        const char *type = NULL;
+                        const char *type;
 
                         switch (dirent.filetype) {
                         case FILE_TYPE_DIR:     type = FONT_COLOR_YELLOW"d";  break;
@@ -124,6 +126,13 @@ PROGRAM_MAIN(ls, int argc, char *argv[])
 
                         printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(11)"%s"RESET_ATTRIBUTES"\n",
                                type, size, unit, dirent.name);
+
+                        errno  = 0;
+                        dirent = readdir(dir);
+                }
+
+                if (errno) {
+                        perror(argv[0]);
                 }
 
                 closedir(dir);

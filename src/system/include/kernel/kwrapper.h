@@ -77,7 +77,7 @@ extern "C" {
 /** CALCULATIONS */
 #define PRIORITY(prio)                  (prio + (configMAX_PRIORITIES / 2))
 #define LOWEST_PRIORITY                 (-(int)(configMAX_PRIORITIES / 2))
-#define HIGHEST_PRIORITY                (configMAX_PRIORITIES / 2)
+#define HIGHEST_PRIORITY                (int)(configMAX_PRIORITIES / 2)
 #define _CEILING(x,y)                   (((x) + (y) - 1) / (y))
 #define MS2TICK(ms)                     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
 
