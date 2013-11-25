@@ -98,7 +98,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
 
         int     key   = 0;
         int     shift = 0;
-        timer_t timer = 0;
+        timer_t timer = timer_set_expired();
 
         while (key != 'q') {
                 fflush(stdin);

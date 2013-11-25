@@ -34,6 +34,7 @@ extern "C" {
 #include "system/dnxmodule.h"
 #include "system/thread.h"
 #include "system/dnx.h"
+#include "system/timer.h"
 #include "stm32f1/sdspi_cfg.h"
 #include "stm32f1/sdspi_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -42,13 +43,8 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define select_SD_card()                                SDSPI_SD_SELECT
-#define deselect_SD_card()                              SDSPI_SD_DESELECT
-
 #define MTX_BLOCK_TIME                                  0
 #define MTX_BLOCK_TIME_LONG                             200
-#define force_lock_recursive_mutex(mtx)                 while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
-
 #define RELEASE_TIMEOUT_MS                              1000
 
 /* SPI configuration macros */
@@ -194,6 +190,8 @@ struct sdspi_data {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void             select_card             (void);
+static void             deselect_card           (void);
 static stdret_t         turn_on_SPI_clock       (void);
 static stdret_t         turn_off_SPI_clock      (void);
 static u8_t             send_cmd                (struct sdspi_data *sdspi, u8_t cmd, u32_t arg);
@@ -250,6 +248,8 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                 RCC->AHBENR |= RCC_AHBENR_DMA1EN;
         } else if ((u32_t)SDSPI_DMA == DMA2_BASE) {
                 RCC->AHBENR |= RCC_AHBENR_DMA2EN;
+        } else {
+                goto error;
         }
 
         NVIC_SetPriority(SDSPI_DMA_IRQ_NUMBER, SDSPI_DMA_IRQ_PRIORITY);
@@ -271,23 +271,22 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         enable_software_slave_management();
         transmit_MSB_first();
 
-#if   (SDSPI_PERIPHERAL_DIVIDER <=   2)
-        set_baud_rate(FPCLK_DIV_2);
-#elif (SDSPI_PERIPHERAL_DIVIDER <=   4)
-        set_baud_rate(FPCLK_DIV_4);
-#elif (SDSPI_PERIPHERAL_DIVIDER <=   8)
-        set_baud_rate(FPCLK_DIV_8);
-#elif (SDSPI_PERIPHERAL_DIVIDER <=  16)
-        set_baud_rate(FPCLK_DIV_16);
-#elif (SDSPI_PERIPHERAL_DIVIDER <=  32)
-        set_baud_rate(FPCLK_DIV_32);
-#elif (SDSPI_PERIPHERAL_DIVIDER <=  64)
-        set_baud_rate(FPCLK_DIV_64);
-#elif (SDSPI_PERIPHERAL_DIVIDER <= 128)
-        set_baud_rate(FPCLK_DIV_128);
-#else
-        set_baud_rate(FPCLK_DIV_256);
-#endif
+        if (SDSPI_PERIPHERAL_DIVIDER <= 2)
+                set_baud_rate(FPCLK_DIV_2);
+        else if (SDSPI_PERIPHERAL_DIVIDER <= 4)
+                set_baud_rate(FPCLK_DIV_4);
+        else if (SDSPI_PERIPHERAL_DIVIDER <= 8)
+                set_baud_rate(FPCLK_DIV_8);
+        else if (SDSPI_PERIPHERAL_DIVIDER <= 16)
+                set_baud_rate(FPCLK_DIV_16);
+        else if (SDSPI_PERIPHERAL_DIVIDER <= 32)
+                set_baud_rate(FPCLK_DIV_32);
+        else if (SDSPI_PERIPHERAL_DIVIDER <= 64)
+                set_baud_rate(FPCLK_DIV_64);
+        else if (SDSPI_PERIPHERAL_DIVIDER <= 128)
+                set_baud_rate(FPCLK_DIV_128);
+        else
+                set_baud_rate(FPCLK_DIV_256);
 
         enable_master_mode();
         set_clock_polarity_to_0_when_idle();
@@ -324,13 +323,13 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
         struct sdspi_data *hdl = device_handle;
 
         /* wait for all partition are released */
-        int os_time = get_time_ms();
+        timer_t timer = timer_reset();
         while (  hdl->partition[0].in_use == true
               || hdl->partition[1].in_use == true
               || hdl->partition[2].in_use == true
               || hdl->partition[3].in_use == true) {
 
-                if (os_time - get_time_ms() >= RELEASE_TIMEOUT_MS) {
+                if (timer_is_expired(timer, RELEASE_TIMEOUT_MS)) {
                         errno = EBUSY;
                         return STD_RET_ERROR;
                 }
@@ -546,11 +545,11 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         if (mutex_lock(hdl->card_protect_mtx, MTX_BLOCK_TIME_LONG)) {
                 /* size info */
                 if (send_cmd(hdl, CMD9, 0) == 0) {
-                        u8_t  csd[16];
-                        u8_t  token;
-                        uint  try = 1000000;
+                        u8_t    csd[16];
+                        u8_t    token;
+                        timer_t timer = timer_reset();
 
-                        while ((token = spi_rw(0xFF)) == 0xFF && --try);
+                        while ((token = spi_rw(0xFF)) == 0xFF && !timer_is_expired(timer, SDSPI_WAIT_TIMEOUT));
 
                         if (token == 0xFE) {
                                 u8_t *ptr = &csd[0];
@@ -591,6 +590,26 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         }
 
         return status;
+}
+
+//==============================================================================
+/**
+ * @brief Function select card
+ */
+//==============================================================================
+static void select_card(void)
+{
+        SDSPI_SD_SELECT;
+}
+
+//==============================================================================
+/**
+ * @brief Function deselect card
+ */
+//==============================================================================
+static void deselect_card(void)
+{
+        SDSPI_SD_DESELECT;
 }
 
 //==============================================================================
@@ -759,7 +778,7 @@ static stdret_t partition_flush(void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t partition_stat(void *device_handle, struct vfs_dev_stat *stat)
+static stdret_t partition_stat(void *device_handle, struct vfs_dev_stat *stat)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(stat == NULL);
@@ -866,12 +885,11 @@ static u8_t spi_rw(u8_t out)
 //==============================================================================
 static u8_t wait_ready(void)
 {
-        int  try = 1000000;
-        u8_t response;
-
         spi_rw(0xFF);
 
-        while ((response = spi_rw(0xFF)) != 0xFF && --try);
+        u8_t    response;
+        timer_t timer = timer_reset();
+        while ((response = spi_rw(0xFF)) != 0xFF && !timer_is_expired(timer, SDSPI_WAIT_TIMEOUT));
 
         return response;
 }
@@ -880,7 +898,7 @@ static u8_t wait_ready(void)
 /**
  * @brief Function transmit command to card
  *
- * @param[in] *sdspi    SD SPI interface data
+ * @param[in] sdspi     SD SPI interface data
  * @param[in] cmd       card command
  * @param[in] arg       command's argument
  */
@@ -898,8 +916,8 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
         }
 
         /* select the card and wait for ready */
-        deselect_SD_card();
-        select_SD_card();
+        deselect_card();
+        select_card();
 
         if (wait_ready() != 0xFF) {
                 errno = EIO;
@@ -945,10 +963,9 @@ static u8_t send_cmd(struct sdspi_data *sdspi, u8_t cmd, u32_t arg)
 //==============================================================================
 static bool receive_data_block(u8_t *buff)
 {
-        u8_t token;
-        uint try = 1000000;
-
-        while ((token = spi_rw(0xFF)) == 0xFF && --try);
+        u8_t    token;
+        timer_t timer = timer_reset();
+        while ((token = spi_rw(0xFF)) == 0xFF && !timer_is_expired(timer, SDSPI_WAIT_TIMEOUT));
 
         if (token != 0xFE) {
                 errno = EIO;
@@ -1268,30 +1285,34 @@ static size_t write_partial_sectors(struct sdspi_data *hdl, const void *src, siz
 //==============================================================================
 static stdret_t initialize_card(struct sdspi_data *hdl)
 {
-        deselect_SD_card();
+        deselect_card();
         for (int n = 0; n < 10; n++) {
                 spi_rw(0xFF);
         }
 
-        int  timeout = 2 * SDSPI_WAIT_TIMEOUT;
-        u8_t cmd;
-        u8_t OCR[4];
-
-        hdl->card_type = 0;
+        hdl->card_type        = 0;
         hdl->card_initialized = false;
+
+        timer_t timer = timer_reset();
 
         if (send_cmd(hdl, CMD0, 0) == 0x01) {
                 if (send_cmd(hdl, CMD8, 0x1AA) == 0x01) { /* check SDHC card */
+                        u8_t OCR[4];
+
                         for (int n = 0; n < 4; n++) {
                                 OCR[n] = spi_rw(0xFF);
                         }
 
                         if (OCR[2] == 0x01 && OCR[3] == 0xAA) {
-                                while (--timeout && send_cmd(hdl, ACMD41, 1UL << 30)) {
+                                while ( !timer_is_expired(timer, SDSPI_WAIT_TIMEOUT)
+                                      && send_cmd(hdl, ACMD41, 1UL << 30) ) {
+
                                         sleep_ms(1);
                                 }
 
-                                if (timeout && send_cmd(hdl, CMD58, 0) == 0) {
+                                if ( !timer_is_expired(timer, SDSPI_WAIT_TIMEOUT)
+                                   && send_cmd(hdl, CMD58, 0) == 0 ) {
+
                                         for (int n = 0; n < 4; n++) {
                                                 OCR[n] = spi_rw(0xFF);
                                         }
@@ -1300,6 +1321,7 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
                                 }
                         }
                 } else { /* SDSC or MMC */
+                        u8_t cmd;
                         if (send_cmd(hdl, ACMD41, 0) <= 0x01)   {
                                 hdl->card_type = CT_SD1;
                                 cmd = ACMD41;   /* SDSC */
@@ -1309,23 +1331,24 @@ static stdret_t initialize_card(struct sdspi_data *hdl)
                         }
 
                         /* Wait for leaving idle state */
-                        while (timeout && send_cmd(hdl, cmd, 0)) {
-                                timeout--;
+                        while (!timer_is_expired(timer, SDSPI_WAIT_TIMEOUT) && send_cmd(hdl, cmd, 0)) {
                                 sleep_ms(1);
                         }
 
                         /* set R/W block length to 512 */
-                        if (!timeout || send_cmd(hdl, CMD16, SECTOR_SIZE) != 0) {
+                        if ( !timer_is_expired(timer, SDSPI_WAIT_TIMEOUT)
+                           || send_cmd(hdl, CMD16, SECTOR_SIZE) != 0) {
+
                                 hdl->card_type = 0;
                         }
                 }
 
-                if (timeout) {
+                if (!timer_is_expired(timer, SDSPI_WAIT_TIMEOUT)) {
                         hdl->card_initialized = true;
                 }
         }
 
-        deselect_SD_card();
+        deselect_card();
         spi_rw(0xFF);
 
         if (hdl->card_initialized == false) {
@@ -1435,7 +1458,7 @@ static size_t card_read(struct sdspi_data *hdl, u8_t *dst, size_t count, u64_t l
                 n  = read_partial_sectors(hdl, dst, count, lseek);
         }
 
-        deselect_SD_card();
+        deselect_card();
         spi_rw(0xFF);
         return n;
 }
@@ -1470,7 +1493,7 @@ static size_t card_write(struct sdspi_data *hdl, const u8_t *src, size_t count, 
                 n  = write_partial_sectors(hdl, src, count, lseek);
         }
 
-        deselect_SD_card();
+        deselect_card();
         spi_rw(0xFF);
         return n;
 }

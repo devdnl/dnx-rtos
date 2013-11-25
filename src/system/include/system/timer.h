@@ -83,6 +83,18 @@ static inline bool timer_is_expired(timer_t timer, int time)
         return (_kernel_get_time_ms() - timer >= time);
 }
 
+//==============================================================================
+/**
+ * @brief Function set timer to expired value
+ *
+ * @return timer expired value
+ */
+//==============================================================================
+static inline timer_t timer_set_expired(void)
+{
+        return 0;
+}
+
 #ifdef __cplusplus
 }
 #endif
