@@ -1,4 +1,4 @@
-dnx/FreeRTOS 1.1.11
+dnx/FreeRTOS 1.1.12
 ==================
 New Features, Improvements:
 - added device lock, unlock functions
@@ -10,6 +10,7 @@ New Features, Improvements:
 - implemented thread functions in thread.h library
 - accelerated program execution, applied shared global variables with standard objects (stdin etc)
 - implemented pipe files in lfs and devfs file systems (mkfifo)
+- implemented timer.h library to support software timers in 1ms resolution
 
 Fixed Bugs:
 - init_driver(): function doesn't color messages
