@@ -522,8 +522,6 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
                 dirent.filetype = node->type;
                 dirent.name     = node->name;
                 dirent.size     = node->size;
-        } else {
-                errno = ENOENT;
         }
 
         mutex_unlock(lfs->resource_mtx);
