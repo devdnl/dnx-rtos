@@ -70,7 +70,7 @@ static inline timer_t timer_reset(void)
 
 //==============================================================================
 /**
- * @brief Function check if timer expired
+ * @brief Function check if timer is expired
  *
  * @param timer         timer value
  * @param time          expiration time
@@ -81,6 +81,21 @@ static inline timer_t timer_reset(void)
 static inline bool timer_is_expired(timer_t timer, int time)
 {
         return (_kernel_get_time_ms() - timer >= time);
+}
+
+//==============================================================================
+/**
+ * @brief Function check if timer is not expired
+ *
+ * @param timer         timer value
+ * @param time          expiration time
+ *
+ * @return true if timer not expired, otherwise false
+ */
+//==============================================================================
+static inline bool timer_is_not_expired(timer_t timer, int time)
+{
+        return (_kernel_get_time_ms() - timer < time);
 }
 
 //==============================================================================
