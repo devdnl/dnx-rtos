@@ -38,6 +38,7 @@ extern "C" {
 #include "system/dnx.h"
 #include "system/ioctl.h"
 #include "system/thread.h"
+#include "system/timer.h"
 #include "lwipopts.h"
 #include "lwip/tcp_impl.h"
 #include "lwip/dhcp.h"
@@ -594,9 +595,9 @@ static int send_request_and_wait_for_response(request *request)
         if (!request)
                 return -1;
 
-        u32_t time = get_time_ms();
+        timer_t timer = timer_reset();
         while (!ethif_mem->eth_file) {
-                if (get_time_ms() - time >= REQUEST_TIMEOUT_MS)
+                if (timer_is_expired(timer, REQUEST_TIMEOUT_MS))
                         return -1;
                 sleep_ms(250);
         }

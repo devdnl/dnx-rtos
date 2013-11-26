@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    ethmac_cfg.h
+@file    timer.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support Ethernet interface.
+@brief   Software timer library.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _ETHMAC_CFG_H_
-#define _ETHMAC_CFG_H_
+#ifndef _TIMER_H_
+#define _TIMER_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,68 +34,16 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "config.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/*
- * Ethernet MAC IRQ priority
- */
-#define ETHMAC_IRQ_PRIORITY             CONFIG_USER_IRQ_PRIORITY
-
-/*
- * Enable (1) or disable (0) hardware checksum calculation
- */
-#define ETHMAC_CHECKSUM_BY_HARDWARE     1
-
-/*
- * Ethernet MAC speed (ETH_Speed_100M or ETH_Speed_10M)
- */
-#define ETHMAC_SPEED                    ETH_Speed_100M
-
-/*
- * PHY address
- */
-#define ETHMAC_PHY_ADDRESS              0x01
-
-/*
- * PHY reset delay [ms]
- */
-#define ETHMAC_PHY_RESET_DELAY          250
-
-/*
- * PHY configuration apply delay [ms]
- */
-#define ETHMAC_PHY_CONFIG_DELAY         250
-
-/*
- * Transceiver Status Register address
- *
- * For DP83848: 16
- * For LAN8700: 31
- */
-#define ETHMAC_PHY_SR                   16
-
-/*
- * PHY speed status 16-bit mask
-- *
- * For DP83848: 0x0002
- * For LAN8700: 0x0004
- */
-#define ETHMAC_PHY_SPEED_STATUS_BM      0x0002
-
-/*
- * PHY duplex status 16-bit mask
- *
- * For DP83848: 0x0004
- * For LAN8700: 0x0010
- */
-#define ETHMAC_PHY_DUPLEX_STATUS_BM     0x0004
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef int timer_t;
 
 /*==============================================================================
   Exported objects
@@ -108,12 +56,80 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function reset timer
+ *
+ * @return timer start value
+ */
+//==============================================================================
+static inline timer_t timer_reset(void)
+{
+        return _kernel_get_time_ms();
+}
+
+//==============================================================================
+/**
+ * @brief Function check if timer is expired
+ *
+ * @param timer         timer value
+ * @param time          expiration time
+ *
+ * @return true if timer expired, otherwise false
+ */
+//==============================================================================
+static inline bool timer_is_expired(timer_t timer, int time)
+{
+        return (_kernel_get_time_ms() - timer >= time);
+}
+
+//==============================================================================
+/**
+ * @brief Function check if timer is not expired
+ *
+ * @param timer         timer value
+ * @param time          expiration time
+ *
+ * @return true if timer not expired, otherwise false
+ */
+//==============================================================================
+static inline bool timer_is_not_expired(timer_t timer, int time)
+{
+        return (_kernel_get_time_ms() - timer < time);
+}
+
+//==============================================================================
+/**
+ * @brief Function set timer to expired value
+ *
+ * @return timer expired value
+ */
+//==============================================================================
+static inline timer_t timer_set_expired(void)
+{
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function calculate timer time difference (abs value)
+ *
+ * @param timer1        timer value
+ * @param timer2        timer value
+ *
+ * @return timer expired value
+ */
+//==============================================================================
+static inline int timer_difftime(timer_t timer1, timer_t timer2)
+{
+        return timer1 > timer2 ? timer1 - timer2 : timer2 - timer1;
+}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _ETHMAC_CFG_H_ */
+#endif /* _TIMER_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

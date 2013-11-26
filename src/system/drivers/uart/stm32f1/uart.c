@@ -581,7 +581,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                 break;
 
         case UART_IORQ_GET_BYTE_BLOCKING:
-                while (TRUE) {
+                while (true) {
                         critical_section_begin();
 
                         if (!arg) {

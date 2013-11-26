@@ -47,13 +47,13 @@ extern "C" {
 #define SDSPI_PARTITION_4_PATH                  "/dev/sda4"
 
 /** card waiting timeout [ms] */
-#define SDSPI_WAIT_TIMEOUT                      500
+#define SDSPI_TIMEOUT                           500
 
 /** supported SPI peripheral */
 #define SDSPI_PORT                              SPI3
 
 /** SPI peripheral divider */
-#define SDSPI_PERIPHERAL_DIVIDER                4
+#define SDSPI_SPI_CLOCK_DIVIDER                 4
 
 /** card select pin operation */
 #define SDSPI_SD_SELECT                         GPIO_CLEAR_PIN(SD_CS)

@@ -36,6 +36,7 @@ extern "C" {
 #include <stdlib.h>
 #include <errno.h>
 #include "system/dnx.h"
+#include "system/timer.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -111,21 +112,19 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
         u64_t lfile_size = ftell(src_file);
         fseek(src_file, 0, SEEK_SET);
 
-        uint  start_time   = get_time_ms();
-        uint  refresh_time = start_time;
-        u64_t lcopy_size   = 0;
+        uint  start_time = get_time_ms();
+        uint  info_timer = timer_set_expired();
+        u64_t lcopy_size = 0;
         int   n;
 
-        while ((n = fread(buffer, sizeof(char), buffer_size, src_file))) {
+        while ((n = fread(buffer, sizeof(char), buffer_size, src_file)) > 0) {
                 if (ferror(src_file)) {
                         perror(argv[1]);
                         break;
                 }
 
-                lcopy_size += n;
-
-                if (get_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
-                        refresh_time = get_time_ms();
+                if (timer_is_expired(info_timer, INFO_REFRESH_TIME_MS)) {
+                        info_timer = timer_reset();
 
                         u32_t file_size = lfile_size / 1024;
                         u32_t copy_size = lcopy_size / 1024;
@@ -140,10 +139,17 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                         perror(argv[2]);
                         break;
                 }
+
+                lcopy_size += n;
         }
 
-        uint stop_time = get_time_ms() - start_time;
+        uint  stop_time = get_time_ms() - start_time;
         u32_t copy_size = lcopy_size;
+
+        if (ferror(src_file)) {
+                perror(argv[1]);
+                goto exit_error;
+        }
 
         const char *pre = "";
         if (lcopy_size >= 1024) {

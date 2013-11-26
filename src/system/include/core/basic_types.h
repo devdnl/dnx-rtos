@@ -41,16 +41,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** TRUE definition */
-#ifndef TRUE
-#define TRUE                              (0 == 0)
-#endif
-
-/** FALSE definition */
-#ifndef FALSE
-#define FALSE                             (0 != 0)
-#endif
-
 /** define NULL pointer */
 #ifndef NULL
 #define NULL                              ((void*)0)

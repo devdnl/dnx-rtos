@@ -37,6 +37,7 @@ extern "C" {
 #include <errno.h>
 #include <string.h>
 #include "system/dnx.h"
+#include "system/timer.h"
 #include "system/ioctl.h"
 #include "system/thread.h"
 
@@ -95,20 +96,20 @@ PROGRAM_MAIN(top, int argc, char *argv[])
         ioctl(stdin, TTY_IORQ_ECHO_OFF);
         ioctl(stdout, TTY_IORQ_CLEAR_SCR);
 
-        int key   = 0;
-        int shift = 0;
-        int time  = 0;
+        int     key   = 0;
+        int     shift = 0;
+        timer_t timer = timer_set_expired();
 
         while (key != 'q') {
                 fflush(stdin);
                 key = getchar();
 
                 if (!strchr("k,.", key)) {
-                        if (get_time_ms() - time < 1000) {
+                        if (timer_is_not_expired(timer, 1000)) {
                                 sleep_ms(10);
                                 continue;
                         } else {
-                                time = get_time_ms();
+                                timer = timer_reset();
                         }
                 }
 

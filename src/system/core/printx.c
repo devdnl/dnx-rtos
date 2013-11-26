@@ -905,7 +905,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
 
                                 u8_t base    = (chr == 'd' || chr == 'u' || chr == 'i' ? 10 : 16);
-                                bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? TRUE : FALSE);
+                                bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? true : false);
 
                                 resultPtr = itoa(va_arg(arg, i32_t), result,
                                                  base, uint_en, arg_size);
