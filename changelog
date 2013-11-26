@@ -17,6 +17,7 @@ Fixed Bugs:
 - tty driver: new lines have incorrect lengths (too long)
 - kernel configuration: switched in/out macros are inversely assigned
 - system creates dead task if not enough free memory
+- LFS not report errors when not enough free space left
 
 dnx/FreeRTOS 1.1.0
 ==================
