@@ -42,12 +42,12 @@ extern "C" {
 /**
  * Size of RAM memory [bytes]
  */
-#define CONFIG_RAM_SIZE                                 (64 * 1024)
+#define CONFIG_RAM_SIZE                                 (65536)
 
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (63 * 1024)
+#define CONFIG_HEAP_SIZE                                (64316)
 
 /**
  * Heap memory alignment
@@ -112,6 +112,7 @@ extern "C" {
  */
 #define CONFIG_RTOS_SLEEP_ON_IDLE                       (0)
 
+
 /**=== PRINT CONFIGURATION ===================================================*/
 /**
  * Enable (1) or disable (0) printf() family functions
@@ -136,7 +137,23 @@ extern "C" {
 /**
  * Maximum stream buffer size
  */
-#define CONFIG_FSCANF_STREAM_BUFFER_SIZE                (100)
+#define CONFIG_STREAM_BUFFER_LENGTH                     (100)
+
+/**
+ * ERRNO string support (strerror(), perror(), etc)
+ * 0: disabled
+ * 1: only numbers
+ * 2: short names
+ * 3: full names
+ */
+#define CONFIG_ERRNO_STRING_LEN                         (3)
+
+/**=== NETWORK CONFIGURATION =================================================*/
+/**
+ * Enable (1) or disable (0) network interface
+ */
+#define CONFIG_NETWORK_ENABLE                           (1)
+
 
 /**=== SYSTEM MONITOR CONFIGURATION ==========================================*/
 /**
@@ -169,17 +186,30 @@ extern "C" {
  */
 #define CONFIG_MONITOR_CPU_LOAD                         (1)
 
+/**
+ * Enable (1) or disable (0) network memory monitoring
+ */
+#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE             (1)
+
+/**
+ * Maximum amount of memory that can be used by network [bytes]. Set to 0 to disable limit.
+ */
+#define CONFIG_MONITOR_NETWORK_MEMORY_USAGE_LIMIT       (0)
+
+
 /**=== SYSTEM ENVIRONMENT CONFIGURATION ======================================*/
 /**
  * Define the host name
  */
 #define CONFIG_HOSTNAME                                 "localhost"
 
-/**=== PROGRAMING OPTIONS ====================================================*/
+
+/**=== DEVELOPMENT OPTIONS ===================================================*/
 /**
- * Enable (1) or disable (0) system assert macro (stop system if condition met)
+ * Enable (1) or disable (0) system assert macro (stops system if condition met)
  */
 #define CONFIG_SYSTEM_STOP_MACRO                        (1)
+
 
 #ifdef __cplusplus
 }

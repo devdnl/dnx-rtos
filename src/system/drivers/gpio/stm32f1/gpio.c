@@ -115,6 +115,8 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
         UNUSED_ARG(major);
         UNUSED_ARG(minor);
 
+        (void) _module_name_;
+
 #if (_AFIO_EN > 0)
         init_AFIO();
 #endif
@@ -216,7 +218,7 @@ API_MOD_CLOSE(GPIO, void *device_handle, bool force, const task_t *opened_by_tas
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
  *
- * @return number of written bytes
+ * @return number of written bytes, -1 if error
  */
 //==============================================================================
 API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
@@ -225,6 +227,8 @@ API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, u64_t *f
         UNUSED_ARG(src);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+
+        errno = EPERM;
 
         return 0;
 }
@@ -238,7 +242,7 @@ API_MOD_WRITE(GPIO, void *device_handle, const u8_t *src, size_t count, u64_t *f
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
  *
- * @return number of read bytes
+ * @return number of read bytes, -1 if error
  */
 //==============================================================================
 API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
@@ -247,6 +251,8 @@ API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         UNUSED_ARG(dst);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+
+        errno = EPERM;
 
         return 0;
 }
@@ -261,7 +267,6 @@ API_MOD_READ(GPIO, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
- * @retval ...
  */
 //==============================================================================
 API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
@@ -271,6 +276,7 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
 
         switch (request) {
         default:
+                errno = EBADRQC;
                 return STD_RET_ERROR;
         }
 

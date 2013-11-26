@@ -32,8 +32,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdio.h>
+#include <unistd.h>
 #include "user/initd.h"
+#include "system/dnx.h"
 #include "system/ioctl.h"
+#include "system/netapi.h"
+#include "system/mount.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -72,11 +77,11 @@ static int run_level_exit(void);
  * is an example to show how this can be implemented.
  */
 //==============================================================================
-void task_initd(void *arg)
+void initd(void *arg)
 {
         (void)arg;
 
-        set_priority(INITD_PRIORITY);
+        task_set_priority(INITD_PRIORITY);
 
         if (run_level_boot() != STD_RET_OK)
                 goto start_failure;
@@ -107,11 +112,11 @@ start_failure:
 static int run_level_boot(void)
 {
         mount("lfs", "", "/");
-        mkdir("/bin");
-        mkdir("/dev");
-        mkdir("/mnt");
-        mkdir("/proc");
-        mkdir("/tmp");
+        mkdir("/bin", 0666);
+        mkdir("/dev", 0666);
+        mkdir("/mnt", 0666);
+        mkdir("/proc", 0666);
+        mkdir("/tmp", 0666);
 
         mount("procfs", "", "/proc");
         mount("devfs", "", "/dev");
@@ -129,13 +134,13 @@ static int run_level_boot(void)
 //==============================================================================
 static int run_level_0(void)
 {
-        init_driver("gpio", "/dev/gpio");
+        driver_init("gpio", "/dev/gpio");
 
-        stdret_t pll_init = init_driver("pll", NULL);
+        int pll_init = driver_init("pll", NULL);
 
-        init_driver("uart1", "/dev/ttyS0");
+        driver_init("uart1", "/dev/ttyS0");
 
-        if (pll_init != STD_RET_OK) {
+        if (pll_init != 0) {
                 FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
                 if (ttyS0) {
                         ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / PLL_CPU_BASE_FREQ));
@@ -143,23 +148,23 @@ static int run_level_0(void)
                 }
         }
 
-        init_driver("tty0", "/dev/tty0");
+        driver_init("tty0", "/dev/tty0");
 
-        enable_printk("/dev/tty0");
+        printk_enable("/dev/tty0");
 
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
 
-        if (pll_init != STD_RET_OK) {
+        if (pll_init != 0) {
                 printk(FONT_COLOR_RED"PLL not started, running no base frequency!"RESET_ATTRIBUTES"\n");
         }
 
-        init_driver("tty1", "/dev/tty1");
-        init_driver("tty2", "/dev/tty2");
-        init_driver("tty3", "/dev/tty3");
-
-        init_driver("sdspi", "/dev/sda");
+        driver_init("tty1", "/dev/tty1");
+        driver_init("tty2", "/dev/tty2");
+        driver_init("tty3", "/dev/tty3");
+        driver_init("sdspi", "/dev/sda");
+        driver_init("ethmac", "/dev/eth0");
 
         return STD_RET_OK;
 }
@@ -183,14 +188,56 @@ static int run_level_1(void)
                 ioctl(sd, SDSPI_IORQ_INITIALIZE_CARD, &status);
 
                 if (status == true) {
-                        printk(FONT_COLOR_GREEN"Initialized."RESET_ATTRIBUTES"\n");
+                        printk("initialized\n");
+                        mount("fatfs", "/dev/sda1", "/mnt");
                 } else {
-                        printk(FONT_COLOR_RED"Fail\n"RESET_ATTRIBUTES);
+                        printk(FONT_COLOR_RED"fail\n"RESET_ATTRIBUTES);
                 }
 
                 fclose(sd);
         } else {
                 printk(FONT_COLOR_RED"Cannot open file!"RESET_ATTRIBUTES"\n");
+        }
+
+        /* network up */
+        printk("Configuring DHCP client... ");
+
+        if (netapi_start_DHCP_client() == 0) {
+                printk("OK\n");
+        } else {
+                printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+
+                printk("Configuring static IP... ");
+
+                netapi_ip_t ip, mask, gateway;
+                netapi_set_ip(&ip, 192,168,0,120);
+                netapi_set_ip(&mask, 255,255,255,0);
+                netapi_set_ip(&gateway, 192,168,0,1);
+
+                if (netapi_ifup(&ip, &mask, &gateway) == 0) {
+                        printk("OK\n");
+                } else {
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
+                }
+        }
+
+        ifconfig ifcfg;
+        netapi_get_ifconfig(&ifcfg);
+        if (ifcfg.status != IFSTATUS_NOT_CONFIGURED) {
+                printk("  Hostname  : %s\n"
+                       "  MAC       : %2x:%2x:%2x:%2x:%2x:%2x\n"
+                       "  IP Address: %d.%d.%d.%d\n"
+                       "  Net Mask  : %d.%d.%d.%d\n"
+                       "  Gateway   : %d.%d.%d.%d\n",
+                       get_host_name(),
+                       ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
+                       ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
+                       netapi_get_ip_part_a(&ifcfg.IP_address),  netapi_get_ip_part_b(&ifcfg.IP_address),
+                       netapi_get_ip_part_c(&ifcfg.IP_address),  netapi_get_ip_part_d(&ifcfg.IP_address),
+                       netapi_get_ip_part_a(&ifcfg.net_mask), netapi_get_ip_part_b(&ifcfg.net_mask),
+                       netapi_get_ip_part_c(&ifcfg.net_mask), netapi_get_ip_part_d(&ifcfg.net_mask),
+                       netapi_get_ip_part_a(&ifcfg.gateway), netapi_get_ip_part_b(&ifcfg.gateway),
+                       netapi_get_ip_part_c(&ifcfg.gateway), netapi_get_ip_part_d(&ifcfg.gateway));
         }
 
         return STD_RET_OK;
@@ -207,21 +254,20 @@ static int run_level_1(void)
 static int run_level_2(void)
 {
         /* stdio program control */
-        FILE            *tty[TTY_DEV_COUNT]             = {NULL};
-        FILE            *tty0                           =  NULL;
-        task_t          *program[TTY_DEV_COUNT - 1]     = {NULL};
-        enum prog_state  state[TTY_DEV_COUNT - 1]       = {PROGRAM_UNKNOWN_STATE};
-        int              current_tty                    = -1;
+        FILE   *tty[TTY_DEV_COUNT]         = {NULL};
+        FILE   *tty0                       =  NULL;
+        prog_t *program[TTY_DEV_COUNT - 1] = {NULL};
+        int     current_tty                = -1;
 
         while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
         }
 
         /* initd info about stack usage */
-        printk("[%d] initd: free stack: %d levels\n\n", get_OS_time_ms(), get_free_stack());
+        printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
 
         /* change TTY for printk */
-        enable_printk("/dev/tty3");
+        printk_enable("/dev/tty3");
 
         for (;;) {
                 ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
@@ -237,58 +283,34 @@ static int run_level_2(void)
                                 fprintf(tty[current_tty], "Welcome to %s/%s (tty%d)\n",
                                         get_OS_name(), get_kernel_name(), current_tty);
 
-                                program[current_tty] = new_program("terminal", "/",
+
+                                program[current_tty] = program_new("terminal", "/",
                                                                    tty[current_tty],
                                                                    tty[current_tty],
-                                                                   &state[current_tty],
-                                                                   NULL);
-
-                                if (program[current_tty]) {
-                                        set_task_priority(program[current_tty], 0);
-                                }
-
-                                switch (state[current_tty]) {
-                                case PROGRAM_UNKNOWN_STATE:
-                                        printk("Program does not start!\n");
-                                        break;
-                                case PROGRAM_RUNNING:
-                                        printk("Program started.\n");
-                                        break;
-                                case PROGRAM_ENDED:
-                                        printk("Program finished.\n");
-                                        break;
-                                case PROGRAM_NOT_ENOUGH_FREE_MEMORY:
-                                        printk("No enough free memory!\n");
-                                        break;
-                                case PROGRAM_ARGUMENTS_PARSE_ERROR:
-                                        printk("Bad arguments!\n");
-                                        break;
-                                case PROGRAM_DOES_NOT_EXIST:
-                                        printk("Program does not exist!\n");
-                                        break;
-                                case PROGRAM_HANDLE_ERROR:
-                                        printk("Handle error!\n");
-                                        break;
+                                                                   tty[current_tty]);
+                                if (!program[current_tty]) {
+                                        perror("initd");
+                                } else {
+                                        printk("initd: terminal started\n");
                                 }
                         }
                 }
 
-                for (uint i = 0; i < TTY_DEV_COUNT - 1; i++) {
-                        if (program[i] == NULL) {
-                                continue;
-                        }
+                for (int i = 0; i < TTY_DEV_COUNT - 1; i++) {
+                        if (program[i]) {
+                                if (program_is_closed(program[i])) {
+                                        printk("initd: terminal closed\n");
+                                        program_delete(program[i]);
+                                        program[i] = NULL;
 
-                        if (state[i] != PROGRAM_RUNNING) {
-                                printk("Program closed.\n");
+                                        ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
+                                        fclose(tty[i]);
+                                        tty[i] = NULL;
 
-                                program[i] = NULL;
-                                state[i]   = PROGRAM_UNKNOWN_STATE;
-
-                                ioctl(tty[i], TTY_IORQ_CLEAR_SCR);
-                                fclose(tty[i]);
-                                tty[i] = NULL;
-
-                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                        if (current_tty == i) {
+                                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                        }
+                                }
                         }
                 }
 
@@ -308,8 +330,8 @@ static int run_level_2(void)
 //==============================================================================
 static int run_level_exit(void)
 {
-        enter_critical_section();
-        disable_ISR();
+        critical_section_begin();
+        ISR_disable();
 
         while (true) {
                 sleep_ms(MAX_DELAY);

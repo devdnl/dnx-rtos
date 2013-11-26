@@ -41,16 +41,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** TRUE definition */
-#ifndef TRUE
-#define TRUE                              (0 == 0)
-#endif
-
-/** FALSE definition */
-#ifndef FALSE
-#define FALSE                             (0 != 0)
-#endif
-
 /** define NULL pointer */
 #ifndef NULL
 #define NULL                              ((void*)0)
@@ -95,6 +85,8 @@ typedef int32_t      i32_t;
 typedef uint64_t     u64_t;
 typedef int64_t      i64_t;
 typedef unsigned int uint;
+
+typedef int          ssize_t;
 
 /*==============================================================================
   Exported object declarations

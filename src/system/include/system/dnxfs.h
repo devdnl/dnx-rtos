@@ -34,18 +34,15 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "config.h"
 #include "core/systypes.h"
 #include "core/sysmoni.h"
 #include "core/vfs.h"
-#include "kernel/kwrapper.h"
+#include <errno.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#ifdef _DNX_H_
-#error "dnx.h and dnxfs.h cannot never included together!"
-#endif
-
 #undef  calloc
 #define calloc(size_t__nmemb, size_t__msize)    sysm_syscalloc(size_t__nmemb, size_t__msize)
 
@@ -61,12 +58,13 @@ extern "C" {
 #define API_FS_RELEASE(fsname, ...)             stdret_t _##fsname##_release(__VA_ARGS__)
 #define API_FS_OPEN(fsname, ...)                stdret_t _##fsname##_open(__VA_ARGS__)
 #define API_FS_CLOSE(fsname, ...)               stdret_t _##fsname##_close(__VA_ARGS__)
-#define API_FS_WRITE(fsname, ...)               size_t _##fsname##_write(__VA_ARGS__)
-#define API_FS_READ(fsname, ...)                size_t _##fsname##_read(__VA_ARGS__)
+#define API_FS_WRITE(fsname, ...)               ssize_t _##fsname##_write(__VA_ARGS__)
+#define API_FS_READ(fsname, ...)                ssize_t _##fsname##_read(__VA_ARGS__)
 #define API_FS_IOCTL(fsname, ...)               stdret_t _##fsname##_ioctl(__VA_ARGS__)
 #define API_FS_FSTAT(fsname, ...)               stdret_t _##fsname##_fstat(__VA_ARGS__)
 #define API_FS_FLUSH(fsname, ...)               stdret_t _##fsname##_flush(__VA_ARGS__)
 #define API_FS_MKDIR(fsname, ...)               stdret_t _##fsname##_mkdir(__VA_ARGS__)
+#define API_FS_MKFIFO(fsname, ...)              stdret_t _##fsname##_mkfifo(__VA_ARGS__)
 #define API_FS_MKNOD(fsname, ...)               stdret_t _##fsname##_mknod(__VA_ARGS__)
 #define API_FS_OPENDIR(fsname, ...)             stdret_t _##fsname##_opendir(__VA_ARGS__)
 #define API_FS_REMOVE(fsname, ...)              stdret_t _##fsname##_remove(__VA_ARGS__)
@@ -84,16 +82,17 @@ extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool, const task_t*);           
 extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, u64_t*);       \
 extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, u64_t*);              \
 extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, void*);                        \
-extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct vfs_stat*);                  \
+extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct stat*);                      \
 extern API_FS_FLUSH(fsname, void*, void*, fd_t);                                    \
-extern API_FS_MKDIR(fsname, void*, const char*);                                    \
+extern API_FS_MKDIR(fsname, void*, const char*, mode_t);                            \
+extern API_FS_MKFIFO(fsname, void*, const char*, mode_t);                           \
 extern API_FS_MKNOD(fsname, void*, const char*, const struct vfs_drv_interface*);   \
 extern API_FS_OPENDIR(fsname, void*, const char*, struct vfs_dir*);                 \
 extern API_FS_REMOVE(fsname, void*, const char*);                                   \
 extern API_FS_RENAME(fsname, void*, const char*, const char*);                      \
 extern API_FS_CHMOD(fsname, void*, const char*, int);                               \
 extern API_FS_CHOWN(fsname, void*, const char*, int, int);                          \
-extern API_FS_STAT(fsname, void*, const char*, struct vfs_stat*);                   \
+extern API_FS_STAT(fsname, void*, const char*, struct stat*);                       \
 extern API_FS_STATFS(fsname, void*, struct vfs_statfs*)
 
 /*==============================================================================
@@ -106,6 +105,10 @@ extern API_FS_STATFS(fsname, void*, struct vfs_statfs*)
 
 /*==============================================================================
   Exported function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline function
 ==============================================================================*/
 
 #ifdef __cplusplus

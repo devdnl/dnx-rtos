@@ -60,7 +60,14 @@
 //==============================================================================
 void HardFault_Handler(void)
 {
-        NVIC_SystemReset();
+        if (CONFIG_SYSTEM_STOP_MACRO != 0) {
+                static char *task_name = NULL;
+                task_name = _task_get_name();
+                (void) task_name;
+                while (true) {
+                        __asm("nop");
+                }
+        }
 }
 
 //==============================================================================

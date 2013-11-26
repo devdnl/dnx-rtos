@@ -25,9 +25,6 @@
 #
 ####################################################################################################
 
-include src/programs/Makefile.include
-include src/system/Makefile.include
-
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
@@ -69,6 +66,12 @@ OBJ_DIR_NAME    = obj
 
 # dependencies file name
 DEP_FILE_NAME   = $(PROJECT).d
+
+# program localization
+PROGLOC = src/programs
+
+# system localization
+SYSLOC = src/system
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -112,24 +115,27 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 # object path
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
+include $(PROGLOC)/Makefile.include
+include $(SYSLOC)/Makefile.include
+
 # defines objects localizations
-HDRLOC  = $(foreach file, $(HDRLOC_noarch),src/system/$(file)) \
-          $(foreach file, $(HDRLOC_$(TARGET)),src/system/$(file)) \
-          $(foreach file, $(HDRLOC_PROGRAMS),src/programs/$(file)) \
-          $(foreach file, $(HDRLOC_CORE),src/system/$(file)) \
+HDRLOC  = $(foreach file, $(HDRLOC_noarch),$(SYSLOC)/$(file)) \
+          $(foreach file, $(HDRLOC_$(TARGET)),$(SYSLOC)/$(file)) \
+          $(foreach file, $(HDRLOC_PROGRAMS),$(PROGLOC)/$(file)) \
+          $(foreach file, $(HDRLOC_CORE),$(SYSLOC)/$(file)) \
           src/
 
 # defines all C/C++ sources
-CSRC    = $(foreach file, $(CSRC_CORE),src/system/$(file)) \
-          $(foreach file, $(CSRC_$(TARGET)),src/system/$(file)) \
-          $(foreach file, $(CSRC_PROGRAMS),src/programs/$(file)) \
-          $(foreach file, $(CSRC_noarch),src/system/$(file)) \
-          $(foreach file, $(CXXSRC_$(TARGET)),src/system/$(file)) \
-          $(foreach file, $(CXXSRC_PROGRAMS),src/programs/$(file)) \
-          $(foreach file, $(CXXSRC_noarch),src/system/$(file))
+CSRC    = $(foreach file, $(CSRC_CORE),$(SYSLOC)/$(file)) \
+          $(foreach file, $(CSRC_$(TARGET)),$(SYSLOC)/$(file)) \
+          $(foreach file, $(CSRC_PROGRAMS),$(PROGLOC)/$(file)) \
+          $(foreach file, $(CSRC_noarch),$(SYSLOC)/$(file)) \
+          $(foreach file, $(CXXSRC_$(TARGET)),$(SYSLOC)/$(file)) \
+          $(foreach file, $(CXXSRC_PROGRAMS),$(PROGLOC)/$(file)) \
+          $(foreach file, $(CXXSRC_noarch),$(SYSLOC)/$(file))
           
 # defines all assembler sources
-ASRC    = $(foreach file, $(ASRC_$(TARGET)),src/system/$(file))
+ASRC    = $(foreach file, $(ASRC_$(TARGET)),$(SYSLOC)/$(file))
          
 # defines objects names
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT))
@@ -179,8 +185,8 @@ hex :
 	@echo 'Creating extended listing....'
 	@$(OBJDUMP) -S $(TARGET_PATH)/$(PROJECT).elf > $(TARGET_PATH)/$(PROJECT).lst
 
-	@echo 'Size of modules:'
-	@$(SIZE) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
+	@echo 'Creating size of modules file...'
+	@$(SIZE) -B -t --common $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) > $(TARGET_PATH)/$(PROJECT).size
 
 	@echo -e "Flash image size: $$($(SIZEOF) $(TARGET_PATH)/$(PROJECT).bin) bytes\n"
 

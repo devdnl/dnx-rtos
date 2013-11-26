@@ -30,7 +30,10 @@
 #include "config.h"
 #include "kernel/khooks.h"
 #include "core/printx.h"
+#include "core/sysmoni.h"
+#include "core/progman.h"
 #include "portable/cpuctl.h"
+#include "system/thread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,8 +85,14 @@ void vApplicationIdleHook(void)
 //==============================================================================
 void vApplicationStackOverflowHook(task_t *taskHdl, signed char *taskName)
 {
-        delete_task(taskHdl);
-        printk(FONT_COLOR_RED"%s: stack overflow!"RESET_ATTRIBUTES"\n", taskName);
+        (void) taskHdl;
+        (void) taskName;
+
+        if (CONFIG_SYSTEM_STOP_MACRO != 0) {
+                while (true) {
+                        __asm("nop");
+                }
+        }
 }
 
 //==============================================================================
@@ -97,6 +106,28 @@ void vApplicationTickHook(void)
                 uptime_divider = 0;
                 uptime_counter_sec++;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Hook when task is switched in
+ */
+//==============================================================================
+void vApplicationSwitchedIn(void)
+{
+        _copy_task_context_to_standard_variables();
+        sysm_task_switched_in();
+}
+
+//==============================================================================
+/**
+ * @brief Hook when task is switched out
+ */
+//==============================================================================
+void vApplicationSwitchedOut(void)
+{
+        _copy_standard_variables_to_task_context();
+        sysm_task_switched_out();
 }
 
 //==============================================================================

@@ -73,10 +73,10 @@
 /*-------------------------------------------------------------
  * Used prototypes from external modules
  *-----------------------------------------------------------*/
-extern void  sysm_task_switched_in      (void);
-extern void  sysm_task_switched_out     (void);
-extern void *sysm_kmalloc               (size_t);
-extern void  sysm_kfree                 (void*);
+extern void  vApplicationSwitchedIn (void);
+extern void  vApplicationSwitchedOut(void);
+extern void *sysm_kmalloc           (size_t);
+extern void  sysm_kfree             (void*);
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -137,8 +137,8 @@ to exclude the API function. */
 
 /* required functions in cpu load stats */
 #if (CONFIG_MONITOR_CPU_LOAD > 0)
-#define traceTASK_SWITCHED_OUT()                sysm_task_switched_in()
-#define traceTASK_SWITCHED_IN()                 sysm_task_switched_out()
+#define traceTASK_SWITCHED_OUT()                vApplicationSwitchedOut()
+#define traceTASK_SWITCHED_IN()                 vApplicationSwitchedIn()
 #endif
 
 #endif /* FREERTOS_CONFIG_H */

@@ -41,6 +41,7 @@ extern "C" {
 ==============================================================================*/
 #include "libfat_user.h"
 #include "libfat_conf.h"
+#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -131,7 +132,10 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 
         switch (cmd) {
         case CTRL_SYNC:
-                return RES_OK;
+                if (vfs_fflush(srcfile) == 0)
+                        return RES_OK;
+                else
+                        return RES_ERROR;
         }
 
         return RES_PARERR;
@@ -167,7 +171,7 @@ uint32_t _libfat_get_fattime(void)
 int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
         if (sobj) {
-                _LIBFAT_MUTEX_t mtx = new_mutex();
+                _LIBFAT_MUTEX_t mtx = mutex_new(MUTEX_NORMAL);
                 if (mtx) {
                         *sobj = mtx;
                         return 1;
@@ -190,7 +194,7 @@ int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                delete_mutex(sobj);
+                mutex_delete(sobj);
                 return 1;
         }
 
@@ -210,7 +214,7 @@ int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                if (lock_mutex(sobj, _LIBFAT_FS_TIMEOUT) == MUTEX_LOCKED) {
+                if (mutex_lock(sobj, _LIBFAT_FS_TIMEOUT)) {
                         return 1;
                 }
         }
@@ -228,7 +232,7 @@ int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 void _libfat_unlock_access(_LIBFAT_MUTEX_t sobj)
 {
         if (sobj) {
-                unlock_mutex(sobj);
+                mutex_unlock(sobj);
         }
 }
 

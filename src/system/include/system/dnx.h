@@ -38,11 +38,9 @@ extern "C" {
 #include <stdarg.h>
 #include "config.h"
 #include "core/systypes.h"
-#include "core/memman.h"
-#include "core/progman.h"
 #include "core/sysmoni.h"
-#include "core/drivers.h"
-#include "core/fsctrl.h"
+#include "core/modctrl.h"
+#include "core/progman.h"
 #include "kernel/kwrapper.h"
 #include "kernel/khooks.h"
 #include "portable/cpuctl.h"
@@ -50,10 +48,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* MEMORY MANAGEMENT DEFINTIONS */
-#define malloc(size_t__size)                    sysm_tskmalloc(size_t__size)
-#define calloc(size_t__nitems, size_t__isize)   sysm_tskcalloc(size_t__nitems, size_t__isize)
-#define free(void__pmem)                        sysm_tskfree(void__pmem)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -70,11 +64,21 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void _dnx_init(void);
+extern void dnx_init(void);
 
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function start kernel scheduler
+ */
+//==============================================================================
+static inline void kernel_start(void)
+{
+        _kernel_start();
+}
+
 //==============================================================================
 /**
  * @brief Function return used static memory
@@ -166,6 +170,30 @@ static inline u32_t get_uptime(void)
 
 //==============================================================================
 /**
+ * @brief Function return tick counter
+ *
+ * @return a tick counter value
+ */
+//==============================================================================
+static inline int get_tick_counter(void)
+{
+        return _kernel_get_tick_counter();
+}
+
+//==============================================================================
+/**
+ * @brief Function return OS time in milliseconds
+ *
+ * @return a OS time in milliseconds
+ */
+//==============================================================================
+static inline int get_time_ms(void)
+{
+        return _kernel_get_time_ms();
+}
+
+//==============================================================================
+/**
  * @brief Function return task status
  *
  * @param[in]   ntask           task number
@@ -206,36 +234,6 @@ static inline u32_t get_total_CPU_usage(void)
 
 //==============================================================================
 /**
- * @brief Function disable CPU load measurement
- */
-//==============================================================================
-static inline void disable_CPU_load_measurement(void)
-{
-        sysm_disable_CPU_load_measurement();
-}
-
-//==============================================================================
-/**
- * @brief Function enable CPU load measurement
- */
-//==============================================================================
-static inline void enable_CPU_load_measurement(void)
-{
-        sysm_enable_CPU_load_measurement();
-}
-
-//==============================================================================
-/**
- * @brief Function restart system
- */
-//==============================================================================
-static inline void restart(void)
-{
-        _cpuctl_restart_system();
-}
-
-//==============================================================================
-/**
  * @brief Function return name of CPU
  *
  * @return pointer to CPU name string
@@ -248,7 +246,7 @@ static inline const char *get_platform_name(void)
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function return name of operating system
  *
  * @return pointer to string
  */
@@ -260,19 +258,19 @@ static inline const char *get_OS_name(void)
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function return operating system version
  *
  * @return pointer to string
  */
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "1.1.0";
+        return "1.2.0";
 }
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function return name of kernel
  *
  * @return pointer to string
  */
@@ -284,7 +282,7 @@ static inline const char *get_kernel_name(void)
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function return name of author
  *
  * @return pointer to string
  */
@@ -296,7 +294,7 @@ static inline const char *get_author_name(void)
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function return author's email
  *
  * @return pointer to string
  */
@@ -308,7 +306,7 @@ static inline const char *get_author_email(void)
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function return kernel version
  *
  * @return pointer to string
  */
@@ -320,7 +318,7 @@ static inline const char *get_kernel_version(void)
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function return host name
  *
  * @return pointer to string
  */
@@ -328,21 +326,6 @@ static inline const char *get_kernel_version(void)
 static inline const char *get_host_name(void)
 {
         return CONFIG_HOSTNAME;
-}
-
-//==============================================================================
-/**
- * @brief Function return x name
- *
- * @param[out] *buf     output buffer
- * @param[in]   size    buffer size
- *
- * @return buf pointer on success, otherwise NULL pointer
- */
-//==============================================================================
-static inline char *getcwd(char *buf, size_t size)
-{
-        return strncpy(buf, _get_this_task_data()->f_cwd, size);
 }
 
 //==============================================================================
@@ -370,6 +353,112 @@ static inline uint get_number_of_modules(void)
 {
         extern const int _regdrv_number_of_modules;
         return _regdrv_number_of_modules;
+}
+
+//==============================================================================
+/**
+ * @brief Function disable CPU load measurement
+ */
+//==============================================================================
+static inline void disable_CPU_load_measurement(void)
+{
+        sysm_disable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function enable CPU load measurement
+ */
+//==============================================================================
+static inline void enable_CPU_load_measurement(void)
+{
+        sysm_enable_CPU_load_measurement();
+}
+
+//==============================================================================
+/**
+ * @brief Function restart system
+ */
+//==============================================================================
+static inline void restart_system(void)
+{
+        _cpuctl_restart_system();
+}
+
+//==============================================================================
+/**
+ * @brief Function start new program by name
+ *
+ * Errno: EINVAL, ENOMEM, ENOENT
+ *
+ * @param cmd           program name and argument list
+ * @param stin          standard input file
+ * @param stout         standard output file
+ * @param sterr         standard error file
+ *
+ * @return NULL if error, otherwise program handle
+ */
+//==============================================================================
+static inline task_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
+{
+        return _program_new(cmd, cwd, stin, stout, sterr);
+}
+
+//==============================================================================
+/**
+ * @brief Kill started program
+ *
+ * @param prog                  program object
+ *
+ * @return 0 if success, otherwise other value
+ */
+//==============================================================================
+static inline int program_kill(prog_t *prog)
+{
+        return _program_kill(prog);
+}
+
+//==============================================================================
+/**
+ * @brief Function delete running program
+ *
+ * @param prog                  program object
+ *
+ * @return 0 on success, otherwise other value
+ */
+//==============================================================================
+static inline int program_delete(prog_t *prog)
+{
+        return _program_delete(prog);
+}
+
+//==============================================================================
+/**
+ * @brief Wait for program close
+ *
+ * @param prog                  program object
+ * @param timeout               wait timeout
+ *
+ * @return 0 if closed, otherwise other value
+ */
+//==============================================================================
+static inline int program_wait_for_close(prog_t *prog, const uint timeout)
+{
+        return _program_wait_for_close(prog, timeout);
+}
+
+//==============================================================================
+/**
+ * @brief Check if program is closed
+ *
+ * @param prog                  program object
+ *
+ * @return true if program closed, otherwise false
+ */
+//==============================================================================
+static inline bool program_is_closed(prog_t *prog)
+{
+        return _program_is_closed(prog);
 }
 
 #ifdef __cplusplus

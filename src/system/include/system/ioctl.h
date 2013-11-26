@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/ioctl_macros.h"
+#include "core/ioctl_macros.h"
 
 /* include here drivers definitions */
 #include "tty_def.h"
@@ -43,6 +43,7 @@ extern "C" {
 #       include "stm32f1/pll_def.h"
 #       include "stm32f1/sdspi_def.h"
 #       include "stm32f1/uart_def.h"
+#       include "stm32f1/ethmac_def.h"
 #else
 #       error "Unknown architecture!"
 #endif
@@ -50,8 +51,6 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/* ioctl function-like macro */
-#define ioctl(file, ...)                vfs_ioctl(file, __VA_ARGS__)
 
 /*==============================================================================
   Exported object types
@@ -64,6 +63,12 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+static inline int ioctl(FILE *stream, int request, ...)
+{
+        va_list arg;
+        va_start(arg, request);
+        return vfs_vioctl(stream, request, arg);
+}
 
 #ifdef __cplusplus
 }

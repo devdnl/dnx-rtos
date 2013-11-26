@@ -64,8 +64,8 @@ extern "C" {
 //==============================================================================
 int main(void)
 {
-        _dnx_init();
-        start_task_scheduler();
+        dnx_init();
+        kernel_start();
         return 0;
 }
 

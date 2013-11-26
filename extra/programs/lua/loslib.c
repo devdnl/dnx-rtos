@@ -124,7 +124,7 @@ static int os_getenv (lua_State *L) {
 
 static int os_clock (lua_State *L) {
 //  lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);
-  lua_pushnumber(L, get_tick_counter());
+  lua_pushnumber(L, kernel_get_tick_counter());
   return 1;
 }
 

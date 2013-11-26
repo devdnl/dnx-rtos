@@ -34,11 +34,16 @@ extern "C" {
 #include "config.h"
 #include "core/printx.h"
 #include "core/sysmoni.h"
+#include "core/progman.h"
 #include "kernel/kwrapper.h"
+#include <unistd.h>
+#include <errno.h>
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define TO_STR(str)                     #str
+#define NUMBER_TO_STR(val)              TO_STR(val)
 
 /*==============================================================================
   Local object types
@@ -360,7 +365,7 @@ static int calc_format_size(const char *format, va_list arg)
  * @param filename      path to file used to write kernel log
  */
 //==============================================================================
-void enable_printk(char *filename)
+void printk_enable(char *filename)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         /* close file if opened */
@@ -383,7 +388,7 @@ void enable_printk(char *filename)
  * @brief Disable printk functionality
  */
 //==============================================================================
-void disable_printk(void)
+void printk_disable(void)
 {
 #if ((CONFIG_SYSTEM_MSG_ENABLE > 0) && (CONFIG_PRINTF_ENABLE > 0))
         if (sys_printk_file) {
@@ -492,13 +497,12 @@ int sys_getc(FILE *stream)
                 return EOF;
         }
 
-        if (vfs_feof(stream)) {
-                return EOF;
-        }
-
         int chr = 0;
         while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                sleep_ms(10);
+                if (vfs_ferror(stream) || vfs_feof(stream))
+                        return EOF;
+                else
+                        sleep_ms(10);
         }
 
         return chr;
@@ -521,30 +525,49 @@ char *sys_fgets(char *str, int size, FILE *stream)
                 return NULL;
         }
 
-        if (vfs_feof(stream) == 0) {
-                u64_t lseek = vfs_ftell(stream);
+        struct stat file_stat;
+        if (vfs_fstat(stream, &file_stat) == 0) {
+                if (file_stat.st_type == FILE_TYPE_PIPE) {
+                        for (int i = 0; i < size - 1; i++) {
+                                vfs_fread(str + i, sizeof(char), 1, stream);
+                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                                        return NULL;
+                                }
 
-                int n;
-                while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0);
+                                if (*(str + i) == '\n') {
+                                        *(str + i + 1) = '\0';
+                                        break;
+                                }
+                        }
 
-                char *end;
-                if ((end = strchr(str, '\n'))) {
-                        end++;
-                        *end = '\0';
-                } else if ((end = strchr(str, EOF))) {
-                        *end = '\0';
+                        return str;
                 } else {
-                        str[n] = '\0';
+                        u64_t fpos = vfs_ftell(stream);
+
+                        int n;
+                        while ((n = vfs_fread(str, sizeof(char), size - 1, stream)) == 0) {
+                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                                        return NULL;
+                                }
+                        }
+
+                        char *end;
+                        if ((end = strchr(str, '\n'))) {
+                                end++;
+                                *end = '\0';
+                        } else {
+                                str[n] = '\0';
+                        }
+
+                        int len = strlen(str);
+
+                        if (len == 0)
+                                len = 1;
+
+                        vfs_fseek(stream, fpos + len, SEEK_SET);
+
+                        return str;
                 }
-
-                int len = strlen(str);
-
-                if (len == 0)
-                        len = 1;
-
-                vfs_fseek(stream, lseek + len, SEEK_SET);
-
-                return str;
         }
 
         return NULL;
@@ -585,7 +608,7 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 
 //==============================================================================
 /**
- * @brief Function send on a standard output string
+ * @brief Function write to file formatted string
  *
  * @param *file               file
  * @param *format             formated text
@@ -597,23 +620,46 @@ int sys_snprintf(char *bfr, size_t size, const char *format, ...)
 int sys_fprintf(FILE *file, const char *format, ...)
 {
 #if (CONFIG_PRINTF_ENABLE > 0)
-        va_list args;
         int n = 0;
 
         if (file && format) {
+                va_list args;
                 va_start(args, format);
-                u32_t size = calc_format_size(format, args);
+                n = sys_vfprintf(file, format, args);
                 va_end(args);
+        }
+
+        return n;
+#else
+        UNUSED_ARG(file);
+        UNUSED_ARG(format);
+        return 0;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function write to file formatted string
+ *
+ * @param file                file
+ * @param format              formated text
+ * @param arg                 arguments
+ *
+ * @retval number of written characters
+ */
+//==============================================================================
+int sys_vfprintf(FILE *file, const char *format, va_list arg)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        int n = 0;
+
+        if (file && format) {
+                u32_t size = calc_format_size(format, arg);
 
                 char *str = sysm_syscalloc(1, size);
-
                 if (str) {
-                        va_start(args, format);
-                        n = sys_vsnprintf(str, size, format, args);
-                        va_end(args);
-
+                        n = sys_vsnprintf(str, size, format, arg);
                         vfs_fwrite(str, sizeof(char), n, file);
-
                         sysm_sysfree(str);
                 }
         }
@@ -622,7 +668,172 @@ int sys_fprintf(FILE *file, const char *format, ...)
 #else
         UNUSED_ARG(file);
         UNUSED_ARG(format);
+        UNUSED_ARG(arg);
         return 0;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function returns error string
+ *
+ * @param errnum        error number
+ *
+ * @return error number string
+ */
+//==============================================================================
+const char *sys_strerror(int errnum)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        static const char *errstr[] = {
+#if (CONFIG_ERRNO_STRING_LEN == 0)
+                /* empty */
+#elif (CONFIG_ERRNO_STRING_LEN == 1)
+                [ESUCC       ] NUMBER_TO_STR(ESUCC),
+                [EPERM       ] NUMBER_TO_STR(EPERM),
+                [ENOENT      ] NUMBER_TO_STR(ENOENT),
+                [ESRCH       ] NUMBER_TO_STR(ESRCH),
+                [EIO         ] NUMBER_TO_STR(EIO),
+                [ENXIO       ] NUMBER_TO_STR(ENXIO),
+                [E2BIG       ] NUMBER_TO_STR(E2BIG),
+                [ENOEXEC     ] NUMBER_TO_STR(ENOEXEC),
+                [EAGAIN      ] NUMBER_TO_STR(EAGAIN),
+                [ENOMEM      ] NUMBER_TO_STR(ENOMEM),
+                [EACCES      ] NUMBER_TO_STR(EACCES),
+                [EFAULT      ] NUMBER_TO_STR(EFAULT),
+                [EBUSY       ] NUMBER_TO_STR(EBUSY),
+                [EEXIST      ] NUMBER_TO_STR(EEXIST),
+                [ENODEV      ] NUMBER_TO_STR(ENODEV),
+                [ENOTDIR     ] NUMBER_TO_STR(ENOTDIR),
+                [EISDIR      ] NUMBER_TO_STR(EISDIR),
+                [EINVAL      ] NUMBER_TO_STR(EINVAL),
+                [EMFILE      ] NUMBER_TO_STR(EMFILE),
+                [EFBIG       ] NUMBER_TO_STR(EFBIG),
+                [ENOSPC      ] NUMBER_TO_STR(ENOSPC),
+                [ESPIPE      ] NUMBER_TO_STR(ESPIPE),
+                [EROFS       ] NUMBER_TO_STR(EROFS),
+                [EDOM        ] NUMBER_TO_STR(EDOM),
+                [ERANGE      ] NUMBER_TO_STR(ERANGE),
+                [EILSEQ      ] NUMBER_TO_STR(EILSEQ),
+                [ENAMETOOLONG] NUMBER_TO_STR(ENAMETOOLONG),
+                [ENOTEMPTY   ] NUMBER_TO_STR(ENOTEMPTY),
+                [EBADRQC     ] NUMBER_TO_STR(EBADRQC),
+                [ETIME       ] NUMBER_TO_STR(ETIME),
+                [ENONET      ] NUMBER_TO_STR(ENONET),
+                [EUSERS      ] NUMBER_TO_STR(EUSERS),
+                [EADDRINUSE  ] NUMBER_TO_STR(EADDRINUSE),
+                [ENOMEDIUM   ] NUMBER_TO_STR(ENOMEDIUM),
+                [EMEDIUMTYPE ] NUMBER_TO_STR(EMEDIUMTYPE),
+                [ECANCELED   ] NUMBER_TO_STR(ECANCELED)
+#elif (CONFIG_ERRNO_STRING_LEN == 2)
+                [ESUCC       ] TO_STR(ESUCC),
+                [EPERM       ] TO_STR(EPERM),
+                [ENOENT      ] TO_STR(ENOENT),
+                [ESRCH       ] TO_STR(ESRCH),
+                [EIO         ] TO_STR(EIO),
+                [ENXIO       ] TO_STR(ENXIO),
+                [E2BIG       ] TO_STR(E2BIG),
+                [ENOEXEC     ] TO_STR(ENOEXEC),
+                [EAGAIN      ] TO_STR(EAGAIN),
+                [ENOMEM      ] TO_STR(ENOMEM),
+                [EACCES      ] TO_STR(EACCES),
+                [EFAULT      ] TO_STR(EFAULT),
+                [EBUSY       ] TO_STR(EBUSY),
+                [EEXIST      ] TO_STR(EEXIST),
+                [ENODEV      ] TO_STR(ENODEV),
+                [ENOTDIR     ] TO_STR(ENOTDIR),
+                [EISDIR      ] TO_STR(EISDIR),
+                [EINVAL      ] TO_STR(EINVAL),
+                [EMFILE      ] TO_STR(EMFILE),
+                [EFBIG       ] TO_STR(EFBIG),
+                [ENOSPC      ] TO_STR(ENOSPC),
+                [ESPIPE      ] TO_STR(ESPIPE),
+                [EROFS       ] TO_STR(EROFS),
+                [EDOM        ] TO_STR(EDOM),
+                [ERANGE      ] TO_STR(ERANGE),
+                [EILSEQ      ] TO_STR(EILSEQ),
+                [ENAMETOOLONG] TO_STR(ENAMETOOLONG),
+                [ENOTEMPTY   ] TO_STR(ENOTEMPTY),
+                [EBADRQC     ] TO_STR(EBADRQC),
+                [ETIME       ] TO_STR(ETIME),
+                [ENONET      ] TO_STR(ENONET),
+                [EUSERS      ] TO_STR(EUSERS),
+                [EADDRINUSE  ] TO_STR(EADDRINUSE),
+                [ENOMEDIUM   ] TO_STR(ENOMEDIUM),
+                [EMEDIUMTYPE ] TO_STR(EMEDIUMTYPE),
+                [ECANCELED   ] TO_STR(ECANCELED)
+#elif (CONFIG_ERRNO_STRING_LEN == 3)
+                [ESUCC       ] "Success",
+                [EPERM       ] "Operation not permitted",
+                [ENOENT      ] "No such file or directory",
+                [ESRCH       ] "No such process",
+                [EIO         ] "I/O error",
+                [ENXIO       ] "No such device or address",
+                [E2BIG       ] "Argument list too long",
+                [ENOEXEC     ] "Exec format error",
+                [EAGAIN      ] "Try again",
+                [ENOMEM      ] "Out of memory",
+                [EACCES      ] "Permission denied",
+                [EFAULT      ] "Bad address",
+                [EBUSY       ] "Device or resource busy",
+                [EEXIST      ] "File exists",
+                [ENODEV      ] "No such device",
+                [ENOTDIR     ] "Not a directory",
+                [EISDIR      ] "Is a directory",
+                [EINVAL      ] "Invalid argument",
+                [EMFILE      ] "Too many open files",
+                [EFBIG       ] "File too large",
+                [ENOSPC      ] "No space left on device",
+                [ESPIPE      ] "Illegal seek",
+                [EROFS       ] "Read-only file system",
+                [EDOM        ] "Math argument out of domain of function",
+                [ERANGE      ] "Math result not representable",
+                [EILSEQ      ] "Illegal byte sequence",
+                [ENAMETOOLONG] "File name too long",
+                [ENOTEMPTY   ] "Directory not empty",
+                [EBADRQC     ] "Invalid request code",
+                [ETIME       ] "Timer expired",
+                [ENONET      ] "Machine is not on the network",
+                [EUSERS      ] "Too many users",
+                [EADDRINUSE  ] "Address already in use",
+                [ENOMEDIUM   ] "No medium found",
+                [EMEDIUMTYPE ] "Wrong medium type",
+                [ECANCELED   ] "Operation Canceled"
+#else
+#error "CONFIG_ERRNO_STRING_LEN should be in range 0 - 3!"
+#endif
+        };
+
+        if (CONFIG_ERRNO_STRING_LEN == 0) {
+                return "";
+        } else if (errnum < _ENUMBER) {
+                return errstr[errnum];
+        } else {
+                return "Unknown error";
+        }
+#else
+        (void) errnum;
+        return "";
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function prints error string
+ *
+ * @param str           string to print or NULL
+ */
+//==============================================================================
+void sys_perror(const char *str)
+{
+#if (CONFIG_PRINTF_ENABLE > 0)
+        if (str) {
+                sys_fprintf(stderr, "%s: %s\n", str, sys_strerror(errno));
+        } else {
+                sys_fprintf(stderr, "%s\n", sys_strerror(errno));
+        }
+#else
+        (void) str
 #endif
 }
 
@@ -694,7 +905,7 @@ int sys_vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
 
                                 u8_t base    = (chr == 'd' || chr == 'u' || chr == 'i' ? 10 : 16);
-                                bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? TRUE : FALSE);
+                                bool uint_en = (chr == 'x' || chr == 'u' || chr == 'X' ? true : false);
 
                                 resultPtr = itoa(va_arg(arg, i32_t), result,
                                                  base, uint_en, arg_size);

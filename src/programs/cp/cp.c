@@ -34,6 +34,9 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
+#include "system/dnx.h"
+#include "system/timer.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -77,46 +80,51 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                 return EXIT_FAILURE;
         }
 
+        errno = 0;
+
         char *buffer   = NULL;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
+
+        src_file = fopen(argv[1], "r");
+        if (!src_file) {
+                perror(argv[1]);
+                goto exit_error;
+        }
+
+        dst_file = fopen(argv[2], "w");
+        if (!dst_file) {
+                perror(argv[2]);
+                goto exit_error;
+        }
 
         int buffer_size = BUFFER_MAX_SIZE;
         while ((buffer = malloc(buffer_size * sizeof(char))) == NULL) {
                 buffer_size /= 2;
 
                 if (buffer_size < 512) {
-                        puts("Not enough free memory");
+                        perror(NULL);
                         goto exit_error;
                 }
-        }
-
-        src_file = fopen(argv[1], "r");
-        if (!src_file) {
-                printf("Cannot open file %s\n", argv[1]);
-                goto exit_error;
-        }
-
-        dst_file = fopen(argv[2], "w");
-        if (!dst_file) {
-                printf("Cannot create file %s\n", argv[2]);
-                goto exit_error;
         }
 
         fseek(src_file, 0, SEEK_END);
         u64_t lfile_size = ftell(src_file);
         fseek(src_file, 0, SEEK_SET);
 
-        uint  start_time   = get_OS_time_ms();
-        uint  refresh_time = start_time;
-        u64_t lcopy_size   = 0;
+        uint  start_time = get_time_ms();
+        uint  info_timer = timer_set_expired();
+        u64_t lcopy_size = 0;
         int   n;
 
-        while ((n = fread(buffer, sizeof(char), buffer_size, src_file))) {
-                lcopy_size += n;
+        while ((n = fread(buffer, sizeof(char), buffer_size, src_file)) > 0) {
+                if (ferror(src_file)) {
+                        perror(argv[1]);
+                        break;
+                }
 
-                if (get_OS_time_ms() - refresh_time >= INFO_REFRESH_TIME_MS) {
-                        refresh_time = get_OS_time_ms();
+                if (timer_is_expired(info_timer, INFO_REFRESH_TIME_MS)) {
+                        info_timer = timer_reset();
 
                         u32_t file_size = lfile_size / 1024;
                         u32_t copy_size = lcopy_size / 1024;
@@ -126,21 +134,26 @@ PROGRAM_MAIN(cp, int argc, char *argv[])
                                ((copy_size*10000)/file_size) % 100);
                 }
 
-                if (fwrite(buffer, sizeof(char), n, dst_file) == 0) {
-                        printf("\rCoping error\n");
+                fwrite(buffer, sizeof(char), n, dst_file);
+                if (ferror(dst_file)) {
+                        perror(argv[2]);
                         break;
                 }
+
+                lcopy_size += n;
         }
 
-        uint stop_time = get_OS_time_ms() - start_time;
+        uint  stop_time = get_time_ms() - start_time;
         u32_t copy_size = lcopy_size;
 
-        if (lcopy_size >= 1024) {
-                copy_size = lcopy_size / 1024;
+        if (ferror(src_file)) {
+                perror(argv[1]);
+                goto exit_error;
         }
 
         const char *pre = "";
-        if (copy_size >= 1024) {
+        if (lcopy_size >= 1024) {
+                copy_size = lcopy_size / 1024;
                 pre = "Ki";
         }
 

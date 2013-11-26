@@ -159,7 +159,7 @@ API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force, const
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
 
- * @return number of written bytes
+ * @return number of written bytes, -1 if error
  */
 //==============================================================================
 API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
@@ -183,7 +183,7 @@ API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, s
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
 
- * @return number of read bytes
+ * @return number of read bytes, -1 if error
  */
 //==============================================================================
 API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
@@ -208,7 +208,6 @@ API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t 
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
- * @retval ...
  */
 //==============================================================================
 API_FS_IOCTL(genericfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
@@ -252,7 +251,7 @@ API_FS_FLUSH(genericfs, void *fs_handle, void *extra, fd_t fd)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *stat)
+API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -267,12 +266,13 @@ API_FS_FSTAT(genericfs, void *fs_handle, void *extra, fd_t fd, struct vfs_stat *
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created directory
+ * @param[in ]           mode                   dir mode
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKDIR(genericfs, void *fs_handle, const char *path)
+API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -454,7 +454,7 @@ API_FS_CHOWN(genericfs, void *fs_handle, const char *path, int owner, int group)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STAT(genericfs, void *fs_handle, const char *path, struct vfs_stat *stat)
+API_FS_STAT(genericfs, void *fs_handle, const char *path, struct stat *stat)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
@@ -462,7 +462,7 @@ API_FS_STAT(genericfs, void *fs_handle, const char *path, struct vfs_stat *stat)
 
         stat->st_dev   = 0;
         stat->st_gid   = 0;
-        stat->st_mode  = OWNER_MODE(MODE_R) | GROUP_MODE(MODE_R) | OTHER_MODE(MODE_R);
+        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
         stat->st_mtime = 0;
         stat->st_size  = 0;
         stat->st_uid   = 0;
@@ -491,7 +491,7 @@ API_FS_STATFS(genericfs, void *fs_handle, struct vfs_statfs *statfs)
         statfs->f_ffree  = 0;
         statfs->f_files  = 0;
         statfs->f_type   = 1;
-        statfs->fsname   = "genericfs";
+        statfs->f_fsname = "genericfs";
 
         return STD_RET_OK;
 }

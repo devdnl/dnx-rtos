@@ -35,7 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "tty_cfg.h"
-#include "system/ioctl_macros.h"
+#include "core/ioctl_macros.h"
 
 /*==============================================================================
   Exported object types

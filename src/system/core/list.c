@@ -37,9 +37,11 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)              sysm_syscalloc(nmemb, msize)
-#define malloc(size)                      sysm_sysmalloc(size)
-#define free(mem)                         sysm_sysfree(mem)
+#define calloc(nmemb, msize)            sysm_syscalloc(nmemb, msize)
+#define malloc(size)                    sysm_sysmalloc(size)
+#define free(mem)                       sysm_sysfree(mem)
+
+#define LIST_VALIDATION_NUMBER          (u32_t)0x25CADA7F
 
 /*==============================================================================
   Local types, enums definitions
@@ -54,6 +56,7 @@ struct list {
         struct list_item *head;
         struct list_item *tail;
         i32_t  item_count;
+        u32_t  valid;
 };
 
 /*==============================================================================
@@ -78,9 +81,14 @@ static i32_t get_iaddr_by_ID(list_t *list, u32_t id, struct list_item **previtem
  * @return pointer to new list object
  */
 //==============================================================================
-list_t *new_list(void)
+list_t *list_new(void)
 {
-      return calloc(1, sizeof(list_t));
+        list_t *list = calloc(1, sizeof(list_t));
+        if (list) {
+                list->valid = LIST_VALIDATION_NUMBER;
+        }
+
+        return list;
 }
 
 //==============================================================================
@@ -97,27 +105,30 @@ list_t *new_list(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t delete_list(list_t *list)
+stdret_t list_delete(list_t *list)
 {
         if (list) {
-                struct list_item *item      = list->head;
-                struct list_item *next_item = NULL;
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item      = list->head;
+                        struct list_item *next_item = NULL;
 
-                while (item) {
-                        next_item = item->next;
+                        while (item) {
+                                next_item = item->next;
 
-                        if (item->data) {
-                                free(item->data);
+                                if (item->data) {
+                                        free(item->data);
+                                }
+
+                                free(item);
+
+                                item = next_item;
                         }
 
-                        free(item);
+                        list->valid = 0;
+                        free(list);
 
-                        item = next_item;
+                        return STD_RET_OK;
                 }
-
-                free(list);
-
-                return STD_RET_OK;
         }
 
         return STD_RET_ERROR;
@@ -137,23 +148,25 @@ stdret_t delete_list(list_t *list)
 i32_t list_add_item(list_t *list, u32_t id, void *data)
 {
         if (list) {
-                struct list_item *new_item = calloc(1, sizeof(struct list_item));
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *new_item = calloc(1, sizeof(struct list_item));
 
-                if (new_item) {
-                        if (list->head == NULL) {
-                                list->head = new_item;
-                                list->tail = new_item;
-                        } else {
-                                list->tail->next = new_item;
-                                list->tail = new_item;
+                        if (new_item) {
+                                if (list->head == NULL) {
+                                        list->head = new_item;
+                                        list->tail = new_item;
+                                } else {
+                                        list->tail->next = new_item;
+                                        list->tail = new_item;
+                                }
+
+                                list->item_count++;
+
+                                new_item->data = data;
+                                new_item->id   = id;
+
+                                return list->item_count - 1;
                         }
-
-                        list->item_count++;
-
-                        new_item->data = data;
-                        new_item->id   = id;
-
-                        return list->item_count - 1;
                 }
         }
 
@@ -175,34 +188,36 @@ i32_t list_add_item(list_t *list, u32_t id, void *data)
 stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *data)
 {
         if (list) {
-                struct list_item *new_item = calloc(1, sizeof(struct list_item));
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *new_item = calloc(1, sizeof(struct list_item));
 
-                if (new_item) {
-                        struct list_item *item;
-                        struct list_item *prev_item;
-                        get_iaddr_by_No(list, nitem, &prev_item, &item);
+                        if (new_item) {
+                                struct list_item *item;
+                                struct list_item *prev_item;
+                                get_iaddr_by_No(list, nitem, &prev_item, &item);
 
-                        if (item) {
-                                /* check head pointer */
-                                if (nitem == 0) {
-                                        new_item->next = list->head;
-                                        list->head    = new_item;
-                                } else {
-                                        prev_item->next = new_item;
-                                        new_item->next  = item;
+                                if (item) {
+                                        /* check head pointer */
+                                        if (nitem == 0) {
+                                                new_item->next = list->head;
+                                                list->head    = new_item;
+                                        } else {
+                                                prev_item->next = new_item;
+                                                new_item->next  = item;
+                                        }
+
+                                        list->item_count++;
+
+                                        /* check tail pointer */
+                                        if (nitem == list->item_count - 1) {
+                                                list->tail = new_item;
+                                        }
+
+                                        new_item->data = data;
+                                        new_item->id   = id;
+
+                                        return STD_RET_OK;
                                 }
-
-                                list->item_count++;
-
-                                /* check tail pointer */
-                                if (nitem == list->item_count - 1) {
-                                        list->tail = new_item;
-                                }
-
-                                new_item->data = data;
-                                new_item->id   = id;
-
-                                return STD_RET_OK;
                         }
                 }
         }
@@ -225,28 +240,30 @@ stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *d
 stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *data)
 {
         if (list) {
-                struct list_item *new_item = calloc(1, sizeof(struct list_item));
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *new_item = calloc(1, sizeof(struct list_item));
 
-                if (new_item) {
-                        struct list_item *item;
-                        struct list_item *prev_item;
-                        get_iaddr_by_No(list, nitem, &prev_item, &item);
+                        if (new_item) {
+                                struct list_item *item;
+                                struct list_item *prev_item;
+                                get_iaddr_by_No(list, nitem, &prev_item, &item);
 
-                        if (item) {
-                                new_item->next = item->next;
-                                item->next    = new_item;
+                                if (item) {
+                                        new_item->next = item->next;
+                                        item->next    = new_item;
 
-                                list->item_count++;
+                                        list->item_count++;
 
-                                /* check tail pointer */
-                                if (list->tail == item) {
-                                        list->tail = new_item;
+                                        /* check tail pointer */
+                                        if (list->tail == item) {
+                                                list->tail = new_item;
+                                        }
+
+                                        new_item->data = data;
+                                        new_item->id   = id;
+
+                                        return STD_RET_OK;
                                 }
-
-                                new_item->data = data;
-                                new_item->id   = id;
-
-                                return STD_RET_OK;
                         }
                 }
         }
@@ -268,10 +285,63 @@ stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *dat
 stdret_t list_rm_nitem(list_t *list, i32_t nitem)
 {
         if (list) {
-                if ((nitem >= 0) && (list->item_count - 1 >= nitem)) {
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        if ((nitem >= 0) && (list->item_count - 1 >= nitem)) {
+                                struct list_item *item;
+                                struct list_item *prev_item;
+                                get_iaddr_by_No(list, nitem, &prev_item, &item);
+
+                                if (item) {
+                                        /* check head pointer */
+                                        if (nitem == 0) {
+                                                list->head = item->next;
+                                        }
+
+                                        /* check tail pointer */
+                                        if (list->item_count - 1 == nitem) {
+                                                list->tail = prev_item;
+                                        }
+
+                                        /* connect to previous item the next item */
+                                        if (prev_item) {
+                                                prev_item->next = item->next;
+                                        }
+
+                                        if (item->data) {
+                                                free(item->data);
+                                        }
+
+                                        free(item);
+
+                                        list->item_count--;
+
+                                        return STD_RET_OK;
+                                }
+                        }
+                }
+        }
+
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function remove selected item by ID
+ *
+ * @param *list         pointer to list
+ * @param  id           item ID
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+stdret_t list_rm_iditem(list_t *list, u32_t id)
+{
+        if (list) {
+                if (list->valid == LIST_VALIDATION_NUMBER) {
                         struct list_item *item;
                         struct list_item *prev_item;
-                        get_iaddr_by_No(list, nitem, &prev_item, &item);
+                        i32_t nitem = get_iaddr_by_ID(list, id, &prev_item, &item);
 
                         if (item) {
                                 /* check head pointer */
@@ -284,7 +354,7 @@ stdret_t list_rm_nitem(list_t *list, i32_t nitem)
                                         list->tail = prev_item;
                                 }
 
-                                /* connect to previous item the next item */
+                                /* connect to previous item next item from current item */
                                 if (prev_item) {
                                         prev_item->next = item->next;
                                 }
@@ -307,55 +377,6 @@ stdret_t list_rm_nitem(list_t *list, i32_t nitem)
 
 //==============================================================================
 /**
- * @brief Function remove selected item by ID
- *
- * @param *list         pointer to list
- * @param  id           item ID
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-stdret_t list_rm_iditem(list_t *list, u32_t id)
-{
-        if (list) {
-                struct list_item *item;
-                struct list_item *prev_item;
-                i32_t nitem = get_iaddr_by_ID(list, id, &prev_item, &item);
-
-                if (item) {
-                        /* check head pointer */
-                        if (nitem == 0) {
-                                list->head = item->next;
-                        }
-
-                        /* check tail pointer */
-                        if (list->item_count - 1 == nitem) {
-                                list->tail = prev_item;
-                        }
-
-                        /* connect to previous item next item from current item */
-                        if (prev_item) {
-                                prev_item->next = item->next;
-                        }
-
-                        if (item->data) {
-                                free(item->data);
-                        }
-
-                        free(item);
-
-                        list->item_count--;
-
-                        return STD_RET_OK;
-                }
-        }
-
-        return STD_RET_ERROR;
-}
-
-//==============================================================================
-/**
  * @brief Function set item data pointer
  * Function automatically free last data before use new data
  *
@@ -370,18 +391,19 @@ stdret_t list_rm_iditem(list_t *list, u32_t id)
 stdret_t list_set_nitem_data(list_t *list, i32_t nitem, void *data)
 {
         if (list && (nitem >= 0)) {
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        get_iaddr_by_No(list, nitem, NULL, &item);
 
-                struct list_item *item;
-                get_iaddr_by_No(list, nitem, NULL, &item);
+                        if (item) {
+                                if (item->data) {
+                                        free(item->data);
+                                }
 
-                if (item) {
-                        if (item->data) {
-                                free(item->data);
+                                item->data = data;
+
+                                return STD_RET_OK;
                         }
-
-                        item->data = data;
-
-                        return STD_RET_OK;
                 }
         }
 
@@ -401,11 +423,13 @@ stdret_t list_set_nitem_data(list_t *list, i32_t nitem, void *data)
 void *list_get_nitem_data(list_t *list, i32_t nitem)
 {
         if (list && (nitem >= 0)) {
-                struct list_item *item;
-                get_iaddr_by_No(list, nitem, NULL, &item);
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        get_iaddr_by_No(list, nitem, NULL, &item);
 
-                if (item) {
-                        return item->data;
+                        if (item) {
+                                return item->data;
+                        }
                 }
         }
 
@@ -428,17 +452,19 @@ void *list_get_nitem_data(list_t *list, i32_t nitem)
 stdret_t list_set_iditem_data(list_t *list, u32_t id, void *data)
 {
         if (list) {
-                struct list_item *item;
-                get_iaddr_by_ID(list, id, NULL, &item);
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        get_iaddr_by_ID(list, id, NULL, &item);
 
-                if (item) {
-                        if (item->data) {
-                                free(item->data);
+                        if (item) {
+                                if (item->data) {
+                                        free(item->data);
+                                }
+
+                                item->data = data;
+
+                                return STD_RET_OK;
                         }
-
-                        item->data = data;
-
-                        return STD_RET_OK;
                 }
         }
 
@@ -458,11 +484,13 @@ stdret_t list_set_iditem_data(list_t *list, u32_t id, void *data)
 void *list_get_iditem_data(list_t *list, u32_t id)
 {
         if (list) {
-                struct list_item *item;
-                get_iaddr_by_ID(list, id, NULL, &item);
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        get_iaddr_by_ID(list, id, NULL, &item);
 
-                if (item) {
-                        return item->data;
+                        if (item) {
+                                return item->data;
+                        }
                 }
         }
 
@@ -484,12 +512,14 @@ void *list_get_iditem_data(list_t *list, u32_t id)
 stdret_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
 {
         if (list && nitem >= 0 && itemid) {
-                struct list_item *item;
-                get_iaddr_by_No(list, nitem, NULL, &item);
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        get_iaddr_by_No(list, nitem, NULL, &item);
 
-                if (item) {
-                        *itemid = item->id;
-                        return STD_RET_OK;
+                        if (item) {
+                                *itemid = item->id;
+                                return STD_RET_OK;
+                        }
                 }
         }
 
@@ -513,16 +543,18 @@ stdret_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
 stdret_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 {
         if (list && nitem) {
-                struct list_item *item;
-                i32_t itemno = get_iaddr_by_ID(list, id, NULL, &item);
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        i32_t itemno = get_iaddr_by_ID(list, id, NULL, &item);
 
-                if (item) {
-                        *nitem = itemno;
-                } else {
-                        *nitem = -1;
+                        if (item) {
+                                *nitem = itemno;
+                        } else {
+                                *nitem = -1;
+                        }
+
+                        return STD_RET_OK;
                 }
-
-                return STD_RET_OK;
         }
 
         return STD_RET_ERROR;
@@ -544,13 +576,15 @@ stdret_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 stdret_t list_unlink_nitem_data(list_t *list, i32_t nitem)
 {
         if (list) {
-                struct list_item *item;
-                get_iaddr_by_No(list, nitem, NULL, &item);
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        get_iaddr_by_No(list, nitem, NULL, &item);
 
-                if (item) {
-                        item->data = NULL;
+                        if (item) {
+                                item->data = NULL;
 
-                        return STD_RET_OK;
+                                return STD_RET_OK;
+                        }
                 }
         }
 
@@ -573,13 +607,15 @@ stdret_t list_unlink_nitem_data(list_t *list, i32_t nitem)
 stdret_t list_unlink_iditem_data(list_t *list, u32_t id)
 {
         if (list) {
-                struct list_item *item;
-                get_iaddr_by_ID(list, id, NULL, &item);
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        struct list_item *item;
+                        get_iaddr_by_ID(list, id, NULL, &item);
 
-                if (item) {
-                        item->data = NULL;
+                        if (item) {
+                                item->data = NULL;
 
-                        return STD_RET_OK;
+                                return STD_RET_OK;
+                        }
                 }
         }
 
@@ -598,7 +634,9 @@ stdret_t list_unlink_iditem_data(list_t *list, u32_t id)
 i32_t list_get_item_count(list_t *list)
 {
         if (list) {
-                return list->item_count;
+                if (list->valid == LIST_VALIDATION_NUMBER) {
+                        return list->item_count;
+                }
         }
 
         return -1;
