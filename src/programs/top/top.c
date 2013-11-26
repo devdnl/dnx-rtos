@@ -105,7 +105,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 key = getchar();
 
                 if (!strchr("k,.", key)) {
-                        if (!timer_is_expired(timer, 1000)) {
+                        if (timer_is_not_expired(timer, 1000)) {
                                 sleep_ms(10);
                                 continue;
                         } else {

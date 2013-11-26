@@ -549,7 +549,7 @@ API_FS_REMOVE(lfs, void *fs_handle, const char *path)
 
         mutex_force_lock(lfs->resource_mtx);
         i32_t   item;
-        bool    remove_file = TRUE;
+        bool    remove_file = true;
         node_t *base_node   = get_node(path, &lfs->root_dir, -1, NULL);
         node_t *obj_node    = get_node(path, &lfs->root_dir, 0, &item);
 
@@ -572,14 +572,14 @@ API_FS_REMOVE(lfs, void *fs_handle, const char *path)
                 for (int i = 0; i < n; i++) {
                         struct opened_file_info *opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
                         if (opened_file->node == obj_node) {
-                                opened_file->remove_at_close = TRUE;
-                                remove_file = FALSE;
+                                opened_file->remove_at_close = true;
+                                remove_file = false;
                         }
                 }
         }
 
         /* remove node if possible */
-        if (remove_file == TRUE) {
+        if (remove_file == true) {
                 u32_t item_ID;
                 if (list_get_nitem_ID(base_node->data, item, &item_ID) == STD_RET_OK) {
                         mutex_unlock(lfs->resource_mtx);
@@ -1048,7 +1048,7 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_
         /* file to remove, check if other task does not opens this file */
         status = STD_RET_OK;
 
-        if (opened_file_data.remove_at_close == TRUE) {
+        if (opened_file_data.remove_at_close == true) {
                 i32_t n = list_get_item_count(lfs->list_of_opended_files);
 
                 for (int i = 0; i < n; i++) {
@@ -1096,7 +1096,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
         STOP_IF(!count);
 
         struct LFS_data *lfs = fs_handle;
-        size_t           n   = 0;
+        ssize_t          n   = -1;
 
         mutex_force_lock(lfs->resource_mtx);
 
@@ -1154,6 +1154,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
                 if (node->data) {
+                        n = 0;
                         for (uint i = 0; i < count; i++) {
                                 if (queue_send(node->data, src + i, PIPE_WRITE_TIMEOUT)) {
                                         n++;
@@ -1169,6 +1170,8 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 } else {
                         errno = EIO;
                 }
+        } else {
+                errno = ENOENT;
         }
 
 exit:
@@ -1200,7 +1203,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
         STOP_IF(!count);
 
         struct LFS_data *lfs = fs_handle;
-        size_t           n   = 0;
+        ssize_t          n   = -1;
 
         mutex_force_lock(lfs->resource_mtx);
 
@@ -1243,11 +1246,16 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                         if (items_to_read > 0) {
                                 memcpy(dst, node->data + seek, items_to_read);
                                 n = items_to_read;
+                        } else {
+                                n = 0;
                         }
+                } else {
+                        errno = EIO;
                 }
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
                 if (node->data) {
+                        n = 0;
                         for (uint i = 0; i < count; i++) {
                                 if (queue_receive(node->data, dst + i, PIPE_READ_TIMEOUT)) {
                                         n++;
@@ -1261,10 +1269,11 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 } else {
                         errno = EIO;
                 }
+        } else {
+                errno = EIO;
         }
 
 exit:
-        errno = ENOENT;
         mutex_unlock(lfs->resource_mtx);
         return n;
 }
@@ -1632,9 +1641,9 @@ static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *bas
                 return STD_RET_ERROR;
         }
 
-        opened_file_info->remove_at_close = FALSE;
-        opened_file_info->node      = node;
-        opened_file_info->base_node = base_node;
+        opened_file_info->remove_at_close = false;
+        opened_file_info->node            = node;
+        opened_file_info->base_node       = base_node;
 
         if (list_get_nitem_ID(base_node->data, *item, &opened_file_info->item_ID) != STD_RET_OK) {
                 goto error;
@@ -1650,8 +1659,8 @@ static stdret_t add_node_to_list_of_open_files(struct LFS_data *lfs, node_t *bas
                         continue;
                 }
 
-                if (opened_file->remove_at_close == TRUE) {
-                        opened_file_info->remove_at_close = TRUE;
+                if (opened_file->remove_at_close == true) {
+                        opened_file_info->remove_at_close = true;
                         break;
                 }
         }
