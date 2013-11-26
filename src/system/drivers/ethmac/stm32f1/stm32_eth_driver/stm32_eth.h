@@ -29,6 +29,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
+#include "../ethmac_cfg.h"
 
 /** @addtogroup STM32_ETH_Driver
   * @{
@@ -235,11 +236,11 @@ typedef struct  {
  *        (for precise timing), otherwise default _eth_delay_ function defined within
  *        this driver is used (less precise timing).
  */
-/* #define USE_Delay */
+#define USE_Delay
 
 #ifdef USE_Delay
-#include "main.h"
-  #define _eth_delay_    Delay     /*!< User can provide more timing precise _eth_delay_ function */
+#include <unistd.h>
+  #define _eth_delay_    sleep_ms  /*!< User can provide more timing precise _eth_delay_ function */
 #else
   #define _eth_delay_    ETH_Delay /*!< Default _eth_delay_ function with less precise timing */
 #endif
@@ -421,7 +422,7 @@ typedef struct  {
 /** @defgroup PHY_Reset_Delay
   * @{
   */
-#define PHY_ResetDelay                  ((uint32_t)0x000FFFFF)
+#define PHY_ResetDelay                  ETHMAC_PHY_RESET_DELAY
 
 /**
   * @}
@@ -430,7 +431,7 @@ typedef struct  {
 /** @defgroup PHY_Config_Delay
   * @{
   */
-#define PHY_ConfigDelay                 ((uint32_t)0x00FFFFFF)
+#define PHY_ConfigDelay                 ETHMAC_PHY_CONFIG_DELAY
 
 /**
   * @}
@@ -487,7 +488,7 @@ typedef struct  {
 /**
   * @brief  For DP83848
   */
-#define PHY_SR                           16     /*!< Tranceiver Status Register */
+#define PHY_SR                           ETHMAC_PHY_SR     /*!< Tranceiver Status Register */
 
 /* The Speed and Duplex mask values change from a PHY to another so the user have to update
    this value depending on the used external PHY */
@@ -500,8 +501,8 @@ typedef struct  {
 /**
   * @brief  For DP83848
   */
-#define PHY_Speed_Status            ((u16)0x0002)    /*!< Configured information of Speed: 10Mbps */
-#define PHY_Duplex_Status           ((u16)0x0004)    /*!< Configured information of Duplex: Full-duplex */
+#define PHY_Speed_Status            ((u16)ETHMAC_PHY_SPEED_STATUS_BM)    /*!< Configured information of Speed: 10Mbps */
+#define PHY_Duplex_Status           ((u16)ETHMAC_PHY_DUPLEX_STATUS_BM)   /*!< Configured information of Duplex: Full-duplex */
 #define IS_ETH_PHY_ADDRESS(ADDRESS) ((ADDRESS) <= 0x20)
 #define IS_ETH_PHY_REG(REG) (((REG) == PHY_BCR) || \
                              ((REG) == PHY_BSR) || \
