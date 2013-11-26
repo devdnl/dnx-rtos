@@ -117,7 +117,7 @@ static inline bool device_is_locked(dev_lock_t *dev_lock)
         return _is_device_locked(dev_lock);
 }
 
-static inline bool is_device_unlocked(dev_lock_t *dev_lock)
+static inline bool device_is_unlocked(dev_lock_t *dev_lock)
 {
         extern bool _is_device_locked(dev_lock_t*);
         return !_is_device_locked(dev_lock);

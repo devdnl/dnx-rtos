@@ -131,7 +131,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
 
         critical_section_begin();
 
-        if (is_device_unlocked(&hdl->dev_lock)) {
+        if (device_is_unlocked(&hdl->dev_lock)) {
                 free(hdl);
                 eth_mem = NULL;
                 ETH_DeInit();
