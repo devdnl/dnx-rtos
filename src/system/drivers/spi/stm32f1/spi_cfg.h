@@ -61,7 +61,6 @@ extern "C" {
 #define _SPI_DEFAULT_CFG_DUMMY_BYTE             0xFF
 #define _SPI_DEFAULT_CFG_CLK_DIVIDER            SPI_CLK_DIV_2
 #define _SPI_DEFAULT_CFG_MODE                   SPI_MODE_0
-#define _SPI_DEFAULT_CFG_MASTER_MODE            true
 #define _SPI_DEFAULT_CFG_MSB_FIRST              true
 
 /* CS configurations for SPI1 */

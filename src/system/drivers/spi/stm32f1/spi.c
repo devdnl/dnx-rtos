@@ -40,6 +40,7 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define MUTEX_TIMOUT                    MAX_DELAY
 #define MAX_NUMBER_OF_CS                8
 
 
@@ -143,7 +144,6 @@ static const struct SPI_config spi_default_cfg = {
         dummy_byte : _SPI_DEFAULT_CFG_DUMMY_BYTE,
         clk_divider: _SPI_DEFAULT_CFG_CLK_DIVIDER,
         mode       : _SPI_DEFAULT_CFG_MODE,
-        master_mode: _SPI_DEFAULT_CFG_MASTER_MODE,
         msb_first  : _SPI_DEFAULT_CFG_MSB_FIRST
 };
 
@@ -225,148 +225,137 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
 //==============================================================================
 /**
- * @brief Device release
+ * @brief Release device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_RELEASE(SPI)
+API_MOD_RELEASE(SPI, void *device_handle)
 {
         STOP_IF(!device_handle);
 
-        SPI_handle *hdl = device_handle;
+        struct spi_virtual *hdl = device_handle;
 
-        force_lock_recursive_mutex(hdl->file_lock);
+        stdret_t status = STD_RET_ERROR;
 
-        enter_critical_section();
+        critical_section_begin();
+        if (device_is_unlocked(hdl->file_lock)) {
 
-        unlock_recursive_mutex(hdl->file_lock);
+                spi_module->number_of_virtual_spi--;
 
-        delete_recursive_mutex(hdl->file_lock);
+                /* deinitialize major device if all minor devices are deinitialized */
+                if (spi_module->number_of_virtual_spi == 0) {
+                        mutex_delete(spi_module->device_protect_mtx[hdl->major]);
+                        spi_module->device_protect_mtx = NULL;
+                        spi_turn_off(spi[hdl->major]);
+                }
 
-        spi_turn_off(hdl->SPI);
-        free(hdl);
-        exit_critical_section();
+                /* free module memory if all devices are deinitialized */
+                bool free_module_mem = true;
+                for (int i = 0; i < _SPI_DEV_NUMBER && free_module_mem; i++) {
+                        free_module_mem = spi_module->device_protect_mtx[i] == NULL;
+                }
 
-        return STD_RET_OK;
-}
+                if (free_module_mem) {
+                        free(spi_module);
+                        spi_module = NULL;
+                }
 
-//==============================================================================
-/**
- * @brief Device open
- */
-//==============================================================================
-MODULE__DEVICE_OPEN(SPI)
-{
-        STOP_IF(!device_handle);
+                /* free virtual spi memory */
+                free(hdl);
 
-        SPI_handle *hdl = device_handle;
-
-        if (lock_recursive_mutex(hdl->file_lock, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-
-                /* program take control on this file, no mutex unlocking */
-
-                return STD_RET_OK;
+                status = STD_RET_OK;
         }
+        critical_section_end();
 
-        return STD_RET_ERROR;
+        return status;
 }
 
 //==============================================================================
 /**
- * @brief Device close
+ * @brief Open device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_CLOSE(SPI)
+API_MOD_OPEN(SPI, void *device_handle, int flags)
 {
         STOP_IF(!device_handle);
 
-        SPI_handle *hdl = device_handle;
+        struct spi_virtual *hdl = device_handle;
 
-        if (lock_recursive_mutex(hdl->file_lock, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-
-                unlock_recursive_mutex(hdl->file_lock);         /* close */
-                unlock_recursive_mutex(hdl->file_lock);         /* open  */
-
-                return STD_RET_OK;
-        }
-
-        return STD_RET_ERROR;
+        return device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
- * @brief Device write
+ * @brief Close device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           force                  device force close (true)
+ * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_WRITE(SPI)
+API_MOD_CLOSE(SPI, void *device_handle, bool force, const task_t *opened_by_task)
 {
-        UNUSED_ARG(lseek);
+        STOP_IF(!device_handle);
+        UNUSED_ARG(opened_by_task);
+
+        struct spi_virtual *hdl = device_handle;
+
+        if (device_is_access_granted(&hdl->file_lock)) {
+                device_unlock(&hdl->file_lock, force);
+                return STD_RET_OK;
+        } else {
+                return STD_RET_ERROR;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Write data to device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]          *src                    data source
+ * @param[in ]           count                  number of bytes to write
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of written bytes, -1 if error
+ */
+//==============================================================================
+API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+{
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
 
-        SPI_handle *hdl = device_handle;
+        struct spi_virtual *hdl = device_handle;
 
-        size_t n = 0;
-        if (lock_recursive_mutex(hdl->file_lock, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        ssize_t n = -1;
 
-                if (hdl->I2S_mode) {
-                        if (item_size == sizeof(u16_t)) {
-                                if (take_counting_semaphore(hdl->I2S_chain.semaphore, MAX_DELAY) == SEMAPHORE_TAKEN) {
-                                        enter_critical_section();
-                                        if (write_I2S_FIFO(&hdl->I2S_chain, src, n_items) == 0) {
+        if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+                spi_apply_config(hdl);
+                spi_select_slave(hdl);
 
-                                                if (hdl->I2S_chain.DMA_started == false) {
-                                                        const u16_t *bfr;
-                                                        uint         size;
-                                                        if (read_I2S_FIFO(&hdl->I2S_chain, &bfr, &size) == 0) {
-                                                                DMA1_Channel5->CMAR  = (u32_t) bfr;
-                                                                DMA1_Channel5->CNDTR = size;
-                                                                SET_BIT(DMA1_Channel5->CCR, DMA_CCR5_EN);
-                                                                hdl->I2S_chain.DMA_started = true;
-                                                        }
-                                                }
+                /* TODO */
 
-
-                                        }
-                                        exit_critical_section();
-                                }
-                        }
-                } else {
-#if   (SPI_HANDLER_MODE == 0)
-                        uint         size    = n_items * item_size;
-                        const u8_t  *data8b  = src;
-                        const u16_t *data16b = src;
-
-                        if (is_16_bit_frame(hdl->SPI)) {
-                                size &= ~(1 << 0);
-                        }
-
-                        while (size) {
-                                while (!is_tx_buffer_empty(hdl->SPI));
-
-                                if (is_16_bit_frame(hdl->SPI)) {
-                                        hdl->SPI->DR = *(data16b++);
-                                } else {
-                                        hdl->SPI->DR = *(data8b++);
-                                }
-
-                                while (!(hdl->SPI->SR & SPI_SR_RXNE));
-                                volatile u16_t tmp = hdl->SPI->DR;
-                                (void)tmp;
-
-                                size--;
-                                n++;
-                        }
-#elif (SPI_HANDLER_MODE == 1)
-#elif (SPI_HANDLER_MODE == 2)
-#else
-#error "Unknown SPI handler mode! Check configuration."
-#endif
-                }
-
-                unlock_recursive_mutex(hdl->file_lock);
+                spi_deselect_slave(hdl);
+                spi_apply_safe_config();
+                mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+        } else {
+                errno = ETIME;
         }
 
         return n;

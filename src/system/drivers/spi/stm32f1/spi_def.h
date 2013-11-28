@@ -88,7 +88,6 @@ struct SPI_config {
         u8_t                    dummy_byte  : 8;
         enum SPI_clk_divider    clk_divider : 3;
         enum SPI_mode           mode        : 2;
-        bool                    master_mode : 1;
         bool                    msb_first   : 1;
 };
 
