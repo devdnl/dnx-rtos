@@ -198,22 +198,30 @@ static struct module *spi_module;
 //==============================================================================
 API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major >= _SPI_DEV_NUMBER)
+        if (major >= _SPI_DEV_NUMBER) {
+                errno = ENXIO;
                 return STD_RET_ERROR;
+        }
 
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
-        if (major == _SPI_DEV_1 && minor >= _SPI1_NUMBER_OF_SLAVES)
+        if (major == _SPI_DEV_1 && minor >= _SPI1_NUMBER_OF_SLAVES) {
+                errno = ENXIO;
                 return STD_RET_ERROR;
+        }
 #endif
 
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
-        if (major == _SPI_DEV_2 && minor >= _SPI2_NUMBER_OF_SLAVES)
+        if (major == _SPI_DEV_2 && minor >= _SPI2_NUMBER_OF_SLAVES) {
+                errno = ENXIO;
                 return STD_RET_ERROR;
+        }
 #endif
 
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-        if (major == _SPI_DEV_3 && minor >= _SPI3_NUMBER_OF_SLAVES)
+        if (major == _SPI_DEV_3 && minor >= _SPI3_NUMBER_OF_SLAVES) {
+                errno = ENXIO;
                 return STD_RET_ERROR;
+        }
 #endif
 
         /* allocate module general data if initialized first time */
@@ -308,6 +316,8 @@ API_MOD_RELEASE(SPI, void *device_handle)
                 free(hdl);
 
                 status = STD_RET_OK;
+        } else {
+                errno = EBUSY;
         }
         critical_section_end();
 
@@ -501,6 +511,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 }
 
                 default:
+                        errno = EBADRQC;
                         break;
                 }
         }
