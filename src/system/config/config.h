@@ -33,7 +33,12 @@ extern "C" {
 
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
- * CPU frequency [Hz]
+ * CPU oscillator frequence (mostly external quartz) [Hz]
+ */
+#define CONFIG_CPU_OSC_FREQ                             (8000000UL)
+
+/**
+ * CPU target frequency [Hz]
  */
 #define CONFIG_CPU_TARGET_FREQ                          (72000000UL)
 
@@ -47,7 +52,7 @@ extern "C" {
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (64316)
+#define CONFIG_HEAP_SIZE                                (64308)
 
 /**
  * Heap memory alignment
