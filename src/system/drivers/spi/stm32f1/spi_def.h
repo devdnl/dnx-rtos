@@ -41,6 +41,7 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 #define SPI_IORQ_SET_CONFIGURATION                      _IOW('S', 0x00, struct SPI_config*)
+#define SPI_IORQ_GET_CONFIGURATION                      _IOR('S', 0x01, struct SPI_config*)
 
 /*==============================================================================
   Exported object types

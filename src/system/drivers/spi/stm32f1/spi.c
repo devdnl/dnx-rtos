@@ -41,24 +41,8 @@ extern "C" {
   Local macros
 ==============================================================================*/
 #define MUTEX_TIMOUT                    MAX_DELAY
+#define SEMAPHORE_TIMEOUT               MAX_DELAY
 #define MAX_NUMBER_OF_CS                8
-
-
-#define MTX_BLOCK_TIME                  10
-#define force_lock_mutex(mtx)           while (lock_mutex(mtx, 10) != MUTEX_LOCKED)
-#define force_lock_recursive_mutex(mtx) while (lock_recursive_mutex(mtx, 10) != MUTEX_LOCKED)
-
-#define SET_REG_BIT(reg, bits)          reg |=  (bits)
-#define CLR_REG_BIT(reg, bits)          reg &= ~(bits)
-
-#define SPI_CR1_BR_CALC(div)            (((div) << 3) & SPI_CR1_BR)
-
-#define is_16_bit_frame(spi)            ((spi)->CR1 & SPI_CR1_DFF)
-#define is_8_bit_frame(spi)             (!is_16_bit_frame(spi))
-#define is_tx_buffer_empty(spi)         ((spi)->SR & SPI_SR_TXE)
-#define is_rx_buffer_not_empty(spi)     ((spi)->SR & SPI_SR_RXNE)
-
-#define DMA_CHAIN_NUMBER                3
 
 /*==============================================================================
   Local object types
@@ -67,6 +51,12 @@ extern "C" {
 struct cs_pin_cfg {
         GPIO_t *const           port;
         u16_t                   pin_mask;
+};
+
+/* priority configuration */
+struct spi_priority_cfg {
+        IRQn_Type               IRQn;
+        u32_t                   priority;
 };
 
 /* independent SPI instance */
@@ -79,15 +69,25 @@ struct spi_virtual {
 
 /* general module data */
 struct module {
+        sem_t                  *wait_irq_sem[_SPI_DEV_NUMBER];
         mutex_t                *device_protect_mtx[_SPI_DEV_NUMBER];
+        u8_t                   *buffer[_SPI_DEV_NUMBER];
+        size_t                  count[_SPI_DEV_NUMBER];
+        bool                    write[_SPI_DEV_NUMBER];
+        u8_t                    dummy_byte[_SPI_DEV_NUMBER];
         u8_t                    number_of_virtual_spi[_SPI_DEV_NUMBER];
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t spi_turn_on     (SPI_t *spi);
-static stdret_t spi_turn_off    (SPI_t *spi);
+static void     spi_turn_on             (SPI_t *spi);
+static void     spi_turn_off            (SPI_t *spi);
+static void     spi_apply_config        (struct spi_virtual *vspi);
+static void     spi_apply_safe_config   (u8_t major);
+static void     spi_select_slave        (u8_t major, u8_t minor);
+static void     spi_deselect_slave      (u8_t major);
+static void     spi_irq_handle          (u8_t major);
 
 /*==============================================================================
   Local objects
@@ -101,41 +101,67 @@ static SPI_t *const spi[_SPI_DEV_NUMBER] = {
         SPI2,
 #endif
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-        SPI3,
+        SPI3
 #endif
 };
 
 /* CS port configuration */
 static const struct cs_pin_cfg spi_cs_pin_cfg[_SPI_DEV_NUMBER][MAX_NUMBER_OF_CS] = {
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
-        {{port: _SPI1_CS0_PORT, pin_mask: (1 << _SPI1_CS0_PIN)},
-         {port: _SPI1_CS1_PORT, pin_mask: (1 << _SPI1_CS1_PIN)},
-         {port: _SPI1_CS2_PORT, pin_mask: (1 << _SPI1_CS2_PIN)},
-         {port: _SPI1_CS3_PORT, pin_mask: (1 << _SPI1_CS3_PIN)},
-         {port: _SPI1_CS4_PORT, pin_mask: (1 << _SPI1_CS4_PIN)},
-         {port: _SPI1_CS5_PORT, pin_mask: (1 << _SPI1_CS5_PIN)},
-         {port: _SPI1_CS6_PORT, pin_mask: (1 << _SPI1_CS6_PIN)},
-         {port: _SPI1_CS7_PORT, pin_mask: (1 << _SPI1_CS7_PIN)}},
+        {{port: (GPIO_t *)_SPI1_CS0_PORT, pin_mask: (1 << _SPI1_CS0_PIN)},
+         {port: (GPIO_t *)_SPI1_CS1_PORT, pin_mask: (1 << _SPI1_CS1_PIN)},
+         {port: (GPIO_t *)_SPI1_CS2_PORT, pin_mask: (1 << _SPI1_CS2_PIN)},
+         {port: (GPIO_t *)_SPI1_CS3_PORT, pin_mask: (1 << _SPI1_CS3_PIN)},
+         {port: (GPIO_t *)_SPI1_CS4_PORT, pin_mask: (1 << _SPI1_CS4_PIN)},
+         {port: (GPIO_t *)_SPI1_CS5_PORT, pin_mask: (1 << _SPI1_CS5_PIN)},
+         {port: (GPIO_t *)_SPI1_CS6_PORT, pin_mask: (1 << _SPI1_CS6_PIN)},
+         {port: (GPIO_t *)_SPI1_CS7_PORT, pin_mask: (1 << _SPI1_CS7_PIN)}},
 #endif
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
-        {{port: _SPI2_CS0_PORT, pin_mask: (1 << _SPI2_CS0_PIN)},
-         {port: _SPI2_CS1_PORT, pin_mask: (1 << _SPI2_CS1_PIN)},
-         {port: _SPI2_CS2_PORT, pin_mask: (1 << _SPI2_CS2_PIN)},
-         {port: _SPI2_CS3_PORT, pin_mask: (1 << _SPI2_CS3_PIN)},
-         {port: _SPI2_CS4_PORT, pin_mask: (1 << _SPI2_CS4_PIN)},
-         {port: _SPI2_CS5_PORT, pin_mask: (1 << _SPI2_CS5_PIN)},
-         {port: _SPI2_CS6_PORT, pin_mask: (1 << _SPI2_CS6_PIN)},
-         {port: _SPI2_CS7_PORT, pin_mask: (1 << _SPI2_CS7_PIN)}},
+        {{port: (GPIO_t *)_SPI2_CS0_PORT, pin_mask: (1 << _SPI2_CS0_PIN)},
+         {port: (GPIO_t *)_SPI2_CS1_PORT, pin_mask: (1 << _SPI2_CS1_PIN)},
+         {port: (GPIO_t *)_SPI2_CS2_PORT, pin_mask: (1 << _SPI2_CS2_PIN)},
+         {port: (GPIO_t *)_SPI2_CS3_PORT, pin_mask: (1 << _SPI2_CS3_PIN)},
+         {port: (GPIO_t *)_SPI2_CS4_PORT, pin_mask: (1 << _SPI2_CS4_PIN)},
+         {port: (GPIO_t *)_SPI2_CS5_PORT, pin_mask: (1 << _SPI2_CS5_PIN)},
+         {port: (GPIO_t *)_SPI2_CS6_PORT, pin_mask: (1 << _SPI2_CS6_PIN)},
+         {port: (GPIO_t *)_SPI2_CS7_PORT, pin_mask: (1 << _SPI2_CS7_PIN)}},
 #endif
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-        {{port: _SPI3_CS0_PORT, pin_mask: (1 << _SPI3_CS0_PIN)},
-         {port: _SPI3_CS1_PORT, pin_mask: (1 << _SPI3_CS1_PIN)},
-         {port: _SPI3_CS2_PORT, pin_mask: (1 << _SPI3_CS2_PIN)},
-         {port: _SPI3_CS3_PORT, pin_mask: (1 << _SPI3_CS3_PIN)},
-         {port: _SPI3_CS4_PORT, pin_mask: (1 << _SPI3_CS4_PIN)},
-         {port: _SPI3_CS5_PORT, pin_mask: (1 << _SPI3_CS5_PIN)},
-         {port: _SPI3_CS6_PORT, pin_mask: (1 << _SPI3_CS6_PIN)},
-         {port: _SPI3_CS7_PORT, pin_mask: (1 << _SPI3_CS7_PIN)}}
+        {{port: (GPIO_t *)_SPI3_CS0_PORT, pin_mask: (1 << _SPI3_CS0_PIN)},
+         {port: (GPIO_t *)_SPI3_CS1_PORT, pin_mask: (1 << _SPI3_CS1_PIN)},
+         {port: (GPIO_t *)_SPI3_CS2_PORT, pin_mask: (1 << _SPI3_CS2_PIN)},
+         {port: (GPIO_t *)_SPI3_CS3_PORT, pin_mask: (1 << _SPI3_CS3_PIN)},
+         {port: (GPIO_t *)_SPI3_CS4_PORT, pin_mask: (1 << _SPI3_CS4_PIN)},
+         {port: (GPIO_t *)_SPI3_CS5_PORT, pin_mask: (1 << _SPI3_CS5_PIN)},
+         {port: (GPIO_t *)_SPI3_CS6_PORT, pin_mask: (1 << _SPI3_CS6_PIN)},
+         {port: (GPIO_t *)_SPI3_CS7_PORT, pin_mask: (1 << _SPI3_CS7_PIN)}}
+#endif
+};
+
+/* number of SPI cs */
+static const u8_t spi_number_of_slaves[_SPI_DEV_NUMBER] = {
+#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        _SPI1_NUMBER_OF_SLAVES,
+#endif
+#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        _SPI2_NUMBER_OF_SLAVES,
+#endif
+#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        _SPI3_NUMBER_OF_SLAVES
+#endif
+};
+
+/* priorities for specified SPI peripherals */
+static const struct spi_priority_cfg spi_priority[_SPI_DEV_NUMBER] = {
+#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        {IRQn: SPI1_IRQn, priority: _SPI1_IRQ_PRIORITY},
+#endif
+#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        {IRQn: SPI2_IRQn, priority: _SPI2_IRQ_PRIORITY},
+#endif
+#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        {IRQn: SPI3_IRQn, priority: _SPI3_IRQ_PRIORITY}
 #endif
 };
 
@@ -197,13 +223,25 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
                         return STD_RET_ERROR;
         }
 
+        /* create irq semaphore */
+        if (!spi_module->wait_irq_sem[major]) {
+                spi_module->wait_irq_sem[major] = semaphore_new(1, 1);
+                if (!spi_module->wait_irq_sem[major]) {
+                        return STD_RET_ERROR;
+                }
+        }
+
         /* create protection mutex and start device if initialized first time */
         if (!spi_module->device_protect_mtx[major]) {
                 spi_module->device_protect_mtx[major] = mutex_new(MUTEX_NORMAL);
                 if (!spi_module->device_protect_mtx[major]) {
+                        semaphore_delete(spi_module->wait_irq_sem[major]);
+                        spi_module->wait_irq_sem[major] = NULL;
                         return STD_RET_ERROR;
                 } else {
-                        /* TODO start SPI clock etc */
+                        NVIC_SetPriority(spi_priority[major].IRQn, spi_priority[major].priority);
+                        spi_turn_on(spi[major]);
+                        spi_apply_safe_config(major);
                 }
         }
 
@@ -244,12 +282,14 @@ API_MOD_RELEASE(SPI, void *device_handle)
         critical_section_begin();
         if (device_is_unlocked(hdl->file_lock)) {
 
-                spi_module->number_of_virtual_spi--;
+                spi_module->number_of_virtual_spi[hdl->major]--;
 
                 /* deinitialize major device if all minor devices are deinitialized */
                 if (spi_module->number_of_virtual_spi == 0) {
                         mutex_delete(spi_module->device_protect_mtx[hdl->major]);
-                        spi_module->device_protect_mtx = NULL;
+                        spi_module->device_protect_mtx[hdl->major] = NULL;
+                        semaphore_delete(spi_module->wait_irq_sem[hdl->major]);
+                        spi_module->wait_irq_sem[hdl->major] = NULL;
                         spi_turn_off(spi[hdl->major]);
                 }
 
@@ -288,6 +328,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
 API_MOD_OPEN(SPI, void *device_handle, int flags)
 {
         STOP_IF(!device_handle);
+        UNUSED_ARG(flags);
 
         struct spi_virtual *hdl = device_handle;
 
@@ -347,12 +388,20 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
         if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
                 spi_apply_config(hdl);
-                spi_select_slave(hdl);
+                spi_select_slave(hdl->major, hdl->minor);
 
-                /* TODO */
+                spi_module->buffer[hdl->major] = (u8_t *)src;
+                spi_module->count[hdl->major]  = count;
+                spi_module->write[hdl->major]  = true;
 
-                spi_deselect_slave(hdl);
-                spi_apply_safe_config();
+                SET_BIT(spi[hdl->major]->CR2, SPI_CR2_TXEIE);
+                semaphore_wait(spi_module->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
+                while (spi[hdl->major]->SR & SPI_SR_BSY); /* flush buffer */
+
+                n = count - spi_module->count[hdl->major];
+
+                spi_deselect_slave(hdl->major);
+                spi_apply_safe_config(hdl->major);
                 mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
         } else {
                 errno = ETIME;
@@ -363,55 +412,54 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
 //==============================================================================
 /**
- * @brief Device read
+ * @brief Read data from device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *dst                    data destination
+ * @param[in ]           count                  number of bytes to read
+ * @param[in ][out]     *fpos                   file position
+ *
+ * @return number of read bytes, -1 if error
  */
 //==============================================================================
-MODULE__DEVICE_READ(SPI)
+API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(lseek);
+        UNUSED_ARG(fpos);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
-        STOP_IF(item_size == 0);
-        STOP_IF(n_items == 0);
+        STOP_IF(count == 0);
 
-        SPI_handle *hdl = device_handle;
+        struct spi_virtual *hdl = device_handle;
 
-        size_t n = 0;
-        if (lock_recursive_mutex(hdl->file_lock, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
+        ssize_t n = -1;
 
-#if   (SPI_HANDLER_MODE == 0)
-                if (!hdl->I2S_mode) {
-                        uint   size    = n_items * item_size;
-                        u8_t  *data8b  = dst;
-                        u16_t *data16b = dst;
+        if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+                spi_apply_config(hdl);
+                spi_select_slave(hdl->major, hdl->minor);
 
-                        if (is_16_bit_frame(hdl->SPI)) {
-                                size &= ~(1 << 0);
-                        }
+                spi_module->buffer[hdl->major] = dst;
+                spi_module->count[hdl->major]  = count;
+                spi_module->write[hdl->major]  = false;
 
-                        while (size) {
-                                while (!is_tx_buffer_empty(hdl->SPI));
-
-                                hdl->SPI->DR = hdl->dummy_frame;
-
-                                while (!(hdl->SPI->SR & SPI_SR_RXNE));
-                                if (is_16_bit_frame(hdl->SPI)) {
-                                        *(data16b++) = hdl->SPI->DR;
-                                } else {
-                                        *(data8b++) = hdl->SPI->DR;
-                                }
-
-                                size--;
-                                n++;
-                        }
-#elif (SPI_HANDLER_MODE == 1)
-#elif (SPI_HANDLER_MODE == 2)
-#else
-#error "Unknown SPI handler mode! Check configuration."
-#endif
+                u8_t tmp;
+                while (spi[hdl->major]->SR & SPI_SR_RXNE) {
+                        tmp = spi[hdl->major]->DR;
                 }
-                unlock_recursive_mutex(hdl->file_lock);
+
+                SET_BIT(spi[hdl->major]->CR2, SPI_CR2_RXNEIE);
+                tmp = spi_module->dummy_byte[hdl->major];
+                spi[hdl->major]->DR = tmp;
+                semaphore_wait(spi_module->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
+                while (spi[hdl->major]->SR & SPI_SR_BSY); /* flush buffer */
+
+                n = count - spi_module->count[hdl->major];
+
+                spi_deselect_slave(hdl->major);
+                spi_apply_safe_config(hdl->major);
+                mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+        } else {
+                errno = ETIME;
         }
 
         return n;
@@ -419,10 +467,58 @@ MODULE__DEVICE_READ(SPI)
 
 //==============================================================================
 /**
- * @brief Device flush
+ * @brief IO control
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           request                request
+ * @param[in ][out]     *arg                    request's argument
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_FLUSH(SPI)
+API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
+{
+        STOP_IF(device_handle == NULL);
+
+        struct spi_virtual *hdl    = device_handle;
+        stdret_t            status = STD_RET_ERROR;
+
+        if (arg) {
+                switch (request) {
+                case SPI_IORQ_SET_CONFIGURATION: {
+                        struct SPI_config *cfg = arg;
+                        hdl->config = *cfg;
+                        status = STD_RET_OK;
+                        break;
+                }
+
+                case SPI_IORQ_GET_CONFIGURATION: {
+                        struct SPI_config *cfg = arg;
+                        *cfg   = hdl->config;
+                        status = STD_RET_OK;
+                        break;
+                }
+
+                default:
+                        break;
+                }
+        }
+
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief Flush device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+API_MOD_FLUSH(SPI, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -431,268 +527,25 @@ MODULE__DEVICE_FLUSH(SPI)
 
 //==============================================================================
 /**
- * @brief Device ioctl
+ * @brief Device information
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *device_stat            device status
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
  */
 //==============================================================================
-MODULE__DEVICE_IOCTL(SPI)
+API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         STOP_IF(device_handle == NULL);
+        STOP_IF(device_stat == NULL);
 
-        SPI_handle *hdl    = device_handle;
-        stdret_t    status = STD_RET_ERROR;
+        struct spi_virtual *hdl = device_handle;
 
-        if (lock_recursive_mutex(hdl->file_lock, MTX_BLOCK_TIME) == MUTEX_LOCKED) {
-                status = STD_RET_OK;
-
-                switch (iorq) {
-                case SPI_IORQ_SET_DUMMY_FRAME:
-                        hdl->dummy_frame = va_arg(args, int);
-                        break;
-
-                case SPI_IORQ_ENABLE_8_BIT_FRAME:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_DFF);
-                        break;
-
-                case SPI_IORQ_ENABLE_16_BIT_FRAME:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_DFF);
-                        break;
-
-                case SPI_IORQ_LSB_FIRST:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_LSBFIRST);
-                        break;
-
-                case SPI_IORQ_MSB_FIRST:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_LSBFIRST);
-                        break;
-
-                case SPI_IORQ_CAPTURE_ON_FIRST_EDGE:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_CPHA);
-                        break;
-
-                case SPI_IORQ_CAPTURE_ON_SECOND_EDGE:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_CPHA);
-                        break;
-
-                case SPI_IORQ_CLOCK_LOW_WHEN_IDLE:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_CPOL);
-                        break;
-
-                case SPI_IORQ_CLOCK_HIGH_WHEN_IDLE:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_CPOL);
-                        break;
-
-                case SPI_IORQ_ENABLE_MASTER_MODE:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_MSTR);
-                        break;
-
-                case SPI_IORQ_ENABLE_SLAVE_MODE:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_MSTR);
-                        break;
-
-                case SPI_IORQ_SET_CLOCK_DIVIDER:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_BR);
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_BR_CALC(va_arg(args, int)));
-                        break;
-
-                case SPI_IORQ_ENABLE_SW_SLAVE_MANAGEMENT:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_SSM);
-                        break;
-
-                case SPI_IORQ_DISABLE_SW_SLAVE_MANAGEMENT:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_SSM);
-                        break;
-
-                case SPI_IORQ_UNIDIRECTIONAL_DATA_MODE:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_BIDIMODE);
-                        break;
-
-                case SPI_IORQ_BIDIRECTIONAL_DATA_MODE:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_BIDIMODE);
-                        break;
-
-                case SPI_IORQ_RECEIVE_ONLY_IN_BD_MODE:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_BIDIOE);
-                        break;
-
-                case SPI_IORQ_TRANSMIT_ONLY_IN_BD_MODE:
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_BIDIOE);
-                        break;
-
-                case SPI_IORQ_TURN_ON:
-                        hdl->I2S_mode = false;
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SMOD | SPI_I2SCFGR_I2SE);
-                        SET_REG_BIT(hdl->SPI->CR1, SPI_CR1_SPE);
-                        break;
-
-                case SPI_IORQ_TURN_OFF:
-                        CLR_REG_BIT(hdl->SPI->CR1, SPI_CR1_SPE);
-                        break;
-
-                case SPI_IORQ_ENABLE_SS_OUTPUT:
-                        SET_REG_BIT(hdl->SPI->CR2, SPI_CR2_SSOE);
-                        break;
-
-                case SPI_IORQ_DISABLE_SS_OUTPUT:
-                        CLR_REG_BIT(hdl->SPI->CR2, SPI_CR2_SSOE);
-                        break;
-
-                case SPI_IORQ_SHIFT_WORD: {
-                        u16_t *frame = va_arg(args, u16_t*);
-                        if (!frame) {
-                                status = STD_RET_ERROR;
-                        } else {
-                                while (!is_tx_buffer_empty(hdl->SPI));
-                                hdl->SPI->DR = (*frame) & 0xFFFF;
-                                while (!(hdl->SPI->SR & SPI_SR_RXNE));
-                                *frame = hdl->SPI->DR;
-                        }
-                        break;
-                }
-
-                case I2S_IORQ_DISABLE_I2S:
-                        RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
-                        RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
-
-                        CLEAR_BIT(hdl->SPI->CR1, SPI_CR1_SPE);
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SE);
-                        break;
-
-                case I2S_IORQ_ENABLE_I2S:
-                        CLEAR_BIT(hdl->SPI->CR1, SPI_CR1_SPE);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SMOD);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SE);
-                        hdl->I2S_mode = true;
-
-                        NVIC_EnableIRQ(DMA1_Channel5_IRQn);
-                        SET_BIT(hdl->SPI->CR2, SPI_CR2_TXDMAEN);
-                        DMA1_Channel5->CPAR = (u32_t)&hdl->SPI->DR;
-                        DMA1_Channel5->CCR   = DMA_CCR5_MINC
-                                             | DMA_CCR5_DIR
-                                             | DMA_CCR5_PSIZE_0
-                                             | DMA_CCR5_MSIZE_0
-                                             | DMA_CCR5_TCIE;
-                        break;
-
-                case I2S_IORQ_SLAVE_TRANSMIT:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SCFG);
-                        break;
-
-                case I2S_IORQ_SLAVE_RECEIVE:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SCFG);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SCFG_0);
-                        break;
-
-                case I2S_IORQ_MASTER_TRANSMIT:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SCFG);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SCFG_1);
-                        break;
-
-                case I2S_IORQ_MASTER_RECEIVE:
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SCFG_1 | SPI_I2SCFGR_I2SCFG_0);
-                        break;
-
-                case I2S_IORQ_SET_I2S_DIVIDER: {
-                        int divider = va_arg(args, int);
-                        divider &= SPI_I2SPR_I2SDIV;
-                        CLEAR_BIT(hdl->SPI->I2SPR, SPI_I2SPR_I2SDIV);
-                        SET_BIT(hdl->SPI->I2SPR, divider);
-                        break;
-                }
-
-                case I2S_IORQ_SET_ODD_FACTOR:
-                        SET_BIT(hdl->SPI->I2SPR, SPI_I2SPR_ODD);
-                        break;
-
-                case I2S_IORQ_CLEAR_ODD_FACTOR:
-                        CLEAR_BIT(hdl->SPI->I2SPR, SPI_I2SPR_ODD);
-                        break;
-
-                case I2S_IORQ_ENABLE_MASTER_CLOCK_OUTPUT:
-                        SET_BIT(hdl->SPI->I2SPR, SPI_I2SPR_MCKOE);
-                        break;
-
-                case I2S_IORQ_DISABLE_MASTER_CLOCK_OUTPUT:
-                        CLEAR_BIT(hdl->SPI->I2SPR, SPI_I2SPR_MCKOE);
-                        break;
-
-                case I2S_IORQ_PCMSYNC_SHORT_FRAME:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_PCMSYNC);
-                        break;
-
-                case I2S_IORQ_PCMSYNC_LONG_FRAME:
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_PCMSYNC);
-                        break;
-
-                case I2S_IORQ_PHILIPS_STANDARD:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SSTD);
-                        break;
-
-                case I2S_IORQ_MSB_JUSTIFIED_STANDARD:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SSTD);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SSTD_0);
-                        break;
-
-                case I2S_IORQ_LSB_JUSTIFIED_STANDARD:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SSTD);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SSTD_1);
-                        break;
-
-                case I2S_IORQ_PCM_STANDARD:
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_I2SSTD_1 | SPI_I2SCFGR_I2SSTD_0);
-                        break;
-
-                case I2S_IORQ_CLOCK_STEADY_LOW:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_CKPOL);
-                        break;
-
-                case I2S_IORQ_CLOCK_STEADY_HIGH:
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_CKPOL);
-                        break;
-
-                case I2S_IORQ_16_BIT_DATA_LENGTH:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_DATLEN);
-                        break;
-
-                case I2S_IORQ_24_BIT_DATA_LENGTH:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_DATLEN);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_DATLEN_0);
-                        break;
-
-                case I2S_IORQ_32_BIT_DATA_LENGTH:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_DATLEN);
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_DATLEN_1);
-                        break;
-
-                case I2S_IORQ_16_BIT_WIDE_CHANNEL:
-                        CLEAR_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_CHLEN);
-                        break;
-
-                case I2S_IORQ_32_BIT_WIDE_CHANNEL:
-                        SET_BIT(hdl->SPI->I2SCFGR, SPI_I2SCFGR_CHLEN);
-                        break;
-
-                default:
-                        status = STD_RET_ERROR;
-                        break;
-                }
-
-                unlock_recursive_mutex(hdl->file_lock);
-        }
-
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief Device info
- */
-//==============================================================================
-MODULE__DEVICE_INFO(SPI)
-{
-        STOP_IF(device_handle == NULL);
-        STOP_IF(device_info == NULL);
-
-        device_info->st_size = 0;
+        device_stat->st_major = hdl->major;
+        device_stat->st_minor = hdl->minor;
+        device_stat->st_size  = 0;
 
         return STD_RET_OK;
 }
@@ -702,34 +555,33 @@ MODULE__DEVICE_INFO(SPI)
  * @brief Function enable SPI interface
  *
  * @param[in] *spi      spi peripheral
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t spi_turn_on(SPI_t *spi)
+static void spi_turn_on(SPI_t *spi)
 {
         switch ((uint32_t)spi) {
-#if defined(RCC_APB2ENR_SPI1EN) && (SPI_1_ENABLE > 0)
+#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         case SPI1_BASE:
-                RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+                RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
+                RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
+                RCC->APB2ENR  |=  RCC_APB2ENR_SPI1EN;
                 break;
 #endif
-#if defined(RCC_APB1ENR_SPI2EN) && (SPI_2_ENABLE > 0)
+#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         case SPI2_BASE:
-                RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
+                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
+                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
+                RCC->APB1ENR  |=  RCC_APB1ENR_SPI2EN;
                 break;
 #endif
-#if defined(RCC_APB1ENR_SPI3EN) && (SPI_3_ENABLE > 0)
+#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         case SPI3_BASE:
-                RCC->APB1ENR |= RCC_APB1ENR_SPI3EN;
+                RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
+                RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
+                RCC->APB1ENR  |=  RCC_APB1ENR_SPI3EN;
                 break;
 #endif
-        default:
-                return STD_RET_ERROR;
         }
-
-        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -737,123 +589,211 @@ static stdret_t spi_turn_on(SPI_t *spi)
  * @brief Function disable SPI interface
  *
  * @param[in] *spi      spi peripheral
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t spi_turn_off(SPI_t *spi)
+static void spi_turn_off(SPI_t *spi)
 {
         switch ((uint32_t)spi) {
-#if defined(RCC_APB2ENR_SPI1EN) && (SPI_1_ENABLE > 0)
+#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         case SPI1_BASE:
                 RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
                 RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
                 RCC->APB2ENR  &= ~RCC_APB2ENR_SPI1EN;
                 break;
 #endif
-#if defined(RCC_APB1ENR_SPI2EN) && (SPI_2_ENABLE > 0)
+#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         case SPI2_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
                 RCC->APB1ENR  &= ~RCC_APB1ENR_SPI2EN;
                 break;
 #endif
-#if defined(RCC_APB1ENR_SPI3EN) && (SPI_3_ENABLE > 0)
+#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         case SPI3_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
                 RCC->APB1ENR  &= ~RCC_APB1ENR_SPI3EN;
                 break;
 #endif
-        default:
-                return STD_RET_ERROR;
         }
-
-        return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Function write data to FIFO
+ * @brief Function apply new configuration for selected SPI
+ *
+ * @param vspi          virtual spi handler
  */
 //==============================================================================
-static int write_I2S_FIFO(struct chain_fifo *fifo, const u16_t *bfr, uint size)
+static void spi_apply_config(struct spi_virtual *vspi)
 {
-        if (!fifo || !bfr || !size)
-                return 1;
+        SPI_t *SPI = spi[vspi->major];
 
-        if(fifo->level < DMA_CHAIN_NUMBER) {
-                fifo->buffer[fifo->wr_idx] = bfr;
-                fifo->bsize[fifo->wr_idx]  = size;
+        /* configure SPI divider */
+        const u16_t divider_mask[SPI_CLK_DIV_256 + 1] = {
+                [SPI_CLK_DIV_2  ] 0x00,
+                [SPI_CLK_DIV_4  ] SPI_CR1_BR_0,
+                [SPI_CLK_DIV_8  ] SPI_CR1_BR_1,
+                [SPI_CLK_DIV_16 ] SPI_CR1_BR_1 | SPI_CR1_BR_0,
+                [SPI_CLK_DIV_32 ] SPI_CR1_BR_2,
+                [SPI_CLK_DIV_64 ] SPI_CR1_BR_2 | SPI_CR1_BR_0,
+                [SPI_CLK_DIV_128] SPI_CR1_BR_2 | SPI_CR1_BR_1,
+                [SPI_CLK_DIV_256] SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0,
+        };
 
-                if (++fifo->wr_idx >= DMA_CHAIN_NUMBER)
-                        fifo->wr_idx = 0;
+        CLEAR_BIT(SPI->CR1, SPI_CR1_BR);
+        SET_BIT(SPI->CR1, divider_mask[vspi->config.clk_divider]);
 
-                fifo->level++;
+        /* set SPI as master */
+        SET_BIT(SPI->CR1, SPI_CR1_MSTR);
 
-                return 0;
+        /* set MSB/LSB */
+        if (vspi->config.msb_first == false)
+                SET_BIT(SPI->CR1, SPI_CR1_LSBFIRST);
+
+        /* configure SPI mode */
+        switch (vspi->config.mode) {
+        case SPI_MODE_0:
+                /* nothing to do */
+                break;
+        case SPI_MODE_1:
+                SET_BIT(SPI->CR1, SPI_CR1_CPHA);
+                break;
+        case SPI_MODE_2:
+                SET_BIT(SPI->CR1, SPI_CR1_CPOL);
+                break;
+        case SPI_MODE_3:
+                SET_BIT(SPI->CR1, SPI_CR1_CPOL | SPI_CR1_CPHA);
+                break;
         }
 
-        return 1;
+        /* enable peripheral */
+        SET_BIT(SPI->CR1, SPI_CR1_SPE);
 }
 
 //==============================================================================
 /**
- * @brief Function read data from FIFO
+ * @brief Function apply SPI device safe configuration
+ *
+ * @param major         SPI major number
  */
 //==============================================================================
-static int read_I2S_FIFO(struct chain_fifo *fifo, const u16_t **bfr, uint *size)
+static void spi_apply_safe_config(u8_t major)
 {
-        if (!fifo || !bfr || !size)
-                return 1;
+        SPI_t *SPI = spi[major];
 
-        if (fifo->level > 0) {
-                *bfr  = fifo->buffer[fifo->rd_idx];
-                *size = fifo->bsize[fifo->rd_idx];
-
-                fifo->buffer[fifo->rd_idx] = NULL;
-                fifo->bsize[fifo->rd_idx]  = 0;
-
-                if (++fifo->rd_idx >= DMA_CHAIN_NUMBER)
-                        fifo->rd_idx = 0;
-
-                fifo->level--;
-
-                return 0;
-        }
-
-        return 1;
+        while (!(SPI->SR & SPI_SR_RXNE));
+        while (!(SPI->SR & SPI_SR_TXE));
+        while (SPI->SR & SPI_SR_BSY)
+        CLEAR_BIT(SPI->CR1, SPI_CR1_SPE);
+        SET_BIT(SPI->CR1, SPI_CR1_MSTR);
 }
 
 //==============================================================================
 /**
- * @brief Function
+ * @brief Function select slave device
+ *
+ * @param major         major device number (SPI device)
+ * @param minor         minor device number (CS number)
  */
 //==============================================================================
-void DMA1_Channel5_IRQHandler(void)
+static void spi_select_slave(u8_t major, u8_t minor)
 {
-        DMA1->IFCR = DMA_IFCR_CTCIF5;
-        CLEAR_BIT(DMA1_Channel5->CCR, DMA_CCR5_EN);
+        GPIO_t *GPIO = spi_cs_pin_cfg[major][minor].port;
+        u16_t   mask = spi_cs_pin_cfg[major][minor].pin_mask;
 
-        const u16_t *bfr  = NULL;
-        uint         size = 0;
-        if (read_I2S_FIFO(&SPI_data[SPI_DEV_2]->I2S_chain, &bfr, &size) == 0) {
-                STOP_IF(bfr == NULL);
-                STOP_IF(size == 0);
+        GPIO->BRR = mask;
+}
 
-                DMA1_Channel5->CMAR  = (u32_t) bfr;
-                DMA1_Channel5->CNDTR = (u32_t) size;
-                SET_BIT(DMA1_Channel5->CCR, DMA_CCR5_EN);
+//==============================================================================
+/**
+ * @brief Function deselect current slave device
+ *
+ * @param major         major device number (SPI device)
+ * @param minor         minor device number (CS number)
+ */
+//==============================================================================
+static void spi_deselect_slave(u8_t major)
+{
+        for (int minor = 0; minor < spi_number_of_slaves[major]; minor++) {
+                GPIO_t *GPIO = spi_cs_pin_cfg[major][minor].port;
+                u16_t   mask = spi_cs_pin_cfg[major][minor].pin_mask;
+                GPIO->BSRR   = mask;
+        }
+}
 
-                SPI_data[SPI_DEV_2]->I2S_chain.DMA_started = true;
+//==============================================================================
+/**
+ * @brief Function handle SPI IRQ
+ *
+ * @param major        spi device number
+ */
+//==============================================================================
+static void spi_irq_handle(u8_t major)
+{
+        SPI_t *SPI = spi[major];
+
+        if (spi_module->write[major]) {
+                if (SPI->SR & SPI_SR_TXE) {
+                        if (spi_module->count[major] > 0) {
+                                SPI->DR = *(spi_module->buffer[major]++);
+                                spi_module->count[major]--;
+                        } else {
+                                bool woken;
+                                semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], &woken);
+                                CLEAR_BIT(SPI->CR2, SPI_CR2_TXEIE);
+                        }
+                }
         } else {
-                SPI_data[SPI_DEV_2]->I2S_chain.DMA_started = false;
+                if (SPI->SR & SPI_SR_RXNE) {
+                        if (spi_module->count[major] > 0) {
+                                *(spi_module->buffer[major]++) = SPI->DR;
+                                SPI->DR = spi_module->dummy_byte[major];
+                                spi_module->count[major]--;
+                        } else {
+                                bool woken;
+                                semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], &woken);
+                                CLEAR_BIT(SPI->CR2, SPI_CR2_RXNEIE);
+                        }
+                }
         }
-
-        int woke = OS_FALSE;
-        give_counting_semaphore_from_ISR(SPI_data[SPI_DEV_2]->I2S_chain.semaphore, &woke);
 }
+
+//==============================================================================
+/**
+ * @brief SPI1 IRQ handler
+ */
+//==============================================================================
+#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+void SPI1_IRQHandler(void)
+{
+        spi_irq_handle(_SPI_DEV_1);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief SPI2 IRQ handler
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+void SPI2_IRQHandler(void)
+{
+        spi_irq_handle(_SPI_DEV_2);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief SPI3 IRQ handler
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+void SPI3_IRQHandler(void)
+{
+        spi_irq_handle(_SPI_DEV_3);
+}
+#endif
 
 #ifdef __cplusplus
 }
