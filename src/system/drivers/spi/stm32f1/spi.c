@@ -44,6 +44,12 @@ extern "C" {
 #define SEMAPHORE_TIMEOUT               MAX_DELAY
 #define MAX_NUMBER_OF_CS                8
 
+#if (_SPI1_NUMBER_OF_SLAVES > MAX_NUMBER_OF_CS) \
+ || (_SPI2_NUMBER_OF_SLAVES > MAX_NUMBER_OF_CS) \
+ || (_SPI3_NUMBER_OF_SLAVES > MAX_NUMBER_OF_CS)
+#error This module support only up to 8 slaves per device!
+#endif
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -152,8 +158,8 @@ static const u8_t spi_number_of_slaves[_SPI_DEV_NUMBER] = {
 #endif
 };
 
-/* priorities for specified SPI peripherals */
-static const struct spi_priority_cfg spi_priority[_SPI_DEV_NUMBER] = {
+/* IRQ configurations */
+static const struct spi_priority_cfg spi_irq[_SPI_DEV_NUMBER] = {
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         {IRQn: SPI1_IRQn, priority: _SPI1_IRQ_PRIORITY},
 #endif
@@ -247,9 +253,9 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
                         spi_module->wait_irq_sem[major] = NULL;
                         return STD_RET_ERROR;
                 } else {
-                        NVIC_SetPriority(spi_priority[major].IRQn, spi_priority[major].priority);
+                        NVIC_EnableIRQ(spi_irq[major].IRQn);
+                        NVIC_SetPriority(spi_irq[major].IRQn, spi_irq[major].priority);
                         spi_turn_on(spi[major]);
-                        spi_apply_safe_config(major);
                 }
         }
 
@@ -259,14 +265,14 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
                 return STD_RET_ERROR;
         }
 
-        hdl->config     = spi_default_cfg;
-        hdl->major      = major;
-        hdl->minor      = minor;
-        *device_handle  = hdl;
+        hdl->config    = spi_default_cfg;
+        hdl->major     = major;
+        hdl->minor     = minor;
+        *device_handle = hdl;
 
         spi_module->number_of_virtual_spi[major]++;
 
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -396,25 +402,29 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
         ssize_t n = -1;
 
-        if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
-                spi_apply_config(hdl);
-                spi_select_slave(hdl->major, hdl->minor);
+        if (device_is_access_granted(&hdl->file_lock)) {
+                if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+                        spi_apply_config(hdl);
+                        spi_select_slave(hdl->major, hdl->minor);
 
-                spi_module->buffer[hdl->major] = (u8_t *)src;
-                spi_module->count[hdl->major]  = count;
-                spi_module->write[hdl->major]  = true;
+                        spi_module->buffer[hdl->major] = (u8_t *)src;
+                        spi_module->count[hdl->major]  = count;
+                        spi_module->write[hdl->major]  = true;
 
-                SET_BIT(spi[hdl->major]->CR2, SPI_CR2_TXEIE);
-                semaphore_wait(spi_module->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
-                while (spi[hdl->major]->SR & SPI_SR_BSY); /* flush buffer */
+                        SET_BIT(spi[hdl->major]->CR2, SPI_CR2_TXEIE);
+                        semaphore_wait(spi_module->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
+                        while (spi[hdl->major]->SR & SPI_SR_BSY); /* flush buffer */
 
-                n = count - spi_module->count[hdl->major];
+                        n = count - spi_module->count[hdl->major];
 
-                spi_deselect_slave(hdl->major);
-                spi_apply_safe_config(hdl->major);
-                mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+                        spi_deselect_slave(hdl->major);
+                        spi_apply_safe_config(hdl->major);
+                        mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+                } else {
+                        errno = ETIME;
+                }
         } else {
-                errno = ETIME;
+                errno = EACCES;
         }
 
         return n;
@@ -444,32 +454,36 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 
         ssize_t n = -1;
 
-        if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
-                spi_apply_config(hdl);
-                spi_select_slave(hdl->major, hdl->minor);
+        if (device_is_access_granted(&hdl->file_lock)) {
+                if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
+                        spi_apply_config(hdl);
+                        spi_select_slave(hdl->major, hdl->minor);
 
-                spi_module->buffer[hdl->major] = dst;
-                spi_module->count[hdl->major]  = count;
-                spi_module->write[hdl->major]  = false;
+                        spi_module->buffer[hdl->major] = dst;
+                        spi_module->count[hdl->major]  = count;
+                        spi_module->write[hdl->major]  = false;
 
-                u8_t tmp;
-                while (spi[hdl->major]->SR & SPI_SR_RXNE) {
-                        tmp = spi[hdl->major]->DR;
+                        u8_t tmp;
+                        while (spi[hdl->major]->SR & SPI_SR_RXNE) {
+                                tmp = spi[hdl->major]->DR;
+                        }
+
+                        SET_BIT(spi[hdl->major]->CR2, SPI_CR2_RXNEIE);
+                        tmp = spi_module->dummy_byte[hdl->major];
+                        spi[hdl->major]->DR = tmp;
+                        semaphore_wait(spi_module->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
+                        while (spi[hdl->major]->SR & SPI_SR_BSY); /* flush buffer */
+
+                        n = count - spi_module->count[hdl->major];
+
+                        spi_deselect_slave(hdl->major);
+                        spi_apply_safe_config(hdl->major);
+                        mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+                } else {
+                        errno = ETIME;
                 }
-
-                SET_BIT(spi[hdl->major]->CR2, SPI_CR2_RXNEIE);
-                tmp = spi_module->dummy_byte[hdl->major];
-                spi[hdl->major]->DR = tmp;
-                semaphore_wait(spi_module->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
-                while (spi[hdl->major]->SR & SPI_SR_BSY); /* flush buffer */
-
-                n = count - spi_module->count[hdl->major];
-
-                spi_deselect_slave(hdl->major);
-                spi_apply_safe_config(hdl->major);
-                mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
         } else {
-                errno = ETIME;
+                errno = EACCES;
         }
 
         return n;
@@ -494,26 +508,30 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
         struct spi_virtual *hdl    = device_handle;
         stdret_t            status = STD_RET_ERROR;
 
-        if (arg) {
-                switch (request) {
-                case SPI_IORQ_SET_CONFIGURATION: {
-                        struct SPI_config *cfg = arg;
-                        hdl->config = *cfg;
-                        status = STD_RET_OK;
-                        break;
-                }
+        if (device_is_access_granted(&hdl->file_lock)) {
+                if (arg) {
+                        switch (request) {
+                        case SPI_IORQ_SET_CONFIGURATION: {
+                                struct SPI_config *cfg = arg;
+                                hdl->config = *cfg;
+                                status = STD_RET_OK;
+                                break;
+                        }
 
-                case SPI_IORQ_GET_CONFIGURATION: {
-                        struct SPI_config *cfg = arg;
-                        *cfg   = hdl->config;
-                        status = STD_RET_OK;
-                        break;
-                }
+                        case SPI_IORQ_GET_CONFIGURATION: {
+                                struct SPI_config *cfg = arg;
+                                *cfg   = hdl->config;
+                                status = STD_RET_OK;
+                                break;
+                        }
 
-                default:
-                        errno = EBADRQC;
-                        break;
+                        default:
+                                errno = EBADRQC;
+                                break;
+                        }
                 }
+        } else {
+                errno = EACCES;
         }
 
         return status;
@@ -655,17 +673,10 @@ static void spi_apply_config(struct spi_virtual *vspi)
         CLEAR_BIT(SPI->CR1, SPI_CR1_BR);
         SET_BIT(SPI->CR1, divider_mask[vspi->config.clk_divider]);
 
-        /* set SPI as master */
-        SET_BIT(SPI->CR1, SPI_CR1_MSTR);
-
-        /* set MSB/LSB */
-        if (vspi->config.msb_first == false)
-                SET_BIT(SPI->CR1, SPI_CR1_LSBFIRST);
-
         /* configure SPI mode */
         switch (vspi->config.mode) {
         case SPI_MODE_0:
-                /* nothing to do */
+                CLEAR_BIT(SPI->CR1, SPI_CR1_CPOL | SPI_CR1_CPHA);
                 break;
         case SPI_MODE_1:
                 SET_BIT(SPI->CR1, SPI_CR1_CPHA);
@@ -677,6 +688,21 @@ static void spi_apply_config(struct spi_virtual *vspi)
                 SET_BIT(SPI->CR1, SPI_CR1_CPOL | SPI_CR1_CPHA);
                 break;
         }
+
+        /* 8-bit mode */
+        CLEAR_BIT(SPI->CR1, SPI_CR1_DFF);
+
+        /* set MSB/LSB */
+        if (vspi->config.msb_first)
+                CLEAR_BIT(SPI->CR1, SPI_CR1_LSBFIRST);
+        else
+                SET_BIT(SPI->CR1, SPI_CR1_LSBFIRST);
+
+        /* NSS software mode */
+        SET_BIT(SPI->CR1, SPI_CR1_SSM | SPI_CR1_SSI);
+
+        /* set SPI as master */
+        SET_BIT(SPI->CR1, SPI_CR1_MSTR);
 
         /* enable peripheral */
         SET_BIT(SPI->CR1, SPI_CR1_SPE);
@@ -750,8 +776,7 @@ static void spi_irq_handle(u8_t major)
                                 SPI->DR = *(spi_module->buffer[major]++);
                                 spi_module->count[major]--;
                         } else {
-                                bool woken;
-                                semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], &woken);
+                                semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], NULL);
                                 CLEAR_BIT(SPI->CR2, SPI_CR2_TXEIE);
                         }
                 }
@@ -762,8 +787,7 @@ static void spi_irq_handle(u8_t major)
                                 SPI->DR = spi_module->dummy_byte[major];
                                 spi_module->count[major]--;
                         } else {
-                                bool woken;
-                                semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], &woken);
+                                semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], NULL);
                                 CLEAR_BIT(SPI->CR2, SPI_CR2_RXNEIE);
                         }
                 }
