@@ -42,12 +42,28 @@ extern "C" {
 ==============================================================================*/
 #define MUTEX_TIMOUT                    MAX_DELAY
 #define SEMAPHORE_TIMEOUT               MAX_DELAY
-#define MAX_NUMBER_OF_CS                8
 
-#if (_SPI1_NUMBER_OF_SLAVES > MAX_NUMBER_OF_CS) \
- || (_SPI2_NUMBER_OF_SLAVES > MAX_NUMBER_OF_CS) \
- || (_SPI3_NUMBER_OF_SLAVES > MAX_NUMBER_OF_CS)
-#error This module support only up to 8 slaves per device!
+/* calculate max number of slaves for all SPI peripherals (calculate array size) */
+#if (_SPI1_NUMBER_OF_SLAVES > _SPI2_NUMBER_OF_SLAVES)
+#define _SPI_NUMBER_OF_SLAVES_A         _SPI1_NUMBER_OF_SLAVES
+#else
+#define _SPI_NUMBER_OF_SLAVES_A         _SPI2_NUMBER_OF_SLAVES
+#endif
+
+#if (_SPI2_NUMBER_OF_SLAVES > _SPI3_NUMBER_OF_SLAVES)
+#define _SPI_NUMBER_OF_SLAVES_B         _SPI2_NUMBER_OF_SLAVES
+#else
+#define _SPI_NUMBER_OF_SLAVES_B         _SPI3_NUMBER_OF_SLAVES
+#endif
+
+#if (_SPI_NUMBER_OF_SLAVES_A > _SPI_NUMBER_OF_SLAVES_B)
+#define MAX_NUMBER_OF_CS                _SPI_NUMBER_OF_SLAVES_A
+#else
+#define MAX_NUMBER_OF_CS                _SPI_NUMBER_OF_SLAVES_B
+#endif
+
+#if (MAX_NUMBER_OF_CS > 8)
+#error SPI module support up to 8 slaves per device!
 #endif
 
 /*==============================================================================
@@ -89,86 +105,140 @@ struct module {
 ==============================================================================*/
 static void     spi_turn_on             (SPI_t *spi);
 static void     spi_turn_off            (SPI_t *spi);
-static void     spi_apply_config        (struct spi_virtual *vspi);
-static void     spi_apply_safe_config   (u8_t major);
-static void     spi_select_slave        (u8_t major, u8_t minor);
-static void     spi_deselect_slave      (u8_t major);
-static void     spi_irq_handle          (u8_t major);
+static void     config_apply            (struct spi_virtual *vspi);
+static void     config_apply_safe       (u8_t major);
+static void     slave_select            (u8_t major, u8_t minor);
+static void     slave_deselect          (u8_t major);
+static void     handle_irq              (u8_t major);
 
 /*==============================================================================
   Local objects
 ==============================================================================*/
 /* SPI peripherals address */
 static SPI_t *const spi[_SPI_DEV_NUMBER] = {
-#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         SPI1,
-#endif
-#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         SPI2,
-#endif
-#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         SPI3
-#endif
+        #endif
 };
 
 /* CS port configuration */
 static const struct cs_pin_cfg spi_cs_pin_cfg[_SPI_DEV_NUMBER][MAX_NUMBER_OF_CS] = {
-#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
-        {{port: (GPIO_t *)_SPI1_CS0_PORT, pin_mask: (1 << _SPI1_CS0_PIN)},
-         {port: (GPIO_t *)_SPI1_CS1_PORT, pin_mask: (1 << _SPI1_CS1_PIN)},
-         {port: (GPIO_t *)_SPI1_CS2_PORT, pin_mask: (1 << _SPI1_CS2_PIN)},
-         {port: (GPIO_t *)_SPI1_CS3_PORT, pin_mask: (1 << _SPI1_CS3_PIN)},
-         {port: (GPIO_t *)_SPI1_CS4_PORT, pin_mask: (1 << _SPI1_CS4_PIN)},
-         {port: (GPIO_t *)_SPI1_CS5_PORT, pin_mask: (1 << _SPI1_CS5_PIN)},
-         {port: (GPIO_t *)_SPI1_CS6_PORT, pin_mask: (1 << _SPI1_CS6_PIN)},
-         {port: (GPIO_t *)_SPI1_CS7_PORT, pin_mask: (1 << _SPI1_CS7_PIN)}},
-#endif
-#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
-        {{port: (GPIO_t *)_SPI2_CS0_PORT, pin_mask: (1 << _SPI2_CS0_PIN)},
-         {port: (GPIO_t *)_SPI2_CS1_PORT, pin_mask: (1 << _SPI2_CS1_PIN)},
-         {port: (GPIO_t *)_SPI2_CS2_PORT, pin_mask: (1 << _SPI2_CS2_PIN)},
-         {port: (GPIO_t *)_SPI2_CS3_PORT, pin_mask: (1 << _SPI2_CS3_PIN)},
-         {port: (GPIO_t *)_SPI2_CS4_PORT, pin_mask: (1 << _SPI2_CS4_PIN)},
-         {port: (GPIO_t *)_SPI2_CS5_PORT, pin_mask: (1 << _SPI2_CS5_PIN)},
-         {port: (GPIO_t *)_SPI2_CS6_PORT, pin_mask: (1 << _SPI2_CS6_PIN)},
-         {port: (GPIO_t *)_SPI2_CS7_PORT, pin_mask: (1 << _SPI2_CS7_PIN)}},
-#endif
-#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-        {{port: (GPIO_t *)_SPI3_CS0_PORT, pin_mask: (1 << _SPI3_CS0_PIN)},
-         {port: (GPIO_t *)_SPI3_CS1_PORT, pin_mask: (1 << _SPI3_CS1_PIN)},
-         {port: (GPIO_t *)_SPI3_CS2_PORT, pin_mask: (1 << _SPI3_CS2_PIN)},
-         {port: (GPIO_t *)_SPI3_CS3_PORT, pin_mask: (1 << _SPI3_CS3_PIN)},
-         {port: (GPIO_t *)_SPI3_CS4_PORT, pin_mask: (1 << _SPI3_CS4_PIN)},
-         {port: (GPIO_t *)_SPI3_CS5_PORT, pin_mask: (1 << _SPI3_CS5_PIN)},
-         {port: (GPIO_t *)_SPI3_CS6_PORT, pin_mask: (1 << _SPI3_CS6_PIN)},
-         {port: (GPIO_t *)_SPI3_CS7_PORT, pin_mask: (1 << _SPI3_CS7_PIN)}}
-#endif
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        {
+                #if (MAX_NUMBER_OF_CS >= 1)
+                {port: (GPIO_t *)_SPI1_CS0_PORT, pin_mask: (1 << _SPI1_CS0_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 2)
+                {port: (GPIO_t *)_SPI1_CS1_PORT, pin_mask: (1 << _SPI1_CS1_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 3)
+                {port: (GPIO_t *)_SPI1_CS2_PORT, pin_mask: (1 << _SPI1_CS2_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 4)
+                {port: (GPIO_t *)_SPI1_CS3_PORT, pin_mask: (1 << _SPI1_CS3_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 5)
+                {port: (GPIO_t *)_SPI1_CS4_PORT, pin_mask: (1 << _SPI1_CS4_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 6)
+                {port: (GPIO_t *)_SPI1_CS5_PORT, pin_mask: (1 << _SPI1_CS5_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 7)
+                {port: (GPIO_t *)_SPI1_CS6_PORT, pin_mask: (1 << _SPI1_CS6_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 8)
+                {port: (GPIO_t *)_SPI1_CS7_PORT, pin_mask: (1 << _SPI1_CS7_PIN)}
+                #endif
+        },
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        {
+                #if (MAX_NUMBER_OF_CS >= 1)
+                {port: (GPIO_t *)_SPI2_CS0_PORT, pin_mask: (1 << _SPI2_CS0_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 2)
+                {port: (GPIO_t *)_SPI2_CS1_PORT, pin_mask: (1 << _SPI2_CS1_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 3)
+                {port: (GPIO_t *)_SPI2_CS2_PORT, pin_mask: (1 << _SPI2_CS2_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 4)
+                {port: (GPIO_t *)_SPI2_CS3_PORT, pin_mask: (1 << _SPI2_CS3_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 5)
+                {port: (GPIO_t *)_SPI2_CS4_PORT, pin_mask: (1 << _SPI2_CS4_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 6)
+                {port: (GPIO_t *)_SPI2_CS5_PORT, pin_mask: (1 << _SPI2_CS5_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 7)
+                {port: (GPIO_t *)_SPI2_CS6_PORT, pin_mask: (1 << _SPI2_CS6_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 8)
+                {port: (GPIO_t *)_SPI2_CS7_PORT, pin_mask: (1 << _SPI2_CS7_PIN)}
+                #endif
+        },
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        {
+                #if (MAX_NUMBER_OF_CS >= 1)
+                {port: (GPIO_t *)_SPI3_CS0_PORT, pin_mask: (1 << _SPI3_CS0_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 2)
+                {port: (GPIO_t *)_SPI3_CS1_PORT, pin_mask: (1 << _SPI3_CS1_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 3)
+                {port: (GPIO_t *)_SPI3_CS2_PORT, pin_mask: (1 << _SPI3_CS2_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 4)
+                {port: (GPIO_t *)_SPI3_CS3_PORT, pin_mask: (1 << _SPI3_CS3_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 5)
+                {port: (GPIO_t *)_SPI3_CS4_PORT, pin_mask: (1 << _SPI3_CS4_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 6)
+                {port: (GPIO_t *)_SPI3_CS5_PORT, pin_mask: (1 << _SPI3_CS5_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 7)
+                {port: (GPIO_t *)_SPI3_CS6_PORT, pin_mask: (1 << _SPI3_CS6_PIN)},
+                #endif
+                #if (MAX_NUMBER_OF_CS >= 8)
+                {port: (GPIO_t *)_SPI3_CS7_PORT, pin_mask: (1 << _SPI3_CS7_PIN)}
+                #endif
+        }
+        #endif
 };
 
 /* number of SPI cs */
 static const u8_t spi_number_of_slaves[_SPI_DEV_NUMBER] = {
-#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         _SPI1_NUMBER_OF_SLAVES,
-#endif
-#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         _SPI2_NUMBER_OF_SLAVES,
-#endif
-#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         _SPI3_NUMBER_OF_SLAVES
-#endif
+        #endif
 };
 
 /* IRQ configurations */
 static const struct spi_priority_cfg spi_irq[_SPI_DEV_NUMBER] = {
-#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         {IRQn: SPI1_IRQn, priority: _SPI1_IRQ_PRIORITY},
-#endif
-#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         {IRQn: SPI2_IRQn, priority: _SPI2_IRQ_PRIORITY},
-#endif
-#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         {IRQn: SPI3_IRQn, priority: _SPI3_IRQ_PRIORITY}
-#endif
+        #endif
 };
 
 /* default SPI config */
@@ -247,7 +317,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 
         /* create protection mutex and start device if initialized first time */
         if (!spi_module->device_protect_mtx[major]) {
-                spi_module->device_protect_mtx[major] = mutex_new(MUTEX_NORMAL);
+                spi_module->device_protect_mtx[major] = mutex_new(MUTEX_RECURSIVE);
                 if (!spi_module->device_protect_mtx[major]) {
                         semaphore_delete(spi_module->wait_irq_sem[major]);
                         spi_module->wait_irq_sem[major] = NULL;
@@ -404,8 +474,9 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
-                        spi_apply_config(hdl);
-                        spi_select_slave(hdl->major, hdl->minor);
+                        config_apply(hdl);
+                        slave_deselect(hdl->major);
+                        slave_select(hdl->major, hdl->minor);
 
                         spi_module->buffer[hdl->major] = (u8_t *)src;
                         spi_module->count[hdl->major]  = count;
@@ -417,8 +488,8 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
                         n = count - spi_module->count[hdl->major];
 
-                        spi_deselect_slave(hdl->major);
-                        spi_apply_safe_config(hdl->major);
+                        slave_deselect(hdl->major);
+                        config_apply_safe(hdl->major);
                         mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
                 } else {
                         errno = ETIME;
@@ -456,8 +527,9 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 if (mutex_lock(spi_module->device_protect_mtx[hdl->major], MUTEX_TIMOUT)) {
-                        spi_apply_config(hdl);
-                        spi_select_slave(hdl->major, hdl->minor);
+                        config_apply(hdl);
+                        slave_deselect(hdl->major);
+                        slave_select(hdl->major, hdl->minor);
 
                         spi_module->buffer[hdl->major] = dst;
                         spi_module->count[hdl->major]  = count;
@@ -477,8 +549,8 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 
                         n = count - spi_module->count[hdl->major];
 
-                        spi_deselect_slave(hdl->major);
-                        spi_apply_safe_config(hdl->major);
+                        slave_deselect(hdl->major);
+                        config_apply_safe(hdl->major);
                         mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
                 } else {
                         errno = ETIME;
@@ -510,26 +582,88 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
         stdret_t            status = STD_RET_ERROR;
 
         if (device_is_access_granted(&hdl->file_lock)) {
-                if (arg) {
-                        switch (request) {
-                        case SPI_IORQ_SET_CONFIGURATION: {
-                                struct SPI_config *cfg = arg;
-                                hdl->config = *cfg;
-                                status = STD_RET_OK;
-                                break;
+                switch (request) {
+                case SPI_IORQ_SET_CONFIGURATION:
+                        if (arg) {
+                                hdl->config = *(struct SPI_config *)arg;
+                                status      = STD_RET_OK;
+                        } else {
+                                errno = EINVAL;
                         }
+                        break;
 
-                        case SPI_IORQ_GET_CONFIGURATION: {
-                                struct SPI_config *cfg = arg;
-                                *cfg   = hdl->config;
-                                status = STD_RET_OK;
-                                break;
+                case SPI_IORQ_GET_CONFIGURATION:
+                        if (arg) {
+                                *(struct SPI_config *)arg = hdl->config;
+                                status                    = STD_RET_OK;
+                        } else {
+                                errno = EINVAL;
                         }
+                        break;
 
-                        default:
-                                errno = EBADRQC;
-                                break;
+                case SPI_IORQ_LOCK:
+                        if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
+                                status = STD_RET_OK;
+                        } else {
+                                errno = EBUSY;
                         }
+                        break;
+
+                case SPI_IORQ_UNLOCK:
+                        if (mutex_unlock(spi_module->device_protect_mtx[hdl->major])) {
+                                status = STD_RET_OK;
+                        } else {
+                                errno = EBUSY;
+                        }
+                        break;
+
+                case SPI_IORQ_SELECT:
+                        if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
+                                slave_select(hdl->major, hdl->minor);
+                                mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+                                status = STD_RET_OK;
+                        } else {
+                                errno = EBUSY;
+                        }
+                        break;
+
+                case SPI_IORQ_DESELECT:
+                        if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
+                                slave_deselect(hdl->major);
+                                mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+                                status = STD_RET_OK;
+                        } else {
+                                errno = EBUSY;
+                        }
+                        break;
+
+                case SPI_IORQ_TRANSMIT:
+                        if (arg) {
+                                if (mutex_lock(spi_module->device_protect_mtx[hdl->major], 0)) {
+                                        SPI_t *SPI = spi[hdl->major];
+
+                                        while (SPI->SR & SPI_SR_RXNE) {
+                                                u16_t tmp = SPI->DR;
+                                                (void)tmp;
+                                        }
+
+                                        while (!(SPI->SR & SPI_SR_TXE));
+                                        SPI->DR = *(u8_t *)arg;
+
+                                        while (!(SPI->SR & SPI_SR_RXNE));
+                                        *(u8_t *)arg = SPI->DR;
+
+                                        mutex_unlock(spi_module->device_protect_mtx[hdl->major]);
+                                        status = STD_RET_OK;
+                                }
+                        } else {
+                                errno = EINVAL;
+                        }
+                        break;
+
+                default:
+                        errno = EBADRQC;
+                        break;
                 }
         } else {
                 errno = EACCES;
@@ -590,27 +724,27 @@ API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
 static void spi_turn_on(SPI_t *spi)
 {
         switch ((uint32_t)spi) {
-#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         case SPI1_BASE:
                 RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
                 RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
                 RCC->APB2ENR  |=  RCC_APB2ENR_SPI1EN;
                 break;
-#endif
-#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         case SPI2_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
                 RCC->APB1ENR  |=  RCC_APB1ENR_SPI2EN;
                 break;
-#endif
-#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         case SPI3_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
                 RCC->APB1ENR  |=  RCC_APB1ENR_SPI3EN;
                 break;
-#endif
+        #endif
         }
 }
 
@@ -624,27 +758,27 @@ static void spi_turn_on(SPI_t *spi)
 static void spi_turn_off(SPI_t *spi)
 {
         switch ((uint32_t)spi) {
-#if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         case SPI1_BASE:
                 RCC->APB2RSTR |=  RCC_APB2RSTR_SPI1RST;
                 RCC->APB2RSTR &= ~RCC_APB2RSTR_SPI1RST;
                 RCC->APB2ENR  &= ~RCC_APB2ENR_SPI1EN;
                 break;
-#endif
-#if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         case SPI2_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI2RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI2RST;
                 RCC->APB1ENR  &= ~RCC_APB1ENR_SPI2EN;
                 break;
-#endif
-#if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         case SPI3_BASE:
                 RCC->APB1RSTR |=  RCC_APB1RSTR_SPI3RST;
                 RCC->APB1RSTR &= ~RCC_APB1RSTR_SPI3RST;
                 RCC->APB1ENR  &= ~RCC_APB1ENR_SPI3EN;
                 break;
-#endif
+        #endif
         }
 }
 
@@ -655,7 +789,7 @@ static void spi_turn_off(SPI_t *spi)
  * @param vspi          virtual spi handler
  */
 //==============================================================================
-static void spi_apply_config(struct spi_virtual *vspi)
+static void config_apply(struct spi_virtual *vspi)
 {
         SPI_t *SPI = spi[vspi->major];
 
@@ -716,10 +850,9 @@ static void spi_apply_config(struct spi_virtual *vspi)
  * @param major         SPI major number
  */
 //==============================================================================
-static void spi_apply_safe_config(u8_t major)
+static void config_apply_safe(u8_t major)
 {
         SPI_t *SPI = spi[major];
-        u8_t   tmp;
 
         while (SPI->SR & SPI_SR_BSY)
         CLEAR_BIT(SPI->CR1, SPI_CR1_SPE);
@@ -734,7 +867,7 @@ static void spi_apply_safe_config(u8_t major)
  * @param minor         minor device number (CS number)
  */
 //==============================================================================
-static void spi_select_slave(u8_t major, u8_t minor)
+static void slave_select(u8_t major, u8_t minor)
 {
         GPIO_t *GPIO = spi_cs_pin_cfg[major][minor].port;
         u16_t   mask = spi_cs_pin_cfg[major][minor].pin_mask;
@@ -750,7 +883,7 @@ static void spi_select_slave(u8_t major, u8_t minor)
  * @param minor         minor device number (CS number)
  */
 //==============================================================================
-static void spi_deselect_slave(u8_t major)
+static void slave_deselect(u8_t major)
 {
         for (int minor = 0; minor < spi_number_of_slaves[major]; minor++) {
                 GPIO_t *GPIO = spi_cs_pin_cfg[major][minor].port;
@@ -766,7 +899,7 @@ static void spi_deselect_slave(u8_t major)
  * @param major        spi device number
  */
 //==============================================================================
-static void spi_irq_handle(u8_t major)
+static void handle_irq(u8_t major)
 {
         SPI_t *SPI = spi[major];
 
@@ -792,7 +925,7 @@ static void spi_irq_handle(u8_t major)
                 /* receive recently sent frame to fast disable selected slave */
                 if ((SPI->SR & SPI_SR_RXNE) && (SPI->CR2 & SPI_CR2_RXNEIE)) {
                         CLEAR_BIT(SPI->CR2, SPI_CR2_RXNEIE);
-                        spi_deselect_slave(major);
+                        slave_deselect(major);
                         semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], NULL);
                 }
         } else {
@@ -803,7 +936,7 @@ static void spi_irq_handle(u8_t major)
                                 SPI->DR = spi_module->dummy_byte[major];
                         } else {
                                 *(spi_module->buffer[major]++) = SPI->DR;
-                                spi_deselect_slave(major);
+                                slave_deselect(major);
                                 semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], NULL);
                                 CLEAR_BIT(SPI->CR2, SPI_CR2_RXNEIE);
                         }
@@ -819,7 +952,7 @@ static void spi_irq_handle(u8_t major)
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
 void SPI1_IRQHandler(void)
 {
-        spi_irq_handle(_SPI_DEV_1);
+        handle_irq(_SPI_DEV_1);
 }
 #endif
 
@@ -831,7 +964,7 @@ void SPI1_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
 void SPI2_IRQHandler(void)
 {
-        spi_irq_handle(_SPI_DEV_2);
+        handle_irq(_SPI_DEV_2);
 }
 #endif
 
@@ -843,7 +976,7 @@ void SPI2_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
 void SPI3_IRQHandler(void)
 {
-        spi_irq_handle(_SPI_DEV_3);
+        handle_irq(_SPI_DEV_3);
 }
 #endif
 

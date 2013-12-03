@@ -49,12 +49,12 @@ extern "C" {
 /*
  * enable (1) or disable (0) SPI1 peripheral
  */
-#define _SPI1_ENABLE                            1
+#define _SPI1_ENABLE                            0
 
 /*
  * enable (1) or disable (0) SPI2 peripheral
  */
-#define _SPI2_ENABLE                            1
+#define _SPI2_ENABLE                            0
 
 /*
  * enable (1) or disable (0) SPI3 peripheral
@@ -80,7 +80,7 @@ extern "C" {
  *  SPI default configuration (for all devices)
  */
 #define _SPI_DEFAULT_CFG_DUMMY_BYTE             0xFF
-#define _SPI_DEFAULT_CFG_CLK_DIVIDER            SPI_CLK_DIV_2
+#define _SPI_DEFAULT_CFG_CLK_DIVIDER            SPI_CLK_DIV_32
 #define _SPI_DEFAULT_CFG_MODE                   SPI_MODE_0
 #define _SPI_DEFAULT_CFG_MSB_FIRST              true
 
@@ -89,14 +89,14 @@ extern "C" {
  */
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
 #define _SPI1_NUMBER_OF_SLAVES                  8
-_SPI1_CS_CFG(0, GPIOA, 0);
-_SPI1_CS_CFG(1, GPIOA, 0);
-_SPI1_CS_CFG(2, GPIOA, 0);
-_SPI1_CS_CFG(3, GPIOA, 0);
-_SPI1_CS_CFG(4, GPIOA, 0);
-_SPI1_CS_CFG(5, GPIOA, 0);
-_SPI1_CS_CFG(6, GPIOA, 0);
-_SPI1_CS_CFG(7, GPIOA, 0);
+_SPI1_CS_CFG(0, GPIOA, 0);                      /* _SPI1_SLAVE_0 */
+_SPI1_CS_CFG(1, GPIOA, 0);                      /* _SPI1_SLAVE_1 */
+_SPI1_CS_CFG(2, GPIOA, 0);                      /* _SPI1_SLAVE_2 */
+_SPI1_CS_CFG(3, GPIOA, 0);                      /* _SPI1_SLAVE_3 */
+_SPI1_CS_CFG(4, GPIOA, 0);                      /* _SPI1_SLAVE_4 */
+_SPI1_CS_CFG(5, GPIOA, 0);                      /* _SPI1_SLAVE_5 */
+_SPI1_CS_CFG(6, GPIOA, 0);                      /* _SPI1_SLAVE_6 */
+_SPI1_CS_CFG(7, GPIOA, 0);                      /* _SPI1_SLAVE_7 */
 #endif
 
 /*
@@ -104,29 +104,29 @@ _SPI1_CS_CFG(7, GPIOA, 0);
  */
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
 #define _SPI2_NUMBER_OF_SLAVES                  8
-_SPI2_CS_CFG(0, GPIOA, 0);
-_SPI2_CS_CFG(1, GPIOA, 0);
-_SPI2_CS_CFG(2, GPIOA, 0);
-_SPI2_CS_CFG(3, GPIOA, 0);
-_SPI2_CS_CFG(4, GPIOA, 0);
-_SPI2_CS_CFG(5, GPIOA, 0);
-_SPI2_CS_CFG(6, GPIOA, 0);
-_SPI2_CS_CFG(7, GPIOA, 0);
+_SPI2_CS_CFG(0, GPIOA, 0);                      /* _SPI2_SLAVE_0 */
+_SPI2_CS_CFG(1, GPIOA, 0);                      /* _SPI2_SLAVE_1 */
+_SPI2_CS_CFG(2, GPIOA, 0);                      /* _SPI2_SLAVE_2 */
+_SPI2_CS_CFG(3, GPIOA, 0);                      /* _SPI2_SLAVE_3 */
+_SPI2_CS_CFG(4, GPIOA, 0);                      /* _SPI2_SLAVE_4 */
+_SPI2_CS_CFG(5, GPIOA, 0);                      /* _SPI2_SLAVE_5 */
+_SPI2_CS_CFG(6, GPIOA, 0);                      /* _SPI2_SLAVE_6 */
+_SPI2_CS_CFG(7, GPIOA, 0);                      /* _SPI2_SLAVE_7 */
 #endif
 
 /*
  * CS configurations for SPI3
  */
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-#define _SPI3_NUMBER_OF_SLAVES                  8
-_SPI3_CS_CFG(0, GPIOA, 0);
-_SPI3_CS_CFG(1, GPIOA, 0);
-_SPI3_CS_CFG(2, GPIOA, 0);
-_SPI3_CS_CFG(3, GPIOA, 0);
-_SPI3_CS_CFG(4, GPIOA, 0);
-_SPI3_CS_CFG(5, GPIOA, 0);
-_SPI3_CS_CFG(6, GPIOA, 0);
-_SPI3_CS_CFG(7, GPIOA, 0);
+#define _SPI3_NUMBER_OF_SLAVES                  2
+_SPI3_CS_CFG(0, SD_CS_PORT, SD_CS_BP);          /* _SPI3_SLAVE_0 */
+_SPI3_CS_CFG(1, TP204_PORT, TP204_BP);          /* _SPI3_SLAVE_1 */
+_SPI3_CS_CFG(2, GPIOA, 0);                      /* _SPI3_SLAVE_2 */
+_SPI3_CS_CFG(3, GPIOA, 0);                      /* _SPI3_SLAVE_3 */
+_SPI3_CS_CFG(4, GPIOA, 0);                      /* _SPI3_SLAVE_4 */
+_SPI3_CS_CFG(5, GPIOA, 0);                      /* _SPI3_SLAVE_5 */
+_SPI3_CS_CFG(6, GPIOA, 0);                      /* _SPI3_SLAVE_6 */
+_SPI3_CS_CFG(7, GPIOA, 0);                      /* _SPI3_SLAVE_7 */
 #endif
 
 /*==============================================================================

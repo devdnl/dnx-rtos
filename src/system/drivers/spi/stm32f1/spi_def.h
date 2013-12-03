@@ -40,8 +40,13 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define SPI_IORQ_SET_CONFIGURATION                      _IOW('S', 0x00, struct SPI_config*)
-#define SPI_IORQ_GET_CONFIGURATION                      _IOR('S', 0x01, struct SPI_config*)
+#define SPI_IORQ_SET_CONFIGURATION                      _IOW ('S', 0x00, struct SPI_config*)
+#define SPI_IORQ_GET_CONFIGURATION                      _IOR ('S', 0x01, struct SPI_config*)
+#define SPI_IORQ_LOCK                                   _IO  ('S', 0x02)
+#define SPI_IORQ_UNLOCK                                 _IO  ('S', 0x03)
+#define SPI_IORQ_SELECT                                 _IO  ('S', 0x04)
+#define SPI_IORQ_DESELECT                               _IO  ('S', 0x05)
+#define SPI_IORQ_TRANSMIT                               _IOWR('S', 0x06, u8_t*)
 
 /*==============================================================================
   Exported object types
