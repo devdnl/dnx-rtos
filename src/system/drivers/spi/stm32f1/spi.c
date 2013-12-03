@@ -469,7 +469,8 @@ API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
                         }
 
                         SET_BIT(spi[hdl->major]->CR2, SPI_CR2_RXNEIE);
-                        tmp = spi_module->dummy_byte[hdl->major];
+                        tmp = hdl->config.dummy_byte;
+                        spi_module->dummy_byte[hdl->major]= tmp;
                         spi[hdl->major]->DR = tmp;
                         semaphore_wait(spi_module->wait_irq_sem[hdl->major], SEMAPHORE_TIMEOUT);
                         while (spi[hdl->major]->SR & SPI_SR_BSY); /* flush buffer */
@@ -718,9 +719,8 @@ static void spi_apply_config(struct spi_virtual *vspi)
 static void spi_apply_safe_config(u8_t major)
 {
         SPI_t *SPI = spi[major];
+        u8_t   tmp;
 
-        while (!(SPI->SR & SPI_SR_RXNE));
-        while (!(SPI->SR & SPI_SR_TXE));
         while (SPI->SR & SPI_SR_BSY)
         CLEAR_BIT(SPI->CR1, SPI_CR1_SPE);
         SET_BIT(SPI->CR1, SPI_CR1_MSTR);
@@ -771,22 +771,39 @@ static void spi_irq_handle(u8_t major)
         SPI_t *SPI = spi[major];
 
         if (spi_module->write[major]) {
-                if (SPI->SR & SPI_SR_TXE) {
+                if ((SPI->SR & SPI_SR_TXE) && (SPI->CR2 & SPI_CR2_TXEIE)) {
                         if (spi_module->count[major] > 0) {
                                 SPI->DR = *(spi_module->buffer[major]++);
                                 spi_module->count[major]--;
                         } else {
-                                semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], NULL);
                                 CLEAR_BIT(SPI->CR2, SPI_CR2_TXEIE);
+
+                                while (SPI->SR & SPI_SR_RXNE) {
+                                        int tmp = SPI->DR;
+                                        (void) tmp;
+                                }
+
+                                SET_BIT(SPI->CR2, SPI_CR2_RXNEIE);
                         }
+
+                        return;
+                }
+
+                /* receive recently sent frame to fast disable selected slave */
+                if ((SPI->SR & SPI_SR_RXNE) && (SPI->CR2 & SPI_CR2_RXNEIE)) {
+                        CLEAR_BIT(SPI->CR2, SPI_CR2_RXNEIE);
+                        spi_deselect_slave(major);
+                        semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], NULL);
                 }
         } else {
                 if (SPI->SR & SPI_SR_RXNE) {
+                        spi_module->count[major]--;
                         if (spi_module->count[major] > 0) {
                                 *(spi_module->buffer[major]++) = SPI->DR;
                                 SPI->DR = spi_module->dummy_byte[major];
-                                spi_module->count[major]--;
                         } else {
+                                *(spi_module->buffer[major]++) = SPI->DR;
+                                spi_deselect_slave(major);
                                 semaphore_signal_from_ISR(spi_module->wait_irq_sem[major], NULL);
                                 CLEAR_BIT(SPI->CR2, SPI_CR2_RXNEIE);
                         }
