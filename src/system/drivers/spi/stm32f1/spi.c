@@ -791,9 +791,6 @@ static void spi_turn_off(SPI_t *spi)
 //==============================================================================
 static void config_apply(struct spi_virtual *vspi)
 {
-        SPI_t *SPI = spi[vspi->major];
-
-        /* configure SPI divider */
         const u16_t divider_mask[SPI_CLK_DIV_256 + 1] = {
                 [SPI_CLK_DIV_2  ] 0x00,
                 [SPI_CLK_DIV_4  ] SPI_CR1_BR_0,
@@ -805,24 +802,22 @@ static void config_apply(struct spi_virtual *vspi)
                 [SPI_CLK_DIV_256] SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0,
         };
 
+        const u16_t spi_mode_mask[SPI_MODE_3 + 1] = {
+                [SPI_MODE_0] 0x00,
+                [SPI_MODE_1] SPI_CR1_CPHA,
+                [SPI_MODE_2] SPI_CR1_CPOL,
+                [SPI_MODE_3] SPI_CR1_CPOL | SPI_CR1_CPHA
+        };
+
+        SPI_t *SPI = spi[vspi->major];
+
+        /* configure SPI divider */
         CLEAR_BIT(SPI->CR1, SPI_CR1_BR);
         SET_BIT(SPI->CR1, divider_mask[vspi->config.clk_divider]);
 
         /* configure SPI mode */
-        switch (vspi->config.mode) {
-        case SPI_MODE_0:
-                CLEAR_BIT(SPI->CR1, SPI_CR1_CPOL | SPI_CR1_CPHA);
-                break;
-        case SPI_MODE_1:
-                SET_BIT(SPI->CR1, SPI_CR1_CPHA);
-                break;
-        case SPI_MODE_2:
-                SET_BIT(SPI->CR1, SPI_CR1_CPOL);
-                break;
-        case SPI_MODE_3:
-                SET_BIT(SPI->CR1, SPI_CR1_CPOL | SPI_CR1_CPHA);
-                break;
-        }
+        CLEAR_BIT(SPI->CR1, SPI_CR1_CPOL | SPI_CR1_CPHA);
+        SET_BIT(SPI->CR1, spi_mode_mask[vspi->config.mode]);
 
         /* 8-bit mode */
         CLEAR_BIT(SPI->CR1, SPI_CR1_DFF);
