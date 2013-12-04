@@ -282,14 +282,14 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
         }
 
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
-        if (major == _SPI_DEV_1 && minor >= _SPI1_NUMBER_OF_SLAVES) {
+        if (major == _SPI1 && minor >= _SPI1_NUMBER_OF_SLAVES) {
                 errno = ENXIO;
                 return STD_RET_ERROR;
         }
 #endif
 
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
-        if (major == _SPI_DEV_2 && minor >= _SPI2_NUMBER_OF_SLAVES) {
+        if (major == _SPI2 && minor >= _SPI2_NUMBER_OF_SLAVES) {
                 errno = ENXIO;
                 return STD_RET_ERROR;
         }
@@ -949,7 +949,7 @@ static void handle_irq(u8_t major)
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
 void SPI1_IRQHandler(void)
 {
-        handle_irq(_SPI_DEV_1);
+        handle_irq(_SPI1);
 }
 #endif
 
@@ -961,7 +961,7 @@ void SPI1_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
 void SPI2_IRQHandler(void)
 {
-        handle_irq(_SPI_DEV_2);
+        handle_irq(_SPI2);
 }
 #endif
 

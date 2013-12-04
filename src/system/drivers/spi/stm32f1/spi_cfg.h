@@ -49,12 +49,12 @@ extern "C" {
 /*
  * enable (1) or disable (0) SPI1 peripheral
  */
-#define _SPI1_ENABLE                            0
+#define _SPI1_ENABLE                            1
 
 /*
  * enable (1) or disable (0) SPI2 peripheral
  */
-#define _SPI2_ENABLE                            0
+#define _SPI2_ENABLE                            1
 
 /*
  * enable (1) or disable (0) SPI3 peripheral
@@ -118,9 +118,9 @@ _SPI2_CS_CFG(7, GPIOA, 0);                      /* _SPI2_CS7 */
  * CS configurations for SPI3 (_SPI3)
  */
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-#define _SPI3_NUMBER_OF_SLAVES                  2
-_SPI3_CS_CFG(0, SD_CS_PORT, SD_CS_BP);          /* _SPI3_CS0 */
-_SPI3_CS_CFG(1, TP204_PORT, TP204_BP);          /* _SPI3_CS1 */
+#define _SPI3_NUMBER_OF_SLAVES                  8
+_SPI3_CS_CFG(0, GPIOA, 0);                      /* _SPI3_CS0 */
+_SPI3_CS_CFG(1, GPIOA, 0);                      /* _SPI3_CS1 */
 _SPI3_CS_CFG(2, GPIOA, 0);                      /* _SPI3_CS2 */
 _SPI3_CS_CFG(3, GPIOA, 0);                      /* _SPI3_CS3 */
 _SPI3_CS_CFG(4, GPIOA, 0);                      /* _SPI3_CS4 */
