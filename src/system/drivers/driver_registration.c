@@ -39,6 +39,7 @@ extern "C" {
 #include "stm32f1/pll_def.h"
 #include "stm32f1/sdspi_def.h"
 #include "stm32f1/ethmac_def.h"
+#include "stm32f1/spi_def.h"
 #include "tty_def.h"
 
 /**
@@ -54,6 +55,7 @@ _IMPORT_MODULE(PLL);
 _IMPORT_MODULE(TTY);
 _IMPORT_MODULE(SDSPI);
 _IMPORT_MODULE(ETHMAC);
+_IMPORT_MODULE(SPI);
 
 /*==============================================================================
   Exported object definitions
@@ -65,6 +67,7 @@ const char *_regdrv_module_name[] = {
         _USE_MODULE(TTY),
         _USE_MODULE(SDSPI),
         _USE_MODULE(ETHMAC),
+        _USE_MODULE(SPI),
 };
 
 const struct _driver_entry _regdrv_driver_table[] = {
@@ -77,6 +80,8 @@ const struct _driver_entry _regdrv_driver_table[] = {
         _USE_DRIVER_INTERFACE(TTY   , "tty3"  , TTY_DEV_3          , TTY_MINOR_NUMBER   ),
         _USE_DRIVER_INTERFACE(SDSPI , "sdspi" , SDSPI_MAJOR_NUMBER , SDSPI_MINOR_NUMBER ),
         _USE_DRIVER_INTERFACE(ETHMAC, "ethmac", ETHMAC_MAJOR_NUMBER, ETHMAC_MINOR_NUMBER),
+        _USE_DRIVER_INTERFACE(SPI   , "spi_sd", _SPI3              , _SPI3_CS0          ),
+        _USE_DRIVER_INTERFACE(SPI   , "spi_xx", _SPI3              , _SPI3_CS1          ),
 };
 
 const int _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);
