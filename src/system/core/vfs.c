@@ -968,26 +968,26 @@ int vfs_fclose_force(FILE *file, task_t *opened_by_task)
  *
  * @param[in] *ptr              address to data (src)
  * @param[in]  size             item size
- * @param[in]  nitems           number of items
+ * @param[in]  count            number of items
  * @param[in] *file             pointer to file object
  *
  * @return the number of items successfully written. If an error occurs, or the
  *         end-of-file is reached, the return value is a short item count (or 0).
  */
 //==============================================================================
-size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
+size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
         ssize_t n = 0;
 
-        if (ptr && size && nitems && file) {
+        if (ptr && size && count && file) {
                 if (file->f_write && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
-                                          ptr, size * nitems, &file->f_lseek);
+                                          ptr, size * count, &file->f_lseek);
 
                         if (n < 0) {
                                 file->f_errflag |= VFS_EFLAG_ERR;
                                 n = 0;
-                        } else if (n < (ssize_t)(size * nitems)) {
+                        } else if (n < (ssize_t)(size * count)) {
                                 file->f_errflag |= VFS_EFLAG_EOF;
                         }
 
@@ -1011,26 +1011,26 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t nitems, FILE *file)
  *
  * @param[out] *ptr             address to data (dst)
  * @param[in]   size            item size
- * @param[in]   nitems          number of items
+ * @param[in]   count           number of items
  * @param[in]  *file            pointer to file object
  *
  * @return the number of items successfully read. If an error occurs, or the
  *         end-of-file is reached, the return value is a short item count (or 0).
  */
 //==============================================================================
-size_t vfs_fread(void *ptr, size_t size, size_t nitems, FILE *file)
+size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
 {
         ssize_t n = 0;
 
-        if (ptr && size && nitems && file) {
+        if (ptr && size && count && file) {
                 if (file->f_read && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
-                                         ptr, size * nitems, &file->f_lseek);
+                                         ptr, size * count, &file->f_lseek);
 
                         if (n < 0) {
                                 file->f_errflag |= VFS_EFLAG_ERR;
                                 n = 0;
-                        } else if (n < (ssize_t)(size * nitems)) {
+                        } else if (n < (ssize_t)(size * count)) {
                                 file->f_errflag |= VFS_EFLAG_EOF;
                         }
 

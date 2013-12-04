@@ -493,7 +493,7 @@ static inline bool semaphore_signal(sem_t *sem)
  * @brief Function wait for semaphore from ISR
  *
  * @param[in]  sem              semaphore object
- * @param[out] task_woken       true if higher priority task woke, otherwise false
+ * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
  *
  * @retval true                 semaphore taken
  * @retval false                semaphore not taken
@@ -509,7 +509,7 @@ static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
  * @brief Function signal semaphore from ISR
  *
  * @param[in]  sem              semaphore object
- * @param[out] task_woken       true if higher priority task woke, otherwise false
+ * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
  *
  * @retval true                 semaphore taken
  * @retval false                semaphore not taken
@@ -639,7 +639,7 @@ static inline bool queue_send(queue_t *queue, const void *item, const uint timeo
  *
  * @param[in]  queue            queue object
  * @param[in]  item             item
- * @param[out] task_woken       true if higher priority task woke, otherwise false
+ * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
  *
  * @retval true                 item posted
  * @retval false                item not posted
@@ -673,7 +673,7 @@ static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
  *
  * @param[in]  queue            queue object
  * @param[out] item             item
- * @param[out] task_woken       true if higher priority task woke, otherwise false
+ * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
  *
  * @retval true                 item received
  * @retval false                item not received

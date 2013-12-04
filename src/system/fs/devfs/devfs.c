@@ -712,10 +712,11 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                                 struct vfs_dev_stat devstat;
                                 if (node->nif.drv->drv_stat(node->nif.drv->handle, &devstat) == STD_RET_OK) {
                                         dirent.size     = devstat.st_size;
-                                        dirent.filetype = FILE_TYPE_DRV;
+
                                 } else {
                                         dirent.size = 0;
                                 }
+                                dirent.filetype = FILE_TYPE_DRV;
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 int n = queue_get_number_of_items(node->nif.pipe);
                                 if (n >= 0) {

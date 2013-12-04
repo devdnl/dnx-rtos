@@ -39,6 +39,7 @@ extern "C" {
 #include "stm32f1/pll_def.h"
 #include "stm32f1/sdspi_def.h"
 #include "stm32f1/ethmac_def.h"
+#include "stm32f1/spi_def.h"
 #include "tty_def.h"
 
 /**

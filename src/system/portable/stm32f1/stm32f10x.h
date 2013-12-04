@@ -115,6 +115,10 @@
    Tip: To avoid modifying this file each time you need to use different HSE, you
         can define the HSE value in your toolchain compiler preprocessor.
   */
+#include "config.h"
+
+#define HSE_VALUE ((uint32_t)CONFIG_CPU_OSC_FREQ)
+
 #if !defined  HSE_VALUE
  #ifdef STM32F10X_CL
   #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */

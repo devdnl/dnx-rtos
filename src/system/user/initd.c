@@ -191,7 +191,7 @@ static int run_level_1(void)
                         printk("initialized\n");
                         mount("fatfs", "/dev/sda1", "/mnt");
                 } else {
-                        printk(FONT_COLOR_RED"fail\n"RESET_ATTRIBUTES);
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
 
                 fclose(sd);
