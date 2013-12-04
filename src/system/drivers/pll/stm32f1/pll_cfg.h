@@ -39,10 +39,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** CPU target frequency */
-#define PLL_CPU_TARGET_FREQ               CONFIG_CPU_TARGET_FREQ
-
-#define PLL_APB1FREQ                      36000000UL
 
 /*==============================================================================
   Exported types, enums definitions

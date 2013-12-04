@@ -33,7 +33,9 @@ extern "C" {
 ==============================================================================*/
 #include "system/dnxmodule.h"
 #include "stm32f1/pll_cfg.h"
+#include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "stm32f1/lib/stm32f10x_rcc.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -96,11 +98,11 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         }
 
         /* wait states */
-        if (PLL_CPU_TARGET_FREQ <= 24000000UL)
+        if (CONFIG_CPU_TARGET_FREQ <= 24000000UL)
                 FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
-        else if (PLL_CPU_TARGET_FREQ <= 48000000UL)
+        else if (CONFIG_CPU_TARGET_FREQ <= 48000000UL)
                 FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
-        else if (PLL_CPU_TARGET_FREQ <= 72000000UL)
+        else if (CONFIG_CPU_TARGET_FREQ <= 72000000UL)
                 FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
         else
                 FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
@@ -191,9 +193,7 @@ API_MOD_OPEN(PLL, void *device_handle, int flags)
         UNUSED_ARG(device_handle);
         UNUSED_ARG(flags);
 
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -214,9 +214,7 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force, const task_t *opened_by_task
         UNUSED_ARG(force);
         UNUSED_ARG(opened_by_task);
 
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -240,7 +238,7 @@ API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
         errno = EPERM;
 
-        return 0;
+        return -1;
 }
 
 //==============================================================================
@@ -264,7 +262,7 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 
         errno = EPERM;
 
-        return 0;
+        return -1;
 }
 
 //==============================================================================
@@ -281,13 +279,46 @@ API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 //==============================================================================
 API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(request);
-        UNUSED_ARG(arg);
+        STOP_IF(!device_handle);
 
-        errno = EBADRQC;
+        stdret_t status = STD_RET_OK;
 
-        return STD_RET_ERROR;
+        if (arg) {
+                RCC_ClocksTypeDef freq;
+                RCC_GetClocksFreq(&freq);
+
+                switch (request) {
+                case PLL_IORQ_GET_SYSCLK_FREQ:
+                        *(u32_t *)arg = freq.SYSCLK_Frequency;
+                        break;
+
+                case PLL_IORQ_GET_HCLK_FREQ:
+                        *(u32_t *)arg = freq.HCLK_Frequency;
+                        break;
+
+                case PLL_IORQ_GET_PCLK1_FREQ:
+                        *(u32_t *)arg = freq.PCLK1_Frequency;
+                        break;
+
+                case PLL_IORQ_GET_PCLK2_FREQ:
+                        *(u32_t *)arg = freq.PCLK2_Frequency;
+                        break;
+
+                case PLL_IORQ_GET_ADCCLK_FREQ:
+                        *(u32_t *)arg = freq.ADCCLK_Frequency;
+                        break;
+
+                default:
+                        errno  = EBADRQC;
+                        status = STD_RET_ERROR;
+                        break;
+                }
+        } else {
+                errno  = EINVAL;
+                status = STD_RET_ERROR;
+        }
+
+        return status;
 }
 
 //==============================================================================
