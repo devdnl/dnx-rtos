@@ -41,9 +41,9 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /*----------------------------------------------------------------------------*/
-#define _SPI1_CS_CFG(_no, _port, _pin)          enum _SPI1_CS##_no {_SPI1_CS##_no##_PORT = (uint32_t)_port, _SPI1_CS##_no##_PIN = _pin, _SPI1_SLAVE_##_no = _no}
-#define _SPI2_CS_CFG(_no, _port, _pin)          enum _SPI2_CS##_no {_SPI2_CS##_no##_PORT = (uint32_t)_port, _SPI2_CS##_no##_PIN = _pin, _SPI2_SLAVE_##_no = _no}
-#define _SPI3_CS_CFG(_no, _port, _pin)          enum _SPI3_CS##_no {_SPI3_CS##_no##_PORT = (uint32_t)_port, _SPI3_CS##_no##_PIN = _pin, _SPI3_SLAVE_##_no = _no}
+#define _SPI1_CS_CFG(_no, _port, _pin)          enum _SPI1_CS##_no {_SPI1_CS##_no##_PORT = (uint32_t)_port, _SPI1_CS##_no##_PIN = _pin, _SPI1_CS##_no = _no}
+#define _SPI2_CS_CFG(_no, _port, _pin)          enum _SPI2_CS##_no {_SPI2_CS##_no##_PORT = (uint32_t)_port, _SPI2_CS##_no##_PIN = _pin, _SPI2_CS##_no = _no}
+#define _SPI3_CS_CFG(_no, _port, _pin)          enum _SPI3_CS##_no {_SPI3_CS##_no##_PORT = (uint32_t)_port, _SPI3_CS##_no##_PIN = _pin, _SPI3_CS##_no = _no}
 /*----------------------------------------------------------------------------*/
 
 /*
@@ -85,48 +85,48 @@ extern "C" {
 #define _SPI_DEFAULT_CFG_MSB_FIRST              true
 
 /*
- *  CS configurations for SPI1
+ *  CS configurations for SPI1 (_SPI1)
  */
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
 #define _SPI1_NUMBER_OF_SLAVES                  8
-_SPI1_CS_CFG(0, GPIOA, 0);                      /* _SPI1_SLAVE_0 */
-_SPI1_CS_CFG(1, GPIOA, 0);                      /* _SPI1_SLAVE_1 */
-_SPI1_CS_CFG(2, GPIOA, 0);                      /* _SPI1_SLAVE_2 */
-_SPI1_CS_CFG(3, GPIOA, 0);                      /* _SPI1_SLAVE_3 */
-_SPI1_CS_CFG(4, GPIOA, 0);                      /* _SPI1_SLAVE_4 */
-_SPI1_CS_CFG(5, GPIOA, 0);                      /* _SPI1_SLAVE_5 */
-_SPI1_CS_CFG(6, GPIOA, 0);                      /* _SPI1_SLAVE_6 */
-_SPI1_CS_CFG(7, GPIOA, 0);                      /* _SPI1_SLAVE_7 */
+_SPI1_CS_CFG(0, GPIOA, 0);                      /* _SPI1_CS0 */
+_SPI1_CS_CFG(1, GPIOA, 0);                      /* _SPI1_CS1 */
+_SPI1_CS_CFG(2, GPIOA, 0);                      /* _SPI1_CS2 */
+_SPI1_CS_CFG(3, GPIOA, 0);                      /* _SPI1_CS3 */
+_SPI1_CS_CFG(4, GPIOA, 0);                      /* _SPI1_CS4 */
+_SPI1_CS_CFG(5, GPIOA, 0);                      /* _SPI1_CS5 */
+_SPI1_CS_CFG(6, GPIOA, 0);                      /* _SPI1_CS6 */
+_SPI1_CS_CFG(7, GPIOA, 0);                      /* _SPI1_CS7 */
 #endif
 
 /*
- * CS configurations for SPI2
+ * CS configurations for SPI2 (_SPI2)
  */
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
 #define _SPI2_NUMBER_OF_SLAVES                  8
-_SPI2_CS_CFG(0, GPIOA, 0);                      /* _SPI2_SLAVE_0 */
-_SPI2_CS_CFG(1, GPIOA, 0);                      /* _SPI2_SLAVE_1 */
-_SPI2_CS_CFG(2, GPIOA, 0);                      /* _SPI2_SLAVE_2 */
-_SPI2_CS_CFG(3, GPIOA, 0);                      /* _SPI2_SLAVE_3 */
-_SPI2_CS_CFG(4, GPIOA, 0);                      /* _SPI2_SLAVE_4 */
-_SPI2_CS_CFG(5, GPIOA, 0);                      /* _SPI2_SLAVE_5 */
-_SPI2_CS_CFG(6, GPIOA, 0);                      /* _SPI2_SLAVE_6 */
-_SPI2_CS_CFG(7, GPIOA, 0);                      /* _SPI2_SLAVE_7 */
+_SPI2_CS_CFG(0, GPIOA, 0);                      /* _SPI2_CS0 */
+_SPI2_CS_CFG(1, GPIOA, 0);                      /* _SPI2_CS1 */
+_SPI2_CS_CFG(2, GPIOA, 0);                      /* _SPI2_CS2 */
+_SPI2_CS_CFG(3, GPIOA, 0);                      /* _SPI2_CS3 */
+_SPI2_CS_CFG(4, GPIOA, 0);                      /* _SPI2_CS4 */
+_SPI2_CS_CFG(5, GPIOA, 0);                      /* _SPI2_CS5 */
+_SPI2_CS_CFG(6, GPIOA, 0);                      /* _SPI2_CS6 */
+_SPI2_CS_CFG(7, GPIOA, 0);                      /* _SPI2_CS7 */
 #endif
 
 /*
- * CS configurations for SPI3
+ * CS configurations for SPI3 (_SPI3)
  */
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
 #define _SPI3_NUMBER_OF_SLAVES                  2
-_SPI3_CS_CFG(0, SD_CS_PORT, SD_CS_BP);          /* _SPI3_SLAVE_0 */
-_SPI3_CS_CFG(1, TP204_PORT, TP204_BP);          /* _SPI3_SLAVE_1 */
-_SPI3_CS_CFG(2, GPIOA, 0);                      /* _SPI3_SLAVE_2 */
-_SPI3_CS_CFG(3, GPIOA, 0);                      /* _SPI3_SLAVE_3 */
-_SPI3_CS_CFG(4, GPIOA, 0);                      /* _SPI3_SLAVE_4 */
-_SPI3_CS_CFG(5, GPIOA, 0);                      /* _SPI3_SLAVE_5 */
-_SPI3_CS_CFG(6, GPIOA, 0);                      /* _SPI3_SLAVE_6 */
-_SPI3_CS_CFG(7, GPIOA, 0);                      /* _SPI3_SLAVE_7 */
+_SPI3_CS_CFG(0, SD_CS_PORT, SD_CS_BP);          /* _SPI3_CS0 */
+_SPI3_CS_CFG(1, TP204_PORT, TP204_BP);          /* _SPI3_CS1 */
+_SPI3_CS_CFG(2, GPIOA, 0);                      /* _SPI3_CS2 */
+_SPI3_CS_CFG(3, GPIOA, 0);                      /* _SPI3_CS3 */
+_SPI3_CS_CFG(4, GPIOA, 0);                      /* _SPI3_CS4 */
+_SPI3_CS_CFG(5, GPIOA, 0);                      /* _SPI3_CS5 */
+_SPI3_CS_CFG(6, GPIOA, 0);                      /* _SPI3_CS6 */
+_SPI3_CS_CFG(7, GPIOA, 0);                      /* _SPI3_CS7 */
 #endif
 
 /*==============================================================================

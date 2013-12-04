@@ -55,15 +55,15 @@ extern "C" {
 enum SPI_MAJOR_NUMBER
 {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
-        _SPI_DEV_1,
+        _SPI1,
         #endif
         #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
-        _SPI_DEV_2,
+        _SPI2,
         #endif
         #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-        _SPI_DEV_3,
+        _SPI3,
         #endif
-        _SPI_DEV_NUMBER
+        _SPI_NUMBER
 };
 
 /* SPI clock divider */

@@ -63,7 +63,9 @@ extern "C" {
 #endif
 
 #if (MAX_NUMBER_OF_CS > 8)
-#error SPI module support up to 8 slaves per device!
+#error SPI module: set up to 8 slaves per device!
+#elif (MAX_NUMBER_OF_CS == 0)
+#error SPI module: set more than 0 slaves per device!
 #endif
 
 /*==============================================================================
@@ -91,13 +93,13 @@ struct spi_virtual {
 
 /* general module data */
 struct module {
-        sem_t                  *wait_irq_sem[_SPI_DEV_NUMBER];
-        mutex_t                *device_protect_mtx[_SPI_DEV_NUMBER];
-        u8_t                   *buffer[_SPI_DEV_NUMBER];
-        size_t                  count[_SPI_DEV_NUMBER];
-        bool                    write[_SPI_DEV_NUMBER];
-        u8_t                    dummy_byte[_SPI_DEV_NUMBER];
-        u8_t                    number_of_virtual_spi[_SPI_DEV_NUMBER];
+        sem_t                  *wait_irq_sem[_SPI_NUMBER];
+        mutex_t                *device_protect_mtx[_SPI_NUMBER];
+        u8_t                   *buffer[_SPI_NUMBER];
+        size_t                  count[_SPI_NUMBER];
+        bool                    write[_SPI_NUMBER];
+        u8_t                    dummy_byte[_SPI_NUMBER];
+        u8_t                    number_of_virtual_spi[_SPI_NUMBER];
 };
 
 /*==============================================================================
@@ -115,7 +117,7 @@ static void     handle_irq              (u8_t major);
   Local objects
 ==============================================================================*/
 /* SPI peripherals address */
-static SPI_t *const spi[_SPI_DEV_NUMBER] = {
+static SPI_t *const spi[_SPI_NUMBER] = {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         SPI1,
         #endif
@@ -128,7 +130,7 @@ static SPI_t *const spi[_SPI_DEV_NUMBER] = {
 };
 
 /* CS port configuration */
-static const struct cs_pin_cfg spi_cs_pin_cfg[_SPI_DEV_NUMBER][MAX_NUMBER_OF_CS] = {
+static const struct cs_pin_cfg spi_cs_pin_cfg[_SPI_NUMBER][MAX_NUMBER_OF_CS] = {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         {
                 #if (MAX_NUMBER_OF_CS >= 1)
@@ -216,7 +218,7 @@ static const struct cs_pin_cfg spi_cs_pin_cfg[_SPI_DEV_NUMBER][MAX_NUMBER_OF_CS]
 };
 
 /* number of SPI cs */
-static const u8_t spi_number_of_slaves[_SPI_DEV_NUMBER] = {
+static const u8_t spi_number_of_slaves[_SPI_NUMBER] = {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         _SPI1_NUMBER_OF_SLAVES,
         #endif
@@ -229,7 +231,7 @@ static const u8_t spi_number_of_slaves[_SPI_DEV_NUMBER] = {
 };
 
 /* IRQ configurations */
-static const struct spi_priority_cfg spi_irq[_SPI_DEV_NUMBER] = {
+static const struct spi_priority_cfg spi_irq[_SPI_NUMBER] = {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         {IRQn: SPI1_IRQn, priority: _SPI1_IRQ_PRIORITY},
         #endif
@@ -274,7 +276,7 @@ static struct module *spi_module;
 //==============================================================================
 API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major >= _SPI_DEV_NUMBER) {
+        if (major >= _SPI_NUMBER) {
                 errno = ENXIO;
                 return STD_RET_ERROR;
         }
@@ -294,7 +296,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 #endif
 
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-        if (major == _SPI_DEV_3 && minor >= _SPI3_NUMBER_OF_SLAVES) {
+        if (major == _SPI3 && minor >= _SPI3_NUMBER_OF_SLAVES) {
                 errno = ENXIO;
                 return STD_RET_ERROR;
         }
@@ -379,7 +381,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
 
                 /* free module memory if all devices are deinitialized */
                 bool free_module_mem = true;
-                for (int i = 0; i < _SPI_DEV_NUMBER && free_module_mem; i++) {
+                for (int i = 0; i < _SPI_NUMBER && free_module_mem; i++) {
                         free_module_mem = spi_module->device_protect_mtx[i] == NULL;
                 }
 
@@ -971,7 +973,7 @@ void SPI2_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
 void SPI3_IRQHandler(void)
 {
-        handle_irq(_SPI_DEV_3);
+        handle_irq(_SPI3);
 }
 #endif
 
