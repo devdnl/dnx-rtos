@@ -117,16 +117,7 @@
   */
 #include "config.h"
 
-#define HSE_VALUE ((uint32_t)CONFIG_CPU_OSC_FREQ)
-
-#if !defined  HSE_VALUE
- #ifdef STM32F10X_CL
-  #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
- #else
-  #define HSE_VALUE    ((uint32_t)8000000) /*!< Value of the External oscillator in Hz */
- #endif /* STM32F10X_CL */
-#endif /* HSE_VALUE */
-
+#define HSE_VALUE ((uint32_t)CONFIG_CPU_BASE_FREQ)
 
 /**
  * @brief In the following line adjust the External High Speed oscillator (HSE) Startup

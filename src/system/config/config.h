@@ -33,15 +33,9 @@ extern "C" {
 
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
- * CPU oscillator frequence (mostly external quartz) [Hz]
+ * CPU base frequency [Hz] (mostly external quartz or internal RC; start system frequency)
  */
-#define CONFIG_CPU_OSC_FREQ                             (8000000UL)
-
-/**
- * CPU target frequency [Hz]
- */
-#define CONFIG_CPU_TARGET_FREQ                          (72000000UL)
-
+#define CONFIG_CPU_BASE_FREQ                            (8000000UL)
 
 /**=== MEMORY CONFIGURATION ==================================================*/
 /**
