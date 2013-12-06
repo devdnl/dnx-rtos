@@ -117,7 +117,7 @@
   */
 #include "config.h"
 
-#define HSE_VALUE ((uint32_t)CONFIG_CPU_BASE_FREQ)
+#define HSE_VALUE ((uint32_t)CONFIG_CPU_OSC_FREQ)
 
 /**
  * @brief In the following line adjust the External High Speed oscillator (HSE) Startup

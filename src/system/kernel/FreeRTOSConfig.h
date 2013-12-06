@@ -93,7 +93,7 @@ extern void  sysm_kfree             (void*);
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_IDLE_HOOK                     1
 #define configUSE_TICK_HOOK                     1
-#define configCPU_CLOCK_HZ                      CONFIG_CPU_BASE_FREQ
+#define configCPU_CLOCK_HZ                      CONFIG_CPU_START_FREQ
 #define configTICK_RATE_HZ                      ((portTickType) CONFIG_RTOS_TASK_SCHED_FREQ)
 #define configMAX_PRIORITIES                    ((unsigned portBASE_TYPE) CONFIG_RTOS_TASK_MAX_PRIORITIES)
 #define configMINIMAL_STACK_SIZE                ((unsigned short) CONFIG_RTOS_TASK_MIN_STACK_DEPTH)
