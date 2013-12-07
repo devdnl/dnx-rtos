@@ -42,7 +42,7 @@ extern "C" {
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define TIMEOUT_MS                      100
+#define TIMEOUT_MS                      250
 
 /*==============================================================================
   Local types, enums definitions
@@ -96,19 +96,19 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         if (_PLL_CFG__LSI_ON) {
                 RCC_LSICmd(_PLL_CFG__LSI_ON);
                 if (wait_for_flag(RCC_FLAG_LSIRDY) == STD_RET_ERROR)
-                        goto exit_error;
+                        return STD_RET_ERROR;
         }
 
         if (_PLL_CFG__LSE_ON) {
                 RCC_LSEConfig(_PLL_CFG__LSE_ON);
                 if (wait_for_flag(RCC_FLAG_LSERDY) == STD_RET_ERROR)
-                        goto exit_error;
+                        return STD_RET_ERROR;
         }
 
         if (_PLL_CFG__HSE_ON) {
                 RCC_HSEConfig(_PLL_CFG__HSE_ON);
                 if (wait_for_flag(RCC_FLAG_HSERDY) == STD_RET_ERROR)
-                        goto exit_error;
+                        return STD_RET_ERROR;
         }
 
         RCC_RTCCLKConfig(_PLL_CFG__RTCCLK_SRC);
@@ -120,14 +120,14 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                 RCC_PLL2Config(_PLL_CFG__PLL2_MUL);
                 RCC_PLL2Cmd(_PLL_CFG__PLL2_ON);
                 if (wait_for_flag(RCC_FLAG_PLL2RDY) == STD_RET_ERROR)
-                        goto exit_error;
+                        return STD_RET_ERROR;
         }
 
         if (_PLL_CFG__PLL3_ON) {
                 RCC_PLL3Config(_PLL_CFG__PLL3_MUL);
                 RCC_PLL3Cmd(_PLL_CFG__PLL3_ON);
                 if (wait_for_flag(RCC_FLAG_PLL3RDY) == STD_RET_ERROR)
-                        goto exit_error;
+                        return STD_RET_ERROR;
         }
 
         RCC_I2S2CLKConfig(_PLL_CFG__I2S2_SRC);
@@ -142,7 +142,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLConfig(_PLL_CFG__PLL_SRC, _PLL_CFG__PLL_MUL);
         RCC_PLLCmd(_PLL_CFG__PLL_ON);
         if (wait_for_flag(RCC_FLAG_PLLRDY) == STD_RET_ERROR)
-                goto exit_error;
+                return STD_RET_ERROR;
 
         RCC_ADCCLKConfig(_PLL_CFG__ADC_PRE);
         RCC_PCLK2Config(_PLL_CFG__APB2_PRE);
@@ -155,92 +155,6 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         _cpuctl_update_system_clocks();
 
         return STD_RET_OK;
-
-exit_error:
-        errno = EIO;
-        return STD_RET_ERROR;
-
-//        (void) _module_name_;
-//
-//        u32_t wait;
-//
-//        /* turn on HSE oscillator */
-//        RCC->CR |= RCC_CR_HSEON;
-//
-//        /* waiting for HSE ready */
-//        wait = UINT32_MAX;
-//        while (!(RCC->CR & RCC_CR_HSERDY) && wait) {
-//                wait--;
-//        }
-//
-//        if (wait == 0) {
-//                errno = ETIME;
-//                return STD_RET_ERROR;
-//        }
-//
-//#define CONFIG_CPU_TARGET_FREQ 72000000
-//        /* wait states */
-//        if (CONFIG_CPU_TARGET_FREQ <= 24000000UL)
-//                FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
-//        else if (CONFIG_CPU_TARGET_FREQ <= 48000000UL)
-//                FLASH->ACR |= (0x01 & FLASH_ACR_LATENCY);
-//        else if (CONFIG_CPU_TARGET_FREQ <= 72000000UL)
-//                FLASH->ACR |= (0x02 & FLASH_ACR_LATENCY);
-//        else
-//                FLASH->ACR |= (0x03 & FLASH_ACR_LATENCY);
-//
-//        /* AHB prescaler  configuration (/1) */
-//        RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
-//
-//        /* APB1 prescaler configuration (/2) */
-//        RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
-//
-//        /* APB2 prescaler configuration (/1) */
-//        RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
-//
-//        /* FCLK cortex free running clock */
-//        SysTick->CTRL |= SysTick_CTRL_CLKSOURCE;
-//
-//        /* PLL source - HSE; PREDIV1 = 1; PLL x9 */
-//        RCC->CFGR2 |= RCC_CFGR2_PREDIV1SRC_HSE | RCC_CFGR2_PREDIV1_DIV1;
-//        RCC->CFGR  |= RCC_CFGR_PLLSRC_PREDIV1  | RCC_CFGR_PLLMULL9;
-//
-//        /* OTG USB set to 48 MHz (72*2 / 3)*/
-//        RCC->CFGR &= ~RCC_CFGR_OTGFSPRE;
-//
-//        /* I2S3 and I2S2 from SYSCLK */
-//        RCC->CFGR2 &= ~(RCC_CFGR2_I2S3SRC | RCC_CFGR2_I2S2SRC);
-//
-//        /* enable PLL */
-//        RCC->CR |= RCC_CR_PLLON;
-//
-//        /* waiting for PLL ready */
-//        wait = UINT32_MAX;
-//        while (!(RCC->CR & RCC_CR_PLLRDY) && wait) {
-//                wait--;
-//        }
-//
-//        if (wait == 0) {
-//                errno = ETIME;
-//                return STD_RET_ERROR;
-//        }
-//
-//        /* set PLL as system clock */
-//        RCC->CFGR |= RCC_CFGR_SW_PLL;
-//
-//        wait = UINT32_MAX;
-//        while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {
-//                wait--;
-//        }
-//
-//        if (wait == 0) {
-//                errno = ETIME;
-//                return STD_RET_ERROR;
-//        }
-//
-//        _cpuctl_update_system_clocks();
-//
-//        return STD_RET_OK;
 }
 
 //==============================================================================
@@ -486,6 +400,8 @@ static void enable_prefetch_buffer(void)
 /**
  * @brief Wait for flag set
  *
+ * ERRNO: EIO
+ *
  * @param flag          flag
  *
  * @return STD_RET_OK if success, STD_RET_ERROR on error
@@ -495,8 +411,10 @@ static stdret_t wait_for_flag(u32_t flag)
 {
         timer_t timer = timer_reset();
         while (RCC_GetFlagStatus(flag) == RESET) {
-                if (timer_is_expired(timer, TIMEOUT_MS))
+                if (timer_is_expired(timer, TIMEOUT_MS)) {
+                        errno = EIO;
                         return STD_RET_ERROR;
+                }
         }
 
         return STD_RET_OK;
