@@ -48,7 +48,7 @@ extern "C" {
 /* task ID string length (8B name + \0). ID is 32b hex number converted to string */
 #define TASK_ID_STR_LEN                 9
 
-#define FILE_DATA_SIZE                  200
+#define FILE_DATA_SIZE                  256
 
 #define DIR_TASKID_STR                  "taskid"
 #define DIR_TASKNAME_STR                "taskname"
@@ -1161,24 +1161,24 @@ static uint get_file_content(struct file_info *file_info, char *buff, uint size)
                                     "CPU name  : %s\n"
                                     "CPU vendor: %s\n"
                                     #if defined(ARCH_stm32f1)
-                                    "CPU    Mhz: %d\n"
-                                    "SYSCLK MHz: %d\n"
-                                    "PCLK1  MHz: %d\n"
-                                    "PCLK1T MHz: %d\n"
-                                    "PCLK2  MHz: %d\n"
-                                    "PCLK2T MHz: %d\n"
-                                    "ADCCLK MHz: %d\n"
+                                    "CPU    khz: %d\n"
+                                    "SYSCLK kHz: %d\n"
+                                    "PCLK1  kHz: %d\n"
+                                    "PCLK1T kHz: %d\n"
+                                    "PCLK2  kHz: %d\n"
+                                    "PCLK2T kHz: %d\n"
+                                    "ADCCLK kHz: %d\n"
                                     #endif
                                     ,_CPUCTL_PLATFORM_NAME
                                     ,_CPUCTL_VENDOR_NAME
                                     #if defined(ARCH_stm32f1)
-                                    ,freq.HCLK_Frequency / 1000000
-                                    ,freq.SYSCLK_Frequency / 1000000
-                                    ,freq.PCLK1_Frequency / 1000000
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 500000) : (freq.PCLK1_Frequency / 1000000)
-                                    ,freq.PCLK2_Frequency / 1000000
-                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 500000) : (freq.PCLK2_Frequency / 1000000)
-                                    ,freq.ADCCLK_Frequency / 1000000
+                                    ,freq.HCLK_Frequency / 1000
+                                    ,freq.SYSCLK_Frequency / 1000
+                                    ,freq.PCLK1_Frequency / 1000
+                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 500) : (freq.PCLK1_Frequency / 1000)
+                                    ,freq.PCLK2_Frequency / 1000
+                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 500) : (freq.PCLK2_Frequency / 1000)
+                                    ,freq.ADCCLK_Frequency / 1000
                                     #endif
                 );
         }
