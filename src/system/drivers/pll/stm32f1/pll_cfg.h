@@ -39,6 +39,201 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+/*------------------------------------------------------------------------------
+ * OSCILLATORS
+ *----------------------------------------------------------------------------*/
+/*
+ * LSI enable (1) or disable (0)
+ */
+#define _PLL_CFG__LSI_ON                0
+
+/*
+ * LSE enable (1) or disable (0)
+ */
+#define _PLL_CFG__LSE_ON                0
+
+/*
+ * HSE enable (1) or disable (0)
+ */
+#define _PLL_CFG__HSE_ON                1
+
+/*
+ * HSE bypass enable (1) or disable (0)
+ *
+ * Note: can be enabled only if HSE is disabled
+ */
+#define _PLL_CFG__HSE_BYPASS_ON         0
+
+
+/*------------------------------------------------------------------------------
+ * CLOCK SOURCES
+ *----------------------------------------------------------------------------*/
+/*
+ * RTC Clock source
+ * 0: LSI
+ * 1: LSE
+ * 2: HSI/128
+ */
+#define _PLL_CFG__RTCCLK_SRC            0
+
+/*
+ * System clock source
+ * 0: HSE
+ * 1: HSI
+ * 2: PLLCLK
+ */
+#define _PLL_CFG__SYSCLK_SRC            2
+
+/*
+ * MCO source
+ * 0: NO CLOCK
+ * 1: HSE
+ * 2: HSI
+ * 3: SYSCLK
+ * 4: PLLCLK/2
+ * 5: PLL2CLK                           [Connectivity line only]
+ * 6: PLL3CLK/2                         [Connectivity line only]
+ * 7: PLL3CLK                           [Connectivity line only]
+ * 8: XTAL                              [Connectivity line only]
+ */
+#define _PLL_CFG__MCO_SRC               0
+
+#ifdef STM32F10X_CL
+/*
+ * I2S clock source [Connectivity line]
+ * 0: SYSCLK
+ * 1: 2 x PLL3CLK
+ */
+#define _PLL_CFG__I2S_SRC               0
+#endif
+
+/*------------------------------------------------------------------------------
+ * PLL CONFIGURATION
+ *----------------------------------------------------------------------------*/
+#ifdef STM32F10X_CL
+/*
+ * PLL pre-divider 1 source (PREDIV1SRC) [Connectivity line]
+ * 0: HSE
+ * 1: PLL2CLK
+ */
+#define _PLL_CFG__PLL_PREDIV_SRC        0
+#endif
+
+#ifdef STM32F10X_CL
+/*
+ * PLL pre-divider 1 (PREDIV1) [Connectivity line]
+ * 1-16: divider value
+ */
+#define _PLL_CFG__PLL_PREDIV            1
+#endif
+
+#ifndef STM32F10X_CL
+/*
+ * PLL pre-divider (PLLXTPRE) [Low-, medium-, high- and XL-density]
+ * 0: HSE
+ * 1: HSE/2
+ */
+#define _PLL_CFG__PLL_XTPRE_SRC         0
+#endif
+
+/*
+ * PLL clock source (PLLSRC)
+ * 0: HSI/2
+ * 1: PLLXTPRE                          [Low-, medium-, high- and XL-density]
+ * 1: PREDIV1                           [Connectivity line]
+ */
+#define _PLL_CFG__PLL_SRC               1
+
+/*
+ * PLL multiplication (PLLMUL)
+ * 2-16                                 [Low-, medium-, high- and XL-density]
+ * 4-9                                  [Connectivity line]
+ * 10: x6.5                             [Connectivity line]
+ */
+#define _PLL_CFG__PLL_MUL               9
+
+/*
+ * USB prescaler
+ * 1: PLLCLK / 1                        [Low-, medium-, high- and XL-density]
+ * 2: PLLCLK / 1.5                      [Low-, medium-, high- and XL-density]
+ * 2: (2 x PLLCLK) / 2                  [Connectivity line]
+ * 3: (2 x PLLCLK) / 3                  [Connectivity line]
+ */
+#define _PLL_CFG__USB_DIV               3
+
+
+/*------------------------------------------------------------------------------
+ * PLL2 CONFIGURATION
+ *----------------------------------------------------------------------------*/
+#ifdef STM32F10X_CL
+/*
+ * PLL2 enable (1) or disable (0) [Connectivity line]
+ */
+#define _PLL_CFG__PLL2_ON               0
+
+/*
+ * PLL2 multiplication [Connectivity line]
+ * 8-14: multiplier range
+ * 16  : multiplier value
+ * 20  : multiplier value
+ */
+#define _PLL_CFG__PLL2_MUL              8
+
+/*
+ * PLL2/3 pre-divider (PREDIV2) [Connectivity line]
+ * 1-16: divider range
+ */
+#define _PLL_CFG__PLL23_PREDIV          1
+
+#endif
+
+
+/*------------------------------------------------------------------------------
+ * PLL3 CONFIGURATION
+ *----------------------------------------------------------------------------*/
+#ifdef STM32F10X_CL
+/*
+ * PLL3 enable (1) or disable (0) [Connectivity line]
+ */
+#define _PLL_CFG__PLL3_ON               0
+
+/*
+ * PLL3 multiplication [Connectivity line]
+ * 8-14: multiplier range
+ * 16  : multiplier value
+ * 20  : multiplier value
+ */
+#define _PLL_CFG__PLL3_MUL              8
+
+#endif
+
+
+/*------------------------------------------------------------------------------
+ * SYSTEM PRESCALERS
+ *----------------------------------------------------------------------------*/
+/*
+ * AHB prescaler (SYSCLK divider)
+ * 1-512: prescaler range
+ */
+#define _PLL_CFG__AHB_PRE               1
+
+/*
+ * APB1 prescaler (clock from AHB divider)
+ * 1, 2, 4, 8, 16: prescaler values
+ */
+#define _PLL_CFG__APB1_PRE              2
+
+/*
+ * APB2 prescaler (clock from AHB divider)
+ * 1, 2, 4, 8, 16: prescaler values
+ */
+#define _PLL_CFG__APB2_PRE              1
+
+/*
+ * ADC prescaler (clock from APB2 divider)
+ * 2, 4, 8: prescaler values
+ */
+#define _PLL_CFG__ADC_PRE               8
 
 /*==============================================================================
   Exported types, enums definitions

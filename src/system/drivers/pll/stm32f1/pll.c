@@ -36,6 +36,7 @@ extern "C" {
 #include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#include "stm32f1/cpuctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -97,6 +98,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                 return STD_RET_ERROR;
         }
 
+#define CONFIG_CPU_TARGET_FREQ 72000000
         /* wait states */
         if (CONFIG_CPU_TARGET_FREQ <= 24000000UL)
                 FLASH->ACR |= (0x00 & FLASH_ACR_LATENCY);
@@ -156,9 +158,10 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                 return STD_RET_ERROR;
         }
 
+        _cpuctl_update_system_clocks();
+
         return STD_RET_OK;
 }
-
 
 //==============================================================================
 /**
