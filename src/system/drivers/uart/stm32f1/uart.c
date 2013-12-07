@@ -36,6 +36,7 @@ extern "C" {
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/uart_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "stm32f1/lib/stm32f10x_rcc.h"
 #include <unistd.h>
 
 /*==============================================================================
@@ -187,10 +188,12 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
 
                 enable_USART(USART_data[major]->USART);
 
+                RCC_ClocksTypeDef freq;
+                RCC_GetClocksFreq(&freq);
                 if ((u32_t) USART_data[major]->USART == USART1_BASE) {
-                        set_baud_rate(USART_data[major]->USART, UART_PCLK2_FREQ, UART_DEFAULT_BAUDRATE);
+                        set_baud_rate(USART_data[major]->USART, freq.PCLK2_Frequency, UART_DEFAULT_BAUDRATE);
                 } else {
-                        set_baud_rate(USART_data[major]->USART, UART_PCLK1_FREQ, UART_DEFAULT_BAUDRATE);
+                        set_baud_rate(USART_data[major]->USART, freq.PCLK1_Frequency, UART_DEFAULT_BAUDRATE);
                 }
 
                 if (UART_DEFAULT_WAKE_METHOD) {
@@ -616,13 +619,17 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                 hdl->USART->DR = (int)arg;
                 break;
 
-        case UART_IORQ_SET_BAUDRATE:
+        case UART_IORQ_SET_BAUDRATE: {
+                RCC_ClocksTypeDef freq;
+                RCC_GetClocksFreq(&freq);
+
                 if ((u32_t)hdl->USART == USART1_BASE) {
-                        set_baud_rate(hdl->USART, UART_PCLK2_FREQ, (int)arg);
+                        set_baud_rate(hdl->USART, freq.PCLK2_Frequency, (int)arg);
                 } else {
-                        set_baud_rate(hdl->USART, UART_PCLK1_FREQ, (int)arg);
+                        set_baud_rate(hdl->USART, freq.PCLK1_Frequency, (int)arg);
                 }
                 break;
+        }
 
         default:
                 errno = EBADRQC;

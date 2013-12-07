@@ -1290,6 +1290,7 @@ static enum vt100cmd capture_VT100_commands(char chr)
                         vt100cmd = ESC_KEY;
                 }
 
+                tty_ctrl->tty_size_updated = true;
                 tty_ctrl->VT100_cmd_capture.is_pending = false;
                 memset(tty_ctrl->VT100_cmd_capture.buffer, 0, sizeof(tty_ctrl->VT100_cmd_capture.buffer));
 
@@ -1447,7 +1448,9 @@ static void read_vt100_size(void)
         const char *data = VT100_SAVE_CURSOR_POSITION
                            VT100_CURSOR_OFF
                            VT100_SET_CURSOR_POSITION(250, 250)
-                           VT100_QUERY_CURSOR_POSITION;
+                           VT100_QUERY_CURSOR_POSITION
+                           VT100_RESTORE_CURSOR_POSITION
+                           VT100_CURSOR_ON;
         vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 
         /* waiting for response from input function */
@@ -1455,11 +1458,6 @@ static void read_vt100_size(void)
         while (tty_ctrl->tty_size_updated == false) {
                 sleep_ms(5);
         }
-
-        /* restore cursor position, cursor on */
-        data = VT100_RESTORE_CURSOR_POSITION
-               VT100_CURSOR_ON;
-        vfs_fwrite(data, sizeof(char), strlen(data), tty_ctrl->io_stream);
 #endif
 }
 

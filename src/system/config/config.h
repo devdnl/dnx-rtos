@@ -33,15 +33,14 @@ extern "C" {
 
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
- * CPU oscillator frequence (mostly external quartz) [Hz]
+ * CPU start frequency [Hz] (frequency after power up, before clock configuration)
  */
-#define CONFIG_CPU_OSC_FREQ                             (8000000UL)
+#define CONFIG_CPU_START_FREQ                           (8000000UL)
 
 /**
- * CPU target frequency [Hz]
+ * CPU base frequency [Hz] (internal RC, oscillator or crystal frequency connected to PLL)
  */
-#define CONFIG_CPU_TARGET_FREQ                          (72000000UL)
-
+#define CONFIG_CPU_OSC_FREQ                             (8000000UL)
 
 /**=== MEMORY CONFIGURATION ==================================================*/
 /**

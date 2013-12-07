@@ -252,6 +252,8 @@ static enum cmd_status cmd_cd(char *arg)
                                  *(lastslash + 1) = '\0';
                          }
                 }
+        } else if (strcmp(arg, ".") == 0) {
+                /* do nothing */
         } else if (FIRST_CHARACTER(arg) != '/') {
                 newpath = calloc(strlen(arg) + strlen(global->cwd) + 2, ARRAY_ITEM_SIZE(global->cwd));
                 if (newpath) {

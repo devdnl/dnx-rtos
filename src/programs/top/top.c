@@ -132,8 +132,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 int mem_free  = get_free_memory();
 
                 println(CLEAR_SCREEN"Press q to quit or k to kill program\n");
-                println("Total tasks: %u\n", task_number);
-                println("Up time: %ud %2u:%2u\n", udays, uhrs, umins);
+                println("Total tasks: %u\tUp time: %ud %2u:%2u\n", task_number, udays, uhrs, umins);
                 println("Memory:\t%u total,\t%u used,\t%u free\n", mem_total, mem_used, mem_free);
                 println("Kernel  : %d\n", mem.used_kernel_memory);
                 println("System  : %d\n", mem.used_system_memory);

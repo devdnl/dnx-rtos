@@ -1,6 +1,7 @@
 dnx/FreeRTOS 1.2.1
 New Features, Improvements:
 - implemented SPI driver
+- implemented fully configurable STM32F10x PLL driver
 
 Fixed Bugs:
 - none

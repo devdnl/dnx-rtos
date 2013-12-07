@@ -31,15 +31,17 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "config.h"
 #include "stm32f1/cpuctl.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/misc.h"
-#include "stm32f1/pll_cfg.h"
+#include "stm32f1/lib/stm32f10x_rcc.h"
+#include "kernel/kwrapper.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define TIM2FREQ                          1000000UL
+#define TIM2FREQ                        1000000UL
 
 /*==============================================================================
   Local types, enums definitions
@@ -95,7 +97,12 @@ void _cpuctl_init_CPU_load_timer(void)
         RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
 
         /* configure timer */
-        TIM2->PSC = (PLL_APB1FREQ/TIM2FREQ) - 1;
+        RCC_ClocksTypeDef freq;
+        RCC_GetClocksFreq(&freq);
+        if (RCC->CFGR & RCC_CFGR_PPRE1_2)
+                freq.PCLK1_Frequency *= 2;
+
+        TIM2->PSC = (freq.PCLK1_Frequency/TIM2FREQ) - 1;
         TIM2->ARR = 0xFFFF;
         TIM2->CR1 = TIM_CR1_CEN;
 }
@@ -152,6 +159,27 @@ void _cpuctl_clear_CPU_total_time(void)
 void _cpuctl_sleep(void)
 {
         __WFI();
+}
+
+//==============================================================================
+/**
+ * @brief Function update all system clock after CPU frequency change
+ *
+ * Function shall update all devices which base on main clock oscillator.
+ * Function is called after clock/frequency change from clock management driver.
+ */
+//==============================================================================
+void _cpuctl_update_system_clocks(void)
+{
+        /* update CPU load timer frequency */
+        _cpuctl_init_CPU_load_timer();
+
+        /* update context switch counter frequency */
+        _critical_section_begin();
+        RCC_ClocksTypeDef freq;
+        RCC_GetClocksFreq(&freq);
+        SysTick_Config((freq.HCLK_Frequency / (u32_t)CONFIG_RTOS_TASK_SCHED_FREQ) - 1);
+        _critical_section_end();
 }
 
 #ifdef __cplusplus

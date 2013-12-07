@@ -71,7 +71,7 @@ const char *_regdrv_module_name[] = {
 const struct _driver_entry _regdrv_driver_table[] = {
         _USE_DRIVER_INTERFACE(UART  , "uart1" , UART_DEV_1         , UART_MINOR_NUMBER  ),
         _USE_DRIVER_INTERFACE(GPIO  , "gpio"  , GPIO_MAJOR_NUMBER  , GPIO_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(PLL   , "pll"   , PLL_MAJOR_NUMBER   , PLL_MINOR_NUMBER   ),
+        _USE_DRIVER_INTERFACE(PLL   , "pll"   , _PLL_MAJOR_NUMBER  , _PLL_MINOR_NUMBER  ),
         _USE_DRIVER_INTERFACE(TTY   , "tty0"  , TTY_DEV_0          , TTY_MINOR_NUMBER   ),
         _USE_DRIVER_INTERFACE(TTY   , "tty1"  , TTY_DEV_1          , TTY_MINOR_NUMBER   ),
         _USE_DRIVER_INTERFACE(TTY   , "tty2"  , TTY_DEV_2          , TTY_MINOR_NUMBER   ),

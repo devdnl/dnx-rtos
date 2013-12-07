@@ -241,7 +241,7 @@ static inline u32_t get_total_CPU_usage(void)
 //==============================================================================
 static inline const char *get_platform_name(void)
 {
-        return CPUCTL_PLATFORM_NAME;
+        return _CPUCTL_PLATFORM_NAME;
 }
 
 //==============================================================================
