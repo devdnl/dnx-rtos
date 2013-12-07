@@ -135,17 +135,13 @@ static int run_level_boot(void)
 static int run_level_0(void)
 {
         driver_init("gpio", "/dev/gpio");
-
-        int pll_init = driver_init("pll", NULL);
-
+        driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
 
-        if (pll_init != 0) {
-                FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
-                if (ttyS0) {
-                        ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / PLL_CPU_BASE_FREQ));
-                        fclose(ttyS0);
-                }
+        FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
+        if (ttyS0) {
+                ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200);
+                fclose(ttyS0);
         }
 
         driver_init("tty0", "/dev/tty0");
@@ -155,10 +151,6 @@ static int run_level_0(void)
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
-
-        if (pll_init != 0) {
-                printk(FONT_COLOR_RED"PLL not started, running no base frequency!"RESET_ATTRIBUTES"\n");
-        }
 
         driver_init("tty1", "/dev/tty1");
         driver_init("tty2", "/dev/tty2");
