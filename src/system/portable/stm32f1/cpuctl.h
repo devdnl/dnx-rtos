@@ -45,7 +45,8 @@ extern "C" {
 #define vPortSVCHandler                         SVC_Handler
 
 /* CPU/platform name */
-#define CPUCTL_PLATFORM_NAME                    "ARM Cortex-M3 STM32F1xx"
+#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M3 STM32F1xx"
+#define _CPUCTL_VENDOR_NAME                     "STMicroelectronics"
 
 /*==============================================================================
   Exported types, enums definitions
