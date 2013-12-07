@@ -99,6 +99,8 @@ void _cpuctl_init_CPU_load_timer(void)
         /* configure timer */
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
+        if (RCC->CFGR & RCC_CFGR_PPRE1_2)
+                freq.PCLK1_Frequency *= 2;
 
         TIM2->PSC = (freq.PCLK1_Frequency/TIM2FREQ) - 1;
         TIM2->ARR = 0xFFFF;

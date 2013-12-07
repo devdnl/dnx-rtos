@@ -48,8 +48,8 @@ extern "C" {
 #define PLL_IORQ_GET_PCLK1_FREQ         _IOR('p', 0x02, u32_t*)
 #define PLL_IORQ_GET_PCLK2_FREQ         _IOR('p', 0x03, u32_t*)
 #define PLL_IORQ_GET_ADCCLK_FREQ        _IOR('p', 0x04, u32_t*)
-#define PLL_IORQ_GET_PCLK1_TIM_FREQ     _IOR('p', 0x05, u32_t*) /* TODO */
-#define PLL_IORQ_GET_PCLK2_TIM_FREQ     _IOR('p', 0x05, u32_t*) /* TODO */
+#define PLL_IORQ_GET_PCLK1_TIM_FREQ     _IOR('p', 0x05, u32_t*)
+#define PLL_IORQ_GET_PCLK2_TIM_FREQ     _IOR('p', 0x06, u32_t*)
 
 /*==============================================================================
   Exported types, enums definitions

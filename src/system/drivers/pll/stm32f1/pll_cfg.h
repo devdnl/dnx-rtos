@@ -114,33 +114,24 @@ extern "C" {
 
 #ifdef STM32F10X_CL
 /*
- * I2S clock source [Connectivity line]
+ * I2S2 clock source
  * RCC_I2S2CLKSource_SYSCLK  : system clock selected as I2S2 clock entry
  * RCC_I2S2CLKSource_PLL3_VCO: PLL3 VCO clock selected as I2S2 clock entry
  */
-#define _PLL_CFG__I2S_SRC               RCC_I2S2CLKSource_SYSCLK
+#define _PLL_CFG__I2S2_SRC               RCC_I2S2CLKSource_SYSCLK
+
+/*
+ * I2S3 clock source
+ * RCC_I2S3CLKSource_SYSCLK  : system clock selected as I2S3 clock entry
+ * RCC_I2S3CLKSource_PLL3_VCO: PLL3 VCO clock selected as I2S3 clock entry
+ */
+#define _PLL_CFG__I2S3_SRC               RCC_I2S3CLKSource_SYSCLK
 #endif
+
 
 /*------------------------------------------------------------------------------
  * PLL CONFIGURATION
  *----------------------------------------------------------------------------*/
-#ifdef STM32F10X_CL
-/*
- * PLL pre-divider 1 source
- * RCC_PREDIV1_Source_HSE : HSE selected as PREDIV1 clock
- * RCC_PREDIV1_Source_PLL2: PLL2 selected as PREDIV1 clock
- */
-#define _PLL_CFG__PREDIV1_SRC           RCC_PREDIV1_Source_HSE
-#endif
-
-#ifdef STM32F10X_CL
-/*
- * PLL pre-divider 1 value
- * RCC_PREDIV1_Div1-16: divider value
- */
-#define _PLL_CFG__PREDIV1_VAL           RCC_PREDIV1_Div1
-#endif
-
 /*
  * PLL
  * ENABLE : enable main PLL
@@ -198,14 +189,31 @@ extern "C" {
 
 #ifdef STM32F10X_CL
 /*------------------------------------------------------------------------------
- * PLL2 CONFIGURATION
+ * PREDIVIDERS CONFIGURATION
  *----------------------------------------------------------------------------*/
 /*
- * PLL2/3 pre-divider (PREDIV2)
+ * PLL pre-divider 1 clock source
+ * RCC_PREDIV1_Source_HSE : HSE selected as PREDIV1 clock
+ * RCC_PREDIV1_Source_PLL2: PLL2 selected as PREDIV1 clock
+ */
+#define _PLL_CFG__PREDIV1_SRC           RCC_PREDIV1_Source_HSE
+
+/*
+ * PLL pre-divider 1 value
+ * RCC_PREDIV1_Div1-16: divider value
+ */
+#define _PLL_CFG__PREDIV1_VAL           RCC_PREDIV1_Div1
+
+/*
+ * PLL pre-divider 2 value
  * RCC_PREDIV2_Divx where x:[1,16]
  */
-#define _PLL_CFG__PLL_PREDIV2           RCC_PREDIV2_Div1
+#define _PLL_CFG__PLL_PREDIV2_VAL       RCC_PREDIV2_Div1
 
+
+/*------------------------------------------------------------------------------
+ * PLL2 CONFIGURATION
+ *----------------------------------------------------------------------------*/
 /*
  * PLL2
  * ENABLE : enable PLL2
@@ -218,10 +226,8 @@ extern "C" {
  * RCC_PLL2Mul_x where x:{[8,14], 16, 20}
  */
 #define _PLL_CFG__PLL2_MUL              RCC_PLL2Mul_8
-#endif
 
 
-#ifdef STM32F10X_CL
 /*------------------------------------------------------------------------------
  * PLL3 CONFIGURATION
  *----------------------------------------------------------------------------*/
