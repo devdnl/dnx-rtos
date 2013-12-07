@@ -171,6 +171,9 @@ API_MOD_RELEASE(PLL, void *device_handle)
 {
         UNUSED_ARG(device_handle);
 
+        RCC_DeInit();
+        _cpuctl_update_system_clocks();
+
         return STD_RET_OK;
 }
 
