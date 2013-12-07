@@ -84,7 +84,7 @@ extern "C" {
  * RCC_SYSCLKSource_HSE   : HSE selected as system clock
  * RCC_SYSCLKSource_PLLCLK: PLL selected as system clock
  */
-#define _PLL_CFG__SYSCLK_SRC            RCC_SYSCLKSource_HSE
+#define _PLL_CFG__SYSCLK_SRC            RCC_SYSCLKSource_PLLCLK
 
 #ifdef STM32F10X_CL
 /*
