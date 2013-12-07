@@ -134,84 +134,84 @@ static const struct cs_pin_cfg spi_cs_pin_cfg[_SPI_NUMBER][MAX_NUMBER_OF_CS] = {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         {
                 #if (MAX_NUMBER_OF_CS >= 1)
-                {port: (GPIO_t *)_SPI1_CS0_PORT, pin_mask: (1 << _SPI1_CS0_PIN)},
+                {.port = (GPIO_t *)_SPI1_CS0_PORT, .pin_mask = (1 << _SPI1_CS0_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 2)
-                {port: (GPIO_t *)_SPI1_CS1_PORT, pin_mask: (1 << _SPI1_CS1_PIN)},
+                {.port = (GPIO_t *)_SPI1_CS1_PORT, .pin_mask = (1 << _SPI1_CS1_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 3)
-                {port: (GPIO_t *)_SPI1_CS2_PORT, pin_mask: (1 << _SPI1_CS2_PIN)},
+                {.port = (GPIO_t *)_SPI1_CS2_PORT, .pin_mask = (1 << _SPI1_CS2_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 4)
-                {port: (GPIO_t *)_SPI1_CS3_PORT, pin_mask: (1 << _SPI1_CS3_PIN)},
+                {.port = (GPIO_t *)_SPI1_CS3_PORT, .pin_mask = (1 << _SPI1_CS3_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 5)
-                {port: (GPIO_t *)_SPI1_CS4_PORT, pin_mask: (1 << _SPI1_CS4_PIN)},
+                {.port = (GPIO_t *)_SPI1_CS4_PORT, .pin_mask = (1 << _SPI1_CS4_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 6)
-                {port: (GPIO_t *)_SPI1_CS5_PORT, pin_mask: (1 << _SPI1_CS5_PIN)},
+                {.port = (GPIO_t *)_SPI1_CS5_PORT, .pin_mask = (1 << _SPI1_CS5_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 7)
-                {port: (GPIO_t *)_SPI1_CS6_PORT, pin_mask: (1 << _SPI1_CS6_PIN)},
+                {.port = (GPIO_t *)_SPI1_CS6_PORT, .pin_mask = (1 << _SPI1_CS6_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 8)
-                {port: (GPIO_t *)_SPI1_CS7_PORT, pin_mask: (1 << _SPI1_CS7_PIN)}
+                {.port = (GPIO_t *)_SPI1_CS7_PORT, .pin_mask = (1 << _SPI1_CS7_PIN)}
                 #endif
         },
         #endif
         #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
         {
                 #if (MAX_NUMBER_OF_CS >= 1)
-                {port: (GPIO_t *)_SPI2_CS0_PORT, pin_mask: (1 << _SPI2_CS0_PIN)},
+                {.port = (GPIO_t *)_SPI2_CS0_PORT, .pin_mask = (1 << _SPI2_CS0_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 2)
-                {port: (GPIO_t *)_SPI2_CS1_PORT, pin_mask: (1 << _SPI2_CS1_PIN)},
+                {.port = (GPIO_t *)_SPI2_CS1_PORT, .pin_mask = (1 << _SPI2_CS1_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 3)
-                {port: (GPIO_t *)_SPI2_CS2_PORT, pin_mask: (1 << _SPI2_CS2_PIN)},
+                {.port = (GPIO_t *)_SPI2_CS2_PORT, .pin_mask = (1 << _SPI2_CS2_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 4)
-                {port: (GPIO_t *)_SPI2_CS3_PORT, pin_mask: (1 << _SPI2_CS3_PIN)},
+                {.port = (GPIO_t *)_SPI2_CS3_PORT, .pin_mask = (1 << _SPI2_CS3_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 5)
-                {port: (GPIO_t *)_SPI2_CS4_PORT, pin_mask: (1 << _SPI2_CS4_PIN)},
+                {.port = (GPIO_t *)_SPI2_CS4_PORT, .pin_mask = (1 << _SPI2_CS4_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 6)
-                {port: (GPIO_t *)_SPI2_CS5_PORT, pin_mask: (1 << _SPI2_CS5_PIN)},
+                {.port = (GPIO_t *)_SPI2_CS5_PORT, .pin_mask = (1 << _SPI2_CS5_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 7)
-                {port: (GPIO_t *)_SPI2_CS6_PORT, pin_mask: (1 << _SPI2_CS6_PIN)},
+                {.port = (GPIO_t *)_SPI2_CS6_PORT, .pin_mask = (1 << _SPI2_CS6_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 8)
-                {port: (GPIO_t *)_SPI2_CS7_PORT, pin_mask: (1 << _SPI2_CS7_PIN)}
+                {.port = (GPIO_t *)_SPI2_CS7_PORT, .pin_mask = (1 << _SPI2_CS7_PIN)}
                 #endif
         },
         #endif
         #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
         {
                 #if (MAX_NUMBER_OF_CS >= 1)
-                {port: (GPIO_t *)_SPI3_CS0_PORT, pin_mask: (1 << _SPI3_CS0_PIN)},
+                {.port = (GPIO_t *)_SPI3_CS0_PORT, .pin_mask = (1 << _SPI3_CS0_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 2)
-                {port: (GPIO_t *)_SPI3_CS1_PORT, pin_mask: (1 << _SPI3_CS1_PIN)},
+                {.port = (GPIO_t *)_SPI3_CS1_PORT, .pin_mask = (1 << _SPI3_CS1_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 3)
-                {port: (GPIO_t *)_SPI3_CS2_PORT, pin_mask: (1 << _SPI3_CS2_PIN)},
+                {.port = (GPIO_t *)_SPI3_CS2_PORT, .pin_mask = (1 << _SPI3_CS2_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 4)
-                {port: (GPIO_t *)_SPI3_CS3_PORT, pin_mask: (1 << _SPI3_CS3_PIN)},
+                {.port = (GPIO_t *)_SPI3_CS3_PORT, .pin_mask = (1 << _SPI3_CS3_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 5)
-                {port: (GPIO_t *)_SPI3_CS4_PORT, pin_mask: (1 << _SPI3_CS4_PIN)},
+                {.port = (GPIO_t *)_SPI3_CS4_PORT, .pin_mask = (1 << _SPI3_CS4_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 6)
-                {port: (GPIO_t *)_SPI3_CS5_PORT, pin_mask: (1 << _SPI3_CS5_PIN)},
+                {.port = (GPIO_t *)_SPI3_CS5_PORT, .pin_mask = (1 << _SPI3_CS5_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 7)
-                {port: (GPIO_t *)_SPI3_CS6_PORT, pin_mask: (1 << _SPI3_CS6_PIN)},
+                {.port = (GPIO_t *)_SPI3_CS6_PORT, .pin_mask = (1 << _SPI3_CS6_PIN)},
                 #endif
                 #if (MAX_NUMBER_OF_CS >= 8)
-                {port: (GPIO_t *)_SPI3_CS7_PORT, pin_mask: (1 << _SPI3_CS7_PIN)}
+                {.port = (GPIO_t *)_SPI3_CS7_PORT, .pin_mask = (1 << _SPI3_CS7_PIN)}
                 #endif
         }
         #endif
@@ -233,22 +233,22 @@ static const u8_t spi_number_of_slaves[_SPI_NUMBER] = {
 /* IRQ configurations */
 static const struct spi_priority_cfg spi_irq[_SPI_NUMBER] = {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
-        {IRQn: SPI1_IRQn, priority: _SPI1_IRQ_PRIORITY},
+        {.IRQn = SPI1_IRQn, .priority = _SPI1_IRQ_PRIORITY},
         #endif
         #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
-        {IRQn: SPI2_IRQn, priority: _SPI2_IRQ_PRIORITY},
+        {.IRQn = SPI2_IRQn, .priority = _SPI2_IRQ_PRIORITY},
         #endif
         #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
-        {IRQn: SPI3_IRQn, priority: _SPI3_IRQ_PRIORITY}
+        {.IRQn = SPI3_IRQn, .priority = _SPI3_IRQ_PRIORITY}
         #endif
 };
 
 /* default SPI config */
 static const struct SPI_config spi_default_cfg = {
-        dummy_byte : _SPI_DEFAULT_CFG_DUMMY_BYTE,
-        clk_divider: _SPI_DEFAULT_CFG_CLK_DIVIDER,
-        mode       : _SPI_DEFAULT_CFG_MODE,
-        msb_first  : _SPI_DEFAULT_CFG_MSB_FIRST
+        .dummy_byte  = _SPI_DEFAULT_CFG_DUMMY_BYTE,
+        .clk_divider = _SPI_DEFAULT_CFG_CLK_DIVIDER,
+        .mode        = _SPI_DEFAULT_CFG_MODE,
+        .msb_first   = _SPI_DEFAULT_CFG_MSB_FIRST
 };
 
 /* pointers to memory of specified device */

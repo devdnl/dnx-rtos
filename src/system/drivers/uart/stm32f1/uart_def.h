@@ -40,63 +40,64 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** UART minor number */
-#define UART_MINOR_NUMBER                       0
+/* UART minor number */
+#define _UART_MINOR_NUMBER                              0
 
-/** port names */
-enum UART_MAJOR_NUMBER
+/* port names */
+enum
 {
-#if defined(RCC_APB2ENR_USART1EN) && (UART_1_ENABLE > 0)
-        UART_DEV_1,
-#endif
-
-#if defined(RCC_APB1ENR_USART2EN) && (UART_2_ENABLE > 0)
-        UART_DEV_2,
-#endif
-
-#if defined(RCC_APB1ENR_USART3EN) && (UART_3_ENABLE > 0)
-        UART_DEV_3,
-#endif
-
-#if defined(RCC_APB1ENR_UART4EN) && (UART_4_ENABLE > 0)
-        UART_DEV_4,
-#endif
-
-#if defined(RCC_APB1ENR_UART5EN) && (UART_5_ENABLE > 0)
-        UART_DEV_5,
-#endif
-
-        UART_DEV_COUNT
+        #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
+        _UART1,
+        #endif
+        #if defined(RCC_APB1ENR_USART2EN) && (_UART2_ENABLE > 0)
+        _UART2,
+        #endif
+        #if defined(RCC_APB1ENR_USART3EN) && (_UART3_ENABLE > 0)
+        _UART3,
+        #endif
+        #if defined(RCC_APB1ENR_UART4EN) && (_UART4_ENABLE > 0)
+        _UART4,
+        #endif
+        #if defined(RCC_APB1ENR_UART5EN) && (_UART5_ENABLE > 0)
+        _UART5,
+        #endif
+        _UART_NUMBER
 };
 
-/** IO request for UART driver */
-#define UART_IORQ_ENABLE_WAKEUP_IDLE                    _IO( 'U', 0x00)
-#define UART_IORQ_ENABLE_WAKEUP_ADDRESS_MARK            _IO( 'U', 0x01)
-#define UART_IORQ_ENABLE_PARITY_CHECK                   _IO( 'U', 0x02)
-#define UART_IORQ_DISABLE_PARITY_CHECK                  _IO( 'U', 0x03)
-#define UART_IORQ_SET_ODD_PARITY                        _IO( 'U', 0x04)
-#define UART_IORQ_SET_EVEN_PARITY                       _IO( 'U', 0x05)
-#define UART_IORQ_ENABLE_RECEIVER_WAKEUP_MUTE           _IO( 'U', 0x06)
-#define UART_IORQ_DISABLE_RECEIVER_WAKEUP_MUTE          _IO( 'U', 0x07)
-#define UART_IORQ_ENABLE_LIN_MODE                       _IO( 'U', 0x08)
-#define UART_IORQ_DISABLE_LIN_MODE                      _IO( 'U', 0x09)
-#define UART_IORQ_SET_1_STOP_BIT                        _IO( 'U', 0x0A)
-#define UART_IORQ_SET_2_STOP_BITS                       _IO( 'U', 0x0B)
-#define UART_IORQ_SET_LIN_BRK_DETECTOR_11_BITS          _IO( 'U', 0x0C)
-#define UART_IORQ_SET_LIN_BRK_DETECTOR_10_BITS          _IO( 'U', 0x0D)
-#define UART_IORQ_SET_ADDRESS_NODE                      _IOW('U', 0x0E, int)
-#define UART_IORQ_ENABLE_CTS                            _IO( 'U', 0x0F)
-#define UART_IORQ_DISABLE_CTS                           _IO( 'U', 0x10)
-#define UART_IORQ_ENABLE_RTS                            _IO( 'U', 0x11)
-#define UART_IORQ_DISABLE_RTS                           _IO( 'U', 0x12)
-#define UART_IORQ_GET_BYTE                              _IOR('U', 0x13, u8_t*)
-#define UART_IORQ_GET_BYTE_BLOCKING                     _IOR('U', 0x14, u8_t*)
-#define UART_IORQ_SEND_BYTE                             _IOW('U', 0x15, int)
-#define UART_IORQ_SET_BAUDRATE                          _IOW('U', 0x16, int)
+/* IO request for UART driver */
+#define UART_IORQ_SET_CONFIGURATION                     _IOW('U', 0x00, struct UART_config*)
+#define UART_IORQ_GET_CONFIGURATION                     _IOR('U', 0x01, struct UART_config*)
+#define UART_IORQ_GET_CHAR_UNBLOCKING                   _IOR('U', 0x02, char*)
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+enum UART_parity {
+        UART_PARITY_OFF,
+        UART_PARITY_ODD,
+        UART_PARITY_EVEN
+};
+
+enum UART_stop_bits {
+        UART_STOP_BIT_1,
+        UART_STOP_BIT_2
+};
+
+enum UART_LIN_break_length {
+        UART_LIN_BREAK_10_BITS,
+        UART_LIN_BREAK_11_BITS
+};
+
+struct UART_config {
+        enum UART_parity                parity                  : 2;
+        enum UART_stop_bits             stop_bits               : 1;
+        enum UART_LIN_break_length      LIN_break_length        : 1;
+        bool                            tx_enable               : 1;
+        bool                            rx_enable               : 1;
+        bool                            lin_mode_enable         : 1;
+        bool                            hardware_flow_ctrl      : 1;
+        u32_t                           baud                    : 24;
+};
 
 /*==============================================================================
   Exported object declarations

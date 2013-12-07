@@ -52,7 +52,7 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 /** port names */
-enum SPI_MAJOR_NUMBER
+enum
 {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         _SPI1,

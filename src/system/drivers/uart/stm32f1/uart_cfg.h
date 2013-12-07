@@ -39,72 +39,48 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** user UART1 enable (1) or disable (0) */
-#define UART_1_ENABLE                           1
+/* UART1 enable (1) or disable (0) */
+#define _UART1_ENABLE                           1
 
-/** user UART2 enable (1) or disable (0) */
-#define UART_2_ENABLE                           0
+/* UART2 enable (1) or disable (0) */
+#define _UART2_ENABLE                           1
 
-/** user UART3 enable (1) or disable (0) */
-#define UART_3_ENABLE                           0
+/* UART3 enable (1) or disable (0) */
+#define _UART3_ENABLE                           1
 
-/** user UART4 enable (1) or disable (0) */
-#define UART_4_ENABLE                           0
+/* UART4 enable (1) or disable (0) */
+#define _UART4_ENABLE                           1
 
-/** user UART5 enable (1) or disable (0) */
-#define UART_5_ENABLE                           0
+/* UART5 enable (1) or disable (0) */
+#define _UART5_ENABLE                           1
 
-/** IRQ priority */
-#define UART_IRQ_PRIORITY                       CONFIG_USER_IRQ_PRIORITY
+/* UART1 IRQ priority */
+#define _UART1_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
 
-/** UART wake method: idle line (0) or address mark (1) */
-#define UART_DEFAULT_WAKE_METHOD                0
+/* UART1 IRQ priority */
+#define _UART2_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
 
-/** parity enable (1) or disable (0) */
-#define UART_DEFAULT_PARITY_ENABLE              0
+/* UART1 IRQ priority */
+#define _UART3_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
 
-/** even parity (0) or odd parity (1) */
-#define UART_DEFAULT_PARITY_SELECTION           0
+/* UART1 IRQ priority */
+#define _UART4_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
 
-/** disable (0) or enable (1) UART transmitter */
-#define UART_DEFAULT_TX_ENABLE                  1
+/* UART1 IRQ priority */
+#define _UART5_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
 
-/** disable (0) or enable (1) UART receiver */
-#define UART_DEFAULT_RX_ENABLE                  1
+/* RX buffer size [B] */
+#define _UART_RX_BUFFER_SIZE                    128
 
-/** receiver wakeup: active mode (0) or mute mode (1) */
-#define UART_DEFAULT_RX_WAKEUP_MODE             0
-
-/** LIN mode disable (0) or enable (1) */
-#define UART_DEFAULT_LIN_ENABLE                 0
-
-/** 1 stop bit (0) or 2 stop bits (1) */
-#define UART_DEFAULT_STOP_BITS                  0
-
-/** LIN break detector length: 10 bits (0) or 11 bits (1) */
-#define UART_DEFAULT_LIN_BREAK_LEN_DET          0
-
-/** address of the USART node (in the multiprocessor mode), 4-bit length */
-#define UART_DEFAULT_MULTICOM_ADDRESS           0
-
-/** baud rate */
-#define UART_DEFAULT_BAUDRATE                   115200
-
-/** CTS hardware flow control enable (1) or disable (0) */
-#define UART_DEFAULT_CTS_ENABLE                 0
-
-/** RTS hardware flow control enable (1) or disable (0) */
-#define UART_DEFAULT_RTS_ENABLE                 0
-
-
-/** PCLK1 frequency */
-#define UART_PCLK1_FREQ                         36000000UL
-
-/** PCLK2 frequency */
-#define UART_PCLK2_FREQ                         72000000UL
-
-/** RX buffer size [B] */
-#define UART_RX_BUFFER_SIZE                     128
+/* UART default configuration */
+#define _UART_DEFAULT_PARITY                    UART_PARITY_OFF
+#define _UART_DEFAULT_STOP_BITS                 UART_STOP_BIT_1
+#define _UART_DEFAULT_LIN_BREAK_LEN             UART_LIN_BREAK_10_BITS
+#define _UART_DEFAULT_TX_ENABLE                 true
+#define _UART_DEFAULT_RX_ENABLE                 true
+#define _UART_DEFAULT_LIN_MODE_ENABLE           false
+#define _UART_DEFAULT_HW_FLOW_CTRL              false
+#define _UART_DEFAULT_BAUD                      115200
 
 /*==============================================================================
   Exported types, enums definitions
