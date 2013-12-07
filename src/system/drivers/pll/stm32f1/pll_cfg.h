@@ -212,28 +212,36 @@ extern "C" {
  * SYSTEM PRESCALERS
  *----------------------------------------------------------------------------*/
 /*
- * AHB prescaler (SYSCLK divider)
+ * AHB prescaler (in: SYSCLK)
  * 1-512: prescaler range
  */
 #define _PLL_CFG__AHB_PRE               1
 
 /*
- * APB1 prescaler (clock from AHB divider)
+ * APB1 prescaler (in: clock from AHB prescaler)
  * 1, 2, 4, 8, 16: prescaler values
  */
 #define _PLL_CFG__APB1_PRE              2
 
 /*
- * APB2 prescaler (clock from AHB divider)
+ * APB2 prescaler (in: clock from AHB prescaler)
  * 1, 2, 4, 8, 16: prescaler values
  */
 #define _PLL_CFG__APB2_PRE              1
 
 /*
- * ADC prescaler (clock from APB2 divider)
+ * ADC prescaler (in: clock from APB2 prescaler)
  * 2, 4, 8: prescaler values
  */
 #define _PLL_CFG__ADC_PRE               8
+
+/*
+ * Flash Latency (Flash wait-state)
+ * 0: SYSCLK <= 24MHz
+ * 1: SYSCLK <= 48MHz
+ * 2: SYSCLK <= 72MHz
+ */
+#define _PLL_CFG__FLASH_LATENCY         2
 
 /*==============================================================================
   Exported types, enums definitions
