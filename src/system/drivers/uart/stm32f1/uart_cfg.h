@@ -43,16 +43,16 @@ extern "C" {
 #define _UART1_ENABLE                           1
 
 /* UART2 enable (1) or disable (0) */
-#define _UART2_ENABLE                           1
+#define _UART2_ENABLE                           0
 
 /* UART3 enable (1) or disable (0) */
-#define _UART3_ENABLE                           1
+#define _UART3_ENABLE                           0
 
 /* UART4 enable (1) or disable (0) */
-#define _UART4_ENABLE                           1
+#define _UART4_ENABLE                           0
 
 /* UART5 enable (1) or disable (0) */
-#define _UART5_ENABLE                           1
+#define _UART5_ENABLE                           0
 
 /* UART1 IRQ priority */
 #define _UART1_IRQ_PRIORITY                     CONFIG_USER_IRQ_PRIORITY
@@ -80,6 +80,7 @@ extern "C" {
 #define _UART_DEFAULT_RX_ENABLE                 true
 #define _UART_DEFAULT_LIN_MODE_ENABLE           false
 #define _UART_DEFAULT_HW_FLOW_CTRL              false
+#define _UART_DEFAULT_SINGLE_WIRE_MODE          false
 #define _UART_DEFAULT_BAUD                      115200
 
 /*==============================================================================

@@ -94,9 +94,10 @@ struct UART_config {
         enum UART_LIN_break_length      LIN_break_length        : 1;
         bool                            tx_enable               : 1;
         bool                            rx_enable               : 1;
-        bool                            lin_mode_enable         : 1;
+        bool                            LIN_mode_enable         : 1;
         bool                            hardware_flow_ctrl      : 1;
-        u32_t                           baud                    : 24;
+        bool                            single_wire_mode        : 1;
+        u32_t                           baud                    : 23;
 };
 
 /*==============================================================================

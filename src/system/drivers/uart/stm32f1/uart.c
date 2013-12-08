@@ -47,39 +47,6 @@ extern "C" {
 #define RX_WAIT_TIMEOUT                         MAX_DELAY
 #define MTX_BLOCK_TIMEOUT                       MAX_DELAY
 
-
-/** translation of configuration bits to function-like macros */
-#define wakeup_USART_on_address_mark(usart)     usart->CR1 |=  USART_CR1_WAKE
-#define wakeup_USART_on_idle_line(usart)        usart->CR1 &= ~USART_CR1_WAKE
-#define enable_parity_check(usart)              usart->CR1 |=  USART_CR1_PCE
-#define disable_parity_check(usart)             usart->CR1 &= ~USART_CR1_PCE
-#define enable_odd_parity(usart)                usart->CR1 |=  USART_CR1_PS
-#define enable_even_parity(usart)               usart->CR1 &= ~USART_CR1_PS
-#define enable_transmitter(usart)               usart->CR1 |=  USART_CR1_TE
-#define disable_transmitter(usart)              usart->CR1 &= ~USART_CR1_TE
-#define enable_receiver(usart)                  usart->CR1 |=  USART_CR1_RE
-#define disable_receiver(usart)                 usart->CR1 &= ~USART_CR1_RE
-#define receiver_wakeup_in_mute_mode(usart)     usart->CR1 |=  USART_CR1_RWU
-#define receiver_wakeup_in_active_mode(usart)   usart->CR1 &= ~USART_CR1_RWU
-#define enable_LIN_mode(usart)                  usart->CR2 |=  USART_CR2_LINEN
-#define disable_LIN_mode(usart)                 usart->CR2 &= ~USART_CR2_LINEN
-#define set_1_stop_bit(usart)                   usart->CR2 &= ~USART_CR2_STOP
-#define set_2_stop_bits(usart)                  while (0) {usart->CR2 &= ~USART_CR2_STOP; usart->CR2 |= USART_CR2_STOP_1;}
-#define detect_10_bit_LIN_break(usart)          usart->CR2 &= ~USART_CR2_LBDL
-#define detect_11_bit_LIN_break(usart)          usart->CR2 |=  USART_CR2_LBDL
-#define set_address_node(usart, adr)            while (0) {usart->CR2 &= ~USART_CR2_ADD; usart->CR2 |= (adr & USART_CR2_ADD);}
-#define set_baud_rate(usart, clk, baud)         usart->BRR = (u16_t)(((u32_t)clk / (u32_t)baud) + 1)
-#define enable_CTS(usart)                       usart->CR3 |=  USART_CR3_CTSE
-#define disable_CTS(usart)                      usart->CR3 &= ~USART_CR3_CTSE
-#define enable_RTS(usart)                       usart->CR3 |=  USART_CR3_RTSE
-#define disable_RTS(usart)                      usart->CR3 &= ~USART_CR3_RTSE
-#define enable_USART(usart)                     usart->CR1 |=  USART_CR1_UE
-#define disable_USART(usart)                    usart->CR1 &= ~UART_CR1_UE1
-#define enable_RXNE_IRQ(usart)                  usart->CR1 |=  USART_CR1_RXNEIE
-#define disable_RXNE_IRQ(usart)                 usart->CR1 &= ~UART_CR1_RXNEIE
-#define enable_TXE_IRQ(usart)                   usart->CR1 |=  USART_CR1_TXEIE
-#define disable_TXE_IRQ(usart)                  usart->CR1 &= ~USART_CR1_TXEIE
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -144,7 +111,7 @@ static USART_t *const uart[_UART_NUMBER] = {
 };
 
 /* irq configuration */
-static const struct irq_cfg irq[_UART_NUMBER] = {
+static const struct irq_cfg uart_irq[_UART_NUMBER] = {
         #if defined(RCC_APB2ENR_USART1EN) && (_UART1_ENABLE > 0)
         {.irqn = USART1_IRQn, .priority = _UART1_IRQ_PRIORITY},
         #endif
@@ -169,8 +136,9 @@ static const struct UART_config uart_default_config = {
         .LIN_break_length   = _UART_DEFAULT_LIN_BREAK_LEN,
         .tx_enable          = _UART_DEFAULT_TX_ENABLE,
         .rx_enable          = _UART_DEFAULT_RX_ENABLE,
-        .lin_mode_enable    = _UART_DEFAULT_LIN_MODE_ENABLE,
+        .LIN_mode_enable    = _UART_DEFAULT_LIN_MODE_ENABLE,
         .hardware_flow_ctrl = _UART_DEFAULT_HW_FLOW_CTRL,
+        .single_wire_mode   = _UART_DEFAULT_SINGLE_WIRE_MODE,
         .baud               = _UART_DEFAULT_BAUD
 };
 
@@ -217,8 +185,11 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                    && uart_data[major]->port_lock_rx_mtx
                    && uart_data[major]->port_lock_tx_mtx) {
 
-                        uart_data[major]->major = major;
+                        uart_data[major]->major  = major;
+                        uart_data[major]->config = uart_default_config;
 
+                        NVIC_EnableIRQ(uart_irq[major].irqn);
+                        NVIC_SetPriority(uart_irq[major].irqn, uart_irq[major].priority);
                         uart_turn_on(uart[major]);
                         configure_uart(major, (struct UART_config *)&uart_default_config);
 
@@ -335,7 +306,7 @@ API_MOD_CLOSE(UART, void *device_handle, bool force, const task_t *opened_by_tas
 
         return STD_RET_OK;
 }
-
+#include "stm32f1/gpio_cfg.h" /* FIXME */
 //==============================================================================
 /**
  * @brief Write data to device
@@ -358,6 +329,8 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
 
         struct UART_data *hdl = device_handle;
 
+        GPIO_CLEAR_PIN(SD_CS); /* FIXME */
+
         ssize_t n = 0;
         if (mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT)) {
                 hdl->Tx_buffer.src_ptr   = src;
@@ -373,6 +346,8 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
                 errno = EBUSY;
                 n     = -1;
         }
+
+        GPIO_SET_PIN(SD_CS); /* FIXME */
 
         return n;
 }
@@ -637,7 +612,97 @@ static stdret_t uart_turn_off(USART_t *USART)
 //==============================================================================
 static void configure_uart(u8_t major, struct UART_config *config)
 {
-        /* TODO */
+        USART_t *UART = uart[major];
+
+        /* set baud */
+        RCC_ClocksTypeDef freq;
+        RCC_GetClocksFreq(&freq);
+
+        u32_t PCLK;
+        if ((u32_t)UART == USART1_BASE) {
+                PCLK = freq.PCLK2_Frequency;
+        } else {
+                PCLK = freq.PCLK1_Frequency;
+        }
+
+        UART->BRR = (PCLK / (config->baud)) + 1;
+
+        /* set 8 bit word length and wake idle line */
+        CLEAR_BIT(UART->CR1, USART_CR1_M | USART_CR1_WAKE);
+
+        /* set parity */
+        switch (config->parity) {
+        case UART_PARITY_OFF:
+                CLEAR_BIT(UART->CR1, USART_CR1_PCE);
+                break;
+        case UART_PARITY_EVEN:
+                SET_BIT(UART->CR1, USART_CR1_PCE);
+                CLEAR_BIT(UART->CR1, USART_CR1_PS);
+                break;
+        case UART_PARITY_ODD:
+                SET_BIT(UART->CR1, USART_CR1_PCE);
+                SET_BIT(UART->CR1, USART_CR1_PS);
+                break;
+        }
+
+        /* transmitter enable */
+        if (config->tx_enable) {
+                SET_BIT(UART->CR1, USART_CR1_TE);
+        } else {
+                CLEAR_BIT(UART->CR1, USART_CR1_TE);
+        }
+
+        /* receiver enable */
+        if (config->rx_enable) {
+                SET_BIT(UART->CR1, USART_CR1_RE);
+        } else {
+                CLEAR_BIT(UART->CR1, USART_CR1_RE);
+        }
+
+        /* enable LIN if configured */
+        if (config->LIN_mode_enable) {
+                SET_BIT(UART->CR2, USART_CR2_LINEN);
+        } else {
+                CLEAR_BIT(UART->CR2, USART_CR2_LINEN);
+        }
+
+        /* configure stop bits */
+        if (config->stop_bits == UART_STOP_BIT_1) {
+                CLEAR_BIT(UART->CR2, USART_CR2_STOP);
+        } else {
+                CLEAR_BIT(UART->CR2, USART_CR2_STOP);
+                SET_BIT(UART->CR2, USART_CR2_STOP_1);
+        }
+
+        /* clock configuration (synchronous mode) */
+        CLEAR_BIT(UART->CR2, USART_CR2_CLKEN | USART_CR2_CPOL | USART_CR2_CPHA | USART_CR2_LBCL);
+
+        /* LIN break detection length */
+        if (config->LIN_break_length == UART_LIN_BREAK_10_BITS) {
+                CLEAR_BIT(UART->CR2, USART_CR2_LBDL);
+        } else {
+                SET_BIT(UART->CR2, USART_CR2_LBDL);
+        }
+
+        /* hardware flow control */
+        if (config->hardware_flow_ctrl) {
+                SET_BIT(UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
+        } else {
+                CLEAR_BIT(UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
+        }
+
+        /* configure single wire mode */
+        if (config->single_wire_mode) {
+                SET_BIT(UART->CR3, USART_CR3_HDSEL);
+        } else {
+                CLEAR_BIT(UART->CR3, USART_CR3_HDSEL);
+        }
+
+        /* enable RXNE interrupt */
+        SET_BIT(UART->CR1, USART_CR1_RXNEIE);
+
+        /* enable UART */
+        SET_BIT(UART->CR1, USART_CR1_UE);
 }
 
 //==============================================================================
@@ -706,24 +771,29 @@ static void handle_irq(u8_t major)
         USART_t *UART = uart[major];
 
         /* transmitter interrupt handler */
-        if (UART->SR & USART_SR_TXE) {
+        if ((UART->SR & USART_SR_TXE) && (UART->CR1 & USART_CR1_TXEIE)) {
                 if (uart_data[major]->Tx_buffer.data_size && uart_data[major]->Tx_buffer.src_ptr) {
                         UART->DR = *(uart_data[major]->Tx_buffer.src_ptr++);
 
                         if (--uart_data[major]->Tx_buffer.data_size == 0) {
                                 uart_data[major]->Tx_buffer.src_ptr = NULL;
 
+                                UART->SR = USART_SR_TC;
                                 CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
-                                semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
+                                SET_BIT(UART->CR1, USART_CR1_TCIE);
                         }
                 } else {
+                        /* this shall never happen */
                         CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
                         semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
                 }
+        } else if ((UART->SR & USART_SR_TC) && (UART->CR1 & USART_CR1_TCIE)) {
+                CLEAR_BIT(UART->CR1, USART_CR1_TCIE);
+                semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
         }
 
         /* receiver interrupt handler */
-        if (UART->SR & USART_SR_RXNE) {
+        if ((UART->SR & USART_SR_RXNE) && (UART->CR1 & USART_CR1_RXNEIE)) {
                 u8_t DR = UART->DR;
 
                 if (fifo_write(&uart_data[major]->Rx_FIFO, &DR)) {

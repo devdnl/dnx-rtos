@@ -140,7 +140,18 @@ static int run_level_0(void)
 
         FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
         if (ttyS0) {
-                ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200);
+                struct UART_config cfg;
+                cfg.LIN_mode_enable    = false;
+                cfg.LIN_break_length   = UART_LIN_BREAK_10_BITS;
+                cfg.baud               = 115200;
+                cfg.hardware_flow_ctrl = false;
+                cfg.parity             = UART_PARITY_OFF;
+                cfg.rx_enable          = true;
+                cfg.tx_enable          = true;
+                cfg.single_wire_mode   = false;
+                cfg.stop_bits          = UART_STOP_BIT_1;
+
+                ioctl(ttyS0, UART_IORQ_SET_CONFIGURATION, &cfg);
                 fclose(ttyS0);
         }
 
