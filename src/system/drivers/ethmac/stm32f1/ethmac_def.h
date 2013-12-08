@@ -40,8 +40,8 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define ETHMAC_MAJOR_NUMBER                             0
-#define ETHMAC_MINOR_NUMBER                             0
+#define _ETHMAC_MAJOR_NUMBER                            0
+#define _ETHMAC_MINOR_NUMBER                            0
 
 #define ETHMAC_IORQ_ETHERNET_INIT                       _IO ('E', 0x00)
 #define ETHMAC_IORQ_GET_RX_FLAG                         _IOR('E', 0x01, bool*)
