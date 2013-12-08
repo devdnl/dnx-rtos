@@ -306,7 +306,7 @@ API_MOD_CLOSE(UART, void *device_handle, bool force, const task_t *opened_by_tas
 
         return STD_RET_OK;
 }
-#include "stm32f1/gpio_cfg.h" /* FIXME */
+
 //==============================================================================
 /**
  * @brief Write data to device
@@ -329,8 +329,6 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
 
         struct UART_data *hdl = device_handle;
 
-        GPIO_CLEAR_PIN(SD_CS); /* FIXME */
-
         ssize_t n = 0;
         if (mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT)) {
                 hdl->Tx_buffer.src_ptr   = src;
@@ -346,8 +344,6 @@ API_MOD_WRITE(UART, void *device_handle, const u8_t *src, size_t count, u64_t *f
                 errno = EBUSY;
                 n     = -1;
         }
-
-        GPIO_SET_PIN(SD_CS); /* FIXME */
 
         return n;
 }
@@ -378,11 +374,12 @@ API_MOD_READ(UART, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         if (mutex_lock(hdl->port_lock_rx_mtx, MTX_BLOCK_TIMEOUT)) {
                 while (count--) {
                         if (semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT)) {
-                                critical_section_begin();
+                                CLEAR_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
                                 if (fifo_read(&hdl->Rx_FIFO, dst)) {
+                                        dst++;
                                         n++;
                                 }
-                                critical_section_end();
+                                SET_BIT(uart[hdl->major]->CR1, USART_CR1_RXNEIE);
                         }
                 }
 
@@ -771,29 +768,30 @@ static void handle_irq(u8_t major)
         USART_t *UART = uart[major];
 
         /* transmitter interrupt handler */
-        if ((UART->SR & USART_SR_TXE) && (UART->CR1 & USART_CR1_TXEIE)) {
+        if ((UART->CR1 & USART_CR1_TXEIE) && (UART->SR & USART_SR_TXE)) {
+
                 if (uart_data[major]->Tx_buffer.data_size && uart_data[major]->Tx_buffer.src_ptr) {
                         UART->DR = *(uart_data[major]->Tx_buffer.src_ptr++);
 
                         if (--uart_data[major]->Tx_buffer.data_size == 0) {
-                                uart_data[major]->Tx_buffer.src_ptr = NULL;
-
-                                UART->SR = USART_SR_TC;
-                                CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
+                                UART->SR = ~USART_SR_TC;
                                 SET_BIT(UART->CR1, USART_CR1_TCIE);
+                                CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
+                                uart_data[major]->Tx_buffer.src_ptr = NULL;
                         }
                 } else {
                         /* this shall never happen */
                         CLEAR_BIT(UART->CR1, USART_CR1_TXEIE);
                         semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
                 }
-        } else if ((UART->SR & USART_SR_TC) && (UART->CR1 & USART_CR1_TCIE)) {
+        } else if ((UART->CR1 & USART_CR1_TCIE) && (UART->SR & USART_SR_TC)) {
+
                 CLEAR_BIT(UART->CR1, USART_CR1_TCIE);
                 semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
         }
 
         /* receiver interrupt handler */
-        if ((UART->SR & USART_SR_RXNE) && (UART->CR1 & USART_CR1_RXNEIE)) {
+        if ((UART->CR1 & USART_CR1_RXNEIE) && (UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
                 u8_t DR = UART->DR;
 
                 if (fifo_write(&uart_data[major]->Rx_FIFO, &DR)) {
