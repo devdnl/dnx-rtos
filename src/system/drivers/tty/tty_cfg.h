@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support configuration of TTY
+@brief   This file support configuration of TTY.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -38,23 +38,26 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** define TTY max supported lines */
-#define TTY_MAX_LINES               40
+/* default terminal width */
+#define _TTY_DEFAULT_TERMINAL_WIDTH     80
 
-/** define output stream size (from keyboard) */
-#define TTY_STREAM_SIZE             80
+/* default terminal height */
+#define _TTY_DEFAULT_TERMINAL_HEIGHT    40
 
-/** define edit line length */
-#define TTY_EDIT_LINE_LEN           80
+/* output stream size (output queue) */
+#define _TTY_STREAM_SIZE                80
 
-/** define number of virtual terminals */
-#define TTY_NUMBER_OF_VT            4
+/* edit line length */
+#define _TTY_EDIT_LINE_LEN              80
 
-/** enable (1) or disable (0) checking terminal size */
-#define TTY_TERM_SIZE_CHECK         0
+/* number of virtual terminals */
+#define _TTY_NUMBER_OF_VT               4
 
-/** file used by TTY connected to VT100 terminal */
-#define TTY_IF_FILE                 "/dev/ttyS0"
+/* enable (1) or disable (0) checking terminal size */
+#define _TTY_TERM_SIZE_CHECK            1
+
+/* input/outout file */
+#define _TTY_IO_FILE                    "/dev/ttyS0"
 
 /*==============================================================================
   Exported object types
