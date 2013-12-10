@@ -51,7 +51,7 @@ extern "C" {
 #define TTY_NUMBER_OF_VT            4
 
 /** enable (1) or disable (0) checking terminal size */
-#define TTY_TERM_SIZE_CHECK         1
+#define TTY_TERM_SIZE_CHECK         0
 
 /** file used by TTY connected to VT100 terminal */
 #define TTY_IF_FILE                 "/dev/ttyS0"
