@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support virtual terminal
+@brief   This file support virtual terminal.
 
 @note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -36,6 +36,7 @@ extern "C" {
 #include "system/dnx.h"
 #include "tty_cfg.h"
 #include "tty_def.h"
+#include "tty.h"
 #include <unistd.h>
 
 /*==============================================================================
@@ -87,7 +88,7 @@ extern "C" {
 ==============================================================================*/
 /* independent TTY device */
 struct tty_data {
-        struct screen_struct{
+        struct screen_struct {
                 char    *line[TTY_MAX_LINES];
                 u16_t    write_index;
                 u16_t    new_line_counter;
