@@ -116,14 +116,14 @@ extern "C" {
  * RCC_I2S2CLKSource_SYSCLK  : system clock selected as I2S2 clock entry
  * RCC_I2S2CLKSource_PLL3_VCO: PLL3 VCO clock selected as I2S2 clock entry
  */
-#define _PLL_CFG__I2S2_SRC               RCC_I2S2CLKSource_SYSCLK
+#define _PLL_CFG__I2S2_SRC              RCC_I2S2CLKSource_SYSCLK
 
 /*
  * I2S3 clock source
  * RCC_I2S3CLKSource_SYSCLK  : system clock selected as I2S3 clock entry
  * RCC_I2S3CLKSource_PLL3_VCO: PLL3 VCO clock selected as I2S3 clock entry
  */
-#define _PLL_CFG__I2S3_SRC               RCC_I2S3CLKSource_SYSCLK
+#define _PLL_CFG__I2S3_SRC              RCC_I2S3CLKSource_SYSCLK
 #endif
 
 

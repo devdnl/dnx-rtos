@@ -38,8 +38,8 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define GPIO_MAJOR_NUMBER       0
-#define GPIO_MINOR_NUMBER       0
+#define _GPIO_MAJOR_NUMBER      0
+#define _GPIO_MINOR_NUMBER      0
 
 /*==============================================================================
   Exported types, enums definitions

@@ -593,8 +593,8 @@ API_MOD_STAT(ETHMAC, void *device_handle, struct vfs_dev_stat *device_stat)
         STOP_IF(!device_stat);
 
         device_stat->st_size  = 0;
-        device_stat->st_major = ETHMAC_MAJOR_NUMBER;
-        device_stat->st_minor = ETHMAC_MINOR_NUMBER;
+        device_stat->st_major = _ETHMAC_MAJOR_NUMBER;
+        device_stat->st_minor = _ETHMAC_MINOR_NUMBER;
 
         return STD_RET_OK;
 }
