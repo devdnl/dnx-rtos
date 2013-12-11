@@ -55,6 +55,7 @@ typedef struct tty_editline tty_editline_t;
 /* buffer support ----------------------------------------------------------- */
 extern tty_buffer_t    *ttybfr_new              ();
 extern void             ttybfr_delete           (tty_buffer_t*);
+extern void             ttybfr_add_line         (tty_buffer_t*, const char*, size_t);
 
 /* editline support --------------------------------------------------------- */
 extern tty_editline_t  *ttyedit_new             (FILE*);

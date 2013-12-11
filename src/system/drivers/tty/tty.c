@@ -44,18 +44,11 @@ extern "C" {
 ==============================================================================*/
 #define SERVICE_IN_NAME                         "tty-in"
 #define SERVICE_OUT_NAME                        "tty-out"
-#define SERVICE_IN_STACK_DEPTH                  STACK_DEPTH_VERY_LOW /* - 20 */
-#define SERVICE_OUT_STACK_DEPTH                 STACK_DEPTH_VERY_LOW /* - 23 */
+#define SERVICE_IN_STACK_DEPTH                  STACK_DEPTH_VERY_LOW
+#define SERVICE_OUT_STACK_DEPTH                 STACK_DEPTH_VERY_LOW
 #define SERVICE_IN_PRIORITY                     0
-#define SERVICE_IN_PRIORITY                     0
-
+#define SERVICE_OUT_PRIORITY                    0
 #define QUEUE_CMD_LEN                           16
-
-
-
-
-
-#define BLOCK_TIME                              10000
 
 #define VT100_RESET_ATTRIBUTES                  "\e[0m"
 #define VT100_CLEAR_SCREEN                      "\e[2J"
@@ -90,7 +83,8 @@ extern "C" {
 enum cmd {
         CMD_INPUT,
         CMD_SWITCH_TTY,
-        CMD_CLEAR_TTY
+        CMD_CLEAR_TTY,
+        CMD_ADDED_LINE
 };
 
 typedef struct {
@@ -122,6 +116,8 @@ struct module {
 ==============================================================================*/
 static void service_out (void *arg);
 static void service_in  (void *arg);
+static void send_cmd    (enum cmd cmd, u8_t arg);
+static void vt100_init  ();
 
 /*==============================================================================
   Local object definitions
@@ -249,6 +245,9 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 ttyedit_delete(tty->editline);
                 tty_module->tty[tty->major] = NULL;
                 free(tty);
+
+                /* TODO module release needed if all TTYs released */
+
                 critical_section_end();
 
                 return STD_RET_OK;
@@ -319,7 +318,20 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
         STOP_IF(src == NULL);
         STOP_IF(count == 0);
 
-        return 0;
+        tty_t *tty = device_handle;
+
+        ssize_t n = 0;
+
+        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
+                ttybfr_add_line(tty->screen, (const char *)src, count);
+                send_cmd(CMD_ADDED_LINE, tty->major);
+                mutex_unlock(tty->secure_mtx);
+        } else {
+                errno = ETIME;
+                n     = -1;
+        }
+
+        return n;
 }
 
 //==============================================================================
@@ -342,7 +354,18 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         STOP_IF(dst == NULL);
         STOP_IF(count == 0);
 
-        return 0;
+        tty_t *tty = device_handle;
+
+        ssize_t n = 0;
+
+        while (count--) {
+                if (queue_receive(tty->queue_out, dst, MAX_DELAY)) {
+                        dst++;
+                        n++;
+                }
+        }
+
+        return n;
 }
 
 //==============================================================================
@@ -395,6 +418,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         case TTY_IORQ_CLEAR_SCR:
+                send_cmd(CMD_CLEAR_TTY, tty->major);
                 break;
 
         case TTY_IORQ_ECHO_ON:
@@ -464,12 +488,12 @@ static void service_in(void *arg)
 {
         UNUSED_ARG(arg);
 
-        tty_cmd_t cmd;
-        cmd.cmd = CMD_INPUT;
+        task_set_priority(SERVICE_IN_PRIORITY);
 
         for (;;) {
-                if (vfs_fread(&cmd.arg, 1, 1, tty_module->iofile) > 0) {
-                        queue_send(tty_module->queue_cmd, &cmd, MAX_DELAY);
+                char c;
+                if (vfs_fread(&c, 1, 1, tty_module->iofile) > 0) {
+                        send_cmd(CMD_INPUT, c);
                 }
         }
 }
@@ -483,9 +507,64 @@ static void service_out(void *arg)
 {
         UNUSED_ARG(arg);
 
-        for (;;) {
+        task_set_priority(SERVICE_OUT_PRIORITY);
 
+        vt100_init();
+
+        for (;;) {
+                tty_cmd_t rq;
+
+                if (queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY)) {
+                        switch (rq.cmd) {
+                        case CMD_INPUT:
+                                break;
+
+                        case CMD_CLEAR_TTY:
+                                break;
+
+                        case CMD_SWITCH_TTY:
+                                if (rq.arg < _TTY_NUMBER) {
+                                        tty_module->current_tty = rq.arg;
+                                }
+                                break;
+
+                        case CMD_ADDED_LINE:
+                                break;
+                        }
+                }
         }
+}
+
+//==============================================================================
+/**
+ * @brief Send command to main service
+ *
+ * @param cmd           a command
+ * @param arg           an argument
+ */
+//==============================================================================
+static void send_cmd(enum cmd cmd, u8_t arg)
+{
+        tty_cmd_t rq;
+        rq.cmd = cmd;
+        rq.arg = arg;
+
+        queue_send(tty_module->queue_cmd, &rq, MAX_DELAY);
+}
+
+//==============================================================================
+/**
+ * @brief Configure VT100 terminal
+ */
+//==============================================================================
+static void vt100_init()
+{
+        const char *cmd = VT100_RESET_ATTRIBUTES
+                          VT100_CLEAR_SCREEN
+                          VT100_DISABLE_LINE_WRAP
+                          VT100_CURSOR_HOME;
+
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->iofile);
 }
 
 #ifdef __cplusplus

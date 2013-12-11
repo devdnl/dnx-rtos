@@ -121,6 +121,20 @@ void ttybfr_delete(tty_buffer_t *bfr)
 
 //==============================================================================
 /**
+ * @brief Add new line to buffer
+ *
+ * @param bfr           buffer object
+ * @param src           source
+ * @param len           length
+ */
+//==============================================================================
+void ttybfr_add_line(tty_buffer_t *bfr, const char *src, size_t len)
+{
+
+}
+
+//==============================================================================
+/**
  * @brief Initialize editline
  *
  * @param out_file      output file object
