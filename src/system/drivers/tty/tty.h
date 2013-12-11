@@ -42,6 +42,8 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct tty_buffer   tty_buffer_t;
+typedef struct tty_editline tty_editline_t;
 
 /*==============================================================================
   Exported objects
@@ -50,6 +52,15 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+/* buffer support ----------------------------------------------------------- */
+extern tty_buffer_t    *ttybfr_new              ();
+extern void             ttybfr_delete           (tty_buffer_t*);
+
+/* editline support --------------------------------------------------------- */
+extern tty_editline_t  *ttyedit_new             (FILE*);
+extern void             ttyedit_delete          (tty_editline_t*);
+extern void             ttyedit_echo_enable     (tty_editline_t*);
+extern void             ttyedit_echo_disable    (tty_editline_t*);
 
 /*==============================================================================
   Exported inline functions

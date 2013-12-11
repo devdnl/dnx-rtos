@@ -41,7 +41,7 @@ extern "C" {
 /* default terminal width */
 #define _TTY_DEFAULT_TERMINAL_WIDTH     80
 
-/* default terminal height */
+/* default terminal height (buffer size in lines) */
 #define _TTY_DEFAULT_TERMINAL_HEIGHT    40
 
 /* output stream size (output queue) */
