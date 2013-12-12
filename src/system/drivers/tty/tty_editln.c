@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    tty_bfr.c
+@file    tty_editln.c
 
 @author  Daniel Zorychta
 
-@brief   Code in this file is responsible for buffer support.
+@brief
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -38,17 +38,18 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define BUFFER_VALIDATION                       (u32_t)0xFF49421D
+#define EDITLINE_VALIDATION                     (u32_t)0x6921363E
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
-struct ttybfr {
-        char    *line[_TTY_DEFAULT_TERMINAL_HEIGHT];
+struct ttyedit {
+        FILE    *out_file;
+        char    *buffer[_TTY_EDIT_LINE_LEN + 1];
         u32_t    valid;
-        u16_t    write_index;
-        u16_t    read_index;
-        u16_t    new_line_cnt;
+        u16_t    length;
+        u16_t    cursor_position;
+        bool     echo_enabled;
 };
 
 /*==============================================================================
@@ -74,64 +75,64 @@ MODULE_NAME("TTY");
 
 //==============================================================================
 /**
- * @brief Initialize buffer
+ * @brief Initialize editline
  *
- * @param bfr           buffer address
+ * @param out_file      output file object
  *
- * @return if success buffer object, NULL on error
+ * @param edit line object address if success, NULL on error
  */
 //==============================================================================
-ttybfr_t *ttybfr_new()
+ttyedit_t *ttyedit_new(FILE *out_file)
 {
-        ttybfr_t *bfr = calloc(1, sizeof(ttybfr_t));
-        if (bfr) {
-                bfr->valid = BUFFER_VALIDATION;
+        ttyedit_t *edit = calloc(1, sizeof(ttyedit_t));
+        if (edit) {
+                edit->valid        = EDITLINE_VALIDATION;
+                edit->out_file     = out_file;
+                edit->echo_enabled = true;
         }
 
-        return bfr;
+        return edit;
 }
 
 //==============================================================================
 /**
- * @brief Destroy buffer object
+ * @brief Destroy editline
  *
- * @param bfr           buffer object
+ * @param edit          editline object
  */
 //==============================================================================
-void ttybfr_delete(ttybfr_t *bfr)
+void ttyedit_delete(ttyedit_t *edit)
 {
-        if (bfr) {
-                if (bfr->valid == BUFFER_VALIDATION) {
-                        bfr->valid = 0;
-                        free(bfr);
+        if (edit) {
+                if (edit->valid == EDITLINE_VALIDATION) {
+                        edit->valid = 0;
+                        free(edit);
                 }
         }
 }
 
 //==============================================================================
 /**
- * @brief Add new line to buffer
+ * @brief Enable editline echo
  *
- * @param bfr           buffer object
- * @param src           source
- * @param len           length
+ * @param edit          editline object
  */
 //==============================================================================
-void ttybfr_add_line(ttybfr_t *bfr, const char *src, size_t len)
+void ttyedit_echo_enable(ttyedit_t *edit)
 {
-
+        edit->echo_enabled = true;
 }
 
 //==============================================================================
 /**
- * @brief Clear whole terminal
+ * @brief Disable editline echo
  *
- * @param bfr           buffer object
+ * @param edit          editline object
  */
 //==============================================================================
-extern void ttybfr_clear(ttybfr_t *bfr)
+void ttyedit_echo_disable(ttyedit_t *edit)
 {
-
+        edit->echo_enabled = false;
 }
 
 #ifdef __cplusplus

@@ -84,7 +84,7 @@ enum cmd {
         CMD_INPUT,
         CMD_SWITCH_TTY,
         CMD_CLEAR_TTY,
-        CMD_ADDED_LINE
+        CMD_LINE_ADDED
 };
 
 typedef struct {
@@ -95,8 +95,9 @@ typedef struct {
 typedef struct {
        queue_t         *queue_out;
        mutex_t         *secure_mtx;
-       tty_buffer_t    *screen;
-       tty_editline_t  *editline;
+       ttybfr_t        *screen;
+       ttyedit_t       *editline;
+       ttycmd_t        *vtcmd;
        u8_t             major;
 } tty_t;
 
@@ -114,10 +115,11 @@ struct module {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void service_out (void *arg);
-static void service_in  (void *arg);
-static void send_cmd    (enum cmd cmd, u8_t arg);
-static void vt100_init  ();
+static void     service_out     (void *arg);
+static void     service_in      (void *arg);
+static void     send_cmd        (enum cmd cmd, u8_t arg);
+static void     vt100_init      ();
+static void     vt100_analyze   (const char c);
 
 /*==============================================================================
   Local object definitions
@@ -193,8 +195,9 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 tty->secure_mtx = mutex_new(MUTEX_NORMAL);
                 tty->screen     = ttybfr_new();
                 tty->editline   = ttyedit_new(tty_module->iofile);
+                tty->vtcmd      = ttycmd_new();
 
-                if (tty->queue_out && tty->secure_mtx && tty->screen && tty->editline) {
+                if (tty->queue_out && tty->secure_mtx && tty->screen && tty->editline && tty->vtcmd) {
 
                         tty->major             = major;
                         tty_module->tty[major] = tty;
@@ -213,6 +216,9 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
                         if (tty->editline)
                                 ttyedit_delete(tty->editline);
+
+                        if (tty->vtcmd)
+                                ttycmd_delete(tty->vtcmd);
 
                         free(tty);
                 }
@@ -243,8 +249,16 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 queue_delete(tty->queue_out);
                 ttybfr_delete(tty->screen);
                 ttyedit_delete(tty->editline);
+                ttycmd_delete(tty->vtcmd);
                 tty_module->tty[tty->major] = NULL;
                 free(tty);
+
+
+//                for (int i = 0; i < _TTY_NUMBER; i++) {
+//                        if (tty_module->tty[i]) {
+//                                return STD_RET_OK;
+//                        }
+//                }
 
                 /* TODO module release needed if all TTYs released */
 
@@ -324,7 +338,7 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
                 ttybfr_add_line(tty->screen, (const char *)src, count);
-                send_cmd(CMD_ADDED_LINE, tty->major);
+                send_cmd(CMD_LINE_ADDED, tty->major);
                 mutex_unlock(tty->secure_mtx);
         } else {
                 errno = ETIME;
@@ -517,18 +531,26 @@ static void service_out(void *arg)
                 if (queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY)) {
                         switch (rq.cmd) {
                         case CMD_INPUT:
+                                vt100_analyze(rq.arg);
                                 break;
 
                         case CMD_CLEAR_TTY:
-                                break;
-
-                        case CMD_SWITCH_TTY:
                                 if (rq.arg < _TTY_NUMBER) {
-                                        tty_module->current_tty = rq.arg;
+                                        ttybfr_clear(tty_module->tty[rq.arg]->screen);
                                 }
                                 break;
 
-                        case CMD_ADDED_LINE:
+                        case CMD_SWITCH_TTY:
+                                if (ttycmd_is_idle(tty_module->tty[tty_module->current_tty]->vtcmd)) {
+                                        if (rq.arg < _TTY_NUMBER) {
+                                                tty_module->current_tty = rq.arg;
+                                        }
+                                } else {
+                                        queue_send(tty_module->queue_cmd, &rq, 0);
+                                }
+                                break;
+
+                        case CMD_LINE_ADDED:
                                 break;
                         }
                 }
@@ -565,6 +587,69 @@ static void vt100_init()
                           VT100_CURSOR_HOME;
 
         vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->iofile);
+}
+
+//==============================================================================
+/**
+ * @brief Control analyzis of VT100 input stream
+ *
+ * @param c             input character
+ */
+//==============================================================================
+static void vt100_analyze(const char c)
+{
+        tty_t *tty = tty_module->tty[tty_module->current_tty];
+
+        switch (ttycmd_analyze(tty->vtcmd, c)) {
+        case TTYCMD_KEY_ENTER:
+                break;
+        case TTYCMD_KEY_BACKSPACE:
+                break;
+        case TTYCMD_KEY_DELETE:
+                break;
+        case TTYCMD_KEY_ARROW_LEFT:
+                break;
+        case TTYCMD_KEY_ARROW_RIGHT:
+                break;
+        case TTYCMD_KEY_ARROW_UP:
+                break;
+        case TTYCMD_KEY_ARROW_DOWN:
+                break;
+        case TTYCMD_KEY_HOME:
+                break;
+        case TTYCMD_KEY_END:
+                break;
+        case TTYCMD_KEY_ESC:
+                break;
+        case TTYCMD_KEY_F1:
+                break;
+        case TTYCMD_KEY_F2:
+                break;
+        case TTYCMD_KEY_F3:
+                break;
+        case TTYCMD_KEY_F4:
+                break;
+        case TTYCMD_KEY_F5:
+                break;
+        case TTYCMD_KEY_F6:
+                break;
+        case TTYCMD_KEY_F7:
+                break;
+        case TTYCMD_KEY_F8:
+                break;
+        case TTYCMD_KEY_F9:
+                break;
+        case TTYCMD_KEY_F10:
+                break;
+        case TTYCMD_KEY_F11:
+                break;
+        case TTYCMD_KEY_F12:
+                break;
+        case TTYCMD_KEY_CHAR:
+                break;
+        default:
+                break;
+        }
 }
 
 #ifdef __cplusplus
