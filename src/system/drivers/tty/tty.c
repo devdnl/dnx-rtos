@@ -253,17 +253,23 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 tty_module->tty[tty->major] = NULL;
                 free(tty);
 
+                /* initialize whole module if all TTYs released */
+                for (int i = 0; i < _TTY_NUMBER; i++) {
+                        if (tty_module->tty[i]) {
+                                critical_section_end();
+                                return STD_RET_OK;
+                        }
+                }
 
-//                for (int i = 0; i < _TTY_NUMBER; i++) {
-//                        if (tty_module->tty[i]) {
-//                                return STD_RET_OK;
-//                        }
-//                }
+                vfs_fclose(tty_module->iofile);
+                task_delete(tty_module->service_in);
+                task_delete(tty_module->service_out);
+                queue_delete(tty_module->queue_cmd);
 
-                /* TODO module release needed if all TTYs released */
+                free(tty_module);
+                tty_module = NULL;
 
                 critical_section_end();
-
                 return STD_RET_OK;
         } else {
                 return STD_RET_ERROR;
@@ -530,27 +536,56 @@ static void service_out(void *arg)
 
                 if (queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY)) {
                         switch (rq.cmd) {
-                        case CMD_INPUT:
+                        case CMD_INPUT: {
                                 vt100_analyze(rq.arg);
                                 break;
+                        }
 
-                        case CMD_CLEAR_TTY:
-                                if (rq.arg < _TTY_NUMBER) {
-                                        ttybfr_clear(tty_module->tty[rq.arg]->screen);
-                                }
-                                break;
+                        case CMD_CLEAR_TTY: {
+                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg]) {
+                                        tty_t *tty = tty_module->tty[rq.arg];
 
-                        case CMD_SWITCH_TTY:
-                                if (ttycmd_is_idle(tty_module->tty[tty_module->current_tty]->vtcmd)) {
-                                        if (rq.arg < _TTY_NUMBER) {
-                                                tty_module->current_tty = rq.arg;
+                                        if (mutex_lock(tty->secure_mtx, 100)) {
+                                                ttybfr_clear(tty->screen);
+                                                mutex_unlock(tty->secure_mtx);
                                         }
-                                } else {
-                                        queue_send(tty_module->queue_cmd, &rq, 0);
                                 }
                                 break;
+                        }
 
-                        case CMD_LINE_ADDED:
+                        case CMD_SWITCH_TTY: {
+                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg]) {
+                                        tty_t *tty = tty_module->tty[tty_module->current_tty];
+
+                                        if (ttycmd_is_idle(tty->vtcmd)) {
+                                                tty_module->current_tty = rq.arg;
+                                        } else {
+                                                queue_send(tty_module->queue_cmd, &rq, 0);
+                                        }
+                                }
+                                break;
+                        }
+
+                        case CMD_LINE_ADDED: {
+                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg]) {
+                                        tty_t *tty = tty_module->tty[rq.arg];
+
+                                        if (mutex_lock(tty->secure_mtx, 100)) {
+                                                const char *str;
+                                                do {
+                                                        str = ttybfr_get_fresh_line(tty->screen);
+                                                        if (str && rq.arg == tty_module->current_tty) {
+                                                                vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
+                                                        }
+                                                } while (str);
+
+                                                mutex_unlock(tty->secure_mtx);
+                                        }
+                                }
+                                break;
+                        }
+
+                        default:
                                 break;
                         }
                 }

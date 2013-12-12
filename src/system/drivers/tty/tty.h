@@ -86,6 +86,7 @@ extern ttybfr_t        *ttybfr_new              ();
 extern void             ttybfr_delete           (ttybfr_t*);
 extern void             ttybfr_add_line         (ttybfr_t*, const char*, size_t);
 extern void             ttybfr_clear            (ttybfr_t*);
+extern const char      *ttybfr_get_fresh_line   (ttybfr_t*);
 
 /* editline support --------------------------------------------------------- */
 extern ttyedit_t       *ttyedit_new             (FILE*);

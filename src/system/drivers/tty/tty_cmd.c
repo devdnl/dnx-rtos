@@ -39,16 +39,17 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define TTYCMD_VALIDATION                       (u32_t)0x7D8498F1
+#define VALIDATION_TOKEN                       (u32_t)0x7D8498F1
+#define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttycmd {
-        u32_t   valid;
-        bool    analyzing;
-        u8_t    analyze_step;
-        timer_t timer;
+        const u32_t     valid;
+        bool            analyzing;
+        u8_t            analyze_step;
+        timer_t         timer;
 };
 
 /*==============================================================================
@@ -83,7 +84,7 @@ ttycmd_t *ttycmd_new()
 {
         ttycmd_t *ttycmd = calloc(1, sizeof(ttycmd_t));
         if (ttycmd) {
-                ttycmd->valid = TTYCMD_VALIDATION;
+                SET_VALIDATION(ttycmd, VALIDATION_TOKEN);
         }
 
         return ttycmd;
@@ -99,8 +100,8 @@ ttycmd_t *ttycmd_new()
 void ttycmd_delete(ttycmd_t *ttycmd)
 {
         if (ttycmd) {
-                if (ttycmd->valid == TTYCMD_VALIDATION) {
-                        ttycmd->valid = 0;
+                if (ttycmd->valid == VALIDATION_TOKEN) {
+                        SET_VALIDATION(ttycmd, 0);
                         free(ttycmd);
                 }
         }

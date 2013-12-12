@@ -38,18 +38,19 @@ extern "C" {
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define EDITLINE_VALIDATION                     (u32_t)0x6921363E
+#define VALIDATION_TOKEN                        (u32_t)0x6921363E
+#define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttyedit {
-        FILE    *out_file;
-        char    *buffer[_TTY_EDIT_LINE_LEN + 1];
-        u32_t    valid;
-        u16_t    length;
-        u16_t    cursor_position;
-        bool     echo_enabled;
+        FILE           *out_file;
+        char           *buffer[_TTY_EDIT_LINE_LEN + 1];
+        const u32_t     valid;
+        u16_t           length;
+        u16_t           cursor_position;
+        bool            echo_enabled;
 };
 
 /*==============================================================================
@@ -86,7 +87,7 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 {
         ttyedit_t *edit = calloc(1, sizeof(ttyedit_t));
         if (edit) {
-                edit->valid        = EDITLINE_VALIDATION;
+                SET_VALIDATION(edit, VALIDATION_TOKEN);
                 edit->out_file     = out_file;
                 edit->echo_enabled = true;
         }
@@ -104,8 +105,8 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 void ttyedit_delete(ttyedit_t *edit)
 {
         if (edit) {
-                if (edit->valid == EDITLINE_VALIDATION) {
-                        edit->valid = 0;
+                if (edit->valid == VALIDATION_TOKEN) {
+                        SET_VALIDATION(edit, 0);
                         free(edit);
                 }
         }
