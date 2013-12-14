@@ -57,7 +57,6 @@ typedef enum ttycmd_resp {
         TTYCMD_KEY_ARROW_DOWN,
         TTYCMD_KEY_HOME,
         TTYCMD_KEY_END,
-//        TTYCMD_KEY_ESC,
         TTYCMD_KEY_F1,
         TTYCMD_KEY_F2,
         TTYCMD_KEY_F3,

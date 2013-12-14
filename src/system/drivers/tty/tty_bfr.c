@@ -178,7 +178,7 @@ static int free_the_oldest_line(ttybfr_t *bfr)
  *
  * Function create new buffer for new line if latest line is LF ended,
  * otherwise function merge latest line with new line. Function returns
- * pointer to new buffer.
+ * pointer to new buffer (if created) or to source buffer if no changes was made.
  *
  * @param [in]  bfr             buffer object
  * @param [in]  src             source line
@@ -193,61 +193,47 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
         char   *last_line     = bfr->line[get_line_index(bfr, 1)];
         size_t  last_line_len = strlen(last_line);
 
-        if (last_line && (*(last_line + last_line_len - 1) != '\n')) {
+        if (last_line && LAST_CHARACTER(last_line) != '\n') {
                 last_line_len += 1;
 
-                if (src[0] == '\r' && strncmp(src, "\r\n", 2)) {
+                if (FIRST_CHARACTER(src) == '\r' && strncmp(src, "\r\n", 2) != 0) {
                         line = malloc(strlen(src + 1) + 1);
-                } else {
-                        line = malloc(last_line_len + strlen(src) + 1);
-                }
-
-                if (line) {
-                        if (bfr->write_index == 0)
-                                bfr->write_index = _TTY_DEFAULT_TERMINAL_ROWS - 1;
-                        else
-                                bfr->write_index--;
-
-//                        if (bfr->new_line_cnt == 0) { FIXME
-//                                tty->screen.refresh_last_line = SET;
-//                        }
-
-                        if (src[0] == '\r' && strncmp(src, "\r\n", 2)) {
+                        if (line) {
                                 strcpy(line, src + 1);
                         } else {
+                                return NULL;
+                        }
+                } else {
+                        line = malloc(last_line_len + strlen(src) + 1);
+                        if (line) {
                                 strcpy(line, last_line);
                                 strcat(line, src);
+                        } else {
+                                return NULL;
                         }
-
-//                        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS)
-//                                bfr->fresh_line_cnt++;
                 }
+
+                if (bfr->write_index == 0)
+                        bfr->write_index = _TTY_DEFAULT_TERMINAL_ROWS - 1;
+                else
+                        bfr->write_index--;
 
                 *new = true;
         } else {
                 line = (char *)src;
                 *new = false;
-//                line = malloc(strlen(src) + 1);
-//                if (line) {
-//                        strcpy(line, src);
-//
-//                        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS)
-//                                bfr->fresh_line_cnt++;
-//                }
         }
 
-        if (line) {
-                if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS) {
-                        u16_t total_lines;
-                        if (bfr->write_index >= bfr->read_index) {
-                                total_lines = bfr->write_index - bfr->read_index + 1;
-                        } else {
-                                total_lines = (_TTY_DEFAULT_TERMINAL_ROWS - bfr->read_index) + bfr->write_index;
-                        }
+        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS) {
+                u16_t total_lines;
+                if (bfr->write_index >= bfr->read_index) {
+                        total_lines = bfr->write_index - bfr->read_index + 1;
+                } else {
+                        total_lines = (_TTY_DEFAULT_TERMINAL_ROWS - bfr->read_index) + bfr->write_index;
+                }
 
-                        if (bfr->fresh_line_cnt < total_lines) {
-                                bfr->fresh_line_cnt++;
-                        }
+                if (bfr->fresh_line_cnt < total_lines) {
+                        bfr->fresh_line_cnt++;
                 }
         }
 
@@ -326,26 +312,33 @@ void ttybfr_add_line(ttybfr_t *this, const char *src, size_t len)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        /* TODO \n finding and spliting to new lines */
+                        while (len) {
+                                /* find line in buffer */
+                                const char *line = src;
+                                size_t      llen = 0;
 
-                        if (strncmp(VT100_CLEAR_SCREEN, (char *)src, 4) == 0) {
-                                ttybfr_clear(this);
-                        }
+                                while (llen++, --len && *src++ != '\n');
 
-                        char *crlf_line;
-                        while (!(crlf_line = new_CRLF_line(src, len))) {
-                                if (free_the_oldest_line(this) != 0) {
-                                        break;
+                                /* add line to buffer */
+                                if (strncmp(VT100_CLEAR_SCREEN, (char *)line, 4) == 0) {
+                                        ttybfr_clear(this);
                                 }
-                        }
 
-                        if (crlf_line) {
-                                bool  new;
-                                char *new_line = merge_or_create_line(this, crlf_line, &new);
-                                link_line(this, new_line);
+                                char *crlf_line;
+                                while (!(crlf_line = new_CRLF_line(line, llen))) {
+                                        if (free_the_oldest_line(this) != 0) {
+                                                break;
+                                        }
+                                }
 
-                                if (new) {
-                                        free(crlf_line);
+                                if (crlf_line) {
+                                        bool  new;
+                                        char *new_line = merge_or_create_line(this, crlf_line, &new);
+                                        link_line(this, new_line);
+
+                                        if (new || new_line == NULL) {
+                                                free(crlf_line);
+                                        }
                                 }
                         }
                 }
@@ -412,12 +405,7 @@ const char *ttybfr_get_fresh_line(ttybfr_t *this)
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
                         if (this->fresh_line_cnt) {
-                                const char *str = this->line[get_line_index(this, this->fresh_line_cnt)];
-                                if (str) {
-                                        this->fresh_line_cnt--;
-                                }
-
-                                return str;
+                                return this->line[get_line_index(this, this->fresh_line_cnt--)];
                         }
                 }
         }

@@ -44,8 +44,8 @@ extern "C" {
 ==============================================================================*/
 #define SERVICE_IN_NAME                         "tty-in"
 #define SERVICE_OUT_NAME                        "tty-out"
-#define SERVICE_IN_STACK_DEPTH                  STACK_DEPTH_VERY_LOW
-#define SERVICE_OUT_STACK_DEPTH                 STACK_DEPTH_VERY_LOW
+#define SERVICE_IN_STACK_DEPTH                  (STACK_DEPTH_VERY_LOW - 60)
+#define SERVICE_OUT_STACK_DEPTH                 (STACK_DEPTH_VERY_LOW - 50)
 #define SERVICE_IN_PRIORITY                     0
 #define SERVICE_OUT_PRIORITY                    0
 #define QUEUE_CMD_LEN                           16
@@ -482,7 +482,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         tty_t *tty = device_handle;
 
-        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) { /* FIXME */
+        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) { /* FIXME flush method */
 
                 const char *str = ttyedit_get(tty->editline);
                 copy_string_to_queue(str, tty->queue_out, true);
@@ -581,14 +581,14 @@ static void service_out(void *arg)
                         }
 
                         case CMD_LINE_ADDED: {
-                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg]) {
+                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg] && rq.arg == tty_module->current_tty) {
                                         tty_t *tty = tty_module->tty[rq.arg];
 
                                         if (mutex_lock(tty->secure_mtx, 100)) {
                                                 const char *str;
                                                 do {
                                                         str = ttybfr_get_fresh_line(tty->screen);
-                                                        if (str && rq.arg == tty_module->current_tty) {
+                                                        if (str) {
                                                                 vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->iofile);
                                                                 vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
                                                         }

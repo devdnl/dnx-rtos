@@ -420,10 +420,10 @@ void printk(const char *format, ...)
 
                 if (buffer) {
                         va_start(args, format);
-                        sys_vsnprintf(buffer, size, format, args);
+                        int n = sys_vsnprintf(buffer, size, format, args);
                         va_end(args);
 
-                        vfs_fwrite(buffer, sizeof(char), size, sys_printk_file);
+                        vfs_fwrite(buffer, sizeof(char), n, sys_printk_file);
 
                         sysm_sysfree(buffer);
                 }
