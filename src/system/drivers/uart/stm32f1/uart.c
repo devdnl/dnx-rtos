@@ -767,6 +767,15 @@ static void handle_irq(u8_t major)
 {
         USART_t *UART = uart[major];
 
+        /* receiver interrupt handler */
+        if ((UART->CR1 & USART_CR1_RXNEIE) && (UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
+                u8_t DR = UART->DR;
+
+                if (fifo_write(&uart_data[major]->Rx_FIFO, &DR)) {
+                        semaphore_signal_from_ISR(uart_data[major]->data_read_sem, NULL);
+                }
+        }
+
         /* transmitter interrupt handler */
         if ((UART->CR1 & USART_CR1_TXEIE) && (UART->SR & USART_SR_TXE)) {
 
@@ -788,15 +797,6 @@ static void handle_irq(u8_t major)
 
                 CLEAR_BIT(UART->CR1, USART_CR1_TCIE);
                 semaphore_signal_from_ISR(uart_data[major]->data_write_sem, NULL);
-        }
-
-        /* receiver interrupt handler */
-        if ((UART->CR1 & USART_CR1_RXNEIE) && (UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
-                u8_t DR = UART->DR;
-
-                if (fifo_write(&uart_data[major]->Rx_FIFO, &DR)) {
-                        semaphore_signal_from_ISR(uart_data[major]->data_read_sem, NULL);
-                }
         }
 }
 
