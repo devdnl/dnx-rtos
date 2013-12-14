@@ -41,13 +41,20 @@ extern "C" {
 #define VALIDATION_TOKEN                        (u32_t)0x6921363E
 #define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 
+#define VT100_SAVE_CURSOR_POSITION              "\e7"
+#define VT100_ERASE_LINE_FROM_CUR               "\e[K"
+#define VT100_RESTORE_CURSOR_POSITION           "\e8"
+#define VT100_SHIFT_CURSOR_RIGHT(t)             "\e["#t"C"
+#define VT100_CURSOR_OFF                        "\e[?25l"
+#define VT100_CURSOR_ON                         "\e[?25h"
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttyedit {
         FILE           *out_file;
-        char           *buffer[_TTY_EDIT_LINE_LEN + 1];
         const u32_t     valid;
+        char            buffer[_TTY_EDIT_LINE_LEN + 1];
         u16_t           length;
         u16_t           cursor_position;
         bool            echo_enabled;
@@ -99,15 +106,15 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 /**
  * @brief Destroy editline
  *
- * @param edit          editline object
+ * @param this          editline object
  */
 //==============================================================================
-void ttyedit_delete(ttyedit_t *edit)
+void ttyedit_delete(ttyedit_t *this)
 {
-        if (edit) {
-                if (edit->valid == VALIDATION_TOKEN) {
-                        SET_VALIDATION(edit, 0);
-                        free(edit);
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        SET_VALIDATION(this, 0);
+                        free(this);
                 }
         }
 }
@@ -116,25 +123,310 @@ void ttyedit_delete(ttyedit_t *edit)
 /**
  * @brief Enable editline echo
  *
- * @param edit          editline object
+ * @param this          editline object
  */
 //==============================================================================
-void ttyedit_echo_enable(ttyedit_t *edit)
+void ttyedit_echo_enable(ttyedit_t *this)
 {
-        edit->echo_enabled = true;
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        this->echo_enabled = true;
+                }
+        }
 }
 
 //==============================================================================
 /**
  * @brief Disable editline echo
  *
- * @param edit          editline object
+ * @param this          editline object
  */
 //==============================================================================
-void ttyedit_echo_disable(ttyedit_t *edit)
+void ttyedit_echo_disable(ttyedit_t *this)
 {
-        edit->echo_enabled = false;
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        this->echo_enabled = false;
+                }
+        }
 }
+
+//==============================================================================
+/**
+ * @brief Return collected string
+ *
+ * @param this          editline object
+ *
+ * @return edit line string, NULL on error
+ */
+//==============================================================================
+char *ttyedit_get(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        return this->buffer;
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief Clear collected string
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+void ttyedit_clear(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        memset(this->buffer, 0, _TTY_EDIT_LINE_LEN + 1);
+                        this->cursor_position = 0;
+                        this->length          = 0;
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Insert character at cursor position
+ *
+ * @param this          editline object
+ * @param c             character to insert
+ */
+//==============================================================================
+void ttyedit_insert_char(ttyedit_t *this, const char c)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        if (this->length >= _TTY_EDIT_LINE_LEN - 1) {
+                                return;
+                        }
+
+                        if (this->cursor_position < this->length) {
+                                for (uint i = this->length; i > this->cursor_position; i--) {
+                                        this->buffer[i] = this->buffer[i - 1];
+                                }
+
+                                this->buffer[this->cursor_position++] = c;
+                                this->length++;
+
+                                if (this->echo_enabled) {
+                                        const char *cmd = VT100_SAVE_CURSOR_POSITION;
+                                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+
+                                        cmd = &this->buffer[this->cursor_position - 1];
+                                        vfs_fwrite(cmd, sizeof(char), this->length - (this->cursor_position - 1), this->out_file);
+
+                                        cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
+                                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                                }
+                        } else {
+                                this->buffer[this->cursor_position++] = c;
+                                this->length++;
+
+                                if (this->echo_enabled) {
+                                        vfs_fwrite(&c, sizeof(char), 1, this->out_file);
+                                }
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Remove character from edit line in front of cursor
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+void ttyedit_remove_char(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        if (this->cursor_position == 0 || this->length == 0) {
+                                return;
+                        }
+
+                        this->cursor_position--;
+
+                        for (uint i = this->cursor_position; i < this->length; i++) {
+                                this->buffer[i] = this->buffer[i + 1];
+                        }
+
+                        this->length--;
+
+                        const char *cmd = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+
+                        cmd = &this->buffer[this->cursor_position];
+                        vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
+
+                        cmd = VT100_RESTORE_CURSOR_POSITION;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Delete character from edit line at cursor position
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+void ttyedit_delete_char(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        if (this->length == 0 || this->cursor_position == this->length) {
+                                return;
+                        }
+
+                        for (uint i = this->cursor_position; i <= this->length; i++) {
+                                this->buffer[i] = this->buffer[i + 1];
+                        }
+
+                        this->length--;
+
+                        const char *cmd = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+
+                        cmd = &this->buffer[this->cursor_position];
+                        vfs_fwrite(cmd, sizeof(char), this->length - this->cursor_position, this->out_file);
+
+                        cmd = VT100_RESTORE_CURSOR_POSITION;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Move cursor left
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+void ttyedit_move_cursor_left(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        if (this->cursor_position > 0) {
+                                vfs_fwrite("\b", sizeof(char), 1, this->out_file);
+                                this->cursor_position--;
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Move cursor right
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+void ttyedit_move_cursor_right(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        if (this->cursor_position < this->length) {
+                                const char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
+                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                                this->cursor_position++;
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Move cursor home
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+void ttyedit_move_cursor_home(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        const char *cmd = VT100_CURSOR_OFF;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+
+                        while (this->cursor_position > 0) {
+                                vfs_fwrite("\b", sizeof(char), 1, this->out_file);
+                                this->cursor_position--;
+                        }
+
+                        cmd = VT100_CURSOR_ON;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Move cursor end
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+void ttyedit_move_cursor_end(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        const char *cmd = VT100_CURSOR_OFF;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+
+                        while (this->cursor_position < this->length) {
+                                char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
+                                vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                                this->cursor_position++;
+                        }
+
+                        cmd = VT100_CURSOR_ON;
+                        vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+
+//==============================================================================
+/**
+ * @brief
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+
+//==============================================================================
+/**
+ * @brief
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+
+//==============================================================================
+/**
+ * @brief
+ *
+ * @param this          editline object
+ */
+//==============================================================================
+
+
+
 
 #ifdef __cplusplus
 }

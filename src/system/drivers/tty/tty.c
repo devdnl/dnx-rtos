@@ -50,20 +50,21 @@ extern "C" {
 #define SERVICE_OUT_PRIORITY                    0
 #define QUEUE_CMD_LEN                           16
 
+#define VT100_CLEAR_LINE                        "\r\e[K"
+
 #define VT100_RESET_ATTRIBUTES                  "\e[0m"
 #define VT100_CLEAR_SCREEN                      "\e[2J"
 #define VT100_DISABLE_LINE_WRAP                 "\e[7l"
 #define VT100_CURSOR_HOME                       "\e[H"
-#define VT100_CURSOR_OFF                        "\e[?25l"
-#define VT100_CURSOR_ON                         "\e[?25h"
+
 #define VT100_CARRIAGE_RETURN                   "\r"
-#define VT100_ERASE_LINE_FROM_CUR               "\e[K"
-#define VT100_SAVE_CURSOR_POSITION              "\e7"
+
+
 #define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
 #define VT100_QUERY_CURSOR_POSITION             "\e[6n"
-#define VT100_RESTORE_CURSOR_POSITION           "\e8"
+
 #define VT100_CURSOR_ON                         "\e[?25h"
-#define VT100_SHIFT_CURSOR_RIGHT(t)             "\e["#t"C"
+
 
 #ifndef EOF
 #define EOF                                     (-1)
@@ -115,11 +116,12 @@ struct module {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void     service_out     (void *arg);
-static void     service_in      (void *arg);
-static void     send_cmd        (enum cmd cmd, u8_t arg);
-static void     vt100_init      ();
-static void     vt100_analyze   (const char c);
+static void     service_out             (void *arg);
+static void     service_in              (void *arg);
+static void     send_cmd                (enum cmd cmd, u8_t arg);
+static void     vt100_init              ();
+static void     vt100_analyze           (const char c);
+static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend);
 
 /*==============================================================================
   Local object definitions
@@ -368,11 +370,10 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 //==============================================================================
 API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
-        UNUSED_ARG(fpos);
-
-        STOP_IF(device_handle == NULL);
-        STOP_IF(dst == NULL);
+        STOP_IF(!device_handle);
+        STOP_IF(!dst);
         STOP_IF(count == 0);
+        STOP_IF(!fpos);
 
         tty_t *tty = device_handle;
 
@@ -380,10 +381,16 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 
         while (count--) {
                 if (queue_receive(tty->queue_out, dst, MAX_DELAY)) {
-                        dst++;
                         n++;
+
+                        if (*dst == '\n')
+                                break;
+
+                        dst++;
                 }
         }
+
+        *fpos = 0;
 
         return n;
 }
@@ -471,7 +478,19 @@ API_MOD_FLUSH(TTY, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
-        return STD_RET_ERROR;
+        tty_t *tty = device_handle;
+
+        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) { /* FIXME */
+
+                const char *str = ttyedit_get(tty->editline);
+                copy_string_to_queue(str, tty->queue_out, true);
+                ttyedit_clear(tty->editline);
+
+                mutex_unlock(tty->secure_mtx);
+                return STD_RET_OK;
+        } else{
+                return STD_RET_ERROR;
+        }
 }
 
 //==============================================================================
@@ -575,6 +594,7 @@ static void service_out(void *arg)
                                                 do {
                                                         str = ttybfr_get_fresh_line(tty->screen);
                                                         if (str && rq.arg == tty_module->current_tty) {
+                                                                vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->iofile);
                                                                 vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
                                                         }
                                                 } while (str);
@@ -634,56 +654,121 @@ static void vt100_init()
 static void vt100_analyze(const char c)
 {
         tty_t *tty = tty_module->tty[tty_module->current_tty];
+        if (!tty)
+                return;
 
         switch (ttycmd_analyze(tty->vtcmd, c)) {
-        case TTYCMD_KEY_ENTER:
+        case TTYCMD_KEY_ENTER: {
+                const char *str  = ttyedit_get(tty->editline);
+                const char *lf   = "\n";
+                const char *crlf = "\r\n";
+
+                ttybfr_add_line(tty->screen, str, strlen(str));
+                ttybfr_add_line(tty->screen, lf, strlen(lf));
+                ttybfr_clear_fresh_line_counter(tty->screen);
+                vfs_fwrite(crlf, 1, strlen(crlf), tty_module->iofile);
+                copy_string_to_queue(str, tty->queue_out, true);
+                ttyedit_clear(tty->editline);
                 break;
+        }
+
+        case TTYCMD_KEY_CHAR:
+                ttyedit_insert_char(tty->editline, c);
+                break;
+
         case TTYCMD_KEY_BACKSPACE:
+                ttyedit_remove_char(tty->editline);
                 break;
+
         case TTYCMD_KEY_DELETE:
+                ttyedit_delete_char(tty->editline);
                 break;
+
         case TTYCMD_KEY_ARROW_LEFT:
+                ttyedit_move_cursor_left(tty->editline);
                 break;
+
         case TTYCMD_KEY_ARROW_RIGHT:
+                ttyedit_move_cursor_right(tty->editline);
                 break;
+
         case TTYCMD_KEY_ARROW_UP:
+                vfs_fwrite("AU", 1, 2, tty_module->iofile);
                 break;
+
         case TTYCMD_KEY_ARROW_DOWN:
+                vfs_fwrite("AD", 1, 2, tty_module->iofile);
                 break;
+
         case TTYCMD_KEY_HOME:
+                ttyedit_move_cursor_home(tty->editline);
                 break;
+
         case TTYCMD_KEY_END:
+                ttyedit_move_cursor_end(tty->editline);
                 break;
-        case TTYCMD_KEY_ESC:
-                break;
+
+//        case TTYCMD_KEY_ESC:
+//                break;
         case TTYCMD_KEY_F1:
+                vfs_fwrite("F1", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F2:
+                vfs_fwrite("F2", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F3:
+                vfs_fwrite("F3", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F4:
+                vfs_fwrite("F41", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F5:
+                vfs_fwrite("F5", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F6:
+                vfs_fwrite("F6", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F7:
+                vfs_fwrite("F7", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F8:
+                vfs_fwrite("F8", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F9:
+                vfs_fwrite("F9", 1, 2, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F10:
+                vfs_fwrite("F10", 1, 3, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F11:
+                vfs_fwrite("F11", 1, 3, tty_module->iofile);
                 break;
         case TTYCMD_KEY_F12:
-                break;
-        case TTYCMD_KEY_CHAR:
+                vfs_fwrite("F12", 1, 3, tty_module->iofile);
                 break;
         default:
                 break;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Copy string to queue
+ *
+ * @param str           string
+ * @param queue         queue
+ * @param lfend         true: adds LF, false: without LF
+ */
+//==============================================================================
+static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend)
+{
+        for (uint i = 0; i < strlen(str); i++) {
+                queue_send(queue, &str[i], MAX_DELAY);
+        }
+
+        if (lfend) {
+                const char lf = '\n';
+                queue_send(queue, &lf, MAX_DELAY);
         }
 }
 

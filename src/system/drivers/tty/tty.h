@@ -57,7 +57,7 @@ typedef enum ttycmd_resp {
         TTYCMD_KEY_ARROW_DOWN,
         TTYCMD_KEY_HOME,
         TTYCMD_KEY_END,
-        TTYCMD_KEY_ESC,
+//        TTYCMD_KEY_ESC,
         TTYCMD_KEY_F1,
         TTYCMD_KEY_F2,
         TTYCMD_KEY_F3,
@@ -82,23 +82,33 @@ typedef enum ttycmd_resp {
   Exported functions
 ==============================================================================*/
 /* buffer support ----------------------------------------------------------- */
-extern ttybfr_t        *ttybfr_new              ();
-extern void             ttybfr_delete           (ttybfr_t*);
-extern void             ttybfr_add_line         (ttybfr_t*, const char*, size_t);
-extern void             ttybfr_clear            (ttybfr_t*);
-extern const char      *ttybfr_get_fresh_line   (ttybfr_t*);
+extern ttybfr_t        *ttybfr_new                      ();
+extern void             ttybfr_delete                   (ttybfr_t*);
+extern void             ttybfr_add_line                 (ttybfr_t*, const char*, size_t);
+extern void             ttybfr_clear                    (ttybfr_t*);
+extern const char      *ttybfr_get_fresh_line           (ttybfr_t*);
+extern void             ttybfr_clear_fresh_line_counter (ttybfr_t*);
 
 /* editline support --------------------------------------------------------- */
-extern ttyedit_t       *ttyedit_new             (FILE*);
-extern void             ttyedit_delete          (ttyedit_t*);
-extern void             ttyedit_echo_enable     (ttyedit_t*);
-extern void             ttyedit_echo_disable    (ttyedit_t*);
+extern ttyedit_t       *ttyedit_new                     (FILE*);
+extern void             ttyedit_delete                  (ttyedit_t*);
+extern void             ttyedit_echo_enable             (ttyedit_t*);
+extern void             ttyedit_echo_disable            (ttyedit_t*);
+extern char            *ttyedit_get                     (ttyedit_t*);
+extern void             ttyedit_clear                   (ttyedit_t*);
+extern void             ttyedit_insert_char             (ttyedit_t*, const char);
+extern void             ttyedit_remove_char             (ttyedit_t*);
+extern void             ttyedit_delete_char             (ttyedit_t*);
+extern void             ttyedit_move_cursor_left        (ttyedit_t*);
+extern void             ttyedit_move_cursor_right       (ttyedit_t*);
+extern void             ttyedit_move_cursor_home        (ttyedit_t*);
+extern void             ttyedit_move_cursor_end         (ttyedit_t*);
 
 /* vt100 command analyze ---------------------------------------------------- */
-extern ttycmd_t        *ttycmd_new              ();
-extern void             ttycmd_delete           (ttycmd_t*);
-extern ttycmd_resp_t    ttycmd_analyze          (ttycmd_t*, const char);
-extern bool             ttycmd_is_idle          (ttycmd_t*);
+extern ttycmd_t        *ttycmd_new                      ();
+extern void             ttycmd_delete                   (ttycmd_t*);
+extern ttycmd_resp_t    ttycmd_analyze                  (ttycmd_t*, const char);
+extern bool             ttycmd_is_idle                  (ttycmd_t*);
 
 /*==============================================================================
   Exported inline functions
