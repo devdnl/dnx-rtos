@@ -71,6 +71,7 @@ enum {
 #define TTY_IORQ_CLEAR_SCR                      _IO( 'T', 0x04)
 #define TTY_IORQ_ECHO_ON                        _IO( 'T', 0x05)
 #define TTY_IORQ_ECHO_OFF                       _IO( 'T', 0x06)
+#define TTY_IORQ_SET_EDITLINE                   _IOW('T', 0x07, const char *); /* TODO */
 
 #ifdef __cplusplus
 }

@@ -47,7 +47,7 @@ extern "C" {
   Local object types
 ==============================================================================*/
 struct ttybfr {
-        char           *line[_TTY_DEFAULT_TERMINAL_HEIGHT];
+        char           *line[_TTY_DEFAULT_TERMINAL_ROWS];
         const u32_t     valid;
         u16_t           write_index;
         u16_t           read_index;
@@ -142,7 +142,7 @@ static char *new_CRLF_line(const char *line, uint line_len)
 static uint get_line_index(ttybfr_t *bfr, uint go_back)
 {
         if (bfr->write_index < go_back) {
-                return _TTY_DEFAULT_TERMINAL_HEIGHT - (go_back - bfr->write_index);
+                return _TTY_DEFAULT_TERMINAL_ROWS - (go_back - bfr->write_index);
         } else {
                 return bfr->write_index - go_back;
         }
@@ -159,7 +159,7 @@ static uint get_line_index(ttybfr_t *bfr, uint go_back)
 //==============================================================================
 static int free_the_oldest_line(ttybfr_t *bfr)
 {
-        for (int i = _TTY_DEFAULT_TERMINAL_HEIGHT - 1; i >= 0; i--) {
+        for (int i = _TTY_DEFAULT_TERMINAL_ROWS - 1; i >= 0; i--) {
                 int line_index = get_line_index(bfr, i);
                 if (bfr->line[line_index]) {
                         free(bfr->line[line_index]);
@@ -182,7 +182,7 @@ static int free_the_oldest_line(ttybfr_t *bfr)
  *
  * @param [in]  bfr             buffer object
  * @param [in]  src             source line
- * @param [out] new             if new string created set to true TODO
+ * @param [out] new             if new string created set to true
  *
  * @return pointer to new line
  */
@@ -204,7 +204,7 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
 
                 if (line) {
                         if (bfr->write_index == 0)
-                                bfr->write_index = _TTY_DEFAULT_TERMINAL_HEIGHT - 1;
+                                bfr->write_index = _TTY_DEFAULT_TERMINAL_ROWS - 1;
                         else
                                 bfr->write_index--;
 
@@ -219,7 +219,7 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
                                 strcat(line, src);
                         }
 
-//                        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_HEIGHT)
+//                        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS)
 //                                bfr->fresh_line_cnt++;
                 }
 
@@ -231,18 +231,18 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
 //                if (line) {
 //                        strcpy(line, src);
 //
-//                        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_HEIGHT)
+//                        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS)
 //                                bfr->fresh_line_cnt++;
 //                }
         }
 
         if (line) {
-                if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_HEIGHT) {
+                if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS) {
                         u16_t total_lines;
                         if (bfr->write_index >= bfr->read_index) {
                                 total_lines = bfr->write_index - bfr->read_index + 1;
                         } else {
-                                total_lines = (_TTY_DEFAULT_TERMINAL_HEIGHT - bfr->read_index) + bfr->write_index;
+                                total_lines = (_TTY_DEFAULT_TERMINAL_ROWS - bfr->read_index) + bfr->write_index;
                         }
 
                         if (bfr->fresh_line_cnt < total_lines) {
@@ -270,11 +270,10 @@ static void link_line(ttybfr_t *bfr, char *line)
 
         bfr->line[bfr->write_index++] = line;
 
-        if (bfr->write_index >= _TTY_DEFAULT_TERMINAL_HEIGHT) {
+        if (bfr->write_index >= _TTY_DEFAULT_TERMINAL_ROWS) {
                 bfr->write_index = 0;
         }
 }
-
 
 /*------------------------------------------------------------------------------
  * INTERFACES
@@ -364,7 +363,7 @@ void ttybfr_clear(ttybfr_t *this)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        for (int i = 0; i < _TTY_DEFAULT_TERMINAL_HEIGHT; i++) {
+                        for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
                                 if (this->line[i]) {
                                         free(this->line[i]);
                                         this->line[i] = NULL;
@@ -376,6 +375,27 @@ void ttybfr_clear(ttybfr_t *this)
                         this->write_index  = 0;
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief Return n-line
+ *
+ * @param this          buffer object
+ * @param n             n-line
+ *
+ * @return pointer to line or NULL if line doesn't exist
+ */
+//==============================================================================
+const char *ttybfr_get_line(ttybfr_t *this, int n)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        return this->line[get_line_index(this, _TTY_DEFAULT_TERMINAL_ROWS - n)];
+                }
+        }
+
+        return NULL;
 }
 
 //==============================================================================

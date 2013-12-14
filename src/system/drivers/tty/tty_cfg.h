@@ -39,10 +39,10 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /* default terminal width */
-#define _TTY_DEFAULT_TERMINAL_WIDTH     80
+#define _TTY_DEFAULT_TERMINAL_COLUMNS   80
 
 /* default terminal height (buffer size in lines) */
-#define _TTY_DEFAULT_TERMINAL_HEIGHT    40
+#define _TTY_DEFAULT_TERMINAL_ROWS      40
 
 /* output stream size (output queue) */
 #define _TTY_STREAM_SIZE                80
@@ -56,7 +56,7 @@ extern "C" {
 /* enable (1) or disable (0) checking terminal size */
 #define _TTY_TERM_SIZE_CHECK            1
 
-/* input/outout file */
+/* input/output file (access from many threads) */
 #define _TTY_IO_FILE                    "/dev/ttyS0"
 
 /*==============================================================================

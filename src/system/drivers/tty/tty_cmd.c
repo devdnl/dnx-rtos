@@ -178,10 +178,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                         else if (strcmp(VT100_F10        , this->token) == 0) resp = TTYCMD_KEY_F10;
                         else if (strcmp(VT100_F11        , this->token) == 0) resp = TTYCMD_KEY_F11;
                         else if (strcmp(VT100_F12        , this->token) == 0) resp = TTYCMD_KEY_F12;
-                        else {
-                                __asm("nop");
-                                resp = TTYCMD_BUSY;
-                        }
+                        else resp = TTYCMD_BUSY;
 
                         this->token_cnt = 0;
 

@@ -51,32 +51,32 @@ extern "C" {
 #define QUEUE_CMD_LEN                           16
 
 #define VT100_CLEAR_LINE                        "\r\e[K"
-
 #define VT100_RESET_ATTRIBUTES                  "\e[0m"
 #define VT100_CLEAR_SCREEN                      "\e[2J"
 #define VT100_DISABLE_LINE_WRAP                 "\e[7l"
 #define VT100_CURSOR_HOME                       "\e[H"
 
-#define VT100_CARRIAGE_RETURN                   "\r"
 
-
-#define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
-#define VT100_QUERY_CURSOR_POSITION             "\e[6n"
-
-#define VT100_CURSOR_ON                         "\e[?25h"
-
-
-#ifndef EOF
-#define EOF                                     (-1)
-#endif
-
-#ifndef ETX
-#define ETX                                     0x03
-#endif
-
-#ifndef EOT
-#define EOT                                     0x04
-#endif
+//#define VT100_CARRIAGE_RETURN                   "\r"
+//
+//
+//#define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
+//#define VT100_QUERY_CURSOR_POSITION             "\e[6n"
+//
+//#define VT100_CURSOR_ON                         "\e[?25h"
+//
+//
+//#ifndef EOF
+//#define EOF                                     (-1)
+//#endif
+//
+//#ifndef ETX
+//#define ETX                                     0x03
+//#endif
+//
+//#ifndef EOT
+//#define EOT                                     0x04
+//#endif
 
 /*==============================================================================
   Local types, enums definitions
@@ -109,8 +109,8 @@ struct module {
         queue_t        *queue_cmd;
         tty_t          *tty[_TTY_NUMBER];
         int             current_tty;
-        u16_t           vt100_width;
-        u16_t           vt100_height;
+        u16_t           vt100_col;
+        u16_t           vt100_row;
 };
 
 /*==============================================================================
@@ -122,6 +122,7 @@ static void     send_cmd                (enum cmd cmd, u8_t arg);
 static void     vt100_init              ();
 static void     vt100_analyze           (const char c);
 static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend);
+static void     switch_terminal         (int term_no);
 
 /*==============================================================================
   Local object definitions
@@ -185,8 +186,8 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 
                         return STD_RET_ERROR;
                 } else {
-                        tty_module->vt100_width  = _TTY_DEFAULT_TERMINAL_WIDTH;
-                        tty_module->vt100_height = _TTY_DEFAULT_TERMINAL_HEIGHT;
+                        tty_module->vt100_col = _TTY_DEFAULT_TERMINAL_COLUMNS;
+                        tty_module->vt100_row = _TTY_DEFAULT_TERMINAL_ROWS;
                 }
         }
 
@@ -263,9 +264,9 @@ API_MOD_RELEASE(TTY, void *device_handle)
                         }
                 }
 
-                vfs_fclose(tty_module->iofile);
                 task_delete(tty_module->service_in);
                 task_delete(tty_module->service_out);
+                vfs_fclose(tty_module->iofile);
                 queue_delete(tty_module->queue_cmd);
 
                 free(tty_module);
@@ -423,12 +424,9 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case TTY_IORQ_SWITCH_TTY_TO:
-                break;
-
         case TTY_IORQ_GET_COL:
                 if (arg) {
-                        *(int *)arg = tty_module->vt100_width;
+                        *(int *)arg = tty_module->vt100_col;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
@@ -437,11 +435,15 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case TTY_IORQ_GET_ROW:
                 if (arg) {
-                        *(int *)arg = tty_module->vt100_height;
+                        *(int *)arg = tty_module->vt100_row;
                 } else {
                         errno = EINVAL;
                         return STD_RET_ERROR;
                 }
+                break;
+
+        case TTY_IORQ_SWITCH_TTY_TO:
+                send_cmd(CMD_SWITCH_TTY, (int)arg);
                 break;
 
         case TTY_IORQ_CLEAR_SCR:
@@ -566,6 +568,7 @@ static void service_out(void *arg)
 
                                         if (mutex_lock(tty->secure_mtx, 100)) {
                                                 ttybfr_clear(tty->screen);
+                                                vt100_init();
                                                 mutex_unlock(tty->secure_mtx);
                                         }
                                 }
@@ -573,15 +576,7 @@ static void service_out(void *arg)
                         }
 
                         case CMD_SWITCH_TTY: {
-                                if (rq.arg < _TTY_NUMBER && tty_module->tty[rq.arg]) {
-                                        tty_t *tty = tty_module->tty[tty_module->current_tty];
-
-                                        if (ttycmd_is_idle(tty->vtcmd)) {
-                                                tty_module->current_tty = rq.arg;
-                                        } else {
-                                                queue_send(tty_module->queue_cmd, &rq, 0);
-                                        }
-                                }
+                                switch_terminal(rq.arg);
                                 break;
                         }
 
@@ -657,7 +652,8 @@ static void vt100_analyze(const char c)
         if (!tty)
                 return;
 
-        switch (ttycmd_analyze(tty->vtcmd, c)) {
+        ttycmd_resp_t resp = ttycmd_analyze(tty->vtcmd, c);
+        switch (resp) {
         case TTYCMD_KEY_ENTER: {
                 const char *str  = ttyedit_get(tty->editline);
                 const char *lf   = "\n";
@@ -692,13 +688,21 @@ static void vt100_analyze(const char c)
                 ttyedit_move_cursor_right(tty->editline);
                 break;
 
-        case TTYCMD_KEY_ARROW_UP:
-                vfs_fwrite("AU", 1, 2, tty_module->iofile);
+        case TTYCMD_KEY_ARROW_UP: {
+                const char *str = "\e^[A";
+                vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
+                copy_string_to_queue(str, tty->queue_out, true);
+                ttyedit_clear(tty->editline);
                 break;
+        }
 
-        case TTYCMD_KEY_ARROW_DOWN:
-                vfs_fwrite("AD", 1, 2, tty_module->iofile);
+        case TTYCMD_KEY_ARROW_DOWN: {
+                const char *str = "\e^[B";
+                vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
+                copy_string_to_queue(str, tty->queue_out, true);
+                ttyedit_clear(tty->editline);
                 break;
+        }
 
         case TTYCMD_KEY_HOME:
                 ttyedit_move_cursor_home(tty->editline);
@@ -708,44 +712,11 @@ static void vt100_analyze(const char c)
                 ttyedit_move_cursor_end(tty->editline);
                 break;
 
-//        case TTYCMD_KEY_ESC:
-//                break;
-        case TTYCMD_KEY_F1:
-                vfs_fwrite("F1", 1, 2, tty_module->iofile);
+        case TTYCMD_KEY_F1...TTYCMD_KEY_F12: {
+                switch_terminal(resp - TTYCMD_KEY_F1);
                 break;
-        case TTYCMD_KEY_F2:
-                vfs_fwrite("F2", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F3:
-                vfs_fwrite("F3", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F4:
-                vfs_fwrite("F41", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F5:
-                vfs_fwrite("F5", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F6:
-                vfs_fwrite("F6", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F7:
-                vfs_fwrite("F7", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F8:
-                vfs_fwrite("F8", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F9:
-                vfs_fwrite("F9", 1, 2, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F10:
-                vfs_fwrite("F10", 1, 3, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F11:
-                vfs_fwrite("F11", 1, 3, tty_module->iofile);
-                break;
-        case TTYCMD_KEY_F12:
-                vfs_fwrite("F12", 1, 3, tty_module->iofile);
-                break;
+        }
+
         default:
                 break;
         }
@@ -769,6 +740,55 @@ static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend)
         if (lfend) {
                 const char lf = '\n';
                 queue_send(queue, &lf, MAX_DELAY);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Switch terminal
+ *
+ * @param term_no       terminal number
+ */
+//==============================================================================
+static void switch_terminal(int term_no)
+{
+        if (term_no < _TTY_NUMBER && tty_module->tty[term_no] && tty_module->current_tty != term_no) {
+                tty_t *tty = tty_module->tty[tty_module->current_tty];
+
+                if (ttycmd_is_idle(tty->vtcmd)) {
+                        tty_module->current_tty = term_no;
+
+                        tty_t *tty = tty_module->tty[tty_module->current_tty];
+
+                        vt100_init();
+
+                        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
+                                int rows;
+                                if (tty_module->vt100_row < _TTY_DEFAULT_TERMINAL_ROWS) {
+                                        rows = tty_module->vt100_row;
+                                } else {
+                                        rows = _TTY_DEFAULT_TERMINAL_ROWS;
+                                }
+
+                                const char *str;
+                                for (int i = 0; i < rows; i++) {
+                                        str = ttybfr_get_line(tty->screen, i);
+
+                                        if (str) {
+                                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->iofile);
+                                        }
+                                }
+
+                                str = ttyedit_get(tty->editline);
+                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->iofile);
+                                ttybfr_clear_fresh_line_counter(tty->screen);
+
+                                mutex_unlock(tty->secure_mtx);
+                        }
+                } else {
+                        /* try later */
+                        send_cmd(CMD_SWITCH_TTY, term_no);
+                }
         }
 }
 
