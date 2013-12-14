@@ -497,10 +497,11 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         tty_t *tty = device_handle;
 
-        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) { /* FIXME flush method */
+        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
 
+                ttyedit_insert_char(tty->editline, ' ');
                 const char *str = ttyedit_get(tty->editline);
-                copy_string_to_queue(str, tty->queue_out, true);
+                copy_string_to_queue(str, tty->queue_out, false);
                 ttyedit_clear(tty->editline);
 
                 mutex_unlock(tty->secure_mtx);
