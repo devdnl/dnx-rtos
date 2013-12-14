@@ -226,7 +226,7 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
 
         if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS) {
                 u16_t total_lines;
-                if (bfr->write_index >= bfr->read_index) {
+                if (bfr->write_index > bfr->read_index) {
                         total_lines = bfr->write_index - bfr->read_index + 1;
                 } else {
                         total_lines = (_TTY_DEFAULT_TERMINAL_ROWS - bfr->read_index) + bfr->write_index;
