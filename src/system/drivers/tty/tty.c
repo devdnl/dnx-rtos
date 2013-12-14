@@ -442,6 +442,21 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 }
                 break;
 
+        case TTY_IORQ_SET_EDITLINE:
+                if (arg) {
+                        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
+                                ttyedit_set(tty->editline, arg, tty_module->current_tty == tty->major);
+                                mutex_unlock(tty->secure_mtx);
+                        } else {
+                                errno = ETIME;
+                                return STD_RET_ERROR;
+                        }
+                } else {
+                        errno = EINVAL;
+                        return STD_RET_ERROR;
+                }
+                break;
+
         case TTY_IORQ_SWITCH_TTY_TO:
                 send_cmd(CMD_SWITCH_TTY, (int)arg);
                 break;
@@ -690,17 +705,13 @@ static void vt100_analyze(const char c)
 
         case TTYCMD_KEY_ARROW_UP: {
                 const char *str = "\e^[A";
-                vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
                 copy_string_to_queue(str, tty->queue_out, true);
-                ttyedit_clear(tty->editline);
                 break;
         }
 
         case TTYCMD_KEY_ARROW_DOWN: {
                 const char *str = "\e^[B";
-                vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
                 copy_string_to_queue(str, tty->queue_out, true);
-                ttyedit_clear(tty->editline);
                 break;
         }
 

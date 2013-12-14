@@ -173,6 +173,37 @@ char *ttyedit_get(ttyedit_t *this)
 
 //==============================================================================
 /**
+ * @brief Set editline string
+ *
+ * @param this          editline object
+ * @param str           string
+ * @param show          true: new buffer is show
+ */
+//==============================================================================
+void ttyedit_set(ttyedit_t *this, const char *str, bool show)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        if (strlen(str) <= _TTY_EDIT_LINE_LEN) {
+                                if (show) {
+                                        ttyedit_move_cursor_home(this);
+                                }
+
+                                ttyedit_clear(this);
+                                strcpy(this->buffer, str);
+                                this->length          = strlen(str);
+                                this->cursor_position = this->length;
+
+                                if (show) {
+                                        vfs_fwrite(str, sizeof(char), strlen(str), this->out_file);
+                                }
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
  * @brief Clear collected string
  *
  * @param this          editline object

@@ -95,6 +95,7 @@ extern void             ttyedit_delete                  (ttyedit_t*);
 extern void             ttyedit_echo_enable             (ttyedit_t*);
 extern void             ttyedit_echo_disable            (ttyedit_t*);
 extern char            *ttyedit_get                     (ttyedit_t*);
+extern void             ttyedit_set                     (ttyedit_t*, const char*, bool);
 extern void             ttyedit_clear                   (ttyedit_t*);
 extern void             ttyedit_insert_char             (ttyedit_t*, const char);
 extern void             ttyedit_remove_char             (ttyedit_t*);
