@@ -44,7 +44,7 @@ extern "C" {
 ==============================================================================*/
 #define SERVICE_IN_NAME                         "tty-in"
 #define SERVICE_OUT_NAME                        "tty-out"
-#define SERVICE_IN_STACK_DEPTH                  (STACK_DEPTH_VERY_LOW - 65)
+#define SERVICE_IN_STACK_DEPTH                  (STACK_DEPTH_VERY_LOW - 60)
 #define SERVICE_OUT_STACK_DEPTH                 (STACK_DEPTH_VERY_LOW - 45)
 #define SERVICE_IN_PRIORITY                     0
 #define SERVICE_OUT_PRIORITY                    0
@@ -482,6 +482,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
                         str = ttyedit_get(tty->editline);
                 }
 
+                queue_reset(tty->queue_out);
                 copy_string_to_queue(str, tty->queue_out, false);
 
                 ttyedit_clear(tty->editline);
