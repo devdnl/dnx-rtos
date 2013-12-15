@@ -35,13 +35,14 @@ extern "C" {
 #include "tty.h"
 #include "tty_cfg.h"
 #include "system/timer.h"
+#include "core/scanx.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
 #define VALIDATION_TOKEN                        (u32_t)0x7D8498F1
 #define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
-#define VT100_TOKEN_LEN                         16
+#define VT100_TOKEN_LEN                         15
 #define VT100_DEL                               "\e[3~"
 #define VT100_ARROW_LEFT                        "\e[D"
 #define VT100_ARROW_RIGHT                       "\e[C"
@@ -67,8 +68,10 @@ extern "C" {
 ==============================================================================*/
 struct ttycmd {
         const u32_t     valid;
-        char            token[VT100_TOKEN_LEN];
+        char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
+        u16_t           colums;
+        u16_t           rows;
 };
 
 /*==============================================================================
@@ -180,7 +183,17 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                         else if (strcmp(VT100_F10        , this->token) == 0) resp = TTYCMD_KEY_F10;
                                         else if (strcmp(VT100_F11        , this->token) == 0) resp = TTYCMD_KEY_F11;
                                         else if (strcmp(VT100_F12        , this->token) == 0) resp = TTYCMD_KEY_F12;
-                                        else resp = TTYCMD_BUSY;
+                                        else {
+                                                int col = 0;
+                                                int row = 0;
+                                                if (sys_sscanf(this->token, "\e[%d;%dR", &row, &col) == 2) {
+                                                        this->colums = col;
+                                                        this->rows   = row;
+                                                        resp = TTYCMD_SIZE_CAPTURED;
+                                                } else {
+                                                        resp = TTYCMD_BUSY;
+                                                }
+                                        }
 
                                         this->token_cnt = 0;
 
@@ -199,6 +212,8 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                         }
                 }
         }
+
+        return TTYCMD_BUSY;
 }
 
 //==============================================================================
@@ -221,6 +236,27 @@ bool ttycmd_is_idle(ttycmd_t *this)
         return false;
 }
 
+//==============================================================================
+/**
+ * @brief Return terminal size
+ *
+ * @param this          command analyze object
+ * @param col           columns number (can be NULL)
+ * @param row           rows number (can be NULL)
+ */
+//==============================================================================
+void ttycmd_get_size(ttycmd_t *this, u16_t *col, u16_t *row)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        if (col)
+                                *col = this->colums;
+
+                        if (row)
+                                *row = this->rows;
+                }
+        }
+}
 #ifdef __cplusplus
 }
 #endif

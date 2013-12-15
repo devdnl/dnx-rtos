@@ -44,8 +44,8 @@ extern "C" {
 ==============================================================================*/
 #define SERVICE_IN_NAME                         "tty-in"
 #define SERVICE_OUT_NAME                        "tty-out"
-#define SERVICE_IN_STACK_DEPTH                  (STACK_DEPTH_VERY_LOW - 60)
-#define SERVICE_OUT_STACK_DEPTH                 (STACK_DEPTH_VERY_LOW - 50)
+#define SERVICE_IN_STACK_DEPTH                  (STACK_DEPTH_VERY_LOW - 65)
+#define SERVICE_OUT_STACK_DEPTH                 (STACK_DEPTH_VERY_LOW - 45)
 #define SERVICE_IN_PRIORITY                     0
 #define SERVICE_OUT_PRIORITY                    0
 #define QUEUE_CMD_LEN                           16
@@ -56,6 +56,13 @@ extern "C" {
 #define VT100_DISABLE_LINE_WRAP                 "\e[7l"
 #define VT100_CURSOR_HOME                       "\e[H"
 
+
+#define VT100_SAVE_CURSOR_POSITION              "\e7"
+#define VT100_CURSOR_OFF                        "\e[?25l"
+#define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
+#define VT100_QUERY_CURSOR_POSITION             "\e[6n"
+#define VT100_RESTORE_CURSOR_POSITION           "\e8"
+#define VT100_CURSOR_ON                         "\e[?25h"
 
 //#define VT100_CARRIAGE_RETURN                   "\r"
 //
@@ -70,9 +77,9 @@ extern "C" {
 //#define EOF                                     (-1)
 //#endif
 //
-//#ifndef ETX
-//#define ETX                                     0x03
-//#endif
+#ifndef ETX
+#define ETX                                     0x03
+#endif
 //
 //#ifndef EOT
 //#define EOT                                     0x04
@@ -120,6 +127,7 @@ static void     service_out             (void *arg);
 static void     service_in              (void *arg);
 static void     send_cmd                (enum cmd cmd, u8_t arg);
 static void     vt100_init              ();
+static void     vt100_request_size      ();
 static void     vt100_analyze           (const char c);
 static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend);
 static void     switch_terminal         (int term_no);
@@ -499,7 +507,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
 
-                ttyedit_insert_char(tty->editline, ' ');
+                ttyedit_insert_char(tty->editline, ETX);
                 const char *str = ttyedit_get(tty->editline);
                 copy_string_to_queue(str, tty->queue_out, false);
                 ttyedit_clear(tty->editline);
@@ -567,6 +575,7 @@ static void service_out(void *arg)
         task_set_priority(SERVICE_OUT_PRIORITY);
 
         vt100_init();
+        vt100_request_size();
 
         for (;;) {
                 tty_cmd_t rq;
@@ -657,6 +666,25 @@ static void vt100_init()
 
 //==============================================================================
 /**
+ * @brief Send request to VT100 to gets size
+ */
+//==============================================================================
+static void vt100_request_size()
+{
+        if (_TTY_TERM_SIZE_CHECK != 0) {
+                const char *data = VT100_SAVE_CURSOR_POSITION
+                                   VT100_CURSOR_OFF
+                                   VT100_SET_CURSOR_POSITION(500, 500)
+                                   VT100_QUERY_CURSOR_POSITION
+                                   VT100_RESTORE_CURSOR_POSITION
+                                   VT100_CURSOR_ON;
+
+                vfs_fwrite(data, 1, strlen(data), tty_module->iofile);
+        }
+}
+
+//==============================================================================
+/**
  * @brief Control analyzis of VT100 input stream
  *
  * @param c             input character
@@ -728,6 +756,10 @@ static void vt100_analyze(const char c)
                 switch_terminal(resp - TTYCMD_KEY_F1);
                 break;
         }
+
+        case TTYCMD_SIZE_CAPTURED:
+                ttycmd_get_size(tty->vtcmd, &tty_module->vt100_col, &tty_module->vt100_row);
+                break;
 
         default:
                 break;
