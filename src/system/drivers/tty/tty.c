@@ -786,11 +786,11 @@ static void switch_terminal(int term_no)
                                 if (tty_module->vt100_row < _TTY_DEFAULT_TERMINAL_ROWS) {
                                         rows = tty_module->vt100_row;
                                 } else {
-                                        rows = _TTY_DEFAULT_TERMINAL_ROWS;
+                                        rows = _TTY_DEFAULT_TERMINAL_ROWS - 1;
                                 }
 
                                 const char *str;
-                                for (int i = (rows - 1); i >= 0; i--) {
+                                for (int i = rows; i > 0; i--) {
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {
