@@ -789,7 +789,7 @@ static void switch_terminal(int term_no)
                                 }
 
                                 const char *str;
-                                for (int i = 0; i < rows; i++) {
+                                for (int i = (rows - 1); i >= 0; i--) {
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {
