@@ -42,7 +42,7 @@ extern "C" {
 #define _TTY_DEFAULT_TERMINAL_COLUMNS   80
 
 /* default terminal height (buffer size in lines) */
-#define _TTY_DEFAULT_TERMINAL_ROWS      40
+#define _TTY_DEFAULT_TERMINAL_ROWS      24
 
 /* output stream size (output queue) */
 #define _TTY_STREAM_SIZE                80

@@ -187,7 +187,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                                 int col = 0;
                                                 int row = 0;
                                                 if (sys_sscanf(this->token, "\e[%d;%dR", &row, &col) == 2) {
-                                                        if (col >= 16 && row >= 2) {
+                                                        if (col >= 32 && row >= 10) {
                                                                 this->colums = col;
                                                                 this->rows   = row;
                                                                 resp = TTYCMD_SIZE_CAPTURED;

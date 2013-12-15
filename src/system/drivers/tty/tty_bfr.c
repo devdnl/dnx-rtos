@@ -380,7 +380,7 @@ void ttybfr_clear(ttybfr_t *this)
 //==============================================================================
 const char *ttybfr_get_line(ttybfr_t *this, int n)
 {
-        if (this && n > 0 && n <= (_TTY_DEFAULT_TERMINAL_ROWS - 1)) {
+        if (this && n > 0 && n <= _TTY_DEFAULT_TERMINAL_ROWS) {
                 if (this->valid == VALIDATION_TOKEN) {
                         return this->line[get_line_index(this, n)];
                 }
