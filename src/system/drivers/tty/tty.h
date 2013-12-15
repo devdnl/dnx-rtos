@@ -38,6 +38,19 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define VT100_ERASE_LINE_FROM_CUR               "\e[K"
+#define VT100_SHIFT_CURSOR_RIGHT(t)             "\e["#t"C"
+#define VT100_CLEAR_SCREEN                      "\e[2J"
+#define VT100_CLEAR_LINE                        "\r\e[K"
+#define VT100_RESET_ATTRIBUTES                  "\e[0m"
+#define VT100_DISABLE_LINE_WRAP                 "\e[7l"
+#define VT100_CURSOR_OFF                        "\e[?25l"
+#define VT100_CURSOR_ON                         "\e[?25h"
+#define VT100_CURSOR_HOME                       "\e[H"
+#define VT100_SAVE_CURSOR_POSITION              "\e7"
+#define VT100_RESTORE_CURSOR_POSITION           "\e8"
+#define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
+#define VT100_QUERY_CURSOR_POSITION             "\e[6n"
 
 /*==============================================================================
   Exported object types

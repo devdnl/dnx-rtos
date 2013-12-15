@@ -41,8 +41,6 @@ extern "C" {
 #define VALIDATION_TOKEN                        (u32_t)0xFF49421D
 #define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 
-#define VT100_CLEAR_SCREEN                      "\e[2J"
-
 /*==============================================================================
   Local object types
 ==============================================================================*/

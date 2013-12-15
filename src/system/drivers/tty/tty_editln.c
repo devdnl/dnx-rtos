@@ -40,13 +40,7 @@ extern "C" {
 ==============================================================================*/
 #define VALIDATION_TOKEN                        (u32_t)0x6921363E
 #define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
-
-#define VT100_SAVE_CURSOR_POSITION              "\e7"
-#define VT100_ERASE_LINE_FROM_CUR               "\e[K"
-#define VT100_RESTORE_CURSOR_POSITION           "\e8"
-#define VT100_SHIFT_CURSOR_RIGHT(t)             "\e["#t"C"
-#define VT100_CURSOR_OFF                        "\e[?25l"
-#define VT100_CURSOR_ON                         "\e[?25h"
+#define EDITLINE_LEN                            _TTY_DEFAULT_TERMINAL_COLUMNS
 
 /*==============================================================================
   Local object types
@@ -54,7 +48,7 @@ extern "C" {
 struct ttyedit {
         FILE           *out_file;
         const u32_t     valid;
-        char            buffer[_TTY_EDIT_LINE_LEN + 1];
+        char            buffer[EDITLINE_LEN + 1];
         u16_t           length;
         u16_t           cursor_position;
         bool            echo_enabled;
@@ -184,7 +178,7 @@ void ttyedit_set(ttyedit_t *this, const char *str, bool show)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        if (strlen(str) <= _TTY_EDIT_LINE_LEN) {
+                        if (strlen(str) <= EDITLINE_LEN) {
                                 if (show) {
                                         ttyedit_move_cursor_home(this);
                                 }
@@ -213,7 +207,7 @@ void ttyedit_clear(ttyedit_t *this)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        memset(this->buffer, 0, _TTY_EDIT_LINE_LEN + 1);
+                        memset(this->buffer, 0, EDITLINE_LEN + 1);
                         this->cursor_position = 0;
                         this->length          = 0;
                 }
@@ -232,7 +226,7 @@ void ttyedit_insert_char(ttyedit_t *this, const char c)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        if (this->length >= _TTY_EDIT_LINE_LEN - 1) {
+                        if (this->length >= EDITLINE_LEN - 1) {
                                 return;
                         }
 

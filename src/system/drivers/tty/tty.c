@@ -50,40 +50,9 @@ extern "C" {
 #define SERVICE_OUT_PRIORITY                    0
 #define QUEUE_CMD_LEN                           16
 
-#define VT100_CLEAR_LINE                        "\r\e[K"
-#define VT100_RESET_ATTRIBUTES                  "\e[0m"
-#define VT100_CLEAR_SCREEN                      "\e[2J"
-#define VT100_DISABLE_LINE_WRAP                 "\e[7l"
-#define VT100_CURSOR_HOME                       "\e[H"
-
-
-#define VT100_SAVE_CURSOR_POSITION              "\e7"
-#define VT100_CURSOR_OFF                        "\e[?25l"
-#define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
-#define VT100_QUERY_CURSOR_POSITION             "\e[6n"
-#define VT100_RESTORE_CURSOR_POSITION           "\e8"
-#define VT100_CURSOR_ON                         "\e[?25h"
-
-//#define VT100_CARRIAGE_RETURN                   "\r"
-//
-//
-//#define VT100_SET_CURSOR_POSITION(r, c)         "\e["#r";"#c"H"
-//#define VT100_QUERY_CURSOR_POSITION             "\e[6n"
-//
-//#define VT100_CURSOR_ON                         "\e[?25h"
-//
-//
-//#ifndef EOF
-//#define EOF                                     (-1)
-//#endif
-//
 #ifndef ETX
 #define ETX                                     0x03
 #endif
-//
-//#ifndef EOT
-//#define EOT                                     0x04
-//#endif
 
 /*==============================================================================
   Local types, enums definitions

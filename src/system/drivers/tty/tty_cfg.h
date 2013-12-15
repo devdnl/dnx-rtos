@@ -47,9 +47,6 @@ extern "C" {
 /* output stream size (output queue) */
 #define _TTY_STREAM_SIZE                80
 
-/* edit line length */
-#define _TTY_EDIT_LINE_LEN              80
-
 /* number of virtual terminals */
 #define _TTY_NUMBER_OF_VT               4
 
