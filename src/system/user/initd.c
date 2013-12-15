@@ -137,28 +137,9 @@ static int run_level_0(void)
         driver_init("gpio", "/dev/gpio");
         driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
-
-        FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
-        if (ttyS0) {
-                struct UART_config cfg;
-                cfg.LIN_mode_enable    = false;
-                cfg.LIN_break_length   = UART_LIN_BREAK_10_BITS;
-                cfg.baud               = 115200;
-                cfg.hardware_flow_ctrl = false;
-                cfg.parity             = UART_PARITY_OFF;
-                cfg.rx_enable          = true;
-                cfg.tx_enable          = true;
-                cfg.single_wire_mode   = false;
-                cfg.stop_bits          = UART_STOP_BIT_1;
-
-                ioctl(ttyS0, UART_IORQ_SET_CONFIGURATION, &cfg);
-                fclose(ttyS0);
-        }
-
         driver_init("tty0", "/dev/tty0");
 
         printk_enable("/dev/tty0");
-
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
