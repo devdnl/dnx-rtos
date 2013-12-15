@@ -147,6 +147,26 @@ void ttyedit_echo_disable(ttyedit_t *this)
 
 //==============================================================================
 /**
+ * @brief Return echo status
+ *
+ * @param this          editline object
+ *
+ * @return true if echo enabled, false if not
+ */
+//==============================================================================
+bool ttyedit_is_echo_enabled(ttyedit_t *this)
+{
+        if (this) {
+                if (this->valid == VALIDATION_TOKEN) {
+                        return this->echo_enabled;
+                }
+        }
+
+        return false;
+}
+
+//==============================================================================
+/**
  * @brief Return collected string
  *
  * @param this          editline object

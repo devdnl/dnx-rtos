@@ -681,7 +681,11 @@ static void vt100_analyze(const char c)
                 ttybfr_add_line(tty->screen, str, strlen(str));
                 ttybfr_add_line(tty->screen, lf, strlen(lf));
                 ttybfr_clear_fresh_line_counter(tty->screen);
-                vfs_fwrite(crlf, 1, strlen(crlf), tty_module->iofile);
+
+                if (ttyedit_is_echo_enabled(tty->editline)) {
+                        vfs_fwrite(crlf, 1, strlen(crlf), tty_module->iofile);
+                }
+
                 copy_string_to_queue(str, tty->queue_out, true);
                 ttyedit_clear(tty->editline);
                 break;
