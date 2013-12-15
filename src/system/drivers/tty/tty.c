@@ -476,9 +476,14 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
 
-                ttyedit_insert_char(tty->editline, ETX);
                 const char *str = ttyedit_get(tty->editline);
+                if (strlen(str) == 0) {
+                        ttyedit_insert_char(tty->editline, ETX);
+                        str = ttyedit_get(tty->editline);
+                }
+
                 copy_string_to_queue(str, tty->queue_out, false);
+
                 ttyedit_clear(tty->editline);
 
                 mutex_unlock(tty->secure_mtx);
