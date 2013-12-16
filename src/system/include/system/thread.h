@@ -284,8 +284,6 @@ static inline int task_get_number_of_tasks(void)
         return _kernel_get_number_of_tasks();
 }
 
-/* TODO task_kill() -- general routine to kill task of any kind */
-
 //==============================================================================
 /**
  * @brief Function set stdin file

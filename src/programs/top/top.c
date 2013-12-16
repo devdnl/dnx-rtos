@@ -151,11 +151,19 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         }
                 }
 
-                u32_t total_cpu_load = get_total_CPU_usage();
-                disable_CPU_load_measurement();
-                for (int i = shift; i < task_number && global->term_row > 0; i++) {
-                        struct sysmoni_taskstat taskinfo;
-                        if (get_task_stat(i, &taskinfo) == STD_RET_OK) {
+                struct sysmoni_taskstat *taskstat = calloc(task_number, sizeof(struct sysmoni_taskstat));
+                if (taskstat) {
+                        stdret_t status         = STD_RET_OK;
+                        u32_t    total_cpu_load = get_total_CPU_usage();
+                        disable_CPU_load_measurement();
+                        for (int i = 0; i < task_number && status == STD_RET_OK; i++) {
+                                status = get_task_stat(i, &taskstat[i]);
+                        }
+                        enable_CPU_load_measurement();
+
+                        for (int i = shift; i < task_number && global->term_row > 0; i++) {
+                                struct sysmoni_taskstat taskinfo = taskstat[i];
+
                                 println("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                        taskinfo.task_handle,
                                        taskinfo.priority,
@@ -165,11 +173,10 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                                        ( taskinfo.cpu_usage * 100)  / total_cpu_load,
                                        ((taskinfo.cpu_usage * 1000) / total_cpu_load) % 10,
                                        taskinfo.task_name);
-                        } else {
-                                break;
                         }
+
+                        free(taskstat);
                 }
-                enable_CPU_load_measurement();
 
                 if (key == 'k') {
                         ioctl(stdin, TTY_IORQ_ECHO_ON);
@@ -186,6 +193,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                                         task_delete(task);
                                 } else {
                                         perror(NULL);
+                                        timer = timer_reset();
                                 }
                         } else {
                                 puts(strerror(EPERM));

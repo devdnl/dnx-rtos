@@ -4,6 +4,9 @@
 # INSERT HERE SOURCES NOT ARCHITECTURE DEPENDED
 ####################################################################################################
 CSRC_noarch   += drivers/tty/tty.c
+CSRC_noarch   += drivers/tty/tty_bfr.c
+CSRC_noarch   += drivers/tty/tty_cmd.c
+CSRC_noarch   += drivers/tty/tty_editln.c
 
 CXXSRC_noarch += 
 
