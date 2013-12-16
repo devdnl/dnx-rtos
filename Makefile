@@ -41,7 +41,9 @@ MCU_stm32f1       = STM32F10X_CL
 DEFINE_stm32f1    = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET)
 CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
                     -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINE_stm32f1) -Werror=implicit-function-declaration
-CXXFLAGS_stm32f1  =
+CXXFLAGS_stm32f1  = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
+                    -Wextra -std=c++0x -g -ggdb3 -Wparentheses $(DEFINE_stm32f1) -Werror=implicit-function-declaration \
+                    -fno-rtti -fno-exceptions -fno-unwind-tables
 LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
                     -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
                     $(DEFINE_stm32f1) -lm
@@ -88,7 +90,7 @@ GREP     = grep
 SIZEOF   = stat -c %s
 CC       = $(TOOLCHAIN_$(TARGET))gcc
 CXX      = $(TOOLCHAIN_$(TARGET))g++
-LD       = $(TOOLCHAIN_$(TARGET))gcc
+LD       = $(TOOLCHAIN_$(TARGET))g++
 AS       = $(TOOLCHAIN_$(TARGET))gcc -x assembler-with-cpp
 OBJCOPY  = $(TOOLCHAIN_$(TARGET))objcopy
 OBJDUMP  = $(TOOLCHAIN_$(TARGET))objdump
@@ -125,20 +127,22 @@ HDRLOC  = $(foreach file, $(HDRLOC_noarch),$(SYSLOC)/$(file)) \
           $(foreach file, $(HDRLOC_CORE),$(SYSLOC)/$(file)) \
           src/
 
-# defines all C/C++ sources
+# defines all C sources
 CSRC    = $(foreach file, $(CSRC_CORE),$(SYSLOC)/$(file)) \
           $(foreach file, $(CSRC_$(TARGET)),$(SYSLOC)/$(file)) \
           $(foreach file, $(CSRC_PROGRAMS),$(PROGLOC)/$(file)) \
-          $(foreach file, $(CSRC_noarch),$(SYSLOC)/$(file)) \
-          $(foreach file, $(CXXSRC_$(TARGET)),$(SYSLOC)/$(file)) \
+          $(foreach file, $(CSRC_noarch),$(SYSLOC)/$(file))
+
+# defines all C++ sources
+CXXSRC  = $(foreach file, $(CXXSRC_$(TARGET)),$(SYSLOC)/$(file)) \
           $(foreach file, $(CXXSRC_PROGRAMS),$(PROGLOC)/$(file)) \
           $(foreach file, $(CXXSRC_noarch),$(SYSLOC)/$(file))
-          
+
 # defines all assembler sources
 ASRC    = $(foreach file, $(ASRC_$(TARGET)),$(SYSLOC)/$(file))
          
 # defines objects names
-OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT))
+OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT))
 
 ####################################################################################################
 # default target
