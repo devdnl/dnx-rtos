@@ -43,6 +43,8 @@ extern "C" {
 #define VALIDATION_TOKEN                        (u32_t)0x7D8498F1
 #define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 #define VT100_TOKEN_LEN                         15
+#define VT100_TOKEN_READ_TIMEOUT                250
+
 #define VT100_DEL                               "\e[3~"
 #define VT100_ARROW_LEFT                        "\e[D"
 #define VT100_ARROW_RIGHT                       "\e[C"
@@ -72,6 +74,7 @@ struct ttycmd {
         u8_t            token_cnt;
         u16_t           colums;
         u16_t           rows;
+        timer_t         timer;
 };
 
 /*==============================================================================
@@ -155,6 +158,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 memset(this->token, 0, VT100_TOKEN_LEN);
                                 this->token[0]  = c;
                                 this->token_cnt = 1;
+                                this->timer     = timer_reset();
                                 return TTYCMD_BUSY;
 
                         } else if (this->token_cnt) {
@@ -203,10 +207,12 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
 
                                         return resp;
                                 } else {
-                                        if (this->token_cnt < VT100_TOKEN_LEN) {
-                                                this->token[this->token_cnt++] = c;
-                                        } else {
+                                        if (  timer_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
+                                           || this->token_cnt >= VT100_TOKEN_LEN ) {
+
                                                 this->token_cnt = 0;
+                                        } else {
+                                                this->token[this->token_cnt++] = c;
                                         }
 
                                         return TTYCMD_BUSY;

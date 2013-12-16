@@ -131,18 +131,18 @@ static char *new_CRLF_line(const char *line, uint line_len)
 /**
  * @brief Get last or selected line
  *
- * @param bfr           buffer object
+ * @param this          buffer object
  * @param go_back       number of lines from current index
  *
  * @return line's index
  */
 //==============================================================================
-static uint get_line_index(ttybfr_t *bfr, uint go_back)
+static uint get_line_index(ttybfr_t *this, uint go_back)
 {
-        if (bfr->write_index < go_back) {
-                return _TTY_DEFAULT_TERMINAL_ROWS - (go_back - bfr->write_index);
+        if (this->write_index < go_back) {
+                return _TTY_DEFAULT_TERMINAL_ROWS - (go_back - this->write_index);
         } else {
-                return bfr->write_index - go_back;
+                return this->write_index - go_back;
         }
 }
 
@@ -150,18 +150,18 @@ static uint get_line_index(ttybfr_t *bfr, uint go_back)
 /**
  * @brief Function free the oldest line
  *
- * @param bfr           buffer object
+ * @param this          buffer object
  *
  * @return 0 if success, 1 on error
  */
 //==============================================================================
-static int free_the_oldest_line(ttybfr_t *bfr)
+static int free_the_oldest_line(ttybfr_t *this)
 {
         for (int i = _TTY_DEFAULT_TERMINAL_ROWS - 1; i >= 0; i--) {
-                int line_index = get_line_index(bfr, i);
-                if (bfr->line[line_index]) {
-                        free(bfr->line[line_index]);
-                        bfr->line[line_index] = NULL;
+                int line_index = get_line_index(this, i);
+                if (this->line[line_index]) {
+                        free(this->line[line_index]);
+                        this->line[line_index] = NULL;
                         return 0;
                 }
         }
@@ -178,17 +178,17 @@ static int free_the_oldest_line(ttybfr_t *bfr)
  * otherwise function merge latest line with new line. Function returns
  * pointer to new buffer (if created) or to source buffer if no changes was made.
  *
- * @param [in]  bfr             buffer object
+ * @param [in]  this            buffer object
  * @param [in]  src             source line
  * @param [out] new             if new string created set to true
  *
  * @return pointer to new line
  */
 //==============================================================================
-static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
+static char *merge_or_create_line(ttybfr_t *this, const char *src, bool *new)
 {
         char   *line          = NULL;
-        char   *last_line     = bfr->line[get_line_index(bfr, 1)];
+        char   *last_line     = this->line[get_line_index(this, 1)];
         size_t  last_line_len = strlen(last_line);
 
         if (last_line && LAST_CHARACTER(last_line) != '\n') {
@@ -211,10 +211,10 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
                         }
                 }
 
-                if (bfr->write_index == 0)
-                        bfr->write_index = _TTY_DEFAULT_TERMINAL_ROWS - 1;
+                if (this->write_index == 0)
+                        this->write_index = _TTY_DEFAULT_TERMINAL_ROWS - 1;
                 else
-                        bfr->write_index--;
+                        this->write_index--;
 
                 *new = true;
         } else {
@@ -222,16 +222,16 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
                 *new = false;
         }
 
-        if (bfr->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS) {
+        if (this->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS) {
                 u16_t total_lines;
-                if (bfr->write_index > bfr->read_index) {
-                        total_lines = bfr->write_index - bfr->read_index + 1;
+                if (this->write_index > this->read_index) {
+                        total_lines = this->write_index - this->read_index + 1;
                 } else {
-                        total_lines = (_TTY_DEFAULT_TERMINAL_ROWS - bfr->read_index) + bfr->write_index;
+                        total_lines = (_TTY_DEFAULT_TERMINAL_ROWS - this->read_index) + this->write_index;
                 }
 
-                if (bfr->fresh_line_cnt < total_lines) {
-                        bfr->fresh_line_cnt++;
+                if (this->fresh_line_cnt < total_lines) {
+                        this->fresh_line_cnt++;
                 }
         }
 
@@ -242,20 +242,20 @@ static char *merge_or_create_line(ttybfr_t *bfr, const char *src, bool *new)
 /**
  * @brief Function link prepared line to buffer
  *
- * @param bfr           buffer object
+ * @param this          buffer object
  * @param line          line
  */
 //==============================================================================
-static void link_line(ttybfr_t *bfr, char *line)
+static void link_line(ttybfr_t *this, char *line)
 {
-        if (bfr->line[bfr->write_index]) {
-                free(bfr->line[bfr->write_index]);
+        if (this->line[this->write_index]) {
+                free(this->line[this->write_index]);
         }
 
-        bfr->line[bfr->write_index++] = line;
+        this->line[this->write_index++] = line;
 
-        if (bfr->write_index >= _TTY_DEFAULT_TERMINAL_ROWS) {
-                bfr->write_index = 0;
+        if (this->write_index >= _TTY_DEFAULT_TERMINAL_ROWS) {
+                this->write_index = 0;
         }
 }
 
@@ -362,8 +362,8 @@ void ttybfr_clear(ttybfr_t *this)
                         }
 
                         this->fresh_line_cnt = 0;
-                        this->read_index   = 0;
-                        this->write_index  = 0;
+                        this->read_index     = 0;
+                        this->write_index    = 0;
                 }
         }
 }
