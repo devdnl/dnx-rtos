@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    ethmac_def.h
+@file    spi_def.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support Ethernet interface.
+@brief
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _ETHMAC_DEF_H_
-#define _ETHMAC_DEF_H_
+#ifndef _SPI_DEF_H_
+#define _SPI_DEF_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,44 +34,64 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "ethmac_cfg.h"
 #include "core/ioctl_macros.h"
+#include "stm32f1/spi_cfg.h"
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _ETHMAC_MAJOR_NUMBER                            0
-#define _ETHMAC_MINOR_NUMBER                            0
-
-#define ETHMAC_IORQ_ETHERNET_INIT                       _IO ('E', 0x00)
-#define ETHMAC_IORQ_GET_RX_FLAG                         _IOR('E', 0x01, bool*)
-#define ETHMAC_IORQ_CLEAR_RX_FLAG                       _IO ('E', 0x02)
-#define ETHMAC_IORQ_SET_MAC_ADR                         _IOW('E', 0x03, u8_t*)
-#define ETHMAC_IORQ_GET_RX_PACKET_SIZE                  _IOR('E', 0x04, u32_t*)
-#define ETHMAC_IORQ_GET_RX_PACKET_CHAIN_MODE            _IOR('E', 0x05, struct ethmac_frame*)
-#define ETHMAC_IORQ_GET_RX_BUFFER_UNAVAILABLE_STATUS    _IOR('E', 0x06, bool*)
-#define ETHMAC_IORQ_CLEAR_RX_BUFFER_UNAVAILABLE_STATUS  _IO ('E', 0x07)
-#define ETHMAC_IORQ_RESUME_DMA_RECEPTION                _IO ('E', 0x08)
-#define ETHMAC_IORQ_SET_TX_FRAME_LENGTH_CHAIN_MODE      _IOW('E', 0x09, int*)
-#define ETHMAC_IORQ_GET_CURRENT_TX_BUFFER               _IOR('E', 0x0A, u8_t*)
-#define ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE    _IOW('E', 0x0B, struct ethmac_DMA_description*)
-#define ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE    _IOW('E', 0x0C, struct ethmac_DMA_description*)
-#define ETHMAC_IORQ_ENABLE_RX_IRQ                       _IO ('E', 0x0D)
-#define ETHMAC_IORQ_ENABLE_TX_HARDWARE_CHECKSUM         _IO ('E', 0x0E)
-#define ETHMAC_IORQ_ETHERNET_START                      _IO ('E', 0x0F)
-#define ETHMAC_IORQ_ETHERNET_DEINIT                     _IO ('E', 0x10)
+#define SPI_IORQ_SET_CONFIGURATION                      _IOW ('S', 0x00, struct SPI_config*)
+#define SPI_IORQ_GET_CONFIGURATION                      _IOR ('S', 0x01, struct SPI_config*)
+#define SPI_IORQ_LOCK                                   _IO  ('S', 0x02)
+#define SPI_IORQ_UNLOCK                                 _IO  ('S', 0x03)
+#define SPI_IORQ_SELECT                                 _IO  ('S', 0x04)
+#define SPI_IORQ_DESELECT                               _IO  ('S', 0x05)
+#define SPI_IORQ_TRANSMIT                               _IOWR('S', 0x06, u8_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-struct ethmac_DMA_description {
-        u8_t *buffer;
-        u8_t  buffer_count;
+/** port names */
+enum
+{
+        #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
+        _SPI1,
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
+        _SPI2,
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
+        _SPI3,
+        #endif
+        _SPI_NUMBER
 };
 
-struct ethmac_frame {
-        u8_t *buffer;
-        u32_t length;
+/* SPI clock divider */
+enum SPI_clk_divider {
+        SPI_CLK_DIV_2,
+        SPI_CLK_DIV_4,
+        SPI_CLK_DIV_8,
+        SPI_CLK_DIV_16,
+        SPI_CLK_DIV_32,
+        SPI_CLK_DIV_64,
+        SPI_CLK_DIV_128,
+        SPI_CLK_DIV_256
+};
+
+/* SPI modes */
+enum SPI_mode {
+        SPI_MODE_0,     /* CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge)  */
+        SPI_MODE_1,     /* CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge) */
+        SPI_MODE_2,     /* CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge) */
+        SPI_MODE_3      /* CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge)  */
+};
+
+/* SPI configuration type */
+struct SPI_config {
+        u8_t                    dummy_byte  : 8;
+        enum SPI_clk_divider    clk_divider : 3;
+        enum SPI_mode           mode        : 2;
+        bool                    msb_first   : 1;
 };
 
 /*==============================================================================
@@ -90,7 +110,7 @@ struct ethmac_frame {
 }
 #endif
 
-#endif /* _ETHMAC_DEF_H_ */
+#endif /* _SPI_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

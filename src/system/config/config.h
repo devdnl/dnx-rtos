@@ -33,10 +33,14 @@ extern "C" {
 
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
- * CPU frequency [Hz]
+ * CPU start frequency [Hz] (frequency after power up, before clock configuration)
  */
-#define CONFIG_CPU_TARGET_FREQ                          (72000000UL)
+#define CONFIG_CPU_START_FREQ                           (8000000UL)
 
+/**
+ * CPU base frequency [Hz] (internal RC, oscillator or crystal frequency connected to PLL)
+ */
+#define CONFIG_CPU_OSC_FREQ                             (8000000UL)
 
 /**=== MEMORY CONFIGURATION ==================================================*/
 /**
@@ -47,7 +51,7 @@ extern "C" {
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (64316)
+#define CONFIG_HEAP_SIZE                                (64308)
 
 /**
  * Heap memory alignment

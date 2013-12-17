@@ -79,6 +79,7 @@ static enum cmd_status cmd_help                 (char *arg);
 GLOBAL_VARIABLES_SECTION_BEGIN
 
 char line[PROMPT_LINE_LEN];
+char history[PROMPT_LINE_LEN];
 char cwd[CWD_PATH_LEN];
 
 GLOBAL_VARIABLES_SECTION_END
@@ -106,18 +107,36 @@ PROGRAM_MAIN(terminal, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
+        bool prompt_enable = true;
+
         getcwd(global->cwd, CWD_PATH_LEN);
 
         for (;;) {
                 /* clear input line and print prompt */
                 memset(global->line, '\0', PROMPT_LINE_LEN);
-                print_prompt();
+
+                if (prompt_enable)
+                        print_prompt();
 
                 /* waiting for command */
                 if (!fgets(global->line, PROMPT_LINE_LEN, stdin))
                         continue;
 
                 LAST_CHARACTER(global->line) = '\0';
+                if (strcmp(global->line, "\e^[A") == 0 || strcmp(global->line, "\e^[B") == 0) {
+                        if (strlen(global->history)) {
+                                ioctl(stdin, TTY_IORQ_SET_EDITLINE, global->history);
+                        }
+
+                        prompt_enable = false;
+                        continue;
+                } else {
+                        prompt_enable = true;
+
+                        if (strlen(global->line)) {
+                                strcpy(global->history, global->line);
+                        }
+                }
 
                 /* finds all spaces before command */
                 char *cmd  = global->line;
@@ -252,6 +271,8 @@ static enum cmd_status cmd_cd(char *arg)
                                  *(lastslash + 1) = '\0';
                          }
                 }
+        } else if (strcmp(arg, ".") == 0) {
+                /* do nothing */
         } else if (FIRST_CHARACTER(arg) != '/') {
                 newpath = calloc(strlen(arg) + strlen(global->cwd) + 2, ARRAY_ITEM_SIZE(global->cwd));
                 if (newpath) {

@@ -372,7 +372,7 @@ bool _semaphore_give(sem_t *sem)
  * @brief Function take semaphore from ISR
  *
  * @param[in]  *sem              semaphore object
- * @param[out] *task_woken       true if higher priority task woken, otherwise false
+ * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
  *
  * @retval true         semaphore taken
  * @retval false        semaphore not taken
@@ -380,10 +380,11 @@ bool _semaphore_give(sem_t *sem)
 //==============================================================================
 bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
 {
-        if (sem && task_woken) {
+        if (sem) {
                 signed portBASE_TYPE woken = 0;
                 int ret = xSemaphoreTakeFromISR(sem, &woken);
-                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
                 return ret;
         } else {
                 return false;
@@ -395,7 +396,7 @@ bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
  * @brief Function give semaphore from ISR
  *
  * @param[in]  *sem              semaphore object
- * @param[out] *task_woken       true if higher priority task woken, otherwise false
+ * @param[out] *task_woken       true if higher priority task woken, otherwise false (can be NULL)
  *
  * @retval true         semaphore taken
  * @retval false        semaphore not taken
@@ -403,10 +404,11 @@ bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 bool _semaphore_give_from_ISR(sem_t *sem, bool *task_woken)
 {
-        if (sem && task_woken) {
+        if (sem) {
                 signed portBASE_TYPE woken = 0;
                 int ret = xSemaphoreGiveFromISR(sem, &woken);
-                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
                 return ret;
         } else {
                 return false;
@@ -569,7 +571,7 @@ bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
  *
  * @param[in]  *queue            queue object
  * @param[in]  *item             item
- * @param[out] *task_woken       1 if higher priority task woken, otherwise 0
+ * @param[out] *task_woken       1 if higher priority task woken, otherwise 0 (can be NULL)
  *
  * @retval true         item posted
  * @retval false        item not posted
@@ -577,10 +579,11 @@ bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 //==============================================================================
 bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 {
-        if (queue && item && task_woken) {
+        if (queue && item) {
                 signed portBASE_TYPE woken = 0;
                 int ret = xQueueSendFromISR(queue, item, &woken);
-                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
                 return ret;
         } else {
                 return false;
@@ -614,7 +617,7 @@ bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
  *
  * @param[in]  queue            queue object
  * @param[out] item             item
- * @param[out] task_woken       true if higher priority task woke, otherwise false
+ * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
  *
  * @retval true                 item received
  * @retval false                item not received
@@ -622,10 +625,11 @@ bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 //==============================================================================
 bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 {
-        if (queue && item && task_woken) {
+        if (queue && item) {
                 signed portBASE_TYPE woken = 0;
                 int ret = xQueueReceiveFromISR(queue, item, &woken);
-                *task_woken = (bool)woken;
+                if (task_woken)
+                        *task_woken = (bool)woken;
                 return ret;
         } else {
                 return false;

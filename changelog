@@ -1,3 +1,16 @@
+dnx/FreeRTOS 1.2.1
+==================
+New Features, Improvements:
+- implemented SPI driver
+- implemented fully configurable STM32F10x PLL driver
+- corrected UART driver
+- implemented new TTY driver
+- corrected Makefile to support C++ files compilation (first approach)
+
+Fixed Bugs:
+- TTY incorrectly shows lines (doubles)
+- UART driver sometimes cuts data
+
 dnx/FreeRTOS 1.2.0
 ==================
 New Features, Improvements:

@@ -95,14 +95,14 @@ static inline int fclose(FILE *file)
         return sysm_fclose(file);
 }
 
-static inline size_t fwrite(void *ptr, size_t size, size_t nitems, FILE *file)
+static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
-        return vfs_fwrite(ptr, size, nitems, file);
+        return vfs_fwrite(ptr, size, count, file);
 }
 
-static inline size_t fread(void *ptr, size_t size, size_t nitems, FILE *file)
+static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
-        return vfs_fread(ptr, size, nitems, file);
+        return vfs_fread(ptr, size, count, file);
 }
 
 static inline int fseek(FILE *file, i64_t offset, int mode)

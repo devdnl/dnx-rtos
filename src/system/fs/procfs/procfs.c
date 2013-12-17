@@ -38,17 +38,22 @@ extern "C" {
 #include "core/progman.h"
 #include "system/thread.h"
 
+#if defined(ARCH_stm32f1)
+#include "stm32f1/lib/stm32f10x_rcc.h"
+#endif
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
 /* task ID string length (8B name + \0). ID is 32b hex number converted to string */
 #define TASK_ID_STR_LEN                 9
 
-#define U32_STR_LEN                     12
+#define FILE_DATA_SIZE                  256
 
 #define DIR_TASKID_STR                  "taskid"
 #define DIR_TASKNAME_STR                "taskname"
 #define DIR_BIN_STR                     "bin"
+#define FILE_CPUINFO_STR                "cpuinfo"
 #define FILE_TASK_NAME_STR              "name"
 #define FILE_TASK_PRIO_STR              "priority"
 #define FILE_TASK_FREESTACK_STR         "freestack"
@@ -71,13 +76,14 @@ struct procfs {
 struct file_info {
       task_t *taskhdl;
 
-      enum {
+      enum file_content {
               FILE_CONTENT_TASK_NAME,
               FILE_CONTENT_TASK_PRIO,
               FILE_CONTENT_TASK_FREESTACK,
               FILE_CONTENT_TASK_USEDMEM,
               FILE_CONTENT_TASK_OPENFILES,
-              FILE_CONTENT_TASK_COUNT,
+              FILE_CONTENT_CPUINFO,
+              FILE_CONTENT_COUNT,
               FILE_CONTENT_NONE
       } file_content;
 };
@@ -93,6 +99,8 @@ static dirent_t    procfs_readdir_bin      (void *fs_handle, DIR *dir);
 static dirent_t    procfs_readdir_taskid   (void *fs_handle, DIR *dir);
 static dirent_t    procfs_readdir_taskid_n (void *fs_handle, DIR *dir);
 static inline void mutex_force_lock        (mutex_t *mtx);
+static stdret_t    add_file_info_to_list   (struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd);
+static uint        get_file_content        (struct file_info *file_info, char *buff, uint size);
 
 /*==============================================================================
   Local object definitions
@@ -202,31 +210,32 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const char *path, int flags)
+API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const char *path, int flags)
 {
         UNUSED_ARG(extra);
 
         STOP_IF(!fs_handle);
         STOP_IF(!fd);
-        STOP_IF(!lseek);
+        STOP_IF(!fpos);
         STOP_IF(!path);
 
         struct procfs          *procmem = fs_handle;
-        struct sysmoni_taskstat task_data;
-        struct file_info       *file_info;
 
         if (flags != O_RDONLY) {
                 errno = EROFS;
                 return STD_RET_ERROR;
         }
 
+        *fpos = 0;
+
         if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
                 path += strlen(DIR_TASKID_STR) + 2;
 
-                task_t *taskHdl = NULL;
-                path = sys_strtoi((char*)path, 16, (i32_t*)&taskHdl);
+                task_t *taskhdl = NULL;
+                path = sys_strtoi((char*)path, 16, (i32_t*)&taskhdl);
 
-                if (sysm_get_task_stat(taskHdl, &task_data) != STD_RET_OK) {
+                struct sysmoni_taskstat task_data;
+                if (sysm_get_task_stat(taskhdl, &task_data) != STD_RET_OK) {
                         errno = ENOENT;
                         return STD_RET_ERROR;
                 }
@@ -239,42 +248,24 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                         path++;
                 }
 
-                file_info = calloc(1, sizeof(struct file_info));
-                if (file_info == NULL) {
-                        return STD_RET_ERROR;
-                }
-
-                file_info->taskhdl = taskHdl;
+                enum file_content file_content;
 
                 if (strcmp((char*) path, FILE_TASK_NAME_STR) == 0) {
-                        file_info->file_content = FILE_CONTENT_TASK_NAME;
+                        file_content = FILE_CONTENT_TASK_NAME;
                 } else if (strcmp((char*) path, FILE_TASK_FREESTACK_STR) == 0) {
-                        file_info->file_content = FILE_CONTENT_TASK_FREESTACK;
+                        file_content = FILE_CONTENT_TASK_FREESTACK;
                 } else if (strcmp((char*) path, FILE_TASK_OPENFILES_STR) == 0) {
-                        file_info->file_content = FILE_CONTENT_TASK_OPENFILES;
+                        file_content = FILE_CONTENT_TASK_OPENFILES;
                 } else if (strcmp((char*) path, FILE_TASK_PRIO_STR) == 0) {
-                        file_info->file_content = FILE_CONTENT_TASK_PRIO;
+                        file_content = FILE_CONTENT_TASK_PRIO;
                 } else if (strcmp((char*) path, FILE_TASK_USEDMEM_STR) == 0) {
-                        file_info->file_content = FILE_CONTENT_TASK_USEDMEM;
+                        file_content = FILE_CONTENT_TASK_USEDMEM;
                 } else {
-                        free(file_info);
                         errno = ENOENT;
                         return STD_RET_ERROR;
                 }
 
-                mutex_force_lock(procmem->resource_mtx);
-
-                if (list_add_item(procmem->file_list, procmem->ID_counter, file_info) == 0) {
-                        *fd    = procmem->ID_counter++;
-                        *lseek = 0;
-
-                        mutex_unlock(procmem->resource_mtx);
-                        return STD_RET_OK;
-                }
-
-                mutex_unlock(procmem->resource_mtx);
-                free(file_info);
-                return STD_RET_ERROR;
+                return add_file_info_to_list(procmem, taskhdl, file_content, fd);
 
         } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", strlen(DIR_TASKNAME_STR) + 2) == 0) {
 
@@ -283,36 +274,21 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *lseek, const
                 u16_t n = sysm_get_number_of_monitored_tasks();
                 u16_t i = 0;
 
+                struct sysmoni_taskstat task_data;
                 while (n-- && sysm_get_ntask_stat(i++, &task_data) == STD_RET_OK) {
                         if (strcmp(path, task_data.task_name) == 0) {
-                                file_info = calloc(1, sizeof(struct file_info));
-                                if (file_info == NULL) {
-                                        return STD_RET_ERROR;
-                                }
-
-                                file_info->taskhdl      = task_data.task_handle;
-                                file_info->file_content = FILE_CONTENT_NONE;
-
-                                mutex_force_lock(procmem->resource_mtx);
-
-                                if (list_add_item(procmem->file_list,
-                                                  procmem->ID_counter, file_info) == 0) {
-
-                                        *fd = procmem->ID_counter++;
-                                        *lseek = 0;
-
-                                        mutex_unlock(procmem->resource_mtx);
-                                        return STD_RET_OK;
-                                }
-
-                                mutex_unlock(procmem->resource_mtx);
-                                free(file_info);
-                                return STD_RET_ERROR;
+                                return add_file_info_to_list(procmem,
+                                                             task_data.task_handle,
+                                                             FILE_CONTENT_NONE, fd);
                         }
                 }
 
                 errno = ENOENT;
                 return STD_RET_ERROR;
+
+        } else if (strcmp(path, "/"FILE_CPUINFO_STR) == 0) {
+                return add_file_info_to_list(procmem, NULL, FILE_CONTENT_CPUINFO, fd);
+
         } else {
                 errno = ENOENT;
                 return STD_RET_ERROR;
@@ -418,63 +394,32 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
                 return -1;
         }
 
-        if (file_info->file_content >= FILE_CONTENT_TASK_COUNT) {
+        if (file_info->file_content >= FILE_CONTENT_COUNT) {
                 errno = ENOENT;
                 return -1;
         }
 
-        struct sysmoni_taskstat task_info;
-        if (sysm_get_task_stat(file_info->taskhdl, &task_info) != STD_RET_OK) {
-                return -1;
-        }
+        ssize_t n   = -1;
+        char  *data = calloc(FILE_DATA_SIZE, 1);
+        if (data) {
+                uint data_size = get_file_content(file_info, data, FILE_DATA_SIZE);
 
-        uint data_size = (CONFIG_RTOS_TASK_NAME_LEN > U32_STR_LEN) ? CONFIG_RTOS_TASK_NAME_LEN + 1 : U32_STR_LEN;
-
-        char *data = calloc(data_size + 1, 1);
-        if (!data) {
-                return -1;
-        }
-
-        switch (file_info->file_content) {
-        case FILE_CONTENT_TASK_FREESTACK:
-                data_size = sys_snprintf(data, data_size, "%u\n", task_info.free_stack);
-                break;
-
-        case FILE_CONTENT_TASK_NAME:
-                data_size = sys_snprintf(data, data_size, "%s\n", task_info.task_name);
-                break;
-
-        case FILE_CONTENT_TASK_OPENFILES:
-                data_size = sys_snprintf(data, data_size, "%u\n", task_info.opened_files);
-                break;
-
-        case FILE_CONTENT_TASK_PRIO:
-                data_size = sys_snprintf(data, data_size, "%d\n", task_info.priority);
-                break;
-
-        case FILE_CONTENT_TASK_USEDMEM:
-                data_size = sys_snprintf(data, data_size, "%u\n", task_info.memory_usage);
-                break;
-        default:
-                free(data);
-                return -1;
-        }
-
-        size_t n;
-        size_t seek = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
-        if (seek > data_size) {
-                n = 0;
-        } else {
-                if (data_size - seek <= count) {
-                        n = data_size - seek;
-                        strncpy((char*)dst, data + seek, n);
+                size_t seek = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
+                if (seek > data_size) {
+                        n = 0;
                 } else {
-                        n = count;
-                        strncpy((char *)dst, data + seek, n);
+                        if (data_size - seek <= count) {
+                                n = data_size - seek;
+                                strncpy((char*)dst, data + seek, n);
+                        } else {
+                                n = count;
+                                strncpy((char *)dst, data + seek, n);
+                        }
                 }
+
+                free(data);
         }
 
-        free(data);
         return n;
 }
 
@@ -559,13 +504,8 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                 return STD_RET_ERROR;
         }
 
-        if (file_info->file_content >= FILE_CONTENT_TASK_COUNT) {
+        if (file_info->file_content >= FILE_CONTENT_COUNT) {
                 errno = ENOENT;
-                return STD_RET_ERROR;
-        }
-
-        struct sysmoni_taskstat taskInfo;
-        if (sysm_get_task_stat(file_info->taskhdl, &taskInfo) != STD_RET_OK) {
                 return STD_RET_ERROR;
         }
 
@@ -577,33 +517,14 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         stat->st_uid   = 0;
         stat->st_type  = FILE_TYPE_REGULAR;
 
-        char data[U32_STR_LEN] = {0};
-
-        switch (file_info->file_content) {
-        case FILE_CONTENT_TASK_FREESTACK:
-                stat->st_size = sys_snprintf(data, sizeof(data), "%u\n", taskInfo.free_stack);
-                break;
-
-        case FILE_CONTENT_TASK_NAME:
-                stat->st_size = strlen(taskInfo.task_name) + 1;
-                break;
-
-        case FILE_CONTENT_TASK_OPENFILES:
-                stat->st_size = sys_snprintf(data, sizeof(data), "%u\n", taskInfo.opened_files);
-                break;
-
-        case FILE_CONTENT_TASK_PRIO:
-                stat->st_size = sys_snprintf(data, sizeof(data), "%d\n", taskInfo.priority);
-                break;
-
-        case FILE_CONTENT_TASK_USEDMEM:
-                stat->st_size = sys_snprintf(data, sizeof(data), "%u\n", taskInfo.memory_usage);
-                break;
-        default:
-                return STD_RET_ERROR;
+        char *data = calloc(FILE_DATA_SIZE, 1);
+        if (data) {
+                stat->st_size = get_file_content(file_info, data, FILE_DATA_SIZE);
+                free(data);
+                return STD_RET_OK;
         }
 
-        return STD_RET_OK;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -700,7 +621,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 
         if (strcmp(path, "/") == 0) {
                 dir->f_dd       = NULL;
-                dir->f_items    = 3;
+                dir->f_items    = 4;
                 dir->f_readdir  = procfs_readdir_root;
                 dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;
@@ -733,7 +654,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                         task_t                 *taskHdl = (task_t *)taskval;
                         if (sysm_get_task_stat(taskHdl, &taskdata) == STD_RET_OK) {
                                 dir->f_dd       = taskHdl;
-                                dir->f_items    = FILE_CONTENT_TASK_COUNT;
+                                dir->f_items    = FILE_CONTENT_COUNT;
                                 dir->f_readdir  = procfs_readdir_taskid_n;
                                 dir->f_closedir = procfs_closedir_generic;
                                 return STD_RET_OK;
@@ -964,10 +885,33 @@ static dirent_t procfs_readdir_root(void *fs_handle, DIR *dir)
         dirent.size     = 0;
 
         switch (dir->f_seek++) {
-        case  0: dirent.name = DIR_TASKID_STR;   break;
-        case  1: dirent.name = DIR_TASKNAME_STR; break;
-        case  2: dirent.name = DIR_BIN_STR;      break;
-        default: break;
+        case 0: dirent.name = DIR_TASKID_STR;
+                break;
+
+        case 1:
+                dirent.name = DIR_TASKNAME_STR;
+                break;
+
+        case  2:
+                dirent.name = DIR_BIN_STR;
+                break;
+
+        case  3: {
+                char *data = calloc(FILE_DATA_SIZE, 1);
+                if (data) {
+                        struct file_info file_info;
+                        file_info.file_content = FILE_CONTENT_CPUINFO;
+                        dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
+                        free(data);
+                }
+
+                dirent.name     = FILE_CPUINFO_STR;
+                dirent.filetype = FILE_TYPE_REGULAR;
+                break;
+        }
+
+        default:
+                break;
         }
 
         return dirent;
@@ -1092,43 +1036,30 @@ static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
         dirent.name = NULL;
         dirent.size = 0;
 
-        if (dir->f_seek >= FILE_CONTENT_TASK_COUNT) {
+        if (dir->f_seek >= FILE_CONTENT_COUNT) {
                 return dirent;
         }
 
-        struct sysmoni_taskstat taskdata;
-        if (sysm_get_task_stat((task_t*)dir->f_dd, &taskdata) != STD_RET_OK) {
-                return dirent;
-        }
-
-        char data[12]   = {0};
         dirent.filetype = FILE_TYPE_REGULAR;
 
         switch (dir->f_seek) {
-        case FILE_CONTENT_TASK_NAME:
-                dirent.name = FILE_TASK_NAME_STR;
-                dirent.size = strlen(taskdata.task_name) + 1;
-                break;
+        case FILE_CONTENT_TASK_NAME     : dirent.name = FILE_TASK_NAME_STR; break;
+        case FILE_CONTENT_TASK_PRIO     : dirent.name = FILE_TASK_PRIO_STR; break;
+        case FILE_CONTENT_TASK_FREESTACK: dirent.name = FILE_TASK_FREESTACK_STR; break;
+        case FILE_CONTENT_TASK_USEDMEM  : dirent.name = FILE_TASK_USEDMEM_STR; break;
+        case FILE_CONTENT_TASK_OPENFILES: dirent.name = FILE_TASK_OPENFILES_STR; break;
+        }
 
-        case FILE_CONTENT_TASK_PRIO:
-                dirent.name = FILE_TASK_PRIO_STR;
-                dirent.size = sys_snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.priority);
-                break;
+        char *data = calloc(FILE_DATA_SIZE, 1);
+        if (data) {
+                struct file_info file_info;
+                file_info.file_content = dir->f_seek;
+                file_info.taskhdl      = dir->f_dd;
 
-        case FILE_CONTENT_TASK_FREESTACK:
-                dirent.name = FILE_TASK_FREESTACK_STR;
-                dirent.size = sys_snprintf(data, ARRAY_SIZE(data), "%u\n", taskdata.free_stack);
-                break;
-
-        case FILE_CONTENT_TASK_USEDMEM:
-                dirent.name = FILE_TASK_USEDMEM_STR;
-                dirent.size = sys_snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.memory_usage);
-                break;
-
-        case FILE_CONTENT_TASK_OPENFILES:
-                dirent.name = FILE_TASK_OPENFILES_STR;
-                dirent.size = sys_snprintf(data, ARRAY_SIZE(data), "%d\n", taskdata.opened_files);
-                break;
+                dirent.size = get_file_content(&file_info, data, FILE_DATA_SIZE);
+                free(data);
+        } else {
+                dirent.size = 0;
         }
 
         dir->f_seek++;
@@ -1145,6 +1076,116 @@ static dirent_t procfs_readdir_taskid_n(void *fs_handle, DIR *dir)
 static inline void mutex_force_lock(mutex_t *mtx)
 {
         while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+}
+
+//==============================================================================
+/**
+ * @brief Add file info to list
+ *
+ * @param procmem               FS context
+ * @param taskhdl               task handle to write in file info
+ * @param file_content          file content to write in file info
+ * @param fd                    file descriptor (result)
+ *
+ * @return STD_RET_OK if success, STD_RET_ERROR on error
+ */
+//==============================================================================
+static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, enum file_content file_content, fd_t *fd)
+{
+        struct file_info *file_info = calloc(1, sizeof(struct file_info));
+        if (file_info == NULL) {
+                return STD_RET_ERROR;
+        }
+
+        file_info->taskhdl      = taskhdl;
+        file_info->file_content = file_content;
+
+        mutex_force_lock(procmem->resource_mtx);
+
+        if (list_add_item(procmem->file_list, procmem->ID_counter, file_info) == 0) {
+
+                *fd   = procmem->ID_counter++;
+
+                mutex_unlock(procmem->resource_mtx);
+                return STD_RET_OK;
+        }
+
+        mutex_unlock(procmem->resource_mtx);
+        free(file_info);
+        return STD_RET_ERROR;
+}
+
+//==============================================================================
+/**
+ * @brief Function return file content and size
+ *
+ * @param file_info     file information
+ * @param buff          buffer
+ * @param size          buffer size
+ *
+ * @return number of bytes written to buffer
+ */
+//==============================================================================
+static uint get_file_content(struct file_info *file_info, char *buff, uint size)
+{
+        struct sysmoni_taskstat task_info;
+        if (file_info->file_content < FILE_CONTENT_CPUINFO) {
+                if (sysm_get_task_stat(file_info->taskhdl, &task_info) != STD_RET_OK) {
+                        return 0;
+                }
+        }
+
+        switch (file_info->file_content) {
+        case FILE_CONTENT_TASK_FREESTACK:
+                return sys_snprintf(buff, size, "%u\n", task_info.free_stack);
+
+        case FILE_CONTENT_TASK_NAME:
+                return sys_snprintf(buff, size, "%s\n", task_info.task_name);
+
+        case FILE_CONTENT_TASK_OPENFILES:
+                return sys_snprintf(buff, size, "%u\n", task_info.opened_files);
+
+        case FILE_CONTENT_TASK_PRIO:
+                return sys_snprintf(buff, size, "%d\n", task_info.priority);
+
+        case FILE_CONTENT_TASK_USEDMEM:
+                return sys_snprintf(buff, size, "%u\n", task_info.memory_usage);
+
+        case FILE_CONTENT_CPUINFO: {
+                #if defined(ARCH_stm32f1)
+                RCC_ClocksTypeDef freq;
+                RCC_GetClocksFreq(&freq);
+                #endif
+
+                return sys_snprintf(buff, size,
+                                    "CPU name  : %s\n"
+                                    "CPU vendor: %s\n"
+                                    #if defined(ARCH_stm32f1)
+                                    "CPU    khz: %d\n"
+                                    "SYSCLK kHz: %d\n"
+                                    "PCLK1  kHz: %d\n"
+                                    "PCLK1T kHz: %d\n"
+                                    "PCLK2  kHz: %d\n"
+                                    "PCLK2T kHz: %d\n"
+                                    "ADCCLK kHz: %d\n"
+                                    #endif
+                                    ,_CPUCTL_PLATFORM_NAME
+                                    ,_CPUCTL_VENDOR_NAME
+                                    #if defined(ARCH_stm32f1)
+                                    ,freq.HCLK_Frequency / 1000
+                                    ,freq.SYSCLK_Frequency / 1000
+                                    ,freq.PCLK1_Frequency / 1000
+                                    ,(RCC->CFGR & RCC_CFGR_PPRE1_2) ? (freq.PCLK1_Frequency / 500) : (freq.PCLK1_Frequency / 1000)
+                                    ,freq.PCLK2_Frequency / 1000
+                                    ,(RCC->CFGR & RCC_CFGR_PPRE2_2) ? (freq.PCLK2_Frequency / 500) : (freq.PCLK2_Frequency / 1000)
+                                    ,freq.ADCCLK_Frequency / 1000
+                                    #endif
+                );
+        }
+
+        default:
+                return 0;
+        }
 }
 
 #ifdef __cplusplus

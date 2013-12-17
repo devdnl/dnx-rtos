@@ -239,6 +239,8 @@ int _get_module_number(const char *module_name)
 /**
  * @brief Function lock device for this task
  *
+ * ERRNO: EBUSY
+ *
  * @param *dev_lock     pointer to device lock object
  *
  * @return true if device is successfully locked, otherwise false
@@ -253,6 +255,8 @@ bool _lock_device(dev_lock_t *dev_lock)
                 if (*dev_lock == NULL) {
                         *dev_lock = task_get_handle();
                         status = true;
+                } else {
+                        errno = EBUSY;
                 }
                 critical_section_end();
         }

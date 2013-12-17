@@ -135,30 +135,14 @@ static int run_level_boot(void)
 static int run_level_0(void)
 {
         driver_init("gpio", "/dev/gpio");
-
-        int pll_init = driver_init("pll", NULL);
-
+        driver_init("pll", "/dev/pll");
         driver_init("uart1", "/dev/ttyS0");
-
-        if (pll_init != 0) {
-                FILE *ttyS0 = fopen("/dev/ttyS0", "r+");
-                if (ttyS0) {
-                        ioctl(ttyS0, UART_IORQ_SET_BAUDRATE, 115200 * (CONFIG_CPU_TARGET_FREQ / PLL_CPU_BASE_FREQ));
-                        fclose(ttyS0);
-                }
-        }
-
         driver_init("tty0", "/dev/tty0");
 
         printk_enable("/dev/tty0");
-
         printk(FONT_COLOR_GREEN FONT_BOLD "%s/%s" FONT_NORMAL " by "
                FONT_COLOR_CYAN "%s " FONT_COLOR_YELLOW "%s" RESET_ATTRIBUTES "\n\n",
                get_OS_name(), get_kernel_name(), get_author_name(), get_author_email());
-
-        if (pll_init != 0) {
-                printk(FONT_COLOR_RED"PLL not started, running no base frequency!"RESET_ATTRIBUTES"\n");
-        }
 
         driver_init("tty1", "/dev/tty1");
         driver_init("tty2", "/dev/tty2");
@@ -191,7 +175,7 @@ static int run_level_1(void)
                         printk("initialized\n");
                         mount("fatfs", "/dev/sda1", "/mnt");
                 } else {
-                        printk(FONT_COLOR_RED"fail\n"RESET_ATTRIBUTES);
+                        printk(FONT_COLOR_RED"fail"RESET_ATTRIBUTES"\n");
                 }
 
                 fclose(sd);
@@ -232,8 +216,8 @@ static int run_level_1(void)
                        get_host_name(),
                        ifcfg.hw_address[0], ifcfg.hw_address[1], ifcfg.hw_address[2],
                        ifcfg.hw_address[3], ifcfg.hw_address[4], ifcfg.hw_address[5],
-                       netapi_get_ip_part_a(&ifcfg.IP_address),  netapi_get_ip_part_b(&ifcfg.IP_address),
-                       netapi_get_ip_part_c(&ifcfg.IP_address),  netapi_get_ip_part_d(&ifcfg.IP_address),
+                       netapi_get_ip_part_a(&ifcfg.IP_address), netapi_get_ip_part_b(&ifcfg.IP_address),
+                       netapi_get_ip_part_c(&ifcfg.IP_address), netapi_get_ip_part_d(&ifcfg.IP_address),
                        netapi_get_ip_part_a(&ifcfg.net_mask), netapi_get_ip_part_b(&ifcfg.net_mask),
                        netapi_get_ip_part_c(&ifcfg.net_mask), netapi_get_ip_part_d(&ifcfg.net_mask),
                        netapi_get_ip_part_a(&ifcfg.gateway), netapi_get_ip_part_b(&ifcfg.gateway),
@@ -254,14 +238,21 @@ static int run_level_1(void)
 static int run_level_2(void)
 {
         /* stdio program control */
-        FILE   *tty[TTY_DEV_COUNT]         = {NULL};
+        FILE   *tty[_TTY_NUMBER]           = {NULL};
         FILE   *tty0                       =  NULL;
-        prog_t *program[TTY_DEV_COUNT - 1] = {NULL};
+        prog_t *program[_TTY_NUMBER - 1]   = {NULL};
         int     current_tty                = -1;
 
         while (!(tty0 = fopen("/dev/tty0", "r+"))) {
                 sleep_ms(200);
         }
+
+        /* terminal size info */
+        int col = 0;
+        int row = 0;
+        ioctl(tty0, TTY_IORQ_GET_COL, &col);
+        ioctl(tty0, TTY_IORQ_GET_ROW, &row);
+        printk("Terminal size: %d columns x %d rows\n", col, row);
 
         /* initd info about stack usage */
         printk("[%d] initd: free stack: %d levels\n\n", get_time_ms(), task_get_free_stack());
@@ -272,7 +263,7 @@ static int run_level_2(void)
         for (;;) {
                 ioctl(tty0, TTY_IORQ_GET_CURRENT_TTY, &current_tty);
 
-                if (current_tty >= 0 && current_tty < TTY_DEV_COUNT - 1) {
+                if (current_tty >= 0 && current_tty < _TTY_NUMBER - 1) {
                         if (!program[current_tty]) {
                                 if (tty[current_tty] == NULL) {
                                         char path[16];
@@ -296,7 +287,7 @@ static int run_level_2(void)
                         }
                 }
 
-                for (int i = 0; i < TTY_DEV_COUNT - 1; i++) {
+                for (int i = 0; i < _TTY_NUMBER - 1; i++) {
                         if (program[i]) {
                                 if (program_is_closed(program[i])) {
                                         printk("initd: terminal closed\n");
@@ -308,7 +299,7 @@ static int run_level_2(void)
                                         tty[i] = NULL;
 
                                         if (current_tty == i) {
-                                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, TTY_DEV_0);
+                                                ioctl(tty0, TTY_IORQ_SWITCH_TTY_TO, 0);
                                         }
                                 }
                         }
