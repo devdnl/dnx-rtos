@@ -5,7 +5,7 @@ New Features, Improvements:
 - implemented fully configurable STM32F10x PLL driver
 - corrected UART driver
 - implemented new TTY driver
-- corrected Makefile to support C++ files compilation
+- corrected Makefile to support C++ files compilation (first approach)
 
 Fixed Bugs:
 - none

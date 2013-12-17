@@ -320,15 +320,16 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
         tty_t *tty = device_handle;
 
-        ssize_t n = 0;
+        ssize_t n = -1;
 
         if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
                 ttybfr_add_line(tty->screen, (const char *)src, count);
                 send_cmd(CMD_LINE_ADDED, tty->major);
                 mutex_unlock(tty->secure_mtx);
+
+                n = count;
         } else {
                 errno = ETIME;
-                n     = -1;
         }
 
         return n;
@@ -673,23 +674,26 @@ static void vt100_analyze(const char c)
 
         ttycmd_resp_t resp = ttycmd_analyze(tty->vtcmd, c);
         switch (resp) {
-        case TTYCMD_KEY_ENTER: {
-                const char *str  = ttyedit_get(tty->editline);
-                const char *lf   = "\n";
-                const char *crlf = "\r\n";
+        case TTYCMD_KEY_ENTER:
+                if (mutex_lock(tty->secure_mtx, 100)) {
+                        const char *str  = ttyedit_get(tty->editline);
+                        const char *lf   = "\n";
+                        const char *crlf = "\r\n";
 
-                ttybfr_add_line(tty->screen, str, strlen(str));
-                ttybfr_add_line(tty->screen, lf, strlen(lf));
-                ttybfr_clear_fresh_line_counter(tty->screen);
+                        ttybfr_add_line(tty->screen, str, strlen(str));
+                        ttybfr_add_line(tty->screen, lf, strlen(lf));
+                        ttybfr_clear_fresh_line_counter(tty->screen);
 
-                if (ttyedit_is_echo_enabled(tty->editline)) {
-                        vfs_fwrite(crlf, 1, strlen(crlf), tty_module->iofile);
+                        if (ttyedit_is_echo_enabled(tty->editline)) {
+                                vfs_fwrite(crlf, 1, strlen(crlf), tty_module->iofile);
+                        }
+
+                        copy_string_to_queue(str, tty->queue_out, true);
+                        ttyedit_clear(tty->editline);
+
+                        mutex_unlock(tty->secure_mtx);
                 }
-
-                copy_string_to_queue(str, tty->queue_out, true);
-                ttyedit_clear(tty->editline);
                 break;
-        }
 
         case TTYCMD_KEY_CHAR:
                 ttyedit_insert_char(tty->editline, c);

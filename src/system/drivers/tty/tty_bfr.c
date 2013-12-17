@@ -48,8 +48,7 @@ struct ttybfr {
         char           *line[_TTY_DEFAULT_TERMINAL_ROWS];
         const u32_t     valid;
         u16_t           write_index;
-        u16_t           read_index;
-        u16_t           fresh_line_cnt;
+        bool            fresh_line[_TTY_DEFAULT_TERMINAL_ROWS];
 };
 
 /*==============================================================================
@@ -157,7 +156,7 @@ static uint get_line_index(ttybfr_t *this, uint go_back)
 //==============================================================================
 static int free_the_oldest_line(ttybfr_t *this)
 {
-        for (int i = _TTY_DEFAULT_TERMINAL_ROWS - 1; i >= 0; i--) {
+        for (int i = _TTY_DEFAULT_TERMINAL_ROWS; i > 0; i--) {
                 int line_index = get_line_index(this, i);
                 if (this->line[line_index]) {
                         free(this->line[line_index]);
@@ -211,28 +210,12 @@ static char *merge_or_create_line(ttybfr_t *this, const char *src, bool *new)
                         }
                 }
 
-                if (this->write_index == 0)
-                        this->write_index = _TTY_DEFAULT_TERMINAL_ROWS - 1;
-                else
-                        this->write_index--;
+                this->write_index = get_line_index(this, 1);
 
                 *new = true;
         } else {
                 line = (char *)src;
                 *new = false;
-        }
-
-        if (this->fresh_line_cnt < _TTY_DEFAULT_TERMINAL_ROWS) {
-                u16_t total_lines;
-                if (this->write_index > this->read_index) {
-                        total_lines = this->write_index - this->read_index + 1;
-                } else {
-                        total_lines = (_TTY_DEFAULT_TERMINAL_ROWS - this->read_index) + this->write_index;
-                }
-
-                if (this->fresh_line_cnt < total_lines) {
-                        this->fresh_line_cnt++;
-                }
         }
 
         return line;
@@ -252,7 +235,8 @@ static void link_line(ttybfr_t *this, char *line)
                 free(this->line[this->write_index]);
         }
 
-        this->line[this->write_index++] = line;
+        this->fresh_line[this->write_index] = true;
+        this->line[this->write_index++]     = line;
 
         if (this->write_index >= _TTY_DEFAULT_TERMINAL_ROWS) {
                 this->write_index = 0;
@@ -311,13 +295,13 @@ void ttybfr_add_line(ttybfr_t *this, const char *src, size_t len)
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
                         while (len) {
-                                /* find line in buffer */
+                                /* --- find line in buffer --- */
                                 const char *line = src;
                                 size_t      llen = 0;
 
                                 while (llen++, --len && *src++ != '\n');
 
-                                /* add line to buffer */
+                                /* --- add line to buffer --- */
                                 if (strncmp(VT100_CLEAR_SCREEN, (char *)line, 4) == 0) {
                                         ttybfr_clear(this);
                                 }
@@ -330,7 +314,7 @@ void ttybfr_add_line(ttybfr_t *this, const char *src, size_t len)
                                 }
 
                                 if (crlf_line) {
-                                        bool  new;
+                                        bool  new      = false;
                                         char *new_line = merge_or_create_line(this, crlf_line, &new);
                                         link_line(this, new_line);
 
@@ -359,11 +343,11 @@ void ttybfr_clear(ttybfr_t *this)
                                         free(this->line[i]);
                                         this->line[i] = NULL;
                                 }
+
+                                this->fresh_line[i] = false;
                         }
 
-                        this->fresh_line_cnt = 0;
-                        this->read_index     = 0;
-                        this->write_index    = 0;
+                        this->write_index = 0;
                 }
         }
 }
@@ -402,8 +386,12 @@ const char *ttybfr_get_fresh_line(ttybfr_t *this)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        if (this->fresh_line_cnt) {
-                                return this->line[get_line_index(this, this->fresh_line_cnt--)];
+                        for (int i = _TTY_DEFAULT_TERMINAL_ROWS; i > 0; i--) {
+                                uint idx = get_line_index(this, i);
+                                if (this->fresh_line[idx]) {
+                                        this->fresh_line[idx] = false;
+                                        return this->line[idx];
+                                }
                         }
                 }
         }
@@ -422,7 +410,9 @@ void ttybfr_clear_fresh_line_counter(ttybfr_t *this)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        this->fresh_line_cnt = 0;
+                        for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
+                                this->fresh_line[i] = false;
+                        }
                 }
         }
 }
