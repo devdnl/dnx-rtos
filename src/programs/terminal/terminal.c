@@ -36,7 +36,8 @@ extern "C" {
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include "system/ioctl.h"
+#include <sys/ioctl.h>
+#include <dirent.h>
 #include "system/dnx.h"
 
 /*==============================================================================

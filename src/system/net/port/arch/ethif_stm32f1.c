@@ -37,7 +37,7 @@ extern "C" {
 #include <stdlib.h>
 #include "ethif.h"
 #include "system/dnx.h"
-#include "system/ioctl.h"
+#include "sys/ioctl.h"
 #include "system/thread.h"
 #include "system/timer.h"
 #include "lwipopts.h"

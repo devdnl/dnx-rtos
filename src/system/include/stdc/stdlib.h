@@ -36,16 +36,58 @@ extern "C" {
 ==============================================================================*/
 #include "core/systypes.h"
 #include "core/sysmoni.h"
+#include "core/conv.h"
+#include "core/progman.h"
+
+#include <machine/ieeefp.h>
+#include "_ansi.h"
+
+#define __need_size_t
+#define __need_wchar_t
+#include <stddef.h>
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define EXIT_FAILURE 1
-#define EXIT_SUCCESS 0
+#define EXIT_FAILURE    1
+#define EXIT_SUCCESS    0
+
+#ifndef NULL
+#define NULL            0
+#endif
+
+#define RAND_MAX        __RAND_MAX
+
+#ifndef _PTR
+#define _PTR            void *
+#endif
+
+#ifndef _VOID
+#define _VOID           void
+#endif
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct
+{
+        int quot;               /* quotient */
+        int rem;                /* remainder */
+} div_t;
+
+typedef struct
+{
+        long quot;              /* quotient */
+        long rem;               /* remainder */
+} ldiv_t;
+
+#ifndef __STRICT_ANSI__
+typedef struct
+{
+        long long int quot;     /* quotient */
+        long long int rem;      /* remainder */
+} lldiv_t;
+#endif
 
 /*==============================================================================
   Exported objects
@@ -54,6 +96,14 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern int      abs(int);
+extern _PTR     bsearch(const _PTR, const _PTR, size_t, size_t, int (*_compar(const _PTR, const _PTR)));
+extern div_t    div(int, int);
+extern long     labs(long);
+extern ldiv_t   ldiv(long __numer, long __denom);
+extern _VOID    qsort(_PTR __base, size_t __nmemb, size_t __size, int(*_compar)(const _PTR, const _PTR));
+extern int      rand(_VOID);
+extern _VOID    srand(unsigned __seed);
 
 /*==============================================================================
   Exported inline functions
@@ -73,21 +123,88 @@ static inline void free(void *mem)
         sysm_tskfree(mem);
 }
 
+static inline void *realloc(void *mem, size_t size)
+{
+        (void) size;
 
-///** MEMORY MANAGEMENT DEFINTIONS */
-//#ifndef malloc
-//#define malloc(size_t__size)                                    sysm_tskmalloc(size_t__size)
-//#endif
-//
-//#ifndef calloc
-//#define calloc(size_t__nitems, size_t__isize)                   sysm_tskcalloc(size_t__nitems, size_t__isize)
-//#endif
-//
-//#ifndef free
-//#define free(void__pmem)                                        sysm_tskfree(void__pmem)
-//#endif
+        return mem;
+}
 
+static inline void *reallocf(void *mem, size_t size)
+{
+        (void) size;
 
+        free(mem);
+        return NULL;
+}
+
+static inline void abort(void)
+{
+        _abort();
+}
+
+static inline void exit(int status)
+{
+        _exit(status);
+}
+
+static inline int system(const char *str)
+{
+        return _system(str);
+}
+
+static inline char *getenv(const char *name)
+{
+        (void) name;
+        return NULL;
+}
+
+static inline int getsubopt(char **optionp, char *const *tokens, char **valuep)
+{
+        (void) optionp;
+        (void) tokens;
+        (void) valuep;
+
+        return -1;
+}
+
+static inline int atoi(const char *str)
+{
+        return sys_atoi(str);
+}
+
+static inline int atol(const char *str)
+{
+        return sys_atoi(str);
+}
+
+static inline i32_t strtol(const char *str, char **endptr, int base)
+{
+        i32_t result;
+        char *end = sys_strtoi(str, base, &result);
+        *endptr = end;
+        return result;
+}
+
+static inline char *strtoi(const char *str, int base, i32_t *result)
+{
+        return sys_strtoi(str, base, result);
+}
+
+static inline double atof(const char *str)
+{
+        return sys_atof(str);
+}
+
+static inline double strtod(const char *str, char **end)
+{
+        return sys_strtod(str, end);
+}
+
+static inline float strtof(const char *str, char **end)
+{
+        return (float)sys_strtod(str, end);
+}
 
 #ifdef __cplusplus
 }

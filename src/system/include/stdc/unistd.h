@@ -82,6 +82,20 @@ static inline void sleep_ms(const uint milliseconds)
 
 //==============================================================================
 /**
+ * @brief Suspend task for defined time in microseconds (not supported)
+ *
+ * @param[in] microseconds
+ */
+//==============================================================================
+static inline void usleep(const uint microseconds)
+{
+        (void) microseconds;
+
+        vTaskDelay(1);
+}
+
+//==============================================================================
+/**
  * @brief Function sleep task in regular periods (reference argument)
  *
  * @param milliseconds          milliseconds
@@ -119,6 +133,22 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 static inline char *getcwd(char *buf, size_t size)
 {
         return strncpy(buf, _task_get_data()->f_cwd, size);
+}
+
+//==============================================================================
+/**
+ * @brief Changes file owner and group
+ *
+ * @param[in]   path    file path
+ * @param[in]   owner   owner
+ * @param[in]   group   group
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+static inline int chown(const char *path, int owner, int group)
+{
+        return vfs_chown(path, owner, group);
 }
 
 #ifdef __cplusplus

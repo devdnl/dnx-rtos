@@ -34,7 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "system/dnx.h"
+#include <mntent.h>
 
 /*==============================================================================
   Local symbolic constants/macros

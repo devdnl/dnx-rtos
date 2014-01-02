@@ -36,9 +36,9 @@ extern "C" {
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include "system/dnx.h"
 #include "system/timer.h"
-#include "system/ioctl.h"
 #include "system/thread.h"
 
 /*==============================================================================

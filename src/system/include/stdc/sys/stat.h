@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    umount.c
+@file    stat.h
 
 @author  Daniel Zorychta
 
-@brief   Umount selected file system
+@brief
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _STAT_H_
+#define _STAT_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,58 +34,62 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/mount.h>
+#include "core/vfs.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
-==============================================================================*/
-GLOBAL_VARIABLES_SECTION_BEGIN
-
-GLOBAL_VARIABLES_SECTION_END
-
-/*==============================================================================
-  Exported object definitions
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Function definitions
+  Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief Program main function
- */
-//==============================================================================
-PROGRAM_MAIN(umount, int argc, char *argv[])
+static inline int mknod(const char *path, struct vfs_drv_interface *drvif)
 {
-        if (argc == 1) {
-                printf("Usage: %s [mount point]\n", argv[0]);
-        } else {
-                if (umount(argv[1]) != 0) {
-                        perror(argv[1]);
-                }
-        }
+        return vfs_mknod(path, drvif);
+}
 
-        return EXIT_SUCCESS;
+static inline int mkdir(const char *path, mode_t mode)
+{
+        return vfs_mkdir(path, mode);
+}
+
+static inline int mkfifo(const char *path, mode_t mode)
+{
+        return vfs_mkfifo(path, mode);
+}
+
+static inline int chmod(const char *path, int mode)
+{
+        return vfs_chmod(path, mode);
+}
+
+static inline int stat(const char *path, struct stat *stat)
+{
+        return vfs_stat(path, stat);
+}
+
+static inline int fstat(FILE *file, struct stat *stat)
+{
+        return vfs_fstat(file, stat);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _STAT_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

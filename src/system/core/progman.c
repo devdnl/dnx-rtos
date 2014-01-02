@@ -724,7 +724,7 @@ void _task_kill(task_t *taskhdl)
  * @param status        exit value
  */
 //==============================================================================
-void exit(int status)
+void _exit(int status)
 {
         process_kill(task_get_handle(), status);
 
@@ -737,7 +737,7 @@ void exit(int status)
  * @brief Function close program with error code
  */
 //==============================================================================
-void abort(void)
+void _abort(void)
 {
         process_kill(task_get_handle(), -1);
 
@@ -754,7 +754,7 @@ void abort(void)
  * @return program status
  */
 //==============================================================================
-int system(const char *command)
+int _system(const char *command)
 {
         if (!command)
                 return 1;

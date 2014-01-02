@@ -34,10 +34,11 @@ extern "C" {
 #include <stdio.h>
 #include <unistd.h>
 #include "user/initd.h"
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/mount.h>
 #include "system/dnx.h"
-#include "system/ioctl.h"
 #include "system/netapi.h"
-#include "system/mount.h"
 #include "system/thread.h"
 
 /*==============================================================================
