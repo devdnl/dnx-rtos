@@ -31,13 +31,13 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
+#include <dnx/module.h>
+#include <dnx/timer.h>
 #include "stm32f1/pll_cfg.h"
 #include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #include "stm32f1/cpuctl.h"
-#include "system/timer.h"
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -31,14 +31,14 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "system/thread.h"
-#include "system/dnx.h"
-#include "system/timer.h"
+#include <dnx/module.h>
+#include <dnx/thread.h>
+#include <dnx/os.h>
+#include <dnx/timer.h>
+#include <unistd.h>
 #include "stm32f1/sdspi_cfg.h"
 #include "stm32f1/sdspi_def.h"
 #include "stm32f1/stm32f10x.h"
-#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros

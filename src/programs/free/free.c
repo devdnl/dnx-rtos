@@ -33,7 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
-#include "system/dnx.h"
+#include <dnx/os.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -85,13 +85,13 @@ PROGRAM_MAIN(free, int argc, char *argv[])
                 modmem[module] = get_module_memory_usage(module);
         }
 
-        u32_t free = get_free_memory();
-        u32_t used = get_used_memory();
+        u32_t m_free = get_free_memory();
+        u32_t m_used = get_used_memory();
 
         printf("Total: %d\n", get_memory_size());
-        printf("Free : %d\n", free);
-        printf("Used : %d\n", used);
-        printf("Memory usage: %d%%\n\n", (used * 100)/get_memory_size());
+        printf("Free : %d\n", m_free);
+        printf("Used : %d\n", m_used);
+        printf("Memory usage: %d%%\n\n", (m_used * 100)/get_memory_size());
 
         printf("Detailed memory usage:\n");
         printf("  Kernel  : %d\n", sysmem.used_kernel_memory);

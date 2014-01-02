@@ -37,6 +37,7 @@ extern "C" {
 #include "core/printx.h"
 #include "core/sysmoni.h"
 #include "core/conv.h"
+#include <string.h>
 
 /*==============================================================================
  Local symbolic constants/macros

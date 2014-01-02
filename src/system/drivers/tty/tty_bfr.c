@@ -31,7 +31,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
+#include <dnx/module.h>
+#include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
 

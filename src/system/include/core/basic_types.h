@@ -85,6 +85,7 @@ typedef int32_t      i32_t;
 typedef uint64_t     u64_t;
 typedef int64_t      i64_t;
 typedef unsigned int uint;
+typedef uint64_t     fpos_t;
 
 typedef int          ssize_t;
 

@@ -36,6 +36,7 @@ extern "C" {
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <dirent.h>
 
 /*==============================================================================
   Local symbolic constants/macros

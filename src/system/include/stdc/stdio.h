@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    dnxio.h
+@file    stdio.h
 
 @author  Daniel Zorychta
 
@@ -42,28 +42,37 @@ extern "C" {
 #include "core/progman.h"
 #include "core/conv.h"
 #include "kernel/kwrapper.h"
+#include <limits.h>
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/** MEMORY MANAGEMENT DEFINTIONS */
-#ifndef malloc
-#define malloc(size_t__size)                                    sysm_tskmalloc(size_t__size)
-#endif
-
-#ifndef calloc
-#define calloc(size_t__nitems, size_t__isize)                   sysm_tskcalloc(size_t__nitems, size_t__isize)
-#endif
-
-#ifndef free
-#define free(void__pmem)                                        sysm_tskfree(void__pmem)
-#endif
-
 /** stdio buffer size */
-#define BUFSIZ                                                  CONFIG_STREAM_BUFFER_LENGTH
+#define BUFSIZ                  CONFIG_STREAM_BUFFER_LENGTH
 
-/** function-like macros */
-#define strerror(int__errnum)                                   sys_strerror(int__errnum)
+#define _IOFBF                  0               /* setvbuf should set fully buffered */
+#define _IOLBF                  1               /* setvbuf should set line buffered */
+#define _IONBF                  2               /* setvbuf should set unbuffered */
+
+#ifndef NULL
+#define NULL                    0
+#endif
+
+#ifndef EOF
+#define EOF                     (-1)
+#endif
+
+#ifndef SEEK_SET
+#define SEEK_SET                VFS_SEEK_SET
+#endif
+
+#ifndef SEEK_CUR
+#define SEEK_CUR                VFS_SEEK_CUR
+#endif
+
+#ifndef SEEK_END
+#define SEEK_END                VFS_SEEK_END
+#endif
 
 /*==============================================================================
   Exported object types
@@ -105,6 +114,15 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
         return vfs_fread(ptr, size, count, file);
 }
 
+static inline int fsetpos(FILE *file, const fpos_t *pos)
+{
+        if (pos) {
+                return vfs_fseek(file, *pos, SEEK_SET);
+        } else {
+                return EOF;
+        }
+}
+
 static inline int fseek(FILE *file, i64_t offset, int mode)
 {
         return vfs_fseek(file, offset, mode);
@@ -115,9 +133,14 @@ static inline i64_t ftell(FILE *file)
         return vfs_ftell(file);
 }
 
-static inline int fstat(FILE *file, struct stat *stat)
+static inline int fgetpos(FILE *file, fpos_t *pos)
 {
-        return vfs_fstat(file, stat);
+        if (pos) {
+                *pos = (fpos_t)vfs_ftell(file);
+                return 0;
+        } else {
+                return EOF;
+        }
 }
 
 static inline int fflush(FILE *file)
@@ -150,39 +173,20 @@ static inline int rewind(FILE *file)
         return vfs_rewind(file);
 }
 
-static inline stdret_t getmntentry(size_t item, struct vfs_mntent *mntent)
+static inline void setbuf(FILE *stream, char *buffer)
 {
-        return vfs_getmntentry(item, mntent);
+        (void) stream;
+        (void) buffer;
 }
 
-static inline int mknod(const char *path, struct vfs_drv_interface *drvif)
+static inline int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
 {
-        return vfs_mknod(path, drvif);
-}
+        (void) stream;
+        (void) buffer;
+        (void) mode;
+        (void) size;
 
-static inline int mkdir(const char *path, mode_t mode)
-{
-        return vfs_mkdir(path, mode);
-}
-
-static inline int mkfifo(const char *path, mode_t mode)
-{
-        return vfs_mkfifo(path, mode);
-}
-
-static inline DIR *opendir(const char *path)
-{
-        return sysm_opendir(path);
-}
-
-static inline int closedir(DIR *dir)
-{
-        return sysm_closedir(dir);
-}
-
-static inline dirent_t readdir(DIR *dir)
-{
-        return vfs_readdir(dir);
+        return 0;
 }
 
 static inline int remove(const char *path)
@@ -195,27 +199,6 @@ static inline int rename(const char *old_name, const char *new_name)
         return vfs_rename(old_name, new_name);
 }
 
-static inline int chmod(const char *path, int mode)
-{
-        return vfs_chmod(path, mode);
-}
-
-static inline int chown(const char *path, int owner, int group)
-{
-        return vfs_chown(path, owner, group);
-}
-
-static inline int stat(const char *path, struct stat *stat)
-{
-        return vfs_stat(path, stat);
-}
-
-static inline int statfs(const char *path, struct vfs_statfs *statfs)
-{
-        return vfs_statfs(path, statfs);
-}
-
-//#define printf(...) sys_fprintf(stdout, __VA_ARGS__)
 static inline int printf(const char *format, ...)
 {
         va_list arg;
@@ -345,24 +328,9 @@ static inline char *fgets(char *str, int size, FILE *stream)
         return sys_fgets(str, size, stream);
 }
 
-static inline int atoi(const char *str)
+static inline char *gets(char *str)
 {
-        return sys_atoi(str);
-}
-
-static inline char *strtoi(const char *str, int base, i32_t *result)
-{
-        return sys_strtoi(str, base, result);
-}
-
-static inline double atof(const char *str)
-{
-        return sys_atof(str);
-}
-
-static inline double strtod(const char *str, char **end)
-{
-        return sys_strtod(str, end);
+        return sys_fgets(str, INT_MAX, stdin);
 }
 
 #ifdef __cplusplus

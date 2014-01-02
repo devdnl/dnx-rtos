@@ -36,10 +36,10 @@ extern "C" {
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include "system/dnx.h"
-#include "system/timer.h"
-#include "system/ioctl.h"
-#include "system/thread.h"
+#include <sys/ioctl.h>
+#include <dnx/os.h>
+#include <dnx/timer.h>
+#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros

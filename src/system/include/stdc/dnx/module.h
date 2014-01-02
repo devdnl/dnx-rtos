@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    dnxmodule.h
+@file    module.h
 
 @author  Daniel Zorychta
 

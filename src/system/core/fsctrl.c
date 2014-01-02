@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <errno.h>
+#include <string.h>
 #include "core/systypes.h"
 #include "core/fsctrl.h"
 #include "core/vfs.h"

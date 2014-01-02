@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    mian.c
+@file    dirent.h
 
 @author  Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+@brief
 
-@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _DIRENT_H_
+#define _DIRENT_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,48 +34,47 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/os.h>
+#include "core/vfs.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object definitions
+  Exported inline functions
 ==============================================================================*/
-
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Main function
- */
-//==============================================================================
-int main(void)
+static inline DIR *opendir(const char *path)
 {
-        dnx_init();
-        kernel_start();
-        return 0;
+        return sysm_opendir(path);
+}
+
+static inline int closedir(DIR *dir)
+{
+        return sysm_closedir(dir);
+}
+
+static inline dirent_t readdir(DIR *dir)
+{
+        return vfs_readdir(dir);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _DIRENT_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

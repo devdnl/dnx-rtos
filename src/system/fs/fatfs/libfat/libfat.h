@@ -50,8 +50,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdint.h>
+#include <dnx/fs.h>                     /* dnx file system support */
 #include "libfat_conf.h"                /* FatFs configuration options */
-#include "system/dnxfs.h"               /* dnx file system support */
 
 /*==============================================================================
   Exported symbolic constants/macros

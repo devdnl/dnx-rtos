@@ -35,7 +35,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
+#include <dnx/module.h>
 #include "stm32f1/gpio_cfg.h"
 #include "stm32f1/gpio_def.h"
 #include "stm32f1/gpio_macros.h"

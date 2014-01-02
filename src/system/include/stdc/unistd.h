@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    khooks.c
+@file    unistd.h
 
 @author  Daniel Zorychta
 
-@brief   This file support all kernel hooks
+@brief   Unix standard library.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,128 +24,138 @@
 
 *//*==========================================================================*/
 
-/*==============================================================================
-  Include files
-==============================================================================*/
-#include "config.h"
-#include "kernel/khooks.h"
-#include "core/printx.h"
-#include "core/sysmoni.h"
-#include "core/progman.h"
-#include "portable/cpuctl.h"
-#include <dnx/thread.h>
+#ifndef _UNISTD_H_
+#define _UNISTD_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Include files
+==============================================================================*/
+#include <string.h>
+#include "kernel/kwrapper.h"
+
+/*==============================================================================
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
-==============================================================================*/
-/** uptime counter */
-u32_t uptime_counter_sec;
-u32_t uptime_divider;
-
-/*==============================================================================
-  Exported object definitions
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Function definitions
+  Exported inline functions
 ==============================================================================*/
-
 //==============================================================================
 /**
- * @brief Application Idle hook (idle task - don't use loop)
- */
-//==============================================================================
-void vApplicationIdleHook(void)
-{
-#if (CONFIG_RTOS_SLEEP_ON_IDLE > 0)
-        _cpuctl_sleep();
-#endif
-}
-
-//==============================================================================
-/**
- * @brief Stack overflow hook
- */
-//==============================================================================
-void vApplicationStackOverflowHook(task_t *taskHdl, signed char *taskName)
-{
-        (void) taskHdl;
-        (void) taskName;
-
-        if (CONFIG_SYSTEM_STOP_MACRO != 0) {
-                while (true) {
-                        __asm("nop");
-                }
-        }
-}
-
-//==============================================================================
-/**
- * @brief Hook when system tick was increased
- */
-//==============================================================================
-void vApplicationTickHook(void)
-{
-        if (++uptime_divider >= (configTICK_RATE_HZ)) {
-                uptime_divider = 0;
-                uptime_counter_sec++;
-        }
-}
-
-//==============================================================================
-/**
- * @brief Hook when task is switched in
- */
-//==============================================================================
-void vApplicationSwitchedIn(void)
-{
-        _copy_task_context_to_standard_variables();
-        sysm_task_switched_in();
-}
-
-//==============================================================================
-/**
- * @brief Hook when task is switched out
- */
-//==============================================================================
-void vApplicationSwitchedOut(void)
-{
-        _copy_standard_variables_to_task_context();
-        sysm_task_switched_out();
-}
-
-//==============================================================================
-/**
- * @brief Function return uptime counter in seconds
+ * @brief Suspend task for defined time in seconds
  *
- * @return uptime counter
+ * @param[in] seconds
  */
 //==============================================================================
-u32_t _get_uptime_counter(void)
+static inline void sleep(const uint seconds)
 {
-        return uptime_counter_sec;
+        _sleep(seconds);
+}
+
+//==============================================================================
+/**
+ * @brief Suspend task for defined time in milliseconds
+ *
+ * @param[in] milliseconds
+ */
+//==============================================================================
+static inline void sleep_ms(const uint milliseconds)
+{
+        _sleep_ms(milliseconds);
+}
+
+//==============================================================================
+/**
+ * @brief Suspend task for defined time in microseconds (not supported)
+ *
+ * @param[in] microseconds
+ */
+//==============================================================================
+static inline void usleep(const uint microseconds)
+{
+        (void) microseconds;
+
+        vTaskDelay(1);
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param milliseconds          milliseconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+{
+        _sleep_until_ms(milliseconds, ref_time_ticks);
+}
+
+//==============================================================================
+/**
+ * @brief Function sleep task in regular periods (reference argument)
+ *
+ * @param seconds       seconds
+ * @param ref_time_ticks        reference time in OS ticks
+ */
+//==============================================================================
+static inline void sleep_until(const uint seconds, int *ref_time_ticks)
+{
+        _sleep_until(seconds, ref_time_ticks);
+}
+
+//==============================================================================
+/**
+ * @brief Function return x name
+ *
+ * @param[out] *buf     output buffer
+ * @param[in]   size    buffer size
+ *
+ * @return buf pointer on success, otherwise NULL pointer
+ */
+//==============================================================================
+static inline char *getcwd(char *buf, size_t size)
+{
+        return strncpy(buf, _task_get_data()->f_cwd, size);
+}
+
+//==============================================================================
+/**
+ * @brief Changes file owner and group
+ *
+ * @param[in]   path    file path
+ * @param[in]   owner   owner
+ * @param[in]   group   group
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+static inline int chown(const char *path, int owner, int group)
+{
+        return vfs_chown(path, owner, group);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _UNISTD_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

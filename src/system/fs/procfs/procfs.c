@@ -31,12 +31,13 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxfs.h"
+#include <dnx/fs.h>
+#include <dnx/thread.h>
+#include <string.h>
 #include "core/printx.h"
 #include "core/conv.h"
 #include "core/list.h"
 #include "core/progman.h"
-#include "system/thread.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/lib/stm32f10x_rcc.h"

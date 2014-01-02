@@ -1,3 +1,10 @@
+dnx/FreeRTOS 1.2.2
+==================
+New Features, Improvements:
+- cleaned up standard headers, more logical libraries localization
+
+Fixed Bugs:
+
 dnx/FreeRTOS 1.2.1
 ==================
 New Features, Improvements:
