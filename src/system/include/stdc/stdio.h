@@ -189,6 +189,18 @@ static inline int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
         return 0;
 }
 
+static inline FILE *tmpfile(void)
+{
+        return NULL;
+}
+
+static inline char *tmpnam(char *str)
+{
+        (void) str;
+
+        return NULL;
+}
+
 static inline int remove(const char *path)
 {
         return vfs_remove(path);
@@ -321,6 +333,14 @@ static inline int fgetc(FILE *stream)
 static inline int getc(FILE *stream)
 {
         return sys_getc(stream);
+}
+
+static inline int ungetc(int c, FILE *stream)
+{
+        (void) c;
+        (void) stream;
+
+        return EOF;
 }
 
 static inline char *fgets(char *str, int size, FILE *stream)
