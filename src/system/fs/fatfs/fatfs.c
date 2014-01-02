@@ -31,9 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxfs.h"
-#include "libfat/libfat.h"
+#include <dnx/fs.h>
 #include <string.h>
+#include "libfat/libfat.h"
 
 /*==============================================================================
   Local symbolic constants/macros

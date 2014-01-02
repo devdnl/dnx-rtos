@@ -31,13 +31,13 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "system/thread.h"
+#include <dnx/module.h>
+#include <dnx/thread.h>
+#include <unistd.h>
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/uart_def.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
-#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros

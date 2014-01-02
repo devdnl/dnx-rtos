@@ -34,11 +34,11 @@ extern "C" {
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <dnx/thread.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "kernel/kwrapper.h"
-#include "system/thread.h"
 
 /*==============================================================================
   Local symbolic constants/macros

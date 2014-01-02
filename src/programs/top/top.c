@@ -37,9 +37,9 @@ extern "C" {
 #include <errno.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include "system/dnx.h"
-#include "system/timer.h"
-#include "system/thread.h"
+#include <dnx/os.h>
+#include <dnx/timer.h>
+#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros

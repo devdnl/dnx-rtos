@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    netapi.h
+@file    net.h
 
 @author  Daniel Zorychta
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _NETAPI_H_
-#define _NETAPI_H_
+#ifndef _DNXNET_H_
+#define _DNXNET_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -1094,7 +1094,7 @@ static inline u16_t netapi_get_buf_port(netapi_buf_t *buf)
 }
 #endif
 
-#endif /* _NETAPI_H_ */
+#endif /* _DNXNET_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

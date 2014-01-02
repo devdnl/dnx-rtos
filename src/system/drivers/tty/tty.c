@@ -31,13 +31,13 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
-#include "system/thread.h"
-#include "system/dnx.h"
+#include <dnx/module.h>
+#include <dnx/thread.h>
+#include <dnx/os.h>
+#include <unistd.h>
 #include "tty_cfg.h"
 #include "tty_def.h"
 #include "tty.h"
-#include <unistd.h>
 
 /*==============================================================================
   Local symbolic constants/macros

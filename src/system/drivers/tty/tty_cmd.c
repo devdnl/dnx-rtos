@@ -31,12 +31,12 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
+#include <dnx/module.h>
+#include <dnx/timer.h>
+#include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
-#include "system/timer.h"
 #include "core/scanx.h"
-#include <string.h>
 
 /*==============================================================================
   Local macros

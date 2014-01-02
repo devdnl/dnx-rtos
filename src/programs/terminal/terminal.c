@@ -38,7 +38,7 @@ extern "C" {
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <dirent.h>
-#include "system/dnx.h"
+#include <dnx/os.h>
 
 /*==============================================================================
   Local symbolic constants/macros

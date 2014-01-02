@@ -112,17 +112,17 @@ static inline timer_t timer_set_expired(void)
 
 //==============================================================================
 /**
- * @brief Function calculate timer time difference (abs value)
+ * @brief Function calculate timer time difference
  *
  * @param timer1        timer value
  * @param timer2        timer value
  *
- * @return timer expired value
+ * @return time difference
  */
 //==============================================================================
 static inline int timer_difftime(timer_t timer1, timer_t timer2)
 {
-        return timer1 > timer2 ? timer1 - timer2 : timer2 - timer1;
+        return timer1 - timer2;
 }
 
 #ifdef __cplusplus

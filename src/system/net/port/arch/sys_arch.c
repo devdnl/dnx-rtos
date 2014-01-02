@@ -31,9 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <dnx/os.h>
+#include <dnx/thread.h>
 #include "sys_arch.h"
-#include "system/dnx.h"
-#include "system/thread.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 

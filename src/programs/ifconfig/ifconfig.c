@@ -33,7 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <string.h>
-#include "system/netapi.h"
+#include <dnx/net.h>
 
 /*==============================================================================
   Local symbolic constants/macros

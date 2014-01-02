@@ -31,12 +31,12 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <dnx/thread.h>
+#include <errno.h>
+#include <string.h>
 #include "core/vfs.h"
 #include "core/list.h"
 #include "core/sysmoni.h"
-#include "system/thread.h"
-#include <errno.h>
-#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros

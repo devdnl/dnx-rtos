@@ -33,7 +33,7 @@
 #include "core/sysmoni.h"
 #include "core/progman.h"
 #include "portable/cpuctl.h"
-#include "system/thread.h"
+#include <dnx/thread.h>
 
 #ifdef __cplusplus
 extern "C" {

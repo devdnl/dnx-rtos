@@ -31,10 +31,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxfs.h"
-#include "system/thread.h"
-#include "core/list.h"
+#include <dnx/fs.h>
 #include <string.h>
+#include <dnx/thread.h>
+#include "core/list.h"
 
 /*==============================================================================
   Local symbolic constants/macros
