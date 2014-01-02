@@ -41,7 +41,7 @@ extern "C" {
 ==============================================================================*/
 #define MTX_BLOCK_TIME                  10
 #define PIPE_LENGTH                     CONFIG_STREAM_BUFFER_LENGTH
-#define PIPE_WRITE_TIMEOUT              MAX_DELAY
+#define PIPE_WRITE_TIMEOUT              1
 #define PIPE_READ_TIMEOUT               MAX_DELAY
 
 /*==============================================================================
@@ -1160,6 +1160,8 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                                 if (queue_send(node->data, src + i, PIPE_WRITE_TIMEOUT)) {
                                         n++;
                                 } else {
+                                        u8_t tmp;
+                                        queue_receive(node->data, &tmp, 0);
                                         i--;
                                 }
                         }
