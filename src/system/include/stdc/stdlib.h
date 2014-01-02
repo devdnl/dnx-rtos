@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    fsctrl.c
+@file    stdlib.h
 
 @author  Daniel Zorychta
 
-@brief   File system control support.
+@brief
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 
 *//*==========================================================================*/
 
+#ifndef _STDLIB_H_
+#define _STDLIB_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,26 +34,17 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <errno.h>
-#include <string.h>
 #include "core/systypes.h"
-#include "core/fsctrl.h"
-#include "core/vfs.h"
+#include "core/sysmoni.h"
 
 /*==============================================================================
-  Local macros
+  Exported macros
 ==============================================================================*/
+#define EXIT_FAILURE 1
+#define EXIT_SUCCESS 0
 
 /*==============================================================================
-  Local object types
-==============================================================================*/
-
-/*==============================================================================
-  Local function prototypes
-==============================================================================*/
-
-/*==============================================================================
-  Local objects
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -58,70 +52,48 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  External objects
+  Exported functions
 ==============================================================================*/
-extern const struct _FS_entry _FS_table[];
-extern const uint             _FS_table_size;
 
 /*==============================================================================
-  Function definitions
+  Exported inline functions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Function mount file system
- *
- * @param *FS_name       file system name
- * @param *src_path      path to file with source data
- * @param *mount_point   mount point of file system
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-stdret_t _mount(const char *FS_name, const char *src_path, const char *mount_point)
+static inline void *malloc(size_t size)
 {
-        if (!FS_name || !mount_point || !src_path) {
-                errno = EINVAL;
-                return STD_RET_ERROR;
-        }
-
-        for (uint i = 0; i < _FS_table_size; i++) {
-                if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
-                        return vfs_mount(src_path, mount_point,
-                                         (struct vfs_FS_interface *)&_FS_table[i].FS_if);
-                }
-        }
-
-        errno = EINVAL;
-
-        return STD_RET_ERROR;
+        return sysm_tskmalloc(size);
 }
 
-//==============================================================================
-/**
- * @brief Function unmount file system
- *
- * @param *mount_point   path to file system
- *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
- */
-//==============================================================================
-stdret_t _umount(const char *mount_point)
+static inline void *calloc(size_t n, size_t size)
 {
-        if (mount_point) {
-                return vfs_umount(mount_point);
-        } else {
-                errno = EINVAL;
-                return STD_RET_ERROR;
-        }
+        return sysm_tskcalloc(n, size);
 }
+
+static inline void free(void *mem)
+{
+        sysm_tskfree(mem);
+}
+
+
+///** MEMORY MANAGEMENT DEFINTIONS */
+//#ifndef malloc
+//#define malloc(size_t__size)                                    sysm_tskmalloc(size_t__size)
+//#endif
+//
+//#ifndef calloc
+//#define calloc(size_t__nitems, size_t__isize)                   sysm_tskcalloc(size_t__nitems, size_t__isize)
+//#endif
+//
+//#ifndef free
+//#define free(void__pmem)                                        sysm_tskfree(void__pmem)
+//#endif
+
+
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* _STDLIB_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

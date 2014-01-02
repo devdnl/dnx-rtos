@@ -33,6 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 #include "core/progman.h"
 #include "core/sysmoni.h"
 #include "core/list.h"

@@ -34,6 +34,7 @@ extern "C" {
 #include "system/dnxmodule.h"
 #include "tty.h"
 #include "tty_cfg.h"
+#include <string.h>
 
 /*==============================================================================
   Local macros

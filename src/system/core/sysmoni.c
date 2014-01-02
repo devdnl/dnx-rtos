@@ -32,6 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <errno.h>
+#include <string.h>
 #include "core/sysmoni.h"
 #include "core/list.h"
 #include "core/printx.h"

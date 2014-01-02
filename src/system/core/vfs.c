@@ -36,6 +36,7 @@ extern "C" {
 #include "core/sysmoni.h"
 #include "system/thread.h"
 #include <errno.h>
+#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros

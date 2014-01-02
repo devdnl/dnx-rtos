@@ -34,6 +34,7 @@ extern "C" {
 #include "system/dnxfs.h"
 #include "system/thread.h"
 #include "core/list.h"
+#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros

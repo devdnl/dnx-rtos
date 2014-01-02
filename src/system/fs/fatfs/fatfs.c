@@ -33,6 +33,7 @@ extern "C" {
 ==============================================================================*/
 #include "system/dnxfs.h"
 #include "libfat/libfat.h"
+#include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros

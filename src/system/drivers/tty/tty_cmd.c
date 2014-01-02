@@ -36,6 +36,7 @@ extern "C" {
 #include "tty_cfg.h"
 #include "system/timer.h"
 #include "core/scanx.h"
+#include <string.h>
 
 /*==============================================================================
   Local macros

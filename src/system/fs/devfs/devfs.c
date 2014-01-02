@@ -34,6 +34,7 @@ extern "C" {
 #include "system/dnxfs.h"
 #include "system/thread.h"
 #include "system/thread.h"
+#include <string.h>
 
 /*==============================================================================
   Local macros

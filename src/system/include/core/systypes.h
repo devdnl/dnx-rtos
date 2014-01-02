@@ -35,7 +35,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stddef.h>
-#include <string.h>
 #include "core/basic_types.h"
 #include "kernel/ktypes.h"
 

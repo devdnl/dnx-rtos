@@ -34,6 +34,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "ethif.h"
 #include "system/dnx.h"
 #include "system/ioctl.h"
