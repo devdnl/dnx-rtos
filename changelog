@@ -5,6 +5,7 @@ New Features, Improvements:
 - pipe (in LFS and devfs) not blocks a program if stream is full
 
 Fixed Bugs:
+- none
 
 dnx/FreeRTOS 1.2.1
 ==================
