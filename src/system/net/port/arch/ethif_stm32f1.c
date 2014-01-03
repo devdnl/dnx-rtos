@@ -34,11 +34,12 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <dnx/os.h>
+#include <dnx/thread.h>
+#include <dnx/timer.h>
 #include "ethif.h"
-#include "system/dnx.h"
-#include "system/ioctl.h"
-#include "system/thread.h"
-#include "system/timer.h"
 #include "lwipopts.h"
 #include "lwip/tcp_impl.h"
 #include "lwip/dhcp.h"

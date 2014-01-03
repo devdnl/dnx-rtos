@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "core/modctrl.h"
-#include "system/dnxmodule.h"
+#include <dnx/module.h>
 
 #include "stm32f1/uart_def.h"
 #include "stm32f1/gpio_def.h"
@@ -43,7 +43,7 @@ extern "C" {
 #include "tty_def.h"
 
 /**
- * NOTE: To use drivers' ioctl definitions add include to file: ./src/system/include/system/ioctl.h
+ * NOTE: To use drivers' ioctl definitions add include to file: ./src/system/include/sys/ioctl.h
  */
 
 /*==============================================================================

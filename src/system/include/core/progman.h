@@ -83,9 +83,9 @@ extern int                      _errno;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void      exit                                           (int);
-extern void      abort                                          (void);
-extern int       system                                         (const char*);
+extern void      _exit                                          (int);
+extern void      _abort                                         (void);
+extern int       _system                                        (const char*);
 extern task_t   *_program_new                                   (const char*, const char*, FILE*, FILE*, FILE*);
 extern int       _program_kill                                  (prog_t*);
 extern int       _program_delete                                (prog_t*);

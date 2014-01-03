@@ -35,7 +35,7 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "system/ioctl.h"
+#include <sys/ioctl.h>
 
 /*==============================================================================
   Local symbolic constants/macros

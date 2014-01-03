@@ -35,8 +35,8 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "system/dnx.h"
-#include "system/timer.h"
+#include <dnx/os.h>
+#include <dnx/timer.h>
 
 /*==============================================================================
   Local symbolic constants/macros

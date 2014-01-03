@@ -31,9 +31,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxfs.h"
-#include "system/thread.h"
-#include "system/thread.h"
+#include <dnx/fs.h>
+#include <dnx/thread.h>
+#include <string.h>
 
 /*==============================================================================
   Local macros
@@ -311,8 +311,13 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         if (node->type == FILE_TYPE_DRV) {
                 return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos);
         } else if (node->type == FILE_TYPE_PIPE) {
+                ssize_t n = 0;
                 for (size_t i = 0; i < count; i++) {
-                        if (queue_send(node->nif.pipe, src + i, MAX_DELAY) == false) {
+                        if (queue_send(node->nif.pipe, src + i, 1)) {
+                                n++;
+                        } else {
+                                u8_t tmp;
+                                queue_receive(node->nif.pipe, &tmp, 0);
                                 i--;
                         }
                 }

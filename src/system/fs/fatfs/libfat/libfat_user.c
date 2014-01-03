@@ -41,7 +41,7 @@ extern "C" {
 ==============================================================================*/
 #include "libfat_user.h"
 #include "libfat_conf.h"
-#include "system/thread.h"
+#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros

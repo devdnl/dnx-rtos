@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    timer.h
+@file    stat.h
 
 @author  Daniel Zorychta
 
-@brief   Software timer library.
+@brief
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _TIMER_H_
-#define _TIMER_H_
+#ifndef _STAT_H_
+#define _STAT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "kernel/kwrapper.h"
+#include "core/vfs.h"
 
 /*==============================================================================
   Exported macros
@@ -43,7 +43,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef int timer_t;
 
 /*==============================================================================
   Exported objects
@@ -56,80 +55,41 @@ typedef int timer_t;
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief Function reset timer
- *
- * @return timer start value
- */
-//==============================================================================
-static inline timer_t timer_reset(void)
+static inline int mknod(const char *path, struct vfs_drv_interface *drvif)
 {
-        return _kernel_get_time_ms();
+        return vfs_mknod(path, drvif);
 }
 
-//==============================================================================
-/**
- * @brief Function check if timer is expired
- *
- * @param timer         timer value
- * @param time          expiration time
- *
- * @return true if timer expired, otherwise false
- */
-//==============================================================================
-static inline bool timer_is_expired(timer_t timer, int time)
+static inline int mkdir(const char *path, mode_t mode)
 {
-        return (_kernel_get_time_ms() - timer >= time);
+        return vfs_mkdir(path, mode);
 }
 
-//==============================================================================
-/**
- * @brief Function check if timer is not expired
- *
- * @param timer         timer value
- * @param time          expiration time
- *
- * @return true if timer not expired, otherwise false
- */
-//==============================================================================
-static inline bool timer_is_not_expired(timer_t timer, int time)
+static inline int mkfifo(const char *path, mode_t mode)
 {
-        return (_kernel_get_time_ms() - timer < time);
+        return vfs_mkfifo(path, mode);
 }
 
-//==============================================================================
-/**
- * @brief Function set timer to expired value
- *
- * @return timer expired value
- */
-//==============================================================================
-static inline timer_t timer_set_expired(void)
+static inline int chmod(const char *path, int mode)
 {
-        return 0;
+        return vfs_chmod(path, mode);
 }
 
-//==============================================================================
-/**
- * @brief Function calculate timer time difference (abs value)
- *
- * @param timer1        timer value
- * @param timer2        timer value
- *
- * @return timer expired value
- */
-//==============================================================================
-static inline int timer_difftime(timer_t timer1, timer_t timer2)
+static inline int stat(const char *path, struct stat *stat)
 {
-        return timer1 > timer2 ? timer1 - timer2 : timer2 - timer1;
+        return vfs_stat(path, stat);
+}
+
+static inline int fstat(FILE *file, struct stat *stat)
+{
+        return vfs_fstat(file, stat);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _TIMER_H_ */
+#endif /* _STAT_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -32,7 +32,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "core/fsctrl.h"
-#include "system/dnxfs.h"
+#include <dnx/fs.h>
 
 /*==============================================================================
   External objects

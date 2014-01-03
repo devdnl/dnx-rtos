@@ -35,8 +35,8 @@ extern "C" {
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include "system/netapi.h"
-#include "system/thread.h"
+#include <dnx/net.h>
+#include <dnx/thread.h>
 
 /*==============================================================================
   Local symbolic constants/macros

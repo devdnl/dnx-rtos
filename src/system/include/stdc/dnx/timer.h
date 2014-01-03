@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    unistd.h
+@file    timer.h
 
 @author  Daniel Zorychta
 
-@brief   Unix standard library.
+@brief   Software timer library.
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,8 +24,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
+#ifndef _TIMER_H_
+#define _TIMER_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +43,7 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef int timer_t;
 
 /*==============================================================================
   Exported objects
@@ -57,74 +58,78 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Suspend task for defined time in seconds
+ * @brief Function reset timer
  *
- * @param[in] seconds
+ * @return timer start value
  */
 //==============================================================================
-static inline void sleep(const uint seconds)
+static inline timer_t timer_reset(void)
 {
-        _sleep(seconds);
+        return _kernel_get_time_ms();
 }
 
 //==============================================================================
 /**
- * @brief Suspend task for defined time in milliseconds
+ * @brief Function check if timer is expired
  *
- * @param[in] milliseconds
+ * @param timer         timer value
+ * @param time          expiration time
+ *
+ * @return true if timer expired, otherwise false
  */
 //==============================================================================
-static inline void sleep_ms(const uint milliseconds)
+static inline bool timer_is_expired(timer_t timer, int time)
 {
-        _sleep_ms(milliseconds);
+        return (_kernel_get_time_ms() - timer >= time);
 }
 
 //==============================================================================
 /**
- * @brief Function sleep task in regular periods (reference argument)
+ * @brief Function check if timer is not expired
  *
- * @param milliseconds          milliseconds
- * @param ref_time_ticks        reference time in OS ticks
+ * @param timer         timer value
+ * @param time          expiration time
+ *
+ * @return true if timer not expired, otherwise false
  */
 //==============================================================================
-static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
+static inline bool timer_is_not_expired(timer_t timer, int time)
 {
-        _sleep_until_ms(milliseconds, ref_time_ticks);
+        return (_kernel_get_time_ms() - timer < time);
 }
 
 //==============================================================================
 /**
- * @brief Function sleep task in regular periods (reference argument)
+ * @brief Function set timer to expired value
  *
- * @param seconds       seconds
- * @param ref_time_ticks        reference time in OS ticks
+ * @return timer expired value
  */
 //==============================================================================
-static inline void sleep_until(const uint seconds, int *ref_time_ticks)
+static inline timer_t timer_set_expired(void)
 {
-        _sleep_until(seconds, ref_time_ticks);
+        return 0;
 }
 
 //==============================================================================
 /**
- * @brief Function return x name
+ * @brief Function calculate timer time difference
  *
- * @param[out] *buf     output buffer
- * @param[in]   size    buffer size
+ * @param timer1        timer value
+ * @param timer2        timer value
  *
- * @return buf pointer on success, otherwise NULL pointer
+ * @return time difference
  */
 //==============================================================================
-static inline char *getcwd(char *buf, size_t size)
+static inline int timer_difftime(timer_t timer1, timer_t timer2)
 {
-        return strncpy(buf, _task_get_data()->f_cwd, size);
+        return timer1 - timer2;
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _UNISTD_H_ */
+#endif /* _TIMER_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
