@@ -24,10 +24,6 @@
 
 *//*==========================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -1705,10 +1701,6 @@ void SDSPI_DMA_IRQ_ROUTINE(void)
         SDSPI_DMA->IFCR = DMA_IFCR_CTCIF1 << (4 * (SDSPI_DMA_RX_CHANNEL_NO - 1));
 
         sdspi_data->DMA_tansaction_finished = true;
-}
-#endif
-
-#ifdef __cplusplus
 }
 #endif
 

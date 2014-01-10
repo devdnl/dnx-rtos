@@ -5,10 +5,6 @@
  * compiler: arm-none-eabi-gcc
 *******************************************************************************/
 
-#ifdef __cplusplus
-   extern "C" {
-#endif
-
 /** define weak assign to the default function */
 #define WEAK_DEFAULT __attribute__ ((interrupt, weak, alias("__Default_Handler")))
 
@@ -765,10 +761,6 @@ void (*const vectors[])(void) __attribute__ ((section(".vectors"))) =
    OTG_FS_IRQHandler                        /* USB OTG FS global Interrupt                        */
 #endif /* STM32F10X_CL */
 };
-
-#ifdef __cplusplus
-   }
-#endif
 
 /***************************************************************************************************
 END OF FILE

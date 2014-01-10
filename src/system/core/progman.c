@@ -24,10 +24,6 @@
 
 *//*==========================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -167,6 +163,9 @@ static void program_startup(void *arg)
                         errno  = 0;
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
+
+                        vfs_fflush(stdin);
+                        sys_getc(stdin);
 
                         if (prog->mem) {
                                 sysm_tskfree(prog->mem);
@@ -971,10 +970,6 @@ void _copy_standard_variables_to_task_context(void)
                 task_data->f_mem    = global;
         }
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 /*==============================================================================
   End of file

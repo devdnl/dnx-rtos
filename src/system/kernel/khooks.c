@@ -35,10 +35,6 @@
 #include "portable/cpuctl.h"
 #include <dnx/thread.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -141,10 +137,6 @@ u32_t _get_uptime_counter(void)
 {
         return uptime_counter_sec;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 /*==============================================================================
   End of file

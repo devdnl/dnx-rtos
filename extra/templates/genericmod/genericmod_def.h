@@ -27,15 +27,15 @@
 #ifndef _GENERICMOD_DEF_H_
 #define _GENERICMOD_DEF_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
 #include "genericmod_cfg.h"
 #include "core/ioctl_macros.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*==============================================================================
   Exported macros
