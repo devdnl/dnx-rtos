@@ -24,14 +24,10 @@
 
 *//*==========================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "system/dnxmodule.h"
+#include <dnx/module.h>
 #include "genericmod_cfg.h"
 #include "genericmod_def.h"
 
@@ -244,10 +240,6 @@ API_MOD_STAT(GENERICMOD, void *device_handle, struct vfs_dev_stat *device_stat)
 
         return STD_RET_OK;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 /*==============================================================================
   End of file

@@ -27,10 +27,6 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
  * CPU start frequency [Hz] (frequency after power up, before clock configuration)
@@ -213,11 +209,6 @@ extern "C" {
  * Enable (1) or disable (0) system assert macro (stops system if condition met)
  */
 #define CONFIG_SYSTEM_STOP_MACRO                        (1)
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _CONFIG_H_ */
 /*==============================================================================

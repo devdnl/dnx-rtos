@@ -50,10 +50,6 @@
 /   1258  Vietnam (OEM, Windows)
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -600,10 +596,6 @@ wchar_t _libfat_wtoupper(wchar_t chr)
 
         return tbl_lower[i] ? tbl_upper[i] : chr;
 }
-
-#ifdef __cplusplus
-}
-#endif
 
 /*==============================================================================
   End of file
