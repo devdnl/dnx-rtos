@@ -1,3 +1,13 @@
+dnx/FreeRTOS 1.2.3
+==================
+New Features, Improvements:
+- removed redundant c++ switches in c files
+- added stdin flush at program exit
+- added new key codes to TTY driver (end, pgup, pgdn, ins)
+
+Fixed Bugs:
+- in the PuTTY terminal the screen is incorrectly cleared (cursor not got to home position)
+
 dnx/FreeRTOS 1.2.2
 ==================
 New Features, Improvements:
