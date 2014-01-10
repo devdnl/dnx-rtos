@@ -164,6 +164,9 @@ static void program_startup(void *arg)
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
 
+                        vfs_fflush(stdin);
+                        sys_getc(stdin);
+
                         if (prog->mem) {
                                 sysm_tskfree(prog->mem);
                         }

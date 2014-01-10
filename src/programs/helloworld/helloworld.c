@@ -82,6 +82,12 @@ PROGRAM_MAIN(helloworld, int argc, char *argv[])
                 printf("%d: %s\n", i + 1, argv[i]);
         }
 
+        int c;
+        do {
+                puts("Do you really want exit? [y/n]");
+                while (c = getchar(), !(c == 'y' || c == 'n'));
+        } while (c != 'y');
+
         return 0;
 }
 
