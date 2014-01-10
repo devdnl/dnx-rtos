@@ -24,10 +24,6 @@
 
 *//*==========================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -82,10 +78,6 @@ const struct _driver_entry _regdrv_driver_table[] = {
 
 const int _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);
 const int _regdrv_number_of_modules       = ARRAY_SIZE(_regdrv_module_name);
-
-#ifdef __cplusplus
-}
-#endif
 
 /*==============================================================================
   End of file
