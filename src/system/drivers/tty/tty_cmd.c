@@ -46,13 +46,17 @@ extern "C" {
 #define VT100_TOKEN_LEN                         15
 #define VT100_TOKEN_READ_TIMEOUT                250
 
-#define VT100_DEL                               "\e[3~"
 #define VT100_ARROW_LEFT                        "\e[D"
 #define VT100_ARROW_RIGHT                       "\e[C"
 #define VT100_ARROW_UP                          "\e[A"
 #define VT100_ARROW_DOWN                        "\e[B"
 #define VT100_HOME                              "\e[1~"
-#define VT100_END                               "\eOF"
+#define VT100_INS                               "\e[2~"
+#define VT100_DEL                               "\e[3~"
+#define VT100_END_1                             "\e[4~"
+#define VT100_END_2                             "\eOF"
+#define VT100_PGUP                              "\e[5~"
+#define VT100_PGDN                              "\e[6~"
 #define VT100_F1                                "\eOP"
 #define VT100_F2                                "\eOQ"
 #define VT100_F3                                "\eOR"
@@ -175,7 +179,8 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                         else if (strcmp(VT100_ARROW_UP   , this->token) == 0) resp = TTYCMD_KEY_ARROW_UP;
                                         else if (strcmp(VT100_ARROW_DOWN , this->token) == 0) resp = TTYCMD_KEY_ARROW_DOWN;
                                         else if (strcmp(VT100_HOME       , this->token) == 0) resp = TTYCMD_KEY_HOME;
-                                        else if (strcmp(VT100_END        , this->token) == 0) resp = TTYCMD_KEY_END;
+                                        else if (strcmp(VT100_END_1      , this->token) == 0) resp = TTYCMD_KEY_END;
+                                        else if (strcmp(VT100_END_2      , this->token) == 0) resp = TTYCMD_KEY_END;
                                         else if (strcmp(VT100_F1         , this->token) == 0) resp = TTYCMD_KEY_F1;
                                         else if (strcmp(VT100_F2         , this->token) == 0) resp = TTYCMD_KEY_F2;
                                         else if (strcmp(VT100_F3         , this->token) == 0) resp = TTYCMD_KEY_F3;
