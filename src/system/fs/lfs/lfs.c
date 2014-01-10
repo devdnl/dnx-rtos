@@ -931,7 +931,8 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
         /* node must be a file */
         if (node->type == NODE_TYPE_DIR) {
-                goto error;
+                errno = EISDIR;
+                goto exit;
         }
 
         /* add file to list of open files */
@@ -979,6 +980,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
 error:
         errno = ENOENT;
+exit:
         mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
