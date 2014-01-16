@@ -69,7 +69,7 @@ static void remove_control_characters(char *str)
 {
         for (uint i = 0; i < strlen(str); i++) {
                 if (str[i] < ' ' && str[i] != '\n') {
-                        str[i] = ' ';
+                        str[i] = 0xFF;
                 }
         }
 }
