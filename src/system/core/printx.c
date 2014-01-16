@@ -557,6 +557,9 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
                         int len = strlen(str);
 
+                        if (len < n && vfs_feof(stream))
+                                vfs_clearerr(stream);
+
                         if (len == 0)
                                 len = 1;
 
