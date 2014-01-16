@@ -42,7 +42,8 @@
 ==============================================================================*/
 typedef struct CRCCU
 {
-        dev_lock_t file_lock;
+        dev_lock_t              file_lock;
+        enum CRC_input_mode     input_mode;
 } CRCCU;
 
 /*==============================================================================
@@ -85,7 +86,9 @@ API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
         if (hdl) {
                 SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
 
-                *device_handle = hdl;
+                hdl->input_mode = CRC_INPUT_MODE_WORD;
+                *device_handle  = hdl;
+
                 return STD_RET_OK;
         } else {
                 return STD_RET_ERROR;
@@ -203,8 +206,49 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *
         if (device_is_access_granted(&hdl->file_lock)) {
                 reset_CRC();
 
-                for (n = 0; n < (ssize_t)count; n++) {
-                        CRC->DR = src[n];
+                if (hdl->input_mode == CRC_INPUT_MODE_BYTE) {
+
+                        for (n = 0; n < (ssize_t)count; n++) {
+                                CRC->DR = src[n];
+                        }
+
+                } else if (hdl->input_mode == CRC_INPUT_MODE_HALF_WORD) {
+
+                        ssize_t len = (count / sizeof(u16_t)) * sizeof(u16_t);
+
+                        for (n = 0; n < len; n += sizeof(u16_t)) {
+                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8)) & 0xFFFF;
+                        }
+
+                        for (; n < (ssize_t)count; n++) {
+                                CRC->DR = src[n];
+                        }
+
+                } else {
+
+                        ssize_t len = (count / sizeof(u32_t)) * sizeof(u32_t);
+
+                        for (n = 0; n < len; n += sizeof(u32_t)) {
+                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8)
+                                        | (src[n + 2] << 16) | (src[n + 3] << 24));
+                        }
+
+                        switch (count & 0x3) {
+                        case 1:
+                                CRC->DR = (u32_t)(src[n + 0]);
+                                n++;
+                                break;
+
+                        case 2:
+                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8));
+                                n += 2;
+                                break;
+
+                        case 3:
+                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8) | (src[n + 2] << 16));
+                                n += 3;
+                                break;
+                        }
                 }
         } else {
                 errno = EACCES;
@@ -266,13 +310,31 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
 {
         STOP_IF(device_handle == NULL);
-        UNUSED_ARG(arg);
 
         CRCCU   *hdl    = device_handle;
-        stdret_t status = STD_RET_ERROR;
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
+                case CRC_IORQ_SET_INPUT_MODE:
+                        if (arg) {
+                                enum CRC_input_mode mode = *(enum CRC_input_mode *)arg;
+                                if (mode <= CRC_INPUT_MODE_WORD) {
+                                        hdl->input_mode = mode;
+                                        return STD_RET_OK;
+                                }
+                        }
+                        errno = EINVAL;
+                        break;
+
+                case CRC_IORQ_GET_INPUT_MODE:
+                        if (arg) {
+                                *(enum CRC_input_mode *)arg = hdl->input_mode;
+                                return STD_RET_OK;
+                        } else {
+                                errno = EINVAL;
+                        }
+                        break;
+
                 default:
                         errno = EBADRQC;
                         break;
@@ -281,7 +343,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
                 errno = EACCES;
         }
 
-        return status;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
