@@ -1,3 +1,12 @@
+dnx/FreeRTOS 1.2.4
+==================
+New Features, Improvements:
+- CRC driver
+
+Fixed Bugs:
+- wrong behaviour of fgets() function in case of EOF
+- SPI driver: system cannot force to close the opened SPI file
+
 dnx/FreeRTOS 1.2.3
 ==================
 New Features, Improvements:
