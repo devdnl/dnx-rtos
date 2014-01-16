@@ -214,41 +214,25 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *
 
                 } else if (hdl->input_mode == CRC_INPUT_MODE_HALF_WORD) {
 
-                        ssize_t len = (count / sizeof(u16_t)) * sizeof(u16_t);
+                        size_t len = count / sizeof(u16_t);
+                        u16_t *ptr = (u16_t *)src;
 
-                        for (n = 0; n < len; n += sizeof(u16_t)) {
-                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8)) & 0xFFFF;
+                        for (size_t i = 0; i < len; i++) {
+                                CRC->DR = *ptr++;
                         }
 
-                        for (; n < (ssize_t)count; n++) {
-                                CRC->DR = src[n];
-                        }
+                        n = len * sizeof(u16_t);
 
                 } else {
 
-                        ssize_t len = (count / sizeof(u32_t)) * sizeof(u32_t);
+                        size_t len = count / sizeof(u32_t);
+                        u32_t *ptr = (u32_t *)src;
 
-                        for (n = 0; n < len; n += sizeof(u32_t)) {
-                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8)
-                                        | (src[n + 2] << 16) | (src[n + 3] << 24));
+                        for (size_t i = 0; i < len; i++) {
+                                CRC->DR = *ptr++;
                         }
 
-                        switch (count & 0x3) {
-                        case 1:
-                                CRC->DR = (u32_t)(src[n + 0]);
-                                n++;
-                                break;
-
-                        case 2:
-                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8));
-                                n += 2;
-                                break;
-
-                        case 3:
-                                CRC->DR = (u32_t)((src[n + 0]) | (src[n + 1] << 8) | (src[n + 2] << 16));
-                                n += 3;
-                                break;
-                        }
+                        n = len * sizeof(u32_t);
                 }
         } else {
                 errno = EACCES;
