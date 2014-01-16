@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    crc_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   CRC driver configuration
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,29 +24,16 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef _CRC_CFG_H_
+#define _CRC_CFG_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/ioctl_macros.h"
+#include "stm32f1/stm32f10x.h"
 
-/* include here drivers definitions */
-#include "tty_def.h"
-#ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#       include "stm32f1/ethmac_def.h"
-#       include "stm32f1/crc_def.h"
-#else
-#       error "Unknown architecture!"
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /*==============================================================================
@@ -64,18 +51,12 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-static inline int ioctl(FILE *stream, int request, ...)
-{
-        va_list arg;
-        va_start(arg, request);
-        return vfs_vioctl(stream, request, arg);
-}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _CRC_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

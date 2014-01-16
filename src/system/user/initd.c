@@ -146,6 +146,7 @@ static int run_level_0(void)
         driver_init("tty3", "/dev/tty3");
         driver_init("sdspi", "/dev/sda");
         driver_init("ethmac", "/dev/eth0");
+        driver_init("crc", "/dev/crc");
 
         return STD_RET_OK;
 }

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    crc_def.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   CRC driver
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,34 +24,24 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _CRC_DEF_H_
+#define _CRC_DEF_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "core/ioctl_macros.h"
+#include "stm32f1/crc_cfg.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include "core/ioctl_macros.h"
-
-/* include here drivers definitions */
-#include "tty_def.h"
-#ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#       include "stm32f1/ethmac_def.h"
-#       include "stm32f1/crc_def.h"
-#else
-#       error "Unknown architecture!"
-#endif
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _CRC_MAJOR_NUMBER       0
+#define _CRC_MINOR_NUMBER       0
 
 /*==============================================================================
   Exported object types
@@ -64,18 +54,16 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-static inline int ioctl(FILE *stream, int request, ...)
-{
-        va_list arg;
-        va_start(arg, request);
-        return vfs_vioctl(stream, request, arg);
-}
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _CRC_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
