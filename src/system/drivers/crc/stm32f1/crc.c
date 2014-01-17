@@ -168,13 +168,11 @@ API_MOD_CLOSE(CRCCU, void *device_handle, bool force, const task_t *opened_by_ta
 
         CRCCU *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->file_lock)) {
+        if (device_is_access_granted(&hdl->file_lock) || force) {
                 device_unlock(&hdl->file_lock, force);
                 return STD_RET_OK;
         } else {
-                if (force)
-                        device_unlock(&hdl->file_lock, force);
-
+                errno = EBUSY;
                 return STD_RET_ERROR;
         }
 }
