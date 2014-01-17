@@ -69,7 +69,7 @@ static void remove_control_characters(char *str)
 {
         for (uint i = 0; i < strlen(str); i++) {
                 if (str[i] < ' ' && str[i] != '\n') {
-                        str[i] = ' ';
+                        str[i] = 0xFF;
                 }
         }
 }
@@ -91,13 +91,16 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
         errno = 0;
 
         u32_t col = 80;
-        ioctl(stdin, TTY_IORQ_GET_COL, &col);
+        ioctl(stdout, TTY_IORQ_GET_COL, &col);
 
         char *str = calloc(col + 1, sizeof(char));
         if (str) {
                 FILE *file = fopen(argv[1], "r");
                 if (file) {
-                        while (fgets(str, col, file)) {
+                        int eof = 0;
+                        while (!eof && fgets(str, col, file)) {
+                                eof = feof(file);
+
                                 remove_control_characters(str);
 
                                 if (LAST_CHARACTER(str) != '\n') {

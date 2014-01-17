@@ -1,3 +1,13 @@
+dnx/FreeRTOS 1.2.4
+==================
+New Features, Improvements:
+- CRC driver
+
+Fixed Bugs:
+- wrong behaviour of fgets() function in case of EOF
+- SPI driver: system cannot force to close the opened SPI file
+- VFS: errno = "No such device or address" even if file exist
+
 dnx/FreeRTOS 1.2.3
 ==================
 New Features, Improvements:

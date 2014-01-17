@@ -405,13 +405,8 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
                 if (seek > data_size) {
                         n = 0;
                 } else {
-                        if (data_size - seek <= count) {
-                                n = data_size - seek;
-                                strncpy((char*)dst, data + seek, n);
-                        } else {
-                                n = count;
-                                strncpy((char *)dst, data + seek, n);
-                        }
+                        n = (data_size - seek <= count) ? data_size - seek : count;
+                        strncpy((char *)dst, data + seek, n);
                 }
 
                 free(data);

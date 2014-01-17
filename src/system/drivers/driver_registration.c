@@ -36,6 +36,7 @@
 #include "stm32f1/sdspi_def.h"
 #include "stm32f1/ethmac_def.h"
 #include "stm32f1/spi_def.h"
+#include "stm32f1/crc_def.h"
 #include "tty_def.h"
 
 /**
@@ -51,6 +52,7 @@ _IMPORT_MODULE(PLL);
 _IMPORT_MODULE(TTY);
 _IMPORT_MODULE(SDSPI);
 _IMPORT_MODULE(ETHMAC);
+_IMPORT_MODULE(CRCCU);
 
 /*==============================================================================
   Exported object definitions
@@ -62,18 +64,20 @@ const char *_regdrv_module_name[] = {
         _USE_MODULE(TTY),
         _USE_MODULE(SDSPI),
         _USE_MODULE(ETHMAC),
+        _USE_MODULE(CRCCU),
 };
 
 const struct _driver_entry _regdrv_driver_table[] = {
-        _USE_DRIVER_INTERFACE(UART  , "uart1" , _UART1              , _UART_MINOR_NUMBER ),
-        _USE_DRIVER_INTERFACE(GPIO  , "gpio"  , _GPIO_MAJOR_NUMBER  , _GPIO_MINOR_NUMBER ),
-        _USE_DRIVER_INTERFACE(PLL   , "pll"   , _PLL_MAJOR_NUMBER   , _PLL_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty0"  , _TTY0               , _TTY_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty1"  , _TTY1               , _TTY_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty2"  , _TTY2               , _TTY_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty3"  , _TTY3               , _TTY_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(SDSPI , "sdspi" , _SDSPI_MAJOR_NUMBER , _SDSPI_MINOR_NUMBER),
+        _USE_DRIVER_INTERFACE(UART  , "uart1" , _UART1              , _UART_MINOR_NUMBER  ),
+        _USE_DRIVER_INTERFACE(GPIO  , "gpio"  , _GPIO_MAJOR_NUMBER  , _GPIO_MINOR_NUMBER  ),
+        _USE_DRIVER_INTERFACE(PLL   , "pll"   , _PLL_MAJOR_NUMBER   , _PLL_MINOR_NUMBER   ),
+        _USE_DRIVER_INTERFACE(TTY   , "tty0"  , _TTY0               , _TTY_MINOR_NUMBER   ),
+        _USE_DRIVER_INTERFACE(TTY   , "tty1"  , _TTY1               , _TTY_MINOR_NUMBER   ),
+        _USE_DRIVER_INTERFACE(TTY   , "tty2"  , _TTY2               , _TTY_MINOR_NUMBER   ),
+        _USE_DRIVER_INTERFACE(TTY   , "tty3"  , _TTY3               , _TTY_MINOR_NUMBER   ),
+        _USE_DRIVER_INTERFACE(SDSPI , "sdspi" , _SDSPI_MAJOR_NUMBER , _SDSPI_MINOR_NUMBER ),
         _USE_DRIVER_INTERFACE(ETHMAC, "ethmac", _ETHMAC_MAJOR_NUMBER, _ETHMAC_MINOR_NUMBER),
+        _USE_DRIVER_INTERFACE(CRCCU , "crc"   , _CRC_MAJOR_NUMBER   , _CRC_MINOR_NUMBER   ),
 };
 
 const int _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);

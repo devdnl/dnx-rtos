@@ -1486,6 +1486,8 @@ static struct FS_data *find_base_FS(const char *path, char **extPath)
 
         if (!fs_info) {
                 errno = ENOENT;
+        } else {
+                errno = 0;
         }
 
         return fs_info;
