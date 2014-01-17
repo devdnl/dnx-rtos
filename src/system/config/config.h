@@ -47,7 +47,7 @@
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (64308)
+#define CONFIG_HEAP_SIZE                                (64332)
 
 /**
  * Heap memory alignment

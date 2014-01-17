@@ -60,7 +60,7 @@ static void **driver_memory_region;
 /*==============================================================================
   External objects
 ==============================================================================*/
-extern const char                 *_regdrv_module_name[];
+extern const char           *const _regdrv_module_name[];
 extern const struct _driver_entry  _regdrv_driver_table[];
 extern const int                   _regdrv_driver_table_array_size;
 extern const int                   _regdrv_number_of_modules;

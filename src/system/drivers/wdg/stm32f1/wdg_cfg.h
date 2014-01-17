@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    wdg_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   WDG driver configuration
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,35 +24,49 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _WDG_CFG_H_
+#define _WDG_CFG_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include "core/ioctl_macros.h"
-
-/* include here drivers definitions */
-#include "tty_def.h"
-#ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#       include "stm32f1/ethmac_def.h"
-#       include "stm32f1/crc_def.h"
-#       include "stm32f1/wdg_def.h"
-#else
-#       error "Unknown architecture!"
-#endif
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
+/*
+ * Enable device lock for 1 task (e.g. Watchdog daemon)
+ *
+ * true:  device locked at first file open
+ * false: device can open all tasks
+ */
+#define _WDG_CFG_OPEN_LOCK              true
+
+/*
+ * Set Watchdog prescaler (LSI / prescaler; LSI = 40 kHz)
+ *
+ * 4, 8, 16, 32, 64, 128, 256: possible dividers
+ */
+#define _WDG_CFG_DIVIDER                64
+
+/*
+ * Reload value (period = LSI / _WDG_CFG_DIVIDER / _WDG_CFG_RELOAD)
+ *
+ * 0-0xFFF
+ */
+#define _WDG_CFG_RELOAD                 1250    /* 2s */
+
+/*
+ * Disable WDG on debug mode
+ *
+ * true : WDG disabled on debug
+ * false: WDG continue counting
+ */
+#define _WDG_CFG_DISABLE_ON_DEBUG       true
 
 /*==============================================================================
   Exported object types
@@ -65,18 +79,12 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-static inline int ioctl(FILE *stream, int request, ...)
-{
-        va_list arg;
-        va_start(arg, request);
-        return vfs_vioctl(stream, request, arg);
-}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _WDG_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
