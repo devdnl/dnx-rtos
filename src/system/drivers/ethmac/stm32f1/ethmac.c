@@ -197,9 +197,8 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force, const task_t *opened_by_t
                 return STD_RET_OK;
         } else {
                 errno = EBUSY;
+                return STD_RET_ERROR;
         }
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================

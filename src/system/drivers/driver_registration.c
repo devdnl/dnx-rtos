@@ -37,6 +37,7 @@
 #include "stm32f1/ethmac_def.h"
 #include "stm32f1/spi_def.h"
 #include "stm32f1/crc_def.h"
+#include "stm32f1/wdg_def.h"
 #include "tty_def.h"
 
 /**
@@ -53,11 +54,12 @@ _IMPORT_MODULE(TTY);
 _IMPORT_MODULE(SDSPI);
 _IMPORT_MODULE(ETHMAC);
 _IMPORT_MODULE(CRCCU);
+_IMPORT_MODULE(WDG);
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-const char *_regdrv_module_name[] = {
+const char *const _regdrv_module_name[] = {
         _USE_MODULE(UART),
         _USE_MODULE(GPIO),
         _USE_MODULE(PLL),
@@ -65,6 +67,7 @@ const char *_regdrv_module_name[] = {
         _USE_MODULE(SDSPI),
         _USE_MODULE(ETHMAC),
         _USE_MODULE(CRCCU),
+        _USE_MODULE(WDG),
 };
 
 const struct _driver_entry _regdrv_driver_table[] = {
@@ -78,6 +81,7 @@ const struct _driver_entry _regdrv_driver_table[] = {
         _USE_DRIVER_INTERFACE(SDSPI , "sdspi" , _SDSPI_MAJOR_NUMBER , _SDSPI_MINOR_NUMBER ),
         _USE_DRIVER_INTERFACE(ETHMAC, "ethmac", _ETHMAC_MAJOR_NUMBER, _ETHMAC_MINOR_NUMBER),
         _USE_DRIVER_INTERFACE(CRCCU , "crc"   , _CRC_MAJOR_NUMBER   , _CRC_MINOR_NUMBER   ),
+        _USE_DRIVER_INTERFACE(WDG   , "wdg"   , _WDG_MAJOR_NUMBER   , _WDG_MINOR_NUMBER   ),
 };
 
 const int _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);

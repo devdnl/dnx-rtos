@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    crc.c
+@file    wdg.c
 
 @author  Daniel Zorychta
 
-@brief   CRC driver (CRCCU - CRC Calculation Unit)
+@brief   WDG driver
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -29,27 +29,30 @@
 ==============================================================================*/
 #include <dnx/module.h>
 #include <dnx/thread.h>
-#include "stm32f1/crc_cfg.h"
-#include "stm32f1/crc_def.h"
+#include "stm32f1/wdg_cfg.h"
+#include "stm32f1/wdg_def.h"
 #include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define KEY_START               0xCCCC
+#define KEY_RELOAD              0xAAAA
+#define KEY_UNLOCK              0x5555
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef struct CRCCU
-{
-        dev_lock_t              file_lock;
-        enum CRC_input_mode     input_mode;
-} CRCCU;
+typedef struct {
+        dev_lock_t file_lock;
+} WDG_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static inline void reset_CRC();
+static inline void configure_wdg();
+static inline void start_wdg();
+static inline void reset_wdg();
 
 /*==============================================================================
   Local objects
@@ -75,21 +78,25 @@ static inline void reset_CRC();
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(WDG, void **device_handle, u8_t major, u8_t minor)
 {
         STOP_IF(!device_handle);
 
-        if (major != _CRC_MAJOR_NUMBER || minor != _CRC_MINOR_NUMBER)
-                return STD_RET_ERROR;
+        if (major == _WDG_MAJOR_NUMBER || minor == _WDG_MINOR_NUMBER) {
 
-        CRCCU *hdl = calloc(1, sizeof(CRCCU));
-        if (hdl) {
-                SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
+                WDG_t *hdl = calloc(1, sizeof(WDG_t));
+                if (hdl) {
+                        configure_wdg();
+                        start_wdg();
+                        reset_wdg();
 
-                hdl->input_mode = CRC_INPUT_MODE_WORD;
-                *device_handle  = hdl;
+                        *device_handle = hdl;
 
-                return STD_RET_OK;
+                        return STD_RET_OK;
+                } else {
+                        return STD_RET_ERROR;
+                }
+
         } else {
                 return STD_RET_ERROR;
         }
@@ -105,27 +112,12 @@ API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_RELEASE(CRCCU, void *device_handle)
+API_MOD_RELEASE(WDG, void *device_handle)
 {
         STOP_IF(device_handle);
 
-        CRCCU *hdl = device_handle;
-
-        critical_section_begin();
-
-        stdret_t status = STD_RET_ERROR;
-
-        if (device_is_unlocked(hdl->file_lock)) {
-                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                free(hdl);
-                status = STD_RET_OK;
-        } else {
-                errno = EBUSY;
-        }
-
-        critical_section_end();
-
-        return status;
+        errno = EPERM;
+        return STD_RET_ERROR;
 }
 
 //==============================================================================
@@ -139,14 +131,18 @@ API_MOD_RELEASE(CRCCU, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_OPEN(CRCCU, void *device_handle, int flags)
+API_MOD_OPEN(WDG, void *device_handle, int flags)
 {
         STOP_IF(!device_handle);
         UNUSED_ARG(flags);
 
-        CRCCU *hdl = device_handle;
+        WDG_t *hdl = device_handle;
 
-        return device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+        if (_WDG_CFG_OPEN_LOCK) {
+                return device_lock(&hdl->file_lock) ? STD_RET_OK : STD_RET_ERROR;
+        } else {
+                return STD_RET_OK;
+        }
 }
 
 //==============================================================================
@@ -161,19 +157,23 @@ API_MOD_OPEN(CRCCU, void *device_handle, int flags)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(CRCCU, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(WDG, void *device_handle, bool force, const task_t *opened_by_task)
 {
         STOP_IF(!device_handle);
         UNUSED_ARG(opened_by_task);
 
-        CRCCU *hdl = device_handle;
+        WDG_t *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->file_lock) || force) {
-                device_unlock(&hdl->file_lock, force);
-                return STD_RET_OK;
+        if (_WDG_CFG_OPEN_LOCK) {
+                if (device_is_access_granted(&hdl->file_lock) || force) {
+                        device_unlock(&hdl->file_lock, force);
+                        return STD_RET_OK;
+                } else {
+                        errno = EBUSY;
+                        return STD_RET_ERROR;
+                }
         } else {
-                errno = EBUSY;
-                return STD_RET_ERROR;
+                return STD_RET_OK;
         }
 }
 
@@ -189,7 +189,7 @@ API_MOD_CLOSE(CRCCU, void *device_handle, bool force, const task_t *opened_by_ta
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(WDG, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(fpos);
 
@@ -197,46 +197,8 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *
         STOP_IF(src == NULL);
         STOP_IF(count == 0);
 
-        CRCCU *hdl = device_handle;
-
-        ssize_t n = -1;
-
-        if (device_is_access_granted(&hdl->file_lock)) {
-                reset_CRC();
-
-                if (hdl->input_mode == CRC_INPUT_MODE_BYTE) {
-
-                        for (n = 0; n < (ssize_t)count; n++) {
-                                CRC->DR = src[n];
-                        }
-
-                } else if (hdl->input_mode == CRC_INPUT_MODE_HALF_WORD) {
-
-                        size_t len = count / sizeof(u16_t);
-                        u16_t *ptr = (u16_t *)src;
-
-                        for (size_t i = 0; i < len; i++) {
-                                CRC->DR = *ptr++;
-                        }
-
-                        n = len * sizeof(u16_t);
-
-                } else {
-
-                        size_t len = count / sizeof(u32_t);
-                        u32_t *ptr = (u32_t *)src;
-
-                        for (size_t i = 0; i < len; i++) {
-                                CRC->DR = *ptr++;
-                        }
-
-                        n = len * sizeof(u32_t);
-                }
-        } else {
-                errno = EACCES;
-        }
-
-        return n;
+        errno = EPERM;
+        return -1;
 }
 
 //==============================================================================
@@ -251,7 +213,7 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(WDG, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
 {
         UNUSED_ARG(fpos);
 
@@ -259,22 +221,8 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         STOP_IF(dst == NULL);
         STOP_IF(count == 0);
 
-        CRCCU *hdl = device_handle;
-
-        ssize_t n = -1;
-
-        if (device_is_access_granted(&hdl->file_lock)) {
-                u32_t crc = CRC->DR;
-
-                for (n = 0; n < (ssize_t)count && n < (ssize_t)sizeof(u32_t); n++) {
-                        dst[n] = crc & 0xFF;
-                        crc >>= 8;
-                }
-        } else {
-                errno = EACCES;
-        }
-
-        return n;
+        errno = EPERM;
+        return -1;
 }
 
 //==============================================================================
@@ -289,33 +237,18 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
+API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
 {
         STOP_IF(device_handle == NULL);
+        UNUSED_ARG(arg);
 
-        CRCCU   *hdl    = device_handle;
+        WDG_t *hdl = device_handle;
 
         if (device_is_access_granted(&hdl->file_lock)) {
                 switch (request) {
-                case CRC_IORQ_SET_INPUT_MODE:
-                        if (arg) {
-                                enum CRC_input_mode mode = *(enum CRC_input_mode *)arg;
-                                if (mode <= CRC_INPUT_MODE_WORD) {
-                                        hdl->input_mode = mode;
-                                        return STD_RET_OK;
-                                }
-                        }
-                        errno = EINVAL;
-                        break;
-
-                case CRC_IORQ_GET_INPUT_MODE:
-                        if (arg) {
-                                *(enum CRC_input_mode *)arg = hdl->input_mode;
-                                return STD_RET_OK;
-                        } else {
-                                errno = EINVAL;
-                        }
-                        break;
+                case WDG_IORQ_RESET:
+                        reset_wdg();
+                        return STD_RET_OK;
 
                 default:
                         errno = EBADRQC;
@@ -338,7 +271,7 @@ API_MOD_IOCTL(CRCCU, void *device_handle, int request, void *arg)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_FLUSH(CRCCU, void *device_handle)
+API_MOD_FLUSH(WDG, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
@@ -356,26 +289,72 @@ API_MOD_FLUSH(CRCCU, void *device_handle)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_STAT(CRCCU, void *device_handle, struct vfs_dev_stat *device_stat)
+API_MOD_STAT(WDG, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(device_stat == NULL);
 
-        device_stat->st_major = _CRC_MAJOR_NUMBER;
-        device_stat->st_minor = _CRC_MINOR_NUMBER;
-        device_stat->st_size  = 4;
+        device_stat->st_major = _WDG_MAJOR_NUMBER;
+        device_stat->st_minor = _WDG_MINOR_NUMBER;
+        device_stat->st_size  = 0;
 
         return STD_RET_OK;
 }
 
 //==============================================================================
 /**
- * @brief Reset CRC value register
+ * @brief Configure Watchdog
  */
 //==============================================================================
-static inline void reset_CRC()
+static inline void configure_wdg()
 {
-        CRC->CR = CRC_CR_RESET;
+        /* default LSI / 4 */
+        u8_t divider;
+        switch (_WDG_CFG_DIVIDER) {
+        case 8  : divider = IWDG_PR_PR_0; break;
+        case 16 : divider = IWDG_PR_PR_1; break;
+        case 32 : divider = IWDG_PR_PR_1 | IWDG_PR_PR_0; break;
+        case 64 : divider = IWDG_PR_PR_2; break;
+        case 128: divider = IWDG_PR_PR_2 | IWDG_PR_PR_0; break;
+        case 256: divider = IWDG_PR_PR_2 | IWDG_PR_PR_1; break;
+        default : divider = 0; break;
+        }
+
+        /* reload value */
+        u16_t reload = _WDG_CFG_RELOAD & 0xFFF;
+
+        /* enable IWDG */
+        IWDG->KR = KEY_UNLOCK;
+
+        while (IWDG->SR & IWDG_SR_PVU);
+        IWDG->PR = divider;
+
+        while (IWDG->SR & IWDG_SR_RVU);
+        IWDG->RLR = reload;
+
+        if (_WDG_CFG_DISABLE_ON_DEBUG) {
+                SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_IWDG_STOP);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Start Watchdog
+ */
+//==============================================================================
+static inline void start_wdg()
+{
+        IWDG->KR = KEY_START;
+}
+
+//==============================================================================
+/**
+ * @brief Reload Watchdog
+ */
+//==============================================================================
+static inline void reset_wdg()
+{
+        IWDG->KR = KEY_RELOAD;
 }
 
 /*==============================================================================
