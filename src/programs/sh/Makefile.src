@@ -1,0 +1,5 @@
+# Makefile for GNU make
+
+CSRC_PROGRAMS   += sh/sh.c
+CXXSRC_PROGRAMS += 
+HDRLOC_PROGRAMS += 

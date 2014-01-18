@@ -48,6 +48,7 @@ _IMPORT_PROGRAM(mkfifo);
 _IMPORT_PROGRAM(mount);
 _IMPORT_PROGRAM(reboot);
 _IMPORT_PROGRAM(rm);
+_IMPORT_PROGRAM(sh);
 _IMPORT_PROGRAM(telnet);
 _IMPORT_PROGRAM(terminal);
 _IMPORT_PROGRAM(top);
@@ -75,6 +76,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(mount     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(reboot    , STACK_DEPTH_MINIMAL ),
         _PROGRAM_CONFIG(rm        , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(sh        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(telnet    , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(terminal  , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(top       , STACK_DEPTH_LOW     ),

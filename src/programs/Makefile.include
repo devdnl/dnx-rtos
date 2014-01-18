@@ -15,6 +15,7 @@
 -include $(PROGLOC)/mount/Makefile.src
 -include $(PROGLOC)/reboot/Makefile.src
 -include $(PROGLOC)/rm/Makefile.src
+-include $(PROGLOC)/sh/Makefile.src
 -include $(PROGLOC)/telnet/Makefile.src
 -include $(PROGLOC)/terminal/Makefile.src
 -include $(PROGLOC)/top/Makefile.src
