@@ -56,7 +56,7 @@ extern "C" {
 /*
  * Reload value (period = LSI / _WDG_CFG_DIVIDER / _WDG_CFG_RELOAD)
  *
- * 0-0xFFF
+ * 0-0xFFF (0-4095)
  */
 #define _WDG_CFG_RELOAD                 2500    /* 8s */
 
