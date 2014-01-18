@@ -40,6 +40,8 @@
 #define PIPE_WRITE_TIMEOUT              1
 #define PIPE_READ_TIMEOUT               MAX_DELAY
 
+#define PIPE_FLAG_CLOSED                (1 << 0)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -62,6 +64,7 @@ typedef struct node {
         u32_t            gid;                   /* group ID of owner         */
         u64_t            size;                  /* file size                 */
         u32_t            mtime;                 /* time of last modification */
+        u32_t            flags;                 /* file type specified flags */
         void            *data;                  /* file type specified data  */
 } node_t;
 
@@ -570,6 +573,13 @@ API_FS_REMOVE(lfs, void *fs_handle, const char *path)
                         struct opened_file_info *opened_file = list_get_nitem_data(lfs->list_of_opended_files, i);
                         if (opened_file->node == obj_node) {
                                 opened_file->remove_at_close = true;
+
+                                if (opened_file->node->type == NODE_TYPE_PIPE) {
+                                        opened_file->node->flags = PIPE_FLAG_CLOSED;
+                                        u8_t etx                 = ETX;
+                                        queue_send(opened_file->node->data, &etx, 10);
+                                }
+
                                 remove_file = false;
                         }
                 }
@@ -1154,7 +1164,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 mutex_unlock(lfs->resource_mtx);
                 if (node->data) {
                         n = 0;
-                        for (uint i = 0; i < count; i++) {
+                        for (uint i = 0; i < count && !(node->flags & PIPE_FLAG_CLOSED); i++) {
                                 if (queue_send(node->data, src + i, PIPE_WRITE_TIMEOUT)) {
                                         n++;
                                 } else {
@@ -1257,7 +1267,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 mutex_unlock(lfs->resource_mtx);
                 if (node->data) {
                         n = 0;
-                        for (uint i = 0; i < count; i++) {
+                        for (uint i = 0; i < count && !(node->flags & PIPE_FLAG_CLOSED); i++) {
                                 if (queue_receive(node->data, dst + i, PIPE_READ_TIMEOUT)) {
                                         n++;
                                 }
