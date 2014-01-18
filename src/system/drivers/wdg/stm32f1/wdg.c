@@ -248,7 +248,7 @@ API_MOD_IOCTL(WDG, void *device_handle, int request, void *arg)
                 switch (request) {
                 case WDG_IORQ_RESET:
                         reset_wdg();
-                        break;
+                        return STD_RET_OK;
 
                 default:
                         errno = EBADRQC;
