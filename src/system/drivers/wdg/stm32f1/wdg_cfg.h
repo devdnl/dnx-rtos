@@ -41,8 +41,8 @@ extern "C" {
 /*
  * Enable device lock for 1 task (e.g. Watchdog daemon)
  *
- * true:  device locked at first file open
- * false: device can open all tasks
+ * true:  device locked at open() operation
+ * false: device not locked at open() operation
  */
 #define _WDG_CFG_OPEN_LOCK              true
 
