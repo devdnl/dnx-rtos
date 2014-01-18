@@ -51,14 +51,14 @@ extern "C" {
  *
  * 4, 8, 16, 32, 64, 128, 256: possible dividers
  */
-#define _WDG_CFG_DIVIDER                64
+#define _WDG_CFG_DIVIDER                128
 
 /*
  * Reload value (period = LSI / _WDG_CFG_DIVIDER / _WDG_CFG_RELOAD)
  *
  * 0-0xFFF
  */
-#define _WDG_CFG_RELOAD                 1250    /* 2s */
+#define _WDG_CFG_RELOAD                 2500    /* 8s */
 
 /*
  * Disable WDG on debug mode
