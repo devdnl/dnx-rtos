@@ -56,17 +56,14 @@ static void             clear_prompt            ();
 static void             print_prompt            ();
 static const char      *get_user_name           ();
 static bool             read_input              ();
-static bool             handle_history          ();
+static bool             history_request         ();
 static char            *find_cmd_begin          ();
 static bool             is_cd_cmd               (const char *cmd);
 static bool             is_exit_cmd             (const char *cmd);
 static char            *find_arg                (char *cmd);
-static void             cd                      (char *str);
-
-//static enum cmd_status find_internal_command    (const char *cmd);
-//static enum cmd_status find_external_command    (const char *cmd);
-//static enum cmd_status cmd_cd                   (char *arg);
-//static enum cmd_status cmd_help                 (char *arg);
+static void             change_directory        (char *str);
+static void             print_fail_message      (char *cmd);
+static bool             analyze_line            (char *cmd);
 
 /*==============================================================================
   Local object definitions
@@ -88,68 +85,6 @@ GLOBAL_VARIABLES_SECTION_END
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Terminal main function
- */
-//==============================================================================
-PROGRAM_MAIN(sh, int argc, char *argv[])
-{
-        (void) argc;
-        (void) argv;
-
-        global->prompt_enable = true;
-        global->input         = stdin;
-
-        getcwd(global->cwd, CWD_PATH_LEN);
-
-        for (;;) {
-                clear_prompt();
-
-                print_prompt();
-
-                if (!read_input())
-                        continue;
-
-                if (handle_history())
-                        continue;
-
-                char *cmd = find_cmd_begin();
-
-                if (strlen(cmd) == 0)
-                        continue;
-
-                if (is_cd_cmd(cmd)) {
-                        cd(cmd);
-                        continue;
-                }
-
-                if (is_exit_cmd(cmd)) {
-                        return 0;
-                }
-
-                printf("\'%s\' is unknown command.\n", cmd);
-
-//                enum cmd_status cmd_status = find_external_command(cmd);
-//
-//                if (cmd_status == CMD_STATUS_NOT_EXIST) {
-//                        cmd_status = find_internal_command(cmd);
-//                }
-//
-//                switch (cmd_status) {
-//                case CMD_STATUS_EXECUTED:
-//                        continue;
-//                case CMD_STATUS_NOT_EXIST:
-//                        printf("\'%s\' is unknown command.\n", cmd);
-//                        break;
-//                case CMD_STATUS_DO_EXIT:
-//                        return 0;
-//                }
-        }
-
-        return 0;
-}
 
 //==============================================================================
 /**
@@ -213,7 +148,7 @@ static bool read_input()
  * return true if history got, false is new command inserted
  */
 //==============================================================================
-static bool handle_history()
+static bool history_request()
 {
         if (strcmp(global->line, HISTORY_NEXT_KEY) == 0 || strcmp(global->line, HISTORY_PREV_KEY) == 0) {
                 if (strlen(global->history)) {
@@ -306,7 +241,7 @@ static char *find_arg(char *cmd)
  * @param str          command name with arguments
  */
 //==============================================================================
-static void cd(char *str)
+static void change_directory(char *str)
 {
         char  *newpath   = NULL;
         bool   free_path = false;
@@ -360,11 +295,51 @@ static void cd(char *str)
         }
 }
 
+//==============================================================================
+/**
+ * @brief Function print command find failure
+ *
+ * @param cmd           cmd string
+ */
+//==============================================================================
+static void print_fail_message(char *cmd)
+{
+        if (strchr(cmd, ' '))
+                *strchr(cmd, ' ') = '\0';
 
+        printf("\'%s\' is unknown command.\n", cmd);
+}
 
+//==============================================================================
+/**
+ * @brief Function analyze line
+ *
+ * @param cmd           command line
+ *
+ * @return true if command executed, false if error
+ */
+//==============================================================================
+static bool analyze_line(char *cmd)
+{
+        errno = 0;
+        prog_t *prog = program_new(cmd, global->cwd, stdin, stdout, stderr);
+        if (!prog) {
+                if (errno == ENOENT) {
+                        return false;
+                } else {
+                        perror(cmd);
+                        return true;
+                }
+        }
 
+        while (program_wait_for_close(prog, MAX_DELAY) != 0);
 
+        program_delete(prog);
 
+        ioctl(stdout, TTY_IORQ_ECHO_ON);
+
+        return true;
+}
 
 
 
@@ -447,6 +422,56 @@ static void cd(char *str)
 //
 //        return status;
 //}
+
+//==============================================================================
+/**
+ * @brief Terminal main function
+ */
+//==============================================================================
+PROGRAM_MAIN(sh, int argc, char *argv[])
+{
+        (void) argc;
+        (void) argv;
+
+        global->prompt_enable = true;
+        global->input         = stdin;
+
+        getcwd(global->cwd, CWD_PATH_LEN);
+
+        for (;;) {
+                clear_prompt();
+
+                print_prompt();
+
+                if (!read_input())
+                        continue;
+
+                if (history_request())
+                        continue;
+
+                char *cmd = find_cmd_begin();
+
+                if (strlen(cmd) == 0)
+                        continue;
+
+                if (is_cd_cmd(cmd)) {
+                        change_directory(cmd);
+                        continue;
+                }
+
+                if (is_exit_cmd(cmd)) {
+                        return 0;
+                }
+
+                if (analyze_line(cmd)) {
+                        continue;
+                }
+
+                print_fail_message(cmd);
+        }
+
+        return 0;
+}
 
 /*==============================================================================
   End of file
