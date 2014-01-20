@@ -35,7 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include "core/systypes.h"
+#include <sys/types.h>
 #include "core/vfs.h"
 #include "core/sysmoni.h"
 #include "core/modctrl.h"
