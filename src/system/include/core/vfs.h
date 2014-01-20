@@ -36,7 +36,9 @@ extern "C" {
 ==============================================================================*/
 #include <stdarg.h>
 #include <stdbool.h>
-#include "core/systypes.h"
+#include <stddef.h>
+#include <sys/types.h>
+#include "kernel/ktypes.h"
 
 /*==============================================================================
   Exported macros

@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/systypes.h"
+#include <sys/types.h>
 #include "core/sysmoni.h"
 #include "core/conv.h"
 #include "core/progman.h"
