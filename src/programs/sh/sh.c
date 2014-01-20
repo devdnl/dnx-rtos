@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <stdbool.h>
 #include <sys/ioctl.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
@@ -64,6 +65,7 @@ static bool             is_exit_cmd             (const char *cmd);
 static char            *find_arg                (char *cmd);
 static void             change_directory        (char *str);
 static void             print_fail_message      (char *cmd);
+static bool             start_program           (const char *master, const char *slave, const char *file);
 static bool             analyze_line            (char *cmd);
 
 /*==============================================================================
@@ -313,6 +315,32 @@ static void print_fail_message(char *cmd)
 
 //==============================================================================
 /**
+ * @brief Function start defined program group
+ *
+ * @param cmd           command line
+ *
+ * @return true if command executed, false if error
+ */
+//==============================================================================
+static bool start_program(const char *master, const char *slave, const char *file)
+{
+        if (master) {
+                printf("Master: %s\n", master);
+        }
+
+        if (slave) {
+                printf("Slave : %s\n", slave);
+        }
+
+        if (file) {
+                printf("File  : %s\n", file);
+        }
+
+        return false;
+}
+
+//==============================================================================
+/**
  * @brief Function analyze line
  *
  * @param cmd           command line
@@ -322,24 +350,72 @@ static void print_fail_message(char *cmd)
 //==============================================================================
 static bool analyze_line(char *cmd)
 {
-        errno = 0;
-        prog_t *prog = program_new(cmd, global->cwd, stdin, stdout, stderr);
-        if (!prog) {
-                if (errno == ENOENT) {
-                        return false;
-                } else {
-                        perror(cmd);
+        int pipe_number = 0;
+        int out_number  = 0;
+
+        for (size_t i = 0; i < strlen(cmd); i++) {
+                if (cmd[i] == '|')
+                        pipe_number++;
+
+                if (cmd[i] == '>')
+                        out_number++;
+        }
+
+        if (pipe_number > 1 || out_number > 1) {
+                puts("Syntax error");
+                return true;
+        }
+
+        if (out_number && pipe_number) {
+                if ((strchr(cmd, '|') > strchr(cmd, '>')) || strchr(cmd, '|') == cmd) {
+                        puts("Syntax error");
                         return true;
+                } else {
+                        char *master = cmd;
+
+                        char *slave = strchr(master, '|');
+                        *slave++ = '\0';
+
+                        char *file = strchr(slave, '>');
+                        *file++ = '\0';
+
+                        return start_program(master, slave, file);
                 }
         }
 
-        while (program_wait_for_close(prog, MAX_DELAY) != 0);
+        if (out_number) {
+                if (strchr(cmd, '>') == cmd) {
+                        puts("Syntax error");
+                        return true;
+                } else {
+                        char *master = cmd;
 
-        program_delete(prog);
+                        char *file = strchr(master, '>');
+                        *file++ = '\0';
 
-        ioctl(stdout, TTY_IORQ_ECHO_ON);
+                        return start_program(master, NULL, file);
+                }
+        }
 
-        return true;
+        if (pipe_number) {
+                if (strchr(cmd, '|') == cmd) {
+                        puts("Syntax error");
+                        return true;
+                } else {
+                        char *master = cmd;
+
+                        char *slave = strchr(master, '|');
+                        *slave++ = '\0';
+
+                        return start_program(master, slave, NULL);
+                }
+        }
+
+        if (strlen(cmd)) {
+                return start_program(cmd, NULL, NULL);
+        } else {
+                return false;
+        }
 }
 
 
