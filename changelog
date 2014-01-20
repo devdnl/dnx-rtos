@@ -5,6 +5,7 @@ New Features, Improvements:
 - WDG driver (IWDG)
 - procfs: program's file can be opened (usefull in tests for program existing)
 - lfs, devfs: pipes can be closed using remove() interface
+- cleaned up headers
 
 Fixed Bugs:
 - wrong behaviour of fgets() function in case of EOF
