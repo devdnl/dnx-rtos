@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdarg.h>
+#include <stdbool.h>
 #include "core/systypes.h"
 
 /*==============================================================================
@@ -129,6 +130,8 @@ struct vfs_dir {
         size_t     f_seek;
         int        validation;  /* only for system purposes */
 };
+
+typedef struct vfs_dir DIR;
 
 /** file statistics */
 struct stat {

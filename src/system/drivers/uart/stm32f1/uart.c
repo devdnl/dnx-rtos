@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <dnx/module.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include <unistd.h>
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/uart_def.h"

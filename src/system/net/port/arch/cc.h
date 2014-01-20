@@ -32,7 +32,7 @@
 #ifndef _CC_H_
 #define _CC_H_
 
-#include "core/basic_types.h"
+#include <sys/types.h>
 #include "core/printx.h"
 
 typedef i8_t    s8_t;

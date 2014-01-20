@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <dnx/module.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include "ethmac_cfg.h"
 #include "ethmac_def.h"
 #include "stm32f10x.h"

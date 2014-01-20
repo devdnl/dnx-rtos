@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include <dnx/module.h>
+#include <dnx/misc.h>
 #include "genericmod_cfg.h"
 #include "genericmod_def.h"
 

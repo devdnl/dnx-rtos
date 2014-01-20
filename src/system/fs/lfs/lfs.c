@@ -30,6 +30,7 @@
 #include <dnx/fs.h>
 #include <string.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include "core/list.h"
 
 /*==============================================================================

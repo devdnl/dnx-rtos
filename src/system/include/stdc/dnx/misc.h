@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ktypes.h
+@file    util.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains kernel types
+@brief
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,47 +24,55 @@
 
 *//*==========================================================================*/
 
-#ifndef _KTYPES_H_
-#define _KTYPES_H_
+#ifndef _UTIL_H_
+#define _UTIL_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
+  Exported macros
 ==============================================================================*/
-#include <sys/types.h>
+/** array element count */
+#define ARRAY_SIZE(array)                       (sizeof(array)/sizeof(array[0]))
+#define ARRAY_ITEM_SIZE(array)                  (sizeof(array[0]))
+#define FIELD_SIZEOF(t, f)                      (sizeof(((t*)0)->f))
+#define CONTAINER_OF(ptr, type, member)         ((type *)((char *)ptr - offsetof(type, member)))
+
+/** usable macros */
+#define UNUSED_ARG(argument)                    (void)argument
+
+/** string usable macros */
+#define FIRST_CHARACTER(char__pstr)             char__pstr[0]
+#define LAST_CHARACTER(char__pstr)              char__pstr[strlen(char__pstr) - 1]
 
 /*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
-
-/*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
-
-/*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-typedef void task_t;
-typedef void sem_t;
-typedef void queue_t;
-typedef struct mutex mutex_t;
-
-/*==============================================================================
-   Exported object declarations
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _KTYPES_H_ */
+#endif /* _UTIL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

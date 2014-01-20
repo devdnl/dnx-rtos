@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include <dnx/fs.h>
+#include <dnx/misc.h>
 #include <string.h>
 #include "libfat/libfat.h"
 

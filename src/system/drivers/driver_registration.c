@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include "core/modctrl.h"
 #include <dnx/module.h>
+#include <dnx/misc.h>
 
 #include "stm32f1/uart_def.h"
 #include "stm32f1/gpio_def.h"
