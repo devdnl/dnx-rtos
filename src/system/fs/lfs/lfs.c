@@ -30,7 +30,10 @@
 #include <dnx/fs.h>
 #include <string.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
+#include <sys/ioctl.h>
 #include "core/list.h"
+#include "core/pipe.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -386,15 +389,15 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
         if (fifo_file_name) {
                 strcpy(fifo_file_name, fifo_name);
 
-                node_t  *fifo_file  = calloc(1, sizeof(node_t));
-                queue_t *fifo_queue = queue_new(PIPE_LENGTH, sizeof(u8_t));
+                node_t *fifo_file = calloc(1, sizeof(node_t));
+                pipe_t *pipe      = pipe_new();
 
-                if (fifo_file && fifo_queue) {
+                if (fifo_file && pipe) {
 
                         fifo_file->name = fifo_file_name;
                         fifo_file->size = 0;
                         fifo_file->type = NODE_TYPE_PIPE;
-                        fifo_file->data = fifo_queue;
+                        fifo_file->data = pipe;
                         fifo_file->fd   = 0;
                         fifo_file->mode = mode;
 
@@ -410,8 +413,8 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                         free(fifo_file);
                 }
 
-                if (fifo_queue) {
-                        queue_delete(fifo_queue);
+                if (pipe) {
+                        pipe_delete(pipe);
                 }
 
                 free(fifo_file_name);
@@ -1152,25 +1155,15 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 }
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
-                if (node->data) {
-                        n = 0;
-                        for (uint i = 0; i < count; i++) {
-                                if (queue_send(node->data, src + i, PIPE_WRITE_TIMEOUT)) {
-                                        n++;
-                                } else {
-                                        u8_t tmp;
-                                        queue_receive(node->data, &tmp, 0);
-                                        i--;
-                                }
-                        }
 
+                n = pipe_write(node->data, src, count);
+
+                if (n > 0) {
                         critical_section_begin();
-                        node->size += n;
+                        node->size = pipe_get_length(node->data);
                         critical_section_end();
-                        return n;
-                } else {
-                        errno = EIO;
                 }
+
         } else {
                 errno = ENOENT;
         }
@@ -1255,20 +1248,13 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 }
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
-                if (node->data) {
-                        n = 0;
-                        for (uint i = 0; i < count; i++) {
-                                if (queue_receive(node->data, dst + i, PIPE_READ_TIMEOUT)) {
-                                        n++;
-                                }
-                        }
 
+                n = pipe_read(node->data, dst, count);
+
+                if (n > 0) {
                         critical_section_begin();
-                        node->size -= n;
+                        node->size = pipe_get_length(node->data);
                         critical_section_end();
-                        return n;
-                } else {
-                        errno = EIO;
                 }
         } else {
                 errno = EIO;
@@ -1319,10 +1305,21 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
                         mutex_unlock(lfs->resource_mtx);
                         return drv_if->drv_ioctl(drv_if->handle, request, arg);
                 }
+        } else if (opened_file->node->type == NODE_TYPE_PIPE) {
+
+                if (request != PIPE_CLOSE) {
+                        errno = EBADRQC;
+                        goto exit;
+                }
+
+                mutex_unlock(lfs->resource_mtx);
+                return pipe_close(opened_file->node->data) ? STD_RET_OK : STD_RET_ERROR;
         }
 
 error:
         errno = ENOENT;
+
+exit:
         mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
@@ -1430,7 +1427,7 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
         } else if (target->type == NODE_TYPE_PIPE) {
 
                 if (target->data) {
-                        queue_delete(target->data);
+                        pipe_delete(target->data);
                         target->data = NULL;
                 }
         }

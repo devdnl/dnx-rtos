@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <dnx/fs.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include <string.h>
 #include "core/printx.h"
 #include "core/conv.h"
@@ -225,8 +226,8 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const 
 
         *fpos = 0;
 
-        if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
-                path += strlen(DIR_TASKID_STR) + 2;
+        if (strncmp(path, "/"DIR_TASKID_STR"/", strlen("/"DIR_TASKID_STR"/")) == 0) {
+                path += strlen("/"DIR_TASKID_STR"/");
 
                 task_t *taskhdl = NULL;
                 path = sys_strtoi((char*)path, 16, (i32_t*)&taskhdl);
@@ -264,9 +265,9 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const 
 
                 return add_file_info_to_list(procmem, taskhdl, file_content, fd);
 
-        } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", strlen(DIR_TASKNAME_STR) + 2) == 0) {
+        } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", strlen("/"DIR_TASKNAME_STR"/")) == 0) {
 
-                path += strlen(DIR_TASKNAME_STR) + 2;
+                path += strlen("/"DIR_TASKNAME_STR"/");
 
                 u16_t n = sysm_get_number_of_monitored_tasks();
                 u16_t i = 0;
@@ -286,6 +287,17 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const 
         } else if (strcmp(path, "/"FILE_CPUINFO_STR) == 0) {
                 return add_file_info_to_list(procmem, NULL, FILE_CONTENT_CPUINFO, fd);
 
+        } else if (strncmp(path, "/"DIR_BIN_STR"/", strlen("/"DIR_BIN_STR"/")) == 0) {
+                path += strlen("/"DIR_BIN_STR"/");
+
+                for (int i = 0; i < _get_programs_table_size(); i++) {
+                        if (strcmp(path, _get_programs_table()[i].program_name) == 0) {
+                                return add_file_info_to_list(procmem, NULL, FILE_CONTENT_NONE, fd);
+                        }
+                }
+
+                errno = ENOENT;
+                return STD_RET_ERROR;
         } else {
                 errno = ENOENT;
                 return STD_RET_ERROR;
@@ -389,6 +401,10 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
         if (file_info == NULL) {
                 errno = ENOENT;
                 return -1;
+        }
+
+        if (file_info->file_content == FILE_CONTENT_NONE) {
+                return 0;
         }
 
         if (file_info->file_content >= FILE_CONTENT_COUNT) {
@@ -635,8 +651,8 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 dir->f_readdir  = procfs_readdir_bin;
                 dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;
-        } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
-                path += strlen(DIR_TASKID_STR) + 2;
+        } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen("/"DIR_TASKID_STR"/")) == 0) {
+                path += strlen("/"DIR_TASKID_STR"/");
 
                 i32_t taskval = 0;
                 path = sys_strtoi((char*)path, 16, &taskval);
@@ -1096,7 +1112,7 @@ static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, e
 
         if (list_add_item(procmem->file_list, procmem->ID_counter, file_info) == 0) {
 
-                *fd   = procmem->ID_counter++;
+                *fd = procmem->ID_counter++;
 
                 mutex_unlock(procmem->resource_mtx);
                 return STD_RET_OK;

@@ -35,7 +35,10 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdarg.h>
-#include "core/systypes.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <sys/types.h>
+#include "kernel/ktypes.h"
 
 /*==============================================================================
   Exported macros
@@ -129,6 +132,8 @@ struct vfs_dir {
         size_t     f_seek;
         int        validation;  /* only for system purposes */
 };
+
+typedef struct vfs_dir DIR;
 
 /** file statistics */
 struct stat {

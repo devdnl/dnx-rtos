@@ -35,6 +35,7 @@
 #include <sys/ioctl.h>
 #include <dirent.h>
 #include <dnx/os.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ktypes.h
+@file    types.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains kernel types
+@brief
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,47 +24,64 @@
 
 *//*==========================================================================*/
 
-#ifndef _KTYPES_H_
-#define _KTYPES_H_
+#ifndef _TYPES_H_
+#define _TYPES_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include <sys/types.h>
-
-/*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
+==============================================================================*/
+/** short name types */
+typedef uint8_t         u8_t;
+typedef int8_t          i8_t;
+typedef uint16_t        u16_t;
+typedef int16_t         i16_t;
+typedef uint32_t        u32_t;
+typedef int32_t         i32_t;
+typedef uint64_t        u64_t;
+typedef int64_t         i64_t;
+typedef unsigned int    uint;
+
+/* special types */
+typedef uint64_t        fpos_t;
+typedef int             ssize_t;
+
+/** universal status type */
+typedef enum stdret
+{
+        STD_RET_OK      = 0,
+        STD_RET_ERROR   = 1,
+} stdret_t;
+
+/*==============================================================================
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-typedef void task_t;
-typedef void sem_t;
-typedef void queue_t;
-typedef struct mutex mutex_t;
-
-/*==============================================================================
-   Exported object declarations
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _KTYPES_H_ */
+#endif /* _TYPES_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

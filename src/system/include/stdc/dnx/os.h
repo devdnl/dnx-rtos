@@ -37,7 +37,6 @@ extern "C" {
 #include <string.h>
 #include <stdarg.h>
 #include "config.h"
-#include "core/systypes.h"
 #include "core/sysmoni.h"
 #include "core/modctrl.h"
 #include "core/progman.h"

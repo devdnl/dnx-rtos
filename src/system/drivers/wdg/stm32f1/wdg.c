@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <dnx/module.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include "stm32f1/wdg_cfg.h"
 #include "stm32f1/wdg_def.h"
 #include "stm32f1/stm32f10x.h"

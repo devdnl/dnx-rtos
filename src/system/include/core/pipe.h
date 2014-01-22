@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    systypes.h
+@file    pipe.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains all system types
+@brief   File support creating of pipies in file systems.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,63 +24,49 @@
 
 *//*==========================================================================*/
 
-#ifndef SYSTYPES_H_
-#define SYSTYPES_H_
+#ifndef _PIPE_H_
+#define _PIPE_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include <stddef.h>
-#include "core/basic_types.h"
-#include "kernel/ktypes.h"
-
-/*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
-/* disable conflicting types from standard libraries */
-#undef stdin
-#undef stdout
-#undef malloc
-#undef free
-
-/** string usable macros */
-#define FIRST_CHARACTER(char__pstr)             char__pstr[0]
-#define LAST_CHARACTER(char__pstr)              char__pstr[strlen(char__pstr) - 1]
-
-/*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported object types
 ==============================================================================*/
-/** universal status type */
-typedef enum stdret_enum
-{
-        STD_RET_OK      = 0,
-        STD_RET_ERROR   = 1,
-} stdret_t;
-
-/** directory object */
-typedef struct vfs_dir DIR;
+typedef struct pipe pipe_t;
 
 /*==============================================================================
-  Exported object declarations
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
+==============================================================================*/
+extern pipe_t  *pipe_new                ();
+extern void     pipe_delete             (pipe_t*);
+extern int      pipe_get_length         (pipe_t*);
+extern int      pipe_read               (pipe_t*, u8_t*, size_t);
+extern int      pipe_write              (pipe_t*, const u8_t*, size_t);
+extern bool     pipe_close              (pipe_t*);
+
+/*==============================================================================
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SYSTYPES_H_ */
+#endif /* _PIPE_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

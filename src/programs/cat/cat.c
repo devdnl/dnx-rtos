@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros

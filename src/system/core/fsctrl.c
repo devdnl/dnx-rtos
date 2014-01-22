@@ -29,7 +29,7 @@
 ==============================================================================*/
 #include <errno.h>
 #include <string.h>
-#include "core/systypes.h"
+#include <sys/types.h>
 #include "core/fsctrl.h"
 #include "core/vfs.h"
 

@@ -35,7 +35,6 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include "core/systypes.h"
 #include "core/memman.h"
 #include "core/vfs.h"
 
