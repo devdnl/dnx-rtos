@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mntent.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros

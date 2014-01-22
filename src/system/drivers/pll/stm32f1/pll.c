@@ -29,6 +29,7 @@
 ==============================================================================*/
 #include <dnx/module.h>
 #include <dnx/timer.h>
+#include <dnx/misc.h>
 #include "stm32f1/pll_cfg.h"
 #include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"

@@ -31,6 +31,7 @@
 #include <dnx/thread.h>
 #include <dnx/os.h>
 #include <dnx/timer.h>
+#include <dnx/misc.h>
 #include <unistd.h>
 #include "stm32f1/sdspi_cfg.h"
 #include "stm32f1/sdspi_def.h"

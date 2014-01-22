@@ -30,6 +30,7 @@
 #include <dnx/module.h>
 #include <dnx/thread.h>
 #include <dnx/os.h>
+#include <dnx/misc.h>
 #include <unistd.h>
 #include "tty_cfg.h"
 #include "tty_def.h"

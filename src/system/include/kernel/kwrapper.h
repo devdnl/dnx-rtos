@@ -34,6 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdbool.h>
 #include "kernel/ktypes.h"
 #include "core/systypes.h"
 #include "core/vfs.h"

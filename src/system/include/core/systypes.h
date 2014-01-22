@@ -35,7 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stddef.h>
-#include "core/basic_types.h"
+#include <sys/types.h>
 #include "kernel/ktypes.h"
 
 /*==============================================================================
@@ -47,10 +47,6 @@ extern "C" {
 #undef malloc
 #undef free
 
-/** string usable macros */
-#define FIRST_CHARACTER(char__pstr)             char__pstr[0]
-#define LAST_CHARACTER(char__pstr)              char__pstr[strlen(char__pstr) - 1]
-
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
@@ -58,15 +54,6 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
-/** universal status type */
-typedef enum stdret_enum
-{
-        STD_RET_OK      = 0,
-        STD_RET_ERROR   = 1,
-} stdret_t;
-
-/** directory object */
-typedef struct vfs_dir DIR;
 
 /*==============================================================================
   Exported object declarations

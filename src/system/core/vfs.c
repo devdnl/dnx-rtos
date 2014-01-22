@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include <errno.h>
 #include <string.h>
 #include "core/vfs.h"
