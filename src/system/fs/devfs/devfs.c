@@ -30,15 +30,15 @@
 #include <dnx/fs.h>
 #include <dnx/thread.h>
 #include <dnx/misc.h>
+#include <sys/ioctl.h>
 #include <string.h>
+#include "core/pipe.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
 #define CHAIN_NUMBER_OF_NODES           8
 #define TIMEOUT_MS                      MAX_DELAY
-#define PIPE_WRITE_TIMEOUT              50
-#define PIPE_FLAG_CLOSED                (1 << 0)
 
 /*==============================================================================
   Local object types
@@ -47,7 +47,7 @@ struct devfs_chain {
         struct devnode {
                 union {
                         struct vfs_drv_interface *drv;
-                        queue_t                  *pipe;
+                        pipe_t                   *pipe;
                         void                     *generic;
                 } nif;
                 char                     *path;
@@ -56,7 +56,6 @@ struct devfs_chain {
                 int                       uid;
                 int                       mode;
                 int                       opended;
-                u8_t                      flag;
         } devnode[CHAIN_NUMBER_OF_NODES];
 
         struct devfs_chain *next;
@@ -311,18 +310,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         if (node->type == FILE_TYPE_DRV) {
                 return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos);
         } else if (node->type == FILE_TYPE_PIPE) {
-                ssize_t n = 0;
-                for (size_t i = 0; i < count && !(node->flag & PIPE_FLAG_CLOSED); i++) {
-                        if (queue_send(node->nif.pipe, src + i, PIPE_WRITE_TIMEOUT)) {
-                                n++;
-                        } else {
-                                u8_t tmp;
-                                queue_receive(node->nif.pipe, &tmp, 0);
-                                i--;
-                        }
-                }
-
-                return count;
+                return pipe_write(node->nif.pipe, src, count);
         } else {
                 return -1;
         }
@@ -356,16 +344,7 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         if (node->type == FILE_TYPE_DRV) {
                 return node->nif.drv->drv_read(node->nif.drv->handle, dst, count, fpos);
         } else if (node->type == FILE_TYPE_PIPE) {
-                ssize_t n = 0;
-                for (size_t i = 0; i < count && !(node->flag & PIPE_FLAG_CLOSED); i++) {
-                        if (queue_receive(node->nif.pipe, dst + i, MAX_DELAY) == false) {
-                                i--;
-                        } else {
-                                n++;
-                        }
-                }
-
-                return n;
+                return pipe_read(node->nif.pipe, dst, count);
         } else {
                 return -1;
         }
@@ -396,8 +375,11 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
 
         if (node->type == FILE_TYPE_DRV) {
                 return node->nif.drv->drv_ioctl(node->nif.drv->handle, request, arg);
+        } else if (node->type == FILE_TYPE_PIPE && request == PIPE_CLOSE) {
+                return pipe_close(node->nif.pipe) ? STD_RET_OK : STD_RET_ERROR;
         } else {
-                return -1;
+                errno = EBADRQC;
+                return STD_RET_ERROR;
         }
 }
 
@@ -425,7 +407,7 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
         if (node->type == FILE_TYPE_DRV) {
                 return node->nif.drv->drv_flush(node->nif.drv->handle);
         } else {
-                return -1;
+                return STD_RET_ERROR;
         }
 }
 
@@ -464,7 +446,7 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                         stat->st_type = FILE_TYPE_DRV;
                 }
         } else if (node->type == FILE_TYPE_PIPE) {
-                pipelen = queue_get_number_of_items(node->nif.pipe);
+                pipelen = pipe_get_length(node->nif.pipe);
                 if (pipelen >= 0) {
                         stat->st_size = pipelen;
                         stat->st_type = FILE_TYPE_PIPE;
@@ -538,7 +520,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 
                         struct devnode *node = chain_get_empty_node(devfs->root_chain);
                         if (node) {
-                                node->nif.pipe = queue_new(CONFIG_STREAM_BUFFER_LENGTH, sizeof(char));
+                                node->nif.pipe = pipe_new();
                                 node->path     = malloc(strlen(path + 1) + 1);
 
                                 if (node->nif.pipe && node->path) {
@@ -553,7 +535,7 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
                                         status = STD_RET_OK;
                                 } else {
                                         if (node->nif.pipe) {
-                                                queue_delete(node->nif.pipe);
+                                                pipe_delete(node->nif.pipe);
                                                 node->nif.pipe = NULL;
                                         }
 
@@ -726,7 +708,7 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                                 }
                                 dirent.filetype = FILE_TYPE_DRV;
                         } else if (node->type == FILE_TYPE_PIPE) {
-                                int n = queue_get_number_of_items(node->nif.pipe);
+                                int n = pipe_get_length(node->nif.pipe);
                                 if (n >= 0) {
                                         dirent.size     = n;
                                         dirent.filetype = FILE_TYPE_PIPE;
@@ -774,7 +756,7 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                                 if (node->type == FILE_TYPE_DRV) {
                                         free(node->nif.drv);
                                 } else if (node->type == FILE_TYPE_PIPE) {
-                                        queue_delete(node->nif.pipe);
+                                        pipe_delete(node->nif.pipe);
                                 }
                                 node->nif.generic = NULL;
 
@@ -783,23 +765,11 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                                 node->gid   = 0;
                                 node->uid   = 0;
                                 node->mode  = 0;
-                                node->flag  = 0;
 
                                 devfs->number_of_used_nodes--;
                                 status = STD_RET_OK;
                         } else {
-                                if (node->type == FILE_TYPE_PIPE) {
-                                        node->flag = PIPE_FLAG_CLOSED;
-                                        u8_t   etx = ETX;
-
-                                        for (int i = 0; i < node->opended; i++) {
-                                                queue_send(node->nif.pipe, &etx, 10);
-                                        }
-
-                                        errno = EAGAIN;
-                                } else {
-                                        errno = EBUSY;
-                                }
+                                errno = EBUSY;
                         }
                 }
 
@@ -1094,11 +1064,7 @@ static void chain_delete(struct devfs_chain *chain)
 
         for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
                 if (chain->devnode[i].nif.generic) {
-                        if (chain->devnode[i].type == FILE_TYPE_PIPE) {
-                                queue_delete(chain->devnode[i].nif.pipe);
-                        } else {
-                                free(chain->devnode[i].nif.generic);
-                        }
+                        free(chain->devnode[i].nif.generic);
                 }
 
                 if (chain->devnode[i].path) {

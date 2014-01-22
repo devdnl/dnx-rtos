@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ioctl.h
+@file    pipe.h
 
 @author  Daniel Zorychta
 
-@brief   Header contain all device control commands. Depend on existing drivers.
+@brief   File support creating of pipies in file systems.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,40 +24,25 @@
 
 *//*==========================================================================*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _PIPE_H_
+#define _PIPE_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include "core/ioctl_macros.h"
-
-/* include here drivers definitions */
-#include "tty_def.h"
-#ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#       include "stm32f1/ethmac_def.h"
-#       include "stm32f1/crc_def.h"
-#       include "stm32f1/wdg_def.h"
-#else
-#       error "Unknown architecture!"
-#endif
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
-#define PIPE_CLOSE                              _IO('P', 0x00)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct pipe pipe_t;
 
 /*==============================================================================
   Exported objects
@@ -66,18 +51,22 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-static inline int ioctl(FILE *stream, int request, ...)
-{
-        va_list arg;
-        va_start(arg, request);
-        return vfs_vioctl(stream, request, arg);
-}
+extern pipe_t  *pipe_new                ();
+extern void     pipe_delete             (pipe_t*);
+extern int      pipe_get_length         (pipe_t*);
+extern int      pipe_read               (pipe_t*, u8_t*, size_t);
+extern int      pipe_write              (pipe_t*, const u8_t*, size_t);
+extern bool     pipe_close              (pipe_t*);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _PIPE_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

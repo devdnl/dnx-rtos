@@ -352,8 +352,7 @@ static bool start_program(const char *master, const char *slave, const char *fil
 
 
                 while (program_wait_for_close(pm, 1000));
-                u8_t etx = ETX;
-                fwrite(&etx, 1, 1, in);
+                ioctl(in, PIPE_CLOSE);
 
                 while (program_wait_for_close(ps, 1000));
 

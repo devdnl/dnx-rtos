@@ -135,9 +135,14 @@
 #define CONFIG_COLOR_TERMINAL_ENABLE                    (1)
 
 /**
- * Maximum stream buffer size
+ * Maximum stream buffer size [bytes]
  */
 #define CONFIG_STREAM_BUFFER_LENGTH                     (100)
+
+/**
+ * Maximum pipe length [bytes]
+ */
+#define CONFIG_PIPE_LENGTH                              (128)
 
 /**
  * ERRNO string support (strerror(), perror(), etc)
