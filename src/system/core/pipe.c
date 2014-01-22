@@ -154,9 +154,15 @@ int pipe_read(pipe_t *pipe, u8_t *buf, size_t count)
         if (pipe && buf && count) {
                 if (pipe->valid == PIPE_VALIDATION_NUMBER) {
                         int n = 0;
-                        for (; n < (int)count && !pipe->closed; n++) {
+                        for (; n < (int)count; n++) {
 
-                                if (!queue_receive(pipe, &buf[n], PIPE_READ_TIMEOUT)) {
+                                if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                                        u8_t null = '\0';
+                                        queue_send(pipe->queue, &null, PIPE_WRITE_TIMEOUT);
+                                        break;
+                                }
+
+                                if (!queue_receive(pipe->queue, &buf[n], PIPE_READ_TIMEOUT)) {
                                         break;
                                 }
                         }
@@ -184,9 +190,13 @@ int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count)
         if (pipe && buf && count) {
                 if (pipe->valid == PIPE_VALIDATION_NUMBER) {
                         int n = 0;
-                        for (; n < (int)count && !pipe->closed; n++) {
+                        for (; n < (int)count; n++) {
 
-                                if (!queue_send(pipe, &buf[n], PIPE_WRITE_TIMEOUT)) {
+                                if (queue_get_number_of_items(pipe->queue) <= 0 && pipe->closed) {
+                                        break;
+                                }
+
+                                if (!queue_send(pipe->queue, &buf[n], PIPE_WRITE_TIMEOUT)) {
                                         break;
                                 }
                         }
@@ -214,7 +224,7 @@ bool pipe_close(pipe_t *pipe)
                         pipe->closed = true;
 
                         u8_t null = '\0';
-                        if (queue_send(pipe, &null, PIPE_WRITE_TIMEOUT)) {
+                        if (queue_send(pipe->queue, &null, PIPE_WRITE_TIMEOUT)) {
                                 return true;
                         }
                 }
