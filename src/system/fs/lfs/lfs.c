@@ -38,7 +38,7 @@
 ==============================================================================*/
 #define MTX_BLOCK_TIME                  10
 #define PIPE_LENGTH                     CONFIG_STREAM_BUFFER_LENGTH
-#define PIPE_WRITE_TIMEOUT              1
+#define PIPE_WRITE_TIMEOUT              50
 #define PIPE_READ_TIMEOUT               MAX_DELAY
 
 #define PIPE_FLAG_CLOSED                (1 << 0)

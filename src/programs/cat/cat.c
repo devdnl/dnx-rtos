@@ -85,7 +85,7 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
         int status = EXIT_SUCCESS;
 
         if (argc == 1) {
-                printf("Usage: %s <file>\n", argv[0]);
+                printf("Usage: %s [file|-]\n", argv[0]);
                 return EXIT_FAILURE;
         }
 
@@ -96,7 +96,13 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
 
         char *str = calloc(col + 1, sizeof(char));
         if (str) {
-                FILE *file = fopen(argv[1], "r");
+                FILE *file;
+                if (strcmp(argv[1], "-") != 0) {
+                        file = fopen(argv[1], "r");
+                } else {
+                        file = stdin;
+                }
+
                 if (file) {
                         int eof = 0;
                         while (!eof && fgets(str, col, file)) {
@@ -110,7 +116,10 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
 
                                 fputs(str, stdout);
                         }
-                        fclose(file);
+
+                        if (strcmp(argv[1], "-") != 0) {
+                                fclose(file);
+                        }
                 } else {
                         perror(argv[1]);
                         status = EXIT_FAILURE;

@@ -37,6 +37,7 @@
 ==============================================================================*/
 #define CHAIN_NUMBER_OF_NODES           8
 #define TIMEOUT_MS                      MAX_DELAY
+#define PIPE_WRITE_TIMEOUT              50
 #define PIPE_FLAG_CLOSED                (1 << 0)
 
 /*==============================================================================
@@ -312,7 +313,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         } else if (node->type == FILE_TYPE_PIPE) {
                 ssize_t n = 0;
                 for (size_t i = 0; i < count && !(node->flag & PIPE_FLAG_CLOSED); i++) {
-                        if (queue_send(node->nif.pipe, src + i, 1)) {
+                        if (queue_send(node->nif.pipe, src + i, PIPE_WRITE_TIMEOUT)) {
                                 n++;
                         } else {
                                 u8_t tmp;

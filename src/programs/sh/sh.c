@@ -38,6 +38,7 @@
 #include <dnx/os.h>
 #include <dnx/thread.h>
 #include <dnx/misc.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -46,6 +47,7 @@
 #define CWD_PATH_LEN                    128
 #define HISTORY_NEXT_KEY                "\e^[A"
 #define HISTORY_PREV_KEY                "\e^[B"
+#define ETX                             0x03
 
 /*==============================================================================
   Local types, enums definitions
@@ -324,16 +326,53 @@ static void print_fail_message(char *cmd)
 //==============================================================================
 static bool start_program(const char *master, const char *slave, const char *file)
 {
-        if (master) {
-                printf("Master: %s\n", master);
-        }
-
-        if (slave) {
-                printf("Slave : %s\n", slave);
-        }
+        errno     = 0;
+        FILE *in  = stdin;
+        FILE *out = stdout;
 
         if (file) {
                 printf("File  : %s\n", file);
+        }
+
+        if (master && slave) {
+                if (mkfifo("/tmp/sh", 0666) != 0) {
+                        perror("sh");
+                        return false;
+                }
+
+                in = fopen("/tmp/sh", "r+");
+                if (!in) {
+                        remove("/tmp/sh");
+                        perror("sh");
+                        return false;
+                }
+
+                prog_t *pm = program_new(master, global->cwd, stdin, in, in);
+                prog_t *ps = program_new(slave, global->cwd, in, stdout, stdout);
+
+
+                while (program_wait_for_close(pm, 1000));
+                u8_t etx = ETX;
+                fwrite(&etx, 1, 1, in);
+
+                while (program_wait_for_close(ps, 1000));
+
+                fclose(in);
+
+                if (remove("/tmp/sh")) {
+                        /* if error retry again */
+                        remove("/tmp/sh");
+                }
+
+                return true;
+        }
+
+        if (master && slave && file) {
+
+        }
+
+        if (master && file) {
+
         }
 
         return false;
