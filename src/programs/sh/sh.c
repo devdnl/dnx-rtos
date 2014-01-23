@@ -397,13 +397,13 @@ static bool start_program(char *master, char *slave, char *file)
         }
 
         if (master && slave && file) {
-                prog_t *pm = program_new(master, global->cwd, stdin, pipe, pipe);
+                pm = program_new(master, global->cwd, stdin, pipe, pipe);
                 if (!pm) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                prog_t *ps = program_new(slave, global->cwd, pipe, fout, fout);
+                ps = program_new(slave, global->cwd, pipe, fout, fout);
                 if (!ps) {
                         program_kill(pm);
                         print_fail_message(slave);
@@ -415,13 +415,13 @@ static bool start_program(char *master, char *slave, char *file)
                 program_wait_for_close(ps, MAX_DELAY);
 
         } else if (master && slave) {
-                prog_t *pm = program_new(master, global->cwd, stdin, pipe, pipe);
+                pm = program_new(master, global->cwd, stdin, pipe, pipe);
                 if (!pm) {
                         print_fail_message(master);
                         goto free_resources;
                 }
 
-                prog_t *ps = program_new(slave, global->cwd, pipe, stdout, stderr);
+                ps = program_new(slave, global->cwd, pipe, stdout, stderr);
                 if (!ps) {
                         program_kill(pm);
                         print_fail_message(slave);
@@ -433,7 +433,7 @@ static bool start_program(char *master, char *slave, char *file)
                 program_wait_for_close(ps, MAX_DELAY);
 
         } else if (master && file) {
-                prog_t *pm = program_new(master, global->cwd, stdin, fout, fout);
+                pm = program_new(master, global->cwd, stdin, fout, fout);
                 if (!pm) {
                         print_fail_message(master);
                         goto free_resources;
@@ -442,7 +442,7 @@ static bool start_program(char *master, char *slave, char *file)
                 program_wait_for_close(pm, MAX_DELAY);
 
         } else if (master) {
-                prog_t *pm = program_new(master, global->cwd, stdin, stdout, stderr);
+                pm = program_new(master, global->cwd, stdin, stdout, stderr);
                 if (!pm) {
                         print_fail_message(master);
                         goto free_resources;
