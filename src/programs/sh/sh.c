@@ -80,6 +80,7 @@ char  history[PROMPT_LINE_LEN];
 char  cwd[CWD_PATH_LEN];
 bool  prompt_enable;
 FILE *input;
+bool  stream_closed;
 
 GLOBAL_VARIABLES_SECTION_END
 
@@ -110,7 +111,7 @@ static void clear_prompt()
 //==============================================================================
 static void print_prompt(void)
 {
-        if (global->prompt_enable) {
+        if (global->prompt_enable && global->input == stdin) {
                 printf(FONT_COLOR_GREEN"%s@%s:%s"RESET_ATTRIBUTES"\n", get_user_name(), get_host_name(), global->cwd);
                 printf(FONT_COLOR_GREEN"$ "RESET_ATTRIBUTES);
         }
@@ -137,15 +138,19 @@ static const char *get_user_name()
 //==============================================================================
 static bool read_input()
 {
-        clearerr(global->input);
+        if (global->stream_closed) {
+                strcpy(global->line, "exit");
+                return true;
+        }
+
         if (fgets(global->line, PROMPT_LINE_LEN, global->input)) {
-                /* remove LF at the on of line */
-                LAST_CHARACTER(global->line) = '\0';
 
                 if (feof(global->input)) {
-                        strcpy(global->line, "exit");
+                        global->stream_closed = true;
                 }
 
+                /* remove LF at the on of line */
+                LAST_CHARACTER(global->line) = '\0';
                 return true;
         } else {
                 return false;
@@ -380,7 +385,7 @@ static bool start_program(char *master, char *slave, char *file)
         }
 
         if (file) {
-                fout = fopen(file, "w+");
+                fout = fopen(file, "a");
                 if (!fout) {
                         perror(file);
                         goto free_resources;
@@ -596,8 +601,9 @@ PROGRAM_MAIN(sh, int argc, char *argv[])
 
                 print_prompt();
 
-                if (!read_input())
-                        continue;
+                if (!read_input()) {
+                        break;
+                }
 
                 if (history_request())
                         continue;
@@ -613,11 +619,7 @@ PROGRAM_MAIN(sh, int argc, char *argv[])
                 }
 
                 if (is_exit_cmd(cmd)) {
-                        if (global->input != stdin) {
-                                fclose(global->input);
-                        }
-
-                        return 0;
+                        break;;
                 }
 
                 if (analyze_line(cmd)) {
@@ -625,6 +627,10 @@ PROGRAM_MAIN(sh, int argc, char *argv[])
                 }
 
                 print_fail_message(cmd);
+        }
+
+        if (global->input != stdin) {
+                fclose(global->input);
         }
 
         return 0;
