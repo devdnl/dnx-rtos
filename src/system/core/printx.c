@@ -523,7 +523,7 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
         struct stat file_stat;
         if (vfs_fstat(stream, &file_stat) == 0) {
-                if (file_stat.st_type == FILE_TYPE_PIPE) {
+                if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
                         for (int i = 0; i < size - 1; i++) {
                                 vfs_fread(str + i, sizeof(char), 1, stream);
                                 if (vfs_ferror(stream) || vfs_feof(stream)) {
