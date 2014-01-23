@@ -36,7 +36,6 @@
   Local macros
 ==============================================================================*/
 #define VALIDATION_TOKEN                        (u32_t)0x6921363E
-#define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 #define EDITLINE_LEN                            _TTY_DEFAULT_TERMINAL_COLUMNS
 
 /*==============================================================================
@@ -44,7 +43,7 @@
 ==============================================================================*/
 struct ttyedit {
         FILE           *out_file;
-        const u32_t     valid;
+        u32_t           valid;
         char            buffer[EDITLINE_LEN + 1];
         u16_t           length;
         u16_t           cursor_position;
@@ -85,7 +84,7 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 {
         ttyedit_t *edit = calloc(1, sizeof(ttyedit_t));
         if (edit) {
-                SET_VALIDATION(edit, VALIDATION_TOKEN);
+                edit->valid        = VALIDATION_TOKEN;
                 edit->out_file     = out_file;
                 edit->echo_enabled = true;
         }
@@ -104,7 +103,7 @@ void ttyedit_delete(ttyedit_t *this)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        SET_VALIDATION(this, 0);
+                        this->valid = 0;
                         free(this);
                 }
         }

@@ -38,7 +38,6 @@
   Local macros
 ==============================================================================*/
 #define VALIDATION_TOKEN                        (u32_t)0x7D8498F1
-#define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 #define VT100_TOKEN_LEN                         15
 #define VT100_TOKEN_READ_TIMEOUT                250
 
@@ -70,7 +69,7 @@
   Local object types
 ==============================================================================*/
 struct ttycmd {
-        const u32_t     valid;
+        u32_t           valid;
         char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
         u16_t           colums;
@@ -110,7 +109,7 @@ ttycmd_t *ttycmd_new()
 {
         ttycmd_t *ttycmd = calloc(1, sizeof(ttycmd_t));
         if (ttycmd) {
-                SET_VALIDATION(ttycmd, VALIDATION_TOKEN);
+                ttycmd->valid = VALIDATION_TOKEN;
         }
 
         return ttycmd;
@@ -127,7 +126,7 @@ void ttycmd_delete(ttycmd_t *this)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        SET_VALIDATION(this, 0);
+                        this->valid = 0;
                         free(this);
                 }
         }
