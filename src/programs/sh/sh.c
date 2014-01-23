@@ -365,7 +365,7 @@ static bool start_program(char *master, char *slave, char *file)
         }
 
         if (file) {
-                fout = fopen(file, "w");
+                fout = fopen(file, "w+");
                 if (!fout) {
                         perror(file);
                         goto free_resources;
@@ -465,72 +465,6 @@ free_resources:
         }
 
         return true;
-
-
-
-//        if (file) {
-//                printf("File  : %s\n", file);
-//        }
-//
-//        if (master && slave) {
-//                if (mkfifo("/tmp/sh", 0666) != 0) {
-//                        perror("sh");
-//                        return true;
-//                }
-//
-//                in = fopen("/tmp/sh", "r+");
-//                if (!in) {
-//                        remove("/tmp/sh");
-//                        perror("sh");
-//                        return true;
-//                }
-//
-//                prog_t *pm = program_new(master, global->cwd, stdin, in, in);
-//                if (!pm) {
-//                        fclose(in);
-//                        remove("/tmp/sh");
-//                        program_delete(pm);
-//                        print_fail_message(master);
-//                        return true;
-//                }
-//
-//                prog_t *ps = program_new(slave, global->cwd, in, stdout, stdout);
-//                if (!ps) {
-//                        fclose(in);
-//                        remove("/tmp/sh");
-//                        program_kill(pm);
-//                        program_delete(ps);
-//                        program_delete(pm);
-//                        print_fail_message(slave);
-//                        return true;
-//                }
-//
-//                while (program_wait_for_close(pm, 1000));
-//                ioctl(in, PIPE_CLOSE);
-//                while (program_wait_for_close(ps, 1000));
-//
-//                program_delete(pm);
-//                program_delete(ps);
-//
-//                fclose(in);
-//
-//                if (remove("/tmp/sh")) {
-//                        /* if error retry again */
-//                        remove("/tmp/sh");
-//                }
-//
-//                return true;
-//        }
-//
-//        if (master && slave && file) {
-//
-//        }
-//
-//        if (master && file) {
-//
-//        }
-//
-//        return false;
 }
 
 //==============================================================================

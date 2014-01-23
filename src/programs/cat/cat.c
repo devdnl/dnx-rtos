@@ -50,7 +50,7 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
-
+bool rm_ctrl_chars;
 GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
@@ -64,6 +64,8 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 /**
  * @brief Function remove control characters
+ *
+ * @param str           string to modify
  */
 //==============================================================================
 static void remove_control_characters(char *str)
@@ -77,6 +79,48 @@ static void remove_control_characters(char *str)
 
 //==============================================================================
 /**
+ * @brief Read file
+ *
+ * @param file          file to read
+ * @param str           line buffer
+ * @param len           line buffer legth
+ *
+ */
+//==============================================================================
+static void print_file(FILE *file, char *str, int len)
+{
+        int eof = 0;
+        while (!eof && fgets(str, len, file)) {
+                eof = feof(file);
+
+                if (global->rm_ctrl_chars) {
+                        remove_control_characters(str);
+                }
+
+                if (LAST_CHARACTER(str) != '\n') {
+                        strcat(str, "\n");
+                }
+
+                fputs(str, stdout);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function show help screen
+ *
+ * @param name          program name
+ */
+//==============================================================================
+static void print_help(char *name)
+{
+        printf("Usage: %s [OPTION] [FILE]\n", name);
+        puts("  -n              remove control characters");
+        puts("  -h, --help      show this help");
+}
+
+//==============================================================================
+/**
  * @brief Cat main function
  */
 //==============================================================================
@@ -84,9 +128,19 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
 {
         int status = EXIT_SUCCESS;
 
-        if (argc == 1) {
-                printf("Usage: %s [file|-]\n", argv[0]);
-                return EXIT_FAILURE;
+        int i = 1;
+        for (; i < argc; i++) {
+                if (strcmp(argv[i], "-n") == 0) {
+                        global->rm_ctrl_chars = true;
+                        continue;
+                }
+
+                if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+                        print_help(argv[0]);
+                        return 0;
+                }
+
+                break;
         }
 
         errno = 0;
@@ -97,40 +151,30 @@ PROGRAM_MAIN(cat, int argc, char *argv[])
         char *str = calloc(col + 1, sizeof(char));
         if (str) {
                 FILE *file;
-                if (strcmp(argv[1], "-") != 0) {
-                        file = fopen(argv[1], "r");
-                } else {
-                        file = stdin;
-                }
 
-                if (file) {
-                        int eof = 0;
-                        while (!eof && fgets(str, col, file)) {
-                                eof = feof(file);
-
-                                remove_control_characters(str);
-
-                                if (LAST_CHARACTER(str) != '\n') {
-                                        strcat(str, "\n");
+                do {
+                        if (argc == i) {
+                                file = stdin;
+                        } else {
+                                file = fopen(argv[i], "r");
+                                if (!file) {
+                                        perror(argv[i]);
+                                        break;
                                 }
-
-                                fputs(str, stdout);
                         }
 
-                        if (strcmp(argv[1], "-") != 0) {
+                        print_file(file, str, col);
+
+                        if (file != stdin) {
                                 fclose(file);
                         }
-                } else {
-                        perror(argv[1]);
-                        status = EXIT_FAILURE;
-                }
+
+                } while (++i < argc);
+
+                free(str);
         } else {
                 perror(NULL);
                 status = EXIT_FAILURE;
-        }
-
-        if (str) {
-                free(str);
         }
 
         return status;

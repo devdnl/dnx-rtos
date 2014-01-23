@@ -63,11 +63,11 @@ GLOBAL_VARIABLES_SECTION_END
 //==============================================================================
 PROGRAM_MAIN(rm, int argc, char *argv[])
 {
-        (void) argc;
-
-        if (remove(argv[1]) != 0) {
-                perror(argv[1]);
-                return EXIT_FAILURE;
+        for (int i = 1; i < argc; i++) {
+                if (remove(argv[i]) != 0) {
+                        perror(argv[i]);
+                        return EXIT_FAILURE;
+                }
         }
 
         return EXIT_SUCCESS;
