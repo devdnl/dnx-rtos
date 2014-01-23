@@ -137,9 +137,14 @@ static const char *get_user_name()
 //==============================================================================
 static bool read_input()
 {
+        clearerr(global->input);
         if (fgets(global->line, PROMPT_LINE_LEN, global->input)) {
                 /* remove LF at the on of line */
                 LAST_CHARACTER(global->line) = '\0';
+
+                if (feof(global->input)) {
+                        strcpy(global->line, "exit");
+                }
 
                 return true;
         } else {
@@ -256,6 +261,7 @@ static void change_directory(char *str)
         char *arg = find_arg(str);
 
         if (strcmp(arg, "..") == 0) {
+
                 char *lastslash = strrchr(global->cwd, '/');
                 if (lastslash) {
                         if (lastslash != global->cwd) {
@@ -264,9 +270,12 @@ static void change_directory(char *str)
                                  *(lastslash + 1) = '\0';
                          }
                 }
+
         } else if (strcmp(arg, ".") == 0) {
                 /* do nothing */
+
         } else if (FIRST_CHARACTER(arg) != '/') {
+
                 newpath = calloc(strlen(arg) + strlen(global->cwd) + 2, ARRAY_ITEM_SIZE(global->cwd));
                 if (newpath) {
                         strcpy(newpath, global->cwd);
@@ -281,9 +290,13 @@ static void change_directory(char *str)
                 } else {
                         perror(NULL);
                 }
+
         } else if (FIRST_CHARACTER(arg) == '/') {
+
                 newpath = arg;
+
         } else {
+
                 puts(strerror(ENOENT));
         }
 
@@ -308,7 +321,7 @@ static void change_directory(char *str)
  *
  * @param str           string with leading spaces
  *
- * @return string without leading spaces (move pointer to space free index)
+ * @return string without leading spaces (move pointer to space-free index)
  */
 //==============================================================================
 static char *remove_leading_spaces(char *str)
@@ -502,13 +515,13 @@ static bool analyze_line(char *cmd)
         }
 
         if (pipe_number > 1 || out_number > 1) {
-                puts("Syntax error");
+                puts("sh: syntax error");
                 return true;
         }
 
         if (out_number && pipe_number) {
                 if ((strchr(cmd, '|') > strchr(cmd, '>')) || strchr(cmd, '|') == cmd) {
-                        puts("Syntax error");
+                        puts("sh: syntax error");
                         return true;
                 } else {
                         char *master = cmd;
@@ -525,7 +538,7 @@ static bool analyze_line(char *cmd)
 
         if (out_number) {
                 if (strchr(cmd, '>') == cmd) {
-                        puts("Syntax error");
+                        puts("sh: syntax error");
                         return true;
                 } else {
                         char *master = cmd;
@@ -539,7 +552,7 @@ static bool analyze_line(char *cmd)
 
         if (pipe_number) {
                 if (strchr(cmd, '|') == cmd) {
-                        puts("Syntax error");
+                        puts("sh: syntax error");
                         return true;
                 } else {
                         char *master = cmd;
@@ -565,11 +578,16 @@ static bool analyze_line(char *cmd)
 //==============================================================================
 PROGRAM_MAIN(sh, int argc, char *argv[])
 {
-        (void) argc;
-        (void) argv;
-
         global->prompt_enable = true;
         global->input         = stdin;
+
+        if (argc == 2) {
+                global->input = fopen(argv[1], "r");
+                if (!global->input) {
+                        perror(argv[1]);
+                        return EXIT_FAILURE;
+                }
+        }
 
         getcwd(global->cwd, CWD_PATH_LEN);
 
@@ -595,6 +613,10 @@ PROGRAM_MAIN(sh, int argc, char *argv[])
                 }
 
                 if (is_exit_cmd(cmd)) {
+                        if (global->input != stdin) {
+                                fclose(global->input);
+                        }
+
                         return 0;
                 }
 
