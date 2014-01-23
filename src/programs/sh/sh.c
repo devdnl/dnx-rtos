@@ -47,7 +47,6 @@
 #define CWD_PATH_LEN                    128
 #define HISTORY_NEXT_KEY                "\e^[A"
 #define HISTORY_PREV_KEY                "\e^[B"
-#define ETX                             0x03
 
 /*==============================================================================
   Local types, enums definitions
@@ -83,6 +82,8 @@ bool  prompt_enable;
 FILE *input;
 
 GLOBAL_VARIABLES_SECTION_END
+
+const char *pipe_file = "/tmp/sh-";
 
 /*==============================================================================
   Exported object definitions
@@ -346,11 +347,12 @@ static void print_fail_message(char *cmd)
 //==============================================================================
 static bool start_program(char *master, char *slave, char *file)
 {
-#define SH_PIPE_NAME    "/tmp/sh-pipe"
-
-        errno      = 0;
-        FILE *pipe = NULL;
-        FILE *fout = NULL;
+        errno              = 0;
+        FILE    *pipe      = NULL;
+        FILE    *fout      = NULL;
+        prog_t  *pm        = NULL;
+        prog_t  *ps        = NULL;
+        char    *pipe_name = NULL;
 
         if (master) {
                 master = remove_leading_spaces(master);
@@ -373,13 +375,22 @@ static bool start_program(char *master, char *slave, char *file)
         }
 
         if (master && slave) {
-                if (mkfifo(SH_PIPE_NAME, 0666)) {
-                        perror("sh");
-                        goto free_resources;
-                }
+                pipe_name = calloc(sizeof(char), strlen(pipe_file) + 7);
+                if (pipe_name) {
+                        u32_t uptime = get_time_ms() & 0xFFFFFFF;
+                        snprintf(pipe_name, strlen(pipe_file) + 7, "%s%x", pipe_file, uptime);
 
-                pipe = fopen(SH_PIPE_NAME, "r+");
-                if (!pipe) {
+                        if (mkfifo(pipe_name, 0666)) {
+                                perror("sh");
+                                goto free_resources;
+                        }
+
+                        pipe = fopen(pipe_name, "r+");
+                        if (!pipe) {
+                                perror("sh");
+                                goto free_resources;
+                        }
+                } else {
                         perror("sh");
                         goto free_resources;
                 }
@@ -395,17 +406,14 @@ static bool start_program(char *master, char *slave, char *file)
                 prog_t *ps = program_new(slave, global->cwd, pipe, fout, fout);
                 if (!ps) {
                         program_kill(pm);
-                        program_delete(pm);
                         print_fail_message(slave);
                         goto free_resources;
                 }
 
-                while (program_wait_for_close(pm, 1000));
+                program_wait_for_close(pm, MAX_DELAY);
                 ioctl(pipe, PIPE_CLOSE);
-                while (program_wait_for_close(ps, 1000));
+                program_wait_for_close(ps, MAX_DELAY);
 
-                program_delete(pm);
-                program_delete(ps);
         } else if (master && slave) {
                 prog_t *pm = program_new(master, global->cwd, stdin, pipe, pipe);
                 if (!pm) {
@@ -416,17 +424,14 @@ static bool start_program(char *master, char *slave, char *file)
                 prog_t *ps = program_new(slave, global->cwd, pipe, stdout, stderr);
                 if (!ps) {
                         program_kill(pm);
-                        program_delete(pm);
                         print_fail_message(slave);
                         goto free_resources;
                 }
 
-                while (program_wait_for_close(pm, 1000));
+                program_wait_for_close(pm, MAX_DELAY);
                 ioctl(pipe, PIPE_CLOSE);
-                while (program_wait_for_close(ps, 1000));
+                program_wait_for_close(ps, MAX_DELAY);
 
-                program_delete(pm);
-                program_delete(ps);
         } else if (master && file) {
                 prog_t *pm = program_new(master, global->cwd, stdin, fout, fout);
                 if (!pm) {
@@ -434,9 +439,8 @@ static bool start_program(char *master, char *slave, char *file)
                         goto free_resources;
                 }
 
-                while (program_wait_for_close(pm, 1000));
+                program_wait_for_close(pm, MAX_DELAY);
 
-                program_delete(pm);
         } else if (master) {
                 prog_t *pm = program_new(master, global->cwd, stdin, stdout, stderr);
                 if (!pm) {
@@ -444,9 +448,8 @@ static bool start_program(char *master, char *slave, char *file)
                         goto free_resources;
                 }
 
-                while (program_wait_for_close(pm, 1000));
+                program_wait_for_close(pm, MAX_DELAY);
 
-                program_delete(pm);
         } else {
                 return false;
         }
@@ -456,12 +459,21 @@ free_resources:
                 fclose(fout);
         }
 
-        if (file) {
-                remove(SH_PIPE_NAME);
-        }
-
         if (pipe) {
                 fclose(pipe);
+                remove(pipe_name);
+        }
+
+        if (pipe_name) {
+                free(pipe_name);
+        }
+
+        if (pm) {
+                program_delete(pm);
+        }
+
+        if (ps) {
+                program_delete(ps);
         }
 
         return true;
@@ -545,88 +557,6 @@ static bool analyze_line(char *cmd)
                 return false;
         }
 }
-
-
-
-
-
-
-
-
-
-
-////==============================================================================
-///**
-// * @brief Function find external commands (registered applications)
-// *
-// * @param *cmd          command
-// * @param *arg          argument list
-// *
-// * @return operation status
-// */
-////==============================================================================
-//static enum cmd_status find_external_command(const char *cmd)
-//{
-//        errno = 0;
-//        prog_t *prog = program_new(cmd, global->cwd, stdin, stdout, stderr);
-//        if (!prog) {
-//                if (errno == ENOENT) {
-//                        return CMD_STATUS_NOT_EXIST;
-//                } else {
-//                        perror(cmd);
-//                        return CMD_STATUS_EXECUTED;
-//                }
-//        }
-//
-//        while (program_wait_for_close(prog, MAX_DELAY) != 0);
-//
-//        program_delete(prog);
-//
-//        ioctl(stdout, TTY_IORQ_ECHO_ON);
-//
-//        return CMD_STATUS_EXECUTED;
-//}
-//
-////==============================================================================
-///**
-// * @brief Function find internal terminal commands
-// *
-// * @param *cmd          command
-// * @param *arg          argument list
-// *
-// * @return operation status
-// */
-////==============================================================================
-//static enum cmd_status find_internal_command(const char *cmd)
-//{
-//        /* finds first space after command */
-//        char *arg;
-//        if ((arg = strchr(cmd, ' ')) != NULL) {
-//                *(arg++) = '\0';
-//                arg += strspn(arg, " ");
-//        } else {
-//                arg = strchr(cmd, '\0');
-//        }
-//
-//        /* terminal exit */
-//        if (strcmp("exit", cmd) == 0) {
-//                return CMD_STATUS_DO_EXIT;
-//        }
-//
-//        enum cmd_status status = CMD_STATUS_NOT_EXIST;
-//
-//        for (uint i = 0; i < ARRAY_SIZE(commands); i++) {
-//                if (strcmp(cmd, commands[i].name) == 0) {
-//
-//                        errno = 0;
-//                        set_cwd(global->cwd);
-//                        status = commands[i].cmd(arg);
-//                        restore_original_cwd();
-//                }
-//        }
-//
-//        return status;
-//}
 
 //==============================================================================
 /**

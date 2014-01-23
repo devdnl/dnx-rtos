@@ -436,7 +436,7 @@ static inline int program_delete(prog_t *prog)
  * @brief Wait for program close
  *
  * @param prog                  program object
- * @param timeout               wait timeout
+ * @param timeout               wait timeout in ms
  *
  * @return 0 if closed, otherwise other value
  */
