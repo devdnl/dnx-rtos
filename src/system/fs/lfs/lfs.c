@@ -458,6 +458,8 @@ API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
 
                         mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
+                } else {
+                        errno = ENOTDIR;
                 }
         }
 

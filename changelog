@@ -6,12 +6,14 @@ New Features, Improvements:
 - procfs: program's file can be opened (usefull in tests for program existing)
 - cleaned up headers
 - implemented common driver of pipes in file systems (bloking pipe read and write)
+- fgets() read device files byte by byte (slove problem with EOF)
 
 Fixed Bugs:
 - wrong behaviour of fgets() function in case of EOF
 - SPI driver: system cannot force to close the opened SPI file
 - VFS: errno = "No such device or address" even if file exist
 - devfs: file closed cannot be opened again (Device or resource busy error)
+- LFS: print Success if file is opened instead of dir in opendir() function
 
 dnx/FreeRTOS 1.2.3
 ==================
