@@ -5,6 +5,7 @@
 -include $(PROGLOC)/clear/Makefile.src
 -include $(PROGLOC)/cp/Makefile.src
 -include $(PROGLOC)/df/Makefile.src
+-include $(PROGLOC)/echo/Makefile.src
 -include $(PROGLOC)/free/Makefile.src
 -include $(PROGLOC)/helloworld/Makefile.src
 -include $(PROGLOC)/httpserver/Makefile.src
