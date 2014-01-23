@@ -66,8 +66,9 @@ static bool             is_cd_cmd               (const char *cmd);
 static bool             is_exit_cmd             (const char *cmd);
 static char            *find_arg                (char *cmd);
 static void             change_directory        (char *str);
+static char            *remove_leading_spaces   (char *str);
 static void             print_fail_message      (char *cmd);
-static bool             start_program           (const char *master, const char *slave, const char *file);
+static bool             start_program           (char *master, char *slave, char *file);
 static bool             analyze_line            (char *cmd);
 
 /*==============================================================================
@@ -302,6 +303,23 @@ static void change_directory(char *str)
 
 //==============================================================================
 /**
+ * @brief Remove leading spaces
+ *
+ * @param str           string with leading spaces
+ *
+ * @return string without leading spaces (move pointer to space free index)
+ */
+//==============================================================================
+static char *remove_leading_spaces(char *str)
+{
+        if (FIRST_CHARACTER(str) == ' ')
+                while (*(++str) == ' ');
+
+        return str;
+}
+
+//==============================================================================
+/**
  * @brief Function print command find failure
  *
  * @param cmd           cmd string
@@ -309,6 +327,8 @@ static void change_directory(char *str)
 //==============================================================================
 static void print_fail_message(char *cmd)
 {
+        cmd = remove_leading_spaces(cmd);
+
         if (strchr(cmd, ' '))
                 *strchr(cmd, ' ') = '\0';
 
@@ -324,57 +344,193 @@ static void print_fail_message(char *cmd)
  * @return true if command executed, false if error
  */
 //==============================================================================
-static bool start_program(const char *master, const char *slave, const char *file)
+static bool start_program(char *master, char *slave, char *file)
 {
-        errno     = 0;
-        FILE *in  = stdin;
-        FILE *out = stdout;
+#define SH_PIPE_NAME    "/tmp/sh-pipe"
+
+        errno      = 0;
+        FILE *pipe = NULL;
+        FILE *fout = NULL;
+
+        if (master) {
+                master = remove_leading_spaces(master);
+        }
+
+        if (slave) {
+                slave = remove_leading_spaces(slave);
+        }
 
         if (file) {
-                printf("File  : %s\n", file);
+                file = remove_leading_spaces(file);
+        }
+
+        if (file) {
+                fout = fopen(file, "w");
+                if (!fout) {
+                        perror(file);
+                        goto free_resources;
+                }
         }
 
         if (master && slave) {
-                if (mkfifo("/tmp/sh", 0666) != 0) {
+                if (mkfifo(SH_PIPE_NAME, 0666)) {
                         perror("sh");
-                        return false;
+                        goto free_resources;
                 }
 
-                in = fopen("/tmp/sh", "r+");
-                if (!in) {
-                        remove("/tmp/sh");
+                pipe = fopen(SH_PIPE_NAME, "r+");
+                if (!pipe) {
                         perror("sh");
-                        return false;
+                        goto free_resources;
                 }
-
-                prog_t *pm = program_new(master, global->cwd, stdin, in, in);
-                prog_t *ps = program_new(slave, global->cwd, in, stdout, stdout);
-
-
-                while (program_wait_for_close(pm, 1000));
-                ioctl(in, PIPE_CLOSE);
-
-                while (program_wait_for_close(ps, 1000));
-
-                fclose(in);
-
-                if (remove("/tmp/sh")) {
-                        /* if error retry again */
-                        remove("/tmp/sh");
-                }
-
-                return true;
         }
 
         if (master && slave && file) {
+                prog_t *pm = program_new(master, global->cwd, stdin, pipe, pipe);
+                if (!pm) {
+                        print_fail_message(master);
+                        goto free_resources;
+                }
 
+                prog_t *ps = program_new(slave, global->cwd, pipe, fout, fout);
+                if (!ps) {
+                        program_kill(pm);
+                        program_delete(pm);
+                        print_fail_message(slave);
+                        goto free_resources;
+                }
+
+                while (program_wait_for_close(pm, 1000));
+                ioctl(pipe, PIPE_CLOSE);
+                while (program_wait_for_close(ps, 1000));
+
+                program_delete(pm);
+                program_delete(ps);
+        } else if (master && slave) {
+                prog_t *pm = program_new(master, global->cwd, stdin, pipe, pipe);
+                if (!pm) {
+                        print_fail_message(master);
+                        goto free_resources;
+                }
+
+                prog_t *ps = program_new(slave, global->cwd, pipe, stdout, stderr);
+                if (!ps) {
+                        program_kill(pm);
+                        program_delete(pm);
+                        print_fail_message(slave);
+                        goto free_resources;
+                }
+
+                while (program_wait_for_close(pm, 1000));
+                ioctl(pipe, PIPE_CLOSE);
+                while (program_wait_for_close(ps, 1000));
+
+                program_delete(pm);
+                program_delete(ps);
+        } else if (master && file) {
+                prog_t *pm = program_new(master, global->cwd, stdin, fout, fout);
+                if (!pm) {
+                        print_fail_message(master);
+                        goto free_resources;
+                }
+
+                while (program_wait_for_close(pm, 1000));
+
+                program_delete(pm);
+        } else if (master) {
+                prog_t *pm = program_new(master, global->cwd, stdin, stdout, stderr);
+                if (!pm) {
+                        print_fail_message(master);
+                        goto free_resources;
+                }
+
+                while (program_wait_for_close(pm, 1000));
+
+                program_delete(pm);
+        } else {
+                return false;
         }
 
-        if (master && file) {
-
+free_resources:
+        if (fout) {
+                fclose(fout);
         }
 
-        return false;
+        if (file) {
+                remove(SH_PIPE_NAME);
+        }
+
+        if (pipe) {
+                fclose(pipe);
+        }
+
+        return true;
+
+
+
+//        if (file) {
+//                printf("File  : %s\n", file);
+//        }
+//
+//        if (master && slave) {
+//                if (mkfifo("/tmp/sh", 0666) != 0) {
+//                        perror("sh");
+//                        return true;
+//                }
+//
+//                in = fopen("/tmp/sh", "r+");
+//                if (!in) {
+//                        remove("/tmp/sh");
+//                        perror("sh");
+//                        return true;
+//                }
+//
+//                prog_t *pm = program_new(master, global->cwd, stdin, in, in);
+//                if (!pm) {
+//                        fclose(in);
+//                        remove("/tmp/sh");
+//                        program_delete(pm);
+//                        print_fail_message(master);
+//                        return true;
+//                }
+//
+//                prog_t *ps = program_new(slave, global->cwd, in, stdout, stdout);
+//                if (!ps) {
+//                        fclose(in);
+//                        remove("/tmp/sh");
+//                        program_kill(pm);
+//                        program_delete(ps);
+//                        program_delete(pm);
+//                        print_fail_message(slave);
+//                        return true;
+//                }
+//
+//                while (program_wait_for_close(pm, 1000));
+//                ioctl(in, PIPE_CLOSE);
+//                while (program_wait_for_close(ps, 1000));
+//
+//                program_delete(pm);
+//                program_delete(ps);
+//
+//                fclose(in);
+//
+//                if (remove("/tmp/sh")) {
+//                        /* if error retry again */
+//                        remove("/tmp/sh");
+//                }
+//
+//                return true;
+//        }
+//
+//        if (master && slave && file) {
+//
+//        }
+//
+//        if (master && file) {
+//
+//        }
+//
+//        return false;
 }
 
 //==============================================================================
