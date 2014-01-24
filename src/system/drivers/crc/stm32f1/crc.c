@@ -265,11 +265,18 @@ API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         ssize_t n = -1;
 
         if (device_is_access_granted(&hdl->file_lock)) {
-                u32_t crc = CRC->DR;
 
-                for (n = 0; n < (ssize_t)count && n < (ssize_t)sizeof(u32_t); n++) {
-                        dst[n] = crc & 0xFF;
-                        crc >>= 8;
+                u8_t  crc[4] = {CRC->DR, CRC->DR >> 8, CRC->DR >> 16, CRC->DR >> 24};
+
+                n = 0;
+                size_t pos = *fpos;
+                for (size_t i = 0; i < count && sizeof(u32_t); i++) {
+                        if (pos + n < sizeof(u32_t)) {
+                                *(dst++) = crc[n + pos];
+                                n++;
+                        } else {
+                                break;
+                        }
                 }
         } else {
                 errno = EACCES;
