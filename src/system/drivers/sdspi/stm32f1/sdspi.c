@@ -259,7 +259,7 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
                 sleep_ms(100);
         }
 
-        mutex_lock(hdl->card_protect_mtx, MAX_DELAY);
+        mutex_lock(hdl->card_protect_mtx, MAX_DELAY_MS);
         critical_section_begin();
         mutex_unlock(hdl->card_protect_mtx);
         mutex_delete(hdl->card_protect_mtx);
@@ -333,7 +333,7 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
         struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY)) {
+        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY_MS)) {
                 n = card_write(hdl, src, count, *fpos);
                 mutex_unlock(hdl->card_protect_mtx);
         } else {
@@ -365,7 +365,7 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         struct sdspi_data *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY)) {
+        if (mutex_lock(hdl->card_protect_mtx, MAX_DELAY_MS)) {
                 n = card_read(hdl, dst, count, *fpos);
                 mutex_unlock(hdl->card_protect_mtx);
         } else {
@@ -587,7 +587,7 @@ static ssize_t partition_write(void *device_handle, const u8_t *src, size_t coun
         struct partition *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY)) {
+        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY_MS)) {
                 n = card_write(sdspi_data, src, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 mutex_unlock(sdspi_data->card_protect_mtx);
         } else {
@@ -619,7 +619,7 @@ static ssize_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_
         struct partition *hdl = device_handle;
 
         size_t n = 0;
-        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY)) {
+        if (mutex_lock(sdspi_data->card_protect_mtx, MAX_DELAY_MS)) {
                 n = card_read(sdspi_data, dst, count, *fpos + ((u64_t)hdl->first_sector * SECTOR_SIZE));
                 mutex_unlock(sdspi_data->card_protect_mtx);
         } else {

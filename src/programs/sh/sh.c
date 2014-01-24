@@ -416,9 +416,9 @@ static bool start_program(char *master, char *slave, char *file)
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY);
+                program_wait_for_close(pm, MAX_DELAY_MS);
                 ioctl(pipe, PIPE_CLOSE);
-                program_wait_for_close(ps, MAX_DELAY);
+                program_wait_for_close(ps, MAX_DELAY_MS);
 
         } else if (master && slave) {
                 pm = program_new(master, global->cwd, stdin, pipe, pipe);
@@ -434,9 +434,9 @@ static bool start_program(char *master, char *slave, char *file)
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY);
+                program_wait_for_close(pm, MAX_DELAY_MS);
                 ioctl(pipe, PIPE_CLOSE);
-                program_wait_for_close(ps, MAX_DELAY);
+                program_wait_for_close(ps, MAX_DELAY_MS);
 
         } else if (master && file) {
                 pm = program_new(master, global->cwd, stdin, fout, fout);
@@ -445,7 +445,7 @@ static bool start_program(char *master, char *slave, char *file)
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY);
+                program_wait_for_close(pm, MAX_DELAY_MS);
 
         } else if (master) {
                 pm = program_new(master, global->cwd, stdin, stdout, stderr);
@@ -454,7 +454,7 @@ static bool start_program(char *master, char *slave, char *file)
                         goto free_resources;
                 }
 
-                program_wait_for_close(pm, MAX_DELAY);
+                program_wait_for_close(pm, MAX_DELAY_MS);
 
         } else {
                 return false;

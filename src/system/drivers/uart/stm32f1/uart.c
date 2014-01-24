@@ -40,9 +40,9 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define RELEASE_TIMEOUT                         100
-#define TX_WAIT_TIMEOUT                         MAX_DELAY
-#define RX_WAIT_TIMEOUT                         MAX_DELAY
-#define MTX_BLOCK_TIMEOUT                       MAX_DELAY
+#define TX_WAIT_TIMEOUT                         MAX_DELAY_MS
+#define RX_WAIT_TIMEOUT                         MAX_DELAY_MS
+#define MTX_BLOCK_TIMEOUT                       MAX_DELAY_MS
 
 /*==============================================================================
   Local types, enums definitions

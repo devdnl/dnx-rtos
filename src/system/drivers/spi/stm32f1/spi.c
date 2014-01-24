@@ -37,8 +37,8 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define MUTEX_TIMOUT                    MAX_DELAY
-#define SEMAPHORE_TIMEOUT               MAX_DELAY
+#define MUTEX_TIMOUT                    MAX_DELAY_MS
+#define SEMAPHORE_TIMEOUT               MAX_DELAY_MS
 
 /* calculate max number of slaves for all SPI peripherals (calculate array size) */
 #if (_SPI1_NUMBER_OF_SLAVES > _SPI2_NUMBER_OF_SLAVES)

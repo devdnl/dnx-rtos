@@ -38,7 +38,7 @@
   Local macros
 ==============================================================================*/
 #define CHAIN_NUMBER_OF_NODES           8
-#define TIMEOUT_MS                      MAX_DELAY
+#define TIMEOUT_MS                      MAX_DELAY_MS
 
 /*==============================================================================
   Local object types

@@ -92,7 +92,7 @@ PROGRAM_MAIN(time, int argc, char *argv[])
 
         prog_t *prog = program_new(global->cmd, global->cwd, stdin, stdout, stderr);
         if (prog) {
-                program_wait_for_close(prog, MAX_DELAY);
+                program_wait_for_close(prog, MAX_DELAY_MS);
                 program_delete(prog);
         } else {
                 perror(argv[1]);

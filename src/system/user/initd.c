@@ -109,7 +109,6 @@ start_failure:
 static int run_level_boot(void)
 {
         mount("lfs", "", "/");
-        mkdir("/bin", 0666);
         mkdir("/dev", 0666);
         mkdir("/mnt", 0666);
         mkdir("/proc", 0666);
@@ -273,7 +272,7 @@ static int run_level_2(void)
                                         get_OS_name(), get_kernel_name(), current_tty);
 
 
-                                program[current_tty] = program_new("terminal", "/",
+                                program[current_tty] = program_new("sh", "/",
                                                                    tty[current_tty],
                                                                    tty[current_tty],
                                                                    tty[current_tty]);
@@ -288,7 +287,7 @@ static int run_level_2(void)
                 for (int i = 0; i < _TTY_NUMBER - 1; i++) {
                         if (program[i]) {
                                 if (program_is_closed(program[i])) {
-                                        printk("initd: terminal closed\n");
+                                        printk("initd: shell closed\n");
                                         program_delete(program[i]);
                                         program[i] = NULL;
 
@@ -323,7 +322,7 @@ static int run_level_exit(void)
         ISR_disable();
 
         while (true) {
-                sleep_ms(MAX_DELAY);
+                sleep_ms(MAX_DELAY_MS);
         }
 
         return STD_RET_OK;

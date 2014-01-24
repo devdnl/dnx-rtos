@@ -319,7 +319,7 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
 
         ssize_t n = -1;
 
-        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
+        if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                 ttybfr_add_line(tty->screen, (const char *)src, count);
                 send_cmd(CMD_LINE_ADDED, tty->major);
                 mutex_unlock(tty->secure_mtx);
@@ -356,7 +356,7 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
         ssize_t n = 0;
 
         while (count--) {
-                if (queue_receive(tty->queue_out, dst, MAX_DELAY)) {
+                if (queue_receive(tty->queue_out, dst, MAX_DELAY_MS)) {
                         n++;
 
                         if (*dst == '\n')
@@ -419,7 +419,7 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case TTY_IORQ_SET_EDITLINE:
                 if (arg) {
-                        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
+                        if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                                 ttyedit_set(tty->editline, arg, tty_module->current_tty == tty->major);
                                 mutex_unlock(tty->secure_mtx);
                         } else {
@@ -472,7 +472,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
 
         tty_t *tty = device_handle;
 
-        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
+        if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
 
                 const char *str = ttyedit_get(tty->editline);
                 if (strlen(str) == 0) {
@@ -553,7 +553,7 @@ static void service_out(void *arg)
         for (;;) {
                 tty_cmd_t rq;
 
-                if (queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY)) {
+                if (queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY_MS)) {
                         switch (rq.cmd) {
                         case CMD_INPUT: {
                                 vt100_analyze(rq.arg);
@@ -619,7 +619,7 @@ static void send_cmd(enum cmd cmd, u8_t arg)
         rq.cmd = cmd;
         rq.arg = arg;
 
-        queue_send(tty_module->queue_cmd, &rq, MAX_DELAY);
+        queue_send(tty_module->queue_cmd, &rq, MAX_DELAY_MS);
 }
 
 //==============================================================================
@@ -758,12 +758,12 @@ static void vt100_analyze(const char c)
 static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend)
 {
         for (uint i = 0; i < strlen(str); i++) {
-                queue_send(queue, &str[i], MAX_DELAY);
+                queue_send(queue, &str[i], MAX_DELAY_MS);
         }
 
         if (lfend) {
                 const char lf = '\n';
-                queue_send(queue, &lf, MAX_DELAY);
+                queue_send(queue, &lf, MAX_DELAY_MS);
         }
 }
 
@@ -786,7 +786,7 @@ static void switch_terminal(int term_no)
 
                         vt100_init();
 
-                        if (mutex_lock(tty->secure_mtx, MAX_DELAY)) {
+                        if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
                                 int rows;
                                 if (tty_module->vt100_row < _TTY_DEFAULT_TERMINAL_ROWS) {
                                         rows = tty_module->vt100_row;

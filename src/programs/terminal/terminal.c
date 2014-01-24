@@ -198,7 +198,7 @@ static enum cmd_status find_external_command(const char *cmd)
                 }
         }
 
-        while (program_wait_for_close(prog, MAX_DELAY) != 0);
+        program_wait_for_close(prog, MAX_DELAY_MS);
 
         program_delete(prog);
 
