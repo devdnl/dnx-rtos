@@ -72,7 +72,8 @@ extern "C" {
 
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                       NULL
-#define MAX_DELAY                       (portMAX_DELAY / 1000)
+#define MAX_DELAY_MS                    ((portMAX_DELAY) - 1000)
+#define MAX_DELAY_S                     (MAX_DELAY_MS / 1000)
 
 /** CALCULATIONS */
 #define PRIORITY(prio)                  (prio + (configMAX_PRIORITIES / 2))

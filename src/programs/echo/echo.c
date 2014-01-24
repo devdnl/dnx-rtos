@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    rm.c
+@file    echo.c
 
 @author  Daniel Zorychta
 
-@brief   Remove files
+@brief   Print messages on terminal
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -58,17 +58,20 @@ GLOBAL_VARIABLES_SECTION_END
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Program main function
+ * @brief Cat main function
  */
 //==============================================================================
-PROGRAM_MAIN(rm, int argc, char *argv[])
+PROGRAM_MAIN(echo, int argc, char *argv[])
 {
         for (int i = 1; i < argc; i++) {
-                if (remove(argv[i]) != 0) {
-                        perror(argv[i]);
-                        return EXIT_FAILURE;
+                if (i == argc - 1) {
+                        printf("%s", argv[i]);
+                } else {
+                        printf("%s ", argv[i]);
                 }
         }
+
+        putchar('\n');
 
         return EXIT_SUCCESS;
 }

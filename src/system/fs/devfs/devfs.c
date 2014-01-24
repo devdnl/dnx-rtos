@@ -38,7 +38,7 @@
   Local macros
 ==============================================================================*/
 #define CHAIN_NUMBER_OF_NODES           8
-#define TIMEOUT_MS                      MAX_DELAY
+#define TIMEOUT_MS                      MAX_DELAY_MS
 
 /*==============================================================================
   Local object types
@@ -945,9 +945,10 @@ API_FS_STATFS(devfs, void *fs_handle, struct vfs_statfs *statfs)
 
         struct devfs *devfs = fs_handle;
 
-        statfs->f_blocks = 0;
-        statfs->f_bfree  = 0;
-        statfs->f_ffree  = 0;
+        statfs->f_bsize  = sizeof(struct devnode);
+        statfs->f_blocks = devfs->number_of_chains * CHAIN_NUMBER_OF_NODES;
+        statfs->f_bfree  = statfs->f_blocks - devfs->number_of_used_nodes;
+        statfs->f_ffree  = statfs->f_blocks - devfs->number_of_used_nodes;
         statfs->f_files  = devfs->number_of_used_nodes;
         statfs->f_type   = 1;
         statfs->f_fsname = "devfs";

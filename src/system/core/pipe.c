@@ -37,8 +37,8 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define PIPE_READ_TIMEOUT               MAX_DELAY
-#define PIPE_WRITE_TIMEOUT              MAX_DELAY
+#define PIPE_READ_TIMEOUT               MAX_DELAY_MS
+#define PIPE_WRITE_TIMEOUT              MAX_DELAY_MS
 #define PIPE_VALIDATION_NUMBER          (u32_t)0x2B1D0852
 
 /*==============================================================================

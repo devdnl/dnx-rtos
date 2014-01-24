@@ -238,7 +238,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
                         if (timeout) {
                                 sem_status = semaphore_wait(sem->sem, timeout);
                         } else {
-                                sem_status = semaphore_wait(sem->sem, MAX_DELAY);
+                                sem_status = semaphore_wait(sem->sem, MAX_DELAY_MS);
                         }
 
                         if (sem_status) {
@@ -346,7 +346,7 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 
         if (mbox) {
                 if (mbox->queue && mbox->valid == VALID_VALUE) {
-                        queue_send(mbox->queue, &msg, MAX_DELAY);
+                        queue_send(mbox->queue, &msg, MAX_DELAY_MS);
                 }
         }
 }
@@ -404,7 +404,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
                         if (timeout) {
                                 received = queue_receive(mbox->queue, &(*msg), timeout);
                         } else {
-                                received = queue_receive(mbox->queue, &(*msg), MAX_DELAY);
+                                received = queue_receive(mbox->queue, &(*msg), MAX_DELAY_MS);
                         }
 
                         if (received) {

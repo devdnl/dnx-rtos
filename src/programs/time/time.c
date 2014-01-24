@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    rm.c
+@file    time.c
 
 @author  Daniel Zorychta
 
-@brief   Remove files
+@brief   Check execution time of selected program
 
 @note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -29,10 +29,16 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <dnx/os.h>
+#include <sys/types.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define CWD_LEN         80
+#define CMD_LEN         100
 
 /*==============================================================================
   Local types, enums definitions
@@ -46,7 +52,8 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
-
+char cwd[CWD_LEN];
+char cmd[CMD_LEN];
 GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
@@ -61,14 +68,38 @@ GLOBAL_VARIABLES_SECTION_END
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(rm, int argc, char *argv[])
+PROGRAM_MAIN(time, int argc, char *argv[])
 {
+        if (argc == 1) {
+                printf("Usage: %s [program]\n", argv[0]);
+                return EXIT_SUCCESS;
+        }
+
+        getcwd(global->cwd, CWD_LEN);
+
         for (int i = 1; i < argc; i++) {
-                if (remove(argv[i]) != 0) {
-                        perror(argv[i]);
-                        return EXIT_FAILURE;
+                if (strlen(argv[i]) + strlen(global->cmd) < CMD_LEN) {
+                        strcat(global->cmd, argv[i]);
+                        strcat(global->cmd, " ");
+                } else {
+                        break;
                 }
         }
+
+        errno = 0;
+
+        u32_t start_time = get_time_ms();
+
+        prog_t *prog = program_new(global->cmd, global->cwd, stdin, stdout, stderr);
+        if (prog) {
+                program_wait_for_close(prog, MAX_DELAY_MS);
+                program_delete(prog);
+        } else {
+                perror(argv[1]);
+        }
+
+        u32_t stop_time = get_time_ms() - start_time;
+        printf("\nreal\t%dm%d.%3ds\n", stop_time / 60000, (stop_time / 1000) % 60, stop_time % 1000);
 
         return EXIT_SUCCESS;
 }

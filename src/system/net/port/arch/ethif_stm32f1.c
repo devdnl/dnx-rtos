@@ -395,7 +395,7 @@ static void ethif_input(struct netif *netif)
 static void send_response_success()
 {
         static const int response = 0;
-        queue_send(ethif_mem->response_queue, &response, MAX_DELAY);
+        queue_send(ethif_mem->response_queue, &response, MAX_DELAY_MS);
 }
 
 //==============================================================================
@@ -406,7 +406,7 @@ static void send_response_success()
 static void send_response_fail()
 {
         static const int response = -1;
-        queue_send(ethif_mem->response_queue, &response, MAX_DELAY);
+        queue_send(ethif_mem->response_queue, &response, MAX_DELAY_MS);
 }
 
 //==============================================================================
@@ -603,7 +603,7 @@ static int send_request_and_wait_for_response(request *request)
         if (mutex_lock(ethif_mem->protect_request_mtx, REQUEST_TIMEOUT_MS)) {
 
                 send_request(request);
-                queue_receive(ethif_mem->response_queue, &response, MAX_DELAY);
+                queue_receive(ethif_mem->response_queue, &response, MAX_DELAY_MS);
 
                 mutex_unlock(ethif_mem->protect_request_mtx);
         }

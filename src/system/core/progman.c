@@ -663,7 +663,7 @@ int _program_kill(prog_t *prog)
  * @brief Wait for program close
  *
  * @param prog                  program object
- * @param timeout               wait timeout
+ * @param timeout               wait timeout in ms
  *
  * @return 0 if closed, otherwise other value
  */
@@ -766,7 +766,7 @@ int _system(const char *command)
                                     task_data->f_stdout,
                                     task_data->f_stderr);
         if (prog) {
-                while (_program_wait_for_close(prog, MAX_DELAY) != 0);
+                _program_wait_for_close(prog, MAX_DELAY_MS);
                 int status = prog->exit_code;
                 _program_delete(prog);
                 return status;
@@ -841,7 +841,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
 int _thread_join(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, MAX_DELAY)) {
+                if (semaphore_wait(thread->exit_sem, MAX_DELAY_MS)) {
                         semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {

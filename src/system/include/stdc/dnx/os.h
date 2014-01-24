@@ -329,6 +329,18 @@ static inline const char *get_host_name(void)
 
 //==============================================================================
 /**
+ * @brief Function return current user name
+ *
+ * @return user name string
+ */
+//==============================================================================
+static inline const char *get_user_name(void)
+{
+        return "root";
+}
+
+//==============================================================================
+/**
  * @brief Function return module name
  *
  * @param[in] modid     module ID
@@ -436,7 +448,7 @@ static inline int program_delete(prog_t *prog)
  * @brief Wait for program close
  *
  * @param prog                  program object
- * @param timeout               wait timeout
+ * @param timeout               wait timeout in ms
  *
  * @return 0 if closed, otherwise other value
  */

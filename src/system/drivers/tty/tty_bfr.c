@@ -37,14 +37,13 @@
   Local macros
 ==============================================================================*/
 #define VALIDATION_TOKEN                        (u32_t)0xFF49421D
-#define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttybfr {
         char           *line[_TTY_DEFAULT_TERMINAL_ROWS];
-        const u32_t     valid;
+        u32_t           valid;
         u16_t           write_index;
         bool            fresh_line[_TTY_DEFAULT_TERMINAL_ROWS];
 };
@@ -256,7 +255,7 @@ ttybfr_t *ttybfr_new()
 {
         ttybfr_t *bfr = calloc(1, sizeof(ttybfr_t));
         if (bfr) {
-                SET_VALIDATION(bfr, VALIDATION_TOKEN);
+                bfr->valid =  VALIDATION_TOKEN;
         }
 
         return bfr;
@@ -273,7 +272,7 @@ void ttybfr_delete(ttybfr_t *this)
 {
         if (this) {
                 if (this->valid == VALIDATION_TOKEN) {
-                        SET_VALIDATION(this, 0);
+                        this->valid = 0;
                         free(this);
                 }
         }
