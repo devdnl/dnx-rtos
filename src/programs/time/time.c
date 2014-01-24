@@ -37,6 +37,8 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define CWD_LEN         80
+#define CMD_LEN         100
 
 /*==============================================================================
   Local types, enums definitions
@@ -50,8 +52,8 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
-char cwd[128];
-char cmd[128];
+char cwd[CWD_LEN];
+char cmd[CMD_LEN];
 GLOBAL_VARIABLES_SECTION_END
 
 /*==============================================================================
@@ -73,11 +75,15 @@ PROGRAM_MAIN(time, int argc, char *argv[])
                 return EXIT_SUCCESS;
         }
 
-        getcwd(global->cwd, sizeof(global->cwd));
+        getcwd(global->cwd, CWD_LEN);
 
         for (int i = 1; i < argc; i++) {
-                strcat(global->cmd, argv[i]);
-                strcat(global->cmd, " ");
+                if (strlen(argv[i]) + strlen(global->cmd) < CMD_LEN) {
+                        strcat(global->cmd, argv[i]);
+                        strcat(global->cmd, " ");
+                } else {
+                        break;
+                }
         }
 
         errno = 0;
@@ -93,7 +99,7 @@ PROGRAM_MAIN(time, int argc, char *argv[])
         }
 
         u32_t stop_time = get_time_ms() - start_time;
-        printf("\nreal\t%dm%d.%3ds\n", stop_time / 60000, stop_time % 60, stop_time % 1000);
+        printf("\nreal\t%dm%d.%3ds\n", stop_time / 60000, (stop_time / 1000) % 60, stop_time % 1000);
 
         return EXIT_SUCCESS;
 }
