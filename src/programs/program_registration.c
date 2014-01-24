@@ -52,7 +52,6 @@ _IMPORT_PROGRAM(reboot);
 _IMPORT_PROGRAM(rm);
 _IMPORT_PROGRAM(sh);
 _IMPORT_PROGRAM(telnet);
-_IMPORT_PROGRAM(terminal);
 _IMPORT_PROGRAM(time);
 _IMPORT_PROGRAM(top);
 _IMPORT_PROGRAM(touch);
@@ -82,7 +81,6 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(rm        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(sh        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(telnet    , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(terminal  , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(time      , STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(top       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(touch     , STACK_DEPTH_LOW     ),

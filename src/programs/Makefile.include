@@ -18,7 +18,6 @@
 -include $(PROGLOC)/rm/Makefile.src
 -include $(PROGLOC)/sh/Makefile.src
 -include $(PROGLOC)/telnet/Makefile.src
--include $(PROGLOC)/terminal/Makefile.src
 -include $(PROGLOC)/time/Makefile.src
 -include $(PROGLOC)/top/Makefile.src
 -include $(PROGLOC)/touch/Makefile.src

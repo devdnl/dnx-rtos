@@ -1,5 +1,0 @@
-# Makefile for GNU make
-
-CSRC_PROGRAMS   += terminal/terminal.c
-CXXSRC_PROGRAMS += 
-HDRLOC_PROGRAMS += 
