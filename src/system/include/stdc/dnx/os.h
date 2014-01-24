@@ -329,6 +329,18 @@ static inline const char *get_host_name(void)
 
 //==============================================================================
 /**
+ * @brief Function return current user name
+ *
+ * @return user name string
+ */
+//==============================================================================
+static inline const char *get_user_name(void)
+{
+        return "root";
+}
+
+//==============================================================================
+/**
  * @brief Function return module name
  *
  * @param[in] modid     module ID

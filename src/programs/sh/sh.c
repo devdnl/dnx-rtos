@@ -119,18 +119,6 @@ static void print_prompt(void)
 
 //==============================================================================
 /**
- * @brief Return user name
- *
- * @return user name string
- */
-//==============================================================================
-static const char *get_user_name()
-{
-        return "root";
-}
-
-//==============================================================================
-/**
  * @brief Read command from selected file
  *
  * @return true if string read, false if not
