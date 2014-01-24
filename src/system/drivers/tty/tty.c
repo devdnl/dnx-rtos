@@ -713,13 +713,13 @@ static void vt100_analyze(const char c)
                 break;
 
         case TTYCMD_KEY_ARROW_UP: {
-                const char *str = "\e^[A";
+                const char *str = "\033^[A";
                 copy_string_to_queue(str, tty->queue_out, true);
                 break;
         }
 
         case TTYCMD_KEY_ARROW_DOWN: {
-                const char *str = "\e^[B";
+                const char *str = "\033^[B";
                 copy_string_to_queue(str, tty->queue_out, true);
                 break;
         }

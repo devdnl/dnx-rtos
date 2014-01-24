@@ -45,8 +45,8 @@
 ==============================================================================*/
 #define PROMPT_LINE_LEN                 100
 #define CWD_PATH_LEN                    128
-#define HISTORY_NEXT_KEY                "\e^[A"
-#define HISTORY_PREV_KEY                "\e^[B"
+#define HISTORY_NEXT_KEY                "\033^[A"
+#define HISTORY_PREV_KEY                "\033^[B"
 
 /*==============================================================================
   Local types, enums definitions

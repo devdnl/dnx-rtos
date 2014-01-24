@@ -41,29 +41,29 @@
 #define VT100_TOKEN_LEN                         15
 #define VT100_TOKEN_READ_TIMEOUT                250
 
-#define VT100_ARROW_LEFT                        "\e[D"
-#define VT100_ARROW_RIGHT                       "\e[C"
-#define VT100_ARROW_UP                          "\e[A"
-#define VT100_ARROW_DOWN                        "\e[B"
-#define VT100_HOME                              "\e[1~"
-#define VT100_INS                               "\e[2~"
-#define VT100_DEL                               "\e[3~"
-#define VT100_END_1                             "\e[4~"
-#define VT100_END_2                             "\eOF"
-#define VT100_PGUP                              "\e[5~"
-#define VT100_PGDN                              "\e[6~"
-#define VT100_F1                                "\eOP"
-#define VT100_F2                                "\eOQ"
-#define VT100_F3                                "\eOR"
-#define VT100_F4                                "\eOS"
-#define VT100_F5                                "\e[16~"
-#define VT100_F6                                "\e[17~"
-#define VT100_F7                                "\e[18~"
-#define VT100_F8                                "\e[19~"
-#define VT100_F9                                "\e[20~"
-#define VT100_F10                               "\e[21~"
-#define VT100_F11                               "\e[23~"
-#define VT100_F12                               "\e[24~"
+#define VT100_ARROW_LEFT                        "\033[D"
+#define VT100_ARROW_RIGHT                       "\033[C"
+#define VT100_ARROW_UP                          "\033[A"
+#define VT100_ARROW_DOWN                        "\033[B"
+#define VT100_HOME                              "\033[1~"
+#define VT100_INS                               "\033[2~"
+#define VT100_DEL                               "\033[3~"
+#define VT100_END_1                             "\033[4~"
+#define VT100_END_2                             "\033OF"
+#define VT100_PGUP                              "\033[5~"
+#define VT100_PGDN                              "\033[6~"
+#define VT100_F1                                "\033OP"
+#define VT100_F2                                "\033OQ"
+#define VT100_F3                                "\033OR"
+#define VT100_F4                                "\033OS"
+#define VT100_F5                                "\033[16~"
+#define VT100_F6                                "\033[17~"
+#define VT100_F7                                "\033[18~"
+#define VT100_F8                                "\033[19~"
+#define VT100_F9                                "\033[20~"
+#define VT100_F10                               "\033[21~"
+#define VT100_F11                               "\033[23~"
+#define VT100_F12                               "\033[24~"
 
 /*==============================================================================
   Local object types
@@ -154,7 +154,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 return TTYCMD_KEY_BACKSPACE;
                         }
 
-                        if (c == '\e') {
+                        if (c == '\033') {
                                 memset(this->token, 0, VT100_TOKEN_LEN);
                                 this->token[0]  = c;
                                 this->token_cnt = 1;
@@ -191,7 +191,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                         else {
                                                 int col = 0;
                                                 int row = 0;
-                                                if (sys_sscanf(this->token, "\e[%d;%dR", &row, &col) == 2) {
+                                                if (sys_sscanf(this->token, "\033[%d;%dR", &row, &col) == 2) {
                                                         if (col >= 32 && row >= 10) {
                                                                 this->colums = col;
                                                                 this->rows   = row;
