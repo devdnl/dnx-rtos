@@ -93,7 +93,7 @@ PROGRAM_MAIN(time, int argc, char *argv[])
         }
 
         u32_t stop_time = get_time_ms() - start_time;
-        printf("\nreal\t%dm%d.%3ds\n", stop_time / 60000, stop_time / 1000, stop_time % 1000);
+        printf("\nreal\t%dm%d.%3ds\n", stop_time / 60000, stop_time % 60, stop_time % 1000);
 
         return EXIT_SUCCESS;
 }
