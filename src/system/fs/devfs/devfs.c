@@ -290,11 +290,12 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -306,7 +307,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos);
+                return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
                 return pipe_write(node->nif.pipe, src, count);
         } else {
@@ -324,11 +325,12 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -340,7 +342,7 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_read(node->nif.drv->handle, dst, count, fpos);
+                return node->nif.drv->drv_read(node->nif.drv->handle, dst, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
                 return pipe_read(node->nif.pipe, dst, count);
         } else {

@@ -89,6 +89,11 @@ extern "C" {
 #define ETX                     0x03
 #define EOT                     0x04
 
+/* IO operations on files */
+#define PIPE_CLOSE              _IO('V', 0x00)
+#define NON_BLOCKING_ACCESS     _IO('V', 0x01)
+#define DEFAULT_ACCESS          _IO('V', 0x02)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -126,47 +131,52 @@ struct vfs_dir {
         void      *f_handle;
         size_t     f_items;
         size_t     f_seek;
-        int        validation;  /* only for system purposes */
+        int        validation;          /* only for system purposes */
 };
 
 typedef struct vfs_dir DIR;
 
 /** file statistics */
 struct stat {
-        u64_t   st_size;        /* total size, in bytes         */
-        u32_t   st_dev;         /* ID of device containing file */
-        u32_t   st_mode;        /* protection                   */
-        u32_t   st_uid;         /* user ID of owner             */
-        u32_t   st_gid;         /* group ID of owner            */
-        u32_t   st_atime;       /* time of last access          */
-        u32_t   st_mtime;       /* time of last modification    */
-        tfile_t st_type;        /* type of file                 */
+        u64_t   st_size;                /* total size, in bytes         */
+        u32_t   st_dev;                 /* ID of device containing file */
+        u32_t   st_mode;                /* protection                   */
+        u32_t   st_uid;                 /* user ID of owner             */
+        u32_t   st_gid;                 /* group ID of owner            */
+        u32_t   st_atime;               /* time of last access          */
+        u32_t   st_mtime;               /* time of last modification    */
+        tfile_t st_type;                /* type of file                 */
 };
 
 /** device info */
 struct vfs_dev_stat {
-        u64_t st_size;          /* total size, in bytes */
-        u32_t st_major;         /* device major number  */
-        u32_t st_minor;         /* device minor number  */
+        u64_t st_size;                  /* total size, in bytes */
+        u32_t st_major;                 /* device major number  */
+        u32_t st_minor;                 /* device minor number  */
 };
 
 /** file system statistic */
 struct vfs_statfs {
-        u32_t f_type;           /* file system type       */
-        u32_t f_bsize;          /* block size             */
-        u32_t f_blocks;         /* total blocks           */
-        u32_t f_bfree;          /* free blocks            */
-        u32_t f_files;          /* total file nodes in FS */
-        u32_t f_ffree;          /* free file nodes in FS  */
-        const char *f_fsname;   /* FS name                */
+        u32_t f_type;                   /* file system type       */
+        u32_t f_bsize;                  /* block size             */
+        u32_t f_blocks;                 /* total blocks           */
+        u32_t f_bfree;                  /* free blocks            */
+        u32_t f_files;                  /* total file nodes in FS */
+        u32_t f_ffree;                  /* free file nodes in FS  */
+        const char *f_fsname;           /* FS name                */
 };
 
 /** structure describing a mount table entry */
 struct vfs_mntent {
-        char *mnt_fsname;       /* device or server for filesystem */
-        char *mnt_dir;          /* directory mounted on            */
-        u64_t total;            /* device total size               */
-        u64_t free;             /* device free                     */
+        char *mnt_fsname;               /* device or server for filesystem */
+        char *mnt_dir;                  /* directory mounted on            */
+        u64_t total;                    /* device total size               */
+        u64_t free;                     /* device free                     */
+};
+
+/** file write/read attributtes */
+struct vfs_fattr {
+        bool non_blocking:1;            /* non-blocking file access */
 };
 
 /** driver configuration */
@@ -174,8 +184,8 @@ struct vfs_drv_interface {
         void     *handle;
         stdret_t (*drv_open )(void *drvhdl, int flags);
         stdret_t (*drv_close)(void *drvhdl, bool force);
-        ssize_t  (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *fpos);
-        ssize_t  (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *fpos);
+        ssize_t  (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr attr);
+        ssize_t  (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr attr);
         stdret_t (*drv_ioctl)(void *drvhdl, int iorq, void *args);
         stdret_t (*drv_flush)(void *drvhdl);
         stdret_t (*drv_stat )(void *drvhdl, struct vfs_dev_stat *info);
@@ -187,8 +197,8 @@ struct vfs_FS_interface {
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, int flags);
         stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
-        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
-        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
+        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr attr);
+        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr attr);
         stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);

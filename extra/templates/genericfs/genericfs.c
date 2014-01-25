@@ -152,11 +152,12 @@ API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -176,11 +177,12 @@ API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, s
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);

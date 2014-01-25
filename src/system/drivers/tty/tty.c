@@ -301,13 +301,15 @@ API_MOD_CLOSE(TTY, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
@@ -338,16 +340,18 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!device_handle);
         STOP_IF(!dst);
         STOP_IF(count == 0);
         STOP_IF(!fpos);
+        UNUSED_ARG(fattr);
 
         tty_t *tty = device_handle;
 

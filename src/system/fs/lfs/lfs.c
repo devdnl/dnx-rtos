@@ -1085,11 +1085,12 @@ exit:
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1121,7 +1122,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 if (drv_if->drv_write) {
                         mutex_unlock(lfs->resource_mtx);
 
-                        return drv_if->drv_write(drv_if->handle, src, count, fpos);
+                        return drv_if->drv_write(drv_if->handle, src, count, fpos, fattr);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
                 size_t write_size  = count;
@@ -1184,11 +1185,12 @@ exit:
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1217,7 +1219,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
 
                 if (drv_if->drv_read) {
                         mutex_unlock(lfs->resource_mtx);
-                        return drv_if->drv_read(drv_if->handle, dst, count, fpos);
+                        return drv_if->drv_read(drv_if->handle, dst, count, fpos, fattr);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
                 size_t file_length = node->size;

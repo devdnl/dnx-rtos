@@ -34,6 +34,7 @@
 #include "core/vfs.h"
 #include "core/list.h"
 #include "core/sysmoni.h"
+#include "core/ioctl_macros.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -49,9 +50,9 @@
 ==============================================================================*/
 /** file flags */
 typedef struct file_flags {
-        bool    eof             : 1;
-        bool    error           : 1;
-        bool    non_blocking    : 1;
+        bool                    eof:1;
+        bool                    error:1;
+        struct vfs_fattr        fattr;
 } file_flags_t;
 
 /** file type */
@@ -59,8 +60,8 @@ struct vfs_file
 {
         void           *FS_hdl;
         stdret_t      (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
-        ssize_t       (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
-        ssize_t       (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
+        ssize_t       (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr);
+        ssize_t       (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr);
         stdret_t      (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
         stdret_t      (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
         stdret_t      (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
@@ -986,7 +987,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
         if (ptr && size && count && file) {
                 if (file->f_write && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
-                                          ptr, size * count, &file->f_lseek);
+                                          ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
                         if (n < 0) {
                                 file->f_flag.error = true;
@@ -1029,7 +1030,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
         if (ptr && size && count && file) {
                 if (file->f_read && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
-                                         ptr, size * count, &file->f_lseek);
+                                         ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
                         if (n < 0) {
                                 file->f_flag.error = true;
@@ -1154,6 +1155,14 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
         if (!file->f_ioctl && file->validation != FILE_VALIDATION_NUMBER) {
                 errno = ENOENT;
                 return -1;
+        }
+
+        if (rq == NON_BLOCKING_ACCESS) {
+                file->f_flag.fattr.non_blocking = true;
+                return 0;
+        } else if (rq == DEFAULT_ACCESS) {
+                file->f_flag.fattr.non_blocking = false;
+                return 0;
         }
 
         return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
