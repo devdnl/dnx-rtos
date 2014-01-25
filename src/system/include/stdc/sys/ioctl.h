@@ -54,6 +54,8 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 #define PIPE_CLOSE                              _IO('P', 0x00)
+#define FILE_NON_BLOCKING                       _IO('P', 0x01)
+#define FILE_BLOCKING                           _IO('P', 0x02)
 
 /*==============================================================================
   Exported object types

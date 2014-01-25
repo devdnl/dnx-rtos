@@ -78,7 +78,7 @@ extern "C" {
 extern API_FS_INIT(fsname, void**, const char*);                                    \
 extern API_FS_RELEASE(fsname, void*);                                               \
 extern API_FS_OPEN(fsname, void*, void**, fd_t*, u64_t*, const char*, int);         \
-extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool, const task_t*);               \
+extern API_FS_CLOSE(fsname, void*, void*, fd_t, bool);                              \
 extern API_FS_WRITE(fsname, void*, void*, fd_t, const u8_t*, size_t, u64_t*);       \
 extern API_FS_READ(fsname, void*, void*, fd_t, u8_t*, size_t, u64_t*);              \
 extern API_FS_IOCTL(fsname, void*, void*, fd_t, int, void*);                        \

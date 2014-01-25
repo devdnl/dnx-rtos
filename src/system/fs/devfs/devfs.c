@@ -244,17 +244,15 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_t *file_owner)
+API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
-        STOP_IF(force && !file_owner);
 
         UNUSED_ARG(fd);
 
@@ -263,7 +261,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
 
         stdret_t close = STD_RET_ERROR;
         if (node->type == FILE_TYPE_DRV) {
-                close = node->nif.drv->drv_close(node->nif.drv->handle, force, file_owner);
+                close = node->nif.drv->drv_close(node->nif.drv->handle, force);
         } else if (node->type == FILE_TYPE_PIPE) {
                 close = STD_RET_OK;
         }

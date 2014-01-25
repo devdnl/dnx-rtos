@@ -71,7 +71,7 @@ extern "C" {
 extern _API_MOD_INIT(modname, void**, u8_t, u8_t);                       \
 extern API_MOD_RELEASE(modname, void*);                                  \
 extern API_MOD_OPEN(modname, void*, int);                                \
-extern API_MOD_CLOSE(modname, void*, bool, const task_t*);               \
+extern API_MOD_CLOSE(modname, void*, bool);                              \
 extern API_MOD_WRITE(modname, void*, const u8_t*, size_t, u64_t*);       \
 extern API_MOD_READ(modname, void*, u8_t*, size_t, u64_t*);              \
 extern API_MOD_IOCTL(modname, void*, int, void*);                        \

@@ -279,16 +279,14 @@ API_MOD_OPEN(TTY, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(TTY, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(TTY, void *device_handle, bool force)
 {
         UNUSED_ARG(force);
-        UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
 

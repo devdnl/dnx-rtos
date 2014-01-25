@@ -180,16 +180,14 @@ API_MOD_OPEN(ETHMAC, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(ETHMAC, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 {
         STOP_IF(!device_handle);
-        UNUSED_ARG(opened_by_task);
 
         struct eth_mem *hdl = device_handle;
 

@@ -321,7 +321,7 @@ stdret_t sysm_stop_task_monitoring(task_t *taskhdl)
 #if (CONFIG_MONITOR_TASK_FILE_USAGE > 0)
         for (uint slot = 0; slot < TASK_FILE_SLOTS; slot++) {
                 if (task_monitor_data->file_slot[slot]) {
-                        vfs_fclose_force(task_monitor_data->file_slot[slot], taskhdl);
+                        vfs_fclose_force(task_monitor_data->file_slot[slot]);
                 }
         }
 
