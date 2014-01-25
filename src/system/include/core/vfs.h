@@ -39,6 +39,7 @@ extern "C" {
 #include <stddef.h>
 #include <sys/types.h>
 #include "kernel/ktypes.h"
+#include "core/ioctl_macros.h"
 
 /*==============================================================================
   Exported macros
@@ -91,8 +92,10 @@ extern "C" {
 
 /* IO operations on files */
 #define PIPE_CLOSE              _IO('V', 0x00)
-#define NON_BLOCKING_ACCESS     _IO('V', 0x01)
-#define DEFAULT_ACCESS          _IO('V', 0x02)
+#define NON_BLOCKING_RD_MODE    _IO('V', 0x01)
+#define DEFAULT_RD_MODE         _IO('V', 0x02)
+#define NON_BLOCKING_WR_MODE    _IO('V', 0x03)
+#define DEFAULT_WR_MODE         _IO('V', 0x04)
 
 /*==============================================================================
   Exported object types
@@ -176,7 +179,8 @@ struct vfs_mntent {
 
 /** file write/read attributtes */
 struct vfs_fattr {
-        bool non_blocking:1;            /* non-blocking file access */
+        bool non_blocking_rd:1;         /* non-blocking file read access */
+        bool non_blocking_wr:1;         /* non-blocking file write access */
 };
 
 /** driver configuration */

@@ -279,7 +279,7 @@ static int run_level_2(void)
                                 if (!program[current_tty]) {
                                         perror("initd");
                                 } else {
-                                        printk("initd: terminal started\n");
+                                        printk("initd: shell started\n");
                                 }
                         }
                 }

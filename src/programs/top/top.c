@@ -97,8 +97,9 @@ PROGRAM_MAIN(top, int argc, char *argv[])
         timer_t timer = timer_set_expired();
 
         while (key != 'q') {
-                fflush(stdin);
+                ioctl(stdin, NON_BLOCKING_RD_MODE);
                 key = getchar();
+                ioctl(stdin, DEFAULT_RD_MODE);
 
                 if (!strchr("k,.", key)) {
                         if (timer_is_not_expired(timer, 1000)) {

@@ -358,7 +358,16 @@ API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, str
         ssize_t n = 0;
 
         while (count--) {
-                if (queue_receive(tty->queue_out, dst, MAX_DELAY_MS)) {
+                if (fattr.non_blocking_rd) {
+                        if (mutex_lock(tty->secure_mtx, 100)) {
+                                const char *str  = ttyedit_get(tty->editline);
+                                copy_string_to_queue(str, tty->queue_out, false);
+                                ttyedit_clear(tty->editline);
+                                mutex_unlock(tty->secure_mtx);
+                        }
+                }
+
+                if (queue_receive(tty->queue_out, dst, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS)) {
                         n++;
 
                         if (*dst == '\n')
@@ -472,26 +481,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
-        tty_t *tty = device_handle;
-
-        if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-
-                const char *str = ttyedit_get(tty->editline);
-                if (strlen(str) == 0) {
-                        ttyedit_insert_char(tty->editline, ETX);
-                        str = ttyedit_get(tty->editline);
-                }
-
-                queue_reset(tty->queue_out);
-                copy_string_to_queue(str, tty->queue_out, false);
-
-                ttyedit_clear(tty->editline);
-
-                mutex_unlock(tty->secure_mtx);
-                return STD_RET_OK;
-        } else{
-                return STD_RET_ERROR;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================

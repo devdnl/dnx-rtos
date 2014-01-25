@@ -34,7 +34,6 @@
 #include "core/vfs.h"
 #include "core/list.h"
 #include "core/sysmoni.h"
-#include "core/ioctl_macros.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -992,7 +991,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
                         if (n < 0) {
                                 file->f_flag.error = true;
                                 n = 0;
-                        } else if (n < (ssize_t)(size * count)) {
+                        } else if (n < (ssize_t)(size * count) && !file->f_flag.fattr.non_blocking_wr) {
                                 file->f_flag.eof = true;
                         }
 
@@ -1035,7 +1034,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
                         if (n < 0) {
                                 file->f_flag.error = true;
                                 n = 0;
-                        } else if (n < (ssize_t)(size * count)) {
+                        } else if (n < (ssize_t)(size * count) && !file->f_flag.fattr.non_blocking_rd) {
                                 file->f_flag.eof = true;
                         }
 
@@ -1157,12 +1156,11 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
                 return -1;
         }
 
-        if (rq == NON_BLOCKING_ACCESS) {
-                file->f_flag.fattr.non_blocking = true;
-                return 0;
-        } else if (rq == DEFAULT_ACCESS) {
-                file->f_flag.fattr.non_blocking = false;
-                return 0;
+        switch (rq) {
+        case NON_BLOCKING_RD_MODE: file->f_flag.fattr.non_blocking_rd = true;  return 0;
+        case NON_BLOCKING_WR_MODE: file->f_flag.fattr.non_blocking_wr = true;  return 0;
+        case DEFAULT_RD_MODE     : file->f_flag.fattr.non_blocking_rd = false; return 0;
+        case DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return 0;
         }
 
         return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
