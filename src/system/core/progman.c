@@ -164,8 +164,12 @@ static void program_startup(void *arg)
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
 
-                        vfs_fflush(stdin);
-                        sys_getc(stdin);
+                        vfs_ioctl(stdin , DEFAULT_RD_MODE);
+                        vfs_ioctl(stdin , DEFAULT_WR_MODE);
+                        vfs_ioctl(stdout, DEFAULT_RD_MODE);
+                        vfs_ioctl(stdout, DEFAULT_WR_MODE);
+                        vfs_ioctl(stderr, DEFAULT_RD_MODE);
+                        vfs_ioctl(stderr, DEFAULT_WR_MODE);
 
                         if (prog->mem) {
                                 sysm_tskfree(prog->mem);
@@ -457,7 +461,7 @@ static int process_kill(task_t *taskhdl, int status)
         if (taskhdl) {
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
                 case TASK_TYPE_RAW:
-                        task_delete(taskhdl);
+                        _task_delete(taskhdl);
                         break;
                 case TASK_TYPE_PROCESS: {
                         prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;

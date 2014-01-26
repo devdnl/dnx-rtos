@@ -47,21 +47,28 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/** file flags */
+typedef struct file_flags {
+        bool                    eof:1;
+        bool                    error:1;
+        struct vfs_fattr        fattr;
+} file_flags_t;
+
 /** file type */
 struct vfs_file
 {
-        void      *FS_hdl;
-        stdret_t (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
-        ssize_t  (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
-        ssize_t  (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
-        stdret_t (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
-        stdret_t (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
-        stdret_t (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
-        void      *f_extra_data;
-        fd_t       fd;
-        u64_t      f_lseek;
-        int        f_errflag;
-        u32_t      validation;
+        void           *FS_hdl;
+        stdret_t      (*f_close)(void *FS_hdl, void *extra_data, fd_t fd, bool force);
+        ssize_t       (*f_write)(void *FS_hdl, void *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr);
+        ssize_t       (*f_read )(void *FS_hdl, void *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr);
+        stdret_t      (*f_ioctl)(void *FS_hdl, void *extra_data, fd_t fd, int iorq, void *args);
+        stdret_t      (*f_stat )(void *FS_hdl, void *extra_data, fd_t fd, struct stat *stat);
+        stdret_t      (*f_flush)(void *FS_hdl, void *extra_data, fd_t fd);
+        void           *f_extra_data;
+        fd_t            fd;
+        u64_t           f_lseek;
+        file_flags_t    f_flag;
+        u32_t           validation;
 };
 
 struct FS_data {
@@ -81,7 +88,7 @@ enum path_correction {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int              fclose                  (FILE *file, bool force, task_t *opened_by_task);
+static int              fclose                  (FILE *file, bool force);
 static int              increase_task_priority  (void);
 static inline void      restore_priority        (int priority);
 static inline void      mutex_force_lock        (mutex_t *mtx);
@@ -942,7 +949,7 @@ FILE *vfs_freopen(const char *name, const char *mode, FILE *file)
 //==============================================================================
 int vfs_fclose(FILE *file)
 {
-        return fclose(file, false, NULL);
+        return fclose(file, false);
 }
 
 //==============================================================================
@@ -950,14 +957,13 @@ int vfs_fclose(FILE *file)
  * @brief Function force close opened file (used by system to close all files)
  *
  * @param[in] *file             pinter to file
- * @param[in] *opened_by_task   task which opened file
  *
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_fclose_force(FILE *file, task_t *opened_by_task)
+int vfs_fclose_force(FILE *file)
 {
-        return fclose(file, true, opened_by_task);
+        return fclose(file, true);
 }
 
 //==============================================================================
@@ -980,13 +986,13 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
         if (ptr && size && count && file) {
                 if (file->f_write && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
-                                          ptr, size * count, &file->f_lseek);
+                                          ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
                         if (n < 0) {
-                                file->f_errflag |= VFS_EFLAG_ERR;
+                                file->f_flag.error = true;
                                 n = 0;
-                        } else if (n < (ssize_t)(size * count)) {
-                                file->f_errflag |= VFS_EFLAG_EOF;
+                        } else if (n < (ssize_t)(size * count) && !file->f_flag.fattr.non_blocking_wr) {
+                                file->f_flag.eof = true;
                         }
 
                         if (n >= 0) {
@@ -1023,13 +1029,13 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
         if (ptr && size && count && file) {
                 if (file->f_read && file->validation == FILE_VALIDATION_NUMBER) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
-                                         ptr, size * count, &file->f_lseek);
+                                         ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
                         if (n < 0) {
-                                file->f_errflag |= VFS_EFLAG_ERR;
+                                file->f_flag.error = true;
                                 n = 0;
-                        } else if (n < (ssize_t)(size * count)) {
-                                file->f_errflag |= VFS_EFLAG_EOF;
+                        } else if (n < (ssize_t)(size * count) && !file->f_flag.fattr.non_blocking_rd) {
+                                file->f_flag.eof = true;
                         }
 
                         if (n >= 0) {
@@ -1150,6 +1156,13 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
                 return -1;
         }
 
+        switch (rq) {
+        case NON_BLOCKING_RD_MODE: file->f_flag.fattr.non_blocking_rd = true;  return 0;
+        case NON_BLOCKING_WR_MODE: file->f_flag.fattr.non_blocking_wr = true;  return 0;
+        case DEFAULT_RD_MODE     : file->f_flag.fattr.non_blocking_rd = false; return 0;
+        case DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return 0;
+        }
+
         return file->f_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
 }
 
@@ -1223,7 +1236,7 @@ int vfs_feof(FILE *file)
 {
         if (file) {
                 if (file->validation == FILE_VALIDATION_NUMBER) {
-                        return file->f_errflag & VFS_EFLAG_EOF ? 1 : 0;
+                        return file->f_flag.eof ? 1 : 0;
                 } else {
                         errno = ENOENT;
                 }
@@ -1245,7 +1258,8 @@ void vfs_clearerr(FILE *file)
 {
         if (file) {
                 if (file->validation == FILE_VALIDATION_NUMBER) {
-                        file->f_errflag = 0;
+                        file->f_flag.eof   = false;
+                        file->f_flag.error = false;
                 } else {
                         errno = ENOENT;
                 }
@@ -1267,7 +1281,7 @@ int vfs_ferror(FILE *file)
 {
         if (file) {
                 if (file->validation == FILE_VALIDATION_NUMBER) {
-                        return file->f_errflag & VFS_EFLAG_ERR ? 1 : 0;
+                        return file->f_flag.error ? 1 : 0;
                 } else {
                         errno = ENOENT;
                 }
@@ -1298,16 +1312,15 @@ int vfs_rewind(FILE *file)
  *
  * @param[in] file              pinter to file
  * @param[in] force             force close
- * @param[in] opened_by_task    task which opened file
  *
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-static int fclose(FILE *file, bool force, task_t *opened_by_task)
+static int fclose(FILE *file, bool force)
 {
         if (file) {
                 if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
-                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force, opened_by_task) == STD_RET_OK) {
+                        if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force) == STD_RET_OK) {
                                 file->validation = 0;
                                 sysm_sysfree(file);
                                 return 0;

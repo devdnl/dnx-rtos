@@ -57,7 +57,6 @@
 ==============================================================================*/
 static void             clear_prompt            ();
 static void             print_prompt            ();
-static const char      *get_user_name           ();
 static bool             read_input              ();
 static bool             history_request         ();
 static char            *find_cmd_begin          ();

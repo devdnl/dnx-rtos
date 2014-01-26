@@ -279,16 +279,14 @@ API_MOD_OPEN(TTY, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(TTY, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(TTY, void *device_handle, bool force)
 {
         UNUSED_ARG(force);
-        UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
 
@@ -303,13 +301,15 @@ API_MOD_CLOSE(TTY, void *device_handle, bool force, const task_t *opened_by_task
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
@@ -340,23 +340,34 @@ API_MOD_WRITE(TTY, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(TTY, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!device_handle);
         STOP_IF(!dst);
         STOP_IF(count == 0);
         STOP_IF(!fpos);
+        UNUSED_ARG(fattr);
 
         tty_t *tty = device_handle;
 
         ssize_t n = 0;
 
         while (count--) {
-                if (queue_receive(tty->queue_out, dst, MAX_DELAY_MS)) {
+                if (fattr.non_blocking_rd) {
+                        if (mutex_lock(tty->secure_mtx, 100)) {
+                                const char *str  = ttyedit_get(tty->editline);
+                                copy_string_to_queue(str, tty->queue_out, false);
+                                ttyedit_clear(tty->editline);
+                                mutex_unlock(tty->secure_mtx);
+                        }
+                }
+
+                if (queue_receive(tty->queue_out, dst, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS)) {
                         n++;
 
                         if (*dst == '\n')
@@ -470,26 +481,7 @@ API_MOD_FLUSH(TTY, void *device_handle)
 {
         STOP_IF(device_handle == NULL);
 
-        tty_t *tty = device_handle;
-
-        if (mutex_lock(tty->secure_mtx, MAX_DELAY_MS)) {
-
-                const char *str = ttyedit_get(tty->editline);
-                if (strlen(str) == 0) {
-                        ttyedit_insert_char(tty->editline, ETX);
-                        str = ttyedit_get(tty->editline);
-                }
-
-                queue_reset(tty->queue_out);
-                copy_string_to_queue(str, tty->queue_out, false);
-
-                ttyedit_clear(tty->editline);
-
-                mutex_unlock(tty->secure_mtx);
-                return STD_RET_OK;
-        } else{
-                return STD_RET_ERROR;
-        }
+        return STD_RET_OK;
 }
 
 //==============================================================================

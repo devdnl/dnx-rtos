@@ -244,17 +244,15 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_t *file_owner)
+API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
-        STOP_IF(force && !file_owner);
 
         UNUSED_ARG(fd);
 
@@ -263,7 +261,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
 
         stdret_t close = STD_RET_ERROR;
         if (node->type == FILE_TYPE_DRV) {
-                close = node->nif.drv->drv_close(node->nif.drv->handle, force, file_owner);
+                close = node->nif.drv->drv_close(node->nif.drv->handle, force);
         } else if (node->type == FILE_TYPE_PIPE) {
                 close = STD_RET_OK;
         }
@@ -292,11 +290,12 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force, const tas
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -308,9 +307,9 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos);
+                return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_write(node->nif.pipe, src, count);
+                return pipe_write(node->nif.pipe, src, count, fattr.non_blocking_wr);
         } else {
                 return -1;
         }
@@ -326,11 +325,12 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -342,9 +342,9 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_read(node->nif.drv->handle, dst, count, fpos);
+                return node->nif.drv->drv_read(node->nif.drv->handle, dst, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_read(node->nif.pipe, dst, count);
+                return pipe_read(node->nif.pipe, dst, count, fattr.non_blocking_rd);
         } else {
                 return -1;
         }

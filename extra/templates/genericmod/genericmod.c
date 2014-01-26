@@ -122,13 +122,12 @@ API_MOD_OPEN(GENERICMOD, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force)
 {
         STOP_IF(!device_handle);
 
@@ -143,11 +142,12 @@ API_MOD_CLOSE(GENERICMOD, void *device_handle, bool force, const task_t *opened_
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!device_handle);
         STOP_IF(!src);
@@ -164,11 +164,12 @@ API_MOD_WRITE(GENERICMOD, void *device_handle, const u8_t *src, size_t count, u6
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(GENERICMOD, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!device_handle);
         STOP_IF(!dst);

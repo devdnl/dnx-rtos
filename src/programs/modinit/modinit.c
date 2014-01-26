@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    pipe.h
+@file    modinit.c
 
 @author  Daniel Zorychta
 
-@brief   File support creating of pipies in file systems.
+@brief   Module control.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,49 +24,97 @@
 
 *//*==========================================================================*/
 
-#ifndef _PIPE_H_
-#define _PIPE_H_
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <sys/mount.h>
 
 /*==============================================================================
-  Exported macros
+  Local symbolic constants/macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
-==============================================================================*/
-typedef struct pipe pipe_t;
-
-/*==============================================================================
-  Exported objects
+  Local types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  Local function prototypes
 ==============================================================================*/
-extern pipe_t  *pipe_new                ();
-extern void     pipe_delete             (pipe_t*);
-extern int      pipe_get_length         (pipe_t*);
-extern int      pipe_read               (pipe_t*, u8_t*, size_t, bool);
-extern int      pipe_write              (pipe_t*, const u8_t*, size_t, bool);
-extern bool     pipe_close              (pipe_t*);
 
 /*==============================================================================
-  Exported inline functions
+  Local object definitions
+==============================================================================*/
+GLOBAL_VARIABLES_SECTION_BEGIN
+
+GLOBAL_VARIABLES_SECTION_END
+
+/*==============================================================================
+  Exported object definitions
 ==============================================================================*/
 
-#ifdef __cplusplus
+/*==============================================================================
+  Function definitions
+==============================================================================*/
+//==============================================================================
+/**
+ * @brief Print help
+ */
+//==============================================================================
+static void show_help(const char *name)
+{
+        printf("Usage: %s [OPTIONS] <module name> [module node]\n", name);
+        puts("  -r            release module");
+        puts("  -h, --help    this help");
 }
-#endif
 
-#endif /* _PIPE_H_ */
+//==============================================================================
+/**
+ * @brief Program main function
+ */
+//==============================================================================
+PROGRAM_MAIN(modinit, int argc, char *argv[])
+{
+        if (argc < 2) {
+                show_help(argv[0]);
+                return 0;
+        }
+
+        bool release = false;
+        for (int i = 1; i < argc; i++) {
+                if (strcmp(argv[i], "-r") == 0) {
+                        release = true;
+                }
+
+                if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+                        show_help(argv[0]);
+                        return 0;
+                }
+        }
+
+        int status;
+        if (release) {
+                status = driver_release(argv[2]);
+        } else {
+                if (argc == 2) {
+                        status = driver_init(argv[1], NULL);
+                } else {
+                        status = driver_init(argv[1], argv[2]);
+                }
+        }
+
+        if (status == 0) {
+                puts("Success.");
+        } else {
+                puts("Failure.");
+        }
+
+        return EXIT_SUCCESS;
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

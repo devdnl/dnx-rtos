@@ -998,13 +998,12 @@ exit:
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_t *file_owner)
+API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(extra);
 
@@ -1036,7 +1035,7 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_
                         goto exit;
                 }
 
-                if ((status = drv_if->drv_close(drv_if->handle, force, file_owner)) != STD_RET_OK) {
+                if ((status = drv_if->drv_close(drv_if->handle, force)) != STD_RET_OK) {
                         goto exit;
                 }
         }
@@ -1086,11 +1085,12 @@ exit:
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1122,7 +1122,7 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 if (drv_if->drv_write) {
                         mutex_unlock(lfs->resource_mtx);
 
-                        return drv_if->drv_write(drv_if->handle, src, count, fpos);
+                        return drv_if->drv_write(drv_if->handle, src, count, fpos, fattr);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
                 size_t write_size  = count;
@@ -1158,12 +1158,10 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
 
-                n = pipe_write(node->data, src, count);
+                n = pipe_write(node->data, src, count, fattr.non_blocking_wr);
 
                 if (n > 0) {
-                        critical_section_begin();
                         node->size = pipe_get_length(node->data);
-                        critical_section_end();
                 }
 
         } else {
@@ -1185,11 +1183,12 @@ exit:
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1218,7 +1217,7 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
 
                 if (drv_if->drv_read) {
                         mutex_unlock(lfs->resource_mtx);
-                        return drv_if->drv_read(drv_if->handle, dst, count, fpos);
+                        return drv_if->drv_read(drv_if->handle, dst, count, fpos, fattr);
                 }
         } else if (node->type == NODE_TYPE_FILE) {
                 size_t file_length = node->size;
@@ -1251,12 +1250,10 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
 
-                n = pipe_read(node->data, dst, count);
+                n = pipe_read(node->data, dst, count, fattr.non_blocking_rd);
 
                 if (n > 0) {
-                        critical_section_begin();
                         node->size = pipe_get_length(node->data);
-                        critical_section_end();
                 }
         } else {
                 errno = EIO;

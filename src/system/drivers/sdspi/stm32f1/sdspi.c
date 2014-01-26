@@ -295,16 +295,14 @@ API_MOD_OPEN(SDSPI, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(SDSPI, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(SDSPI, void *device_handle, bool force)
 {
         UNUSED_ARG(force);
-        UNUSED_ARG(opened_by_task);
 
         STOP_IF(device_handle == NULL);
 
@@ -319,16 +317,18 @@ API_MOD_CLOSE(SDSPI, void *device_handle, bool force, const task_t *opened_by_ta
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
         STOP_IF(count == 0);
         STOP_IF(fpos == NULL);
+        UNUSED_ARG(fattr);
 
         struct sdspi_data *hdl = device_handle;
 
@@ -351,16 +351,18 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
         STOP_IF(count == 0);
         STOP_IF(fpos == NULL);
+        UNUSED_ARG(fattr);
 
         struct sdspi_data *hdl = device_handle;
 
@@ -546,16 +548,14 @@ static stdret_t partition_open(void *device_handle, int flags)
  *
  * @param[in] *device_handle    handle to partition description
  * @param[in]  forced           force close
- * @param[in] *task             task which open file, valid if forced = true
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static stdret_t partition_close(void *device_handle, bool forced, const task_t *task)
+static stdret_t partition_close(void *device_handle, bool forced)
 {
         UNUSED_ARG(forced);
-        UNUSED_ARG(task);
         STOP_IF(device_handle == NULL);
 
         struct partition *hdl = device_handle;
@@ -573,12 +573,15 @@ static stdret_t partition_close(void *device_handle, bool forced, const task_t *
  * @param[in]  size             item size
  * @param[in]  count            bytes to write
  * @param[in] *fpos             file index
+ * @param[in]  fattr            file attributes
  *
  * @retval number of written bytes
  */
 //==============================================================================
-static ssize_t partition_write(void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+static ssize_t partition_write(void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(fattr);
+
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
         STOP_IF(count == 0);
@@ -605,12 +608,15 @@ static ssize_t partition_write(void *device_handle, const u8_t *src, size_t coun
  * @param[out] *dst             destination
  * @param[in]   count           bytes to read
  * @param[in]  *fpos            file index
+ * @param[in ]  fattr           file attributes
  *
  * @retval number of read bytes
  */
 //==============================================================================
-static ssize_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+static ssize_t partition_read(void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
+        UNUSED_ARG(fattr);
+
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);
         STOP_IF(count == 0);

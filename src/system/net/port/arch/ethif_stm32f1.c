@@ -57,6 +57,9 @@
 /* number of Tx buffers */
 #define ETH_NUMBER_OF_TX_BUFFERS        2
 
+/* validation number of ethernet interface data */
+#define ETHIF_DATA_VALIDATION_NUMBER    (u32_t)0xF8F134B4
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -83,6 +86,7 @@ typedef struct {
         mutex_t        *protect_request_mtx;
         request        *request;
         queue_t        *response_queue;
+        u32_t           valid;
         struct netif    netif;
         int             manager_step;
         uint            rx_packets;
@@ -536,6 +540,8 @@ static void tcpip_init_done(void *arg)
                 goto release_resources;
         }
 
+        ethif_mem->valid = ETHIF_DATA_VALIDATION_NUMBER;
+
         ethif_mem->protect_request_mtx = mutex_new(MUTEX_NORMAL);
         if (!ethif_mem->protect_request_mtx) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("tcpip_init_done: new mutex fail\n"));
@@ -563,6 +569,8 @@ static void tcpip_init_done(void *arg)
         return;
 
 release_resources:
+        ethif_mem->valid = 0;
+
         if (ethif_mem->protect_request_mtx)
                 mutex_delete(ethif_mem->protect_request_mtx);
 
@@ -647,16 +655,20 @@ void _ethif_start_lwIP_daemon()
 //==============================================================================
 int _ethif_start_DHCP_client()
 {
-        if (netif_is_up(&ethif_mem->netif))
-                return -1;
+        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+                if (netif_is_up(&ethif_mem->netif))
+                        return -1;
 
-        request rq;
-        rq.cmd        = RQ_START_DHCP;
-        rq.ip_address = ip_addr_any;
-        rq.net_mask   = ip_addr_any;
-        rq.gateway    = ip_addr_any;
+                request rq;
+                rq.cmd        = RQ_START_DHCP;
+                rq.ip_address = ip_addr_any;
+                rq.net_mask   = ip_addr_any;
+                rq.gateway    = ip_addr_any;
 
-        return send_request_and_wait_for_response(&rq);
+                return send_request_and_wait_for_response(&rq);
+        }
+
+        return -1;
 }
 
 //==============================================================================
@@ -671,12 +683,14 @@ int _ethif_start_DHCP_client()
 //==============================================================================
 int _ethif_stop_DHCP_client()
 {
-        if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
+        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+                if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
-                request rq;
-                rq.cmd = RQ_STOP_DHCP;
+                        request rq;
+                        rq.cmd = RQ_STOP_DHCP;
 
-                return send_request_and_wait_for_response(&rq);
+                        return send_request_and_wait_for_response(&rq);
+                }
         }
 
         return -1;
@@ -694,12 +708,14 @@ int _ethif_stop_DHCP_client()
 //==============================================================================
 int _ethif_renew_DHCP_connection()
 {
-        if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
+        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+                if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
-                request rq;
-                rq.cmd = RQ_RENEW_DHCP;
+                        request rq;
+                        rq.cmd = RQ_RENEW_DHCP;
 
-                return send_request_and_wait_for_response(&rq);
+                        return send_request_and_wait_for_response(&rq);
+                }
         }
 
         return -1;
@@ -717,12 +733,14 @@ int _ethif_renew_DHCP_connection()
 //==============================================================================
 int _ethif_inform_DHCP_server()
 {
-        if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
+        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+                if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
-                request rq;
-                rq.cmd = RQ_INFORM_DHCP;
+                        request rq;
+                        rq.cmd = RQ_INFORM_DHCP;
 
-                return send_request_and_wait_for_response(&rq);
+                        return send_request_and_wait_for_response(&rq);
+                }
         }
 
         return -1;
@@ -744,16 +762,20 @@ int _ethif_inform_DHCP_server()
 //==============================================================================
 int _ethif_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway)
 {
-        if (!ip_address || !net_mask || !gateway || netif_is_up(&ethif_mem->netif))
-                return -1;
+        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+                if (!ip_address || !net_mask || !gateway || netif_is_up(&ethif_mem->netif))
+                        return -1;
 
-        request rq;
-        rq.cmd        = RQ_UP_STATIC;
-        rq.ip_address = *ip_address;
-        rq.net_mask   = *net_mask;
-        rq.gateway    = *gateway;
+                request rq;
+                rq.cmd        = RQ_UP_STATIC;
+                rq.ip_address = *ip_address;
+                rq.net_mask   = *net_mask;
+                rq.gateway    = *gateway;
 
-        return send_request_and_wait_for_response(&rq);
+                return send_request_and_wait_for_response(&rq);
+        }
+
+        return -1;
 }
 
 //==============================================================================
@@ -768,12 +790,14 @@ int _ethif_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const i
 //==============================================================================
 int _ethif_if_down()
 {
-        if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
+        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+                if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
-                request rq;
-                rq.cmd = RQ_DOWN_STATIC;
+                        request rq;
+                        rq.cmd = RQ_DOWN_STATIC;
 
-                return send_request_and_wait_for_response(&rq);
+                        return send_request_and_wait_for_response(&rq);
+                }
         }
 
         return -1;
@@ -790,7 +814,7 @@ int _ethif_if_down()
 //==============================================================================
 int _ethif_get_ifconfig(ifconfig *ifcfg)
 {
-        if (!ifcfg)
+        if (!ifcfg || ethif_mem->valid != ETHIF_DATA_VALIDATION_NUMBER)
                 return -1;
 
         if (netif_is_up(&ethif_mem->netif)) {

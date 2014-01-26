@@ -494,11 +494,12 @@ int sys_getc(FILE *stream)
         }
 
         int chr = 0;
-        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                if (vfs_ferror(stream) || vfs_feof(stream))
+        if (vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
+                if (vfs_ferror(stream) || vfs_feof(stream)) {
                         return EOF;
-                else
-                        sleep_ms(10);
+                }
+        } else {
+                return EOF;
         }
 
         return chr;
@@ -526,18 +527,25 @@ char *sys_fgets(char *str, int size, FILE *stream)
                 if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
                         int n = 0;
                         for (int i = 0; i < size - 1; i++) {
-                                n += vfs_fread(str + i, sizeof(char), 1, stream);
+                                int m = vfs_fread(str + i, sizeof(char), 1, stream);
+                                if (m == 0) {
+                                        str[i] = '\0';
+                                        return str;
+                                } else {
+                                        n += m;
+                                }
+
                                 if (vfs_ferror(stream) || vfs_feof(stream)) {
                                         if (n == 0) {
                                                 return NULL;
                                         } else {
-                                                *(str + i + 1) = '\0';
+                                                str[i + 1] = '\0';
                                                 return str;
                                         }
                                 }
 
-                                if (*(str + i) == '\n') {
-                                        *(str + i + 1) = '\0';
+                                if (str[i] == '\n') {
+                                        str[i + 1] = '\0';
                                         break;
                                 }
                         }

@@ -108,7 +108,7 @@ API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(CRCCU, void *device_handle)
 {
-        STOP_IF(device_handle);
+        STOP_IF(device_handle == NULL);
 
         CRCCU *hdl = device_handle;
 
@@ -156,16 +156,14 @@ API_MOD_OPEN(CRCCU, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(CRCCU, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(CRCCU, void *device_handle, bool force)
 {
         STOP_IF(!device_handle);
-        UNUSED_ARG(opened_by_task);
 
         CRCCU *hdl = device_handle;
 
@@ -186,13 +184,15 @@ API_MOD_CLOSE(CRCCU, void *device_handle, bool force, const task_t *opened_by_ta
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
@@ -248,13 +248,15 @@ API_MOD_WRITE(CRCCU, void *device_handle, const u8_t *src, size_t count, u64_t *
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(CRCCU, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);

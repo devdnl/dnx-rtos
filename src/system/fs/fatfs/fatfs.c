@@ -225,17 +225,15 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
+API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(fd);
         UNUSED_ARG(force);
-        UNUSED_ARG(file_owner);
 
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
