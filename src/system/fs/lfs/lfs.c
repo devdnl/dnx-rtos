@@ -1158,12 +1158,10 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
 
-                n = pipe_write(node->data, src, count);
+                n = pipe_write(node->data, src, count, fattr.non_blocking_wr);
 
                 if (n > 0) {
-                        critical_section_begin();
                         node->size = pipe_get_length(node->data);
-                        critical_section_end();
                 }
 
         } else {
@@ -1252,12 +1250,10 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
 
-                n = pipe_read(node->data, dst, count);
+                n = pipe_read(node->data, dst, count, fattr.non_blocking_rd);
 
                 if (n > 0) {
-                        critical_section_begin();
                         node->size = pipe_get_length(node->data);
-                        critical_section_end();
                 }
         } else {
                 errno = EIO;

@@ -54,8 +54,8 @@ typedef struct pipe pipe_t;
 extern pipe_t  *pipe_new                ();
 extern void     pipe_delete             (pipe_t*);
 extern int      pipe_get_length         (pipe_t*);
-extern int      pipe_read               (pipe_t*, u8_t*, size_t);
-extern int      pipe_write              (pipe_t*, const u8_t*, size_t);
+extern int      pipe_read               (pipe_t*, u8_t*, size_t, bool);
+extern int      pipe_write              (pipe_t*, const u8_t*, size_t, bool);
 extern bool     pipe_close              (pipe_t*);
 
 /*==============================================================================

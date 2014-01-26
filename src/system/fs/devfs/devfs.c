@@ -309,7 +309,7 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         if (node->type == FILE_TYPE_DRV) {
                 return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_write(node->nif.pipe, src, count);
+                return pipe_write(node->nif.pipe, src, count, fattr.non_blocking_wr);
         } else {
                 return -1;
         }
@@ -344,7 +344,7 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         if (node->type == FILE_TYPE_DRV) {
                 return node->nif.drv->drv_read(node->nif.drv->handle, dst, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_read(node->nif.pipe, dst, count);
+                return pipe_read(node->nif.pipe, dst, count, fattr.non_blocking_rd);
         } else {
                 return -1;
         }

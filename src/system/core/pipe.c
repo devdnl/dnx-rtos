@@ -145,11 +145,12 @@ int pipe_get_length(pipe_t *pipe)
  * @param pipe          a pipe object
  * @param buf           a destination buffer
  * @param count         a count of bytes to read
+ * @param non_blocking  a non-blocking access mode
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-int pipe_read(pipe_t *pipe, u8_t *buf, size_t count)
+int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
 {
         if (pipe && buf && count) {
                 if (pipe->valid == PIPE_VALIDATION_NUMBER) {
@@ -162,7 +163,7 @@ int pipe_read(pipe_t *pipe, u8_t *buf, size_t count)
                                         break;
                                 }
 
-                                if (!queue_receive(pipe->queue, &buf[n], PIPE_READ_TIMEOUT)) {
+                                if (!queue_receive(pipe->queue, &buf[n], non_blocking ? 0 : PIPE_READ_TIMEOUT)) {
                                         break;
                                 }
                         }
@@ -181,11 +182,12 @@ int pipe_read(pipe_t *pipe, u8_t *buf, size_t count)
  * @param pipe          a pipe object
  * @param buf           a source buffer
  * @param count         a count of bytes to write
+ * @param non_blocking  a non-blocking access mode
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count)
+int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
 {
         if (pipe && buf && count) {
                 if (pipe->valid == PIPE_VALIDATION_NUMBER) {
@@ -196,7 +198,7 @@ int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count)
                                         break;
                                 }
 
-                                if (!queue_send(pipe->queue, &buf[n], PIPE_WRITE_TIMEOUT)) {
+                                if (!queue_send(pipe->queue, &buf[n], non_blocking ? 0 : PIPE_WRITE_TIMEOUT)) {
                                         break;
                                 }
                         }
