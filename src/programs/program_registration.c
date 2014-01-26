@@ -47,6 +47,7 @@ _IMPORT_PROGRAM(ifconfig);
 _IMPORT_PROGRAM(ls);
 _IMPORT_PROGRAM(mkdir);
 _IMPORT_PROGRAM(mkfifo);
+_IMPORT_PROGRAM(modinit);
 _IMPORT_PROGRAM(mount);
 _IMPORT_PROGRAM(reboot);
 _IMPORT_PROGRAM(rm);
@@ -76,6 +77,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(ls        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mkdir     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mkfifo    , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(modinit   , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mount     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(reboot    , STACK_DEPTH_MINIMAL ),
         _PROGRAM_CONFIG(rm        , STACK_DEPTH_LOW     ),

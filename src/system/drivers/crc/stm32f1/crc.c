@@ -108,7 +108,7 @@ API_MOD_INIT(CRCCU, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(CRCCU, void *device_handle)
 {
-        STOP_IF(device_handle);
+        STOP_IF(device_handle == NULL);
 
         CRCCU *hdl = device_handle;
 
