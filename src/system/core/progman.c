@@ -461,7 +461,7 @@ static int process_kill(task_t *taskhdl, int status)
         if (taskhdl) {
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
                 case TASK_TYPE_RAW:
-                        task_delete(taskhdl);
+                        _task_delete(taskhdl);
                         break;
                 case TASK_TYPE_PROCESS: {
                         prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;

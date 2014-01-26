@@ -72,7 +72,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(free      , STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(httpserver, STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(ifconfig  , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(ifconfig  , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(ls        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mkdir     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mkfifo    , STACK_DEPTH_LOW     ),
