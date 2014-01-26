@@ -92,11 +92,11 @@ PROGRAM_MAIN(top, int argc, char *argv[])
         ioctl(stdin, TTY_IORQ_ECHO_OFF);
         ioctl(stdout, TTY_IORQ_CLEAR_SCR);
 
-        int     key   = 0;
+        int     key   = ' ';
         int     shift = 0;
         timer_t timer = timer_set_expired();
 
-        while (key != 'q') {
+        while (key != 'q' && key != '\0') {
                 ioctl(stdin, NON_BLOCKING_RD_MODE);
                 key = getchar();
                 ioctl(stdin, DEFAULT_RD_MODE);
