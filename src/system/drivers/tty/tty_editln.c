@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"

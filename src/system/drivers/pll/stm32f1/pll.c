@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <dnx/timer.h>
 #include <dnx/misc.h>
 #include "stm32f1/pll_cfg.h"

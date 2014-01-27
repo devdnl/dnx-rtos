@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <dnx/thread.h>
 #include <dnx/os.h>
 #include <dnx/timer.h>

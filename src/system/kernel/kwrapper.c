@@ -129,7 +129,7 @@ task_t *_task_new(void (*func)(void*), const char *name, const uint stack_depth,
 void _task_delete(task_t *taskHdl)
 {
         if (sysm_is_task_exist(taskHdl)) {
-                (void)sysm_stop_task_monitoring(taskHdl);
+                sysm_stop_task_monitoring(taskHdl);
 
                 taskENTER_CRITICAL();
                 struct _task_data *data;

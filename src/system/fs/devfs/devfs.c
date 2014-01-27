@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
 #include <dnx/thread.h>
 #include <dnx/misc.h>
 #include <sys/ioctl.h>
