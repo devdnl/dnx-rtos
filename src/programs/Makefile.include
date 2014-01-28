@@ -5,6 +5,7 @@
 -include $(PROGLOC)/clear/Makefile.src
 -include $(PROGLOC)/cp/Makefile.src
 -include $(PROGLOC)/df/Makefile.src
+-include $(PROGLOC)/dsh/Makefile.src
 -include $(PROGLOC)/echo/Makefile.src
 -include $(PROGLOC)/free/Makefile.src
 -include $(PROGLOC)/helloworld/Makefile.src
@@ -17,7 +18,6 @@
 -include $(PROGLOC)/mount/Makefile.src
 -include $(PROGLOC)/reboot/Makefile.src
 -include $(PROGLOC)/rm/Makefile.src
--include $(PROGLOC)/sh/Makefile.src
 -include $(PROGLOC)/telnet/Makefile.src
 -include $(PROGLOC)/time/Makefile.src
 -include $(PROGLOC)/top/Makefile.src

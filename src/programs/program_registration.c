@@ -39,6 +39,7 @@ _IMPORT_PROGRAM(cat);
 _IMPORT_PROGRAM(clear);
 _IMPORT_PROGRAM(cp);
 _IMPORT_PROGRAM(df);
+_IMPORT_PROGRAM(dsh);
 _IMPORT_PROGRAM(echo);
 _IMPORT_PROGRAM(free);
 _IMPORT_PROGRAM(helloworld);
@@ -51,7 +52,6 @@ _IMPORT_PROGRAM(modinit);
 _IMPORT_PROGRAM(mount);
 _IMPORT_PROGRAM(reboot);
 _IMPORT_PROGRAM(rm);
-_IMPORT_PROGRAM(sh);
 _IMPORT_PROGRAM(telnet);
 _IMPORT_PROGRAM(time);
 _IMPORT_PROGRAM(top);
@@ -69,6 +69,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(clear     , STACK_DEPTH_MINIMAL ),
         _PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(df        , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(dsh       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(echo      , STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(free      , STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
@@ -81,7 +82,6 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(mount     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(reboot    , STACK_DEPTH_MINIMAL ),
         _PROGRAM_CONFIG(rm        , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(sh        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(telnet    , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(time      , STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(top       , STACK_DEPTH_LOW     ),

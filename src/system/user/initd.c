@@ -272,7 +272,7 @@ static int run_level_2(void)
                                         get_OS_name(), get_kernel_name(), current_tty);
 
 
-                                program[current_tty] = program_new("sh", "/",
+                                program[current_tty] = program_new("dsh", "/",
                                                                    tty[current_tty],
                                                                    tty[current_tty],
                                                                    tty[current_tty]);

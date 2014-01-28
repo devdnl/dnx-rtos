@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += sh/sh.c
+CSRC_PROGRAMS   += dsh/dsh.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

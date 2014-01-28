@@ -81,9 +81,9 @@ static void show_help(const char *name)
 static void show_list_of_modules()
 {
         puts(FONT_BOLD"Driver"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"Module"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(26)"MID"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(33)"DID"
-             CURSOR_BACKWARD(99)CURSOR_FORWARD(39)"Active"
+             CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"MID"
+             CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"DID"
+             CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"Active"
              RESET_ATTRIBUTES);
 
         int drv_number = get_number_of_drivers();
@@ -94,9 +94,9 @@ static void show_list_of_modules()
                 bool        is_active = is_driver_active(i);
 
                 printf("%s"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"%s"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(26)"%i"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(33)"%u"
-                           CURSOR_BACKWARD(99)CURSOR_FORWARD(39)"%c\n",
+                           CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"%i"
+                           CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"%u"
+                           CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"%c\n",
                        drv_name, mod_name, mod_id, i, is_active ? '*': ' ');
         }
 }
