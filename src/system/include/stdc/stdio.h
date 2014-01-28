@@ -215,7 +215,9 @@ static inline int printf(const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        return sys_vfprintf(stdout, format, arg);
+        int status = sys_vfprintf(stdout, format, arg);
+        va_end(arg);
+        return status;
 }
 
 static inline int vprintf(const char *format, va_list arg)
@@ -227,7 +229,9 @@ static inline int fprintf(FILE *stream, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        return sys_vfprintf(stream, format, arg);
+        int status = sys_vfprintf(stream, format, arg);
+        va_end(arg);
+        return status;
 }
 
 static inline int vfprintf(FILE *stream, const char *format, va_list arg)
@@ -239,7 +243,9 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        return sys_vsnprintf(s, n, format, arg);
+        int status = sys_vsnprintf(s, n, format, arg);
+        va_end(arg);
+        return status;
 }
 
 static inline int vsnprintf(char *bfr, size_t size, const char *format, va_list args)
@@ -251,7 +257,9 @@ static inline int sprintf(char *s, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        return sys_vsnprintf(s, UINT16_MAX, format, arg);
+        int status = sys_vsnprintf(s, UINT16_MAX, format, arg);
+        va_end(arg);
+        return status;
 }
 
 static inline int vsprintf(char *s, const char *format, va_list arg)
@@ -263,7 +271,9 @@ static inline int scanf(const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        return sys_vfscanf(stdin, format, arg);
+        int status = sys_vfscanf(stdin, format, arg);
+        va_end(arg);
+        return status;
 }
 
 static inline int vscanf(const char *format, va_list arg)
@@ -275,7 +285,9 @@ static inline int fscanf(FILE *stream, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        return sys_vfscanf(stream, format, arg);
+        int status = sys_vfscanf(stream, format, arg);
+        va_end(arg);
+        return status;
 }
 
 static inline int vfscanf(FILE *stream, const char *format, va_list arg)
@@ -287,7 +299,9 @@ static inline int sscanf(const char *s, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
-        return sys_vsscanf(s, format, arg);
+        int status = sys_vsscanf(s, format, arg);
+        va_end(arg);
+        return status;
 }
 
 static inline int vsscanf(const char *str, const char *format, va_list args)

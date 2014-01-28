@@ -70,7 +70,9 @@ static inline int ioctl(FILE *stream, int request, ...)
 {
         va_list arg;
         va_start(arg, request);
-        return vfs_vioctl(stream, request, arg);
+        int status = vfs_vioctl(stream, request, arg);
+        va_end(arg);
+        return status;
 }
 
 #ifdef __cplusplus
