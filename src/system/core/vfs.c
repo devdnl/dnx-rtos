@@ -284,20 +284,20 @@ vfs_umount_error:
 
 //==============================================================================
 /**
- * @brief Function gets mount point for n item
+ * @brief Function return file system describe object
+ * After operation object must be freed using free() function.
  *
- * @param[in]   item            mount point number
- * @param[out] *mntent          mount entry data
+ * @param item          n-item to read
+ * @param mntent        pointer to mntent object
  *
- * @retval STD_RET_OK           success
- * @retval STD_RET_ERROR        error
+ * @return 0 if success, 1 if all items read, -1 on error
  */
 //==============================================================================
-stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
+int vfs_getmntentry(int item, struct mntent *mntent)
 {
         if (!mntent) {
                 errno = EINVAL;
-                return STD_RET_ERROR;
+                return -1;
         }
 
         mutex_force_lock(vfs_resource_mtx);
@@ -311,27 +311,23 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
                         int priority = increase_task_priority();
                         fs->interface.fs_statfs(fs->handle, &stat_fs);
                         restore_priority(priority);
+                } else {
+                        return -1;
                 }
 
                 if (stat_fs.f_fsname) {
-                        if (strlen(fs->mount_point) > 1) {
-                                strncpy(mntent->mnt_dir, fs->mount_point,
-                                        strlen(fs->mount_point) - 1);
-                        } else {
-                                strcpy(mntent->mnt_dir, fs->mount_point);
-                        }
+                        mntent->mnt_fsname = stat_fs.f_fsname;
+                        mntent->mnt_dir    = fs->mount_point;
+                        mntent->free       = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
+                        mntent->total      = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
 
-                        strcpy(mntent->mnt_fsname, stat_fs.f_fsname);
-                        mntent->free  = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
-                        mntent->total = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
-
-                        return STD_RET_OK;
+                        return 0;
+                } else {
+                        return -1;
                 }
+        } else {
+                return 1;
         }
-
-        errno = ENXIO;
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================

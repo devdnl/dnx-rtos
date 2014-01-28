@@ -8,6 +8,7 @@ New Features, Improvements:
 - implemented common driver for pipes in file systems
 - fgets() reads device files byte by byte (slove problem with EOF)
 - some files can be switched to unblocking read (some devices, pipes)
+- corrected driver layer, used device id
 
 Fixed Bugs:
 - wrong behaviour of fgets() function in case of EOF

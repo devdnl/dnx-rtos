@@ -165,11 +165,11 @@ struct vfs_statfs {
 };
 
 /** structure describing a mount table entry */
-struct vfs_mntent {
-        char *mnt_fsname;               /* device or server for filesystem */
-        char *mnt_dir;                  /* directory mounted on            */
-        u64_t total;                    /* device total size               */
-        u64_t free;                     /* device free                     */
+struct mntent {
+        const char *mnt_fsname;         /* device or server for filesystem */
+        const char *mnt_dir;            /* directory mounted on            */
+        u64_t       total;              /* device total size               */
+        u64_t       free;               /* device free                     */
 };
 
 /** file write/read attributtes */
@@ -207,7 +207,7 @@ struct vfs_FS_interface {
 extern stdret_t         vfs_init                (void);
 extern stdret_t         vfs_mount               (const char*, const char*, struct vfs_FS_interface*);
 extern stdret_t         vfs_umount              (const char*);
-extern stdret_t         vfs_getmntentry         (size_t, struct vfs_mntent*);
+extern int              vfs_getmntentry         (int, struct mntent*);
 extern int              vfs_mknod               (const char*, dev_t);
 extern int              vfs_mkdir               (const char*, mode_t);
 extern int              vfs_mkfifo              (const char*, mode_t);

@@ -75,66 +75,42 @@ PROGRAM_MAIN(df, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        struct vfs_mntent mnt;
-        mnt.mnt_dir    = calloc(64, ARRAY_ITEM_SIZE(mnt.mnt_dir));
-        mnt.mnt_fsname = calloc(64, ARRAY_ITEM_SIZE(mnt.mnt_fsname));
-        mnt.free       = 0;
-        mnt.total      = 0;
+        printf(FONT_BOLD"File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(5)
+               "Free"CURSOR_FORWARD(6)"%%Used  Mount point"RESET_ATTRIBUTES"\n");
 
-        if (mnt.mnt_dir && mnt.mnt_fsname) {
-                printf("File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(5)
-                       "Free"CURSOR_FORWARD(6)"%%Used  Mount point\n");
+        struct mntent mnt;
+        int           i = 0;
+        while (getmntentry(i++, &mnt) == 0) {
+                u32_t dtotal;
+                u32_t dfree;
+                const char *unit;
 
-                for (u32_t i = 0;; i++) {
-                        if (getmntentry(i, &mnt) == STD_RET_OK) {
-                                u32_t dtotal;
-                                u32_t dfree;
-                                const char *unit;
-
-                                if (mnt.total > 10*GiB) {
-                                        dtotal = CONVERT_TO_GiB(mnt.total);
-                                        dfree  = CONVERT_TO_GiB(mnt.free);
-                                        unit   = "GiB";
-                                } else if (mnt.total > 10*MiB) {
-                                        dtotal = CONVERT_TO_MiB(mnt.total);
-                                        dfree  = CONVERT_TO_MiB(mnt.free);
-                                        unit   = "MiB";
-                                } else if (mnt.total > 10*KiB) {
-                                        dtotal = CONVERT_TO_KiB(mnt.total);
-                                        dfree  = CONVERT_TO_KiB(mnt.free);
-                                        unit   = "KiB";
-                                } else {
-                                        dtotal = mnt.total;
-                                        dfree  = mnt.free;
-                                        unit   = "B";
-                                }
-
-                                printf("%s"  CURSOR_BACKWARD(90)CURSOR_FORWARD(16)
-                                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(26)
-                                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(36)
-                                       "%u%%"CURSOR_BACKWARD(90)CURSOR_FORWARD(43)
-                                       "%s\n",
-                                       mnt.mnt_fsname, dtotal, unit, dfree, unit,
-                                       ((dtotal - dfree) * 100)/dtotal, mnt.mnt_dir);
-
-                                memset(mnt.mnt_dir, 0, 64);
-                                memset(mnt.mnt_fsname, 0, 64);
-                        } else {
-                                if (i == 0)
-                                        perror(NULL);
-
-                                break;
-                        }
+                if (mnt.total > 10*GiB) {
+                        dtotal = CONVERT_TO_GiB(mnt.total);
+                        dfree  = CONVERT_TO_GiB(mnt.free);
+                        unit   = "GiB";
+                } else if (mnt.total > 10*MiB) {
+                        dtotal = CONVERT_TO_MiB(mnt.total);
+                        dfree  = CONVERT_TO_MiB(mnt.free);
+                        unit   = "MiB";
+                } else if (mnt.total > 10*KiB) {
+                        dtotal = CONVERT_TO_KiB(mnt.total);
+                        dfree  = CONVERT_TO_KiB(mnt.free);
+                        unit   = "KiB";
+                } else {
+                        dtotal = mnt.total;
+                        dfree  = mnt.free;
+                        unit   = "B";
                 }
-        } else {
-                perror(NULL);
+
+                printf("%s"  CURSOR_BACKWARD(90)CURSOR_FORWARD(16)
+                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(26)
+                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(36)
+                       "%u%%"CURSOR_BACKWARD(90)CURSOR_FORWARD(43)
+                       "%s\n",
+                       mnt.mnt_fsname, dtotal, unit, dfree, unit,
+                       ((dtotal - dfree) * 100)/dtotal, mnt.mnt_dir);
         }
-
-        if (mnt.mnt_dir)
-                free(mnt.mnt_dir);
-
-        if (mnt.mnt_fsname)
-                free(mnt.mnt_fsname);
 
         return EXIT_SUCCESS;
 }
