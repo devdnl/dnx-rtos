@@ -689,19 +689,21 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                                 struct vfs_dev_stat devstat;
                                 if (driver_stat(node->IF.drv, &devstat) == STD_RET_OK) {
                                         dirent.size = devstat.st_size;
-                                        dirent.dev  = node->IF.drv;
                                 } else {
                                         dirent.size = 0;
                                 }
+                                dirent.dev      = node->IF.drv;
                                 dirent.filetype = FILE_TYPE_DRV;
+
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 int n = pipe_get_length(node->IF.pipe);
                                 if (n >= 0) {
-                                        dirent.size     = n;
-                                        dirent.filetype = FILE_TYPE_PIPE;
+                                        dirent.size = n;
                                 } else {
                                         dirent.size = 0;
                                 }
+
+                                dirent.filetype = FILE_TYPE_PIPE;
                         }
 
                         dirent.name = node->path;
