@@ -85,8 +85,8 @@ const struct _driver_entry _regdrv_driver_table[] = {
         _USE_DRIVER_INTERFACE(WDG   , "wdg"   , _WDG_MAJOR_NUMBER   , _WDG_MINOR_NUMBER   ),
 };
 
-const int _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);
-const int _regdrv_number_of_modules       = ARRAY_SIZE(_regdrv_module_name);
+const int _regdrv_size_of_driver_table = ARRAY_SIZE(_regdrv_driver_table);
+const int _regdrv_number_of_modules    = ARRAY_SIZE(_regdrv_module_name);
 
 /*==============================================================================
   End of file

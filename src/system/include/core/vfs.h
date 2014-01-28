@@ -103,12 +103,6 @@ extern "C" {
 /** file object */
 typedef struct vfs_file FILE;
 
-/** file descriptor */
-typedef uint fd_t;
-
-/** file mode */
-typedef int mode_t;
-
 /** file type */
 typedef enum tfile {
         FILE_TYPE_REGULAR,
@@ -124,6 +118,7 @@ typedef struct dirent {
         char   *name;
         u64_t   size;
         tfile_t filetype;
+        dev_t   dev;
 } dirent_t;
 
 /** directory type */
@@ -154,8 +149,8 @@ struct stat {
 /** device info */
 struct vfs_dev_stat {
         u64_t st_size;                  /* total size, in bytes */
-        u32_t st_major;                 /* device major number  */
-        u32_t st_minor;                 /* device minor number  */
+        u8_t  st_major;                 /* device major number  */
+        u8_t  st_minor;                 /* device minor number  */
 };
 
 /** file system statistic */
@@ -183,18 +178,6 @@ struct vfs_fattr {
         bool non_blocking_wr:1;         /* non-blocking file write access */
 };
 
-/** driver configuration */
-struct vfs_drv_interface {
-        void     *handle;
-        stdret_t (*drv_open )(void *drvhdl, int flags);
-        stdret_t (*drv_close)(void *drvhdl, bool force);
-        ssize_t  (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr attr);
-        ssize_t  (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr attr);
-        stdret_t (*drv_ioctl)(void *drvhdl, int iorq, void *args);
-        stdret_t (*drv_flush)(void *drvhdl);
-        stdret_t (*drv_stat )(void *drvhdl, struct vfs_dev_stat *info);
-};
-
 /** file system configuration */
 struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
@@ -208,7 +191,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path, mode_t);
         stdret_t (*fs_mkfifo )(void *fshdl, const char *path, mode_t);
-        stdret_t (*fs_mknod  )(void *fshdl, const char *path, const struct vfs_drv_interface *drv_if);
+        stdret_t (*fs_mknod  )(void *fshdl, const char *path, const dev_t dev);
         stdret_t (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
         stdret_t (*fs_remove )(void *fshdl, const char *path);
         stdret_t (*fs_rename )(void *fshdl, const char *old_name, const char *new_name);
@@ -225,7 +208,7 @@ extern stdret_t         vfs_init                (void);
 extern stdret_t         vfs_mount               (const char*, const char*, struct vfs_FS_interface*);
 extern stdret_t         vfs_umount              (const char*);
 extern stdret_t         vfs_getmntentry         (size_t, struct vfs_mntent*);
-extern int              vfs_mknod               (const char*, struct vfs_drv_interface*);
+extern int              vfs_mknod               (const char*, dev_t);
 extern int              vfs_mkdir               (const char*, mode_t);
 extern int              vfs_mkfifo              (const char*, mode_t);
 extern DIR             *vfs_opendir             (const char*);

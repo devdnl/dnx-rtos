@@ -338,15 +338,15 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
 /**
  * @brief Function create node for driver file
  *
- * @param[in] *path                 path when driver-file shall be created
- * @param[in] *drvcfg               pointer to description of driver
+ * @param[in] path              path when driver-file shall be created
+ * @param[in] dev               pointer to description of driver
  *
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
+int vfs_mknod(const char *path, dev_t dev)
 {
-        if (!path || !drv_interface) {
+        if (!path) {
                 errno = EINVAL;
                 return -1;
         }
@@ -364,7 +364,7 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
         int status = -1;
         if (fs) {
                 if (fs->interface.fs_mknod) {
-                        status = fs->interface.fs_mknod(fs->handle, external_path, drv_interface) == STD_RET_OK ? 0 : -1;
+                        status = fs->interface.fs_mknod(fs->handle, external_path, dev) == STD_RET_OK ? 0 : -1;
                 }
         }
 

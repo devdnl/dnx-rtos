@@ -55,9 +55,9 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-static inline int mknod(const char *path, struct vfs_drv_interface *drvif)
+static inline int mknod(const char *path, dev_t dev)
 {
-        return vfs_mknod(path, drvif);
+        return vfs_mknod(path, dev);
 }
 
 static inline int mkdir(const char *path, mode_t mode)

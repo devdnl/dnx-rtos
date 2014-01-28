@@ -348,9 +348,23 @@ static inline const char *get_user_name(void)
  * @return module name
  */
 //==============================================================================
-static inline const char *get_module_name(uint modid)
+static inline const char *get_module_name(int modid)
 {
         return _get_module_name(modid);
+}
+
+//==============================================================================
+/**
+ * @brief Function return module number
+ *
+ * @param[in] name     module name
+ *
+ * @return module name
+ */
+//==============================================================================
+static inline int get_module_number(const char *name)
+{
+        return _get_module_number(name);
 }
 
 //==============================================================================
@@ -360,10 +374,63 @@ static inline const char *get_module_name(uint modid)
  * @return number of modules
  */
 //==============================================================================
-static inline uint get_number_of_modules(void)
+static inline int get_number_of_modules(void)
 {
-        extern const int _regdrv_number_of_modules;
-        return _regdrv_number_of_modules;
+        return _get_number_of_modules();
+}
+
+//==============================================================================
+/**
+ * @brief Function return number of drivers
+ *
+ * @return number of drivers
+ */
+//==============================================================================
+static inline int get_number_of_drivers(void)
+{
+        return _get_number_of_drivers();
+}
+
+//==============================================================================
+/**
+ * @brief Function return driver name
+ *
+ * @param n             driver number
+ *
+ * @param driver name, NULL on error
+ */
+//==============================================================================
+static inline const char *get_driver_name(int n)
+{
+        return _get_driver_name(n);
+}
+
+//==============================================================================
+/**
+ * @brief Function return driver's module name
+ *
+ * @param n             driver number
+ *
+ * @param driver name, NULL on error
+ */
+//==============================================================================
+static inline const char *get_driver_module_name(int n)
+{
+        return _get_driver_module_name(n);
+}
+
+//==============================================================================
+/**
+ * @brief Function return driver status
+ *
+ * @param n             driver number
+ *
+ * @return true if driver is active (initialized), otherwise false
+ */
+//==============================================================================
+static inline bool is_driver_active(int n)
+{
+        return _is_driver_active(n);
 }
 
 //==============================================================================

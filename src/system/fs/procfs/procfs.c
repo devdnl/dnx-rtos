@@ -586,17 +586,17 @@ API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver number
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(procfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
-        UNUSED_ARG(drv_if);
+        UNUSED_ARG(dev);
 
         /* not supported by this file system */
         errno = EPERM;

@@ -582,6 +582,7 @@ PROGRAM_MAIN(sh, int argc, char *argv[])
         }
 
         getcwd(global->cwd, CWD_PATH_LEN);
+        task_set_cwd(global->cwd);
 
         for (;;) {
                 clear_prompt();

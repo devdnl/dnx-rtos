@@ -1642,45 +1642,45 @@ static stdret_t mbr_detect_partitions(struct sdspi_data *hdl)
                         goto error;
                 }
 
-                struct vfs_drv_interface drvif;
-                drvif.drv_open  = partition_open;
-                drvif.drv_close = partition_close;
-                drvif.drv_write = partition_write;
-                drvif.drv_read  = partition_read;
-                drvif.drv_ioctl = partition_ioctl;
-                drvif.drv_flush = partition_flush;
-                drvif.drv_stat  = partition_stat;
+//                struct vfs_drv_interface drvif; TODO
+//                drvif.drv_open  = partition_open;
+//                drvif.drv_close = partition_close;
+//                drvif.drv_write = partition_write;
+//                drvif.drv_read  = partition_read;
+//                drvif.drv_ioctl = partition_ioctl;
+//                drvif.drv_flush = partition_flush;
+//                drvif.drv_stat  = partition_stat;
 
                 u32_t partition_sectors = mbr_get_partition_1_number_of_sectors(MBR);
                 if (partition_sectors > 0) {
                         hdl->partition[0].first_sector    = mbr_get_partition_1_first_LBA_sector(MBR);
                         hdl->partition[0].size_in_sectors = partition_sectors;
-                        drvif.handle                      = &hdl->partition[0];
-                        vfs_mknod(SDSPI_PARTITION_1_PATH, &drvif);
+//                        drvif.handle                      = &hdl->partition[0];
+//                        vfs_mknod(SDSPI_PARTITION_1_PATH, &drvif);
                 }
 
                 partition_sectors = mbr_get_partition_2_number_of_sectors(MBR);
                 if (partition_sectors > 0) {
                         hdl->partition[1].first_sector    = mbr_get_partition_2_first_LBA_sector(MBR);
                         hdl->partition[1].size_in_sectors = partition_sectors;
-                        drvif.handle                      = &hdl->partition[1];
-                        vfs_mknod(SDSPI_PARTITION_2_PATH, &drvif);
+//                        drvif.handle                      = &hdl->partition[1];
+//                        vfs_mknod(SDSPI_PARTITION_2_PATH, &drvif);
                 }
 
                 partition_sectors = mbr_get_partition_3_number_of_sectors(MBR);
                 if (partition_sectors > 0) {
                         hdl->partition[2].first_sector    = mbr_get_partition_3_first_LBA_sector(MBR);
                         hdl->partition[2].size_in_sectors = partition_sectors;
-                        drvif.handle                      = &hdl->partition[2];
-                        vfs_mknod(SDSPI_PARTITION_3_PATH, &drvif);
+//                        drvif.handle                      = &hdl->partition[2];
+//                        vfs_mknod(SDSPI_PARTITION_3_PATH, &drvif);
                 }
 
                 partition_sectors = mbr_get_partition_4_number_of_sectors(MBR);
                 if (partition_sectors > 0) {
                         hdl->partition[3].first_sector    = mbr_get_partition_4_first_LBA_sector(MBR);
                         hdl->partition[3].size_in_sectors = partition_sectors;
-                        drvif.handle                      = &hdl->partition[3];
-                        vfs_mknod(SDSPI_PARTITION_4_PATH, &drvif);
+//                        drvif.handle                      = &hdl->partition[3];
+//                        vfs_mknod(SDSPI_PARTITION_4_PATH, &drvif);
                 }
 
                 status = STD_RET_OK;
