@@ -955,7 +955,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
                         *fpos = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);
-                        goto error;
+                        goto exit;
                 }
         }
 
