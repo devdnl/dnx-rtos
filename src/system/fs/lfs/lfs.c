@@ -850,7 +850,7 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(lfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 

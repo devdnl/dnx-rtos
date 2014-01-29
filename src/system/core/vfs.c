@@ -305,7 +305,7 @@ int vfs_getmntentry(int item, struct mntent *mntent)
         mutex_unlock(vfs_resource_mtx);
 
         if (fs) {
-                struct vfs_statfs stat_fs = {.f_fsname = NULL};
+                struct statfs stat_fs = {.f_fsname = NULL};
 
                 if (fs->interface.fs_statfs) {
                         int priority = increase_task_priority();
@@ -796,7 +796,7 @@ int vfs_stat(const char *path, struct stat *stat)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_statfs(const char *path, struct vfs_statfs *statfs)
+int vfs_statfs(const char *path, struct statfs *statfs)
 {
         if (!path || !statfs) {
                 errno = EINVAL;

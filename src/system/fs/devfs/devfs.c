@@ -925,7 +925,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(devfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!statfs);

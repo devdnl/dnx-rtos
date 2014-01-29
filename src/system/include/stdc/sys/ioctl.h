@@ -66,6 +66,17 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function support not standard operations on devices and files
+ *
+ * @param[in]     *file         file
+ * @param[in]      rq           request
+ * @param[in,out]  ...          argument or nothing
+ *
+ * @return 0 on success. On error, different from 0 is returned
+ */
+//==============================================================================
 static inline int ioctl(FILE *stream, int request, ...)
 {
         va_list arg;

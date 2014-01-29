@@ -154,7 +154,7 @@ struct vfs_dev_stat {
 };
 
 /** file system statistic */
-struct vfs_statfs {
+struct statfs {
         u32_t f_type;                   /* file system type       */
         u32_t f_bsize;                  /* block size             */
         u32_t f_blocks;                 /* total blocks           */
@@ -198,7 +198,7 @@ struct vfs_FS_interface {
         stdret_t (*fs_chmod  )(void *fshdl, const char *path, int mode);
         stdret_t (*fs_chown  )(void *fshdl, const char *path, int owner, int group);
         stdret_t (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
-        stdret_t (*fs_statfs )(void *fshdl, struct vfs_statfs *statfs);
+        stdret_t (*fs_statfs )(void *fshdl, struct statfs *statfs);
 };
 
 /*==============================================================================
@@ -219,7 +219,7 @@ extern int              vfs_rename              (const char*, const char*);
 extern int              vfs_chmod               (const char*, int);
 extern int              vfs_chown               (const char*, int, int);
 extern int              vfs_stat                (const char*, struct stat*);
-extern int              vfs_statfs              (const char*, struct vfs_statfs*);
+extern int              vfs_statfs              (const char*, struct statfs*);
 extern FILE            *vfs_fopen               (const char*, const char*);
 extern FILE            *vfs_freopen             (const char*, const char*, FILE*);
 extern int              vfs_fclose              (FILE*);

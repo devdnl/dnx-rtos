@@ -55,16 +55,44 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function open selected directory
+ *
+ * @param *name         directory path
+ *
+ * @retval NULL if file can't be created
+ */
+//==============================================================================
 static inline DIR *opendir(const char *path)
 {
         return sysm_opendir(path);
 }
 
+//==============================================================================
+/**
+ * @brief Function close opened directory
+ *
+ * @param *DIR                pinter to directory
+ *
+ * @retval 0                  file closed successfully
+ * @retval -1                 file not closed
+ */
+//==============================================================================
 static inline int closedir(DIR *dir)
 {
         return sysm_closedir(dir);
 }
 
+//==============================================================================
+/**
+ * @brief Function read next item of opened directory
+ *
+ * @param[in] *dir                  directory object
+ *
+ * @return element attributes
+ */
+//==============================================================================
 static inline dirent_t readdir(DIR *dir)
 {
         return vfs_readdir(dir);
