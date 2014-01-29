@@ -41,9 +41,6 @@
 /* wait time for operation on VFS */
 #define MTX_BLOCK_TIME                          10
 
-#define FILE_VALIDATION_NUMBER                  (u32_t)0x495D47CB
-#define DIR_VALIDATION_NUMBER                   (u32_t)0x297E823D
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -100,9 +97,11 @@ static char            *new_corrected_path      (const char *path, enum path_cor
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static list_t  *vfs_mnt_list;
-static mutex_t *vfs_resource_mtx;
-static u32_t    vfs_id_counter;
+static list_t          *vfs_mnt_list;
+static mutex_t         *vfs_resource_mtx;
+static u32_t            vfs_id_counter;
+static const u32_t      file_validation_number = 0x495D47CB;
+static const u32_t      dir_validation_number  = 0x297E823D;
 
 /*==============================================================================
   Function definitions
@@ -495,7 +494,7 @@ DIR *vfs_opendir(const char *path)
                         sysm_sysfree(dir);
                         dir = NULL;
                 } else {
-                        dir->validation = DIR_VALIDATION_NUMBER;
+                        dir->validation = dir_validation_number;
                 }
         }
 
@@ -514,7 +513,7 @@ DIR *vfs_opendir(const char *path)
 int vfs_closedir(DIR *dir)
 {
         if (dir) {
-                if (dir->f_closedir && dir->validation == DIR_VALIDATION_NUMBER) {
+                if (dir->f_closedir && dir->validation == dir_validation_number) {
                         if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
                                 dir->validation = 0;
                                 sysm_sysfree(dir);
@@ -543,7 +542,7 @@ dirent_t vfs_readdir(DIR *dir)
         direntry.size = 0;
 
         if (dir) {
-                if (dir->f_readdir && dir->validation == DIR_VALIDATION_NUMBER) {
+                if (dir->f_readdir && dir->validation == dir_validation_number) {
                         int priority = increase_task_priority();
                         direntry = dir->f_readdir(dir->f_handle, dir);
                         restore_priority(priority);
@@ -895,7 +894,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                                 file->f_read  = fs->interface.fs_read;
                         }
 
-                        file->validation = FILE_VALIDATION_NUMBER;
+                        file->validation = file_validation_number;
                         sysm_sysfree(cwd_path);
                         return file;
                 }
@@ -980,7 +979,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && count && file) {
-                if (file->f_write && file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->f_write && file->validation == file_validation_number) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
                                           ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
@@ -1023,7 +1022,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && count && file) {
-                if (file->f_read && file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->f_read && file->validation == file_validation_number) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
                                          ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
@@ -1068,7 +1067,7 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
                 return -1;
         }
 
-        if (file->validation != FILE_VALIDATION_NUMBER) {
+        if (file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1147,7 +1146,7 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
                 return -1;
         }
 
-        if (!file->f_ioctl && file->validation != FILE_VALIDATION_NUMBER) {
+        if (!file->f_ioctl && file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1179,7 +1178,7 @@ int vfs_fstat(FILE *file, struct stat *stat)
                 return -1;
         }
 
-        if (!file->f_stat && file->validation != FILE_VALIDATION_NUMBER) {
+        if (!file->f_stat && file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1207,7 +1206,7 @@ int vfs_fflush(FILE *file)
                 return -1;
         }
 
-        if (!file->f_flush && file->validation != FILE_VALIDATION_NUMBER) {
+        if (!file->f_flush && file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1231,7 +1230,7 @@ int vfs_fflush(FILE *file)
 int vfs_feof(FILE *file)
 {
         if (file) {
-                if (file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->validation == file_validation_number) {
                         return file->f_flag.eof ? 1 : 0;
                 } else {
                         errno = ENOENT;
@@ -1253,7 +1252,7 @@ int vfs_feof(FILE *file)
 void vfs_clearerr(FILE *file)
 {
         if (file) {
-                if (file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->validation == file_validation_number) {
                         file->f_flag.eof   = false;
                         file->f_flag.error = false;
                 } else {
@@ -1276,7 +1275,7 @@ void vfs_clearerr(FILE *file)
 int vfs_ferror(FILE *file)
 {
         if (file) {
-                if (file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->validation == file_validation_number) {
                         return file->f_flag.error ? 1 : 0;
                 } else {
                         errno = ENOENT;
@@ -1315,7 +1314,7 @@ int vfs_rewind(FILE *file)
 static int fclose(FILE *file, bool force)
 {
         if (file) {
-                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->f_close && file->validation == file_validation_number) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force) == STD_RET_OK) {
                                 file->validation = 0;
                                 sysm_sysfree(file);

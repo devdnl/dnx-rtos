@@ -39,7 +39,6 @@
 ==============================================================================*/
 #define PIPE_READ_TIMEOUT               MAX_DELAY_MS
 #define PIPE_WRITE_TIMEOUT              MAX_DELAY_MS
-#define PIPE_VALIDATION_NUMBER          (u32_t)0x2B1D0852
 
 /*==============================================================================
   Local object types
@@ -57,6 +56,7 @@ struct pipe {
 /*==============================================================================
   Local objects
 ==============================================================================*/
+static const u32_t pipe_validation_number = 0x2B1D0852;
 
 /*==============================================================================
   Exported objects
@@ -85,7 +85,7 @@ pipe_t *pipe_new()
         if (pipe && queue) {
 
                 pipe->queue  = queue;
-                pipe->valid  = PIPE_VALIDATION_NUMBER;
+                pipe->valid  = pipe_validation_number;
                 pipe->closed = false;
 
         } else {
@@ -112,7 +112,7 @@ pipe_t *pipe_new()
 void pipe_delete(pipe_t *pipe)
 {
         if (pipe) {
-                if (pipe->valid == PIPE_VALIDATION_NUMBER) {
+                if (pipe->valid == pipe_validation_number) {
                         queue_delete(pipe->queue);
                 }
         }
@@ -130,7 +130,7 @@ void pipe_delete(pipe_t *pipe)
 int pipe_get_length(pipe_t *pipe)
 {
         if (pipe) {
-                if (pipe->valid == PIPE_VALIDATION_NUMBER) {
+                if (pipe->valid == pipe_validation_number) {
                         return queue_get_number_of_items(pipe->queue);
                 }
         }
@@ -153,7 +153,7 @@ int pipe_get_length(pipe_t *pipe)
 int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
 {
         if (pipe && buf && count) {
-                if (pipe->valid == PIPE_VALIDATION_NUMBER) {
+                if (pipe->valid == pipe_validation_number) {
                         int n = 0;
                         for (; n < (int)count; n++) {
 
@@ -190,7 +190,7 @@ int pipe_read(pipe_t *pipe, u8_t *buf, size_t count, bool non_blocking)
 int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
 {
         if (pipe && buf && count) {
-                if (pipe->valid == PIPE_VALIDATION_NUMBER) {
+                if (pipe->valid == pipe_validation_number) {
                         int n = 0;
                         for (; n < (int)count; n++) {
 
@@ -222,7 +222,7 @@ int pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, bool non_blocking)
 bool pipe_close(pipe_t *pipe)
 {
         if (pipe) {
-                if (pipe->valid == PIPE_VALIDATION_NUMBER) {
+                if (pipe->valid == pipe_validation_number) {
                         pipe->closed = true;
 
                         u8_t null = '\0';

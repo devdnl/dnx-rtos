@@ -94,7 +94,7 @@ extern API_FS_RENAME(fsname, void*, const char*, const char*);                  
 extern API_FS_CHMOD(fsname, void*, const char*, int);                                           \
 extern API_FS_CHOWN(fsname, void*, const char*, int, int);                                      \
 extern API_FS_STAT(fsname, void*, const char*, struct stat*);                                   \
-extern API_FS_STATFS(fsname, void*, struct vfs_statfs*)
+extern API_FS_STATFS(fsname, void*, struct statfs*)
 
 /*==============================================================================
   Exported types, enums definitions

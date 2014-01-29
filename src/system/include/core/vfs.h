@@ -129,7 +129,7 @@ struct vfs_dir {
         void      *f_handle;
         size_t     f_items;
         size_t     f_seek;
-        int        validation;          /* only for system purposes */
+        u32_t      validation;          /* only for system purposes */
 };
 
 typedef struct vfs_dir DIR;

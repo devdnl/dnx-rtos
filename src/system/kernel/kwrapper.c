@@ -34,7 +34,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define MUTEX_VALID_NUMBER              (u32_t)0x4379A85C
 
 /*==============================================================================
   Local types, enums definitions
@@ -52,6 +51,7 @@ struct mutex {
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static const u32_t mutex_valid_number = 0x4379A85C;
 
 /*==============================================================================
   Exported object definitions
@@ -433,7 +433,7 @@ mutex_t *_mutex_new(enum mutex_type type)
                 }
 
                 if (mtx->mutex) {
-                        mtx->valid = MUTEX_VALID_NUMBER;
+                        mtx->valid = mutex_valid_number;
                 } else {
                         sysm_kfree(mtx);
                         mtx = NULL;
@@ -453,7 +453,7 @@ mutex_t *_mutex_new(enum mutex_type type)
 void _mutex_delete(mutex_t *mutex)
 {
         if (mutex) {
-                if (mutex->mutex && mutex->valid == MUTEX_VALID_NUMBER) {
+                if (mutex->mutex && mutex->valid == mutex_valid_number) {
                         vSemaphoreDelete(mutex);
                         mutex->valid = 0;
                         sysm_kfree(mutex);
@@ -475,7 +475,7 @@ void _mutex_delete(mutex_t *mutex)
 bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 {
         if (mutex) {
-                if (mutex->mutex && mutex->valid == MUTEX_VALID_NUMBER) {
+                if (mutex->mutex && mutex->valid == mutex_valid_number) {
                         if (mutex->recursive) {
                                 return xSemaphoreTakeRecursive(mutex->mutex, MS2TICK((portTickType)blocktime_ms));
                         } else {
@@ -500,7 +500,7 @@ bool _mutex_lock(mutex_t *mutex, const uint blocktime_ms)
 bool _mutex_unlock(mutex_t *mutex)
 {
         if (mutex) {
-                if (mutex->mutex && mutex->valid == MUTEX_VALID_NUMBER) {
+                if (mutex->mutex && mutex->valid == mutex_valid_number) {
                         if (mutex->recursive) {
                                 return xSemaphoreGiveRecursive(mutex->mutex);
                         } else {

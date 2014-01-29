@@ -37,8 +37,6 @@
 #define malloc(size)                    sysm_sysmalloc(size)
 #define free(mem)                       sysm_sysfree(mem)
 
-#define LIST_VALIDATION_NUMBER          (u32_t)0x25CADA7F
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -66,6 +64,7 @@ static i32_t get_iaddr_by_ID(list_t *list, u32_t id, struct list_item **previtem
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static const u32_t list_validation_number = 0x25CADA7F;
 
 /*==============================================================================
   Function definitions
@@ -81,7 +80,7 @@ list_t *list_new(void)
 {
         list_t *list = calloc(1, sizeof(list_t));
         if (list) {
-                list->valid = LIST_VALIDATION_NUMBER;
+                list->valid = list_validation_number;
         }
 
         return list;
@@ -104,7 +103,7 @@ list_t *list_new(void)
 stdret_t list_delete(list_t *list)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item      = list->head;
                         struct list_item *next_item = NULL;
 
@@ -144,7 +143,7 @@ stdret_t list_delete(list_t *list)
 i32_t list_add_item(list_t *list, u32_t id, void *data)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *new_item = calloc(1, sizeof(struct list_item));
 
                         if (new_item) {
@@ -184,7 +183,7 @@ i32_t list_add_item(list_t *list, u32_t id, void *data)
 stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *data)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *new_item = calloc(1, sizeof(struct list_item));
 
                         if (new_item) {
@@ -236,7 +235,7 @@ stdret_t list_insert_item_before_n(list_t *list, i32_t nitem, u32_t id,  void *d
 stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *data)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *new_item = calloc(1, sizeof(struct list_item));
 
                         if (new_item) {
@@ -281,7 +280,7 @@ stdret_t list_insert_item_after_n(list_t *list, i32_t nitem, u32_t id, void *dat
 stdret_t list_rm_nitem(list_t *list, i32_t nitem)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         if ((nitem >= 0) && (list->item_count - 1 >= nitem)) {
                                 struct list_item *item;
                                 struct list_item *prev_item;
@@ -334,7 +333,7 @@ stdret_t list_rm_nitem(list_t *list, i32_t nitem)
 stdret_t list_rm_iditem(list_t *list, u32_t id)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         struct list_item *prev_item;
                         i32_t nitem = get_iaddr_by_ID(list, id, &prev_item, &item);
@@ -387,7 +386,7 @@ stdret_t list_rm_iditem(list_t *list, u32_t id)
 stdret_t list_set_nitem_data(list_t *list, i32_t nitem, void *data)
 {
         if (list && (nitem >= 0)) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         get_iaddr_by_No(list, nitem, NULL, &item);
 
@@ -419,7 +418,7 @@ stdret_t list_set_nitem_data(list_t *list, i32_t nitem, void *data)
 void *list_get_nitem_data(list_t *list, i32_t nitem)
 {
         if (list && (nitem >= 0)) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         get_iaddr_by_No(list, nitem, NULL, &item);
 
@@ -448,7 +447,7 @@ void *list_get_nitem_data(list_t *list, i32_t nitem)
 stdret_t list_set_iditem_data(list_t *list, u32_t id, void *data)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         get_iaddr_by_ID(list, id, NULL, &item);
 
@@ -480,7 +479,7 @@ stdret_t list_set_iditem_data(list_t *list, u32_t id, void *data)
 void *list_get_iditem_data(list_t *list, u32_t id)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         get_iaddr_by_ID(list, id, NULL, &item);
 
@@ -508,7 +507,7 @@ void *list_get_iditem_data(list_t *list, u32_t id)
 stdret_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
 {
         if (list && nitem >= 0 && itemid) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         get_iaddr_by_No(list, nitem, NULL, &item);
 
@@ -539,7 +538,7 @@ stdret_t list_get_nitem_ID(list_t *list, i32_t nitem, u32_t *itemid)
 stdret_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 {
         if (list && nitem) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         i32_t itemno = get_iaddr_by_ID(list, id, NULL, &item);
 
@@ -572,7 +571,7 @@ stdret_t list_get_iditem_No(list_t *list, u32_t id, i32_t *nitem)
 stdret_t list_unlink_nitem_data(list_t *list, i32_t nitem)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         get_iaddr_by_No(list, nitem, NULL, &item);
 
@@ -603,7 +602,7 @@ stdret_t list_unlink_nitem_data(list_t *list, i32_t nitem)
 stdret_t list_unlink_iditem_data(list_t *list, u32_t id)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         struct list_item *item;
                         get_iaddr_by_ID(list, id, NULL, &item);
 
@@ -630,7 +629,7 @@ stdret_t list_unlink_iditem_data(list_t *list, u32_t id)
 i32_t list_get_item_count(list_t *list)
 {
         if (list) {
-                if (list->valid == LIST_VALIDATION_NUMBER) {
+                if (list->valid == list_validation_number) {
                         return list->item_count;
                 }
         }
