@@ -69,7 +69,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(cat       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(clear     , STACK_DEPTH_MINIMAL ),
         _PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
-        _PROGRAM_CONFIG(df        , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(df        , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(dsh       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(echo      , STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(free      , STACK_DEPTH_VERY_LOW),

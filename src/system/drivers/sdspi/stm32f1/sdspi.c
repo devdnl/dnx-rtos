@@ -44,34 +44,6 @@
 #define MTX_BLOCK_TIME_LONG                             200
 #define RELEASE_TIMEOUT_MS                              1000
 
-/* card command definitions */ /* create as enum sdcmd_t */
-#define CMD0                                            (0x40+0 )       /* GO_IDLE_STATE */
-#define CMD1                                            (0x40+1 )       /* SEND_OP_COND (MMC) */
-#define ACMD41                                          (0xC0+41)       /* SEND_OP_COND (SDC) */
-#define CMD8                                            (0x40+8 )       /* SEND_IF_COND */
-#define CMD9                                            (0x40+9 )       /* SEND_CSD */
-#define CMD10                                           (0x40+10)       /* SEND_CID */
-#define CMD12                                           (0x40+12)       /* STOP_TRANSMISSION */
-#define ACMD13                                          (0xC0+13)       /* SD_STATUS (SDC) */
-#define CMD16                                           (0x40+16)       /* SET_BLOCKLEN */
-#define CMD17                                           (0x40+17)       /* READ_SINGLE_BLOCK */
-#define CMD18                                           (0x40+18)       /* READ_MULTIPLE_BLOCK */
-#define CMD23                                           (0x40+23)       /* SET_BLOCK_COUNT (MMC) */
-#define ACMD23                                          (0xC0+23)       /* SET_WR_BLK_ERASE_COUNT (SDC) */
-#define CMD24                                           (0x40+24)       /* WRITE_BLOCK */
-#define CMD25                                           (0x40+25)       /* WRITE_MULTIPLE_BLOCK */
-#define CMD55                                           (0x40+55)       /* APP_CMD */
-#define CMD58                                           (0x40+58)       /* READ_OCR */
-
-/* card type flags */ /* create as struct card_type_t */
-#define CT_MMC                                          (1 << 0)
-#define CT_SD1                                          (1 << 1)
-#define CT_SD2                                          (1 << 2)
-#define CT_SDC                                          (CT_SD1|CT_SD2)
-#define CT_BLOCK                                        (1 << 3)
-
-#define SECTOR_SIZE                                     512
-
 /* MBR definitions */
 #define MBR_BOOTSTRAP_CODE_OFFSET                       0x000
 #define MBR_PARTITION_1_ENTRY_OFFSET                    0x1BE
@@ -90,8 +62,37 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+/** card command definitions */
+typedef enum {
+        CMD0            = (0x40+0 ),    /* GO_IDLE_STATE */
+        CMD1            = (0x40+1 ),    /* SEND_OP_COND (MMC) */
+        ACMD41          = (0xC0+41),    /* SEND_OP_COND (SDC) */
+        CMD8            = (0x40+8 ),    /* SEND_IF_COND */
+        CMD9            = (0x40+9 ),    /* SEND_CSD */
+        CMD10           = (0x40+10),    /* SEND_CID */
+        CMD12           = (0x40+12),    /* STOP_TRANSMISSION */
+        ACMD13          = (0xC0+13),    /* SD_STATUS (SDC) */
+        CMD16           = (0x40+16),    /* SET_BLOCKLEN */
+        CMD17           = (0x40+17),    /* READ_SINGLE_BLOCK */
+        CMD18           = (0x40+18),    /* READ_MULTIPLE_BLOCK */
+        CMD23           = (0x40+23),    /* SET_BLOCK_COUNT (MMC) */
+        ACMD23          = (0xC0+23),    /* SET_WR_BLK_ERASE_COUNT (SDC) */
+        CMD24           = (0x40+24),    /* WRITE_BLOCK */
+        CMD25           = (0x40+25),    /* WRITE_MULTIPLE_BLOCK */
+        CMD55           = (0x40+55),    /* APP_CMD */
+        CMD58           = (0x40+58)     /* READ_OCR */
+} card_cmd_t;
+
 /** card types */
-typedef u8_t card_type; /* to struct */
+typedef struct {
+        enum {
+                        CT_UNKNOWN,
+                        CT_MMC,
+                        CT_SD1,
+                        CT_SD2
+        }               type  : 2;
+        bool            block : 1;
+} card_type;
 
 /** device structure */
 typedef struct {
@@ -128,7 +129,7 @@ static bool             spi_is_rx_buffer_not_empty              (void);
 static void             spi_send_data                           (u8_t data);
 static u8_t             spi_get_data                            (void);
 static u8_t             spi_transmit                            (u8_t out);
-static u8_t             card_send_cmd                           (sdpart_t *hdl, u8_t cmd, u32_t arg);
+static u8_t             card_send_cmd                           (sdpart_t *hdl, card_cmd_t cmd, u32_t arg);
 static u8_t             card_wait_ready                         (void);
 static bool             card_receive_data_block                 (u8_t *buff);
 static bool             card_transmit_data_block                (const u8_t *buff, u8_t token);
@@ -147,7 +148,8 @@ static stdret_t         mbr_detect_partitions                   (sdpart_t *hdl);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static sdctrl_t *sdspi_ctrl;
+static sdctrl_t   *sdspi_ctrl;
+static const u16_t sector_size = 512;
 
 /*==============================================================================
   Function definitions
@@ -347,7 +349,7 @@ API_MOD_WRITE(SDSPI, void *device_handle, const u8_t *src, size_t count, u64_t *
         ssize_t n = -1;
         if (part->size > 0) {
                 if (mutex_lock(sdspi_ctrl->card_protect_mtx, MAX_DELAY_MS)) {
-                        n = card_write(part, src, count, *fpos + ((u64_t)part->first_sector * SECTOR_SIZE));
+                        n = card_write(part, src, count, *fpos + ((u64_t)part->first_sector * sector_size));
                         mutex_unlock(sdspi_ctrl->card_protect_mtx);
                 } else {
                         errno = EBUSY;
@@ -385,7 +387,7 @@ API_MOD_READ(SDSPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, s
         ssize_t n = -1;
         if (part->size > 0) {
                 if (mutex_lock(sdspi_ctrl->card_protect_mtx, MAX_DELAY_MS)) {
-                        n = card_read(part, dst, count, *fpos + ((u64_t)part->first_sector * SECTOR_SIZE));
+                        n = card_read(part, dst, count, *fpos + ((u64_t)part->first_sector * sector_size));
                         mutex_unlock(sdspi_ctrl->card_protect_mtx);
                 } else {
                         errno = EBUSY;
@@ -483,7 +485,7 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         if (sdspi_ctrl->card_initialized) {
                 device_stat->st_major = part->major;
                 device_stat->st_minor = part->minor;
-                device_stat->st_size  = (u64_t)part->size * SECTOR_SIZE;
+                device_stat->st_size  = (u64_t)part->size * sector_size;
 
                 return STD_RET_OK;
         } else {
@@ -757,7 +759,7 @@ static u8_t card_wait_ready(void)
  * @param[in] arg       command's argument
  */
 //==============================================================================
-static u8_t card_send_cmd(sdpart_t *hdl, u8_t cmd, u32_t arg)
+static u8_t card_send_cmd(sdpart_t *hdl, card_cmd_t cmd, u32_t arg)
 {
         u8_t response;
 
@@ -829,14 +831,14 @@ static bool card_receive_data_block(u8_t *buff)
 #if (SDSPI_ENABLE_DMA != 0)
         SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
         SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)buff;
-        SDSPI_DMA_RX_CHANNEL->CNDTR = SECTOR_SIZE;
+        SDSPI_DMA_RX_CHANNEL->CNDTR = sector_size;
         SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_EN;
         NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
 
         u16_t dummy = 0xFFFF;
         SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
         SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)&dummy;
-        SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
+        SDSPI_DMA_TX_CHANNEL->CNDTR = sector_size;
         SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_DIR | DMA_CCR1_EN;
 
         sdspi_ctrl->DMA_tansaction_finished = false;
@@ -847,7 +849,7 @@ static bool card_receive_data_block(u8_t *buff)
 
 #else
         /* memory alignment */
-        int size = SECTOR_SIZE;
+        int size = sector_size;
         do {
                 *buff++ = spi_transmit(0xFF);
                 *buff++ = spi_transmit(0xFF);
@@ -888,13 +890,13 @@ static bool card_transmit_data_block(const u8_t *buff, u8_t token)
                 u16_t dummy;
                 SDSPI_DMA_RX_CHANNEL->CMAR  = (u32_t)&dummy;
                 SDSPI_DMA_RX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
-                SDSPI_DMA_RX_CHANNEL->CNDTR = SECTOR_SIZE;
+                SDSPI_DMA_RX_CHANNEL->CNDTR = sector_size;
                 SDSPI_DMA_RX_CHANNEL->CCR   = DMA_CCR1_TCIE | DMA_CCR1_EN;
                 NVIC_EnableIRQ(SDSPI_DMA_IRQ_NUMBER);
 
                 SDSPI_DMA_TX_CHANNEL->CMAR  = (u32_t)buff;
                 SDSPI_DMA_TX_CHANNEL->CPAR  = (u32_t)&SDSPI_PORT->DR;
-                SDSPI_DMA_TX_CHANNEL->CNDTR = SECTOR_SIZE;
+                SDSPI_DMA_TX_CHANNEL->CNDTR = sector_size;
                 SDSPI_DMA_TX_CHANNEL->CCR   = DMA_CCR1_MINC | DMA_CCR1_DIR | DMA_CCR1_EN;
 
                 sdspi_ctrl->DMA_tansaction_finished = false;
@@ -904,7 +906,7 @@ static bool card_transmit_data_block(const u8_t *buff, u8_t token)
                 while (sdspi_ctrl->DMA_tansaction_finished == false);
 
 #else
-                int size = SECTOR_SIZE;
+                int size = sector_size;
                 do {
                         spi_transmit(*buff++);
                         spi_transmit(*buff++);
@@ -941,7 +943,7 @@ static bool card_transmit_data_block(const u8_t *buff, u8_t token)
 //==============================================================================
 static ssize_t card_read_whole_sectors(sdpart_t *hdl, void *dst, size_t nsectors, u64_t lseek)
 {
-        if (sdspi_ctrl->card_type & CT_BLOCK) {
+        if (sdspi_ctrl->card_type.block) {
                 lseek >>= 9;    /* divide by 512 */
         }
 
@@ -961,7 +963,7 @@ static ssize_t card_read_whole_sectors(sdpart_t *hdl, void *dst, size_t nsectors
                                         break;
                                 }
 
-                                dst += SECTOR_SIZE;
+                                dst += sector_size;
                         } while (++n < (ssize_t)nsectors);
 
                         /* stop transmission */
@@ -986,24 +988,24 @@ static ssize_t card_read_whole_sectors(sdpart_t *hdl, void *dst, size_t nsectors
 //==============================================================================
 static ssize_t card_read_partial_sectors(sdpart_t *hdl, void *dst, size_t size, u64_t lseek)
 {
-        u8_t *buffer = malloc(SECTOR_SIZE);
+        u8_t *buffer = malloc(sector_size);
         if (!buffer)
                 return -1;
 
         u32_t recv_data = 0;
         while (recv_data < size) {
-                if (lseek % SECTOR_SIZE == 0 && (size - recv_data) / SECTOR_SIZE > 0) {
-                        ssize_t n = card_read_whole_sectors(hdl, dst, size / SECTOR_SIZE, lseek);
+                if (lseek % sector_size == 0 && (size - recv_data) / sector_size > 0) {
+                        ssize_t n = card_read_whole_sectors(hdl, dst, size / sector_size, lseek);
                         if (n == -1) {
                                 recv_data = -1;
                                 goto exit;
-                        } else if (n != (ssize_t)size / SECTOR_SIZE) {
+                        } else if (n != (ssize_t)size / sector_size) {
                                 break;
                         }
 
-                        dst       += n * SECTOR_SIZE;
-                        lseek     += n * SECTOR_SIZE;
-                        recv_data += n * SECTOR_SIZE;
+                        dst       += n * sector_size;
+                        lseek     += n * sector_size;
+                        recv_data += n * sector_size;
                 } else {
                         ssize_t n = card_read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF));
                         if (n == -1) {
@@ -1014,12 +1016,12 @@ static ssize_t card_read_partial_sectors(sdpart_t *hdl, void *dst, size_t size, 
                         }
 
                         u32_t rest;
-                        if ((SECTOR_SIZE - (lseek % SECTOR_SIZE)) > (size - recv_data))
+                        if ((sector_size - (lseek % sector_size)) > (size - recv_data))
                                 rest = size - recv_data;
                         else
-                                rest = SECTOR_SIZE - (lseek % SECTOR_SIZE);
+                                rest = sector_size - (lseek % sector_size);
 
-                        memcpy(dst, buffer + (lseek % SECTOR_SIZE), rest);
+                        memcpy(dst, buffer + (lseek % sector_size), rest);
                         dst       += rest;
                         recv_data += rest;
                         lseek     += rest;
@@ -1046,7 +1048,7 @@ exit:
 //==============================================================================
 static ssize_t card_write_whole_sectors(sdpart_t *hdl, const void *src, size_t nsectors, u64_t lseek)
 {
-        if (sdspi_ctrl->card_type & CT_BLOCK) {
+        if (sdspi_ctrl->card_type.block) {
                 lseek >>= 9;    /* divide by 512 */
         }
 
@@ -1059,7 +1061,7 @@ static ssize_t card_write_whole_sectors(sdpart_t *hdl, const void *src, size_t n
                         }
                 }
         } else {
-                if (sdspi_ctrl->card_type & CT_SDC) {
+                if (sdspi_ctrl->card_type.type == CT_SD1 || sdspi_ctrl->card_type.type == CT_SD2) {
                         card_send_cmd(hdl, ACMD23, nsectors);
                 }
 
@@ -1070,7 +1072,7 @@ static ssize_t card_write_whole_sectors(sdpart_t *hdl, const void *src, size_t n
                                         break;
                                 }
 
-                                src += SECTOR_SIZE;
+                                src += sector_size;
                         } while (++n < (ssize_t)nsectors);
 
                         /* stop transmission */
@@ -1097,24 +1099,24 @@ static ssize_t card_write_whole_sectors(sdpart_t *hdl, const void *src, size_t n
 //==============================================================================
 static ssize_t card_write_partial_sectors(sdpart_t *hdl, const void *src, size_t size, u64_t lseek)
 {
-        u8_t *buffer = malloc(SECTOR_SIZE);
+        u8_t *buffer = malloc(sector_size);
         if (!buffer)
                 return -1;
 
         u32_t transmit_data = 0;
         while (transmit_data < size) {
-                if (lseek % SECTOR_SIZE == 0 && (size - transmit_data) / SECTOR_SIZE > 0) {
-                        ssize_t n = card_write_whole_sectors(hdl, src, size / SECTOR_SIZE, lseek);
+                if (lseek % sector_size == 0 && (size - transmit_data) / sector_size > 0) {
+                        ssize_t n = card_write_whole_sectors(hdl, src, size / sector_size, lseek);
                         if (n == -1) {
                                 transmit_data = -1;
                                 goto exit;
-                        } else if (n != (ssize_t)size / SECTOR_SIZE) {
+                        } else if (n != (ssize_t)size / sector_size) {
                                 break;
                         }
 
-                        src           += n * SECTOR_SIZE;
-                        lseek         += n * SECTOR_SIZE;
-                        transmit_data += n * SECTOR_SIZE;
+                        src           += n * sector_size;
+                        lseek         += n * sector_size;
+                        transmit_data += n * sector_size;
                 } else {
                         ssize_t n = card_read_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF));
                         if (n == -1) {
@@ -1125,12 +1127,12 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const void *src, size_t
                         }
 
                         u32_t rest;
-                        if ((SECTOR_SIZE - (lseek % SECTOR_SIZE)) > (size - transmit_data))
+                        if ((sector_size - (lseek % sector_size)) > (size - transmit_data))
                                 rest = size - transmit_data;
                         else
-                                rest = SECTOR_SIZE - (lseek % SECTOR_SIZE);
+                                rest = sector_size - (lseek % sector_size);
 
-                        memcpy(buffer + (lseek % SECTOR_SIZE), src, rest);
+                        memcpy(buffer + (lseek % sector_size), src, rest);
 
                         n = card_write_whole_sectors(hdl, buffer, 1, lseek & ~(0x1FF));
                         if (n == -1) {
@@ -1165,11 +1167,12 @@ exit:
 static stdret_t card_initialize(sdpart_t *hdl)
 {
         spi_deselect_card();
-        for (int n = 0; n < 10; n++) {
+        for (int n = 0; n < 50; n++) {
                 spi_transmit(0xFF);
         }
 
-        sdspi_ctrl->card_type        = 0;
+        sdspi_ctrl->card_type.type   = CT_UNKNOWN;
+        sdspi_ctrl->card_type.block  = false;
         sdspi_ctrl->card_initialized = false;
 
         timer_t timer = timer_reset();
@@ -1196,16 +1199,19 @@ static stdret_t card_initialize(sdpart_t *hdl)
                                                 OCR[n] = spi_transmit(0xFF);
                                         }
 
-                                        sdspi_ctrl->card_type = (OCR[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;
+                                        sdspi_ctrl->card_type.type   = CT_SD2;
+                                        sdspi_ctrl->card_type.block  = (OCR[0] & 0x40) ? true : false;
+
+                                        sdspi_ctrl->card_initialized = true;
                                 }
                         }
                 } else { /* SDSC or MMC */
                         u8_t cmd;
                         if (card_send_cmd(hdl, ACMD41, 0) <= 0x01)   {
-                                sdspi_ctrl->card_type = CT_SD1;
+                                sdspi_ctrl->card_type.type = CT_SD1;
                                 cmd = ACMD41;   /* SDSC */
                         } else {
-                                sdspi_ctrl->card_type = CT_MMC;
+                                sdspi_ctrl->card_type.type = CT_MMC;
                                 cmd = CMD1;     /* MMC */
                         }
 
@@ -1216,14 +1222,13 @@ static stdret_t card_initialize(sdpart_t *hdl)
 
                         /* set R/W block length to 512 */
                         if ( !timer_is_expired(timer, SDSPI_TIMEOUT)
-                           || card_send_cmd(hdl, CMD16, SECTOR_SIZE) != 0) {
+                           || card_send_cmd(hdl, CMD16, sector_size) != 0) {
 
-                                sdspi_ctrl->card_type = 0;
+                                sdspi_ctrl->card_type.type   = CT_UNKNOWN;
+                                sdspi_ctrl->card_type.block  = false;
+                        } else {
+                                sdspi_ctrl->card_initialized = true;
                         }
-                }
-
-                if (!timer_is_expired(timer, SDSPI_TIMEOUT)) {
-                        sdspi_ctrl->card_initialized = true;
                 }
         }
 
@@ -1300,10 +1305,10 @@ static ssize_t card_read(sdpart_t *hdl, u8_t *dst, size_t count, u64_t lseek)
 
         /* whole sector(s) read */
         ssize_t n = 0;
-        if ((count % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
+        if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
 
-                n  = card_read_whole_sectors(hdl, dst, count / SECTOR_SIZE, lseek);
-                n *= SECTOR_SIZE;
+                n  = card_read_whole_sectors(hdl, dst, count / sector_size, lseek);
+                n *= sector_size;
 
         } else {
                 n  = card_read_partial_sectors(hdl, dst, count, lseek);
@@ -1336,10 +1341,10 @@ static ssize_t card_write(sdpart_t *hdl, const u8_t *src, size_t count, u64_t ls
 
         /* whole sector(s) read */
         ssize_t n = 0;
-        if ((count % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
+        if ((count % sector_size == 0) && (lseek % sector_size == 0)) {
 
-                n  = card_write_whole_sectors(hdl, src, count / SECTOR_SIZE, lseek);
-                n *= SECTOR_SIZE;
+                n  = card_write_whole_sectors(hdl, src, count / sector_size, lseek);
+                n *= sector_size;
 
         } else {
                 n  = card_write_partial_sectors(hdl, src, count, lseek);
@@ -1456,9 +1461,9 @@ static stdret_t mbr_detect_partitions(sdpart_t *hdl)
 {
         stdret_t status = STD_RET_ERROR;
 
-        u8_t *MBR = malloc(SECTOR_SIZE);
+        u8_t *MBR = malloc(sector_size);
         if (MBR) {
-                if (card_read(hdl, MBR, SECTOR_SIZE, 0) != SECTOR_SIZE) {
+                if (card_read(hdl, MBR, sector_size, 0) != sector_size) {
                         goto error;
                 }
 

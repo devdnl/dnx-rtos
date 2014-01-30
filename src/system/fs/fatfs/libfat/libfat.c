@@ -2475,8 +2475,7 @@ FRESULT libfat_mount(FILE *fsfile, FATFS *fs)
                 if (!_libfat_create_mutex(&fs->sobj))
                         return FR_INT_ERR;
 
-                if (chk_mounted(fs) == FR_OK)
-                        return FR_OK;
+                return chk_mounted(fs);
         }
 
         return FR_DISK_ERR;
