@@ -779,6 +779,10 @@ API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
         struct fatfs *hdl    = fs_handle;
         u32_t  free_clusters = 0;
 
+        memset(statfs, 0, sizeof(struct statfs));
+        statfs->f_fsname = "fatfs (FAT\?\?)";
+        statfs->f_type   = hdl->fatfs.fs_type;
+
         struct stat fstat;
         fstat.st_size = 0;
         if (vfs_fstat(hdl->fsfile, &fstat) != 0)

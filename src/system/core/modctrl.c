@@ -189,9 +189,12 @@ int _driver_release(const char *drv_name)
         for (int i = 0; i < _regdrv_size_of_driver_table; i++) {
                 if (strcmp(_regdrv_driver_table[i].drv_name, drv_name) == 0) {
 
-                        stdret_t status = _regdrv_driver_table[i].drv_release(driver_memory_region[i]);
-                        if (status == STD_RET_OK) {
-                                driver_memory_region[i] = NULL;
+                        stdret_t status = STD_RET_ERROR;
+                        if (driver_memory_region[i]) {
+                                status = _regdrv_driver_table[i].drv_release(driver_memory_region[i]);
+                                if (status == STD_RET_OK) {
+                                        driver_memory_region[i] = NULL;
+                                }
                         }
 
                         return status;

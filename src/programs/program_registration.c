@@ -65,7 +65,7 @@ _IMPORT_PROGRAM(uptime);
   Exported objects
 ==============================================================================*/
 const struct _prog_data _prog_table[] = {
-        _PROGRAM_CONFIG(card_init , STACK_DEPTH_MINIMAL ),
+        _PROGRAM_CONFIG(card_init , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(cat       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(clear     , STACK_DEPTH_MINIMAL ),
         _PROGRAM_CONFIG(cp        , STACK_DEPTH_LOW     ),
