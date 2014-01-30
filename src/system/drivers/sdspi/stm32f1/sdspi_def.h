@@ -39,9 +39,19 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** device numbers */
-#define _SDSPI_MAJOR_NUMBER     0
-#define _SDSPI_MINOR_NUMBER     0
+/* major device number */
+enum {
+        _SDSPI_CARD_0 = 0,
+};
+
+/* minor numbers */
+enum {
+        _SDSPI_FULL_VOLUME = 0,
+        _SDSPI_PARTITION_1 = 1,
+        _SDSPI_PARTITION_2 = 2,
+        _SDSPI_PARTITION_3 = 3,
+        _SDSPI_PARTITION_4 = 4
+};
 
 /*==============================================================================
   Exported types, enums definitions
