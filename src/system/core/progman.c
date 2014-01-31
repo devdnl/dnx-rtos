@@ -164,6 +164,9 @@ static void program_startup(void *arg)
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
 
+                        vfs_ioctl(stdin , NON_BLOCKING_RD_MODE);
+                        sys_getc(stdin);
+
                         vfs_ioctl(stdin , DEFAULT_RD_MODE);
                         vfs_ioctl(stdin , DEFAULT_WR_MODE);
                         vfs_ioctl(stdout, DEFAULT_RD_MODE);
