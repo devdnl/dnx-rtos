@@ -83,7 +83,7 @@ bool  stream_closed;
 
 GLOBAL_VARIABLES_SECTION_END
 
-const char *pipe_file = "/tmp/sh-";
+const char *pipe_file = "/tmp/dsh-";
 
 /*==============================================================================
   Exported object definitions

@@ -76,7 +76,8 @@ typedef struct {
 } tty_t;
 
 struct module {
-        FILE           *iofile;
+        FILE           *infile;
+        FILE           *outfile;
         task_t         *service_in;
         task_t         *service_out;
         queue_t        *queue_cmd;
@@ -135,16 +136,20 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 if (!tty_module)
                         return STD_RET_ERROR;
 
-                tty_module->iofile      = vfs_fopen(_TTY_IO_FILE, "r+");
+                tty_module->infile      = vfs_fopen(_TTY_IN_FILE, "r");
+                tty_module->outfile     = vfs_fopen(_TTY_OUT_FILE, "w");
                 tty_module->service_in  = task_new(service_in, SERVICE_IN_NAME, SERVICE_IN_STACK_DEPTH, NULL);
                 tty_module->service_out = task_new(service_out, SERVICE_OUT_NAME, SERVICE_OUT_STACK_DEPTH, NULL);
                 tty_module->queue_cmd   = queue_new(QUEUE_CMD_LEN, sizeof(tty_cmd_t));
 
-                if (  !tty_module->iofile     || !tty_module->queue_cmd
+                if (  !tty_module->infile || !tty_module->outfile || !tty_module->queue_cmd
                    || !tty_module->service_in || !tty_module->service_out) {
 
-                        if (tty_module->iofile)
-                                vfs_fclose(tty_module->iofile);
+                        if (tty_module->infile)
+                                vfs_fclose(tty_module->infile);
+
+                        if (tty_module->outfile)
+                                vfs_fclose(tty_module->outfile);
 
                         if (tty_module->queue_cmd)
                                 queue_delete(tty_module->queue_cmd);
@@ -171,7 +176,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 tty->queue_out  = queue_new(_TTY_STREAM_SIZE, sizeof(char));
                 tty->secure_mtx = mutex_new(MUTEX_NORMAL);
                 tty->screen     = ttybfr_new();
-                tty->editline   = ttyedit_new(tty_module->iofile);
+                tty->editline   = ttyedit_new(tty_module->outfile);
                 tty->vtcmd      = ttycmd_new();
 
                 if (tty->queue_out && tty->secure_mtx && tty->screen && tty->editline && tty->vtcmd) {
@@ -240,7 +245,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
 
                 task_delete(tty_module->service_in);
                 task_delete(tty_module->service_out);
-                vfs_fclose(tty_module->iofile);
+                vfs_fclose(tty_module->infile);
+                vfs_fclose(tty_module->outfile);
                 queue_delete(tty_module->queue_cmd);
 
                 free(tty_module);
@@ -522,7 +528,7 @@ static void service_in(void *arg)
 
         for (;;) {
                 char c;
-                if (vfs_fread(&c, 1, 1, tty_module->iofile) > 0) {
+                if (vfs_fread(&c, 1, 1, tty_module->infile) > 0) {
                         send_cmd(CMD_INPUT, c);
                 }
         }
@@ -579,8 +585,8 @@ static void service_out(void *arg)
                                                 do {
                                                         str = ttybfr_get_fresh_line(tty->screen);
                                                         if (str) {
-                                                                vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->iofile);
-                                                                vfs_fwrite(str, 1, strlen(str), tty_module->iofile);
+                                                                vfs_fwrite(VT100_CLEAR_LINE, 1, strlen(VT100_CLEAR_LINE), tty_module->outfile);
+                                                                vfs_fwrite(str, 1, strlen(str), tty_module->outfile);
                                                         }
                                                 } while (str);
 
@@ -626,7 +632,7 @@ static void vt100_init()
                           VT100_DISABLE_LINE_WRAP
                           VT100_CURSOR_HOME;
 
-        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->iofile);
+        vfs_fwrite(cmd, sizeof(char), strlen(cmd), tty_module->outfile);
 }
 
 //==============================================================================
@@ -644,7 +650,7 @@ static void vt100_request_size()
                                    VT100_RESTORE_CURSOR_POSITION
                                    VT100_CURSOR_ON;
 
-                vfs_fwrite(data, 1, strlen(data), tty_module->iofile);
+                vfs_fwrite(data, 1, strlen(data), tty_module->outfile);
         }
 }
 
@@ -674,7 +680,7 @@ static void vt100_analyze(const char c)
                         ttybfr_clear_fresh_line_counter(tty->screen);
 
                         if (ttyedit_is_echo_enabled(tty->editline)) {
-                                vfs_fwrite(crlf, 1, strlen(crlf), tty_module->iofile);
+                                vfs_fwrite(crlf, 1, strlen(crlf), tty_module->outfile);
                         }
 
                         copy_string_to_queue(str, tty->queue_out, true);
@@ -791,12 +797,12 @@ static void switch_terminal(int term_no)
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {
-                                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->iofile);
+                                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
                                         }
                                 }
 
                                 str = ttyedit_get(tty->editline);
-                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->iofile);
+                                vfs_fwrite(str, sizeof(char), strlen(str), tty_module->outfile);
                                 ttybfr_clear_fresh_line_counter(tty->screen);
 
                                 mutex_unlock(tty->secure_mtx);
