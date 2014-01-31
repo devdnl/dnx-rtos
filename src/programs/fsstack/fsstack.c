@@ -231,7 +231,7 @@ PROGRAM_MAIN(fsstack, int argc, char *argv[])
         test_remove_file();
         test_remove_fifo();
 
-        printf("The highest usage of stack: %d\n", initial_stack - task_get_free_stack());
+        printf("The highest usage of stack: %d levels\n", initial_stack - task_get_free_stack());
 
         return EXIT_SUCCESS;
 }
