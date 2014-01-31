@@ -8,6 +8,7 @@
 -include $(PROGLOC)/dsh/Makefile.src
 -include $(PROGLOC)/echo/Makefile.src
 -include $(PROGLOC)/free/Makefile.src
+-include $(PROGLOC)/fsstack/Makefile.src
 -include $(PROGLOC)/helloworld/Makefile.src
 -include $(PROGLOC)/httpserver/Makefile.src
 -include $(PROGLOC)/ifconfig/Makefile.src

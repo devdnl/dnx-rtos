@@ -42,6 +42,7 @@ _IMPORT_PROGRAM(df);
 _IMPORT_PROGRAM(dsh);
 _IMPORT_PROGRAM(echo);
 _IMPORT_PROGRAM(free);
+_IMPORT_PROGRAM(fsstack);
 _IMPORT_PROGRAM(helloworld);
 _IMPORT_PROGRAM(httpserver);
 _IMPORT_PROGRAM(ifconfig);
@@ -73,6 +74,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(dsh       , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(echo      , STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(free      , STACK_DEPTH_VERY_LOW),
+        _PROGRAM_CONFIG(fsstack   , STACK_DEPTH_LARGE   ),
         _PROGRAM_CONFIG(helloworld, STACK_DEPTH_VERY_LOW),
         _PROGRAM_CONFIG(httpserver, STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(ifconfig  , STACK_DEPTH_LOW     ),

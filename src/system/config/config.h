@@ -69,7 +69,7 @@
 /**
  * File system stack depth [levels]
  */
-#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (32)
+#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (48)
 
 /**
  * Interrupt stack depth [levels]
