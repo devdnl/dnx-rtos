@@ -148,7 +148,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         }
                 }
 
-                struct sysmoni_taskstat *taskstat = calloc(task_number, sizeof(struct sysmoni_taskstat));
+                taskstat_t *taskstat = calloc(task_number, sizeof(taskstat_t));
                 if (taskstat) {
                         stdret_t status         = STD_RET_OK;
                         u32_t    total_cpu_load = get_total_CPU_usage();
@@ -159,7 +159,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         enable_CPU_load_measurement();
 
                         for (int i = shift; i < task_number && global->term_row > 0; i++) {
-                                struct sysmoni_taskstat taskinfo = taskstat[i];
+                                taskstat_t taskinfo = taskstat[i];
 
                                 println("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                        taskinfo.task_handle,

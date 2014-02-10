@@ -51,6 +51,7 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef struct sysmoni_taskstat taskstat_t;
 
 /*==============================================================================
   Exported object declarations
@@ -202,7 +203,7 @@ static inline int get_time_ms(void)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-static inline stdret_t get_task_stat(i32_t ntask, struct sysmoni_taskstat *stat)
+static inline stdret_t get_task_stat(i32_t ntask, taskstat_t *stat)
 {
         return sysm_get_ntask_stat(ntask, stat);
 }
