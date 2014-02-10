@@ -49,6 +49,11 @@ struct queue {
         u32_t valid;
 };
 
+struct sem {
+        void *object;
+        u32_t valid;
+};
+
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -58,6 +63,7 @@ struct queue {
 ==============================================================================*/
 static const u32_t mutex_valid_number = 0x4379A85C;
 static const u32_t queue_valid_number = 0x97612C5B;
+static const u32_t sem_valid_number   = 0xDAD9B8E0;
 
 /*==============================================================================
   Exported object definitions
@@ -299,21 +305,32 @@ _task_data_t *_task_get_data(void)
 //==============================================================================
 sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
 {
-        if (cnt_max == 0)
-                return NULL;
+        if (cnt_max > 0) {
+                sem_t *sem = sysm_kmalloc(sizeof(struct sem));
+                if (sem) {
+                        sem->object = NULL;
+                        if (cnt_max == 1) {
+                                vSemaphoreCreateBinary(sem->object);
+                                if (sem->object && cnt_init == 1) {
+                                        xSemaphoreTake(sem->object, 0);
+                                }
+                        } else {
+                                sem->object = xSemaphoreCreateCounting(cnt_max, cnt_init);
+                        }
 
-        sem_t *sem = NULL;
-
-        if (cnt_max == 1) {
-                vSemaphoreCreateBinary(sem);
-                if (sem && cnt_init == 1) {
-                        xSemaphoreTake(sem, 0);
+                        if (sem->object) {
+                                sem->valid = sem_valid_number;
+                        } else {
+                                sem->valid = 0;
+                                sysm_kfree(sem);
+                                sem = NULL;
+                        }
                 }
-        } else {
-                sem = xSemaphoreCreateCounting(cnt_max, cnt_init);
-        }
 
-        return sem;
+                return sem;
+        } else {
+                return NULL;
+        }
 }
 
 //==============================================================================
@@ -326,7 +343,11 @@ sem_t *_semaphore_new(const uint cnt_max, const uint cnt_init)
 void _semaphore_delete(sem_t *sem)
 {
         if (sem) {
-                vSemaphoreDelete(sem);
+                if (sem->object && sem->valid == sem_valid_number) {
+                        vSemaphoreDelete(sem->object);
+                        sem->valid = 0;
+                        sysm_kfree(sem);
+                }
         }
 }
 
@@ -344,10 +365,12 @@ void _semaphore_delete(sem_t *sem)
 bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
 {
         if (sem) {
-                return xSemaphoreTake(sem, MS2TICK((portTickType)blocktime_ms));
-        } else {
-                return false;
+                if (sem->object && sem->valid == sem_valid_number) {
+                        return xSemaphoreTake(sem->object, MS2TICK((portTickType)blocktime_ms));
+                }
         }
+
+        return false;
 }
 
 //==============================================================================
@@ -363,10 +386,12 @@ bool _semaphore_take(sem_t *sem, const uint blocktime_ms)
 bool _semaphore_give(sem_t *sem)
 {
         if (sem) {
-                return xSemaphoreGive(sem);
-        } else {
-                return false;
+                if (sem->object && sem->valid == sem_valid_number) {
+                        return xSemaphoreGive(sem->object);
+                }
         }
+
+        return false;
 }
 
 //==============================================================================
@@ -383,14 +408,18 @@ bool _semaphore_give(sem_t *sem)
 bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (sem) {
-                signed portBASE_TYPE woken = 0;
-                int ret = xSemaphoreTakeFromISR(sem, &woken);
-                if (task_woken)
-                        *task_woken = (bool)woken;
-                return ret;
-        } else {
-                return false;
+                if (sem->object && sem->valid == sem_valid_number) {
+                        signed portBASE_TYPE woken = 0;
+                        int ret = xSemaphoreTakeFromISR(sem->object, &woken);
+
+                        if (task_woken)
+                                *task_woken = (bool)woken;
+
+                        return ret;
+                }
         }
+
+        return false;
 }
 
 //==============================================================================
@@ -407,14 +436,18 @@ bool _semaphore_take_from_ISR(sem_t *sem, bool *task_woken)
 bool _semaphore_give_from_ISR(sem_t *sem, bool *task_woken)
 {
         if (sem) {
-                signed portBASE_TYPE woken = 0;
-                int ret = xSemaphoreGiveFromISR(sem, &woken);
-                if (task_woken)
-                        *task_woken = (bool)woken;
-                return ret;
-        } else {
-                return false;
+                if (sem->object && sem->valid == sem_valid_number) {
+                        signed portBASE_TYPE woken = 0;
+                        int ret = xSemaphoreGiveFromISR(sem->object, &woken);
+
+                        if (task_woken)
+                                *task_woken = (bool)woken;
+
+                        return ret;
+                }
         }
+
+        return false;
 }
 
 //==============================================================================
@@ -441,6 +474,7 @@ mutex_t *_mutex_new(enum mutex_type type)
                 if (mtx->object) {
                         mtx->valid = mutex_valid_number;
                 } else {
+                        mtx->valid = 0;
                         sysm_kfree(mtx);
                         mtx = NULL;
                 }
@@ -536,6 +570,7 @@ queue_t *_queue_new(const uint length, const uint item_size)
                 if (queue->object) {
                         queue->valid = queue_valid_number;
                 } else {
+                        queue->valid = 0;
                         sysm_kfree(queue);
                         queue = NULL;
                 }
@@ -554,7 +589,7 @@ queue_t *_queue_new(const uint length, const uint item_size)
 void _queue_delete(queue_t *queue)
 {
         if (queue) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         vQueueDelete(queue->object);
                         queue->valid = 0;
                         sysm_kfree(queue);
@@ -572,7 +607,7 @@ void _queue_delete(queue_t *queue)
 void _queue_reset(queue_t *queue)
 {
         if (queue) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         xQueueReset(queue->object);
                 }
         }
@@ -593,7 +628,7 @@ void _queue_reset(queue_t *queue)
 bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 {
         if (queue && item) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         return xQueueSend(queue->object, item, MS2TICK((portTickType)waittime_ms));
                 }
         }
@@ -616,7 +651,7 @@ bool _queue_send(queue_t *queue, const void *item, const uint waittime_ms)
 bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 {
         if (queue && item) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         signed portBASE_TYPE woken = 0;
                         int ret = xQueueSendFromISR(queue->object, item, &woken);
 
@@ -645,7 +680,7 @@ bool _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
 bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 {
         if (queue && item) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         return xQueueReceive(queue->object, item, MS2TICK((portTickType)waittime_ms));
                 }
         }
@@ -668,7 +703,7 @@ bool _queue_receive(queue_t *queue, void *item, const uint waittime_ms)
 bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 {
         if (queue && item) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         signed portBASE_TYPE woken = 0;
                         int ret = xQueueReceiveFromISR(queue->object, item, &woken);
 
@@ -697,7 +732,7 @@ bool _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
 bool _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 {
         if (queue && item) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         return xQueuePeek(queue->object, item, MS2TICK((portTickType)waittime_ms));
                 }
         }
@@ -717,7 +752,7 @@ bool _queue_receive_peek(queue_t *queue, void *item, const uint waittime_ms)
 int _queue_get_number_of_items(queue_t *queue)
 {
         if (queue) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         return uxQueueMessagesWaiting(queue->object);
                 }
         }
@@ -737,7 +772,7 @@ int _queue_get_number_of_items(queue_t *queue)
 int _queue_get_number_of_items_from_ISR(queue_t *queue)
 {
         if (queue) {
-                if (queue->valid == queue_valid_number) {
+                if (queue->object && queue->valid == queue_valid_number) {
                         return uxQueueMessagesWaitingFromISR(queue->object);
                 }
         }

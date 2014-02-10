@@ -48,7 +48,7 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 typedef void task_t;
-typedef void sem_t;
+typedef struct sem sem_t;
 typedef struct queue queue_t;
 typedef struct mutex mutex_t;
 
