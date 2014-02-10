@@ -16,7 +16,8 @@ Fixed Bugs:
 - VFS: errno = "No such device or address" even if file exist
 - devfs: file closed cannot be opened again (Device or resource busy error)
 - LFS: print Success if file is opened instead of dir in opendir() function
-- ifconfig makes crash if tcpipd was killed
+- ifconfig crashes if tcpipd was killed
+- TTY: process starvation by fast rate write cycles
 
 dnx/FreeRTOS 1.2.3
 ==================
