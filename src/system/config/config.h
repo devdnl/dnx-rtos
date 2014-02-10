@@ -57,7 +57,7 @@
 /**
  * Heap block size [bytes]
  */
-#define CONFIG_HEAP_BLOCK_SIZE                          (16)
+#define CONFIG_HEAP_BLOCK_SIZE                          (4)
 
 
 /**=== RTOS CONFIGURATION ====================================================*/
