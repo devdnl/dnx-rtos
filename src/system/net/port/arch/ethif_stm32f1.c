@@ -46,19 +46,6 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define REQUEST_TIMEOUT_MS              2000
-
-/* ETH_HEADER + ETH_EXTRA + MAX_ETH_PAYLOAD + ETH_CRC */
-#define ETH_MAX_PACKET_SIZE             1520
-
-/* number of Rx buffers */
-#define ETH_NUMBER_OF_RX_BUFFERS        3
-
-/* number of Tx buffers */
-#define ETH_NUMBER_OF_TX_BUFFERS        2
-
-/* validation number of ethernet interface data */
-#define ETHIF_DATA_VALIDATION_NUMBER    (u32_t)0xF8F134B4
 
 /*==============================================================================
   Local object types
@@ -103,6 +90,11 @@ typedef struct {
   Local objects
 ==============================================================================*/
 static ethif_data *ethif_mem;
+static const u32_t ethif_data_validation_number = 0xF8F134B4;
+static const uint  REQUEST_TIMEOUT_MS           = 2000;
+static const int   eth_max_packet_size          = 1520; /* ETH_HEADER + ETH_EXTRA + MAX_ETH_PAYLOAD + ETH_CRC */
+static const int   eth_number_of_rx_buffers     = 3;
+static const int   eth_number_of_tx_buffers     = 2;
 
 /*==============================================================================
   Exported objects
@@ -239,8 +231,8 @@ static err_t low_level_init(struct netif *netif)
         }
 
         /* allocate Rx and Tx buffers */
-        ethif_mem->rx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_RX_BUFFERS * ETH_MAX_PACKET_SIZE);
-        ethif_mem->tx_buffer = malloc(sizeof(u8_t) * ETH_NUMBER_OF_TX_BUFFERS * ETH_MAX_PACKET_SIZE);
+        ethif_mem->rx_buffer = malloc(sizeof(u8_t) * eth_number_of_rx_buffers * eth_max_packet_size);
+        ethif_mem->tx_buffer = malloc(sizeof(u8_t) * eth_number_of_tx_buffers * eth_max_packet_size);
 
         if (!ethif_mem->rx_buffer || !ethif_mem->tx_buffer) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: rx or tx buffer NULL\n"));
@@ -250,7 +242,7 @@ static err_t low_level_init(struct netif *netif)
         /* initialize Tx Descriptors list: Chain Mode */
         struct ethmac_DMA_description DMA_description;
         DMA_description.buffer       = ethif_mem->tx_buffer;
-        DMA_description.buffer_count = ETH_NUMBER_OF_TX_BUFFERS;
+        DMA_description.buffer_count = eth_number_of_tx_buffers;
 
         if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_TX_DESC_LIST_CHAIN_MODE, &DMA_description) != 0) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
@@ -259,7 +251,7 @@ static err_t low_level_init(struct netif *netif)
 
         /* initialize Rx Descriptors list: Chain Mode */
         DMA_description.buffer       = ethif_mem->rx_buffer;
-        DMA_description.buffer_count = ETH_NUMBER_OF_RX_BUFFERS;
+        DMA_description.buffer_count = eth_number_of_rx_buffers;
 
         if (ioctl(ethif_mem->eth_file, ETHMAC_IORQ_INIT_DMA_RX_DESC_LIST_CHAIN_MODE, &DMA_description) != 0) {
                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("low_level_init: ioctl() fail\n"));
@@ -540,7 +532,7 @@ static void tcpip_init_done(void *arg)
                 goto release_resources;
         }
 
-        ethif_mem->valid = ETHIF_DATA_VALIDATION_NUMBER;
+        ethif_mem->valid = ethif_data_validation_number;
 
         ethif_mem->protect_request_mtx = mutex_new(MUTEX_NORMAL);
         if (!ethif_mem->protect_request_mtx) {
@@ -655,7 +647,7 @@ void _ethif_start_lwIP_daemon()
 //==============================================================================
 int _ethif_start_DHCP_client()
 {
-        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+        if (ethif_mem->valid == ethif_data_validation_number) {
                 if (netif_is_up(&ethif_mem->netif))
                         return -1;
 
@@ -683,7 +675,7 @@ int _ethif_start_DHCP_client()
 //==============================================================================
 int _ethif_stop_DHCP_client()
 {
-        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+        if (ethif_mem->valid == ethif_data_validation_number) {
                 if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
                         request rq;
@@ -708,7 +700,7 @@ int _ethif_stop_DHCP_client()
 //==============================================================================
 int _ethif_renew_DHCP_connection()
 {
-        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+        if (ethif_mem->valid == ethif_data_validation_number) {
                 if (netif_is_up(&ethif_mem->netif) && (ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
                         request rq;
@@ -733,7 +725,7 @@ int _ethif_renew_DHCP_connection()
 //==============================================================================
 int _ethif_inform_DHCP_server()
 {
-        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+        if (ethif_mem->valid == ethif_data_validation_number) {
                 if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
                         request rq;
@@ -762,7 +754,7 @@ int _ethif_inform_DHCP_server()
 //==============================================================================
 int _ethif_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway)
 {
-        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+        if (ethif_mem->valid == ethif_data_validation_number) {
                 if (!ip_address || !net_mask || !gateway || netif_is_up(&ethif_mem->netif))
                         return -1;
 
@@ -790,7 +782,7 @@ int _ethif_if_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const i
 //==============================================================================
 int _ethif_if_down()
 {
-        if (ethif_mem->valid == ETHIF_DATA_VALIDATION_NUMBER) {
+        if (ethif_mem->valid == ethif_data_validation_number) {
                 if (netif_is_up(&ethif_mem->netif) && !(ethif_mem->netif.flags & NETIF_FLAG_DHCP)) {
 
                         request rq;
@@ -814,7 +806,7 @@ int _ethif_if_down()
 //==============================================================================
 int _ethif_get_ifconfig(ifconfig *ifcfg)
 {
-        if (!ifcfg || ethif_mem->valid != ETHIF_DATA_VALIDATION_NUMBER)
+        if (!ifcfg || ethif_mem->valid != ethif_data_validation_number)
                 return -1;
 
         if (netif_is_up(&ethif_mem->netif)) {

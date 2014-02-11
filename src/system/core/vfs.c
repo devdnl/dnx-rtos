@@ -38,8 +38,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-/* wait time for operation on VFS */
-#define MTX_BLOCK_TIME                          10
 
 /*==============================================================================
   Local types, enums definitions
@@ -102,6 +100,7 @@ static mutex_t         *vfs_resource_mtx;
 static u32_t            vfs_id_counter;
 static const u32_t      file_validation_number = 0x495D47CB;
 static const u32_t      dir_validation_number  = 0x297E823D;
+static const uint       mtx_block_time         = 10;
 
 /*==============================================================================
   Function definitions
@@ -1369,7 +1368,7 @@ static inline void restore_priority(int priority)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+        while (mutex_lock(mtx, mtx_block_time) != true);
 }
 
 //==============================================================================

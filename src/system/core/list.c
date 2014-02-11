@@ -33,9 +33,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define calloc(nmemb, msize)            sysm_syscalloc(nmemb, msize)
-#define malloc(size)                    sysm_sysmalloc(size)
-#define free(mem)                       sysm_sysfree(mem)
 
 /*==============================================================================
   Local types, enums definitions
@@ -56,10 +53,10 @@ struct list {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void  get_iaddr_by_No(list_t *list, i32_t nitem, struct list_item **previtem,
-                             struct list_item **thisitem);
-static i32_t get_iaddr_by_ID(list_t *list, u32_t id, struct list_item **previtem,
-                             struct list_item **thisitem);
+static inline void *calloc           (size_t nmemb, size_t msize);
+static inline void  free             (void *ptr);
+static void         get_iaddr_by_No  (list_t *list, i32_t nitem, struct list_item **previtem, struct list_item **thisitem);
+static i32_t        get_iaddr_by_ID  (list_t *list, u32_t id, struct list_item **previtem, struct list_item **thisitem);
 
 /*==============================================================================
   Local object definitions
@@ -69,6 +66,33 @@ static const u32_t list_validation_number = 0x25CADA7F;
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Allocate memory
+ *
+ * @param nmemb         number of members
+ * @param msize         member size
+ *
+ * @return allocated address or NULL if error
+ */
+//==============================================================================
+static inline void *calloc(size_t nmemb, size_t msize)
+{
+        return sysm_syscalloc(nmemb, msize);
+}
+
+//==============================================================================
+/**
+ * @brief Free allocated memory
+ *
+ * @param ptr           memory block
+ */
+//==============================================================================
+static inline void free(void *ptr)
+{
+        sysm_sysfree(ptr);
+}
+
 //==============================================================================
 /**
  * @brief Function create new list object
