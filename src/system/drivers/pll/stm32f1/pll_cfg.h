@@ -47,7 +47,7 @@ extern "C" {
  * ENABLE : enable oscillator
  * DISABLE: disable oscillator
  */
-#define _PLL_CFG__LSI_ON                DISABLE
+#define _PLL_CFG__LSI_ON                ENABLE
 
 /*
  * LSE

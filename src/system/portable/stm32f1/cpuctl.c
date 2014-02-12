@@ -37,7 +37,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define TIM2FREQ                        1000000UL
 
 /*==============================================================================
   Local types, enums definitions
@@ -50,7 +49,8 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static u32_t total_CPU_time;
+static u32_t       total_CPU_time;
+static const u32_t timer_frequency = 1000000;
 
 /*==============================================================================
   Function definitions
@@ -98,7 +98,7 @@ void _cpuctl_init_CPU_load_timer(void)
         if (RCC->CFGR & RCC_CFGR_PPRE1_2)
                 freq.PCLK1_Frequency *= 2;
 
-        TIM2->PSC = (freq.PCLK1_Frequency/TIM2FREQ) - 1;
+        TIM2->PSC = (freq.PCLK1_Frequency/timer_frequency) - 1;
         TIM2->ARR = 0xFFFF;
         TIM2->CR1 = TIM_CR1_CEN;
 }

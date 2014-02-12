@@ -40,12 +40,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** partitions node path */
-#define SDSPI_PARTITION_1_PATH                  "/dev/sda1"
-#define SDSPI_PARTITION_2_PATH                  "/dev/sda2"
-#define SDSPI_PARTITION_3_PATH                  "/dev/sda3"
-#define SDSPI_PARTITION_4_PATH                  "/dev/sda4"
-
 /** card waiting timeout [ms] */
 #define SDSPI_TIMEOUT                           500
 

@@ -39,8 +39,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PROG_VALID_NUMBER               (u32_t)0x3B6BF19D
-#define THREAD_VALID_NUMBER             (u32_t)0x8843D463
 
 /*==============================================================================
   Local types, enums definitions
@@ -84,6 +82,8 @@ static stdret_t get_program_data        (const char *name, struct _prog_data *pr
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static const u32_t prog_valid_number   = 0x3B6BF19D;
+static const u32_t thread_valid_number = 0x8843D463;
 
 /*==============================================================================
   Exported object definitions
@@ -164,8 +164,15 @@ static void program_startup(void *arg)
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
 
-                        vfs_fflush(stdin);
+                        vfs_ioctl(stdin , NON_BLOCKING_RD_MODE);
                         sys_getc(stdin);
+
+                        vfs_ioctl(stdin , DEFAULT_RD_MODE);
+                        vfs_ioctl(stdin , DEFAULT_WR_MODE);
+                        vfs_ioctl(stdout, DEFAULT_RD_MODE);
+                        vfs_ioctl(stdout, DEFAULT_WR_MODE);
+                        vfs_ioctl(stderr, DEFAULT_RD_MODE);
+                        vfs_ioctl(stderr, DEFAULT_WR_MODE);
 
                         if (prog->mem) {
                                 sysm_tskfree(prog->mem);
@@ -457,7 +464,7 @@ static int process_kill(task_t *taskhdl, int status)
         if (taskhdl) {
                 switch (_task_get_data_of(taskhdl)->f_task_type) {
                 case TASK_TYPE_RAW:
-                        task_delete(taskhdl);
+                        _task_delete(taskhdl);
                         break;
                 case TASK_TYPE_PROCESS: {
                         prog_t *prog    = _task_get_data_of(taskhdl)->f_task_object;
@@ -492,7 +499,7 @@ static int process_kill(task_t *taskhdl, int status)
 static bool prog_is_valid(prog_t *prog)
 {
         if (prog) {
-                if (prog->valid == PROG_VALID_NUMBER) {
+                if (prog->valid == prog_valid_number) {
                         return true;
                 }
         }
@@ -515,7 +522,7 @@ static bool prog_is_valid(prog_t *prog)
 static bool thread_is_valid(thread_t *thread)
 {
         if (thread) {
-                if (thread->valid == THREAD_VALID_NUMBER) {
+                if (thread->valid == thread_valid_number) {
                         return true;
                 }
         }
@@ -570,7 +577,7 @@ task_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                                                   prog);
 
                                         if (prog->task) {
-                                                prog->valid = PROG_VALID_NUMBER;
+                                                prog->valid = prog_valid_number;
                                                 return prog;
                                         }
                                 }
@@ -663,7 +670,7 @@ int _program_kill(prog_t *prog)
  * @brief Wait for program close
  *
  * @param prog                  program object
- * @param timeout               wait timeout
+ * @param timeout               wait timeout in ms
  *
  * @return 0 if closed, otherwise other value
  */
@@ -766,7 +773,7 @@ int _system(const char *command)
                                     task_data->f_stdout,
                                     task_data->f_stderr);
         if (prog) {
-                while (_program_wait_for_close(prog, MAX_DELAY) != 0);
+                _program_wait_for_close(prog, MAX_DELAY_MS);
                 int status = prog->exit_code;
                 _program_delete(prog);
                 return status;
@@ -812,7 +819,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
-                        thread->valid = THREAD_VALID_NUMBER;
+                        thread->valid = thread_valid_number;
                         return thread;
                 }
         }
@@ -841,7 +848,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
 int _thread_join(thread_t *thread)
 {
         if (thread_is_valid(thread)) {
-                if (semaphore_wait(thread->exit_sem, MAX_DELAY)) {
+                if (semaphore_wait(thread->exit_sem, MAX_DELAY_MS)) {
                         semaphore_signal(thread->exit_sem);
                         return 0;
                 } else {

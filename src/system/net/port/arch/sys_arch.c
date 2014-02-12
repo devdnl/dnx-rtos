@@ -36,7 +36,6 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define VALID_VALUE             0x56CAEEDE
 
 /*==============================================================================
   Local object types
@@ -49,6 +48,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
+static const u32_t validation_value = 0x56CAEEDE;
 
 /*==============================================================================
   Exported objects
@@ -165,7 +165,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
         if (sem) {
                 sem->sem = semaphore_new(1, 0);
                 if (sem->sem) {
-                        sem->valid = VALID_VALUE;
+                        sem->valid = validation_value;
 
                         if (count == 0) {
                                 semaphore_wait(sem->sem, 0);
@@ -192,7 +192,7 @@ void sys_sem_free(sys_sem_t *sem)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                if (sem->sem && sem->valid == VALID_VALUE) {
+                if (sem->sem && sem->valid == validation_value) {
                         semaphore_delete(sem->sem);
                 }
         }
@@ -210,7 +210,7 @@ void sys_sem_signal(sys_sem_t *sem)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                if (sem->sem && sem->valid == VALID_VALUE) {
+                if (sem->sem && sem->valid == validation_value) {
                         semaphore_signal(sem->sem);
                 }
         }
@@ -231,14 +231,14 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                if (sem->sem && sem->valid == VALID_VALUE) {
+                if (sem->sem && sem->valid == validation_value) {
                         u32_t start_time = get_time_ms();
                         bool  sem_status = false;
 
                         if (timeout) {
                                 sem_status = semaphore_wait(sem->sem, timeout);
                         } else {
-                                sem_status = semaphore_wait(sem->sem, MAX_DELAY);
+                                sem_status = semaphore_wait(sem->sem, MAX_DELAY_MS);
                         }
 
                         if (sem_status) {
@@ -262,7 +262,7 @@ int sys_sem_valid(sys_sem_t *sem)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem) {
-                if (sem->sem && sem->valid == VALID_VALUE) {
+                if (sem->sem && sem->valid == validation_value) {
                         return 1;
                 }
         }
@@ -302,7 +302,7 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
         if (mbox && size) {
                 mbox->queue = queue_new(size, sizeof(void*));
                 if (mbox->queue) {
-                        mbox->valid = VALID_VALUE;
+                        mbox->valid = validation_value;
                         return ERR_OK;
                 }
 
@@ -324,7 +324,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox) {
-                if (mbox->queue && mbox->valid == VALID_VALUE) {
+                if (mbox->queue && mbox->valid == validation_value) {
                         _stop_if(queue_get_number_of_items(mbox->queue));
                         queue_delete(mbox->queue);
                 }
@@ -345,8 +345,8 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox) {
-                if (mbox->queue && mbox->valid == VALID_VALUE) {
-                        queue_send(mbox->queue, &msg, MAX_DELAY);
+                if (mbox->queue && mbox->valid == validation_value) {
+                        queue_send(mbox->queue, &msg, MAX_DELAY_MS);
                 }
         }
 }
@@ -366,7 +366,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox) {
-                if (mbox->queue && mbox->valid == VALID_VALUE) {
+                if (mbox->queue && mbox->valid == validation_value) {
                         if (queue_send(mbox->queue, &msg, 0)) {
                                 return ERR_OK;
                         }
@@ -397,14 +397,14 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
         LWIP_ASSERT("sys_arch.c: wrong mbox message destination!", (msg != NULL));
 
         if (mbox) {
-                if (mbox->queue && mbox->valid == VALID_VALUE) {
+                if (mbox->queue && mbox->valid == validation_value) {
                         u32_t start_time = get_time_ms();
                         bool  received   = false;
 
                         if (timeout) {
                                 received = queue_receive(mbox->queue, &(*msg), timeout);
                         } else {
-                                received = queue_receive(mbox->queue, &(*msg), MAX_DELAY);
+                                received = queue_receive(mbox->queue, &(*msg), MAX_DELAY_MS);
                         }
 
                         if (received) {
@@ -434,7 +434,7 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
         LWIP_ASSERT("sys_arch.c: wrong mbox message destination!", (msg != NULL));
 
         if (mbox) {
-                if (mbox->queue && mbox->valid == VALID_VALUE) {
+                if (mbox->queue && mbox->valid == validation_value) {
                         if (queue_receive(mbox->queue, &(*msg), 0)) {
                                 return 0;
                         }
@@ -456,7 +456,7 @@ int sys_mbox_valid(sys_mbox_t *mbox)
         LWIP_ASSERT("sys_arch.c: wrong mbox object!", (mbox != NULL));
 
         if (mbox) {
-                if (mbox->queue && mbox->valid == VALID_VALUE) {
+                if (mbox->queue && mbox->valid == validation_value) {
                         return 1;
                 }
         }

@@ -35,7 +35,11 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdarg.h>
-#include "core/systypes.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <sys/types.h>
+#include "kernel/ktypes.h"
+#include "core/ioctl_macros.h"
 
 /*==============================================================================
   Exported macros
@@ -86,21 +90,18 @@ extern "C" {
 #define ETX                     0x03
 #define EOT                     0x04
 
-/* error flags */
-#define VFS_EFLAG_EOF           (1 << 0)
-#define VFS_EFLAG_ERR           (1 << 1)
+/* IO operations on files */
+#define PIPE_CLOSE              _IO('V', 0x00)
+#define NON_BLOCKING_RD_MODE    _IO('V', 0x01)
+#define DEFAULT_RD_MODE         _IO('V', 0x02)
+#define NON_BLOCKING_WR_MODE    _IO('V', 0x03)
+#define DEFAULT_WR_MODE         _IO('V', 0x04)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 /** file object */
 typedef struct vfs_file FILE;
-
-/** file descriptor */
-typedef uint fd_t;
-
-/** file mode */
-typedef int mode_t;
 
 /** file type */
 typedef enum tfile {
@@ -117,6 +118,7 @@ typedef struct dirent {
         char   *name;
         u64_t   size;
         tfile_t filetype;
+        dev_t   dev;
 } dirent_t;
 
 /** directory type */
@@ -127,57 +129,53 @@ struct vfs_dir {
         void      *f_handle;
         size_t     f_items;
         size_t     f_seek;
-        int        validation;  /* only for system purposes */
+        u32_t      validation;          /* only for system purposes */
 };
+
+typedef struct vfs_dir DIR;
 
 /** file statistics */
 struct stat {
-        u64_t   st_size;        /* total size, in bytes         */
-        u32_t   st_dev;         /* ID of device containing file */
-        u32_t   st_mode;        /* protection                   */
-        u32_t   st_uid;         /* user ID of owner             */
-        u32_t   st_gid;         /* group ID of owner            */
-        u32_t   st_atime;       /* time of last access          */
-        u32_t   st_mtime;       /* time of last modification    */
-        tfile_t st_type;        /* type of file                 */
+        u64_t   st_size;                /* total size, in bytes         */
+        u32_t   st_dev;                 /* ID of device containing file */
+        u32_t   st_mode;                /* protection                   */
+        u32_t   st_uid;                 /* user ID of owner             */
+        u32_t   st_gid;                 /* group ID of owner            */
+        u32_t   st_atime;               /* time of last access          */
+        u32_t   st_mtime;               /* time of last modification    */
+        tfile_t st_type;                /* type of file                 */
 };
 
 /** device info */
 struct vfs_dev_stat {
-        u64_t st_size;          /* total size, in bytes */
-        u32_t st_major;         /* device major number  */
-        u32_t st_minor;         /* device minor number  */
+        u64_t st_size;                  /* total size, in bytes */
+        u8_t  st_major;                 /* device major number  */
+        u8_t  st_minor;                 /* device minor number  */
 };
 
 /** file system statistic */
-struct vfs_statfs {
-        u32_t f_type;           /* file system type       */
-        u32_t f_bsize;          /* block size             */
-        u32_t f_blocks;         /* total blocks           */
-        u32_t f_bfree;          /* free blocks            */
-        u32_t f_files;          /* total file nodes in FS */
-        u32_t f_ffree;          /* free file nodes in FS  */
-        const char *f_fsname;   /* FS name                */
+struct statfs {
+        u32_t f_type;                   /* file system type       */
+        u32_t f_bsize;                  /* block size             */
+        u32_t f_blocks;                 /* total blocks           */
+        u32_t f_bfree;                  /* free blocks            */
+        u32_t f_files;                  /* total file nodes in FS */
+        u32_t f_ffree;                  /* free file nodes in FS  */
+        const char *f_fsname;           /* FS name                */
 };
 
 /** structure describing a mount table entry */
-struct vfs_mntent {
-        char *mnt_fsname;       /* device or server for filesystem */
-        char *mnt_dir;          /* directory mounted on            */
-        u64_t total;            /* device total size               */
-        u64_t free;             /* device free                     */
+struct mntent {
+        const char *mnt_fsname;         /* device or server for filesystem */
+        const char *mnt_dir;            /* directory mounted on            */
+        u64_t       total;              /* device total size               */
+        u64_t       free;               /* device free                     */
 };
 
-/** driver configuration */
-struct vfs_drv_interface {
-        void     *handle;
-        stdret_t (*drv_open )(void *drvhdl, int flags);
-        stdret_t (*drv_close)(void *drvhdl, bool force, const task_t *opened_by_task);
-        ssize_t  (*drv_write)(void *drvhdl, const u8_t *src, size_t count, u64_t *fpos);
-        ssize_t  (*drv_read )(void *drvhdl, u8_t *dst, size_t count, u64_t *fpos);
-        stdret_t (*drv_ioctl)(void *drvhdl, int iorq, void *args);
-        stdret_t (*drv_flush)(void *drvhdl);
-        stdret_t (*drv_stat )(void *drvhdl, struct vfs_dev_stat *info);
+/** file write/read attributtes */
+struct vfs_fattr {
+        bool non_blocking_rd:1;         /* non-blocking file read access */
+        bool non_blocking_wr:1;         /* non-blocking file write access */
 };
 
 /** file system configuration */
@@ -185,22 +183,22 @@ struct vfs_FS_interface {
         stdret_t (*fs_init   )(void **fshdl, const char *path);
         stdret_t (*fs_release)(void *fshdl);
         stdret_t (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, u64_t *lseek, const char *path, int flags);
-        stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force, const task_t *opened_by_task);
-        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos);
-        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos);
+        stdret_t (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
+        ssize_t  (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr attr);
+        ssize_t  (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr attr);
         stdret_t (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *args);
         stdret_t (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct stat *stat);
         stdret_t (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
         stdret_t (*fs_mkdir  )(void *fshdl, const char *path, mode_t);
         stdret_t (*fs_mkfifo )(void *fshdl, const char *path, mode_t);
-        stdret_t (*fs_mknod  )(void *fshdl, const char *path, const struct vfs_drv_interface *drv_if);
+        stdret_t (*fs_mknod  )(void *fshdl, const char *path, const dev_t dev);
         stdret_t (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
         stdret_t (*fs_remove )(void *fshdl, const char *path);
         stdret_t (*fs_rename )(void *fshdl, const char *old_name, const char *new_name);
         stdret_t (*fs_chmod  )(void *fshdl, const char *path, int mode);
         stdret_t (*fs_chown  )(void *fshdl, const char *path, int owner, int group);
         stdret_t (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
-        stdret_t (*fs_statfs )(void *fshdl, struct vfs_statfs *statfs);
+        stdret_t (*fs_statfs )(void *fshdl, struct statfs *statfs);
 };
 
 /*==============================================================================
@@ -209,8 +207,8 @@ struct vfs_FS_interface {
 extern stdret_t         vfs_init                (void);
 extern stdret_t         vfs_mount               (const char*, const char*, struct vfs_FS_interface*);
 extern stdret_t         vfs_umount              (const char*);
-extern stdret_t         vfs_getmntentry         (size_t, struct vfs_mntent*);
-extern int              vfs_mknod               (const char*, struct vfs_drv_interface*);
+extern int              vfs_getmntentry         (int, struct mntent*);
+extern int              vfs_mknod               (const char*, dev_t);
 extern int              vfs_mkdir               (const char*, mode_t);
 extern int              vfs_mkfifo              (const char*, mode_t);
 extern DIR             *vfs_opendir             (const char*);
@@ -221,11 +219,11 @@ extern int              vfs_rename              (const char*, const char*);
 extern int              vfs_chmod               (const char*, int);
 extern int              vfs_chown               (const char*, int, int);
 extern int              vfs_stat                (const char*, struct stat*);
-extern int              vfs_statfs              (const char*, struct vfs_statfs*);
+extern int              vfs_statfs              (const char*, struct statfs*);
 extern FILE            *vfs_fopen               (const char*, const char*);
 extern FILE            *vfs_freopen             (const char*, const char*, FILE*);
 extern int              vfs_fclose              (FILE*);
-extern int              vfs_fclose_force        (FILE*, task_t*);
+extern int              vfs_fclose_force        (FILE*);
 extern size_t           vfs_fwrite              (const void*, size_t, size_t, FILE*);
 extern size_t           vfs_fread               (void*, size_t, size_t, FILE*);
 extern int              vfs_fseek               (FILE*, i64_t, int);

@@ -27,8 +27,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include <string.h>
 #include "core/printx.h"
 #include "core/conv.h"
@@ -225,8 +226,8 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const 
 
         *fpos = 0;
 
-        if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
-                path += strlen(DIR_TASKID_STR) + 2;
+        if (strncmp(path, "/"DIR_TASKID_STR"/", strlen("/"DIR_TASKID_STR"/")) == 0) {
+                path += strlen("/"DIR_TASKID_STR"/");
 
                 task_t *taskhdl = NULL;
                 path = sys_strtoi((char*)path, 16, (i32_t*)&taskhdl);
@@ -264,9 +265,9 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const 
 
                 return add_file_info_to_list(procmem, taskhdl, file_content, fd);
 
-        } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", strlen(DIR_TASKNAME_STR) + 2) == 0) {
+        } else if (strncmp(path, "/"DIR_TASKNAME_STR"/", strlen("/"DIR_TASKNAME_STR"/")) == 0) {
 
-                path += strlen(DIR_TASKNAME_STR) + 2;
+                path += strlen("/"DIR_TASKNAME_STR"/");
 
                 u16_t n = sysm_get_number_of_monitored_tasks();
                 u16_t i = 0;
@@ -286,6 +287,17 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const 
         } else if (strcmp(path, "/"FILE_CPUINFO_STR) == 0) {
                 return add_file_info_to_list(procmem, NULL, FILE_CONTENT_CPUINFO, fd);
 
+        } else if (strncmp(path, "/"DIR_BIN_STR"/", strlen("/"DIR_BIN_STR"/")) == 0) {
+                path += strlen("/"DIR_BIN_STR"/");
+
+                for (int i = 0; i < _get_programs_table_size(); i++) {
+                        if (strcmp(path, _get_programs_table()[i].program_name) == 0) {
+                                return add_file_info_to_list(procmem, NULL, FILE_CONTENT_NONE, fd);
+                        }
+                }
+
+                errno = ENOENT;
+                return STD_RET_ERROR;
         } else {
                 errno = ENOENT;
                 return STD_RET_ERROR;
@@ -300,17 +312,15 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const 
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
+API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(extra);
         UNUSED_ARG(force);
-        UNUSED_ARG(file_owner);
 
         STOP_IF(!fs_handle);
 
@@ -391,6 +401,10 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
                 return -1;
         }
 
+        if (file_info->file_content == FILE_CONTENT_NONE) {
+                return 0;
+        }
+
         if (file_info->file_content >= FILE_CONTENT_COUNT) {
                 errno = ENOENT;
                 return -1;
@@ -405,13 +419,8 @@ API_FS_READ(procfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t cou
                 if (seek > data_size) {
                         n = 0;
                 } else {
-                        if (data_size - seek <= count) {
-                                n = data_size - seek;
-                                strncpy((char*)dst, data + seek, n);
-                        } else {
-                                n = count;
-                                strncpy((char *)dst, data + seek, n);
-                        }
+                        n = (data_size - seek <= count) ? data_size - seek : count;
+                        strncpy((char *)dst, data + seek, n);
                 }
 
                 free(data);
@@ -577,17 +586,17 @@ API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver number
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(procfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
-        UNUSED_ARG(drv_if);
+        UNUSED_ARG(dev);
 
         /* not supported by this file system */
         errno = EPERM;
@@ -640,8 +649,8 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                 dir->f_readdir  = procfs_readdir_bin;
                 dir->f_closedir = procfs_closedir_generic;
                 return STD_RET_OK;
-        } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen(DIR_TASKID_STR) + 2) == 0) {
-                path += strlen(DIR_TASKID_STR) + 2;
+        } else if (strncmp(path, "/"DIR_TASKID_STR"/", strlen("/"DIR_TASKID_STR"/")) == 0) {
+                path += strlen("/"DIR_TASKID_STR"/");
 
                 i32_t taskval = 0;
                 path = sys_strtoi((char*)path, 16, &taskval);
@@ -843,7 +852,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(procfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 
@@ -1101,7 +1110,7 @@ static stdret_t add_file_info_to_list(struct procfs *procmem, task_t *taskhdl, e
 
         if (list_add_item(procmem->file_list, procmem->ID_counter, file_info) == 0) {
 
-                *fd   = procmem->ID_counter++;
+                *fd = procmem->ID_counter++;
 
                 mutex_unlock(procmem->resource_mtx);
                 return STD_RET_OK;

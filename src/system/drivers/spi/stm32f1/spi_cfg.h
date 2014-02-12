@@ -89,14 +89,14 @@ extern "C" {
  */
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
 #define _SPI1_NUMBER_OF_SLAVES                  8
-_SPI1_CS_CFG(0, GPIOA, 0);                      /* _SPI1_CS0 */
-_SPI1_CS_CFG(1, GPIOA, 0);                      /* _SPI1_CS1 */
-_SPI1_CS_CFG(2, GPIOA, 0);                      /* _SPI1_CS2 */
-_SPI1_CS_CFG(3, GPIOA, 0);                      /* _SPI1_CS3 */
-_SPI1_CS_CFG(4, GPIOA, 0);                      /* _SPI1_CS4 */
-_SPI1_CS_CFG(5, GPIOA, 0);                      /* _SPI1_CS5 */
-_SPI1_CS_CFG(6, GPIOA, 0);                      /* _SPI1_CS6 */
-_SPI1_CS_CFG(7, GPIOA, 0);                      /* _SPI1_CS7 */
+_SPI1_CS_CFG(0, GPIOA, 0);                      /* _SPI1_CS0 or _SPI_CS0 */
+_SPI1_CS_CFG(1, GPIOA, 0);                      /* _SPI1_CS1 or _SPI_CS1 */
+_SPI1_CS_CFG(2, GPIOA, 0);                      /* _SPI1_CS2 or _SPI_CS2 */
+_SPI1_CS_CFG(3, GPIOA, 0);                      /* _SPI1_CS3 or _SPI_CS3 */
+_SPI1_CS_CFG(4, GPIOA, 0);                      /* _SPI1_CS4 or _SPI_CS4 */
+_SPI1_CS_CFG(5, GPIOA, 0);                      /* _SPI1_CS5 or _SPI_CS5 */
+_SPI1_CS_CFG(6, GPIOA, 0);                      /* _SPI1_CS6 or _SPI_CS6 */
+_SPI1_CS_CFG(7, GPIOA, 0);                      /* _SPI1_CS7 or _SPI_CS7 */
 #endif
 
 /*
@@ -104,14 +104,14 @@ _SPI1_CS_CFG(7, GPIOA, 0);                      /* _SPI1_CS7 */
  */
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
 #define _SPI2_NUMBER_OF_SLAVES                  8
-_SPI2_CS_CFG(0, GPIOA, 0);                      /* _SPI2_CS0 */
-_SPI2_CS_CFG(1, GPIOA, 0);                      /* _SPI2_CS1 */
-_SPI2_CS_CFG(2, GPIOA, 0);                      /* _SPI2_CS2 */
-_SPI2_CS_CFG(3, GPIOA, 0);                      /* _SPI2_CS3 */
-_SPI2_CS_CFG(4, GPIOA, 0);                      /* _SPI2_CS4 */
-_SPI2_CS_CFG(5, GPIOA, 0);                      /* _SPI2_CS5 */
-_SPI2_CS_CFG(6, GPIOA, 0);                      /* _SPI2_CS6 */
-_SPI2_CS_CFG(7, GPIOA, 0);                      /* _SPI2_CS7 */
+_SPI2_CS_CFG(0, GPIOA, 0);                      /* _SPI2_CS0 or _SPI_CS0 */
+_SPI2_CS_CFG(1, GPIOA, 0);                      /* _SPI2_CS1 or _SPI_CS1 */
+_SPI2_CS_CFG(2, GPIOA, 0);                      /* _SPI2_CS2 or _SPI_CS2 */
+_SPI2_CS_CFG(3, GPIOA, 0);                      /* _SPI2_CS3 or _SPI_CS3 */
+_SPI2_CS_CFG(4, GPIOA, 0);                      /* _SPI2_CS4 or _SPI_CS4 */
+_SPI2_CS_CFG(5, GPIOA, 0);                      /* _SPI2_CS5 or _SPI_CS5 */
+_SPI2_CS_CFG(6, GPIOA, 0);                      /* _SPI2_CS6 or _SPI_CS6 */
+_SPI2_CS_CFG(7, GPIOA, 0);                      /* _SPI2_CS7 or _SPI_CS7 */
 #endif
 
 /*
@@ -119,14 +119,14 @@ _SPI2_CS_CFG(7, GPIOA, 0);                      /* _SPI2_CS7 */
  */
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
 #define _SPI3_NUMBER_OF_SLAVES                  8
-_SPI3_CS_CFG(0, GPIOA, 0);                      /* _SPI3_CS0 */
-_SPI3_CS_CFG(1, GPIOA, 0);                      /* _SPI3_CS1 */
-_SPI3_CS_CFG(2, GPIOA, 0);                      /* _SPI3_CS2 */
-_SPI3_CS_CFG(3, GPIOA, 0);                      /* _SPI3_CS3 */
-_SPI3_CS_CFG(4, GPIOA, 0);                      /* _SPI3_CS4 */
-_SPI3_CS_CFG(5, GPIOA, 0);                      /* _SPI3_CS5 */
-_SPI3_CS_CFG(6, GPIOA, 0);                      /* _SPI3_CS6 */
-_SPI3_CS_CFG(7, GPIOA, 0);                      /* _SPI3_CS7 */
+_SPI3_CS_CFG(0, GPIOA, 0);                      /* _SPI3_CS0 or _SPI_CS0 */
+_SPI3_CS_CFG(1, GPIOA, 0);                      /* _SPI3_CS1 or _SPI_CS1 */
+_SPI3_CS_CFG(2, GPIOA, 0);                      /* _SPI3_CS2 or _SPI_CS2 */
+_SPI3_CS_CFG(3, GPIOA, 0);                      /* _SPI3_CS3 or _SPI_CS3 */
+_SPI3_CS_CFG(4, GPIOA, 0);                      /* _SPI3_CS4 or _SPI_CS4 */
+_SPI3_CS_CFG(5, GPIOA, 0);                      /* _SPI3_CS5 or _SPI_CS5 */
+_SPI3_CS_CFG(6, GPIOA, 0);                      /* _SPI3_CS6 or _SPI_CS6 */
+_SPI3_CS_CFG(7, GPIOA, 0);                      /* _SPI3_CS7 or _SPI_CS7 */
 #endif
 
 /*==============================================================================

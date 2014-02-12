@@ -27,8 +27,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include "stm32f1/spi_cfg.h"
 #include "stm32f1/spi_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -36,8 +37,8 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define MUTEX_TIMOUT                    MAX_DELAY
-#define SEMAPHORE_TIMEOUT               MAX_DELAY
+#define MUTEX_TIMOUT                    MAX_DELAY_MS
+#define SEMAPHORE_TIMEOUT               MAX_DELAY_MS
 
 /* calculate max number of slaves for all SPI peripherals (calculate array size) */
 #if (_SPI1_NUMBER_OF_SLAVES > _SPI2_NUMBER_OF_SLAVES)
@@ -425,23 +426,22 @@ API_MOD_OPEN(SPI, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(SPI, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(SPI, void *device_handle, bool force)
 {
         STOP_IF(!device_handle);
-        UNUSED_ARG(opened_by_task);
 
         struct spi_virtual *hdl = device_handle;
 
-        if (device_is_access_granted(&hdl->file_lock)) {
+        if (device_is_access_granted(&hdl->file_lock) || force) {
                 device_unlock(&hdl->file_lock, force);
                 return STD_RET_OK;
         } else {
+                errno = EBUSY;
                 return STD_RET_ERROR;
         }
 }
@@ -454,13 +454,15 @@ API_MOD_CLOSE(SPI, void *device_handle, bool force, const task_t *opened_by_task
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(src == NULL);
@@ -507,13 +509,15 @@ API_MOD_WRITE(SPI, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(SPI, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         STOP_IF(device_handle == NULL);
         STOP_IF(dst == NULL);

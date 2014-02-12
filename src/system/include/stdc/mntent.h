@@ -55,7 +55,18 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-static inline stdret_t getmntentry(size_t item, struct vfs_mntent *mntent)
+//==============================================================================
+/**
+ * @brief Function return file system describe object
+ * After operation object must be freed using free() function.
+ *
+ * @param item          n-item to read
+ * @param mntent        pointer to mntent object
+ *
+ * @return 0 if success, 1 if all items read, -1 on error
+ */
+//==============================================================================
+static inline int getmntentry(int item, struct mntent *mntent)
 {
         return vfs_getmntentry(item, mntent);
 }

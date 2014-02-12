@@ -27,7 +27,8 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
+#include <dnx/misc.h>
 #include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
@@ -35,15 +36,13 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define VALIDATION_TOKEN                        (u32_t)0xFF49421D
-#define SET_VALIDATION(_bfr, _val)              *(u32_t *)&_bfr->valid = _val;
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 struct ttybfr {
         char           *line[_TTY_DEFAULT_TERMINAL_ROWS];
-        const u32_t     valid;
+        u32_t           valid;
         u16_t           write_index;
         bool            fresh_line[_TTY_DEFAULT_TERMINAL_ROWS];
 };
@@ -56,6 +55,8 @@ struct ttybfr {
   Local objects
 ==============================================================================*/
 MODULE_NAME("TTY");
+
+static const u32_t validation_token = 0xFF49421D;
 
 /*==============================================================================
   Exported objects
@@ -255,7 +256,7 @@ ttybfr_t *ttybfr_new()
 {
         ttybfr_t *bfr = calloc(1, sizeof(ttybfr_t));
         if (bfr) {
-                SET_VALIDATION(bfr, VALIDATION_TOKEN);
+                bfr->valid =  validation_token;
         }
 
         return bfr;
@@ -271,8 +272,8 @@ ttybfr_t *ttybfr_new()
 void ttybfr_delete(ttybfr_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
-                        SET_VALIDATION(this, 0);
+                if (this->valid == validation_token) {
+                        this->valid = 0;
                         free(this);
                 }
         }
@@ -290,7 +291,7 @@ void ttybfr_delete(ttybfr_t *this)
 void ttybfr_add_line(ttybfr_t *this, const char *src, size_t len)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         while (len) {
                                 /* --- find line in buffer --- */
                                 const char *line = src;
@@ -334,7 +335,7 @@ void ttybfr_add_line(ttybfr_t *this, const char *src, size_t len)
 void ttybfr_clear(ttybfr_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
                                 if (this->line[i]) {
                                         free(this->line[i]);
@@ -362,7 +363,7 @@ void ttybfr_clear(ttybfr_t *this)
 const char *ttybfr_get_line(ttybfr_t *this, int n)
 {
         if (this && n > 0 && n <= _TTY_DEFAULT_TERMINAL_ROWS) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         return this->line[get_line_index(this, n)];
                 }
         }
@@ -382,7 +383,7 @@ const char *ttybfr_get_line(ttybfr_t *this, int n)
 const char *ttybfr_get_fresh_line(ttybfr_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         for (int i = _TTY_DEFAULT_TERMINAL_ROWS; i > 0; i--) {
                                 uint idx = get_line_index(this, i);
                                 if (this->fresh_line[idx]) {
@@ -406,7 +407,7 @@ const char *ttybfr_get_fresh_line(ttybfr_t *this)
 void ttybfr_clear_fresh_line_counter(ttybfr_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         for (int i = 0; i < _TTY_DEFAULT_TERMINAL_ROWS; i++) {
                                 this->fresh_line[i] = false;
                         }

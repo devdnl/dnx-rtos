@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "core/ioctl_macros.h"
+#include "core/vfs.h"
 
 /* include here drivers definitions */
 #include "tty_def.h"
@@ -44,6 +45,8 @@ extern "C" {
 #       include "stm32f1/sdspi_def.h"
 #       include "stm32f1/uart_def.h"
 #       include "stm32f1/ethmac_def.h"
+#       include "stm32f1/crc_def.h"
+#       include "stm32f1/wdg_def.h"
 #else
 #       error "Unknown architecture!"
 #endif
@@ -63,11 +66,24 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function support not standard operations on devices and files
+ *
+ * @param[in]     *file         file
+ * @param[in]      rq           request
+ * @param[in,out]  ...          argument or nothing
+ *
+ * @return 0 on success. On error, different from 0 is returned
+ */
+//==============================================================================
 static inline int ioctl(FILE *stream, int request, ...)
 {
         va_list arg;
         va_start(arg, request);
-        return vfs_vioctl(stream, request, arg);
+        int status = vfs_vioctl(stream, request, arg);
+        va_end(arg);
+        return status;
 }
 
 #ifdef __cplusplus

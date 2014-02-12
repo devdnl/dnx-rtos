@@ -27,8 +27,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <dnx/timer.h>
+#include <dnx/misc.h>
 #include "stm32f1/pll_cfg.h"
 #include "stm32f1/pll_def.h"
 #include "stm32f1/stm32f10x.h"
@@ -198,17 +199,15 @@ API_MOD_OPEN(PLL, void *device_handle, int flags)
  *
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
- * @param[in ]          *opened_by_task         task with opened this device (valid only if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_MOD_CLOSE(PLL, void *device_handle, bool force, const task_t *opened_by_task)
+API_MOD_CLOSE(PLL, void *device_handle, bool force)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(force);
-        UNUSED_ARG(opened_by_task);
 
         return STD_RET_OK;
 }
@@ -221,16 +220,18 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force, const task_t *opened_by_task
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fpos)
+API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(src);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         errno = EPERM;
 
@@ -245,16 +246,18 @@ API_MOD_WRITE(PLL, void *device_handle, const u8_t *src, size_t count, u64_t *fp
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[in ]           fattr                  file attributes
  *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos)
+API_MOD_READ(PLL, void *device_handle, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(device_handle);
         UNUSED_ARG(dst);
         UNUSED_ARG(count);
         UNUSED_ARG(fpos);
+        UNUSED_ARG(fattr);
 
         errno = EPERM;
 

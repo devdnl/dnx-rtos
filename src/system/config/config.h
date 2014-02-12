@@ -47,7 +47,7 @@
 /**
  * Size of dynamic allocated memory (HEAP) [bytes]
  */
-#define CONFIG_HEAP_SIZE                                (64308)
+#define CONFIG_HEAP_SIZE                                (64332)
 
 /**
  * Heap memory alignment
@@ -57,7 +57,7 @@
 /**
  * Heap block size [bytes]
  */
-#define CONFIG_HEAP_BLOCK_SIZE                          (16)
+#define CONFIG_HEAP_BLOCK_SIZE                          (4)
 
 
 /**=== RTOS CONFIGURATION ====================================================*/
@@ -69,7 +69,7 @@
 /**
  * File system stack depth [levels]
  */
-#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (32)
+#define CONFIG_RTOS_FILE_SYSTEM_STACK_DEPTH             (48)
 
 /**
  * Interrupt stack depth [levels]
@@ -135,9 +135,14 @@
 #define CONFIG_COLOR_TERMINAL_ENABLE                    (1)
 
 /**
- * Maximum stream buffer size
+ * Maximum stream buffer size [bytes]
  */
 #define CONFIG_STREAM_BUFFER_LENGTH                     (100)
+
+/**
+ * Maximum pipe length [bytes]
+ */
+#define CONFIG_PIPE_LENGTH                              (128)
 
 /**
  * ERRNO string support (strerror(), perror(), etc)

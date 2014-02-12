@@ -27,7 +27,8 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
+#include <dnx/misc.h>
 #include <string.h>
 #include "libfat/libfat.h"
 
@@ -224,17 +225,15 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force, task_t *file_owner)
+API_FS_CLOSE(fatfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(fd);
         UNUSED_ARG(force);
-        UNUSED_ARG(file_owner);
 
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -476,17 +475,17 @@ API_FS_MKFIFO(fatfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver number
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(fatfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(fatfs, void *fs_handle, const char *path, const dev_t dev)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
-        UNUSED_ARG(drv_if);
+        UNUSED_ARG(dev);
 
         /* not supported by this file system */
         errno = EPERM;
@@ -772,13 +771,17 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(fatfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!statfs);
 
         struct fatfs *hdl    = fs_handle;
         u32_t  free_clusters = 0;
+
+        memset(statfs, 0, sizeof(struct statfs));
+        statfs->f_fsname = "fatfs (FAT\?\?)";
+        statfs->f_type   = hdl->fatfs.fs_type;
 
         struct stat fstat;
         fstat.st_size = 0;

@@ -1,3 +1,24 @@
+dnx/FreeRTOS 1.3.0
+==================
+New Features, Improvements:
+- CRC driver
+- WDG driver
+- procfs: program-file can be open (usefull in tests for program existing)
+- cleaned up headers
+- implemented common driver for pipes in file systems
+- fgets() reads device files byte by byte (solve EOF problem)
+- some files can be switched to unblocking read/write (some devices, pipes)
+- driver layer corrected, used device id
+
+Fixed Bugs:
+- wrong behaviour of fgets() function in case of EOF
+- SPI driver: system cannot force to close the opened SPI file
+- VFS: errno = "No such device or address" even if file exist
+- devfs: file closed cannot be opened again (Device or resource busy error)
+- LFS: prints "Success" if file is opened instead of dir using opendir() function
+- ifconfig crashes if tcpipd was killed
+- TTY: process starvation by fast rate write cycles
+
 dnx/FreeRTOS 1.2.3
 ==================
 New Features, Improvements:

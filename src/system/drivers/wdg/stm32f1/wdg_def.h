@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    systypes.h
+@file    wdg_def.h
 
 @author  Daniel Zorychta
 
-@brief   This file contains all system types
+@brief   WDG driver
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,63 +24,48 @@
 
 *//*==========================================================================*/
 
-#ifndef SYSTYPES_H_
-#define SYSTYPES_H_
+#ifndef _WDG_DEF_H_
+#define _WDG_DEF_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "core/ioctl_macros.h"
+#include "stm32f1/wdg_cfg.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
+  Exported macros
 ==============================================================================*/
-#include <stddef.h>
-#include "core/basic_types.h"
-#include "kernel/ktypes.h"
+#define _WDG_MAJOR_NUMBER               0
+#define _WDG_MINOR_NUMBER               0
+
+#define WDG_IORQ_RESET                  _IO('C', 0x00)
 
 /*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
-/* disable conflicting types from standard libraries */
-#undef stdin
-#undef stdout
-#undef malloc
-#undef free
-
-/** string usable macros */
-#define FIRST_CHARACTER(char__pstr)             char__pstr[0]
-#define LAST_CHARACTER(char__pstr)              char__pstr[strlen(char__pstr) - 1]
-
-/*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-/** universal status type */
-typedef enum stdret_enum
-{
-        STD_RET_OK      = 0,
-        STD_RET_ERROR   = 1,
-} stdret_t;
-
-/** directory object */
-typedef struct vfs_dir DIR;
-
-/*==============================================================================
-  Exported object declarations
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
+==============================================================================*/
+
+/*==============================================================================
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SYSTYPES_H_ */
+#endif /* _WDG_DEF_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

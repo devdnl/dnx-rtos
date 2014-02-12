@@ -27,10 +27,13 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
 #include <string.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
+#include <sys/ioctl.h>
 #include "core/list.h"
+#include "core/pipe.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -183,17 +186,16 @@ API_FS_RELEASE(lfs, void *fs_handle)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver id
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(lfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(lfs, void *fs_handle, const char *path, const dev_t dev)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
-        STOP_IF(!drv_if);
 
         struct LFS_data *lfs = fs_handle;
 
@@ -221,16 +223,12 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const struct vfs_drv_interf
         if ((drv_file_name = calloc(drv_name_len + 1, sizeof(char)))) {
                 strcpy(drv_file_name, drv_name);
 
-                node_t                   *drv_file      = calloc(1, sizeof(node_t));
-                struct vfs_drv_interface *drv_interface = calloc(1, sizeof(struct vfs_drv_interface));
-
-                if (drv_file && drv_interface) {
-                        memcpy(drv_interface, drv_if, sizeof(struct vfs_drv_interface));
-
+                node_t *drv_file = calloc(1, sizeof(node_t));
+                if (drv_file) {
                         drv_file->name = drv_file_name;
                         drv_file->size = 0;
                         drv_file->type = NODE_TYPE_DRV;
-                        drv_file->data = drv_interface;
+                        drv_file->data = (void *)dev;
                         drv_file->fd   = 0;
 
                         /* add new driver to this folder */
@@ -243,10 +241,6 @@ API_FS_MKNOD(lfs, void *fs_handle, const char *path, const struct vfs_drv_interf
                 /* free memory when error */
                 if (drv_file) {
                         free(drv_file);
-                }
-
-                if (drv_interface) {
-                        free(drv_interface);
                 }
 
                 free(drv_file_name);
@@ -386,15 +380,15 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
         if (fifo_file_name) {
                 strcpy(fifo_file_name, fifo_name);
 
-                node_t  *fifo_file  = calloc(1, sizeof(node_t));
-                queue_t *fifo_queue = queue_new(PIPE_LENGTH, sizeof(u8_t));
+                node_t *fifo_file = calloc(1, sizeof(node_t));
+                pipe_t *pipe      = pipe_new();
 
-                if (fifo_file && fifo_queue) {
+                if (fifo_file && pipe) {
 
                         fifo_file->name = fifo_file_name;
                         fifo_file->size = 0;
                         fifo_file->type = NODE_TYPE_PIPE;
-                        fifo_file->data = fifo_queue;
+                        fifo_file->data = pipe;
                         fifo_file->fd   = 0;
                         fifo_file->mode = mode;
 
@@ -410,8 +404,8 @@ API_FS_MKFIFO(lfs, void *fs_handle, const char *path, mode_t mode)
                         free(fifo_file);
                 }
 
-                if (fifo_queue) {
-                        queue_delete(fifo_queue);
+                if (pipe) {
+                        pipe_delete(pipe);
                 }
 
                 free(fifo_file_name);
@@ -455,6 +449,8 @@ API_FS_OPENDIR(lfs, void *fs_handle, const char *path, DIR *dir)
 
                         mutex_unlock(lfs->resource_mtx);
                         return STD_RET_OK;
+                } else {
+                        errno = ENOTDIR;
                 }
         }
 
@@ -509,11 +505,11 @@ static dirent_t lfs_readdir(void *fs_handle, DIR *dir)
 
         if (node) {
                 if (node->type == NODE_TYPE_DRV) {
-                        struct vfs_drv_interface *drv_if = node->data;
                         struct vfs_dev_stat dev_stat;
                         dev_stat.st_size = 0;
-                        drv_if->drv_stat(drv_if->handle, &dev_stat);
+                        driver_stat((dev_t)node->data, &dev_stat);
                         node->size = dev_stat.st_size;
+                        dirent.dev = (dev_t)node->data;
                 }
 
                 dirent.filetype = node->type;
@@ -761,10 +757,9 @@ API_FS_STAT(lfs, void *fs_handle, const char *path, struct stat *stat)
                    || get_last_char(path) != '/') {
 
                         if (node->type == NODE_TYPE_DRV) {
-                                struct vfs_drv_interface *drv_if = node->data;
                                 struct vfs_dev_stat dev_stat;
                                 dev_stat.st_size = 0;
-                                drv_if->drv_stat(drv_if->handle, &dev_stat);
+                                driver_stat((dev_t)node->data, &dev_stat);
                                 node->size   = dev_stat.st_size;
                                 stat->st_dev = dev_stat.st_major;
                         } else {
@@ -816,10 +811,9 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         if (opened_file) {
                 if (opened_file->node) {
                         if (opened_file->node->type == NODE_TYPE_DRV) {
-                                struct vfs_drv_interface *drv_if = opened_file->node->data;
                                 struct vfs_dev_stat dev_stat;
                                 dev_stat.st_size = 0;
-                                drv_if->drv_stat(drv_if->handle, &dev_stat);
+                                driver_stat((dev_t)opened_file->node->data, &dev_stat);
                                 opened_file->node->size = dev_stat.st_size;
                                 stat->st_dev = dev_stat.st_major;
                         } else {
@@ -856,7 +850,7 @@ API_FS_FSTAT(lfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(lfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(lfs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 
@@ -931,7 +925,8 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
         /* node must be a file */
         if (node->type == NODE_TYPE_DIR) {
-                goto error;
+                errno = EISDIR;
+                goto exit;
         }
 
         /* add file to list of open files */
@@ -956,17 +951,11 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
                         *fpos = node->size;
                 }
         } else if (node->type == NODE_TYPE_DRV) {
-                struct vfs_drv_interface *drv = node->data;
-
-                if (!drv->drv_open) {
-                        goto error;
-                }
-
-                if (drv->drv_open(drv->handle, O_DEV_FLAGS(flags)) == STD_RET_OK) {
+                if (driver_open((dev_t)node->data, O_DEV_FLAGS(flags)) == STD_RET_OK) {
                         *fpos = 0;
                 } else {
                         list_rm_nitem(lfs->list_of_opended_files, item);
-                        goto error;
+                        goto exit;
                 }
         }
 
@@ -979,6 +968,7 @@ API_FS_OPEN(lfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const cha
 
 error:
         errno = ENOENT;
+exit:
         mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
@@ -991,13 +981,12 @@ error:
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_t *file_owner)
+API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         UNUSED_ARG(extra);
 
@@ -1020,16 +1009,7 @@ API_FS_CLOSE(lfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_
 
         /* close device if file is driver type */
         if (node->type == NODE_TYPE_DRV) {
-                if (node->data == NULL) {
-                        goto exit;
-                }
-
-                struct vfs_drv_interface *drv_if = node->data;
-                if (!drv_if->drv_close) {
-                        goto exit;
-                }
-
-                if ((status = drv_if->drv_close(drv_if->handle, force, file_owner)) != STD_RET_OK) {
+                if ((status = driver_close((dev_t)node->data, force)) != STD_RET_OK) {
                         goto exit;
                 }
         }
@@ -1079,11 +1059,12 @@ exit:
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1109,14 +1090,9 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 goto exit;
         }
 
-        if (node->type == NODE_TYPE_DRV && node->data) {
-                struct vfs_drv_interface *drv_if = node->data;
-
-                if (drv_if->drv_write) {
-                        mutex_unlock(lfs->resource_mtx);
-
-                        return drv_if->drv_write(drv_if->handle, src, count, fpos);
-                }
+        if (node->type == NODE_TYPE_DRV) {
+                mutex_unlock(lfs->resource_mtx);
+                return driver_write((dev_t)node->data, src, count, fpos, fattr);
         } else if (node->type == NODE_TYPE_FILE) {
                 size_t write_size  = count;
                 size_t file_length = node->size;
@@ -1150,25 +1126,13 @@ API_FS_WRITE(lfs, void *fs_handle, void *extra, fd_t fd, const u8_t *src, size_t
                 }
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
-                if (node->data) {
-                        n = 0;
-                        for (uint i = 0; i < count; i++) {
-                                if (queue_send(node->data, src + i, PIPE_WRITE_TIMEOUT)) {
-                                        n++;
-                                } else {
-                                        u8_t tmp;
-                                        queue_receive(node->data, &tmp, 0);
-                                        i--;
-                                }
-                        }
 
-                        critical_section_begin();
-                        node->size += n;
-                        critical_section_end();
-                        return n;
-                } else {
-                        errno = EIO;
+                n = pipe_write(node->data, src, count, fattr.non_blocking_wr);
+
+                if (n > 0) {
+                        node->size = pipe_get_length(node->data);
                 }
+
         } else {
                 errno = ENOENT;
         }
@@ -1188,11 +1152,12 @@ exit:
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         UNUSED_ARG(extra);
 
@@ -1216,13 +1181,9 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 goto exit;
         }
 
-        if (node->type == NODE_TYPE_DRV && node->data) {
-                struct vfs_drv_interface *drv_if = node->data;
-
-                if (drv_if->drv_read) {
-                        mutex_unlock(lfs->resource_mtx);
-                        return drv_if->drv_read(drv_if->handle, dst, count, fpos);
-                }
+        if (node->type == NODE_TYPE_DRV) {
+                mutex_unlock(lfs->resource_mtx);
+                return driver_read((dev_t)node->data, dst, count, fpos, fattr);
         } else if (node->type == NODE_TYPE_FILE) {
                 size_t file_length = node->size;
                 size_t seek        = *fpos > SIZE_MAX ? SIZE_MAX : *fpos;
@@ -1253,20 +1214,11 @@ API_FS_READ(lfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count,
                 }
         } else if (node->type == NODE_TYPE_PIPE) {
                 mutex_unlock(lfs->resource_mtx);
-                if (node->data) {
-                        n = 0;
-                        for (uint i = 0; i < count; i++) {
-                                if (queue_receive(node->data, dst + i, PIPE_READ_TIMEOUT)) {
-                                        n++;
-                                }
-                        }
 
-                        critical_section_begin();
-                        node->size -= n;
-                        critical_section_end();
-                        return n;
-                } else {
-                        errno = EIO;
+                n = pipe_read(node->data, dst, count, fattr.non_blocking_rd);
+
+                if (n > 0) {
+                        node->size = pipe_get_length(node->data);
                 }
         } else {
                 errno = EIO;
@@ -1310,17 +1262,24 @@ API_FS_IOCTL(lfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
                 goto error;
         }
 
-        if (opened_file->node->type == NODE_TYPE_DRV && opened_file->node->data) {
-                struct vfs_drv_interface *drv_if = opened_file->node->data;
+        if (opened_file->node->type == NODE_TYPE_DRV) {
+                mutex_unlock(lfs->resource_mtx);
+                return driver_ioctl((dev_t)opened_file->node->data, request, arg);
+        } else if (opened_file->node->type == NODE_TYPE_PIPE) {
 
-                if (drv_if->drv_ioctl) {
-                        mutex_unlock(lfs->resource_mtx);
-                        return drv_if->drv_ioctl(drv_if->handle, request, arg);
+                if (request != PIPE_CLOSE) {
+                        errno = EBADRQC;
+                        goto exit;
                 }
+
+                mutex_unlock(lfs->resource_mtx);
+                return pipe_close(opened_file->node->data) ? STD_RET_OK : STD_RET_ERROR;
         }
 
 error:
         errno = ENOENT;
+
+exit:
         mutex_unlock(lfs->resource_mtx);
         return STD_RET_ERROR;
 }
@@ -1356,13 +1315,9 @@ API_FS_FLUSH(lfs, void *fs_handle, void *extra, fd_t fd)
                 goto error;
         }
 
-        if (opened_file->node->type == NODE_TYPE_DRV && opened_file->node->data) {
-                struct vfs_drv_interface *drv_if = opened_file->node->data;
-
-                if (drv_if->drv_flush) {
-                        mutex_unlock(lfs->resource_mtx);
-                        return drv_if->drv_flush(drv_if->handle);
-                }
+        if (opened_file->node->type == NODE_TYPE_DRV) {
+                mutex_unlock(lfs->resource_mtx);
+                return driver_flush((dev_t)opened_file->node->data);
         }
 
 error:
@@ -1428,7 +1383,7 @@ static stdret_t delete_node(node_t *base, node_t *target, u32_t baseitemid)
         } else if (target->type == NODE_TYPE_PIPE) {
 
                 if (target->data) {
-                        queue_delete(target->data);
+                        pipe_delete(target->data);
                         target->data = NULL;
                 }
         }

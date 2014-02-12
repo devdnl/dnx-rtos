@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
 
 /*==============================================================================
   Local macros
@@ -129,17 +129,15 @@ API_FS_OPEN(genericfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, con
  * @param[in ]          *extra                  file extra data
  * @param[in ]           fd                     file descriptor
  * @param[in ]           force                  force close
- * @param[in ]          *file_owner             task which opened file (valid if force is true)
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force, const task_t *file_owner)
+API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
-        STOP_IF(!file_owner);
 
         return STD_RET_ERROR;
 }
@@ -154,11 +152,12 @@ API_FS_CLOSE(genericfs, void *fs_handle, void *extra, fd_t fd, bool force, const
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of written bytes, -1 if error
  */
 //==============================================================================
-API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos)
+API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -178,11 +177,12 @@ API_FS_WRITE(genericfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, s
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
-
+ * @param[in ]           fattr                  file attributes
+ *
  * @return number of read bytes, -1 if error
  */
 //==============================================================================
-API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos)
+API_FS_READ(genericfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!extra);
@@ -282,17 +282,16 @@ API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver id
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
-        STOP_IF(!drv_if);
 
         return STD_RET_ERROR;
 }

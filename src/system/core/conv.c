@@ -30,6 +30,7 @@
 #include "core/conv.h"
 #include <ctype.h>
 #include <string.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Local macros

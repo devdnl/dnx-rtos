@@ -34,7 +34,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/basic_types.h"
+#include <sys/types.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -48,8 +48,8 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 typedef void task_t;
-typedef void sem_t;
-typedef void queue_t;
+typedef struct sem sem_t;
+typedef struct queue queue_t;
 typedef struct mutex mutex_t;
 
 /*==============================================================================

@@ -34,8 +34,8 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdbool.h>
 #include "kernel/ktypes.h"
-#include "core/systypes.h"
 #include "core/vfs.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -72,12 +72,16 @@ extern "C" {
 
 /** OS BASIC DEFINITIONS */
 #define THIS_TASK                       NULL
-#define MAX_DELAY                       (portMAX_DELAY / 1000)
+#define MAX_DELAY_MS                    ((portMAX_DELAY) - 1000)
+#define MAX_DELAY_S                     (MAX_DELAY_MS / 1000)
 
 /** CALCULATIONS */
 #define PRIORITY(prio)                  (prio + (configMAX_PRIORITIES / 2))
+#define NORMAL_PRIORITY                 0
 #define LOWEST_PRIORITY                 (-(int)(configMAX_PRIORITIES / 2))
 #define HIGHEST_PRIORITY                (int)(configMAX_PRIORITIES / 2)
+#define LOW_PRIORITY                    LOWEST_PRIORITY
+#define MAX_PRIORITY                    HIGHEST_PRIORITY
 #define _CEILING(x,y)                   (((x) + (y) - 1) / (y))
 #define MS2TICK(ms)                     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
 
@@ -137,6 +141,7 @@ extern mutex_t      *_mutex_new                         (enum mutex_type);
 extern void          _mutex_delete                      (mutex_t*);
 extern bool          _mutex_lock                        (mutex_t*, const uint);
 extern bool          _mutex_unlock                      (mutex_t*);
+extern queue_t      *_queue_new                         (const uint, const uint);
 extern void          _queue_delete                      (queue_t*);
 extern void          _queue_reset                       (queue_t*);
 extern bool          _queue_send                        (queue_t*, const void*, const uint);
@@ -150,21 +155,6 @@ extern int           _queue_get_number_of_items_from_ISR(queue_t*);
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief Function create new queue
- *
- * @param[in] length            queue length
- * @param[in] item_size         queue item size
- *
- * @return pointer to queue object, otherwise NULL if error
- */
-//==============================================================================
-static inline queue_t *_queue_new(const uint length, const uint item_size)
-{
-        return xQueueCreate((unsigned portBASE_TYPE)length, (unsigned portBASE_TYPE)item_size);
-}
-
 //==============================================================================
 /**
  * @brief Function start kernel scheduler

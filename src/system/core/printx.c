@@ -494,11 +494,12 @@ int sys_getc(FILE *stream)
         }
 
         int chr = 0;
-        while (vfs_fread(&chr, sizeof(char), 1, stream) < 1) {
-                if (vfs_ferror(stream) || vfs_feof(stream))
+        if (vfs_fread(&chr, sizeof(char), 1, stream) != 0) {
+                if (vfs_ferror(stream) || vfs_feof(stream)) {
                         return EOF;
-                else
-                        sleep_ms(10);
+                }
+        } else {
+                return EOF;
         }
 
         return chr;
@@ -523,15 +524,28 @@ char *sys_fgets(char *str, int size, FILE *stream)
 
         struct stat file_stat;
         if (vfs_fstat(stream, &file_stat) == 0) {
-                if (file_stat.st_type == FILE_TYPE_PIPE) {
+                if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
+                        int n = 0;
                         for (int i = 0; i < size - 1; i++) {
-                                vfs_fread(str + i, sizeof(char), 1, stream);
-                                if (vfs_ferror(stream) || vfs_feof(stream)) {
-                                        return NULL;
+                                int m = vfs_fread(str + i, sizeof(char), 1, stream);
+                                if (m == 0) {
+                                        str[i] = '\0';
+                                        return str;
+                                } else {
+                                        n += m;
                                 }
 
-                                if (*(str + i) == '\n') {
-                                        *(str + i + 1) = '\0';
+                                if (vfs_ferror(stream) || vfs_feof(stream)) {
+                                        if (n == 0) {
+                                                return NULL;
+                                        } else {
+                                                str[i + 1] = '\0';
+                                                return str;
+                                        }
+                                }
+
+                                if (str[i] == '\n') {
+                                        str[i + 1] = '\0';
                                         break;
                                 }
                         }
@@ -556,6 +570,9 @@ char *sys_fgets(char *str, int size, FILE *stream)
                         }
 
                         int len = strlen(str);
+
+                        if (len != 0 && len < n && vfs_feof(stream))
+                                vfs_clearerr(stream);
 
                         if (len == 0)
                                 len = 1;

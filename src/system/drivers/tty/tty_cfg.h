@@ -53,8 +53,11 @@ extern "C" {
 /* enable (1) or disable (0) checking terminal size */
 #define _TTY_TERM_SIZE_CHECK            1
 
-/* input/output file (access from many threads) */
-#define _TTY_IO_FILE                    "/dev/ttyS0"
+/* input file (access from many threads) */
+#define _TTY_IN_FILE                    "/dev/ttyS0"
+
+/* output file (access from many threads) */
+#define _TTY_OUT_FILE                   "/dev/ttyS0"
 
 /*==============================================================================
   Exported object types

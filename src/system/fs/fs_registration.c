@@ -28,7 +28,8 @@
   Include files
 ==============================================================================*/
 #include "core/fsctrl.h"
-#include <dnx/fs.h>
+#include "core/fs.h"
+#include <dnx/misc.h>
 
 /*==============================================================================
   External objects
