@@ -38,6 +38,7 @@ extern "C" {
 #include <sys/types.h>
 #include "core/sysmoni.h"
 #include "core/vfs.h"
+#include "core/modctrl.h"
 #include <errno.h>
 
 /*==============================================================================
@@ -86,14 +87,14 @@ extern API_FS_FSTAT(fsname, void*, void*, fd_t, struct stat*);                  
 extern API_FS_FLUSH(fsname, void*, void*, fd_t);                                                \
 extern API_FS_MKDIR(fsname, void*, const char*, mode_t);                                        \
 extern API_FS_MKFIFO(fsname, void*, const char*, mode_t);                                       \
-extern API_FS_MKNOD(fsname, void*, const char*, const struct vfs_drv_interface*);               \
+extern API_FS_MKNOD(fsname, void*, const char*, const dev_t);                                   \
 extern API_FS_OPENDIR(fsname, void*, const char*, struct vfs_dir*);                             \
 extern API_FS_REMOVE(fsname, void*, const char*);                                               \
 extern API_FS_RENAME(fsname, void*, const char*, const char*);                                  \
 extern API_FS_CHMOD(fsname, void*, const char*, int);                                           \
 extern API_FS_CHOWN(fsname, void*, const char*, int, int);                                      \
 extern API_FS_STAT(fsname, void*, const char*, struct stat*);                                   \
-extern API_FS_STATFS(fsname, void*, struct vfs_statfs*)
+extern API_FS_STATFS(fsname, void*, struct statfs*)
 
 /*==============================================================================
   Exported types, enums definitions
@@ -110,6 +111,123 @@ extern API_FS_STATFS(fsname, void*, struct vfs_statfs*)
 /*==============================================================================
   Exported inline function
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Function open selected driver
+ *
+ * @param id            module id
+ * @param flags         flags
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static inline stdret_t driver_open(dev_t id, int flags)
+{
+        return _driver_open(id, flags);
+}
+
+//==============================================================================
+/**
+ * @brief Function close selected driver
+ *
+ * @param id            module id
+ * @param force         force close request
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static inline stdret_t driver_close(dev_t id, bool force)
+{
+        return _driver_close(id, force);
+}
+
+//==============================================================================
+/**
+ * @brief Function write data to driver
+ *
+ * @param id            module id
+ * @param src           data source
+ * @param count         buffer size
+ * @param fpos          file position
+ * @param fattr         file attributes
+ *
+ * @return number of written bytes, -1 on error
+ */
+//==============================================================================
+static inline ssize_t driver_write(dev_t id, const u8_t *src, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+{
+        return _driver_write(id, src, count, fpos, fattr);
+}
+
+//==============================================================================
+/**
+ * @brief Function read data to driver
+ *
+ * @param id            module id
+ * @param dst           data destination
+ * @param count         buffer size
+ * @param fpos          file position
+ * @param fattr         file attributes
+ *
+ * @return number of read bytes, -1 on error
+ */
+//==============================================================================
+static inline ssize_t driver_read(dev_t id, u8_t *dst, size_t count, u64_t *fpos, struct vfs_fattr fattr)
+{
+        return _driver_read(id, dst, count, fpos, fattr);
+}
+
+//==============================================================================
+/**
+ * @brief IO control
+ *
+ * @param id            module id
+ * @param request       io request
+ * @param arg           argument
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static inline stdret_t driver_ioctl(dev_t id, int request, void *arg)
+{
+        return _driver_ioctl(id, request, arg);
+}
+
+//==============================================================================
+/**
+ * @brief Flush device buffer (forces write)
+ *
+ * @param id            module id
+ * @param request       io request
+ * @param arg           argument
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static inline stdret_t driver_flush(dev_t id)
+{
+        return _driver_flush(id);
+}
+
+//==============================================================================
+/**
+ * @brief Device information
+ *
+ * @param id            module id
+ * @param stat          status object
+ *
+ * @retval STD_RET_OK
+ * @retval STD_RET_ERROR
+ */
+//==============================================================================
+static inline stdret_t driver_stat(dev_t id, struct vfs_dev_stat *stat)
+{
+        return _driver_stat(id, stat);
+}
 
 #ifdef __cplusplus
 }

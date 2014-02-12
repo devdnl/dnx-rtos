@@ -28,7 +28,7 @@
   Include files
 ==============================================================================*/
 #include "core/modctrl.h"
-#include <dnx/module.h>
+#include "core/module.h"
 #include <dnx/misc.h>
 
 #include "stm32f1/uart_def.h"
@@ -79,14 +79,18 @@ const struct _driver_entry _regdrv_driver_table[] = {
         _USE_DRIVER_INTERFACE(TTY   , "tty1"  , _TTY1               , _TTY_MINOR_NUMBER   ),
         _USE_DRIVER_INTERFACE(TTY   , "tty2"  , _TTY2               , _TTY_MINOR_NUMBER   ),
         _USE_DRIVER_INTERFACE(TTY   , "tty3"  , _TTY3               , _TTY_MINOR_NUMBER   ),
-        _USE_DRIVER_INTERFACE(SDSPI , "sdspi" , _SDSPI_MAJOR_NUMBER , _SDSPI_MINOR_NUMBER ),
+        _USE_DRIVER_INTERFACE(SDSPI , "sda"   , _SDSPI_CARD_0       , _SDSPI_FULL_VOLUME  ),
+        _USE_DRIVER_INTERFACE(SDSPI , "sda1"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_1  ),
+        _USE_DRIVER_INTERFACE(SDSPI , "sda2"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_2  ),
+        _USE_DRIVER_INTERFACE(SDSPI , "sda3"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_3  ),
+        _USE_DRIVER_INTERFACE(SDSPI , "sda4"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_4  ),
         _USE_DRIVER_INTERFACE(ETHMAC, "ethmac", _ETHMAC_MAJOR_NUMBER, _ETHMAC_MINOR_NUMBER),
         _USE_DRIVER_INTERFACE(CRCCU , "crc"   , _CRC_MAJOR_NUMBER   , _CRC_MINOR_NUMBER   ),
         _USE_DRIVER_INTERFACE(WDG   , "wdg"   , _WDG_MAJOR_NUMBER   , _WDG_MINOR_NUMBER   ),
 };
 
-const int _regdrv_driver_table_array_size = ARRAY_SIZE(_regdrv_driver_table);
-const int _regdrv_number_of_modules       = ARRAY_SIZE(_regdrv_module_name);
+const int _regdrv_size_of_driver_table = ARRAY_SIZE(_regdrv_driver_table);
+const int _regdrv_number_of_modules    = ARRAY_SIZE(_regdrv_module_name);
 
 /*==============================================================================
   End of file

@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    sh.c
+@file    dsh.c
 
 @author  Daniel Zorychta
 
-@brief   Shell interpreter
+@brief   Dnx's Shell interpreter
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -83,7 +83,7 @@ bool  stream_closed;
 
 GLOBAL_VARIABLES_SECTION_END
 
-const char *pipe_file = "/tmp/sh-";
+const char *pipe_file = "/tmp/dsh-";
 
 /*==============================================================================
   Exported object definitions
@@ -568,7 +568,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-PROGRAM_MAIN(sh, int argc, char *argv[])
+PROGRAM_MAIN(dsh, int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
@@ -582,6 +582,7 @@ PROGRAM_MAIN(sh, int argc, char *argv[])
         }
 
         getcwd(global->cwd, CWD_PATH_LEN);
+        task_set_cwd(global->cwd);
 
         for (;;) {
                 clear_prompt();

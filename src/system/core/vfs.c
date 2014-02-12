@@ -38,11 +38,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-/* wait time for operation on VFS */
-#define MTX_BLOCK_TIME                          10
-
-#define FILE_VALIDATION_NUMBER                  (u32_t)0x495D47CB
-#define DIR_VALIDATION_NUMBER                   (u32_t)0x297E823D
 
 /*==============================================================================
   Local types, enums definitions
@@ -100,9 +95,12 @@ static char            *new_corrected_path      (const char *path, enum path_cor
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static list_t  *vfs_mnt_list;
-static mutex_t *vfs_resource_mtx;
-static u32_t    vfs_id_counter;
+static list_t          *vfs_mnt_list;
+static mutex_t         *vfs_resource_mtx;
+static u32_t            vfs_id_counter;
+static const u32_t      file_validation_number = 0x495D47CB;
+static const u32_t      dir_validation_number  = 0x297E823D;
+static const uint       mtx_block_time         = 10;
 
 /*==============================================================================
   Function definitions
@@ -284,20 +282,20 @@ vfs_umount_error:
 
 //==============================================================================
 /**
- * @brief Function gets mount point for n item
+ * @brief Function return file system describe object
+ * After operation object must be freed using free() function.
  *
- * @param[in]   item            mount point number
- * @param[out] *mntent          mount entry data
+ * @param item          n-item to read
+ * @param mntent        pointer to mntent object
  *
- * @retval STD_RET_OK           success
- * @retval STD_RET_ERROR        error
+ * @return 0 if success, 1 if all items read, -1 on error
  */
 //==============================================================================
-stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
+int vfs_getmntentry(int item, struct mntent *mntent)
 {
         if (!mntent) {
                 errno = EINVAL;
-                return STD_RET_ERROR;
+                return -1;
         }
 
         mutex_force_lock(vfs_resource_mtx);
@@ -305,48 +303,44 @@ stdret_t vfs_getmntentry(size_t item, struct vfs_mntent *mntent)
         mutex_unlock(vfs_resource_mtx);
 
         if (fs) {
-                struct vfs_statfs stat_fs = {.f_fsname = NULL};
+                struct statfs stat_fs = {.f_fsname = NULL};
 
                 if (fs->interface.fs_statfs) {
                         int priority = increase_task_priority();
                         fs->interface.fs_statfs(fs->handle, &stat_fs);
                         restore_priority(priority);
+                } else {
+                        return -1;
                 }
 
                 if (stat_fs.f_fsname) {
-                        if (strlen(fs->mount_point) > 1) {
-                                strncpy(mntent->mnt_dir, fs->mount_point,
-                                        strlen(fs->mount_point) - 1);
-                        } else {
-                                strcpy(mntent->mnt_dir, fs->mount_point);
-                        }
+                        mntent->mnt_fsname = stat_fs.f_fsname;
+                        mntent->mnt_dir    = fs->mount_point;
+                        mntent->free       = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
+                        mntent->total      = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
 
-                        strcpy(mntent->mnt_fsname, stat_fs.f_fsname);
-                        mntent->free  = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
-                        mntent->total = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
-
-                        return STD_RET_OK;
+                        return 0;
+                } else {
+                        return -1;
                 }
+        } else {
+                return 1;
         }
-
-        errno = ENXIO;
-
-        return STD_RET_ERROR;
 }
 
 //==============================================================================
 /**
  * @brief Function create node for driver file
  *
- * @param[in] *path                 path when driver-file shall be created
- * @param[in] *drvcfg               pointer to description of driver
+ * @param[in] path              path when driver-file shall be created
+ * @param[in] dev               pointer to description of driver
  *
  * @return zero on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
+int vfs_mknod(const char *path, dev_t dev)
 {
-        if (!path || !drv_interface) {
+        if (!path) {
                 errno = EINVAL;
                 return -1;
         }
@@ -364,7 +358,7 @@ int vfs_mknod(const char *path, struct vfs_drv_interface *drv_interface)
         int status = -1;
         if (fs) {
                 if (fs->interface.fs_mknod) {
-                        status = fs->interface.fs_mknod(fs->handle, external_path, drv_interface) == STD_RET_OK ? 0 : -1;
+                        status = fs->interface.fs_mknod(fs->handle, external_path, dev) == STD_RET_OK ? 0 : -1;
                 }
         }
 
@@ -499,7 +493,7 @@ DIR *vfs_opendir(const char *path)
                         sysm_sysfree(dir);
                         dir = NULL;
                 } else {
-                        dir->validation = DIR_VALIDATION_NUMBER;
+                        dir->validation = dir_validation_number;
                 }
         }
 
@@ -518,7 +512,7 @@ DIR *vfs_opendir(const char *path)
 int vfs_closedir(DIR *dir)
 {
         if (dir) {
-                if (dir->f_closedir && dir->validation == DIR_VALIDATION_NUMBER) {
+                if (dir->f_closedir && dir->validation == dir_validation_number) {
                         if (dir->f_closedir(dir->f_handle, dir) == STD_RET_OK) {
                                 dir->validation = 0;
                                 sysm_sysfree(dir);
@@ -547,7 +541,7 @@ dirent_t vfs_readdir(DIR *dir)
         direntry.size = 0;
 
         if (dir) {
-                if (dir->f_readdir && dir->validation == DIR_VALIDATION_NUMBER) {
+                if (dir->f_readdir && dir->validation == dir_validation_number) {
                         int priority = increase_task_priority();
                         direntry = dir->f_readdir(dir->f_handle, dir);
                         restore_priority(priority);
@@ -800,7 +794,7 @@ int vfs_stat(const char *path, struct stat *stat)
  * @return 0 on success. On error, -1 is returned
  */
 //==============================================================================
-int vfs_statfs(const char *path, struct vfs_statfs *statfs)
+int vfs_statfs(const char *path, struct statfs *statfs)
 {
         if (!path || !statfs) {
                 errno = EINVAL;
@@ -899,7 +893,7 @@ FILE *vfs_fopen(const char *path, const char *mode)
                                 file->f_read  = fs->interface.fs_read;
                         }
 
-                        file->validation = FILE_VALIDATION_NUMBER;
+                        file->validation = file_validation_number;
                         sysm_sysfree(cwd_path);
                         return file;
                 }
@@ -984,7 +978,7 @@ size_t vfs_fwrite(const void *ptr, size_t size, size_t count, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && count && file) {
-                if (file->f_write && file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->f_write && file->validation == file_validation_number) {
                         n = file->f_write(file->FS_hdl, file->f_extra_data, file->fd,
                                           ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
@@ -1027,7 +1021,7 @@ size_t vfs_fread(void *ptr, size_t size, size_t count, FILE *file)
         ssize_t n = 0;
 
         if (ptr && size && count && file) {
-                if (file->f_read && file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->f_read && file->validation == file_validation_number) {
                         n = file->f_read(file->FS_hdl, file->f_extra_data, file->fd,
                                          ptr, size * count, &file->f_lseek, file->f_flag.fattr);
 
@@ -1072,7 +1066,7 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
                 return -1;
         }
 
-        if (file->validation != FILE_VALIDATION_NUMBER) {
+        if (file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1151,7 +1145,7 @@ int vfs_vioctl(FILE *file, int rq, va_list arg)
                 return -1;
         }
 
-        if (!file->f_ioctl && file->validation != FILE_VALIDATION_NUMBER) {
+        if (!file->f_ioctl && file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1183,7 +1177,7 @@ int vfs_fstat(FILE *file, struct stat *stat)
                 return -1;
         }
 
-        if (!file->f_stat && file->validation != FILE_VALIDATION_NUMBER) {
+        if (!file->f_stat && file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1211,7 +1205,7 @@ int vfs_fflush(FILE *file)
                 return -1;
         }
 
-        if (!file->f_flush && file->validation != FILE_VALIDATION_NUMBER) {
+        if (!file->f_flush && file->validation != file_validation_number) {
                 errno = ENOENT;
                 return -1;
         }
@@ -1235,7 +1229,7 @@ int vfs_fflush(FILE *file)
 int vfs_feof(FILE *file)
 {
         if (file) {
-                if (file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->validation == file_validation_number) {
                         return file->f_flag.eof ? 1 : 0;
                 } else {
                         errno = ENOENT;
@@ -1257,7 +1251,7 @@ int vfs_feof(FILE *file)
 void vfs_clearerr(FILE *file)
 {
         if (file) {
-                if (file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->validation == file_validation_number) {
                         file->f_flag.eof   = false;
                         file->f_flag.error = false;
                 } else {
@@ -1280,7 +1274,7 @@ void vfs_clearerr(FILE *file)
 int vfs_ferror(FILE *file)
 {
         if (file) {
-                if (file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->validation == file_validation_number) {
                         return file->f_flag.error ? 1 : 0;
                 } else {
                         errno = ENOENT;
@@ -1319,7 +1313,7 @@ int vfs_rewind(FILE *file)
 static int fclose(FILE *file, bool force)
 {
         if (file) {
-                if (file->f_close && file->validation == FILE_VALIDATION_NUMBER) {
+                if (file->f_close && file->validation == file_validation_number) {
                         if (file->f_close(file->FS_hdl, file->f_extra_data, file->fd, force) == STD_RET_OK) {
                                 file->validation = 0;
                                 sysm_sysfree(file);
@@ -1374,7 +1368,7 @@ static inline void restore_priority(int priority)
 //==============================================================================
 static inline void mutex_force_lock(mutex_t *mtx)
 {
-        while (mutex_lock(mtx, MTX_BLOCK_TIME) != true);
+        while (mutex_lock(mtx, mtx_block_time) != true);
 }
 
 //==============================================================================

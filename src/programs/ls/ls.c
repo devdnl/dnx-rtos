@@ -121,8 +121,14 @@ PROGRAM_MAIN(ls, int argc, char *argv[])
                                 unit = "B";
                         }
 
-                        printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(11)"%s"RESET_ATTRIBUTES"\n",
-                               type, size, unit, dirent.name);
+                        if (dirent.filetype == FILE_TYPE_DRV) {
+                                printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(11)"%i"
+                                       CURSOR_BACKWARD(100)CURSOR_FORWARD(15)"%s"RESET_ATTRIBUTES"\n",
+                                       type, size, unit, dirent.dev, dirent.name);
+                        } else {
+                                printf("%s %u%s"CURSOR_BACKWARD(100)CURSOR_FORWARD(15)"%s"RESET_ATTRIBUTES"\n",
+                                       type, size, unit, dirent.name);
+                        }
 
                         errno  = 0;
                         dirent = readdir(dir);

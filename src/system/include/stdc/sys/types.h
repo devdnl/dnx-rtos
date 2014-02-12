@@ -65,6 +65,15 @@ typedef enum stdret
         STD_RET_ERROR   = 1,
 } stdret_t;
 
+/** file descriptor */
+typedef uint fd_t;
+
+/** file mode */
+typedef int mode_t;
+
+/** device */
+typedef int dev_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/

@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
 #include <dnx/thread.h>
 #include <dnx/misc.h>
 #include <sys/ioctl.h>
@@ -46,10 +46,10 @@
 struct devfs_chain {
         struct devnode {
                 union {
-                        struct vfs_drv_interface *drv;
-                        pipe_t                   *pipe;
-                        void                     *generic;
-                } nif;
+                        dev_t             drv;
+                        pipe_t           *pipe;
+                        void             *generic;
+                } IF;
                 char                     *path;
                 tfile_t                   type;
                 int                       gid;
@@ -214,7 +214,7 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, u64_t *fpos, const c
                 if (node) {
                         stdret_t open = STD_RET_ERROR;
                         if (node->type == FILE_TYPE_DRV) {
-                                open = node->nif.drv->drv_open(node->nif.drv->handle, O_DEV_FLAGS(flags));
+                                open = driver_open(node->IF.drv, O_DEV_FLAGS(flags));
                         } else if (node->type == FILE_TYPE_PIPE) {
                                 open = STD_RET_OK;
                         }
@@ -261,7 +261,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 
         stdret_t close = STD_RET_ERROR;
         if (node->type == FILE_TYPE_DRV) {
-                close = node->nif.drv->drv_close(node->nif.drv->handle, force);
+                close = driver_close(node->IF.drv, force);
         } else if (node->type == FILE_TYPE_PIPE) {
                 close = STD_RET_OK;
         }
@@ -307,10 +307,11 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_write(node->nif.drv->handle, src, count, fpos, fattr);
+                return driver_write(node->IF.drv, src, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_write(node->nif.pipe, src, count, fattr.non_blocking_wr);
+                return pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
         } else {
+                errno = ENXIO;
                 return -1;
         }
 }
@@ -342,10 +343,11 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_read(node->nif.drv->handle, dst, count, fpos, fattr);
+                return driver_read(node->IF.drv, dst, count, fpos, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return pipe_read(node->nif.pipe, dst, count, fattr.non_blocking_rd);
+                return pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
         } else {
+                errno = ENXIO;
                 return -1;
         }
 }
@@ -374,9 +376,9 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_ioctl(node->nif.drv->handle, request, arg);
+                return driver_ioctl(node->IF.drv, request, arg);
         } else if (node->type == FILE_TYPE_PIPE && request == PIPE_CLOSE) {
-                return pipe_close(node->nif.pipe) ? STD_RET_OK : STD_RET_ERROR;
+                return pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
         } else {
                 errno = EBADRQC;
                 return STD_RET_ERROR;
@@ -405,7 +407,7 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
         struct devnode *node = extra;
 
         if (node->type == FILE_TYPE_DRV) {
-                return node->nif.drv->drv_flush(node->nif.drv->handle);
+                return driver_flush(node->IF.drv);
         } else {
                 return STD_RET_ERROR;
         }
@@ -439,22 +441,20 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         stdret_t            getfstat = STD_RET_ERROR;
 
         if (node->type == FILE_TYPE_DRV) {
-                getfstat = node->nif.drv->drv_stat(node->nif.drv->handle, &devstat);
+                getfstat = driver_stat(node->IF.drv, &devstat);
                 if (getfstat == STD_RET_OK) {
                         stat->st_dev  = devstat.st_major << 8 | devstat.st_minor;
                         stat->st_size = devstat.st_size;
                         stat->st_type = FILE_TYPE_DRV;
                 }
         } else if (node->type == FILE_TYPE_PIPE) {
-                pipelen = pipe_get_length(node->nif.pipe);
+                pipelen = pipe_get_length(node->IF.pipe);
                 if (pipelen >= 0) {
                         stat->st_size = pipelen;
                         stat->st_type = FILE_TYPE_PIPE;
                         stat->st_dev  = 0;
 
                         getfstat = STD_RET_OK;
-                } else {
-                        getfstat = STD_RET_ERROR;
                 }
         }
 
@@ -520,10 +520,10 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 
                         struct devnode *node = chain_get_empty_node(devfs->root_chain);
                         if (node) {
-                                node->nif.pipe = pipe_new();
-                                node->path     = malloc(strlen(path + 1) + 1);
+                                node->IF.pipe = pipe_new();
+                                node->path    = malloc(strlen(path + 1) + 1);
 
-                                if (node->nif.pipe && node->path) {
+                                if (node->IF.pipe && node->path) {
                                         strcpy(node->path, path + 1);
                                         node->gid  = 0;
                                         node->uid  = 0;
@@ -534,9 +534,9 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 
                                         status = STD_RET_OK;
                                 } else {
-                                        if (node->nif.pipe) {
-                                                pipe_delete(node->nif.pipe);
-                                                node->nif.pipe = NULL;
+                                        if (node->IF.pipe) {
+                                                pipe_delete(node->IF.pipe);
+                                                node->IF.pipe = NULL;
                                         }
 
                                         if (node->path) {
@@ -561,17 +561,16 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver interface
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
-        STOP_IF(!drv_if);
 
         struct devfs *devfs  = fs_handle;
         stdret_t      status = STD_RET_ERROR;
@@ -582,31 +581,19 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const struct vfs_drv_inte
 
                         struct devnode *node = chain_get_empty_node(devfs->root_chain);
                         if (node) {
-                                node->nif.drv = malloc(sizeof(struct vfs_drv_interface));
-                                node->path    = malloc(strlen(path + 1) + 1);
-
-                                if (node->nif.drv && node->path) {
-                                        *node->nif.drv = *drv_if;
+                                node->path = malloc(strlen(path + 1) + 1);
+                                if (node->path) {
                                         strcpy(node->path, path + 1);
-                                        node->gid  = 0;
-                                        node->uid  = 0;
-                                        node->mode = S_IRUSR | S_IWUSR | S_IRGRO | S_IWGRO | S_IROTH | S_IWOTH;
-                                        node->type = FILE_TYPE_DRV;
+                                        node->IF.drv = dev;
+                                        node->gid    = 0;
+                                        node->uid    = 0;
+                                        node->mode   = S_IRUSR | S_IWUSR | S_IRGRO | S_IWGRO | S_IROTH | S_IWOTH;
+                                        node->type   = FILE_TYPE_DRV;
 
                                         devfs->number_of_used_nodes++;
 
                                         status = STD_RET_OK;
                                 } else {
-                                        if (node->nif.drv) {
-                                                free(node->nif.drv);
-                                                node->nif.drv = NULL;
-                                        }
-
-                                        if (node->path) {
-                                                free(node->path);
-                                                node->path = NULL;
-                                        }
-
                                         errno = ENOSPC;
                                 }
                         }
@@ -700,21 +687,23 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
                 if (node) {
                         if (node->type == FILE_TYPE_DRV) {
                                 struct vfs_dev_stat devstat;
-                                if (node->nif.drv->drv_stat(node->nif.drv->handle, &devstat) == STD_RET_OK) {
-                                        dirent.size     = devstat.st_size;
-
+                                if (driver_stat(node->IF.drv, &devstat) == STD_RET_OK) {
+                                        dirent.size = devstat.st_size;
                                 } else {
                                         dirent.size = 0;
                                 }
+                                dirent.dev      = node->IF.drv;
                                 dirent.filetype = FILE_TYPE_DRV;
+
                         } else if (node->type == FILE_TYPE_PIPE) {
-                                int n = pipe_get_length(node->nif.pipe);
+                                int n = pipe_get_length(node->IF.pipe);
                                 if (n >= 0) {
-                                        dirent.size     = n;
-                                        dirent.filetype = FILE_TYPE_PIPE;
+                                        dirent.size = n;
                                 } else {
                                         dirent.size = 0;
                                 }
+
+                                dirent.filetype = FILE_TYPE_PIPE;
                         }
 
                         dirent.name = node->path;
@@ -753,12 +742,10 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
                 struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
                 if (node) {
                         if (node->opended == 0) {
-                                if (node->type == FILE_TYPE_DRV) {
-                                        free(node->nif.drv);
-                                } else if (node->type == FILE_TYPE_PIPE) {
-                                        pipe_delete(node->nif.pipe);
+                                if (node->type == FILE_TYPE_PIPE) {
+                                        pipe_delete(node->IF.pipe);
                                 }
-                                node->nif.generic = NULL;
+                                node->IF.generic = NULL;
 
                                 free(node->path);
                                 node->path  = NULL;
@@ -938,7 +925,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(devfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!statfs);
@@ -971,7 +958,7 @@ static struct devnode *chain_get_node_by_path(struct devfs_chain *chain, const c
 {
         for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (nchain->devnode[i].nif.generic == NULL)
+                        if (nchain->devnode[i].path == NULL)
                                 continue;
 
                         if (strcmp(nchain->devnode[i].path, path + 1) == 0)
@@ -998,7 +985,7 @@ static struct devnode *chain_get_empty_node(struct devfs_chain *chain)
 {
         for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (nchain->devnode[i].nif.generic == NULL)
+                        if (nchain->devnode[i].path == NULL)
                                 return &nchain->devnode[i];
                 }
         }
@@ -1025,7 +1012,7 @@ static struct devnode *chain_get_n_node(struct devfs_chain *chain, int n)
 
         for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (nchain->devnode[i].nif.generic != NULL) {
+                        if (nchain->devnode[i].path != NULL) {
                                 if (n_node++ == n)
                                         return &nchain->devnode[i];
                         }
@@ -1063,8 +1050,8 @@ static void chain_delete(struct devfs_chain *chain)
         }
 
         for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                if (chain->devnode[i].nif.generic) {
-                        free(chain->devnode[i].nif.generic);
+                if (chain->devnode[i].IF.generic) {
+                        free(chain->devnode[i].IF.generic);
                 }
 
                 if (chain->devnode[i].path) {

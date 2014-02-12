@@ -128,7 +128,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                 int mem_used  = get_used_memory();
                 int mem_free  = get_free_memory();
 
-                println(CLEAR_SCREEN"Press q to quit or k to kill program\n");
+                println(CLEAR_SCREEN"Press "FONT_BOLD"q"RESET_ATTRIBUTES" to quit or "FONT_BOLD"k"RESET_ATTRIBUTES" to kill program\n");
                 println("Total tasks: %u\tUp time: %ud %2u:%2u\n", task_number, udays, uhrs, umins);
                 println("Memory:\t%u total,\t%u used,\t%u free\n", mem_total, mem_used, mem_free);
                 println("Kernel  : %d\n", mem.used_kernel_memory);
@@ -148,7 +148,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         }
                 }
 
-                struct sysmoni_taskstat *taskstat = calloc(task_number, sizeof(struct sysmoni_taskstat));
+                taskstat_t *taskstat = calloc(task_number, sizeof(taskstat_t));
                 if (taskstat) {
                         stdret_t status         = STD_RET_OK;
                         u32_t    total_cpu_load = get_total_CPU_usage();
@@ -159,7 +159,7 @@ PROGRAM_MAIN(top, int argc, char *argv[])
                         enable_CPU_load_measurement();
 
                         for (int i = shift; i < task_number && global->term_row > 0; i++) {
-                                struct sysmoni_taskstat taskinfo = taskstat[i];
+                                taskstat_t taskinfo = taskstat[i];
 
                                 println("%x  %d\t%u\t%u\t%u\t%u.%u%%\t%s\n",
                                        taskinfo.task_handle,

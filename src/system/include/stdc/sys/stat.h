@@ -55,31 +55,91 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-static inline int mknod(const char *path, struct vfs_drv_interface *drvif)
+//==============================================================================
+/**
+ * @brief Function create node for driver file
+ *
+ * @param[in] path              path when driver-file shall be created
+ * @param[in] dev               pointer to description of driver
+ *
+ * @return zero on success. On error, -1 is returned
+ */
+//==============================================================================
+static inline int mknod(const char *path, dev_t dev)
 {
-        return vfs_mknod(path, drvif);
+        return vfs_mknod(path, dev);
 }
 
+//==============================================================================
+/**
+ * @brief Create directory
+ *
+ * @param[in] path              path to new directory
+ * @param[in] mode              directory mode
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
 static inline int mkdir(const char *path, mode_t mode)
 {
         return vfs_mkdir(path, mode);
 }
 
+//==============================================================================
+/**
+ * @brief Create pipe
+ *
+ * @param[in] path              path to pipe
+ * @param[in] mode              directory mode
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
 static inline int mkfifo(const char *path, mode_t mode)
 {
         return vfs_mkfifo(path, mode);
 }
 
+//==============================================================================
+/**
+ * @brief Function change file mode
+ *
+ * @param[in] *path         file path
+ * @param[in]  mode         file mode
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
 static inline int chmod(const char *path, int mode)
 {
         return vfs_chmod(path, mode);
 }
 
+//==============================================================================
+/**
+ * @brief Function returns file/dir status
+ *
+ * @param[in]  *path            file/dir path
+ * @param[out] *stat            pointer to structure
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
 static inline int stat(const char *path, struct stat *stat)
 {
         return vfs_stat(path, stat);
 }
 
+//==============================================================================
+/**
+ * @brief Function returns file/dir status
+ *
+ * @param[in]  *path            file/dir path
+ * @param[out] *stat            pointer to stat structure
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
 static inline int fstat(FILE *file, struct stat *stat)
 {
         return vfs_fstat(file, stat);

@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <dnx/timer.h>
 #include <string.h>
 #include "tty.h"
@@ -37,7 +37,6 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define VALIDATION_TOKEN                        (u32_t)0x7D8498F1
 #define VT100_TOKEN_LEN                         15
 #define VT100_TOKEN_READ_TIMEOUT                250
 
@@ -86,6 +85,8 @@ struct ttycmd {
 ==============================================================================*/
 MODULE_NAME("TTY");
 
+static const u32_t validation_token = 0x7D8498F1;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -109,7 +110,7 @@ ttycmd_t *ttycmd_new()
 {
         ttycmd_t *ttycmd = calloc(1, sizeof(ttycmd_t));
         if (ttycmd) {
-                ttycmd->valid = VALIDATION_TOKEN;
+                ttycmd->valid = validation_token;
         }
 
         return ttycmd;
@@ -125,7 +126,7 @@ ttycmd_t *ttycmd_new()
 void ttycmd_delete(ttycmd_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         this->valid = 0;
                         free(this);
                 }
@@ -145,7 +146,7 @@ void ttycmd_delete(ttycmd_t *this)
 ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (strchr("\r\n", c)) {
                                 return TTYCMD_KEY_ENTER;
                         }
@@ -239,7 +240,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
 bool ttycmd_is_idle(ttycmd_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         return this->token_cnt == 0 ? true : false;
                 }
         }
@@ -259,7 +260,7 @@ bool ttycmd_is_idle(ttycmd_t *this)
 void ttycmd_get_size(ttycmd_t *this, u16_t *col, u16_t *row)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (col)
                                 *col = this->colums;
 

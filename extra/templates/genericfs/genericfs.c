@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
 
 /*==============================================================================
   Local macros
@@ -282,17 +282,16 @@ API_FS_MKDIR(genericfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver id
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(genericfs, void *fs_handle, const char *path, const dev_t dev)
 {
         STOP_IF(!fs_handle);
         STOP_IF(!path);
-        STOP_IF(!drv_if);
 
         return STD_RET_ERROR;
 }

@@ -55,7 +55,17 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-static inline int statfs(const char *path, struct vfs_statfs *statfs)
+//==============================================================================
+/**
+ * @brief Function returns file system status
+ *
+ * @param[in]  *path            fs path
+ * @param[out] *statfs          pointer to FS status structure
+ *
+ * @return 0 on success. On error, -1 is returned
+ */
+//==============================================================================
+static inline int statfs(const char *path, struct statfs *statfs)
 {
         return vfs_statfs(path, statfs);
 }

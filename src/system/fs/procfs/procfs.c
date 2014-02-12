@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/fs.h>
+#include "core/fs.h"
 #include <dnx/thread.h>
 #include <dnx/misc.h>
 #include <string.h>
@@ -586,17 +586,17 @@ API_FS_MKFIFO(procfs, void *fs_handle, const char *path, mode_t mode)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of created node
- * @param[in ]          *drv_if                 driver interface
+ * @param[in ]           dev                    driver number
  *
  * @retval STD_RET_OK
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_MKNOD(procfs, void *fs_handle, const char *path, const struct vfs_drv_interface *drv_if)
+API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 {
         UNUSED_ARG(fs_handle);
         UNUSED_ARG(path);
-        UNUSED_ARG(drv_if);
+        UNUSED_ARG(dev);
 
         /* not supported by this file system */
         errno = EPERM;
@@ -852,7 +852,7 @@ API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-API_FS_STATFS(procfs, void *fs_handle, struct vfs_statfs *statfs)
+API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
 {
         UNUSED_ARG(fs_handle);
 

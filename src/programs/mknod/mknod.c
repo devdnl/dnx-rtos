@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    df.c
+@file    mknod.c
 
 @author  Daniel Zorychta
 
-@brief   List mounted file systems
+@brief   Create device node file
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,19 +29,11 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <mntent.h>
-#include <dnx/misc.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define KiB                             (u32_t)(1024)
-#define MiB                             (u32_t)(1024*1024)
-#define GiB                             (u64_t)(1024*1024*1024)
-#define CONVERT_TO_KiB(_val)            (_val >> 10)
-#define CONVERT_TO_MiB(_val)            (_val >> 20)
-#define CONVERT_TO_GiB(_val)            (_val >> 30)
 
 /*==============================================================================
   Local types, enums definitions
@@ -67,49 +59,20 @@ GLOBAL_VARIABLES_SECTION_END
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Cat main function
+ * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(df, int argc, char *argv[])
+PROGRAM_MAIN(mknod, int argc, char *argv[])
 {
-        (void) argc;
-        (void) argv;
+        if (argc < 3) {
+                printf("%s <file> <dev id>\n", argv[0]);
+                return EXIT_SUCCESS;
+        }
 
-        printf(FONT_BOLD"File system"CURSOR_FORWARD(5)"Total"CURSOR_FORWARD(5)
-               "Free"CURSOR_FORWARD(6)"%%Used  Mount point"RESET_ATTRIBUTES"\n");
-
-        struct mntent mnt;
-        int           i = 0;
-        while (getmntentry(i++, &mnt) == 0) {
-                u32_t dtotal;
-                u32_t dfree;
-                const char *unit;
-
-                if (mnt.total > 10*GiB) {
-                        dtotal = CONVERT_TO_GiB(mnt.total);
-                        dfree  = CONVERT_TO_GiB(mnt.free);
-                        unit   = "GiB";
-                } else if (mnt.total > 10*MiB) {
-                        dtotal = CONVERT_TO_MiB(mnt.total);
-                        dfree  = CONVERT_TO_MiB(mnt.free);
-                        unit   = "MiB";
-                } else if (mnt.total > 10*KiB) {
-                        dtotal = CONVERT_TO_KiB(mnt.total);
-                        dfree  = CONVERT_TO_KiB(mnt.free);
-                        unit   = "KiB";
-                } else {
-                        dtotal = mnt.total;
-                        dfree  = mnt.free;
-                        unit   = "B";
-                }
-
-                printf("%s"  CURSOR_BACKWARD(90)CURSOR_FORWARD(16)
-                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(26)
-                       "%u%s"CURSOR_BACKWARD(90)CURSOR_FORWARD(36)
-                       "%u%%"CURSOR_BACKWARD(90)CURSOR_FORWARD(43)
-                       "%s\n",
-                       mnt.mnt_fsname, dtotal, unit, dfree, unit,
-                       ((dtotal - dfree) * 100)/dtotal, mnt.mnt_dir);
+        int node = atoi(argv[2]);
+        if (mknod(argv[1], node) != 0) {
+                perror(argv[1]);
+                return EXIT_FAILURE;
         }
 
         return EXIT_SUCCESS;

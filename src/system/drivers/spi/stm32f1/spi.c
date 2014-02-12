@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <dnx/thread.h>
 #include <dnx/misc.h>
 #include "stm32f1/spi_cfg.h"

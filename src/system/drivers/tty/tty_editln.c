@@ -27,7 +27,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/module.h>
+#include "core/module.h"
 #include <string.h>
 #include "tty.h"
 #include "tty_cfg.h"
@@ -35,7 +35,6 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define VALIDATION_TOKEN                        (u32_t)0x6921363E
 #define EDITLINE_LEN                            _TTY_DEFAULT_TERMINAL_COLUMNS
 
 /*==============================================================================
@@ -58,6 +57,8 @@ struct ttyedit {
   Local objects
 ==============================================================================*/
 MODULE_NAME("TTY");
+
+static const u32_t validation_token = 0x6921363E;
 
 /*==============================================================================
   Exported objects
@@ -84,7 +85,7 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 {
         ttyedit_t *edit = calloc(1, sizeof(ttyedit_t));
         if (edit) {
-                edit->valid        = VALIDATION_TOKEN;
+                edit->valid        = validation_token;
                 edit->out_file     = out_file;
                 edit->echo_enabled = true;
         }
@@ -102,7 +103,7 @@ ttyedit_t *ttyedit_new(FILE *out_file)
 void ttyedit_delete(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         this->valid = 0;
                         free(this);
                 }
@@ -119,7 +120,7 @@ void ttyedit_delete(ttyedit_t *this)
 void ttyedit_echo_enable(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         this->echo_enabled = true;
                 }
         }
@@ -135,7 +136,7 @@ void ttyedit_echo_enable(ttyedit_t *this)
 void ttyedit_echo_disable(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         this->echo_enabled = false;
                 }
         }
@@ -153,7 +154,7 @@ void ttyedit_echo_disable(ttyedit_t *this)
 bool ttyedit_is_echo_enabled(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         return this->echo_enabled;
                 }
         }
@@ -173,7 +174,7 @@ bool ttyedit_is_echo_enabled(ttyedit_t *this)
 char *ttyedit_get(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         return this->buffer;
                 }
         }
@@ -193,7 +194,7 @@ char *ttyedit_get(ttyedit_t *this)
 void ttyedit_set(ttyedit_t *this, const char *str, bool show)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (strlen(str) <= EDITLINE_LEN) {
                                 if (show) {
                                         ttyedit_move_cursor_home(this);
@@ -222,7 +223,7 @@ void ttyedit_set(ttyedit_t *this, const char *str, bool show)
 void ttyedit_clear(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         memset(this->buffer, 0, EDITLINE_LEN + 1);
                         this->cursor_position = 0;
                         this->length          = 0;
@@ -241,7 +242,7 @@ void ttyedit_clear(ttyedit_t *this)
 void ttyedit_insert_char(ttyedit_t *this, const char c)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (this->length >= EDITLINE_LEN - 1) {
                                 return;
                         }
@@ -286,7 +287,7 @@ void ttyedit_insert_char(ttyedit_t *this, const char c)
 void ttyedit_remove_char(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (this->cursor_position == 0 || this->length == 0) {
                                 return;
                         }
@@ -321,7 +322,7 @@ void ttyedit_remove_char(ttyedit_t *this)
 void ttyedit_delete_char(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (this->length == 0 || this->cursor_position == this->length) {
                                 return;
                         }
@@ -354,7 +355,7 @@ void ttyedit_delete_char(ttyedit_t *this)
 void ttyedit_move_cursor_left(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (this->cursor_position > 0) {
                                 vfs_fwrite("\b", sizeof(char), 1, this->out_file);
                                 this->cursor_position--;
@@ -373,7 +374,7 @@ void ttyedit_move_cursor_left(ttyedit_t *this)
 void ttyedit_move_cursor_right(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         if (this->cursor_position < this->length) {
                                 const char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
                                 vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
@@ -393,7 +394,7 @@ void ttyedit_move_cursor_right(ttyedit_t *this)
 void ttyedit_move_cursor_home(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         const char *cmd = VT100_CURSOR_OFF;
                         vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 
@@ -418,7 +419,7 @@ void ttyedit_move_cursor_home(ttyedit_t *this)
 void ttyedit_move_cursor_end(ttyedit_t *this)
 {
         if (this) {
-                if (this->valid == VALIDATION_TOKEN) {
+                if (this->valid == validation_token) {
                         const char *cmd = VT100_CURSOR_OFF;
                         vfs_fwrite(cmd, sizeof(char), strlen(cmd), this->out_file);
 

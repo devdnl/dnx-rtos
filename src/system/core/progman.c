@@ -39,8 +39,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PROG_VALID_NUMBER               (u32_t)0x3B6BF19D
-#define THREAD_VALID_NUMBER             (u32_t)0x8843D463
 
 /*==============================================================================
   Local types, enums definitions
@@ -84,6 +82,8 @@ static stdret_t get_program_data        (const char *name, struct _prog_data *pr
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static const u32_t prog_valid_number   = 0x3B6BF19D;
+static const u32_t thread_valid_number = 0x8843D463;
 
 /*==============================================================================
   Exported object definitions
@@ -163,6 +163,9 @@ static void program_startup(void *arg)
                         errno  = 0;
 
                         prog->exit_code = prog->func(prog->argc, prog->argv);
+
+                        vfs_ioctl(stdin , NON_BLOCKING_RD_MODE);
+                        sys_getc(stdin);
 
                         vfs_ioctl(stdin , DEFAULT_RD_MODE);
                         vfs_ioctl(stdin , DEFAULT_WR_MODE);
@@ -496,7 +499,7 @@ static int process_kill(task_t *taskhdl, int status)
 static bool prog_is_valid(prog_t *prog)
 {
         if (prog) {
-                if (prog->valid == PROG_VALID_NUMBER) {
+                if (prog->valid == prog_valid_number) {
                         return true;
                 }
         }
@@ -519,7 +522,7 @@ static bool prog_is_valid(prog_t *prog)
 static bool thread_is_valid(thread_t *thread)
 {
         if (thread) {
-                if (thread->valid == THREAD_VALID_NUMBER) {
+                if (thread->valid == thread_valid_number) {
                         return true;
                 }
         }
@@ -574,7 +577,7 @@ task_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, 
                                                                   prog);
 
                                         if (prog->task) {
-                                                prog->valid = PROG_VALID_NUMBER;
+                                                prog->valid = prog_valid_number;
                                                 return prog;
                                         }
                                 }
@@ -816,7 +819,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
                 thread->task     = task_new(thread_startup, task_get_name(), stack_depth, thread);
 
                 if (thread->task) {
-                        thread->valid = THREAD_VALID_NUMBER;
+                        thread->valid = thread_valid_number;
                         return thread;
                 }
         }

@@ -51,9 +51,8 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** port names */
-enum
-{
+/** major number */
+enum {
         #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
         _SPI1,
         #endif
@@ -64,6 +63,18 @@ enum
         _SPI3,
         #endif
         _SPI_NUMBER
+};
+
+/** minor number */
+enum {
+        _SPI_CS0 = 0,
+        _SPI_CS1 = 1,
+        _SPI_CS2 = 2,
+        _SPI_CS3 = 3,
+        _SPI_CS4 = 4,
+        _SPI_CS5 = 5,
+        _SPI_CS6 = 6,
+        _SPI_CS7 = 7
 };
 
 /* SPI clock divider */

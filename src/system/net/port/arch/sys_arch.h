@@ -53,17 +53,17 @@ typedef int              sys_prot_t;
 
 typedef struct sys_mutex {
         mutex_t *mutex;
-        int      valid;
+        u32_t    valid;
 } sys_mutex_t;
 
 typedef struct sys_sem {
         sem_t *sem;
-        int    valid;
+        u32_t  valid;
 } sys_sem_t;
 
 typedef struct sys_mbox {
         queue_t *queue;
-        int      valid;
+        u32_t    valid;
 } sys_mbox_t;
 
 /*==============================================================================
