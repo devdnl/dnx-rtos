@@ -1085,6 +1085,9 @@ int vfs_fseek(FILE *file, i64_t offset, int mode)
         default: return -1;
         }
 
+        file->f_flag.eof   = false;
+        file->f_flag.error = false;
+
         return 0;
 }
 
