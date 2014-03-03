@@ -97,31 +97,27 @@ extern "C" {
  * to a string beginning with one of the following sequences (possibly followed
  * by additional characters, as described below):<p>
  *
- * <b>r</b><br>
- * Open text file for reading. The stream is positioned at the beginning of the
+ * <b>r</b><br> - Open text file for reading. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>r+</b><br> - Open for reading and writing. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>w</b><br> - Truncate file to zero length or create text file for writing.
+ * The stream is positioned at the beginning of the file.<p>
+ *
+ * <b>w+</b><br> - Open for reading and writing. The file is created if it does
+ * not exist, otherwise it is truncated. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>a</b><br> - Open for appending (writing at end of file). The file is
+ * created if it does  not exist. The stream is positioned at the end of the
  * file.<p>
  *
- * <b>r+</b><br>
- * Open for reading and writing. The stream is positioned at the beginning of
- * the file.<p>
- *
- * <b>w</b><br>
- * Truncate file to zero length or create text file for writing. The stream is
- * positioned at the beginning of the file.<p>
- *
- * <b>w+</b><br>
- * Open for reading and writing. The file is created if it does not exist,
- * otherwise it is truncated. The stream is positioned at the beginning of the
- * file.<p>
- *
- * <b>a</b><br>
- * Open for appending (writing at end of file). The file is created if it does
- * not exist. The stream is positioned at the end of the file.<p>
- *
- * <b>a+</b><br>
- * Open for reading and appending (writing at end of file). The file is created
- * if it does not exist. The initial file position for reading is at the
- * beginning of the file, but output is always appended to the end of the file.
+ * <b>a+</b><br> - Open for reading and appending (writing at end of file). The
+ * file is created if it does not exist. The initial file position for reading
+ * is at the beginning of the file, but output is always appended to the end of
+ * the file.
  *
  * @param path          path to file
  * @param mode          file open mode
@@ -567,30 +563,179 @@ static inline int feof(FILE *file)
         return vfs_feof(file);
 }
 
+//==============================================================================
+/**
+ * @brief void clearerr(FILE *file)
+ * The function <b>clearerr()</b> clears the end-of-file and error indicators
+ * for the stream pointed to by <i>file</i>.
+ *
+ * @param file          stream
+ *
+ * @errors EINVAL, ENOENT
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/foo/bar", "w+");
+ * if (file) {
+ *        // file operations...
+ *
+ *        if (ferror(file) {
+ *                // ...
+ *
+ *                clearerr(file);
+ *
+ *                // ...
+ *        }
+ *
+ *        // file operations...
+ *
+ *        fclose(file);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
 static inline void clearerr(FILE *file)
 {
         return vfs_clearerr(file);
 }
 
+//==============================================================================
+/**
+ * @brief int ferror(FILE *file)
+ * The function <b>ferror()</b> tests the error indicator for the stream pointed
+ * to by <i>file</i>, returning nonzero if it is set.  The error indicator can
+ * be reset only by the <b>clearerr()</b> function.
+ *
+ * @param file          stream
+ *
+ * @errors EINVAL, ENOENT
+ *
+ * @return Returns nonzero value if the file stream has errors occurred,
+ * 0 otherwise.
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/foo/bar", "w+");
+ * if (file) {
+ *        // file operations...
+ *
+ *        if (ferror(file) {
+ *                // ...
+ *
+ *                clearerr(file);
+ *
+ *                // ...
+ *        }
+ *
+ *        // file operations...
+ *
+ *        fclose(file);
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
 static inline int ferror(FILE *file)
 {
         return vfs_ferror(file);
 }
 
+//==============================================================================
+/**
+ * @brief void perror(const char *s)
+ * The routine <b>perror()</b> produces a message on the standard error output,
+ * describing the last error encountered during a call to a system or
+ * library function.  First (if <i>s</i> is not <b>NULL</b> and <i>*s</i> is not
+ * a null byte ('\0')) the argument string <i>s</i> is printed, followed by a
+ * colon and a blank. Then the message and a new-line.
+ *
+ * @param s             string to print
+ *
+ * @errors EINVAL, ENOENT, ENOMEM, ...
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/foo/bar", "w+");
+ * if (!file) {
+ *        perror("/foo/bar");
+ *
+ *        // error handling
+ * }
+ *
+ * // ...
+ */
+//==============================================================================
 static inline void perror(const char *s)
 {
         sys_perror(s);
 }
 
-static inline void setbuf(FILE *stream, char *buffer)
+//==============================================================================
+/**
+ * @brief void setbuf(FILE *file, char *buffer)
+ * The routine exist in dnx RTOS only for compatible reasons. Function in this
+ * case do nothing.
+ *
+ * @param file      stream
+ * @param buffer    buffer
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/foo/bar", "r");
+ * if (file) {
+ *        char buffer[100];
+ *        setbuf(file, buffer);
+ *
+ *        // ...
+ * }
+ * // ...
+ */
+//==============================================================================
+static inline void setbuf(FILE *file, char *buffer)
 {
-        (void) stream;
+        (void) file;
         (void) buffer;
 }
 
-static inline int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
+//==============================================================================
+/**
+ * @brief int setvbuf(FILE *file, char *buffer, int mode, size_t size)
+ * The routine exist in dnx RTOS only for compatible reasons. Function in this
+ * case do nothing.
+ *
+ * @param file      stream
+ * @param buffer    buffer
+ * @param mode      buffer mode (<b>_IONBF</b> unbuffered,
+ *                  <b>_IOLBF</b> line buffered, <b>_IOFBF</b> fully buffered)
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ * FILE *file = fopen("/foo/bar", "r");
+ * if (file) {
+ *        char buffer[100];
+ *        setvbuf(file, buffer, _IOFBF, 100);
+ *
+ *        // ...
+ * }
+ * // ...
+ */
+//==============================================================================
+static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
 {
-        (void) stream;
+        (void) file;
         (void) buffer;
         (void) mode;
         (void) size;
@@ -598,11 +743,56 @@ static inline int setvbuf(FILE *stream, char *buffer, int mode, size_t size)
         return 0;
 }
 
+//==============================================================================
+/**
+ * @brief FILE *tmpfile(void)
+ * The routine exist in dnx RTOS only for compatible reasons. Function in this
+ * case do nothing.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return The <b>tmpfile()</b> function returns a stream descriptor, or <b>NULL</b>
+ * if a unique filename cannot be generated or the unique file cannot be opened.
+ * In the latter case, <b>errno</b> is set to indicate the error.
+ *
+ * @example
+ * // ...
+ * FILE *file = tmpfile();
+ * if (file) {
+ *        // ...
+ * }
+ * // ...
+ */
+//==============================================================================
 static inline FILE *tmpfile(void)
 {
         return NULL;
 }
 
+//==============================================================================
+/**
+ * @brief char *tmpnam(char *str)
+ * The routine exist in dnx RTOS only for compatible reasons. Function in this
+ * case do nothing.
+ *
+ * @param str       temporary file name or automatic generated if <b>NULL</b>
+ *
+ * @errors None
+ *
+ * @return The <b>tmpnam()</b> function returns a pointer to a unique temporary
+ * filename, or <b>NULL</b> if a unique name cannot be generated.
+ *
+ * @example
+ * // ...
+ * char *tmpname = tmpnam(NULL);
+ * if (tmpname) {
+ *        // ...
+ * }
+ * // ...
+ */
+//==============================================================================
 static inline char *tmpnam(char *str)
 {
         (void) str;
@@ -610,16 +800,85 @@ static inline char *tmpnam(char *str)
         return NULL;
 }
 
+//==============================================================================
+/**
+ * @brief int remove(const char *path)
+ * <b>remove</b>() deletes a name from the filesystem. If the removed name was
+ * the last link to a file and no processes have the file open, the file is
+ * deleted and the space it was using is made available for reuse.<p>
+ *
+ * If the name referred to a FIFO, or device, the name is removed, but
+ * processes which have the object open may continue to use it.
+ *
+ * @param path      path to file
+ *
+ * @errors EINVAL, ENOENT, ...
+ *
+ * @return On success, zero is returned. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * // ...
+ * remove("/foo/bar");
+ * // ...
+ */
+//==============================================================================
 static inline int remove(const char *path)
 {
         return vfs_remove(path);
 }
 
+//==============================================================================
+/**
+ * @brief int rename(const char *old_name, const char *new_name)
+ * <b>rename</b>() renames a file. In contrast to standard C library this function
+ * don't move files between directories if <i>new_name</i> is localized on other
+ * filesystem than <i>old_name</i>, otherwise it's depending on filesystem.
+ *
+ * @param old_name      old file name
+ * @param new_name      new file name
+ *
+ * @errors EINVAL, ENOENT, EPERM, ...
+ *
+ * @return On success, zero is returned. On error, -1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * // ...
+ * rename("/foo/bar", "/foo/baz");
+ * // ...
+ */
+//==============================================================================
 static inline int rename(const char *old_name, const char *new_name)
 {
         return vfs_rename(old_name, new_name);
 }
 
+//==============================================================================
+/**
+ * @brief int printf(const char *format, ...)
+ * The functions in the <b>printf</b>() family produce output according to a
+ * format as described below. The functions <b>printf</b>() and <b>vprintf</b>()
+ * write output to <b>stdout</b>, the standard output stream; <b>fprintf</b>()
+ * and <b>vfprintf</b>() write output to the given output stream; <b>sprintf</b>(),
+ * <b>snprintf</b>(), <b>vsprintf</b>() and <b>vsnprintf</b>() write to the
+ * character string str.
+ *
+ * @param format        formatting string
+ * @param ...           additional arguments
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return http://man7.org/linux/man-pages/man3/printf.3.html
+ *
+ * @example
+ * // ...
+ * int foo = 12;
+ * int bar = 0x12;
+ * printf("foois %d; bar is 0x%x\n", foo, bar);
+ * // ...
+ */
+//==============================================================================
 static inline int printf(const char *format, ...)
 {
         va_list arg;
