@@ -92,7 +92,7 @@ extern "C" {
 //==============================================================================
 /**
  * @brief FILE *fopen(const char *path, const char *mode)
- * The <b>fopen()</b> function opens the file whose name is the string pointed to by
+ * The <b>fopen</b>() function opens the file whose name is the string pointed to by
  * <i>path</i> and associates a stream with it. The argument <i>mode</i> points
  * to a string beginning with one of the following sequences (possibly followed
  * by additional characters, as described below):<p>
@@ -124,7 +124,7 @@ extern "C" {
  *
  * @errors EINVAL, ENOMEM, ENOENT
  *
- * @return Upon successful completion <b>fopen()</b>, return a <b>FILE</b> pointer.
+ * @return Upon successful completion <b>fopen</b>(), return a <b>FILE</b> pointer.
  * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
  * error.
  *
@@ -149,10 +149,10 @@ static inline FILE *fopen(const char *path, const char *mode)
 //==============================================================================
 /**
  * @brief FILE *freopen(const char *path, const char *mode, FILE *file)
- * The <b>freopen()</b> function opens the file whose name is the string pointed to by
+ * The <b>freopen</b>() function opens the file whose name is the string pointed to by
  * <i>path</i> and associates the stream pointed to by stream with it. The
  * original stream (if it exists) is closed. The <i>mode</i> argument is used just as
- * in the <b>fopen()</b> function.
+ * in the <b>fopen</b>() function.
  *
  * @param path          path to file
  * @param mode          file open mode
@@ -160,7 +160,7 @@ static inline FILE *fopen(const char *path, const char *mode)
  *
  * @errors EINVAL, ENOMEM, ENOENT
  *
- * @return Upon successful completion <b>freopen()</b>, return a <b>FILE</b> pointer.
+ * @return Upon successful completion <b>freopen</b>(), return a <b>FILE</b> pointer.
  * Otherwise, <b>NULL</b> is returned and <b>errno</b> is set to indicate the
  * error.
  *
@@ -185,7 +185,7 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 //==============================================================================
 /**
  * @brief int fclose(FILE *file)
- * The <b>fclose()</b> function closes the created stream <i>file</i>.
+ * The <b>fclose</b>() function closes the created stream <i>file</i>.
  *
  * @param file          file to reopen
  *
@@ -216,7 +216,7 @@ static inline int fclose(FILE *file)
 //==============================================================================
 /**
  * @brief size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
- * The function <b>fwrite()</b> writes <i>count</i> elements of data, each <i>size</i>
+ * The function <b>fwrite</b>() writes <i>count</i> elements of data, each <i>size</i>
  * bytes long, to the stream pointed to by <i>file</i>, obtaining them from the
  * location given by <i>ptr</i>.
  *
@@ -227,7 +227,7 @@ static inline int fclose(FILE *file)
  *
  * @errors EINVAL, ENOENT, ENOMEM, ...
  *
- * @return On success, <b>fwrite()</b> return the number of items written. This number
+ * @return On success, <b>fwrite</b>() return the number of items written. This number
  * equals the number of bytes transferred only when <i>size</i> is 1. If an error
  * occurs, or the end of the file is reached, the return value is a short item
  * count (or zero).
@@ -255,7 +255,7 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 //==============================================================================
 /**
  * @brief size_t fread(void *ptr, size_t size, size_t count, FILE *file)
- * The function <b>fread()</b> reads <i>count</i> elements of data, each <i>size</i>
+ * The function <b>fread</b>() reads <i>count</i> elements of data, each <i>size</i>
  * bytes long, from the stream pointed to by <i>file</i>, storing them at the
  * location given by <i>ptr</i>.
  *
@@ -266,7 +266,7 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
  *
  * @errors EINVAL, ENOENT, ENOMEM, ...
  *
- * @return On success, <b>fread()</b> return the number of items read. This number
+ * @return On success, <b>fread</b>() return the number of items read. This number
  * equals the number of bytes transferred only when <i>size</i> is 1. If an error
  * occurs, or the end of the file is reached, the return value is a short item
  * count (or zero).
@@ -294,7 +294,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 //==============================================================================
 /**
  * @brief int fsetpos(FILE *file, const fpos_t *pos)
- * The <b>fsetpos()</b> function is alternate interfaces equivalent to <b>fseek()</b>
+ * The <b>fsetpos</b>() function is alternate interfaces equivalent to <b>fseek</b>()
  * (with whence set to <b>SEEK_SET</b>), setting and storing the current value
  * of the file offset into the object referenced by <i>pos</i>.
  *
@@ -303,7 +303,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
  *
  * @errors EINVAL, ENOENT
  *
- * @return Upon successful completion, <b>fsetpos()</b> return 0. Otherwise, -1 is
+ * @return Upon successful completion, <b>fsetpos</b>() return 0. Otherwise, -1 is
  * returned and <b>errno</b> is set to indicate the error.
  *
  * @example
@@ -334,14 +334,14 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
 //==============================================================================
 /**
  * @brief int fseek(FILE *file, i64_t offset, int mode)
- * The <b>fseek()</b> function sets the file position indicator for the stream
+ * The <b>fseek</b>() function sets the file position indicator for the stream
  * pointed to by <i>file</i>. The new position, measured in bytes, is obtained
  * by adding offset bytes to the position specified by whence. If whence is set
  * to <b>SEEK_SET</b>, <b>SEEK_CUR</b>, or <b>SEEK_END</b>, the offset is
  * relative to the start of the file, the current position indicator, or
- * end-of-file, respectively. A successful call to the <b>fseek()</b> function
+ * end-of-file, respectively. A successful call to the <b>fseek</b>() function
  * clears the end-of-file indicator for the stream and undoes any effects of the
- * <b>ungetc()</b> function on the same stream.
+ * <b>ungetc</b>() function on the same stream.
  *
  * @param file          stream
  * @param offset        offset
@@ -349,7 +349,7 @@ static inline int fsetpos(FILE *file, const fpos_t *pos)
  *
  * @errors EINVAL, ENOENT
  *
- * @return Upon successful completion, <b>fseek()</b> return 0. Otherwise, -1 is
+ * @return Upon successful completion, <b>fseek</b>() return 0. Otherwise, -1 is
  * returned and <b>errno</b> is set to indicate the error.
  *
  * @example
@@ -376,7 +376,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
 //==============================================================================
 /**
  * @brief int rewind(FILE *file)
- * The <b>rewind()</b> function sets the file position indicator for the stream
+ * The <b>rewind</b>() function sets the file position indicator for the stream
  * pointed to by <i>file</i> to the beginning of the file. It is equivalent to:
  * <pre>(void) fseek(stream, 0L, SEEK_SET)</pre>
  *
@@ -384,7 +384,7 @@ static inline int fseek(FILE *file, i64_t offset, int mode)
  *
  * @errors EINVAL, ENOENT
  *
- * @return The <b>rewind()</b> function returns no value.
+ * @return The <b>rewind</b>() function returns no value.
  *
  * @example
  * // ...
@@ -410,14 +410,14 @@ static inline int rewind(FILE *file)
 //==============================================================================
 /**
  * @brief i64_t ftell(FILE *file)
- * The <b>ftell()</b> function obtains the current value of the file position
+ * The <b>ftell</b>() function obtains the current value of the file position
  * indicator for the stream pointed to by <i>file</i>.
  *
  * @param file          stream
  *
  * @errors EINVAL
  *
- * @return Upon successful completion, <b>ftell()</b> returns the current offset.
+ * @return Upon successful completion, <b>ftell</b>() returns the current offset.
  * Otherwise, -1 is returned and <b>errno</b> is set to indicate the error.
  *
  * @example
@@ -447,7 +447,7 @@ static inline i64_t ftell(FILE *file)
 //==============================================================================
 /**
  * @brief int fgetpos(FILE *file, fpos_t *pos)
- * The <b>fgetpos()</b> function is alternate interface equivalent to <b>ftell()</b>,
+ * The <b>fgetpos</b>() function is alternate interface equivalent to <b>ftell</b>(),
  * storing the current value of the file offset from the object referenced by
  * <i>pos</i>.
  *
@@ -456,7 +456,7 @@ static inline i64_t ftell(FILE *file)
  *
  * @errors EINVAL
  *
- * @return Upon successful completion, <b>fgetpos()</b> return 0. Otherwise, -1
+ * @return Upon successful completion, <b>fgetpos</b>() return 0. Otherwise, -1
  * is returned and <b>errno</b> is set to indicate the error.
  *
  * @example
@@ -491,9 +491,9 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 //==============================================================================
 /**
  * @brief int fflush(FILE *file)
- * For output streams, <b>fflush()</b> forces a write of all buffered data for
+ * For output streams, <b>fflush</b>() forces a write of all buffered data for
  * the given output or update stream via the stream's underlying write function.
- * For input streams, <b>fflush()</b> discards any buffered data that has been
+ * For input streams, <b>fflush</b>() discards any buffered data that has been
  * fetched from the underlying file. The open status of the stream is unaffected.
  *
  * @param file          stream
@@ -529,9 +529,9 @@ static inline int fflush(FILE *file)
 //==============================================================================
 /**
  * @brief int feof(FILE *file)
- * The function <b>feof()</b> tests the end-of-file indicator for the stream
+ * The function <b>feof</b>() tests the end-of-file indicator for the stream
  * pointed to by <i>file</i>, returning nonzero if it is set. The end-of-file
- * indicator can only be cleared by the function <b>clearerr()</b>.
+ * indicator can only be cleared by the function <b>clearerr</b>().
  *
  * @param file          stream
  *
@@ -566,7 +566,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 /**
  * @brief void clearerr(FILE *file)
- * The function <b>clearerr()</b> clears the end-of-file and error indicators
+ * The function <b>clearerr</b>() clears the end-of-file and error indicators
  * for the stream pointed to by <i>file</i>.
  *
  * @param file          stream
@@ -605,9 +605,9 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 /**
  * @brief int ferror(FILE *file)
- * The function <b>ferror()</b> tests the error indicator for the stream pointed
+ * The function <b>ferror</b>() tests the error indicator for the stream pointed
  * to by <i>file</i>, returning nonzero if it is set.  The error indicator can
- * be reset only by the <b>clearerr()</b> function.
+ * be reset only by the <b>clearerr</b>() function.
  *
  * @param file          stream
  *
@@ -646,7 +646,7 @@ static inline int ferror(FILE *file)
 //==============================================================================
 /**
  * @brief void perror(const char *s)
- * The routine <b>perror()</b> produces a message on the standard error output,
+ * The routine <b>perror</b>() produces a message on the standard error output,
  * describing the last error encountered during a call to a system or
  * library function.  First (if <i>s</i> is not <b>NULL</b> and <i>*s</i> is not
  * a null byte ('\0')) the argument string <i>s</i> is printed, followed by a
@@ -753,7 +753,7 @@ static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
  *
  * @errors None
  *
- * @return The <b>tmpfile()</b> function returns a stream descriptor, or <b>NULL</b>
+ * @return The <b>tmpfile</b>() function returns a stream descriptor, or <b>NULL</b>
  * if a unique filename cannot be generated or the unique file cannot be opened.
  * In the latter case, <b>errno</b> is set to indicate the error.
  *
@@ -781,7 +781,7 @@ static inline FILE *tmpfile(void)
  *
  * @errors None
  *
- * @return The <b>tmpnam()</b> function returns a pointer to a unique temporary
+ * @return The <b>tmpnam</b>() function returns a pointer to a unique temporary
  * filename, or <b>NULL</b> if a unique name cannot be generated.
  *
  * @example
@@ -1678,46 +1678,224 @@ static inline int vsscanf(const char *s, const char *format, va_list args)
         return sys_vsscanf(s, format, args);
 }
 
+//==============================================================================
+/**
+ * @brief int putc(int c, FILE *stream)
+ * <b>putc</b>() is equivalent to <b>fputc</b>().
+ *
+ * @param c         character to put
+ * @param stream    destination stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character written as an unsigned char cast to an int or
+ * <b>EOF</b> on error.
+ *
+ * @example
+ * // ...
+ * putc('f', stdout);
+ * // ...
+ */
+//==============================================================================
 static inline int putc(int c, FILE *stream)
 {
         return sys_fputc(c, stream);
 }
 
-static inline int fputc(int c, FILE *stream)
-{
-        return sys_fputc(c, stream);
-}
-
-static inline int fputs(const char *s, FILE *stream)
-{
-        return sys_f_puts(s, stream, false);
-}
-
-static inline int puts(const char *s)
-{
-        return sys_f_puts(s, stdout, true);
-}
-
+//==============================================================================
+/**
+ * @brief int putchar(int c)
+ * <b>putchar</b>(c); is equivalent to <b>putc</b>(c, stdout).
+ *
+ * @param c         character to put
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character written as an unsigned char cast to an int or
+ * <b>EOF</b> on error.
+ *
+ * @example
+ * // ...
+ * putchar('f');
+ * // ...
+ */
+//==============================================================================
 static inline int putchar(int c)
 {
         return sys_fputc(c, stdout);
 }
 
+//==============================================================================
+/**
+ * @brief int fputc(int c, FILE *stream)
+ * <b>fputc</b>() writes the character <i>c</i>, cast to an unsigned char, to
+ * <i>stream</i>.
+ *
+ * @param c         character to put
+ * @param stream    destination stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character written as an unsigned char cast to an int or
+ * <b>EOF</b> on error.
+ *
+ * @example
+ * // ...
+ * fputc('f', stdout);
+ * // ...
+ */
+//==============================================================================
+static inline int fputc(int c, FILE *stream)
+{
+        return sys_fputc(c, stream);
+}
+
+//==============================================================================
+/**
+ * @brief int fputs(const char *s, FILE *stream)
+ * <b>fputs</b>() writes the string <i>s</i> to <i>stream</i>, without its
+ * terminating null byte ('\0').
+ *
+ * @param s         string to put
+ * @param stream    destination stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return a nonnegative number on success, or <b>EOF</b> on error.
+ *
+ * @example
+ * // ...
+ * fputs("foo bar", stdout);
+ * // ...
+ */
+//==============================================================================
+static inline int fputs(const char *s, FILE *stream)
+{
+        return sys_f_puts(s, stream, false);
+}
+
+//==============================================================================
+/**
+ * @brief int puts(const char *s)
+ * <b>puts</b>() writes the string <i>s</i> to <i>stdout</i>, without its
+ * terminating null byte ('\0').
+ *
+ * @param s         string to put
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return a nonnegative number on success, or <b>EOF</b> on error.
+ *
+ * @example
+ * // ...
+ * puts("foo bar");
+ * // ...
+ */
+//==============================================================================
+static inline int puts(const char *s)
+{
+        return sys_f_puts(s, stdout, true);
+}
+
+//==============================================================================
+/**
+ * @brief int getchar(void)
+ * <b>getchar</b>() is equivalent to <b>getc</b>(stdin).
+ *
+ * @param None
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character read as an unsigned char cast to an int or
+ * <b>EOF</b> on end of file or error.
+ *
+ * @example
+ * // ...
+ * char c = getchar();
+ * // ...
+ */
+//==============================================================================
 static inline int getchar(void)
 {
         return sys_getc(stdin);
 }
 
-static inline int fgetc(FILE *stream)
-{
-        return sys_getc(stream);
-}
-
+//==============================================================================
+/**
+ * @brief int getc(FILE *stream)
+ * <b>getc</b>() is equivalent to <b>fgetc</b>().
+ *
+ * @param stream        input stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character read as an unsigned char cast to an int or
+ * <b>EOF</b> on end of file or error.
+ *
+ * @example
+ * // ...
+ * char c = getc(stdin);
+ * // ...
+ */
+//==============================================================================
 static inline int getc(FILE *stream)
 {
         return sys_getc(stream);
 }
 
+//==============================================================================
+/**
+ * @brief int fgetc(FILE *stream)
+ * <b>fgetc</b>() reads the next character from <i>stream</i> and returns it
+ * as an unsigned char cast to an int, or <b>EOF</b> on end of file or error.
+ *
+ * @param stream        input stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character read as an unsigned char cast to an int or
+ * <b>EOF</b> on end of file or error.
+ *
+ * @example
+ * // ...
+ * char c = fgetc(stdin);
+ * // ...
+ */
+//==============================================================================
+static inline int fgetc(FILE *stream)
+{
+        return sys_getc(stream);
+}
+
+//==============================================================================
+/**
+ * @brief int ungetc(int c, FILE *stream)
+ * <b>ungetc</b>() pushes <i>c</i> back to stream, cast to unsigned char, where
+ * it is available for subsequent read operations. Pushed-back characters will
+ * be returned in reverse order; only one pushback is guaranteed.<p>
+ *
+ * Calls to the functions described here can be mixed with each other and with
+ * calls to other input functions from the stdio library for the same input
+ * stream.<p>
+ *
+ * The routine exist by dnx RTOS only for compatible reasons. Function in no
+ * supported.
+ *
+ * @param c             output stream
+ * @param stream        input stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character read as an unsigned char cast to an int or
+ * <b>EOF</b> on end of file or error. Function is not supported by dnx RTOS
+ * and always <b>EOF</b> is returned.
+ *
+ * @example
+ * // ...
+ * ungetc(c, stdin);
+ * // ...
+ */
+//==============================================================================
 static inline int ungetc(int c, FILE *stream)
 {
         (void) c;
@@ -1726,14 +1904,35 @@ static inline int ungetc(int c, FILE *stream)
         return EOF;
 }
 
+//==============================================================================
+/**
+ * @brief char *fgets(char *str, int size, FILE *stream)
+ * <b>fgets</b>() reads in at most one less than size characters from stream
+ * and stores them into the buffer pointed to by <i>str</i>. Reading stops after
+ * an EOF, a newline or buffer end. If a newline is read, it is stored into the
+ * buffer. A terminating null byte ('\0') is stored after the last character in
+ * the buffer.
+ *
+ * @param str           destination buffer
+ * @param size          buffer size
+ * @param stream        input stream
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return Return the character read as an unsigned char cast to an int or
+ * <b>EOF</b> on end of file or error. Function is not supported by dnx RTOS
+ * and always <b>EOF</b> is returned.
+ *
+ * @example
+ * // ...
+ * char *buffer[100];
+ * fgets(buffer, 100, stdin);
+ * // ...
+ */
+//==============================================================================
 static inline char *fgets(char *str, int size, FILE *stream)
 {
         return sys_fgets(str, size, stream);
-}
-
-static inline char *gets(char *str)
-{
-        return sys_fgets(str, INT_MAX, stdin);
 }
 
 #ifdef __cplusplus
