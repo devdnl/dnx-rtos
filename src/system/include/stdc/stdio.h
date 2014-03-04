@@ -857,25 +857,45 @@ static inline int rename(const char *old_name, const char *new_name)
 //==============================================================================
 /**
  * @brief int printf(const char *format, ...)
- * The functions in the <b>printf</b>() family produce output according to a
- * format as described below. The functions <b>printf</b>() and <b>vprintf</b>()
- * write output to <b>stdout</b>, the standard output stream; <b>fprintf</b>()
- * and <b>vfprintf</b>() write output to the given output stream; <b>sprintf</b>(),
- * <b>snprintf</b>(), <b>vsprintf</b>() and <b>vsnprintf</b>() write to the
- * character string str.
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <b>stdout</b>, the standard output stream.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
  *
  * @param format        formatting string
- * @param ...           additional arguments
+ * @param ...           argument sequence
  *
  * @errors EINVAL, ENOMEM, ENOENT, ...
  *
- * @return http://man7.org/linux/man-pages/man3/printf.3.html
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
  *
  * @example
  * // ...
  * int foo = 12;
  * int bar = 0x12;
- * printf("foois %d; bar is 0x%x\n", foo, bar);
+ * printf("foo is %d; bar is 0x%x\n", foo, bar);
  * // ...
  */
 //==============================================================================
@@ -888,11 +908,103 @@ static inline int printf(const char *format, ...)
         return status;
 }
 
+//==============================================================================
+/**
+ * @brief int vprintf(const char *format, va_list arg)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <b>stdout</b>, the standard output stream.
+ * An arguments are passed by list <i>arg</i>.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
+ *
+ * @param format        formatting string
+ * @param arg           argument sequence list
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ *
+ * @example
+ * // ...
+ * va_list arg;
+ * // ...
+ * vprintf("foo is %d; bar is 0x%x\n", arg);
+ * // ...
+ */
+//==============================================================================
 static inline int vprintf(const char *format, va_list arg)
 {
         return sys_vfprintf(stdout, format, arg);
 }
 
+//==============================================================================
+/**
+ * @brief int fprintf(FILE *stream, const char *format, ...)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <b>stream</b>.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
+ *
+ * @param stream        output stream
+ * @param format        formatting string
+ * @param ...           argument sequence
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ *
+ * @example
+ * // ...
+ * int foo = 12;
+ * int bar = 0x12;
+ * fprintf(stdout, "foo is %d; bar is 0x%x\n", foo, bar);
+ * // ...
+ */
+//==============================================================================
 static inline int fprintf(FILE *stream, const char *format, ...)
 {
         va_list arg;
@@ -902,11 +1014,106 @@ static inline int fprintf(FILE *stream, const char *format, ...)
         return status;
 }
 
+//==============================================================================
+/**
+ * @brief int vfprintf(FILE *stream, const char *format, va_list arg)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output to <b>stream</b>.
+ * An arguments are passed by list <i>arg</i>.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
+ *
+ * @param stream        output stream
+ * @param format        formatting string
+ * @param arg           argument list
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ *
+ * @example
+ * // ...
+ * va_list arg;
+ * // ...
+ * vfprintf(stdout, "foois %d; bar is 0x%x\n", arg);
+ * // ...
+ */
+//==============================================================================
 static inline int vfprintf(FILE *stream, const char *format, va_list arg)
 {
         return sys_vfprintf(stream, format, arg);
 }
 
+//==============================================================================
+/**
+ * @brief int snprintf(char *s, size_t n, const char *format, ...)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output pointed to by <i>s</i> of size <i>n</i>.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
+ *
+ * @param s             buffer where output was produced
+ * @param n             buffer size
+ * @param format        formatting string
+ * @param ...           argument sequence
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ *
+ * @example
+ * // ...
+ * char buffer[20];
+ * int foo = 12;
+ * int bar = 0x12;
+ * snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", foo, bar);
+ * // ...
+ */
+//==============================================================================
 static inline int snprintf(char *s, size_t n, const char *format, ...)
 {
         va_list arg;
@@ -916,11 +1123,108 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
         return status;
 }
 
+//==============================================================================
+/**
+ * @brief int vsnprintf(char *bfr, size_t size, const char *format, va_list args)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output pointed to by <i>bfr</i> of size <i>size</i>.
+ * An arguments are passed by list <i>args</i>.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
+ *
+ * @param bfr           buffer which output was produced
+ * @param size          buffer size
+ * @param format        formatting string
+ * @param args          argument list
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ *
+ * @example
+ * // ...
+ * va_list args;
+ * // ...
+ * char buffer[20];
+ * snprintf(buffer, 20, "foo is %d; bar is 0x%x\n", args);
+ * // ...
+ */
+//==============================================================================
 static inline int vsnprintf(char *bfr, size_t size, const char *format, va_list args)
 {
         return sys_vsnprintf(bfr, size, format, args);
 }
 
+//==============================================================================
+/**
+ * @brief int sprintf(char *s, const char *format, ...)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output pointed to by <i>s</i>. Buffer must be enough long
+ * to store produced data.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
+ *
+ * @param s             buffer which output was produced
+ * @param format        formatting string
+ * @param ...           argument sequence
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ *
+ * @example
+ * // ...
+ * int foo = 12;
+ * int bar = 0x12;
+ * char buffer[20];
+ * sprintf(buffer, "foo is %d; bar is 0x%x\n", foo, bar);
+ * // ...
+ */
+//==============================================================================
 static inline int sprintf(char *s, const char *format, ...)
 {
         va_list arg;
@@ -930,6 +1234,54 @@ static inline int sprintf(char *s, const char *format, ...)
         return status;
 }
 
+//==============================================================================
+/**
+ * @brief int vsprintf(char *s, const char *format, va_list arg)
+ * The function produce output according to a <i>format</i> as described below.
+ * The function write output pointed to by <i>s</i>. Buffer must be enough long
+ * to store produced data. An arguments are passed by list <i>arg</i>.<p>
+ *
+ * <b>%</b><br>
+ * The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc. When
+ * next character is <i>%</i> then per cent is printed.
+ *
+ * <b>c</b><br>
+ * Prints single character.<p>
+ *
+ * <b>s</b><br>
+ * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ *
+ * <b>d, i</b><br>
+ * Prints signed <i>int</i> type number.<p>
+ *
+ * <b>u</b><br>
+ * Prints unsigned type number.<p>
+ *
+ * <b>x, X</b><br>
+ * Prints value in HEX formatting.<p>
+ *
+ * <b>f</b><br>
+ * Prints float value.
+ *
+ * @param s             buffer which output was produced
+ * @param format        formatting string
+ * @param arg           argument sequence list
+ *
+ * @errors EINVAL, ENOMEM, ENOENT, ...
+ *
+ * @return Upon successful return, these functions return the number of
+ * characters printed (excluding the null byte used to end output to strings).
+ *
+ * @example
+ * // ...
+ * va_list args;
+ * // ...
+ * char buffer[20];
+ * vsprintf(buffer, "foo is %d; bar is 0x%x\n", args);
+ * // ...
+ */
+//==============================================================================
 static inline int vsprintf(char *s, const char *format, va_list arg)
 {
         return sys_vsnprintf(s, UINT16_MAX, format, arg);
