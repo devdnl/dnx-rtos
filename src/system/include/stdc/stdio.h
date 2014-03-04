@@ -97,24 +97,24 @@ extern "C" {
  * to a string beginning with one of the following sequences (possibly followed
  * by additional characters, as described below):<p>
  *
- * <b>r</b><br> - Open text file for reading. The stream is positioned at the
+ * <b>r</b> - Open text file for reading. The stream is positioned at the
  * beginning of the file.<p>
  *
- * <b>r+</b><br> - Open for reading and writing. The stream is positioned at the
+ * <b>r+</b> - Open for reading and writing. The stream is positioned at the
  * beginning of the file.<p>
  *
- * <b>w</b><br> - Truncate file to zero length or create text file for writing.
+ * <b>w</b> - Truncate file to zero length or create text file for writing.
  * The stream is positioned at the beginning of the file.<p>
  *
- * <b>w+</b><br> - Open for reading and writing. The file is created if it does
+ * <b>w+</b> - Open for reading and writing. The file is created if it does
  * not exist, otherwise it is truncated. The stream is positioned at the
  * beginning of the file.<p>
  *
- * <b>a</b><br> - Open for appending (writing at end of file). The file is
+ * <b>a</b> - Open for appending (writing at end of file). The file is
  * created if it does  not exist. The stream is positioned at the end of the
  * file.<p>
  *
- * <b>a+</b><br> - Open for reading and appending (writing at end of file). The
+ * <b>a+</b> - Open for reading and appending (writing at end of file). The
  * file is created if it does not exist. The initial file position for reading
  * is at the beginning of the file, but output is always appended to the end of
  * the file.
@@ -187,7 +187,7 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
  * @brief int fclose(FILE *file)
  * The <b>fclose</b>() function closes the created stream <i>file</i>.
  *
- * @param file          file to reopen
+ * @param file          file to close
  *
  * @errors EINVAL, ENOENT, ESRCH
  *
@@ -714,8 +714,7 @@ static inline void setbuf(FILE *file, char *buffer)
  *
  * @param file      stream
  * @param buffer    buffer
- * @param mode      buffer mode (<b>_IONBF</b> unbuffered,
- *                  <b>_IOLBF</b> line buffered, <b>_IOFBF</b> fully buffered)
+ * @param mode      buffer mode (<b>_IONBF</b> unbuffered, <b>_IOLBF</b> line buffered, <b>_IOFBF</b> fully buffered)
  *
  * @errors None
  *
@@ -860,28 +859,21 @@ static inline int rename(const char *old_name, const char *new_name)
  * The function produce output according to a <i>format</i> as described below.
  * The function write output to <b>stdout</b>, the standard output stream.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
  * next character is <i>%</i> then per cent is printed.
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param format        formatting string
  * @param ...           argument sequence
@@ -916,28 +908,21 @@ static inline int printf(const char *format, ...)
  * The function write output to <b>stdout</b>, the standard output stream.
  * An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.
+ * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param format        formatting string
  * @param arg           argument sequence list
@@ -967,28 +952,21 @@ static inline int vprintf(const char *format, va_list arg)
  * The function produce output according to a <i>format</i> as described below.
  * The function write output to <b>stream</b>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.
+ * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param stream        output stream
  * @param format        formatting string
@@ -1024,28 +1002,21 @@ static inline int fprintf(FILE *stream, const char *format, ...)
  * The function write output to <b>stream</b>.
  * An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.
+ * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param stream        output stream
  * @param format        formatting string
@@ -1076,28 +1047,21 @@ static inline int vfprintf(FILE *stream, const char *format, va_list arg)
  * The function produce output according to a <i>format</i> as described below.
  * The function write output pointed to by <i>s</i> of size <i>n</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.
+ * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param s             buffer where output was produced
  * @param n             buffer size
@@ -1135,28 +1099,21 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
  * The function write output pointed to by <i>bfr</i> of size <i>size</i>.
  * An arguments are passed by list <i>args</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.
+ * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param bfr           buffer which output was produced
  * @param size          buffer size
@@ -1190,28 +1147,21 @@ static inline int vsnprintf(char *bfr, size_t size, const char *format, va_list 
  * The function write output pointed to by <i>s</i>. Buffer must be enough long
  * to store produced data.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.
+ * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param s             buffer which output was produced
  * @param format        formatting string
@@ -1248,28 +1198,21 @@ static inline int sprintf(char *s, const char *format, ...)
  * The function write output pointed to by <i>s</i>. Buffer must be enough long
  * to store produced data. An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
- * next character is <i>%</i> then per cent is printed.
+ * next character is <i>%</i> then per cent is printed.<p>
  *
- * <b>c</b><br>
- * Prints single character.<p>
+ * <b>c</b> - Prints single character.<p>
  *
- * <b>s</b><br>
- * Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
+ * <b>s</b> - Prints string. If string is <b>NULL</b> then <i>null</i> string is printed.<p>
  *
- * <b>d, i</b><br>
- * Prints signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Prints signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Prints unsigned type number.<p>
+ * <b>u</b> - Prints unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Prints value in HEX formatting.<p>
+ * <b>x, X</b> - Prints value in HEX formatting.<p>
  *
- * <b>f</b><br>
- * Prints float value.
+ * <b>f</b> - Prints float value.
  *
  * @param s             buffer which output was produced
  * @param format        formatting string
@@ -1304,30 +1247,22 @@ static inline int vsprintf(char *s, const char *format, va_list arg)
  * follow format. Each pointer argument must be of a type that is appropriate
  * for the value returned by the corresponding conversion specification.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
  *
- * <b>c</b><br>
- * Scans single character.<p>
+ * <b>c</b> - Scans single character.<p>
  *
- * <b>s</b><br>
- * Scans string.<p>
+ * <b>s</b> - Scans string.<p>
  *
- * <b>d, i</b><br>
- * Scans signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Scans unsigned type number.<p>
+ * <b>u</b> - Scans unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Scans value in HEX formatting.<p>
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
  *
- * <b>o</b><br>
- * Scans value in Octal formatting.<p>
+ * <b>o</b> - Scans value in Octal formatting.<p>
  *
- * <b>f, F, g, G</b><br>
- * Scans float value.
+ * <b>f, F, g, G</b> - Scans float value.
  *
  * @param format        formatting string
  * @param ...           argument sequence list
@@ -1369,30 +1304,22 @@ static inline int scanf(const char *format, ...)
  * for the value returned by the corresponding conversion specification.
  * An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
  *
- * <b>c</b><br>
- * Scans single character.<p>
+ * <b>c</b> - Scans single character.<p>
  *
- * <b>s</b><br>
- * Scans string.<p>
+ * <b>s</b> - Scans string.<p>
  *
- * <b>d, i</b><br>
- * Scans signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Scans unsigned type number.<p>
+ * <b>u</b> - Scans unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Scans value in HEX formatting.<p>
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
  *
- * <b>o</b><br>
- * Scans value in Octal formatting.<p>
+ * <b>o</b> - Scans value in Octal formatting.<p>
  *
- * <b>f, F, g, G</b><br>
- * Scans float value.
+ * <b>f, F, g, G</b> - Scans float value.
  *
  * @param format        formatting string
  * @param arg           argument sequence list
@@ -1430,30 +1357,22 @@ static inline int vscanf(const char *format, va_list arg)
  * follow format. Each pointer argument must be of a type that is appropriate
  * for the value returned by the corresponding conversion specification.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
  *
- * <b>c</b><br>
- * Scans single character.<p>
+ * <b>c</b> - Scans single character.<p>
  *
- * <b>s</b><br>
- * Scans string.<p>
+ * <b>s</b> - Scans string.<p>
  *
- * <b>d, i</b><br>
- * Scans signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Scans unsigned type number.<p>
+ * <b>u</b> - Scans unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Scans value in HEX formatting.<p>
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
  *
- * <b>o</b><br>
- * Scans value in Octal formatting.<p>
+ * <b>o</b> - Scans value in Octal formatting.<p>
  *
- * <b>f, F, g, G</b><br>
- * Scans float value.
+ * <b>f, F, g, G</b> - Scans float value.
  *
  * @param stream        input file
  * @param format        formatting string
@@ -1496,30 +1415,22 @@ static inline int fscanf(FILE *stream, const char *format, ...)
  * for the value returned by the corresponding conversion specification.
  * An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
  *
- * <b>c</b><br>
- * Scans single character.<p>
+ * <b>c</b> - Scans single character.<p>
  *
- * <b>s</b><br>
- * Scans string.<p>
+ * <b>s</b> - Scans string.<p>
  *
- * <b>d, i</b><br>
- * Scans signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Scans unsigned type number.<p>
+ * <b>u</b> - Scans unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Scans value in HEX formatting.<p>
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
  *
- * <b>o</b><br>
- * Scans value in Octal formatting.<p>
+ * <b>o</b> - Scans value in Octal formatting.<p>
  *
- * <b>f, F, g, G</b><br>
- * Scans float value.
+ * <b>f, F, g, G</b> - Scans float value.
  *
  * @param stream        input file
  * @param format        formatting string
@@ -1558,30 +1469,22 @@ static inline int vfscanf(FILE *stream, const char *format, va_list arg)
  * follow format. Each pointer argument must be of a type that is appropriate
  * for the value returned by the corresponding conversion specification.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
  *
- * <b>c</b><br>
- * Scans single character.<p>
+ * <b>c</b> - Scans single character.<p>
  *
- * <b>s</b><br>
- * Scans string.<p>
+ * <b>s</b> - Scans string.<p>
  *
- * <b>d, i</b><br>
- * Scans signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Scans unsigned type number.<p>
+ * <b>u</b> - Scans unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Scans value in HEX formatting.<p>
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
  *
- * <b>o</b><br>
- * Scans value in Octal formatting.<p>
+ * <b>o</b> - Scans value in Octal formatting.<p>
  *
- * <b>f, F, g, G</b><br>
- * Scans float value.
+ * <b>f, F, g, G</b> - Scans float value.
  *
  * @param s             input string (must be <i>null</i> terminated)
  * @param format        formatting string
@@ -1625,30 +1528,22 @@ static inline int sscanf(const char *s, const char *format, ...)
  * for the value returned by the corresponding conversion specification.
  * An arguments are passed by list <i>arg</i>.<p>
  *
- * <b>%</b><br>
- * The flag starts interpreting of formatting. After character can be type a
- * numbers which determine e.g. buffer length, number of digits, etc.
+ * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
+ * numbers which determine e.g. buffer length, number of digits, etc.<p>
  *
- * <b>c</b><br>
- * Scans single character.<p>
+ * <b>c</b> - Scans single character.<p>
  *
- * <b>s</b><br>
- * Scans string.<p>
+ * <b>s</b> - Scans string.<p>
  *
- * <b>d, i</b><br>
- * Scans signed <i>int</i> type number.<p>
+ * <b>d, i</b> - Scans signed <i>int</i> type number.<p>
  *
- * <b>u</b><br>
- * Scans unsigned type number.<p>
+ * <b>u</b> - Scans unsigned type number.<p>
  *
- * <b>x, X</b><br>
- * Scans value in HEX formatting.<p>
+ * <b>x, X</b> - Scans value in HEX formatting.<p>
  *
- * <b>o</b><br>
- * Scans value in Octal formatting.<p>
+ * <b>o</b> - Scans value in Octal formatting.<p>
  *
- * <b>f, F, g, G</b><br>
- * Scans float value.
+ * <b>f, F, g, G</b> - Scans float value.
  *
  * @param s             input string (must be <i>null</i> terminated)
  * @param format        formatting string
@@ -1777,7 +1672,7 @@ static inline int fputs(const char *s, FILE *stream)
 //==============================================================================
 /**
  * @brief int puts(const char *s)
- * <b>puts</b>() writes the string <i>s</i> to <i>stdout</i>, without its
+ * <b>puts</b>() writes the string <i>s</i> to <b>stdout</b>, without its
  * terminating null byte ('\0').
  *
  * @param s         string to put
@@ -1878,7 +1773,7 @@ static inline int fgetc(FILE *stream)
  * calls to other input functions from the stdio library for the same input
  * stream.<p>
  *
- * The routine exist by dnx RTOS only for compatible reasons. Function in no
+ * The routine exist in dnx RTOS only for compatible reasons. Function in no
  * supported.
  *
  * @param c             output stream
@@ -1909,7 +1804,7 @@ static inline int ungetc(int c, FILE *stream)
  * @brief char *fgets(char *str, int size, FILE *stream)
  * <b>fgets</b>() reads in at most one less than size characters from stream
  * and stores them into the buffer pointed to by <i>str</i>. Reading stops after
- * an EOF, a newline or buffer end. If a newline is read, it is stored into the
+ * an <b>EOF</b>, a newline or buffer end. If a newline is read, it is stored into the
  * buffer. A terminating null byte ('\0') is stored after the last character in
  * the buffer.
  *
@@ -1921,7 +1816,7 @@ static inline int ungetc(int c, FILE *stream)
  *
  * @return Return the character read as an unsigned char cast to an int or
  * <b>EOF</b> on end of file or error. Function is not supported by dnx RTOS
- * and always <b>EOF</b> is returned.
+ * and always returns <b>EOF</b>.
  *
  * @example
  * // ...
