@@ -81,14 +81,6 @@ typedef struct
         long rem;               /* remainder */
 } ldiv_t;
 
-#ifndef __STRICT_ANSI__
-typedef struct
-{
-        long long int quot;     /* quotient */
-        long long int rem;      /* remainder */
-} lldiv_t;
-#endif
-
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -96,14 +88,279 @@ typedef struct
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int      abs(int);
-extern _PTR     bsearch(const _PTR, const _PTR, size_t, size_t, int (*_compar(const _PTR, const _PTR)));
-extern div_t    div(int, int);
-extern long     labs(long);
-extern ldiv_t   ldiv(long __numer, long __denom);
-extern _VOID    qsort(_PTR __base, size_t __nmemb, size_t __size, int(*_compar)(const _PTR, const _PTR));
-extern int      rand(_VOID);
-extern _VOID    srand(unsigned __seed);
+//==============================================================================
+/**
+ * @brief int abs(int j)
+ * The abs() function computes the absolute value of the integer argument <i>j</i>.
+ *
+ * @param j         value to convert
+ *
+ * @errors None
+ *
+ * @return Returns the absolute value of the integer argument, of the
+ * appropriate integer type for the function.
+ *
+ * @example
+ * // ...
+ * int foo = -100;
+ * int bar = abs(foo);
+ * // ...
+ */
+//==============================================================================
+extern int abs(int);
+
+//==============================================================================
+/**
+ * @brief long int labs(long int j)
+ * The labs() function computes the absolute value of the integer argument <i>j</i>.
+ *
+ * @param j         value to convert
+ *
+ * @errors None
+ *
+ * @return Returns the absolute value of the integer argument, of the
+ * appropriate integer type for the function.
+ *
+ * @example
+ * // ...
+ * long int foo = -100;
+ * long int bar = labs(foo);
+ * // ...
+ */
+//==============================================================================
+extern long labs(long);
+
+//==============================================================================
+/**
+ * @brief void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar(const void *, const void *)))
+ * The bsearch() function searches an array of <i>nmemb</i> objects, the initial
+ * member of which is pointed to by <i>base</i>, for a member that matches the object
+ * pointed to by <i>key</i>. The size of each member of the array is specified by <i>size</i>.<p>
+ *
+ * The contents of the array should be in ascending sorted order according
+ * to the comparison function referenced by <i>compar</i>. The <i>compar</i> routine is
+ * expected to have two arguments which point to the key object and to an
+ * array member, in that order, and should return an integer less than,
+ * equal to, or greater than zero if the key object is found, respectively,
+ * to be less than, to match, or be greater than the array member.
+ *
+ * @param key       object to compare
+ * @param base      initial object array
+ * @param nmemb     number of objects in array
+ * @param size      object size
+ * @param compar    function used to compare objects
+ *
+ * @errors None
+ *
+ * @return The bsearch() function returns a pointer to a matching member of the
+ * array, or NULL if no match is found.  If there are multiple elements
+ * that match the key, the element returned is unspecified.
+ *
+ * @example
+ * #include <stdio.h>
+ * #include <stdlib.h>
+ * #include <string.h>
+ *
+ * struct mi {
+ *     int nr;
+ *     char *name;
+ * } months[] = {
+ *     { 1, "jan" }, { 2, "feb" }, { 3, "mar" }, { 4, "apr" },
+ *     { 5, "may" }, { 6, "jun" }, { 7, "jul" }, { 8, "aug" },
+ *     { 9, "sep" }, {10, "oct" }, {11, "nov" }, {12, "dec" }
+ * };
+ *
+ * const int nr_of_months = (sizeof(months)/sizeof(months[0]));
+ *
+ * static int compmi(const void *m1, const void *m2)
+ * {
+ *     struct mi *mi1 = (struct mi *) m1;
+ *     struct mi *mi2 = (struct mi *) m2;
+ *     return strcmp(mi1->name, mi2->name);
+ * }
+ *
+ * int main(int argc, char **argv)
+ * {
+ *     int i;
+ *
+ *     qsort(months, nr_of_months, sizeof(struct mi), compmi);
+ *     for (i = 1; i < argc; i++) {
+ *         struct mi key, *res;
+ *         key.name = argv[i];
+ *         res = bsearch(&key, months, nr_of_months,
+ *                       sizeof(struct mi), compmi);
+ *         if (res == NULL)
+ *             printf("'%s': unknown month\n", argv[i]);
+ *         else
+ *             printf("%s: month #%d\n", res->name, res->nr);
+ *     }
+ *
+ *     exit(EXIT_SUCCESS);
+ * }
+ */
+//==============================================================================
+extern _PTR bsearch(const _PTR, const _PTR, size_t, size_t, int (*_compar(const _PTR, const _PTR)));
+
+//==============================================================================
+/**
+ * @brief void qsort(void *base, size_t nmemb, size_t size, int(*compar)(const void *, const void *))
+ * The qsort() function sorts an array with <i>nmemb</i> elements of size <i>size</i>.
+ * The <i>base</i> argument points to the start of the array.<p>
+ *
+ * The contents of the array are sorted in ascending order according to
+ * a comparison function pointed to by <i>compar</i>, which is called with two
+ * arguments that point to the objects being compared.<p>
+ *
+ * The comparison function must return an integer less than, equal to,
+ * or greater than zero if the first argument is considered to be
+ * respectively less than, equal to, or greater than the second. If two
+ * members compare as equal, their order in the sorted array is undefined.
+ *
+ * @param base      initial object array
+ * @param nmemb     number of objects in array
+ * @param size      object size
+ * @param compar    function used to compare objects
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <stdio.h>
+ * #include <stdlib.h>
+ * #include <string.h>
+ *
+ * struct mi {
+ *     int nr;
+ *     char *name;
+ * } months[] = {
+ *     { 1, "jan" }, { 2, "feb" }, { 3, "mar" }, { 4, "apr" },
+ *     { 5, "may" }, { 6, "jun" }, { 7, "jul" }, { 8, "aug" },
+ *     { 9, "sep" }, {10, "oct" }, {11, "nov" }, {12, "dec" }
+ * };
+ *
+ * const int nr_of_months = (sizeof(months)/sizeof(months[0]));
+ *
+ * static int compmi(const void *m1, const void *m2)
+ * {
+ *     struct mi *mi1 = (struct mi *) m1;
+ *     struct mi *mi2 = (struct mi *) m2;
+ *     return strcmp(mi1->name, mi2->name);
+ * }
+ *
+ * int main(int argc, char **argv)
+ * {
+ *     int i;
+ *
+ *     qsort(months, nr_of_months, sizeof(struct mi), compmi);
+ *     for (i = 1; i < argc; i++) {
+ *         struct mi key, *res;
+ *         key.name = argv[i];
+ *         res = bsearch(&key, months, nr_of_months,
+ *                       sizeof(struct mi), compmi);
+ *         if (res == NULL)
+ *             printf("'%s': unknown month\n", argv[i]);
+ *         else
+ *             printf("%s: month #%d\n", res->name, res->nr);
+ *     }
+ *
+ *     exit(EXIT_SUCCESS);
+ * }
+ */
+//==============================================================================
+extern _VOID qsort(_PTR __base, size_t __nmemb, size_t __size, int(*_compar)(const _PTR, const _PTR));
+
+//==============================================================================
+/**
+ * @brief div_t div(int numerator, int denominator)
+ * The div() function computes the value <i>numerator/denominator</i> and
+ * returns the quotient and remainder in a structure named <b>div_t</b> that
+ * contains two integer members (in unspecified order) named <b>quot</b> and
+ * <b>rem</b>. The quotient is rounded toward zero. The result satisfies
+ * <i>quot * denominator + rem = numerator</i>.
+ *
+ * @param numerator     a numerator
+ * @param denominator   a denominator
+ *
+ * @errors None
+ *
+ * @return The <b>div_t</b> structure.
+ *
+ * @example
+ * // ...
+ * div_t = div(1, 2);
+ * // ...
+ */
+//==============================================================================
+extern div_t div(int, int);
+
+//==============================================================================
+/**
+ * @brief ldiv_t ldiv(long int numerator, long int denominator)
+ * The ldiv() function computes the value <i>numerator/denominator</i> and
+ * returns the quotient and remainder in a structure named <b>ldiv_t</b> that
+ * contains two integer members (in unspecified order) named <b>quot</b> and
+ * <b>rem</b>. The quotient is rounded toward zero. The result satisfies
+ * <i>quot * denominator + rem = numerator</i>.
+ *
+ * @param numerator     a numerator
+ * @param denominator   a denominator
+ *
+ * @errors None
+ *
+ * @return The <b>ldiv_t</b> structure.
+ *
+ * @example
+ * // ...
+ * ldiv_t = ldiv(1, 2);
+ * // ...
+ */
+//==============================================================================
+extern ldiv_t ldiv(long numer, long denom);
+
+//==============================================================================
+/**
+ * @brief int rand(void)
+ * The rand() function returns a pseudo-random integer in the range 0 to
+ * <B>RAND_MAX</b> inclusive (i.e., the mathematical range [0, RAND_MAX]).
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return The rand() function return a value between 0 and <b>RAND_MAX</b> (inclusive).
+ *
+ * @example
+ * // ...
+ * int foo = rand();
+ * // ...
+ */
+//==============================================================================
+extern int rand(_VOID);
+
+//==============================================================================
+/**
+ * @brief void srand(unsigned int seed)
+ * The srand() function sets its argument as the seed for a new sequence
+ * of pseudo-random integers to be returned by rand().  These sequences
+ * are repeatable by calling srand() with the same seed value.
+ *
+ * @param seed      new seed value
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * // ...
+ * #include <dnx/os.h>
+ *
+ * srand(get_tick_counter());
+ * int foo = rand();
+ * // ...
+ */
+//==============================================================================
+extern _VOID srand(unsigned __seed);
 
 /*==============================================================================
   Exported inline functions
@@ -119,7 +376,7 @@ extern _VOID    srand(unsigned __seed);
  *
  * @errors ENOMEM
  *
- * @return Return a pointer to the allocated memory, which is suitably aligned
+ * @return Returns a pointer to the allocated memory, which is suitably aligned
  * for any built-in type.  On error, these functions return NULL.  NULL may
  * also be returned by a successful call to function with a <i>size</i> of zero.
  *
@@ -146,9 +403,10 @@ static inline void *malloc(size_t size)
  *
  * @errors ENOMEM
  *
- * @return Return a pointer to the allocated memory, which is suitably aligned
+ * @return Returns a pointer to the allocated memory, which is suitably aligned
  * for any built-in type.  On error, these functions return NULL.  NULL may
- * also be returned by a successful call to function with a <i>n</i> or <i>size</i> of zero.
+ * also be returned by a successful call to function with a <i>n</i> or <i>size</i>
+ * of zero.
  *
  * @example
  * // ...
@@ -413,33 +671,145 @@ static inline int atol(const char *str)
         return sys_atoi(str);
 }
 
-
-static inline i32_t strtol(const char *str, char **endptr, int base)
+//==============================================================================
+/**
+ * @brief i32_t strtol(const char *nptr, char **endptr, int base)
+ * The strtol() function converts the initial part of the string in <i>nptr</i>
+ * to a 32-bit value according to the given <i>base</i>, which must be
+ * between 2 and 36 inclusive, or be the special value 0.<p>
+ *
+ * The string may begin with an arbitrary amount of white space (as
+ * determined by isspace()) followed by a single optional '+' or '-'
+ * sign. If base is zero or 16, the number will be read in base 16; otherwise,
+ * a zero base is taken as 10 (decimal) unless the next character is '0', in
+ * which case it is taken as 8 (octal).<p>
+ *
+ * If <i>endptr</i> is not <b>NULL</b>, strtol() stores the address of the first
+ * invalid character in <i>*endptr</i>.  If there were no digits at all,
+ * strtol() stores the original value of <i>nptr</i> in <i>*endptr</i> (and
+ * returns 0).  In particular, if <i>*nptr</i> is not '\0' but <i>**endptr</i>
+ * is '\0' on return, the entire string is valid.
+ *
+ * @param nptr          string to convert
+ * @param endptr        points to first not converted character
+ * @param base          calculation base
+ *
+ * @errors None
+ *
+ * @return The strtol() function returns the result of the conversion, unless
+ * the value would underflow or overflow.
+ *
+ * @example
+ * const char *end;
+ * const char *str;
+ * i32_t       val;
+ *
+ * // convert string to decimal value
+ * str = "123";
+ * val = strtol(str, &end, 10);
+ *
+ * // convert string to hex value
+ * str = "1FF";
+ * val = strtol(str, &end, 16);
+ *
+ * // convert string to octal
+ * str = "77"
+ * val = strtol(str, &end, 8);
+ *
+ * // convert string automatically
+ * str = "0x45";
+ * val = strtol(str, &end, 0);
+ *
+ * str = "056";
+ * val = strtol(str, &end, 0);
+ *
+ * str = "123";
+ * val = strtol(str, &end, 0);
+ *
+ * str = "0b1110;
+ * val = strtol(str, &end, 0);
+ */
+//==============================================================================
+static inline i32_t strtol(const char *nptr, char **endptr, int base)
 {
         i32_t result;
-        char *end = sys_strtoi(str, base, &result);
-        *endptr = end;
+        char *end = sys_strtoi(nptr, base, &result);
+        if (endptr)
+                *endptr = end;
         return result;
 }
 
-static inline char *strtoi(const char *str, int base, i32_t *result)
+//==============================================================================
+/**
+ * @brief double atof(const char *nptr)
+ * The atof() function converts the initial portion of the string pointed
+ * to by nptr to double.  The behavior is the same as
+ * <pre>strtod(nptr, NULL);</pre>
+ * except that atof() does not detect errors.
+ *
+ * @param nptr          string to convert
+ *
+ * @errors None
+ *
+ * @return The converted value.
+ *
+ * @example
+ * // convert string to decimal value
+ * const char *str = "123.56";
+ * double      val = atof(str);
+ */
+//==============================================================================
+static inline double atof(const char *nptr)
 {
-        return sys_strtoi(str, base, result);
+        return sys_atof(nptr);
 }
 
-static inline double atof(const char *str)
+//==============================================================================
+/**
+ * @brief double strtod(const char *nptr, char **endptr)
+ * The function convert the initial portion of the string pointed to by <i>nptr</i>
+ * to double representation.
+ *
+ * @param nptr          string to convert
+ * @param endptr        points to first not converted character
+ *
+ * @errors None
+ *
+ * @return These functions return the converted value, if any.
+ *
+ * @example
+ * // convert string to decimal value
+ * const char *str = "123.56";
+ * double      val = strtod(str, NULL);
+ */
+//==============================================================================
+static inline double strtod(const char *nptr, char **endptr)
 {
-        return sys_atof(str);
+        return sys_strtod(nptr, endptr);
 }
 
-static inline double strtod(const char *str, char **end)
+//==============================================================================
+/**
+ * @brief float strtof(const char *nptr, char **endptr)
+ * The function convert the initial portion of the string pointed to by <i>nptr</i>
+ * to float representation.
+ *
+ * @param nptr          string to convert
+ * @param endptr        points to first not converted character
+ *
+ * @errors None
+ *
+ * @return These functions return the converted value, if any.
+ *
+ * @example
+ * // convert string to decimal value
+ * const char *str = "123.56";
+ * float       val = strtof(str, NULL);
+ */
+//==============================================================================
+static inline float strtof(const char *nptr, char **endptr)
 {
-        return sys_strtod(str, end);
-}
-
-static inline float strtof(const char *str, char **end)
-{
-        return (float)sys_strtod(str, end);
+        return (float)sys_strtod(nptr, endptr);
 }
 
 #ifdef __cplusplus
