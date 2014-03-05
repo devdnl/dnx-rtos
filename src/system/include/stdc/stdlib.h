@@ -69,14 +69,12 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef struct
-{
+typedef struct {
         int quot;               /* quotient */
         int rem;                /* remainder */
 } div_t;
 
-typedef struct
-{
+typedef struct {
         long quot;              /* quotient */
         long rem;               /* remainder */
 } ldiv_t;
@@ -277,7 +275,15 @@ extern _VOID qsort(_PTR __base, size_t __nmemb, size_t __size, int(*_compar)(con
  * returns the quotient and remainder in a structure named <b>div_t</b> that
  * contains two integer members (in unspecified order) named <b>quot</b> and
  * <b>rem</b>. The quotient is rounded toward zero. The result satisfies
- * <i>quot * denominator + rem = numerator</i>.
+ * <i>quot * denominator + rem = numerator</i>.<p>
+ *
+ * <b>div_t</b> structure:
+ * <pre>
+ * typedef struct {
+ *         int quot;    // quotient
+ *         int rem;     // remainder
+ * } div_t;
+ * </pre>
  *
  * @param numerator     a numerator
  * @param denominator   a denominator
@@ -301,7 +307,15 @@ extern div_t div(int, int);
  * returns the quotient and remainder in a structure named <b>ldiv_t</b> that
  * contains two integer members (in unspecified order) named <b>quot</b> and
  * <b>rem</b>. The quotient is rounded toward zero. The result satisfies
- * <i>quot * denominator + rem = numerator</i>.
+ * <i>quot * denominator + rem = numerator</i>.<p>
+ *
+ * <b>div_t</b> structure:
+ * <pre>
+ * typedef struct {
+ *         long int quot;       // quotient
+ *         long int rem;        // remainder
+ * } ldiv_t;
+ * </pre>
  *
  * @param numerator     a numerator
  * @param denominator   a denominator
@@ -458,7 +472,7 @@ static inline void free(void *ptr)
  * will not be initialized.  If <i>ptr</i> is <b>NULL</b>, then the call is equivalent
  * to malloc(size), for all values of <i>size</i>; if <i>size</i> is equal to
  * zero, and <i>ptr</i> is not <b>NULL</b>, then the call is equivalent to free(ptr).
- * Unless <i>ptr<i> is <b>NULL</b>, it must have been returned by an earlier call to
+ * Unless <i>ptr</i> is <b>NULL</b>, it must have been returned by an earlier call to
  * <b>malloc</b>(), <b>calloc</b>() or <b>realloc</b>().  If the area pointed to was moved, a
  * free(ptr) is done.
  *
@@ -476,7 +490,7 @@ static inline void free(void *ptr)
  *
  * @example
  * // ...
- * int *buffer = calloc(100, sizeof(int));
+ * int *buffer = realloc(NULL, 100);
  * if (buffer) {
  *         // ...
  *
@@ -674,19 +688,19 @@ static inline int atol(const char *str)
 //==============================================================================
 /**
  * @brief i32_t strtol(const char *nptr, char **endptr, int base)
- * The <b>strtol</b>()function converts the initial part of the string in <i>nptr</i>
+ * The <b>strtol</b>() function converts the initial part of the string in <i>nptr</i>
  * to a 32-bit value according to the given <i>base</i>, which must be
- * between 2 and 36 inclusive, or be the special value 0.<p>
+ * between 2 and 16 inclusive, or be the special value 0.<p>
  *
  * The string may begin with an arbitrary amount of white space (as
- * determined by <b>isspace</b>() followed by a single optional '+' or '-'
+ * determined by <b>isspace</b>()) followed by a single optional '+' or '-'
  * sign. If base is zero or 16, the number will be read in base 16; otherwise,
  * a zero base is taken as 10 (decimal) unless the next character is '0', in
  * which case it is taken as 8 (octal).<p>
  *
  * If <i>endptr</i> is not <b>NULL</b>, <b>strtol</b>()stores the address of the first
  * invalid character in <i>*endptr</i>.  If there were no digits at all,
- * <b>strtol</b>()stores the original value of <i>nptr</i> in <i>*endptr</i> (and
+ * <b>strtol</b>() stores the original value of <i>nptr</i> in <i>*endptr</i> (and
  * returns 0).  In particular, if <i>*nptr</i> is not '\0' but <i>**endptr</i>
  * is '\0' on return, the entire string is valid.
  *
@@ -696,7 +710,7 @@ static inline int atol(const char *str)
  *
  * @errors None
  *
- * @return The <b>strtol</b>()function returns the result of the conversion, unless
+ * @return The <b>strtol</b>() function returns the result of the conversion, unless
  * the value would underflow or overflow.
  *
  * @example
@@ -726,7 +740,7 @@ static inline int atol(const char *str)
  * str = "123";
  * val = strtol(str, &end, 0);
  *
- * str = "0b1110;
+ * str = "0b1110";
  * val = strtol(str, &end, 0);
  */
 //==============================================================================
@@ -742,10 +756,10 @@ static inline i32_t strtol(const char *nptr, char **endptr, int base)
 //==============================================================================
 /**
  * @brief double atof(const char *nptr)
- * The <b>atof</b>()function converts the initial portion of the string pointed
- * to by nptr to double.  The behavior is the same as
+ * The <b>atof</b>() function converts the initial portion of the string pointed
+ * to by <i>nptr</i> to double.  The behavior is the same as
  * <pre>strtod(nptr, NULL);</pre>
- * except that <b>atof</b>()does not detect errors.
+ * except that <b>atof</b>() does not detect errors.
  *
  * @param nptr          string to convert
  *
