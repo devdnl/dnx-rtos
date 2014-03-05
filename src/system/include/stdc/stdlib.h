@@ -91,7 +91,7 @@ typedef struct
 //==============================================================================
 /**
  * @brief int abs(int j)
- * The abs() function computes the absolute value of the integer argument <i>j</i>.
+ * The <b>abs</b>() function computes the absolute value of the integer argument <i>j</i>.
  *
  * @param j         value to convert
  *
@@ -112,7 +112,7 @@ extern int abs(int);
 //==============================================================================
 /**
  * @brief long int labs(long int j)
- * The labs() function computes the absolute value of the integer argument <i>j</i>.
+ * The <b>labs</b>() function computes the absolute value of the integer argument <i>j</i>.
  *
  * @param j         value to convert
  *
@@ -133,7 +133,7 @@ extern long labs(long);
 //==============================================================================
 /**
  * @brief void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar(const void *, const void *)))
- * The bsearch() function searches an array of <i>nmemb</i> objects, the initial
+ * The <b>bsearch</b>() function searches an array of <i>nmemb</i> objects, the initial
  * member of which is pointed to by <i>base</i>, for a member that matches the object
  * pointed to by <i>key</i>. The size of each member of the array is specified by <i>size</i>.<p>
  *
@@ -152,8 +152,8 @@ extern long labs(long);
  *
  * @errors None
  *
- * @return The bsearch() function returns a pointer to a matching member of the
- * array, or NULL if no match is found.  If there are multiple elements
+ * @return The <b>bsearch</b>() function returns a pointer to a matching member of the
+ * array, or <b>NULL</b> if no match is found.  If there are multiple elements
  * that match the key, the element returned is unspecified.
  *
  * @example
@@ -204,7 +204,7 @@ extern _PTR bsearch(const _PTR, const _PTR, size_t, size_t, int (*_compar(const 
 //==============================================================================
 /**
  * @brief void qsort(void *base, size_t nmemb, size_t size, int(*compar)(const void *, const void *))
- * The qsort() function sorts an array with <i>nmemb</i> elements of size <i>size</i>.
+ * The <b>qsort</b>() function sorts an array with <i>nmemb</i> elements of size <i>size</i>.
  * The <i>base</i> argument points to the start of the array.<p>
  *
  * The contents of the array are sorted in ascending order according to
@@ -273,7 +273,7 @@ extern _VOID qsort(_PTR __base, size_t __nmemb, size_t __size, int(*_compar)(con
 //==============================================================================
 /**
  * @brief div_t div(int numerator, int denominator)
- * The div() function computes the value <i>numerator/denominator</i> and
+ * The <b>div</b>() function computes the value <i>numerator/denominator</i> and
  * returns the quotient and remainder in a structure named <b>div_t</b> that
  * contains two integer members (in unspecified order) named <b>quot</b> and
  * <b>rem</b>. The quotient is rounded toward zero. The result satisfies
@@ -297,7 +297,7 @@ extern div_t div(int, int);
 //==============================================================================
 /**
  * @brief ldiv_t ldiv(long int numerator, long int denominator)
- * The ldiv() function computes the value <i>numerator/denominator</i> and
+ * The <b>ldiv</b>() function computes the value <i>numerator/denominator</i> and
  * returns the quotient and remainder in a structure named <b>ldiv_t</b> that
  * contains two integer members (in unspecified order) named <b>quot</b> and
  * <b>rem</b>. The quotient is rounded toward zero. The result satisfies
@@ -321,14 +321,14 @@ extern ldiv_t ldiv(long numer, long denom);
 //==============================================================================
 /**
  * @brief int rand(void)
- * The rand() function returns a pseudo-random integer in the range 0 to
+ * The <b>rand</b>() function returns a pseudo-random integer in the range 0 to
  * <B>RAND_MAX</b> inclusive (i.e., the mathematical range [0, RAND_MAX]).
  *
  * @param None
  *
  * @errors None
  *
- * @return The rand() function return a value between 0 and <b>RAND_MAX</b> (inclusive).
+ * @return The <b>rand</b>() function return a value between 0 and <b>RAND_MAX</b> (inclusive).
  *
  * @example
  * // ...
@@ -341,9 +341,9 @@ extern int rand(_VOID);
 //==============================================================================
 /**
  * @brief void srand(unsigned int seed)
- * The srand() function sets its argument as the seed for a new sequence
- * of pseudo-random integers to be returned by rand().  These sequences
- * are repeatable by calling srand() with the same seed value.
+ * The <b>srand</b>() function sets its argument as the seed for a new sequence
+ * of pseudo-random integers to be returned by <b>rand</b>().  These sequences
+ * are repeatable by calling <b>srand</b>() with the same seed value.
  *
  * @param seed      new seed value
  *
@@ -368,16 +368,16 @@ extern _VOID srand(unsigned __seed);
 //==============================================================================
 /**
  * @brief void *malloc(size_t size)
- * The malloc() function allocates <i>size</i> bytes and returns a pointer to the
- * allocated memory. The memory is not initialized.  If size is 0, then malloc()
- * returns either NULL.
+ * The <b>malloc</b>() function allocates <i>size</i> bytes and returns a pointer to the
+ * allocated memory. The memory is not initialized.  If size is 0, then <b>malloc</b>()
+ * returns either <b>NULL</b>.
  *
  * @param size      size bytes to allocate
  *
  * @errors ENOMEM
  *
  * @return Returns a pointer to the allocated memory, which is suitably aligned
- * for any built-in type.  On error, these functions return NULL.  NULL may
+ * for any built-in type.  On error, these functions return <b>NULL</b>.  <b>NULL</b> may
  * also be returned by a successful call to function with a <i>size</i> of zero.
  *
  * @example
@@ -394,7 +394,7 @@ static inline void *malloc(size_t size)
 //==============================================================================
 /**
  * @brief void *calloc(size_t n, size_t size)
- * The calloc() function allocates memory for an array of <i>n</i> elements
+ * The <b>calloc</b>() function allocates memory for an array of <i>n</i> elements
  * of <i>size</i> bytes each and returns a pointer to the allocated memory.
  * The memory is set to zero.
  *
@@ -404,7 +404,7 @@ static inline void *malloc(size_t size)
  * @errors ENOMEM
  *
  * @return Returns a pointer to the allocated memory, which is suitably aligned
- * for any built-in type.  On error, these functions return NULL.  NULL may
+ * for any built-in type.  On error, these functions return <b>NULL</b>.  <b>NULL</b> may
  * also be returned by a successful call to function with a <i>n</i> or <i>size</i>
  * of zero.
  *
@@ -422,9 +422,9 @@ static inline void *calloc(size_t n, size_t size)
 //==============================================================================
 /**
  * @brief void free(void *ptr)
- * The free() function frees the memory space pointed to by <i>ptr</i>, which
- * must have been returned by a previous call to malloc(), calloc(),
- * realloc(). If <i>ptr</i> is NULL, no operation is performed.
+ * The <b>free</b>() function frees the memory space pointed to by <i>ptr</i>, which
+ * must have been returned by a previous call to <b>malloc</b>(), <b>calloc</b>(),
+ * <b>realloc</b>(). If <i>ptr</i> is <b>NULL</b>, no operation is performed.
  *
  * @param ptr       pointer to memory space to be freed
  *
@@ -451,15 +451,15 @@ static inline void free(void *ptr)
 //==============================================================================
 /**
  * @brief void *realloc(void *ptr, size_t size)
- * The realloc() function changes the size of the memory block pointed
+ * The <b>realloc</b>() function changes the size of the memory block pointed
  * to by <i>ptr</i> to size bytes. The contents will be unchanged in the range
  * from the start of the region up to the minimum of the old and new
  * sizes.  If the new size is larger than the old size, the added memory
- * will not be initialized.  If <i>ptr</i> is NULL, then the call is equivalent
+ * will not be initialized.  If <i>ptr</i> is <b>NULL</b>, then the call is equivalent
  * to malloc(size), for all values of <i>size</i>; if <i>size</i> is equal to
- * zero, and <i>ptr</i> is not NULL, then the call is equivalent to free(ptr).
- * Unless <i>ptr<i> is NULL, it must have been returned by an earlier call to
- * malloc(), calloc() or realloc().  If the area pointed to was moved, a
+ * zero, and <i>ptr</i> is not <b>NULL</b>, then the call is equivalent to free(ptr).
+ * Unless <i>ptr<i> is <b>NULL</b>, it must have been returned by an earlier call to
+ * <b>malloc</b>(), <b>calloc</b>() or <b>realloc</b>().  If the area pointed to was moved, a
  * free(ptr) is done.
  *
  * @param ptr       pointer to memory space
@@ -467,11 +467,11 @@ static inline void free(void *ptr)
  *
  * @errors ENOMEM
  *
- * @return The realloc() function returns a pointer to the newly allocated
+ * @return The <b>realloc</b>() function returns a pointer to the newly allocated
  * memory, which is suitably aligned for any built-in type and may be
- * different from <i>ptr</i>, or NULL if the request fails.  If <i>size</i>
- * was equal to 0, either NULL or a pointer suitable to be passed to free()
- * is returned. If realloc() fails the original block is left untouched;
+ * different from <i>ptr</i>, or <b>NULL</b> if the request fails.  If <i>size</i>
+ * was equal to 0, either <b>NULL</b> or a pointer suitable to be passed to <b>free</b>()
+ * is returned. If <b>realloc</b>() fails the original block is left untouched;
  * it is not freed or moved.
  *
  * @example
@@ -502,13 +502,13 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 /**
  * @brief void abort(void)
- * The abort() function kills program which execute it.
+ * The <b>abort</b>() function kills program which execute it.
  *
  * @param None
  *
  * @errors None
  *
- * @return The abort() function never returns.
+ * @return The <b>abort</b>() function never returns.
  *
  * @example
  * // ...
@@ -523,14 +523,14 @@ static inline void abort(void)
 //==============================================================================
 /**
  * @brief void exit(int status)
- * The exit() function kills program which execute it and program return
+ * The <b>exit</b>() function kills program which execute it and program return
  * <i>status</i> value.
  *
  * @param status        status to be return by program
  *
  * @errors None
  *
- * @return The exit() function never returns.
+ * @return The <b>exit</b>() function never returns.
  *
  * @example
  * // ...
@@ -545,7 +545,7 @@ static inline void exit(int status)
 //==============================================================================
 /**
  * @brief int system(const char *command)
- * The system() executes a command specified in <i>command</i> and returns after
+ * The <b>system</b>() executes a command specified in <i>command</i> and returns after
  * the command has been completed.
  *
  * @param command       command to execute
@@ -568,16 +568,16 @@ static inline int system(const char *command)
 //==============================================================================
 /**
  * @brief char *getenv(const char *name)
- * The getenv() function searches the environment list to find the environment
+ * The <b>getenv</b>() function searches the environment list to find the environment
  * variable name, and returns a pointer to the corresponding value string.<p>
  *
- * Function is not supported by dnx RTOS and always returns NULL.
+ * Function is not supported by dnx RTOS and always returns <b>NULL</b>.
  *
  * @param name          variable name
  *
  * @errors None
  *
- * @return Returns a pointer to the value in the environment, or NULL if
+ * @return Returns a pointer to the value in the environment, or <b>NULL</b> if
  * there is no match.
  *
  * @example
@@ -595,7 +595,7 @@ static inline char *getenv(const char *name)
 //==============================================================================
 /**
  * @brief int getsubopt(char **optionp, char *const *tokens, char **valuep)
- * The getsubopt() parses the list of comma-separated suboptions.<p>
+ * The <b>getsubopt</b>() parses the list of comma-separated suboptions.<p>
  *
  * Function is not supported by dnx RTOS and always returns -1.
  *
@@ -605,7 +605,7 @@ static inline char *getenv(const char *name)
  *
  * @errors None
  *
- * @return If the first suboption in <i>optionp</i> is recognized, getsubopt()
+ * @return If the first suboption in <i>optionp</i> is recognized, <b>getsubopt</b>()
  * returns the index of the matching suboption element in <i>tokens</i>.
  * Otherwise, -1 is returned and <i>*valuep</i> is the entire <i>name[=value]</i>
  * string.
@@ -626,9 +626,9 @@ static inline int getsubopt(char **optionp, char *const *tokens, char **valuep)
 //==============================================================================
 /**
  * @brief int atoi(const char *str)
- * The atoi() function converts the initial portion of the string pointed
+ * The <b>atoi</b>() function converts the initial portion of the string pointed
  * to by <i>str</i> to int. The behavior is the same as <b>strtol</b>(nptr, NULL, 10);
- * except that atoi() does not detect errors.
+ * except that <b>atoi</b>() does not detect errors.
  *
  * @param str           string to convert
  *
@@ -650,9 +650,9 @@ static inline int atoi(const char *str)
 //==============================================================================
 /**
  * @brief int atol(const char *str)
- * The atol() function converts the initial portion of the string pointed
+ * The <b>atol</b>() function converts the initial portion of the string pointed
  * to by <i>str</i> to int. The behavior is the same as <b>strtol</b>(nptr, NULL, 10);
- * except that atoi() does not detect errors.
+ * except that <b>atoi</b>() does not detect errors.
  *
  * @param str           string to convert
  *
@@ -674,19 +674,19 @@ static inline int atol(const char *str)
 //==============================================================================
 /**
  * @brief i32_t strtol(const char *nptr, char **endptr, int base)
- * The strtol() function converts the initial part of the string in <i>nptr</i>
+ * The <b>strtol</b>()function converts the initial part of the string in <i>nptr</i>
  * to a 32-bit value according to the given <i>base</i>, which must be
  * between 2 and 36 inclusive, or be the special value 0.<p>
  *
  * The string may begin with an arbitrary amount of white space (as
- * determined by isspace()) followed by a single optional '+' or '-'
+ * determined by <b>isspace</b>() followed by a single optional '+' or '-'
  * sign. If base is zero or 16, the number will be read in base 16; otherwise,
  * a zero base is taken as 10 (decimal) unless the next character is '0', in
  * which case it is taken as 8 (octal).<p>
  *
- * If <i>endptr</i> is not <b>NULL</b>, strtol() stores the address of the first
+ * If <i>endptr</i> is not <b>NULL</b>, <b>strtol</b>()stores the address of the first
  * invalid character in <i>*endptr</i>.  If there were no digits at all,
- * strtol() stores the original value of <i>nptr</i> in <i>*endptr</i> (and
+ * <b>strtol</b>()stores the original value of <i>nptr</i> in <i>*endptr</i> (and
  * returns 0).  In particular, if <i>*nptr</i> is not '\0' but <i>**endptr</i>
  * is '\0' on return, the entire string is valid.
  *
@@ -696,7 +696,7 @@ static inline int atol(const char *str)
  *
  * @errors None
  *
- * @return The strtol() function returns the result of the conversion, unless
+ * @return The <b>strtol</b>()function returns the result of the conversion, unless
  * the value would underflow or overflow.
  *
  * @example
@@ -742,10 +742,10 @@ static inline i32_t strtol(const char *nptr, char **endptr, int base)
 //==============================================================================
 /**
  * @brief double atof(const char *nptr)
- * The atof() function converts the initial portion of the string pointed
+ * The <b>atof</b>()function converts the initial portion of the string pointed
  * to by nptr to double.  The behavior is the same as
  * <pre>strtod(nptr, NULL);</pre>
- * except that atof() does not detect errors.
+ * except that <b>atof</b>()does not detect errors.
  *
  * @param nptr          string to convert
  *
