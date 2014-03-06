@@ -58,13 +58,38 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function mount file system
+ * @brief int mount(const char *FS_name, const char *src_path, const char *mount_point)
+ * The <b>mount<b>() function mounts file system name pointed by <i>FS_name</i>
+ * from source file pointed by <i>src_path</i> to mount directory pointed by
+ * <i>mount_point</i>.<p>
  *
- * @param FS_name        file system name
- * @param src_path       path to file with source data
- * @param mount_point    mount point of file system
+ * File system name and driver must exist in system to use it. If file system
+ * not require to use source file (e.g. procfs, lfs, devfs) then <i>src_path</i>
+ * shall be an empty string (<i>""</i>).
  *
- * @return 0 if success, otherwise 1
+ * @param FS_name       file system name
+ * @param src_path      file system source file (e.g. /dev/sda1)
+ * @param mount_point   file system mount directory
+ *
+ * @errors EINVAL, ENOMEM, ...
+ *
+ * @return On success, <b>STD_RET_OK</b> is returned. On error, <b>STD_RET_ERROR</b>
+ * is returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * mkdir("/fs", 0666);
+ * errno = 0;
+ * if (mount("fatfs", "/dev/sda1", "/sdcard") == STD_RET_OK) {
+ *         // file system mounted ...
+ *
+ * } else {
+ *         // file system not mounted
+ *         perror("Mount failure");
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
@@ -74,11 +99,39 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
 
 //==============================================================================
 /**
- * @brief Function unmount file system
+ * @brief int umount(const char *mount_point)
+ * The <b>umount<b>() function unmount file system localized in path pointed by
+ * <i>mount_point</i>. To unmount file system, all files of unmounting file
+ * system shall be closed.
  *
- * @param *mount_point   path to file system
+ * @param seconds   number of seconds to sleep
  *
- * @return 0 if success, otherwise 1
+ * @errors EINVAL, EBUSY
+ *
+ * @return On success, <b>STD_RET_OK</b> is returned. On error, <b>STD_RET_ERROR</b>
+ * is returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * mkdir("/fs", 0666);
+ * errno = 0;
+ * if (mount("fatfs", "/dev/sda1", "/sdcard") == STD_RET_OK) {
+ *         // file system mounted ...
+ *         // operations on file system ...
+ *
+ *         if (umount("/sdcard") == STD_RET_OK) {
+ *                 // ...
+ *
+ *         } else {
+ *                 perror("Unmount failure");
+ *         }
+ * } else {
+ *         // file system not mounted
+ *         perror("Mount failure");
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int umount(const char *mount_point)
@@ -88,12 +141,29 @@ static inline int umount(const char *mount_point)
 
 //==============================================================================
 /**
- * @brief Function find driver name and then initialize device
+ * @brief int driver_init(const char *drv_name, const char *node_path)
+ * The <b>driver_init<b>() function initialize driver pointed by <i>drv_name</i>
+ * and create file node pointed by <i>node_path</i>. If there is no need to
+ * create node, then <i>node_path</i> can be <b>NULL</b>. Node can be created
+ * later using <b>mknod</b>() function.<p>
  *
- * @param drv_name            driver name
- * @param node_path           path name to create in the file system or NULL
+ * Driver must exist in system to perform initialization. Driver's nodes can
+ * be created only on file system which support it.
  *
- * @return 0 on success, otherwise other value
+ * @param drv_name      driver_name
+ * @param node_path     path to node which should be created
+ *
+ * @errors EINVAL, ENOMEM, EADDRINUSE
+ *
+ * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * driver_init("crc", "/dev/crc");
+ *
+ * // ...
  */
 //==============================================================================
 static inline int driver_init(const char *drv_name, const char *node_path)
@@ -103,11 +173,25 @@ static inline int driver_init(const char *drv_name, const char *node_path)
 
 //==============================================================================
 /**
- * @brief Function find driver name and then release device
+ * @brief int driver_release(const char *drv_name)
+ * The <b>driver_release<b>() function release driver pointed by <i>drv_name</i>.
+ * If driver was released when node is created and pointed to driver then
+ * node is node removed. From this time, device node is pointing to not
+ * existing (initialized) device, resulting that user can't access to file.
  *
- * @param drv_name           driver name
+ * @param drv_name      driver_name
  *
- * @return 0 on success, otherwise other value
+ * @errors EINVAL, ...
+ *
+ * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * // ...
+ *
+ * driver_release("/dev/crc");
+ *
+ * // ...
  */
 //==============================================================================
 static inline int driver_release(const char *drv_name)

@@ -104,13 +104,13 @@ int _driver_init(const char *drv_name, const char *node_path)
 {
         if (drv_name == NULL) {
                 errno = EINVAL;
-                return -EINVAL;
+                return 1;
         }
 
         if (!driver_memory_region) {
                 driver_memory_region = sysm_syscalloc(_regdrv_size_of_driver_table, sizeof(void*));
                 if (!driver_memory_region) {
-                        return -ENOMEM;
+                        return 1;
                 }
         }
 
@@ -125,7 +125,7 @@ int _driver_init(const char *drv_name, const char *node_path)
                                RESET_ATTRIBUTES"\n", drv_name);
 
                         errno = EADDRINUSE;
-                        return -EADDRINUSE;
+                        return 1;
                 }
 
                 printk("Initializing %s... ", drv_name);
@@ -146,7 +146,7 @@ int _driver_init(const char *drv_name, const char *node_path)
                 if (node_path) {
                         if (vfs_mknod(node_path, drvid) == STD_RET_OK) {
                                 printk("%s node created\n", node_path);
-                                return STD_RET_OK;
+                                return 0;
                         } else {
                                 _regdrv_driver_table[drvid].drv_release(driver_memory_region[drvid]);
 
@@ -162,12 +162,10 @@ int _driver_init(const char *drv_name, const char *node_path)
                 }
         }
 
-        printk(FONT_COLOR_RED"Driver %s does not exist!"
-               RESET_ATTRIBUTES"\n", drv_name);
+        printk(FONT_COLOR_RED"Driver %s does not exist!" RESET_ATTRIBUTES"\n", drv_name);
 
         errno = EINVAL;
-
-        return -EINVAL;
+        return 1;
 }
 
 //==============================================================================
@@ -183,7 +181,7 @@ int _driver_release(const char *drv_name)
 {
         if (!drv_name) {
                 errno = EINVAL;
-                return -EINVAL;
+                return 1;
         }
 
         for (int i = 0; i < _regdrv_size_of_driver_table; i++) {
@@ -202,7 +200,7 @@ int _driver_release(const char *drv_name)
         }
 
         errno = EINVAL;
-        return -EINVAL;
+        return 1;
 }
 
 //==============================================================================
