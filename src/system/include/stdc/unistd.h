@@ -59,7 +59,7 @@ extern "C" {
 //==============================================================================
 /**
  * @brief void sleep(const uint seconds)
- * The sleep() makes the calling thread sleep until seconds <i>seconds</i>
+ * The <b>sleep<b>() makes the calling thread sleep until seconds <i>seconds</i>
  * have elapsed.
  *
  * @param seconds   number of seconds to sleep
@@ -83,7 +83,7 @@ static inline void sleep(const uint seconds)
 //==============================================================================
 /**
  * @brief void sleep_ms(const uint milliseconds)
- * The sleep_ms() makes the calling thread sleep until milliseconds
+ * The <b>sleep_ms<b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed.
  *
  * @param milliseconds      number of milliseconds to sleep
@@ -107,7 +107,7 @@ static inline void sleep_ms(const uint milliseconds)
 //==============================================================================
 /**
  * @brief void usleep(const uint microseconds)
- * The usleep() makes the calling thread sleep until microseconds
+ * The <b>usleep<b>() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
  * Function is not supported by dnx RTOS. Function sleep thread at least 1ms.
@@ -135,7 +135,7 @@ static inline void usleep(const uint microseconds)
 //==============================================================================
 /**
  * @brief void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
- * The sleep_until_ms() makes the calling thread sleep until milliseconds
+ * The <b>sleep_until_ms<b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
  * @param microseconds      number of microseconds to sleep
@@ -167,7 +167,7 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 //==============================================================================
 /**
  * @brief void sleep_until(const uint seconds, int *ref_time_ticks)
- * The sleep_until() makes the calling thread sleep until seconds
+ * The <b>sleep_until<b>() makes the calling thread sleep until seconds
  * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
  * @param seconds       number of seconds to sleep
@@ -199,7 +199,7 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 //==============================================================================
 /**
  * @brief char *getcwd(char *buf, size_t size)
- * The getcwd() function copies an absolute pathname of the current
+ * The <b>getcwd<b>() function copies an absolute pathname of the current
  * working directory to the array pointed to by <i>buf</i>, which is of length
  * <i>size</i>.
  *
@@ -209,7 +209,7 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
  * @errors None
  *
  * @return On success, these functions return a pointer to a string containing
- * the pathname of the current working directory. In the case getcwd() is the
+ * the pathname of the current working directory. In the case <b>getcwd<b>() is the
  * same value as <i>buf</i>.
  *
  * @example
@@ -228,19 +228,8 @@ static inline char *getcwd(char *buf, size_t size)
 
 //==============================================================================
 /**
- * @brief Changes file owner and group
- *
- * @param[in]   path    file path
- * @param[in]   owner   owner
- * @param[in]   group   group
- *
- * @return 0 on success. On error, -1 is returned
- */
-//==============================================================================
-//==============================================================================
-/**
  * @brief int chown(const char *pathname, int owner, int group)
- * The chown() changes the ownership of the file specified by <i>pathname</i>.<p>
+ * The <b>chown<b>() changes the ownership of the file specified by <i>pathname</i>.<p>
  *
  * This function is not supported by dnx RTOS, because users and groups are
  * not implemented yet.
