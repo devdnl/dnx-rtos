@@ -59,7 +59,7 @@ extern "C" {
 //==============================================================================
 /**
  * @brief int mount(const char *FS_name, const char *src_path, const char *mount_point)
- * The <b>mount<b>() function mounts file system name pointed by <i>FS_name</i>
+ * The <b>mount</b>() function mounts file system name pointed by <i>FS_name</i>
  * from source file pointed by <i>src_path</i> to mount directory pointed by
  * <i>mount_point</i>.<p>
  *
@@ -79,7 +79,7 @@ extern "C" {
  * @example
  * // ...
  *
- * mkdir("/fs", 0666);
+ * mkdir("/sdcard", 0666);
  * errno = 0;
  * if (mount("fatfs", "/dev/sda1", "/sdcard") == STD_RET_OK) {
  *         // file system mounted ...
@@ -114,7 +114,7 @@ static inline int mount(const char *FS_name, const char *src_path, const char *m
  * @example
  * // ...
  *
- * mkdir("/fs", 0666);
+ * mkdir("/sdcard", 0666);
  * errno = 0;
  * if (mount("fatfs", "/dev/sda1", "/sdcard") == STD_RET_OK) {
  *         // file system mounted ...

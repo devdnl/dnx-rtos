@@ -116,7 +116,17 @@ static inline int closedir(DIR *dir)
 /**
  * @brief dirent_t readdir(DIR *dir)
  * Function returns a object <b>dirent_t</b> type representing the next directory
- * entry in the directory stream pointed to by <i>dir</i>.
+ * entry in the directory stream pointed to by <i>dir</i>.<p>
+ *
+ * <b>dirent_t</b> structure:
+ * <pre>
+ * typedef struct dirent {
+ *         char   *name;
+ *         u64_t   size;
+ *         tfile_t filetype;
+ *         dev_t   dev;
+ * } dirent_t;
+ * </pre>
  *
  * @param[in] dir       directory object
  *

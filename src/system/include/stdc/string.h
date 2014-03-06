@@ -116,7 +116,9 @@ extern _PTR memchr(const _PTR s, int c, size_t n);
  * int buffer2[100];
  * // ...
  * if (memcmp(buffer1, buffer2, 100) == 0) {
- *         // buffer are equal
+ *         // buffers are equal
+ * } else {
+ *         // buffers are not equal
  * }
  * // ...
  */
@@ -290,7 +292,7 @@ extern char *strncat(char *, const char *, size_t);
  * const char *str = "/foo/bar";
  * char       *ptr;
  * if ((ptr = strchr(str, '/'))) {
- *         // first '/' character found ...
+ *         // the first '/' character found ...
  * }
  * // ...
  */
@@ -318,7 +320,7 @@ extern char *strchr(const char *s, int c);
  * const char *str = "/foo/bar";
  * char       *ptr;
  * if ((ptr = strrchr(str, '/'))) {
- *         // last '/' character found ...
+ *         // the last '/' character found ...
  * }
  * // ...
  */
@@ -668,7 +670,7 @@ extern int strcasecmp(const char *s1, const char *s2);
  *
  * @param s1        string 1
  * @param s2        string 2
- * @param n         number of bytes to compare
+ * @param n         max number of bytes to compare
  *
  * @errors None
  *

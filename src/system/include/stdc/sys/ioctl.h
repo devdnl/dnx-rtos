@@ -69,9 +69,9 @@ extern "C" {
 //==============================================================================
 /**
  * @brief int ioctl(FILE *stream, int request, ...)
- * The <b>ioctl<b>() function manipulates the file parameters.  In particular, many
+ * The <b>ioctl</b>() function manipulates the file parameters.  In particular, many
  * operating characteristics of character special files (e.g., drivers) may
- * be controlled with <b>ioctl<b>() requests.
+ * be controlled with <b>ioctl</b>() requests.
  *
  * The second argument is a device-dependent request code. The third
  * argument is an untyped pointer to memory.
@@ -80,13 +80,13 @@ extern "C" {
  *
  * @errors EINVAL, ENOENT, EBADRQC, ...
  *
- * @return Usually, on success zero is returned.  A few <b>ioctl<b>() requests use the
+ * @return Usually, on success zero is returned.  A few <b>ioctl</b>() requests use the
  * return value as an output parameter and return a nonnegative value on
  * success.  On error, -1 is returned, and <b>errno</b> is set appropriately.
  *
  * @example
  * // ...
- * FILE *file = fopen("/dev/tty0, "r");
+ * FILE *file = fopen("/dev/tty0", "r");
  * if (file) {
  *         ioctl(file, TTY_IORQ_CLEAR_SCR);
  *

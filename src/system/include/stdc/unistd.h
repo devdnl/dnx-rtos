@@ -107,7 +107,7 @@ static inline void sleep_ms(const uint milliseconds)
 //==============================================================================
 /**
  * @brief void usleep(const uint microseconds)
- * The <b>usleep<b>() makes the calling thread sleep until microseconds
+ * The <b>usleep</b>() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
  * Function is not supported by dnx RTOS. Function sleep thread at least 1ms.
@@ -134,8 +134,40 @@ static inline void usleep(const uint microseconds)
 
 //==============================================================================
 /**
+ * @brief int prepare_sleep_until(void)
+ * The <b>prepare_sleep_until</b>() function prepare tick counter to call
+ * <b>sleep_until_ms</b>() and <b>sleep_until</b>() functions.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Current tick counter.
+ *
+ * @example
+ * #include <dnx/os.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ * int ref_time = prepare_sleep_until();
+ *
+ * for (;;) {
+ *         // ...
+ *
+ *         sleep_until_ms(10, &ref_time);
+ * }
+ * // ...
+ */
+//==============================================================================
+static inline int prepare_sleep_until(void)
+{
+        return _kernel_get_tick_counter();
+}
+
+//==============================================================================
+/**
  * @brief void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
- * The <b>sleep_until_ms<b>() makes the calling thread sleep until milliseconds
+ * The <b>sleep_until_ms</b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed. Function produces more precise delay.
  *
  * @param microseconds      number of microseconds to sleep
@@ -167,7 +199,7 @@ static inline void sleep_until_ms(const uint milliseconds, int *ref_time_ticks)
 //==============================================================================
 /**
  * @brief void sleep_until(const uint seconds, int *ref_time_ticks)
- * The <b>sleep_until<b>() makes the calling thread sleep until seconds
+ * The <b>sleep_until</b>() makes the calling thread sleep until seconds
  * <i>seconds</i> have elapsed. Function produces more precise delay.
  *
  * @param seconds       number of seconds to sleep
@@ -199,7 +231,7 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
 //==============================================================================
 /**
  * @brief char *getcwd(char *buf, size_t size)
- * The <b>getcwd<b>() function copies an absolute pathname of the current
+ * The <b>getcwd</b>() function copies an absolute pathname of the current
  * working directory to the array pointed to by <i>buf</i>, which is of length
  * <i>size</i>.
  *
@@ -209,7 +241,7 @@ static inline void sleep_until(const uint seconds, int *ref_time_ticks)
  * @errors None
  *
  * @return On success, these functions return a pointer to a string containing
- * the pathname of the current working directory. In the case <b>getcwd<b>() is the
+ * the pathname of the current working directory. In the case <b>getcwd</b>() is the
  * same value as <i>buf</i>.
  *
  * @example
@@ -229,7 +261,7 @@ static inline char *getcwd(char *buf, size_t size)
 //==============================================================================
 /**
  * @brief int chown(const char *pathname, int owner, int group)
- * The <b>chown<b>() changes the ownership of the file specified by <i>pathname</i>.<p>
+ * The <b>chown</b>() changes the ownership of the file specified by <i>pathname</i>.<p>
  *
  * This function is not supported by dnx RTOS, because users and groups are
  * not implemented yet.
