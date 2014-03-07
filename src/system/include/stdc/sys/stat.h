@@ -59,7 +59,7 @@ extern "C" {
 //==============================================================================
 /**
  * @brief int mknod(const char *pathname, dev_t dev)
- * The <b>mknod<b>() function creates a filesystem node (device special file) named
+ * The <b>mknod</b>() function creates a filesystem node (device special file) named
  * <i>pathname</i>, with attributes specified by mode and <i>dev</i>. <i>dev</i>
  * determines the number of driver to use. This depends on system configuration.
  *
@@ -88,7 +88,7 @@ static inline int mknod(const char *pathname, dev_t dev)
 //==============================================================================
 /**
  * @brief int mkdir(const char *pathname, mode_t mode)
- * The <b>mkdir<b>() attempts to create a directory named <i>pathname</i>. The
+ * The <b>mkdir</b>() attempts to create a directory named <i>pathname</i>. The
  * argument <i>mode</i> specifies the permissions to use.
  *
  * @param pathname      directory name
@@ -115,7 +115,7 @@ static inline int mkdir(const char *pathname, mode_t mode)
 //==============================================================================
 /**
  * @brief int mkfifo(const char *pathname, mode_t mode)
- * The <b>mkfifo<b>() makes a FIFO special file with name <i>pathname</i>. <i>mode</i>
+ * The <b>mkfifo</b>() makes a FIFO special file with name <i>pathname</i>. <i>mode</i>
  * specifies the FIFO's permissions. A FIFO special file is similar to pipe, but
  * is created in filesystem and is not an anonymous. Access to FIFO is the same
  * as to regular file, except that data can be read only one time. Not all
@@ -145,7 +145,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 //==============================================================================
 /**
  * @brief int chmod(const char *pathname, int mode)
- * The <b>chmod<b>() system call change the permissions of a file.
+ * The <b>chmod</b>() system call change the permissions of a file.
  *
  * @param pathname      file to permission change
  * @param mode          new permissions
@@ -171,7 +171,7 @@ static inline int chmod(const char *pathname, int mode)
 //==============================================================================
 /**
  * @brief int stat(const char *pathname, struct stat *buf)
- * The <b>stat<b>() function return information about a file.<p>
+ * The <b>stat</b>() function return information about a file.<p>
  *
  * This function return a <b>stat</b> structure, which contains the following
  * fileds:
@@ -219,7 +219,7 @@ static inline int stat(const char *pathname, struct stat *buf)
 //==============================================================================
 /**
  * @brief int fstat(FILE *file, struct stat *stat)
- * The <b>fstat<b>() function return information about a file pointed by <i>file</i>.<p>
+ * The <b>fstat</b>() function return information about a file pointed by <i>file</i>.<p>
  *
  * This function return a <b>stat</b> structure, which contains the following
  * fileds:
