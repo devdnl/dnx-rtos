@@ -219,22 +219,7 @@ static inline int stat(const char *pathname, struct stat *buf)
 //==============================================================================
 /**
  * @brief int fstat(FILE *file, struct stat *stat)
- * The <b>fstat</b>() function return information about a file pointed by <i>file</i>.<p>
- *
- * This function return a <b>stat</b> structure, which contains the following
- * fileds:
- * <pre>
- * struct stat {
- *         u64_t   st_size;     // total size, in bytes
- *         u32_t   st_dev;      // ID of device containing file
- *         u32_t   st_mode;     // protection
- *         u32_t   st_uid;      // user ID of owner
- *         u32_t   st_gid;      // group ID of owner
- *         u32_t   st_atime;    // time of last access
- *         u32_t   st_mtime;    // time of last modification
- *         tfile_t st_type;     // type of file
- * };
- * </pre>
+ * The <b>fstat</b>() function return information about a file pointed by <i>file</i>.
  *
  * @param file          file object
  * @param buf           file's information

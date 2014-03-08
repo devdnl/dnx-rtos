@@ -59,7 +59,7 @@ extern "C" {
 /**
  * @brief int statfs(const char *path, struct statfs *statfs)
  * The function <b>statfs</b>() returns information about a mounted file system.
- * <i>path</i> is the pathname of any file within the mounted file system.
+ * <i>path</i> is directory of the mount point of file system.
  * <i>buf</i> is a pointer to a <b>statfs</b> structure defined as follows:
  * <pre>
  * struct statfs {

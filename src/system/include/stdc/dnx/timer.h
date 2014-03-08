@@ -58,9 +58,27 @@ typedef int timer_t;
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function reset timer
+ * @brief timer_t timer_reset(void)
+ * The function <b>timer_reset</b>() resets timer. Function synchronize selected
+ * timer to system time.
  *
- * @return timer start value
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Synchronized timer object.
+ *
+ * @example
+ * // ...
+ *
+ * timer_t timer = timer_reset();
+ *
+ * while (timer_is_not_expired(timer, 100)) {
+ *         // try to do operations by 100ms
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline timer_t timer_reset(void)
@@ -70,12 +88,28 @@ static inline timer_t timer_reset(void)
 
 //==============================================================================
 /**
- * @brief Function check if timer is expired
+ * @brief bool timer_is_expired(timer_t timer, int time)
+ * The function <b>timer_is_expired</b>() check if time <i>time</i> of <i>timer</i>
+ * was expired.
  *
- * @param timer         timer value
- * @param time          expiration time
+ * @param timer         timer
+ * @param time          time to check
  *
- * @return true if timer expired, otherwise false
+ * @errors None
+ *
+ * @return If time expired then <b>true</b> is returned, otherwise <b>false</b>.
+ *
+ * @example
+ * // ...
+ *
+ * timer_t timer = timer_reset();
+ *
+ * while (!timer_is_expired(timer, 100)) {
+ *         // try to do operations by 100ms
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool timer_is_expired(timer_t timer, int time)
@@ -85,12 +119,28 @@ static inline bool timer_is_expired(timer_t timer, int time)
 
 //==============================================================================
 /**
- * @brief Function check if timer is not expired
+ * @brief bool timer_is_not_expired(timer_t timer, int time)
+ * The function <b>timer_is_not_expired</b>() check if time <i>time</i> of <i>timer</i>
+ * was not expired.
  *
- * @param timer         timer value
- * @param time          expiration time
+ * @param timer         timer
+ * @param time          time to check
  *
- * @return true if timer not expired, otherwise false
+ * @errors None
+ *
+ * @return If time not expired then <b>true</b> is returned, otherwise <b>false</b>.
+ *
+ * @example
+ * // ...
+ *
+ * timer_t timer = timer_reset();
+ *
+ * while (timer_is_not_expired(timer, 100)) {
+ *         // try to do operations by 100ms
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool timer_is_not_expired(timer_t timer, int time)
@@ -100,9 +150,31 @@ static inline bool timer_is_not_expired(timer_t timer, int time)
 
 //==============================================================================
 /**
- * @brief Function set timer to expired value
+ * @brief timer_t timer_set_expired(void)
+ * The function <b>timer_set_expired</b>() set timer to expired value.
  *
- * @return timer expired value
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Timer object with expired value.
+ *
+ * @example
+ * // ...
+ *
+ * timer_t timer = timer_set_expired();
+ *
+ * while (true) {
+ *         // ...
+ *
+ *         if (timer_is_expired(timer, 10)) {
+ *                 // refresh screen
+ *
+ *                 timer = timer_reset();
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline timer_t timer_set_expired(void)
@@ -112,12 +184,32 @@ static inline timer_t timer_set_expired(void)
 
 //==============================================================================
 /**
- * @brief Function calculate timer time difference
+ * @brief int timer_difftime(timer_t timer1, timer_t timer2)
+ * The function <b>timer_difftime</b>() calculate difference between <i>timer1</i>
+ * and <i>timer2</i>.
  *
- * @param timer1        timer value
- * @param timer2        timer value
+ * @param timer1        timer 1
+ * @param timer2        timer 2
  *
- * @return time difference
+ * @errors None
+ *
+ * @return Returns difference between <i>timer1</i> and <i>timer2</i>.
+ *
+ * @example
+ * // ...
+ *
+ * timer_t timer1 = timer_reset();
+ * timer_t timer2 = timer_reset();
+ *
+ * // ...
+ *
+ * if (timer_difftime(timer1, timer2) == 100) {
+ *         // ...
+ * } else {
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int timer_difftime(timer_t timer1, timer_t timer2)
