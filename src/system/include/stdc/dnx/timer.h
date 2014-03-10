@@ -43,7 +43,7 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef int timer_t;
+typedef uint timer_t;
 
 /*==============================================================================
   Exported objects
@@ -88,7 +88,7 @@ static inline timer_t timer_reset(void)
 
 //==============================================================================
 /**
- * @brief bool timer_is_expired(timer_t timer, int time)
+ * @brief bool timer_is_expired(timer_t timer, uint time)
  * The function <b>timer_is_expired</b>() check if time <i>time</i> of <i>timer</i>
  * was expired.
  *
@@ -112,14 +112,14 @@ static inline timer_t timer_reset(void)
  * // ...
  */
 //==============================================================================
-static inline bool timer_is_expired(timer_t timer, int time)
+static inline bool timer_is_expired(timer_t timer, uint time)
 {
         return (_kernel_get_time_ms() - timer >= time);
 }
 
 //==============================================================================
 /**
- * @brief bool timer_is_not_expired(timer_t timer, int time)
+ * @brief bool timer_is_not_expired(timer_t timer, uint time)
  * The function <b>timer_is_not_expired</b>() check if time <i>time</i> of <i>timer</i>
  * was not expired.
  *
@@ -143,7 +143,7 @@ static inline bool timer_is_expired(timer_t timer, int time)
  * // ...
  */
 //==============================================================================
-static inline bool timer_is_not_expired(timer_t timer, int time)
+static inline bool timer_is_not_expired(timer_t timer, uint time)
 {
         return (_kernel_get_time_ms() - timer < time);
 }

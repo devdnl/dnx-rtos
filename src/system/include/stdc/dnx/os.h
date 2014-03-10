@@ -52,6 +52,7 @@ extern "C" {
   Exported types, enums definitions
 ==============================================================================*/
 typedef struct sysmoni_taskstat taskstat_t;
+typedef struct sysmoni_used_memory memstat_t;
 
 /*==============================================================================
   Exported object declarations
@@ -64,6 +65,28 @@ typedef struct sysmoni_taskstat taskstat_t;
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief void dnx_init(void)
+ * The function <b>dnx_init</b>() starts dnx initialization process.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * int main()
+ * {
+ *         dnx_init();
+ *         kernel_start();
+ *         return 0;
+ * }
+ */
+//==============================================================================
 extern void dnx_init(void);
 
 /*==============================================================================
@@ -71,7 +94,25 @@ extern void dnx_init(void);
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief Function start kernel scheduler
+ * @brief void kernel_start(void)
+ * The function <b>kernel_start</b>() starts kernel. This function must be
+ * called after <b>dnx_init</b>().
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * int main()
+ * {
+ *         dnx_init();
+ *         kernel_start();
+ *         return 0;
+ * }
  */
 //==============================================================================
 static inline void kernel_start(void)
@@ -81,9 +122,24 @@ static inline void kernel_start(void)
 
 //==============================================================================
 /**
- * @brief Function return used static memory
+ * @brief u32_t get_used_static_memory(void)
+ * The function <b>get_used_static_memory</b>() return used static memory
+ * in bytes. Usage of static memory is determined by configuration.
  *
- * @return used static memory (configured at precompilation time)
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Number of bytes reserved by static memory.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Used static memory: %d bytes\n", get_used_static_memory());
+ *
+ * // ...
  */
 //==============================================================================
 static inline u32_t get_used_static_memory(void)
@@ -93,9 +149,24 @@ static inline u32_t get_used_static_memory(void)
 
 //==============================================================================
 /**
- * @brief Function return free memory
+ * @brief u32_t get_free_memory(void)
+ * The function <b>get_free_memory</b>() return free memory in bytes. This is
+ * the total amount of memory which can be used.
  *
- * @return a free memory
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Free memory in bytes.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Free memory: %d bytes\n", get_free_memory());
+ *
+ * // ...
  */
 //==============================================================================
 static inline u32_t get_free_memory(void)
@@ -105,9 +176,24 @@ static inline u32_t get_free_memory(void)
 
 //==============================================================================
 /**
- * @brief Function return used memory
+ * @brief u32_t get_used_memory(void)
+ * The function <b>get_used_memory</b>() return used memory in bytes. This value
+ * is a sum of static and dynamic allocated memory.
  *
- * @return used memory
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Used memory in bytes.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Used memory: %d bytes\n", get_used_memory());
+ *
+ * // ...
  */
 //==============================================================================
 static inline u32_t get_used_memory(void)
@@ -117,9 +203,23 @@ static inline u32_t get_used_memory(void)
 
 //==============================================================================
 /**
- * @brief Function return memory size
+ * @brief u32_t get_memory_size(void)
+ * The function <b>get_memory_size</b>() return total memory size in bytes.
  *
- * @return a memory size
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Total memory size in bytes.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Memory size: %d bytes\n", get_memory_size());
+ *
+ * // ...
  */
 //==============================================================================
 static inline u32_t get_memory_size(void)
@@ -129,26 +229,80 @@ static inline u32_t get_memory_size(void)
 
 //==============================================================================
 /**
- * @brief Function return detailed memory usage
+ * @brief stdret_t get_detailed_memory_usage(memstat_t *stat)
+ * The function <b>get_detailed_memory_usage</b>() return detailed memory usage
+ * pointed by <i>stat</i>. <b>memstat_t</b> structure:
+ * <pre>
+ * typedef struct {
+ *         int used_kernel_memory;
+ *         int used_system_memory;
+ *         int used_network_memory;
+ *         int used_modules_memory;
+ *         int used_programs_memory;
+ * } memstat_t;
+ * </pre>
  *
- * @param[out] *stat    memory usage object
+ * @param stat      memory information
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @errors EINVAL
+ *
+ * @return Return <b>STD_RET_OK</b> on success. On error, <b>STD_RET_ERROR</b>
+ * is returned, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * memstat_t stat;
+ * if (get_detailed_memory_usage(&stat) == STD_RET_OK) {
+ *         printf("Used memory by kernel  : %d\n"
+ *                "Used memory by system  : %d\n"
+ *                "Used memory by network : %d\n"
+ *                "Used memory by modules : %d\n"
+ *                "Used memory by programs: %d\n",
+ *                stat.used_kernel_memory,
+ *                stat.used_system_memory,
+ *                stat.used_network_memory,
+ *                stat.used_modules_memory,
+ *                stat.used_programs_memory);
+ * } else {
+ *         perror(NULL);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline stdret_t get_detailed_memory_usage(struct sysmoni_used_memory *stat)
+static inline stdret_t get_detailed_memory_usage(memstat_t *stat)
 {
         return sysm_get_used_memory(stat);
 }
 
 //==============================================================================
 /**
- * @brief Function return memory usage of selected module
+ * @brief i32_t get_module_memory_usage(uint module_number)
+ * The function <b>get_module_memory_usage</b>() return memory usage by specified
+ * module number <i>module_number</i>.
  *
- * @param[in] module_number
+ * @param module_number     module number
  *
- * @return used memory by selected module
+ * @errors None
+ *
+ * @return On success, return amount of used memory by module in bytes.
+ * On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * uint number_of_modules = get_number_of_modules();
+ * for (uint i = 0; i < number_of_modules; i++) {
+ *         printf("%s : %d\n", get_module_name(i), get_module_memory_usage(i));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline i32_t get_module_memory_usage(uint module_number)
@@ -158,9 +312,23 @@ static inline i32_t get_module_memory_usage(uint module_number)
 
 //==============================================================================
 /**
- * @brief Function return uptime
+ * @brief u32_t get_uptime(void)
+ * The function <b>get_uptime</b>() return 32-bit uptime in seconds.
  *
- * @return an uptime
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Uptime value in seconds.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("System works: %d seconds\n", get_uptime());
+ *
+ * // ...
  */
 //==============================================================================
 static inline u32_t get_uptime(void)
@@ -170,61 +338,168 @@ static inline u32_t get_uptime(void)
 
 //==============================================================================
 /**
- * @brief Function return tick counter
+ * @brief uint get_tick_counter(void)
+ * The function <b>get_tick_counter</b>() return number of system clock ticks.
  *
- * @return a tick counter value
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Number of system's ticks.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Context was switched %d times\n", get_tick_counter());
+ *
+ * // ...
  */
 //==============================================================================
-static inline int get_tick_counter(void)
+static inline uint get_tick_counter(void)
 {
         return _kernel_get_tick_counter();
 }
 
 //==============================================================================
 /**
- * @brief Function return OS time in milliseconds
+ * @brief int get_time_ms(void)
+ * The function <b>get_time_ms</b>() return number of milliseconds which
+ * elapsed after kernel start. Function is similar to <b>get_uptime</b>(), except
+ * that return milliseconds instead of seconds. In this function the tick
+ * counter value is calculated to milliseconds, what means that resolution of
+ * this counter depends on system tick counter increase value.
  *
- * @return a OS time in milliseconds
+ * @param None
+ *
+ * @errors None
+ *
+ * @return System work time in milliseconds.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("System works by %d ms\n", get_time_ms());
+ *
+ * // ...
  */
 //==============================================================================
-static inline int get_time_ms(void)
+static inline uint get_time_ms(void)
 {
         return _kernel_get_time_ms();
 }
 
 //==============================================================================
 /**
- * @brief Function return task status
+ * @brief stdret_t get_task_stat(uint ntask, taskstat_t *stat)
+ * The function <b>get_task_stat</b>() return <i>ntask</i> task information
+ * pointed by <i>stat</i>. <b>taskstat_t</b> structure:
+ * <pre>
+ * typedef struct {
+ *        u32_t   memory_usage;
+ *        u32_t   opened_files;
+ *        u32_t   cpu_usage;
+ *        char   *task_name;
+ *        task_t *task_handle;
+ *        u32_t   free_stack;
+ *        i16_t   priority;
+ * } taskstat_t;
+ * </pre>
  *
- * @param[in]   ntask           task number
- * @param[out] *stat            object for statistics
+ * @param ntask     task number
+ * @param stat      task information
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @errors None
+ *
+ * @return Return <b>STD_RET_OK</b> on success. On error, <b>STD_RET_ERROR</b>
+ * is returned.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * uint number_of_tasks = get_number_of_monitored_tasks();
+ * for (uint i = 0; i < number_of_tasks; i++) {
+ *         taskstat_t stat;
+ *         get_task_stat(i, &stat);
+ *         printf("Memory usage: %d\n", stat.memory_usage);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline stdret_t get_task_stat(i32_t ntask, taskstat_t *stat)
+static inline stdret_t get_task_stat(uint ntask, taskstat_t *stat)
 {
         return sysm_get_ntask_stat(ntask, stat);
 }
 
 //==============================================================================
 /**
- * @brief Function return a number of monitored tasks
+ * @brief uint get_number_of_monitored_tasks(void)
+ * The function <b>get_number_of_monitored_tasks</b>() return number of
+ * monitored tasks. Real task number is larger by 1, because idle task is not
+ * added to monitoring.
  *
- * @return a number of monitored task
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Return number of monitored tasks.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * uint number_of_tasks = get_number_of_monitored_tasks();
+ * for (uint i = 0; i < number_of_tasks; i++) {
+ *         taskstat_t stat;
+ *         get_task_stat(i, &stat);
+ *         printf("Memory usage: %d\n", stat.memory_usage);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline int get_number_of_monitored_tasks(void)
+static inline uint get_number_of_monitored_tasks(void)
 {
         return sysm_get_number_of_monitored_tasks();
 }
 
 //==============================================================================
 /**
- * @brief Function return total CPU usage
+ * @brief u32_t get_total_CPU_usage(void)
+ * The function <b>get_total_CPU_usage</b>() return total CPU usage. The value
+ * is a counter. After call of this function counter is reset.
  *
- * @return a CPU usage value
+ * @param None
+ *
+ * @errors None
+ *
+ * @return CPU usage counter.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * u32_t total_cpu_usage = get_total_CPU_usage();
+ * uint  number_of_tasks = get_number_of_monitored_tasks();
+ *
+ * for (uint i = 0; i < number_of_tasks; i++) {
+ *         taskstat_t stat;
+ *         get_task_stat(i, &stat);
+ *
+ *         printf("Task %s CPU usage: %d\n",
+ *                get_task_name(i),
+ *                (stat.cpu_usage * 100)  / total_cpu_usage);
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline u32_t get_total_CPU_usage(void)
@@ -234,9 +509,23 @@ static inline u32_t get_total_CPU_usage(void)
 
 //==============================================================================
 /**
- * @brief Function return name of CPU
+ * @brief const char *get_platform_name(void)
+ * The function <b>get_platform_name</b>() return platform name.
  *
- * @return pointer to CPU name string
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Platform name.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Platform name: %s\n", get_platform_name());
+ *
+ * // ...
  */
 //==============================================================================
 static inline const char *get_platform_name(void)
@@ -246,9 +535,23 @@ static inline const char *get_platform_name(void)
 
 //==============================================================================
 /**
- * @brief Function return name of operating system
+ * @brief const char *get_OS_name(void)
+ * The function <b>get_OS_name</b>() return operating system name.
  *
- * @return pointer to string
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Operating system name.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Operating system name: %s\n", get_OS_name());
+ *
+ * // ...
  */
 //==============================================================================
 static inline const char *get_OS_name(void)
@@ -258,9 +561,23 @@ static inline const char *get_OS_name(void)
 
 //==============================================================================
 /**
- * @brief Function return operating system version
+ * @brief const char *get_OS_version(void)
+ * The function <b>get_OS_version</b>() return operating system version string.
  *
- * @return pointer to string
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Operating system version string.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Operating system version: %s\n", get_OS_version());
+ *
+ * // ...
  */
 //==============================================================================
 static inline const char *get_OS_version(void)
@@ -270,9 +587,23 @@ static inline const char *get_OS_version(void)
 
 //==============================================================================
 /**
- * @brief Function return name of kernel
+ * @brief const char *get_kernel_name(void)
+ * The function <b>get_kernel_name</b>() return kernel name string.
  *
- * @return pointer to string
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Kernel name string.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Kernel name: %s\n", get_kernel_name());
+ *
+ * // ...
  */
 //==============================================================================
 static inline const char *get_kernel_name(void)
@@ -282,33 +613,23 @@ static inline const char *get_kernel_name(void)
 
 //==============================================================================
 /**
- * @brief Function return name of author
+ * @brief const char *get_kernel_version(void)
+ * The function <b>get_kernel_version</b>() return kernel version string.
  *
- * @return pointer to string
- */
-//==============================================================================
-static inline const char *get_author_name(void)
-{
-        return "Daniel Zorychta";
-}
-
-//==============================================================================
-/**
- * @brief Function return author's email
+ * @param None
  *
- * @return pointer to string
- */
-//==============================================================================
-static inline const char *get_author_email(void)
-{
-        return "<daniel.zorychta@gmail.com>";
-}
-
-//==============================================================================
-/**
- * @brief Function return kernel version
+ * @errors None
  *
- * @return pointer to string
+ * @return Kernel version string.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Kernel version: %s\n", get_kernel_version());
+ *
+ * // ...
  */
 //==============================================================================
 static inline const char *get_kernel_version(void)
@@ -318,9 +639,75 @@ static inline const char *get_kernel_version(void)
 
 //==============================================================================
 /**
- * @brief Function return host name
+ * @brief const char *get_author_name(void)
+ * The function <b>get_author_name</b>() return author name.
  *
- * @return pointer to string
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Author name.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Author name: %s\n", get_author_name());
+ *
+ * // ...
+ */
+//==============================================================================
+static inline const char *get_author_name(void)
+{
+        return "Daniel Zorychta";
+}
+
+//==============================================================================
+/**
+ * @brief const char *get_author_email(void)
+ * The function <b>get_author_email</b>() return author's email address.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Author's email address.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Author's email: %s\n", get_author_email());
+ *
+ * // ...
+ */
+//==============================================================================
+static inline const char *get_author_email(void)
+{
+        return "<daniel.zorychta@gmail.com>";
+}
+
+//==============================================================================
+/**
+ * @brief const char *get_host_name(void)
+ * The function <b>get_host_name</b>() return host name.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Return host name.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Host name: %s\n", get_host_name());
+ *
+ * // ...
  */
 //==============================================================================
 static inline const char *get_host_name(void)
@@ -330,9 +717,24 @@ static inline const char *get_host_name(void)
 
 //==============================================================================
 /**
- * @brief Function return current user name
+ * @brief const char *get_user_name(void)
+ * The function <b>get_user_name</b>() return current user name. Function
+ * return always "root" name, because user handling is not supported yet.
  *
- * @return user name string
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Return user name.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("User name: %s\n", get_user_name());
+ *
+ * // ...
  */
 //==============================================================================
 static inline const char *get_user_name(void)
@@ -342,25 +744,51 @@ static inline const char *get_user_name(void)
 
 //==============================================================================
 /**
- * @brief Function return module name
+ * @brief const char *get_module_name(uint modid)
+ * The function <b>get_module_name</b>() return module name selected by <i>modid</i>
+ * index.
  *
- * @param[in] modid     module ID
+ * @param modid     module ID
  *
- * @return module name
+ * @errors None
+ *
+ * @return Return module name.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Module name: %s\n", get_module_name(0));
+ *
+ * // ...
  */
 //==============================================================================
-static inline const char *get_module_name(int modid)
+static inline const char *get_module_name(uint modid)
 {
         return _get_module_name(modid);
 }
 
 //==============================================================================
 /**
- * @brief Function return module number
+ * @brief int get_module_number(const char *name)
+ * The function <b>get_module_number</b>() return module index selected by
+ * name pointed by <i>name</i>.
  *
- * @param[in] name     module name
+ * @param name     module name
  *
- * @return module name
+ * @errors None
+ *
+ * @return On success, return module index (ID). On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * printf("Module ID: %d\n", get_module_number("crc"));
+ *
+ * // ...
  */
 //==============================================================================
 static inline int get_module_number(const char *name)

@@ -72,7 +72,7 @@ typedef uint fd_t;
 typedef int mode_t;
 
 /** device */
-typedef int dev_t;
+typedef uint dev_t;
 
 /*==============================================================================
   Exported objects

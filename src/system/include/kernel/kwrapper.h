@@ -172,7 +172,7 @@ static inline void _kernel_start(void)
  * @return a OS time in milliseconds
  */
 //==============================================================================
-static inline int _kernel_get_time_ms(void)
+static inline uint _kernel_get_time_ms(void)
 {
         return (xTaskGetTickCount() * ((1000/(configTICK_RATE_HZ))));
 }
@@ -184,9 +184,9 @@ static inline int _kernel_get_time_ms(void)
  * @return a tick counter value
  */
 //==============================================================================
-static inline int _kernel_get_tick_counter(void)
+static inline uint _kernel_get_tick_counter(void)
 {
-        return (int)xTaskGetTickCount();
+        return (uint)xTaskGetTickCount();
 }
 
 //==============================================================================

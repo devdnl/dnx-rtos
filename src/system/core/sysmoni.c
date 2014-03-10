@@ -118,7 +118,7 @@ static i32_t sysm_network_memory_usage;
 /*==============================================================================
   External object definitions
 ==============================================================================*/
-extern const int _regdrv_number_of_modules;
+extern const uint _regdrv_number_of_modules;
 
 /*==============================================================================
   Function definitions
@@ -429,13 +429,13 @@ exit_error:
  * @retval STD_RET_ERROR
  */
 //==============================================================================
-stdret_t sysm_get_ntask_stat(i32_t item, struct sysmoni_taskstat *stat)
+stdret_t sysm_get_ntask_stat(uint item, struct sysmoni_taskstat *stat)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
 
         task_t *task;
-        if (list_get_nitem_ID(sysm_task_list, item, (u32_t *)&task) != STD_RET_OK) {
+        if (list_get_nitem_ID(sysm_task_list, (i32_t)item, (u32_t *)&task) != STD_RET_OK) {
                 goto exit_error;
         }
 
@@ -469,8 +469,10 @@ exit_error:
 //==============================================================================
 stdret_t sysm_get_used_memory(struct sysmoni_used_memory *mem_info)
 {
-        if (!mem_info)
+        if (!mem_info) {
+                errno = EINVAL;
                 return STD_RET_ERROR;
+        }
 
 #if (CONFIG_MONITOR_KERNEL_MEMORY_USAGE > 0)
         mem_info->used_kernel_memory   = sysm_kernel_memory_usage;
@@ -511,7 +513,7 @@ stdret_t sysm_get_used_memory(struct sysmoni_used_memory *mem_info)
  * @return number of monitor tasks
  */
 //==============================================================================
-int sysm_get_number_of_monitored_tasks(void)
+uint sysm_get_number_of_monitored_tasks(void)
 {
 #if (CONFIG_MONITOR_TASK_MEMORY_USAGE > 0 || CONFIG_MONITOR_TASK_FILE_USAGE > 0 || CONFIG_MONITOR_CPU_LOAD > 0)
         mutex_force_lock(sysm_resource_mtx);
@@ -727,7 +729,7 @@ void sysm_netfree(void *mem)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modmalloc(size_t size, int module_number)
+void *sysm_modmalloc(size_t size, uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         void *p = NULL;
@@ -757,7 +759,7 @@ void *sysm_modmalloc(size_t size, int module_number)
  * @return pointer to allocated block or NULL if error
  */
 //==============================================================================
-void *sysm_modcalloc(size_t count, size_t size, int module_number)
+void *sysm_modcalloc(size_t count, size_t size, uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         void *p = NULL;
@@ -785,7 +787,7 @@ void *sysm_modcalloc(size_t count, size_t size, int module_number)
  * @param  module_number        module number
  */
 //==============================================================================
-void sysm_modfree(void *mem, int module_number)
+void sysm_modfree(void *mem, uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number < _regdrv_number_of_modules) {
@@ -805,14 +807,14 @@ void sysm_modfree(void *mem, int module_number)
  *
  * @param  module_number        module number
  *
- * @return used memory by selected driver
+ * @return used memory by selected driver, or -1 on error
  */
 //==============================================================================
-i32_t sysm_get_used_memory_by_module(int module_number)
+i32_t sysm_get_used_memory_by_module(uint module_number)
 {
 #if (CONFIG_MONITOR_MODULE_MEMORY_USAGE > 0)
         if (module_number >= _regdrv_number_of_modules)
-                return 0;
+                return -1;
         else
                 return sysm_module_memory_usage[module_number];
 #else
