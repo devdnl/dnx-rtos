@@ -662,6 +662,7 @@ int _program_kill(prog_t *prog)
                 }
         }
 
+        errno = EINVAL;
         return -EINVAL;
 }
 

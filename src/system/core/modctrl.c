@@ -395,7 +395,7 @@ int _get_module_number(const char *module_name)
  * @brief Function returns number of modules
  */
 //==============================================================================
-int _get_number_of_modules(void)
+uint _get_number_of_modules(void)
 {
         return _regdrv_number_of_modules;
 };
@@ -407,7 +407,7 @@ int _get_number_of_modules(void)
  * @return number of drivers
  */
 //==============================================================================
-int _get_number_of_drivers(void)
+uint _get_number_of_drivers(void)
 {
         return _regdrv_size_of_driver_table;
 }

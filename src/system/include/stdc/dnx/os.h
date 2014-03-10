@@ -798,73 +798,189 @@ static inline int get_module_number(const char *name)
 
 //==============================================================================
 /**
- * @brief Function return number of modules
+ * @brief uint get_number_of_modules(void)
+ * The function <b>get_number_of_modules</b>() return number of registered
+ * modules in system.
  *
- * @return number of modules
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Return number of registered modules in system.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * uint number_of_modules = get_number_of_modules();
+ * for (uint i = 0; i < number_of_modules; i++) {
+ *         printf("%s : %d\n", get_module_name(i), get_module_memory_usage(i));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline int get_number_of_modules(void)
+static inline uint get_number_of_modules(void)
 {
         return _get_number_of_modules();
 }
 
 //==============================================================================
 /**
- * @brief Function return number of drivers
+ * @brief uint get_number_of_drivers(void)
+ * The function <b>get_number_of_drivers</b>() return number of drivers. Each
+ * module can contains many drivers e.g. UART module can handle UART1, UART2, etc.
  *
- * @return number of drivers
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Return number of drivers registered in system.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * uint number_of_drivers = get_number_of_drivers();
+ * for (uint i = 0; i < number_of_drivers; i++) {
+ *         printf("%s in module %s\n", get_driver_name(i), get_driver_module_name(i));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline int get_number_of_drivers(void)
+static inline uint get_number_of_drivers(void)
 {
         return _get_number_of_drivers();
 }
 
 //==============================================================================
 /**
- * @brief Function return driver name
+ * @brief const char *get_driver_name(uint n)
+ * The function <b>get_driver_name</b>() return driver name selected by <i>n</i>
+ * index (ID).
  *
- * @param n             driver number
+ * @param n     driver index
  *
- * @param driver name, NULL on error
+ * @errors None
+ *
+ * @return Returns driver's name.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * uint number_of_drivers = get_number_of_drivers();
+ * for (uint i = 0; i < number_of_drivers; i++) {
+ *         printf("%s in module %s\n", get_driver_name(i), get_driver_module_name(i));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline const char *get_driver_name(int n)
+static inline const char *get_driver_name(uint n)
 {
         return _get_driver_name(n);
 }
 
 //==============================================================================
 /**
- * @brief Function return driver's module name
+ * @brief const char *get_driver_module_name(uint n)
+ * The function <b>get_driver_module_name</b>() return name of module which
+ * contains driver indexed by <i>n</i>.
  *
- * @param n             driver number
+ * @param n     driver index
  *
- * @param driver name, NULL on error
+ * @errors None
+ *
+ * @return Returns name of module which contains driver.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * uint number_of_drivers = get_number_of_drivers();
+ * for (uint i = 0; i < number_of_drivers; i++) {
+ *         printf("%s in module %s\n", get_driver_name(i), get_driver_module_name(i));
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline const char *get_driver_module_name(int n)
+static inline const char *get_driver_module_name(uint n)
 {
         return _get_driver_module_name(n);
 }
 
 //==============================================================================
 /**
- * @brief Function return driver status
+ * @brief bool is_driver_active(uint n)
+ * The function <b>is_driver_active</b>() return <b>true</b> if driver is activated,
+ * otherwise <b>false</b>.
  *
- * @param n             driver number
+ * @param n     driver index
  *
- * @return true if driver is active (initialized), otherwise false
+ * @errors None
+ *
+ * @return Returns <b>true</b> if driver is activated, otherwise <b>false</b>.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * if (is_driver_active(0)) {
+ *         // ...
+ * } else {
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
-static inline bool is_driver_active(int n)
+static inline bool is_driver_active(uint n)
 {
         return _is_driver_active(n);
 }
 
 //==============================================================================
 /**
- * @brief Function disable CPU load measurement
+ * @brief void disable_CPU_load_measurement(void)
+ * The function <b>disable_CPU_load_measurement</b>() disable CPU load
+ * measurement.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * disable_CPU_load_measurement();
+ *
+ * u32_t total_cpu_usage = get_total_CPU_usage();
+ * uint  number_of_tasks = get_number_of_monitored_tasks();
+ *
+ * for (uint i = 0; i < number_of_tasks; i++) {
+ *         taskstat_t stat;
+ *         get_task_stat(i, &stat);
+ *
+ *         printf("Task %s CPU usage: %d\n",
+ *                get_task_name(i),
+ *                (stat.cpu_usage * 100)  / total_cpu_usage);
+ * }
+ *
+ * enable_CPU_load_measurement();
+ *
+ * // ...
  */
 //==============================================================================
 static inline void disable_CPU_load_measurement(void)
@@ -874,7 +990,38 @@ static inline void disable_CPU_load_measurement(void)
 
 //==============================================================================
 /**
- * @brief Function enable CPU load measurement
+ * @brief void enable_CPU_load_measurement(void)
+ * The function <b>enable_CPU_load_measurement</b>() enable CPU load
+ * measurement.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * disable_CPU_load_measurement();
+ *
+ * u32_t total_cpu_usage = get_total_CPU_usage();
+ * uint  number_of_tasks = get_number_of_monitored_tasks();
+ *
+ * for (uint i = 0; i < number_of_tasks; i++) {
+ *         taskstat_t stat;
+ *         get_task_stat(i, &stat);
+ *
+ *         printf("Task %s CPU usage: %d\n",
+ *                get_task_name(i),
+ *                (stat.cpu_usage * 100)  / total_cpu_usage);
+ * }
+ *
+ * enable_CPU_load_measurement();
+ *
+ * // ...
  */
 //==============================================================================
 static inline void enable_CPU_load_measurement(void)
@@ -884,7 +1031,23 @@ static inline void enable_CPU_load_measurement(void)
 
 //==============================================================================
 /**
- * @brief Function restart system
+ * @brief void restart_system(void)
+ * The function <b>restart_system</b>() restart system. Reset operation can
+ * be software or hardware, but this depends on CPU port implementation.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return This function not return.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * // e.g. user request system restart
+ * restart_system();
  */
 //==============================================================================
 static inline void restart_system(void)
@@ -894,16 +1057,39 @@ static inline void restart_system(void)
 
 //==============================================================================
 /**
- * @brief Function start new program by name
- *
- * Errno: EINVAL, ENOMEM, ENOENT
+ * @brief task_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
+ * The function <b>program_new</b>() create new program pointed by <i>cmd</i>
+ * with current working directory pointed by <i>cwd</i>. Standard input of
+ * program is pointed by <i>stin</i>, standard output is pointed by <i>stout</i>
+ * and standard error ouptup is pointed by <i>sterr</i>.
  *
  * @param cmd           program name and argument list
  * @param stin          standard input file
  * @param stout         standard output file
  * @param sterr         standard error file
  *
- * @return NULL if error, otherwise program handle
+ * @errors ENOMEM, EINVAL, ENOENT
+ *
+ * @return On success, return program object instance, otherwise NULL.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * if (prog) {
+ *         program_wait_for_close(prog, MAX_DELAY_MS);
+ *
+ *         program_delete(prog);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline task_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
@@ -913,11 +1099,36 @@ static inline task_t *program_new(const char *cmd, const char *cwd, FILE *stin, 
 
 //==============================================================================
 /**
- * @brief Kill started program
+ * @brief int program_kill(prog_t *prog)
+ * The function <b>program_kill</b>() kill working program. After kill object
+ * must be deleted using <b>program_delete</b>().
  *
  * @param prog                  program object
  *
- * @return 0 if success, otherwise other value
+ * @errors EINVAL
+ *
+ * @return On success return 0, otherwise other than 0 value.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * if (prog) {
+ *         if (program_wait_for_close(prog, 500) != 0) {
+ *                 program_kill(prog);
+ *         }
+ *
+ *         program_delete(prog);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int program_kill(prog_t *prog)
@@ -927,11 +1138,35 @@ static inline int program_kill(prog_t *prog)
 
 //==============================================================================
 /**
- * @brief Function delete running program
+ * @brief int program_delete(prog_t *prog)
+ * The function <b>program_delete</b>() delete closed program object. If program
+ * is already running then object deletion is denied.
  *
  * @param prog                  program object
  *
- * @return 0 on success, otherwise other value
+ * @errors EINVAL, EAGAIN
+ *
+ * @return Return 0 on success. On error, different than 0 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * if (prog) {
+ *         program_wait_for_close(prog, MAX_DELAY_MS);
+ *
+ *         program_delete(prog);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int program_delete(prog_t *prog)
@@ -941,12 +1176,35 @@ static inline int program_delete(prog_t *prog)
 
 //==============================================================================
 /**
- * @brief Wait for program close
+ * @brief int program_wait_for_close(prog_t *prog, const uint timeout)
+ * The function <b>program_wait_for_close</b>() wait for program close.
  *
  * @param prog                  program object
  * @param timeout               wait timeout in ms
  *
- * @return 0 if closed, otherwise other value
+ * @errors EINVAL, ETIME
+ *
+ * @return Return 0 on success. On error, different than 0 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * if (prog) {
+ *         program_wait_for_close(prog, MAX_DELAY_MS);
+ *
+ *         program_delete(prog);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int program_wait_for_close(prog_t *prog, const uint timeout)
@@ -956,11 +1214,38 @@ static inline int program_wait_for_close(prog_t *prog, const uint timeout)
 
 //==============================================================================
 /**
- * @brief Check if program is closed
+ * @brief bool program_is_closed(prog_t *prog)
+ * The function <b>program_is_closed</b>() check if program is closed. This
+ * function can be used to poll program status.
  *
  * @param prog                  program object
  *
- * @return true if program closed, otherwise false
+ * @errors None
+ *
+ * @return Return <b>true</b> if closed. If is not closed then <b>false</b> is
+ * returned.
+ *
+ * @example
+ * #include <dnx/os.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * errno = 0;
+ * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * if (prog) {
+ *         while (!program_is_closed(prog)) {
+ *                 sleep(1);
+ *         }
+ *
+ *         program_delete(prog);
+ * } else {
+ *         perror("Program not started");
+ *
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool program_is_closed(prog_t *prog)
