@@ -59,7 +59,7 @@ extern "C" {
 //==============================================================================
 /**
  * @brief void sleep(const uint seconds)
- * The <b>sleep<b>() makes the calling thread sleep until seconds <i>seconds</i>
+ * The <b>sleep</b>() makes the calling thread sleep until seconds <i>seconds</i>
  * have elapsed.
  *
  * @param seconds   number of seconds to sleep
@@ -69,6 +69,8 @@ extern "C" {
  * @return None
  *
  * @example
+ * #include <unistd.h>
+ *
  * // ...
  * sleep(2);
  * // code here will be executed after 1s sleep
@@ -83,7 +85,7 @@ static inline void sleep(const uint seconds)
 //==============================================================================
 /**
  * @brief void sleep_ms(const uint milliseconds)
- * The <b>sleep_ms<b>() makes the calling thread sleep until milliseconds
+ * The <b>sleep_ms</b>() makes the calling thread sleep until milliseconds
  * <i>milliseconds</i> have elapsed.
  *
  * @param milliseconds      number of milliseconds to sleep
@@ -93,6 +95,8 @@ static inline void sleep(const uint seconds)
  * @return None
  *
  * @example
+ * #include <unistd.h>
+ *
  * // ...
  * sleep_ms(10);
  * // code here will be executed after 10ms sleep
@@ -119,6 +123,8 @@ static inline void sleep_ms(const uint milliseconds)
  * @return None
  *
  * @example
+ * #include <unistd.h>
+ *
  * // ...
  * usleep(10);
  * // code here will be executed after 1ms sleep (shall be 10us)

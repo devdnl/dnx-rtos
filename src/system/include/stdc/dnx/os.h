@@ -973,7 +973,7 @@ static inline bool is_driver_active(uint n)
  *         taskstat_t stat;
  *         get_task_stat(i, &stat);
  *
- *         printf("Task %s CPU usage: %d\n",
+ *         printf("Task %s CPU usage: %d%%\n",
  *                get_task_name(i),
  *                (stat.cpu_usage * 100)  / total_cpu_usage);
  * }
@@ -1014,7 +1014,7 @@ static inline void disable_CPU_load_measurement(void)
  *         taskstat_t stat;
  *         get_task_stat(i, &stat);
  *
- *         printf("Task %s CPU usage: %d\n",
+ *         printf("Task %s CPU usage: %d%%\n",
  *                get_task_name(i),
  *                (stat.cpu_usage * 100)  / total_cpu_usage);
  * }
@@ -1046,7 +1046,7 @@ static inline void enable_CPU_load_measurement(void)
  *
  * // ...
  *
- * // e.g. user request system restart
+ * // e.g. user requests system restart
  * restart_system();
  */
 //==============================================================================
@@ -1061,7 +1061,7 @@ static inline void restart_system(void)
  * The function <b>program_new</b>() create new program pointed by <i>cmd</i>
  * with current working directory pointed by <i>cwd</i>. Standard input of
  * program is pointed by <i>stin</i>, standard output is pointed by <i>stout</i>
- * and standard error ouptup is pointed by <i>sterr</i>.
+ * and standard error output is pointed by <i>sterr</i>.
  *
  * @param cmd           program name and argument list
  * @param stin          standard input file
