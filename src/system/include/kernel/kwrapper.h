@@ -125,7 +125,7 @@ extern void          _task_delete                       (task_t*);
 extern void          _task_exit                         (void);
 extern void          _task_suspend                      (task_t*);
 extern void          _task_resume                       (task_t*);
-extern int           _task_resume_from_ISR              (task_t*);
+extern bool          _task_resume_from_ISR              (task_t*);
 extern char         *_task_get_name_of                  (task_t*);
 extern int           _task_get_priority_of              (task_t*);
 extern void          _task_set_priority_of              (task_t*, const int);
@@ -219,6 +219,18 @@ static inline void _task_suspend_now(void)
 static inline void _task_yield(void)
 {
         taskYIELD();
+}
+
+//==============================================================================
+/**
+ * @brief Function yield task from ISR
+ */
+//==============================================================================
+static inline void _task_yield_from_ISR(void)
+{
+#ifdef portYIELD_FROM_ISR
+        portYIELD_FROM_ISR();
+#endif
 }
 
 //==============================================================================

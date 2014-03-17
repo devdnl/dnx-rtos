@@ -208,7 +208,7 @@ void _task_resume(task_t *taskhdl)
  * @retval false                if yield not required
  */
 //==============================================================================
-int _task_resume_from_ISR(task_t *taskhdl)
+bool _task_resume_from_ISR(task_t *taskhdl)
 {
         if (taskhdl)
                 return xTaskResumeFromISR(taskhdl);
