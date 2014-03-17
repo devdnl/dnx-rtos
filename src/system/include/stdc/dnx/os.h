@@ -472,6 +472,33 @@ static inline uint get_number_of_monitored_tasks(void)
 
 //==============================================================================
 /**
+ * @brief int task_get_number_of_tasks(void)
+ * The function <b>task_get_number_of_tasks</b>() returns number of tasks
+ * working in the system.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return Number of tasks working in the system.
+ *
+ * @example
+ * #include <dnx/os.h>
+ *
+ * // ...
+ *
+ * int tasks = task_get_number_of_tasks();
+ *
+ * // ...
+ */
+//==============================================================================
+static inline int get_number_of_tasks(void)
+{
+        return _kernel_get_number_of_tasks();
+}
+
+//==============================================================================
+/**
  * @brief u32_t get_total_CPU_usage(void)
  * The function <b>get_total_CPU_usage</b>() return total CPU usage. The value
  * is a counter. After call of this function counter is reset.

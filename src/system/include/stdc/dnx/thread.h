@@ -817,34 +817,6 @@ static inline task_t *task_get_parent_handle(void)
 
 //==============================================================================
 /**
- * @brief int task_get_number_of_tasks(void)
- * The function <b>task_get_number_of_tasks</b>() returns number of tasks
- * working in the system.
- *
- * @param None
- *
- * @errors None
- *
- * @return Number of tasks working in the system.
- *
- * @example
- * #include <dnx/thread.h>
- * #include <stdbool.h>
- *
- * // ...
- *
- * int tasks = task_get_number_of_tasks();
- *
- * // ...
- */
-//==============================================================================
-static inline int task_get_number_of_tasks(void)
-{
-        return _kernel_get_number_of_tasks();
-}
-
-//==============================================================================
-/**
  * @brief Function set stdin file
  *
  * @param[in] stream
