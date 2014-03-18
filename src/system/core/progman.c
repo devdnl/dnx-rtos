@@ -843,7 +843,7 @@ thread_t *_thread_new(void (*func)(void*), const int stack_depth, void *arg)
  *
  * @param thread        thread object
  *
- * @return 0 on success, otherwise -EINVAL
+ * @return 0 on success, otherwise 1
  */
 //==============================================================================
 int _thread_join(thread_t *thread)
@@ -858,7 +858,7 @@ int _thread_join(thread_t *thread)
                 }
         }
 
-        return -EINVAL;
+        return 1;
 }
 
 //==============================================================================
@@ -886,7 +886,7 @@ int _thread_cancel(thread_t *thread)
                 }
         }
 
-        return -EINVAL;
+        return 1;
 }
 
 //==============================================================================
@@ -915,9 +915,7 @@ bool _thread_is_finished(thread_t *thread)
  *
  * @param thread        thread object
  *
- * @return 0 on success
- * @return -EAGAIN if thread is running, try later
- * @return -EINVAL if argument is invalid
+ * @return 0 on success, on error 1
  */
 //==============================================================================
 int _thread_delete(thread_t *thread)
@@ -930,11 +928,11 @@ int _thread_delete(thread_t *thread)
                         return 0;
                 } else {
                         errno = EAGAIN;
-                        return -EAGAIN;
+                        return 1;
                 }
         }
 
-        return -EINVAL;
+        return 1;
 }
 
 //==============================================================================

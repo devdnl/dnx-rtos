@@ -817,9 +817,31 @@ static inline task_t *task_get_parent_handle(void)
 
 //==============================================================================
 /**
- * @brief Function set stdin file
+ * @brief void task_set_stdin(FILE *stream)
+ * The function <b>task_set_stdin</b>() set <b>stdin</b> stream for task which
+ * calls the function.
  *
- * @param[in] stream
+ * @param stream        stream to set as <b>stdin</b>
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         FILE *std_in = arg;
+ *
+ *         char c = getc(stdin);
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
  */
 //==============================================================================
 static inline void task_set_stdin(FILE *stream)
@@ -829,9 +851,32 @@ static inline void task_set_stdin(FILE *stream)
 
 //==============================================================================
 /**
- * @brief Function set stdout file
+ * @brief void task_set_stdout(FILE *stream)
+ * The function <b>task_set_stdout</b>() set <b>stdout</b> stream for task which
+ * calls the function.
  *
- * @param[in] stream
+ * @param stream        stream to set as <b>stdout</b>
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         FILE *std_out = arg;
+ *
+ *         task_set_stdout(std_out);
+ *         puts("stdio is configured");
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
  */
 //==============================================================================
 static inline void task_set_stdout(FILE *stream)
@@ -841,9 +886,32 @@ static inline void task_set_stdout(FILE *stream)
 
 //==============================================================================
 /**
- * @brief Function set stderr file
+ * @brief void task_set_stderr(FILE *stream)
+ * The function <b>task_set_stderr</b>() set <b>stderr</b> stream for task which
+ * calls the function.
  *
- * @param[in] stream
+ * @param stream        stream to set as <b>stderr</b>
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         FILE *std_err = arg;
+ *
+ *         task_set_stderr(std_err);
+ *         fputs("stderr configured\n", stderr);
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
  */
 //==============================================================================
 static inline void task_set_stderr(FILE *stream)
@@ -853,9 +921,31 @@ static inline void task_set_stderr(FILE *stream)
 
 //==============================================================================
 /**
- * @brief Function set cwd path
+ * @brief void task_set_cwd(const char *str)
+ * The function <b>task_set_cwd</b>() set current working directory for task
+ * which calls the function.
  *
- * @param str           cwd string
+ * @param str       path to set as current working directory
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ * #include <stdio.h>
+ *
+ * void my_task(void *arg)
+ * {
+ *         const char *cwd = arg;
+ *
+ *         task_set_cwd(cwd);
+ *
+ *         while (true) {
+ *                 // task do something
+ *         }
+ * }
  */
 //==============================================================================
 static inline void task_set_cwd(const char *str)
@@ -865,11 +955,31 @@ static inline void task_set_cwd(const char *str)
 
 //==============================================================================
 /**
- * @brief Check if task exist and is registered in system
+ * @brief bool task_is_exist(task_t *taskhdl)
+ * The function <b>task_is_exist</b>() check if task pointed by <i>taskhdl</i>
+ * exist in system. If task exist then <b>true</b> is returned, otherwise
+ * <b>false</b>.
  *
  * @param taskhdl       task handle
  *
- * @return true if task exist, otherwise false
+ * @errors ESRCH
+ *
+ * @return If task exist then <b>true</b> is returned, otherwise <b>false</b>.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * task_t *task;
+ *
+ * // ...
+ *
+ * if (task_is_exist(task)) {
+ *         // ...
+ * } else {
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool task_is_exist(task_t *taskhdl)
@@ -879,13 +989,56 @@ static inline bool task_is_exist(task_t *taskhdl)
 
 //==============================================================================
 /**
- * @brief Create new thread of configured task (program or RAW task)
+ * @brief thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
+ * The function <b>thread_new</b>() creates new thread using function pointed
+ * by <i>func</i> with stack depth <i>stack_depth</i>. To thread can be passed
+ * additional argument pointed by <i>arg</i>. If thread was created then
+ * pointer to object is returned, otherwise <b>NULL</b> is returned, and
+ * <b>errno</b> set appropriately. Threads are functions which are called as
+ * new task and have own stack, but global variables are shared with parent
+ * thread.
  *
  * @param func          thread function
  * @param stack_depth   stack depth
  * @param arg           thread argument
  *
- * @return thread object if success, otherwise NULL
+ * @errors EINVAL, ENOMEM,
+ *
+ * @return If thread was created then pointer to object is returned, otherwise
+ * <b>NULL</b> is returned, and <b>errno</b> set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 while (!thread_is_finished(thread)) {
+ *                         sleep_ms(1);
+ *                 }
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, void *arg)
@@ -895,11 +1048,68 @@ static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, v
 
 //==============================================================================
 /**
- * @brief Function wait for thread exit
+ * @brief int thread_join(thread_t *thread)
+ * The function <b>thread_join</b>() joins selected thread pointed by
+ * <i>thread</i> to parent program. Function wait until thread was closed.
+ *
  *
  * @param thread        thread object
  *
- * @return 0 on success, otherwise -EINVAL
+ * @errors ETIME, EINVAL
+ *
+ * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread1 = thread_new(thread1, STACK_DEPTH_LOW, NULL);
+ *         thread_t *thread2 = thread_new(thread2, STACK_DEPTH_LOW, NULL);
+ *
+ *         if (thread1 && thread2) {
+ *                 // some code ...
+ *
+ *                 thread_join(thread1);
+ *                 thread_join(thread2);
+ *
+ *                 thread_delete(thread1);
+ *                 thread_delete(thread2);
+ *         } else {
+ *                 perror("Thread error");
+ *
+ *                 if (thread1) {
+ *                         thread_delete(thread1);
+ *                 }
+ *
+ *                 if (thread2) {
+ *                         thread_delete(thread2);
+ *                 }
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int thread_join(thread_t *thread)
@@ -909,9 +1119,49 @@ static inline int thread_join(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Cancel current working thread
+ * @brief int thread_cancel(thread_t *thread)
+ * The function <b>thread_cancel</b>() kills running thread.
  *
- * @return 0 on success, otherwise other
+ * @param thread        thread object
+ *
+ * @errors EINVAL
+ *
+ * @return On success, 0 is returned. On error, 1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread1, STACK_DEPTH_LOW, NULL);
+ *
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 while (thread_cancel(thread) != true) {
+ *                         sleep_ms(10);
+ *                 }
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int thread_cancel(thread_t *thread)
@@ -921,11 +1171,52 @@ static inline int thread_cancel(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Check if thread is finished
+ * @brief bool thread_is_finished(thread_t *thread)
+ * The function <b>thread_is_finished</b>() examine that selected thread pointed
+ * by <i>thread</i> is finished. If thread is finished then <b>true</b> is
+ * returned, otherwise <b>false</b>. Function can be used to poll that selected
+ * thread is finished. If would you like to wait for thread close, then use
+ * <b>thread_join</b>() instead.
  *
  * @param thread        thread object
  *
- * @return true if finished, otherwise false
+ * @errors EINVAL
+ *
+ * @return If thread is finished then <b>true</b> is returned, otherwise
+ * <b>false</b>, and <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 while (!thread_is_finished(thread)) {
+ *                         sleep_ms(1);
+ *                 }
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool thread_is_finished(thread_t *thread)
@@ -935,13 +1226,49 @@ static inline bool thread_is_finished(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Delete thread object
+ * @brief int thread_delete(thread_t *thread)
+ * The function <b>thread_delete</b>() removes unused thread object pointed by
+ * <i>thread</i>. This function can delete object only if thread is finished.
+ * To kill running thread use <b>thread_cancel</b>() function. If thread object
+ * was deleted then function returns 0, otherwise 1.
  *
  * @param thread        thread object
  *
- * @return 0 on success
- * @return -EAGAIN if thread is running, try later
- * @return -EINVAL if argument is invalid
+ * @errors EINVAL, EAGAIN
+ *
+ * @return If thread object was deleted then function returns 0, otherwise 1, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <unistd.h>
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         // ...
+ *
+ *         // thread function exit without any function,
+ *         // or just by return
+ * }
+ *
+ * void some_function()
+ * {
+ *         errno = 0;
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
+ *         if (thread) {
+ *                 // some code ...
+ *
+ *                 thread_join(thread);
+ *
+ *                 thread_delete(thread);
+ *         } else {
+ *                 perror("Thread error");
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline int thread_delete(thread_t *thread)
@@ -951,12 +1278,49 @@ static inline int thread_delete(thread_t *thread)
 
 //==============================================================================
 /**
- * @brief Function create semaphore
+ * @brief sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
+ * The function <b>semaphore_new</b>() creates new semaphore object. The
+ * semaphore can be counting or binary. If counting then <i>cnt_max</i>
+ * is bigger that 2. <i>cnt_init</i> is an initial value of semaphore.
+ * Semaphore can be used for task synchronization.
  *
  * @param cnt_max       max count value (1 for binary)
  * @param cnt_init      initial value (0 or 1 for binary)
  *
- * @return semaphore object pointer, otherwise NULL
+ * @errors None
+ *
+ * @return On success, semaphore object is returned. On error, <b>NULL</b> is
+ * returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread2(void *arg)
+ * {
+ *         while (true) {
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                // ...
+ *
+ *                semaphore_signal(sem);
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
