@@ -1305,6 +1305,7 @@ static inline int thread_delete(thread_t *thread)
  * void thread2(void *arg)
  * {
  *         while (true) {
+ *                 // this task will wait for semaphore signal
  *                 semaphore_wait(sem, MAX_DELAY_MS);
  *
  *                 // ...
@@ -1316,6 +1317,7 @@ static inline int thread_delete(thread_t *thread)
  *         while (true) {
  *                // ...
  *
+ *                // this task signal to thread2 that can execute part of code
  *                semaphore_signal(sem);
  *         }
  * }
@@ -1330,9 +1332,29 @@ static inline sem_t *semaphore_new(const uint cnt_max, const uint cnt_init)
 
 //==============================================================================
 /**
- * @brief Function delete semaphore
+ * @brief void semaphore_delete(sem_t *sem)
+ * The function <b>semaphore_delete</b>() removes created semaphore pointed by
+ * <i>sem</i>. Be aware that if semaphore was removed when tasks use it, then
+ * process starvation can occur on tasks which wait for semaphore signal.
  *
- * @param[in] sem       semaphore object
+ * @param sem       semaphore object pointer
+ *
+ * @errors None
+ *
+ * @return
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // operation on semaphore
+ *
+ * semaphore_delete(sem);
+ *
+ * // ...
  */
 //==============================================================================
 static inline void semaphore_delete(sem_t *sem)
@@ -1342,13 +1364,50 @@ static inline void semaphore_delete(sem_t *sem)
 
 //==============================================================================
 /**
- * @brief Function wait for semaphore
+ * @brief bool semaphore_wait(sem_t *sem, const uint timeout)
+ * The function <b>semaphore_wait</b>() waits for semaphore signal pointed by
+ * <i>sem</i> by <i>timeout</i> milliseconds. If semaphore was signaled then
+ * <b>true</b> is returned, otherwise (timeout) <b>false</b>. When <i>timeout</i>
+ * value is set to 0 then semaphore is polling without timeout.
  *
- * @param[in] sem               semaphore object
- * @param[in] timeout           semaphore polling time
+ * @param sem       semaphore object pointer
  *
- * @retval true                 semaphore taken
- * @retval false                semaphore not taken
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On timeout or if semaphore is
+ * not signaled <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread2(void *arg)
+ * {
+ *         while (true) {
+ *                 // this task will wait for semaphore signal
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                // ...
+ *
+ *                // this task signal to thread2 that can execute part of code
+ *                semaphore_signal(sem);
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_wait(sem_t *sem, const uint timeout)
@@ -1358,12 +1417,47 @@ static inline bool semaphore_wait(sem_t *sem, const uint timeout)
 
 //==============================================================================
 /**
- * @brief Function signal semaphore
+ * @brief bool semaphore_signal(sem_t *sem)
+ * The function <b>semaphore_signal</b>() signals semaphore pointed by <i>sem</i>.
  *
- * @param[in] sem       semaphore object
+ * @param sem       semaphore object pointer
  *
- * @retval true         semaphore given
- * @retval false        semaphore not given
+ * @errors None
+ *
+ * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
+ * be signaled or object is invalid then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread2(void *arg)
+ * {
+ *         while (true) {
+ *                 // this task will wait for semaphore signal
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                // ...
+ *
+ *                // this task signal to thread2 that can execute part of code
+ *                semaphore_signal(sem);
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_signal(sem_t *sem)
@@ -1373,13 +1467,54 @@ static inline bool semaphore_signal(sem_t *sem)
 
 //==============================================================================
 /**
- * @brief Function wait for semaphore from ISR
+ * @brief bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
+ * The function <b>semaphore_wait_from_ISR</b>() is similar to <b>semaphore_wait</b>()
+ * except that can be called from interrupt. Function have limited application.
  *
- * @param[in]  sem              semaphore object
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param sem           semaphore object pointer
+ * @param task_woken    <b>true</b> if task woken, otherwise <b>false</b>. Can be <b>NULL</b>
  *
- * @retval true                 semaphore taken
- * @retval false                semaphore not taken
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On timeout or if semaphore is
+ * not signaled <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                 if (...) {
+ *                         semaphore_signal(sem);
+ *                 }
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void ISR(void)
+ * {
+ *         // ...
+ *
+ *         bool woken = false;
+ *         if (semaphore_wait_from_ISR(sem, &woken)) {
+ *                 // ...
+ *         }
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
@@ -1389,13 +1524,51 @@ static inline bool semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
 
 //==============================================================================
 /**
- * @brief Function signal semaphore from ISR
+ * @brief bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
+ * The function <b>semaphore_signal_from_ISR</b>() is similar to
+ * <b>semaphore_signal</b>() except that can be called from interrupt.
  *
- * @param[in]  sem              semaphore object
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param sem           semaphore object pointer
+ * @param task_woken    <b>true</b> if task woken, otherwise <b>false</b>. Can be <b>NULL</b>
  *
- * @retval true                 semaphore taken
- * @retval false                semaphore not taken
+ * @errors None
+ *
+ * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
+ * be signaled or object is invalid then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ * #include <stdbool.h>
+ *
+ * // ...
+ *
+ * sem_t *sem = semaphore_new(1, 0);
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         while (true) {
+ *                 // this task will wait for semaphore signal
+ *                 semaphore_wait(sem, MAX_DELAY_MS);
+ *
+ *                 // ...
+ *         }
+ * }
+ *
+ * void ISR(void)
+ * {
+ *         // ...
+ *
+ *         bool woken = false;
+ *         semaphore_signal_from_ISR(sem, &woken);
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
