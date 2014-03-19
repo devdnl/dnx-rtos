@@ -86,7 +86,7 @@ extern int                      _errno;
 extern void      _exit                                          (int);
 extern void      _abort                                         (void);
 extern int       _system                                        (const char*);
-extern task_t   *_program_new                                   (const char*, const char*, FILE*, FILE*, FILE*);
+extern prog_t   *_program_new                                   (const char*, const char*, FILE*, FILE*, FILE*);
 extern int       _program_kill                                  (prog_t*);
 extern int       _program_delete                                (prog_t*);
 extern int       _program_wait_for_close                        (prog_t*, const uint);

@@ -1578,11 +1578,63 @@ static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 
 //==============================================================================
 /**
- * @brief Function create new mutex
+ * @brief mutex_t *mutex_new(enum mutex_type type)
+ * The function <b>mutex_new</b>() creates new mutex of type <i>type</i>.
+ * Two types of mutex can be created: <b>MUTEX_RECURSIVE</b> and <b>MUTEX_NORMAL</b>.
  *
- * @param type          mutex type
+ * @param type          mutex type (MUTEX_RECURSIVE or MUTEX_NORMAL)
  *
- * @return pointer to mutex object, otherwise NULL if error
+ * @errors None
+ *
+ * @return On success, pointer to the mutex object is returned. On error,
+ * <b>NULL</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * int resource;
+ *
+ * // ...
+ *
+ * mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         // ...
+ *
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ *
+ *         // ...
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         // ...
+ *
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ *
+ *         // ...
+ * }
+ *
+ * // ...
  */
 //==============================================================================
 static inline mutex_t *mutex_new(enum mutex_type type)

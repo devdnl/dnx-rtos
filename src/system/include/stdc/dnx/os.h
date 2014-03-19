@@ -1084,7 +1084,7 @@ static inline void restart_system(void)
 
 //==============================================================================
 /**
- * @brief task_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
+ * @brief prog_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
  * The function <b>program_new</b>() create new program pointed by <i>cmd</i>
  * with current working directory pointed by <i>cwd</i>. Standard input of
  * program is pointed by <i>stin</i>, standard output is pointed by <i>stout</i>
@@ -1105,7 +1105,7 @@ static inline void restart_system(void)
  * // ...
  *
  * errno = 0;
- * task_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
+ * prog_t *prog = program_new("ls /", "/", stdin, stdout, stderr);
  * if (prog) {
  *         program_wait_for_close(prog, MAX_DELAY_MS);
  *
@@ -1119,7 +1119,7 @@ static inline void restart_system(void)
  * // ...
  */
 //==============================================================================
-static inline task_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
+static inline prog_t *program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
 {
         return _program_new(cmd, cwd, stin, stout, sterr);
 }

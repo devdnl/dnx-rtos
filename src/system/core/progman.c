@@ -545,7 +545,7 @@ static bool thread_is_valid(thread_t *thread)
  * @return NULL if error, otherwise program handle
  */
 //==============================================================================
-task_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
+prog_t *_program_new(const char *cmd, const char *cwd, FILE *stin, FILE *stout, FILE *sterr)
 {
         if (!cmd || !cwd || !stin || !stout || !sterr) {
                 errno = EINVAL;
