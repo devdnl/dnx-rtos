@@ -73,7 +73,7 @@ extern "C" {
  *
  * // ...
  * sleep(2);
- * // code here will be executed after 1s sleep
+ * // code here will be executed after 2s sleep
  * // ...
  */
 //==============================================================================
@@ -114,7 +114,7 @@ static inline void sleep_ms(const uint milliseconds)
  * The <b>usleep</b>() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
- * Function is not supported by dnx RTOS. Function sleep thread at least 1ms.
+ * Function is not supported by dnx RTOS. Function sleep task at least 1ms.
  *
  * @param microseconds      number of microseconds to sleep
  *
@@ -127,7 +127,7 @@ static inline void sleep_ms(const uint milliseconds)
  *
  * // ...
  * usleep(10);
- * // code here will be executed after 1ms sleep (shall be 10us)
+ * // code here will be executed at least after 1ms sleep (shall be 10us)
  * // ...
  */
 //==============================================================================

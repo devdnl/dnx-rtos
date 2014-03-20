@@ -66,10 +66,10 @@ extern "C" {
  * arguments can be passed by value pointed by <i>arg</i>. If task is created
  * then valid object is returned, on error <b>NULL</b>.
  *
- * @param[in ] func            task code
- * @param[in ] name            task name
- * @param[in ] stack_depth     stack deep
- * @param[in ] arg             argument pointer
+ * @param func            task code
+ * @param name            task name
+ * @param stack_depth     stack deep
+ * @param arg             argument pointer
  *
  * @errors None
  *
@@ -122,7 +122,6 @@ static inline task_t *task_new(void (*func)(void*), const char *name, const uint
  * @example
  * #include <dnx/thread.h>
  * #include <stdbool.h>
- * #include <unistd.h>
  *
  * void my_task(void *arg)
  * {
@@ -406,7 +405,7 @@ static inline void task_yield(void)
 /**
  * @brief void task_yield_from_ISR(void)
  * The function <b>task_yield_from_ISR</b>() force context switch from interrupt
- * routine. Some ports need force context switch before ISR API functions calls.
+ * routine. Some ports need force context switch after ISR API functions calls.
  *
  * @param None
  *
@@ -871,7 +870,7 @@ static inline void task_set_stdin(FILE *stream)
  *         FILE *std_out = arg;
  *
  *         task_set_stdout(std_out);
- *         puts("stdio is configured");
+ *         puts("stdout is configured");
  *
  *         while (true) {
  *                 // task do something
@@ -1100,10 +1099,12 @@ static inline thread_t *thread_new(void (*func)(void*), const int stack_depth, v
  *                 perror("Thread error");
  *
  *                 if (thread1) {
+ *                         thread_cancel(thread1);
  *                         thread_delete(thread1);
  *                 }
  *
  *                 if (thread2) {
+ *                         thread_cancel(thread2);
  *                         thread_delete(thread2);
  *                 }
  *         }
@@ -1146,7 +1147,7 @@ static inline int thread_join(thread_t *thread)
  * void some_function()
  * {
  *         errno = 0;
- *         thread_t *thread = thread_new(thread1, STACK_DEPTH_LOW, NULL);
+ *         thread_t *thread = thread_new(thread, STACK_DEPTH_LOW, NULL);
  *
  *         if (thread) {
  *                 // some code ...
@@ -2580,8 +2581,8 @@ static inline void ISR_disable(void)
 
 //==============================================================================
 /**
- * @brief void ISR_disable(void)
- * The function <b>ISR_disable</b>() enable interrupts.
+ * @brief void ISR_enable(void)
+ * The function <b>ISR_enable</b>() enable interrupts.
  *
  * @param None
  *
