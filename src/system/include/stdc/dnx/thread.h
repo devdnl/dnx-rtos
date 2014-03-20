@@ -1592,20 +1592,13 @@ static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
  * @example
  * #include <dnx/thread.h>
  *
- * // ...
- *
  * int resource;
- *
- * // ...
- *
- * mutex_t *mtx = mutex_new(MUTEX_NORMAL);
- *
- * // ...
  *
  * void thread1(void *arg)
  * {
- *         // ...
+ *         mutex_t *mtx = arg;
  *
+ *         // protected access to resource
  *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
  *                 // write to buffer is allowed
  *                 resource = ...;
@@ -1614,14 +1607,13 @@ static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
  *
  *                 mutex_unlock(mtx);
  *         }
- *
- *         // ...
  * }
  *
  * void thread2(void *arg)
  * {
- *         // ...
+ *         mutex_t *mtx = arg;
  *
+ *         // protected access to resource
  *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
  *                 // write to buffer is allowed
  *                 resource = ...;
@@ -1630,11 +1622,24 @@ static inline bool semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
  *
  *                 mutex_unlock(mtx);
  *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
  *
  *         // ...
  * }
- *
- * // ...
  */
 //==============================================================================
 static inline mutex_t *mutex_new(enum mutex_type type)
@@ -1644,9 +1649,66 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 
 //==============================================================================
 /**
- * @brief Function delete mutex
+ * @brief void mutex_delete(mutex_t *mutex)
+ * The function <b>mutex_delete</b>() delete created mutex pointed by <i>mutex</i>.
  *
- * @param[in] mutex     mutex object
+ * @param mutex     mutex
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void mutex_delete(mutex_t *mutex)
@@ -1656,13 +1718,72 @@ static inline void mutex_delete(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief Function lock mutex
+ * @brief bool mutex_lock(mutex_t *mutex, const uint timeout)
+ * The function <b>mutex_lock</b>() lock mutex pointed by <i>mutex</i>. If
+ * mutex is locked by other thread then system try to lock mutex by <i>timeout</i>
+ * milliseconds. If mutex is recursive then task can lock mutex recursively, and
+ * the same times shall be unlocked. If normal mutex is used then task can lock
+ * mutex only one time (not recursively).
  *
- * @param[in] mutex            mutex object
- * @param[in] timeout          polling time
+ * @param mutex     mutex
+ * @param timeout   timeout
  *
- * @retval true                 mutex locked
- * @retval false                mutex not locked
+ * @errors None
+ *
+ * @return If mutex is locked then <b>true</b> is returned. If mutex is used or
+ * timeout occur or object is incorrect, then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
@@ -1672,12 +1793,67 @@ static inline bool mutex_lock(mutex_t *mutex, const uint timeout)
 
 //==============================================================================
 /**
- * @brief Function unlock mutex
+ * @brief bool mutex_unlock(mutex_t *mutex)
+ * The function <b>mutex_unlock</b>() unlock mutex pointed by <i>mutex</i>.
  *
- * @param[in] mutex             mutex object
+ * @param mutex     mutex
  *
- * @retval true                 mutex unlocked
- * @retval false                mutex still locked
+ * @errors None
+ *
+ * @return If mutex is unlocked then <b>true</b> is returned. If mutex is not
+ * unlocked or object is incorrect then <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * int resource;
+ *
+ * void thread1(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         mutex_t *mtx = arg;
+ *
+ *         // protected access to resource
+ *         if (mutex_lock(mtx, MAX_DELAY_MS)) {
+ *                 // write to buffer is allowed
+ *                 resource = ...;
+ *
+ *                 // ...
+ *
+ *                 mutex_unlock(mtx);
+ *         }
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         mutex_t *mtx = mutex_new(MUTEX_NORMAL);
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, mtx);
+ *         thread_new(thread2, STACK_DEPTH_LOW, mtx);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         mutex_delete(mtx);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool mutex_unlock(mutex_t *mutex)
@@ -1687,12 +1863,65 @@ static inline bool mutex_unlock(mutex_t *mutex)
 
 //==============================================================================
 /**
- * @brief Function create new queue
+ * @brief queue_t *queue_new(const uint length, const uint item_size)
+ * The function <b>queue_new</b>() create new queue with length <i>length</i>
+ * of item size <i>item_size</i>. Returns pointer to the created object or
+ * <b>NULL</b> on error. Both, <i>length</i> and <i>item_size</i> cannot be zero.
  *
- * @param[in] length            queue length
- * @param[in] item_size         queue item size
+ * @param length        queue length
+ * @param item_size     size of item
  *
- * @return pointer to queue object, otherwise NULL if error
+ * @errors None
+ *
+ * @return On success returns pointer to the created object or <b>NULL</b> on
+ * error.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline queue_t *queue_new(const uint length, const uint item_size)
@@ -1702,9 +1931,62 @@ static inline queue_t *queue_new(const uint length, const uint item_size)
 
 //==============================================================================
 /**
- * @brief Function delete queue
+ * @brief void queue_delete(queue_t *queue)
+ * The function <b>queue_delete</b>() deletes the created queue pointed by
+ * <i>queue</i>. Make sure that neither task use queue before delete.
  *
- * @param[in] queue             queue object
+ * @param queue     queue object
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void queue_delete(queue_t *queue)
@@ -1714,9 +1996,64 @@ static inline void queue_delete(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function reset queue
+ * @brief void queue_reset(queue_t *queue)
+ * The function <b>queue_delete</b>() reset the selected queue pointed by
+ * <i>queue</i>.
  *
- * @param[in] queue             queue object
+ * @param queue     queue object
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         queue_reset(queue);
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void queue_reset(queue_t *queue)
@@ -1726,14 +2063,67 @@ static inline void queue_reset(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief bool queue_send(queue_t *queue, const void *item, const uint timeout)
+ * The function <b>queue_send</b>() send specified item pointed by <i>item</i>
+ * to queue pointed by <i>queue</i>. If queue is full then system try to send
+ * item for <i>timeout</i> milliseconds. If <i>timeout</i> is set to zero then
+ * sending is aborted immediately if queue is full, and <b>false</b> value is
+ * returned.
  *
- * @param[in] queue             queue object
- * @param[in] item              item
- * @param[in] timeout           timeout
+ * @param queue     queue object
+ * @param item      item to send
+ * @param timeout   send timeout (0 for polling)
  *
- * @retval true                 item posted
- * @retval false                item not posted
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool queue_send(queue_t *queue, const void *item, const uint timeout)
@@ -1743,14 +2133,47 @@ static inline bool queue_send(queue_t *queue, const void *item, const uint timeo
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief bool queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
+ * The function <b>queue_send_from_ISR</b>() is similar to  <b>queue_send</b>(),
+ * expect that can be called from interrupt. The <i>task_woken</i> is set to
+ * <b>true</b> if context switch shall be forced by using <b>task_yield_from_ISR<b>().
  *
- * @param[in]  queue            queue object
- * @param[in]  item             item
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param queue         queue object
+ * @param item          item to send
+ * @param task_woken    context switch request
  *
- * @retval true                 item posted
- * @retval false                item not posted
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * queue_t *queue = queue_new(10, sizeof(char));
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         char c;
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void uart_rx_isr(void)
+ * {
+ *         char c = UART1->DR;
+ *
+ *         bool woken = false;
+ *         queue_send_from_ISR(queue, &c, &woken);
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
  */
 //==============================================================================
 static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
@@ -1760,14 +2183,66 @@ static inline bool queue_send_from_ISR(queue_t *queue, const void *item, bool *t
 
 //==============================================================================
 /**
- * @brief Function send queue
+ * @brief bool queue_receive(queue_t *queue, void *item, const uint timeout)
+ * The function <b>queue_receive</b>() receive top item from queue pointed by
+ * <i>queue</i> and copy it to the item pointed by <i>item</i>. The item is
+ * removed from queue. Try of receive is doing for time <i>timeout</i>. If item
+ * was successfully received, then <b>true</b> is returned, otherwise <b>false</b>.
  *
- * @param[in]  queue            queue object
- * @param[out] item             item
- * @param[in]  timeout          timeout
+ * @param queue     queue object
+ * @param item      item destination
+ * @param timeout   send timeout (0 for polling)
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
@@ -1777,14 +2252,49 @@ static inline bool queue_receive(queue_t *queue, void *item, const uint timeout)
 
 //==============================================================================
 /**
- * @brief Function receive queue from ISR
+ * @brief bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task_woken)
+ * The function <b>queue_recieve_from_ISR</b>() is similar to  <b>queue_recieve</b>(),
+ * expect that can be called from interrupt. The <i>task_woken</i> is set to
+ * <b>true</b> if context switch shall be forced by using <b>task_yield_from_ISR<b>().
  *
- * @param[in]  queue            queue object
- * @param[out] item             item
- * @param[out] task_woken       true if higher priority task woke, otherwise false (can be NULL)
+ * @param queue         queue object
+ * @param item          item destination
+ * @param task_woken    context switch request
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * queue_t *queue = queue_new(10, sizeof(char));
+ *
+ * // ...
+ *
+ * void thread(void *arg)
+ * {
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void some_isr(void)
+ * {
+ *         char c;
+ *
+ *         bool woken = false;
+ *         if (queue_receive_from_ISR(queue, &c, &woken)) {
+ *                 // some operations
+ *         }
+ *
+ *         if (woken) {
+ *                 task_yield_from_ISR();
+ *         }
+ * }
  */
 //==============================================================================
 static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task_woken)
@@ -1794,14 +2304,68 @@ static inline bool queue_recieve_from_ISR(queue_t *queue, void *item, bool *task
 
 //==============================================================================
 /**
- * @brief Function peek queue
+ * @brief bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
+ * The function <b>queue_receive_peek</b>() is similar to <b>queue_receive</b>(),
+ * expect that top item is not removed from the queue.
  *
- * @param[in]  queue            queue object
- * @param[out] item             item
- * @param[in]  waittime_ms      wait time
+ * @param queue     queue object
+ * @param item      item destination
+ * @param timeout   send timeout (0 for polling)
  *
- * @retval true                 item received
- * @retval false                item not received
+ * @errors None
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c;
+ *
+ *         queue_receive_peek(queue, &c, MAX_DELAY_MS);
+ *
+ *         if (c == '1') {
+ *                 // ...
+ *         } else {
+ *                 // ...
+ *         }
+ *
+ *         // ...
+ *
+ *         queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline bool queue_receive_peek(queue_t *queue, void *item, const uint timeout)
@@ -1811,11 +2375,59 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const uint tim
 
 //==============================================================================
 /**
- * @brief Function gets number of items in queue
+ * @brief int queue_get_number_of_items(queue_t *queue)
+ * The function <b>queue_get_number_of_items</b>() returns a number of items
+ * stored in the queue pointed by <i>queue</i>.
  *
- * @param[in] queue             queue object
+ * @param queue     queue object
  *
- * @return a number of items in queue, -1 if error
+ * @errors None
+ *
+ * @return Number of items stored in the queue. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void thread1(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void thread2(void *arg)
+ * {
+ *         queue_t *queue = arg;
+ *
+ *         for (i = 0; i < queue_get_number_of_items(queue); i++) {
+ *                 char c;
+ *                 queue_receive(queue, &c, MAX_DELAY_MS);
+ *
+ *                 // some operations
+ *         }
+ *
+ *         // ...
+ * }
+ *
+ * int main()
+ * {
+ *         // ...
+ *
+ *         queue_t *queue = queue_new(10, sizeof(char));
+ *
+ *         thread_new(thread1, STACK_DEPTH_LOW, queue);
+ *         thread_new(thread2, STACK_DEPTH_LOW, queue);
+ *
+ *         thread_join(thread1);
+ *         thread_join(thread2);
+ *
+ *         queue_delete(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline int queue_get_number_of_items(queue_t *queue)
@@ -1825,11 +2437,39 @@ static inline int queue_get_number_of_items(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function gets number of items in queue from ISR
+ * @brief int queue_get_number_of_items_from_ISR(queue_t *queue)
+ * The function <b>queue_get_number_of_items_from_ISR</b>() is similar to
+ * <b>queue_get_number_of_items</b>(), except that can be called from interrupt.
  *
- * @param[in] *queue            queue object
+ * @param queue     queue object
  *
- * @return a number of items in queue, -1 if error
+ * @errors None
+ *
+ * @return Number of items stored in the queue. On error, -1 is returned.
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * // ...
+ *
+ * queue_t *queue;
+ *
+ * // ...
+ *
+ * void thread1(void *arg)
+ * {
+ *         char c = '1';
+ *         queue_send(queue, &c, MAX_DELAY_MS);
+ *
+ *         // some operations
+ * }
+ *
+ * void some_isr(void *arg)
+ * {
+ *         int len = queue_get_number_of_items_from_ISR(queue);
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
@@ -1839,7 +2479,32 @@ static inline int queue_get_number_of_items_from_ISR(queue_t *queue)
 
 //==============================================================================
 /**
- * @brief Function enter to critical section
+ * @brief void critical_section_begin(void)
+ * The function <b>critical_section_begin</b>() enters the code to the
+ * critical section. From critical section masked interrupts and context switch
+ * does not work. The critical section routine shall be short as possible.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         critical_section_begin();
+ *
+ *         // some short operations ...
+ *
+ *         critical_section_end();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void critical_section_begin(void)
@@ -1849,7 +2514,30 @@ static inline void critical_section_begin(void)
 
 //==============================================================================
 /**
- * @brief Function exit from critical section
+ * @brief void critical_section_end(void)
+ * The function <b>critical_section_end</b>() exit from critical section.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         critical_section_begin();
+ *
+ *         // some short operations ...
+ *
+ *         critical_section_end();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void critical_section_end(void)
@@ -1859,7 +2547,30 @@ static inline void critical_section_end(void)
 
 //==============================================================================
 /**
- * @brief Function disable interrupts
+ * @brief void ISR_disable(void)
+ * The function <b>ISR_disable</b>() disable interrupts.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         ISR_disable();
+ *
+ *         // some short operations ...
+ *
+ *         ISR_enable();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void ISR_disable(void)
@@ -1869,7 +2580,30 @@ static inline void ISR_disable(void)
 
 //==============================================================================
 /**
- * @brief Function enable interrupts
+ * @brief void ISR_disable(void)
+ * The function <b>ISR_disable</b>() enable interrupts.
+ *
+ * @param None
+ *
+ * @errors None
+ *
+ * @return None
+ *
+ * @example
+ * #include <dnx/thread.h>
+ *
+ * void some_function(void)
+ * {
+ *         // ...
+ *
+ *         ISR_disable();
+ *
+ *         // some short operations ...
+ *
+ *         ISR_enable();
+ *
+ *         // ...
+ * }
  */
 //==============================================================================
 static inline void ISR_enable(void)
