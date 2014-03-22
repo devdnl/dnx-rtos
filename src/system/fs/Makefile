@@ -1,9 +1,9 @@
 # Makefile for GNU make
-CSRC_CORE += kernel/khooks.c
-CSRC_CORE += kernel/kwrapper.c
-CSRC_CORE += kernel/FreeRTOS/Source/croutine.c
-CSRC_CORE += kernel/FreeRTOS/Source/list.c
-CSRC_CORE += kernel/FreeRTOS/Source/queue.c
-CSRC_CORE += kernel/FreeRTOS/Source/tasks.c
-CSRC_CORE += kernel/FreeRTOS/Source/timers.c
-CSRC_CORE += kernel/FreeRTOS/Source/portable/MemMang/heap_3.c
+CSRC_CORE += fs/procfs/procfs.c
+CSRC_CORE += fs/lfs/lfs.c
+CSRC_CORE += fs/fatfs/fatfs.c
+CSRC_CORE += fs/fatfs/libfat/libfat_user.c
+CSRC_CORE += fs/fatfs/libfat/libfat.c
+CSRC_CORE += fs/fatfs/libfat/libfat_unicode.c
+CSRC_CORE += fs/devfs/devfs.c
+CSRC_CORE += fs/fs_registration.c

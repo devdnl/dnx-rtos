@@ -54,53 +54,6 @@ HDRLOC_stm32f1 += portable/stm32f1
 include $(CORE_LOC)/Makefile
 include $(FS_LOC)/Makefile
 include $(KERNEL_LOC)/Makefile
+include $(NET_LOC)/Makefile
 
-CSRC_CORE += user/initd.c
-CSRC_CORE += drivers/driver_registration.c
-
-CSRC_CORE += ../programs/program_registration.c
-CSRC_CORE += net/api/api_lib.c
-CSRC_CORE += net/api/api_msg.c
-CSRC_CORE += net/api/err.c
-CSRC_CORE += net/api/netbuf.c
-CSRC_CORE += net/api/netdb.c
-CSRC_CORE += net/api/netifapi.c
-CSRC_CORE += net/api/sockets.c
-CSRC_CORE += net/api/tcpip.c
-CSRC_CORE += net/core/def.c
-CSRC_CORE += net/core/dhcp.c
-CSRC_CORE += net/core/dns.c
-CSRC_CORE += net/core/init.c
-CSRC_CORE += net/core/mem.c
-CSRC_CORE += net/core/memp.c
-CSRC_CORE += net/core/netif.c
-CSRC_CORE += net/core/pbuf.c
-CSRC_CORE += net/core/raw.c
-CSRC_CORE += net/core/stats.c
-CSRC_CORE += net/core/sys.c
-CSRC_CORE += net/core/tcp.c
-CSRC_CORE += net/core/tcp_in.c
-CSRC_CORE += net/core/tcp_out.c
-CSRC_CORE += net/core/timers.c
-CSRC_CORE += net/core/udp.c
-CSRC_CORE += net/core/ipv4/autoip.c
-CSRC_CORE += net/core/ipv4/icmp.c
-CSRC_CORE += net/core/ipv4/igmp.c
-CSRC_CORE += net/core/ipv4/inet.c
-CSRC_CORE += net/core/ipv4/inet_chksum.c
-CSRC_CORE += net/core/ipv4/ip.c
-CSRC_CORE += net/core/ipv4/ip_addr.c
-CSRC_CORE += net/core/ipv4/ip_frag.c
-CSRC_CORE += net/netif/etharp.c
-CSRC_CORE += net/port/arch/sys_arch.c
-
-HDRLOC_CORE += kernel/FreeRTOS/Source/include
-HDRLOC_CORE += kernel
-HDRLOC_CORE += config
 HDRLOC_CORE += portable
-HDRLOC_CORE += include
-HDRLOC_CORE += include/stdc
-HDRLOC_CORE += include/stdc/sys
-HDRLOC_CORE += net/include
-HDRLOC_CORE += net/include/ipv4
-HDRLOC_CORE += net/port

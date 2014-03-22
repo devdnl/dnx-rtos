@@ -12,3 +12,11 @@ CSRC_CORE += core/vfs.c
 CSRC_CORE += core/modctrl.c
 CSRC_CORE += core/fsctrl.c
 CSRC_CORE += core/conv.c
+CSRC_CORE += user/initd.c
+CSRC_CORE += drivers/driver_registration.c
+CSRC_CORE += ../programs/program_registration.c
+
+HDRLOC_CORE += config
+HDRLOC_CORE += include
+HDRLOC_CORE += include/stdc
+HDRLOC_CORE += include/stdc/sys

@@ -75,6 +75,7 @@ SYS_LOC    = src/system
 CORE_LOC   = $(SYS_LOC)/core
 FS_LOC     = $(SYS_LOC)/fs
 KERNEL_LOC = $(SYS_LOC)/kernel
+NET_LOC    = $(SYS_LOC)/net
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
