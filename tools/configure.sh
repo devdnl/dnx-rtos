@@ -124,7 +124,7 @@ configure()
                                 done
 
                                 choice=999
-                                until [ $choice -le ${#selection[@]} ]; do
+                                until [ $choice -le ${#selection[@]} ] && [ $choice -gt 0 ]; do
                                         read -p "Select option (1..${#selection[@]}), or 's' for skip: " choice
 
                                         if [ "$choice" == "" ]; then
