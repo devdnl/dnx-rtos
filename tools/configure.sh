@@ -225,10 +225,10 @@ main()
 
         cd "$working_path"
 
-        #
         configure "./project/arch.config"
         CPU_arch=$(get_key_value "./project/arch.config" "ARCHCONFIG__TARGET")
         configure "./$CPU_arch/cpu.config"
+        configure "./project/name.config"
 
         echo "Done"
 }
