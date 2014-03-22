@@ -27,12 +27,9 @@
 
 include ./config/project/fs.config
 include ./config/project/name.config
-include ./config/arch.config
-
-ifeq ($(ARCHCONFIG__TARGET), stm32f1)
-include ./config/stm32f1/cpu.config
-include ./config/stm32f1/toolchain.config
-endif
+include ./config/project/arch.config
+include ./config/$(ARCHCONFIG__TARGET)/cpu.config
+include ./config/$(ARCHCONFIG__TARGET)/toolchain.config
 
 CONFIG_DEF = -D__DEVFS_ENABLE__=$(FSCONFIG__DEVFS_ENABLE) \
              -D__LFS_ENABLE__=$(FSCONFIG__LFS_ENABLE) \
@@ -198,14 +195,20 @@ ASRC    = $(foreach file, $(ASRC_ARCH),$(SYS_LOC)/$(file))
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT))
 
 ####################################################################################################
-# default target
+# targets
 ####################################################################################################
 .PHONY : all
-all :
+all : dependencies buildobjects linkobjects hex status
+
+####################################################################################################
+# help
+####################################################################################################
+.PHONY : help
+help :
 	@echo "This is help for this $(THIS_MAKEFILE)"
 	@echo "Possible targets:"
 	@echo "   help                this help"
-	@echo "   stm32f1             compilation for ARM-Cortex-M3 STM32F1XX microcontroller family"
+	@echo "   config              project configuration"
 	@echo "   clean               clean project"
 	@echo "   cleanall            clean all non-project files"
 	@echo ""
@@ -218,12 +221,6 @@ all :
 .PHONY : check
 check :
 	@cppcheck -j $(THREAD) --std=c99 --enable=all --inconclusive $(DEFINE_stm32f1) $(SEARCHPATH) $(foreach file,$(OBJECTS),$(subst $(OBJ_PATH)/,,$(file:.$(OBJ_EXT)=.$(C_EXT))))
-
-####################################################################################################
-# targets
-####################################################################################################
-.PHONY : stm32f1
-stm32f1 : dependencies buildobjects linkobjects hex status
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.
