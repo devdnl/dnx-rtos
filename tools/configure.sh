@@ -3,15 +3,14 @@
 # configuration file
 working_path=$1
 CPU_family=
+CPU_arch=
 
 ################################################################################
 # Function set selected value
 ################################################################################
 set_key_value()
 {
-        local fle=$1
-        local key=$2
-        local val=$3
+        local fle=$1 key=$2 val=$3
 
         sed -i -e "s%$key\s*=.*%$key=$val%g" $fle
 }
@@ -21,10 +20,9 @@ set_key_value()
 ################################################################################
 get_key_value()
 {
-        local fle=$1
-        local key=$2
+        local fle=$1 key=$2
 
-        cat $fle | grep $key | sed "s/$key\s*=\s*//g"
+        cat $fle | grep -P "^$key" | sed "s/^$key\s*=\s*//g"
 }
 
 ################################################################################
@@ -117,15 +115,17 @@ configure()
                                 echo "${msg[$i]}"
                         done
 
+                        echo "---> $(get_key_value "$fle" "$key")"
+
                         case "$sel_type" in
                         "CHOOSE" )
                                 for (( i=0; i < ${#selection[@]}; i++ )); do
-                                        echo "  $i) ${selection[$i]}"
+                                        echo "  $[$i+1]) ${selection[$i]}"
                                 done
 
                                 choice=999
-                                until [ $choice -lt ${#selection[@]} ]; do
-                                        read -p "Select option (0..$[${#selection[@]}-1]), or 's' for skip: " choice
+                                until [ $choice -le ${#selection[@]} ]; do
+                                        read -p "Select option (1..${#selection[@]}), or 's' for skip: " choice
 
                                         if [ "$choice" == "" ]; then
                                                 choice=${#selection[@]}
@@ -196,7 +196,7 @@ configure()
 
                         if $save; then
                                 case "$sel_type" in
-                                "CHOOSE" ) set_key_value $fle "$key" "${selection[$choice]}";;
+                                "CHOOSE" ) set_key_value $fle "$key" "${selection[$[$choice-1]]}";;
                                 "STRING" ) set_key_value $fle "$key" "$choice";;
                                 "INT"    ) set_key_value $fle "$key" "$choice";;
                                 "UINT"   ) set_key_value $fle "$key" "$choice";;
@@ -223,8 +223,12 @@ main()
                 exit -1
         fi
 
+        cd "$working_path"
+
         #
-        configure "$working_path"/arch.config
+        configure "./project/arch.config"
+        CPU_arch=$(get_key_value "./project/arch.config" "ARCHCONFIG__TARGET")
+        configure "./$CPU_arch/cpu.config"
 
         echo "Done"
 }
