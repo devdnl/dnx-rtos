@@ -117,7 +117,7 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 # object path
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
-include $(PROGLOC)/Makefile.include
+include $(PROGLOC)/Makefile
 include $(SYSLOC)/Makefile.include
 
 # defines objects localizations
@@ -140,7 +140,7 @@ CXXSRC  = $(foreach file, $(CXXSRC_$(TARGET)),$(SYSLOC)/$(file)) \
 
 # defines all assembler sources
 ASRC    = $(foreach file, $(ASRC_$(TARGET)),$(SYSLOC)/$(file))
-         
+
 # defines objects names
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT))
 

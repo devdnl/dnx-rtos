@@ -1,0 +1,29 @@
+# Makefile for GNU make
+
+-include $(PROGLOC)/card_init/Makefile
+-include $(PROGLOC)/cat/Makefile
+-include $(PROGLOC)/clear/Makefile
+-include $(PROGLOC)/cp/Makefile
+-include $(PROGLOC)/df/Makefile
+-include $(PROGLOC)/dsh/Makefile
+-include $(PROGLOC)/echo/Makefile
+-include $(PROGLOC)/free/Makefile
+-include $(PROGLOC)/fsstack/Makefile
+-include $(PROGLOC)/helloworld/Makefile
+-include $(PROGLOC)/httpserver/Makefile
+-include $(PROGLOC)/ifconfig/Makefile
+-include $(PROGLOC)/ls/Makefile
+-include $(PROGLOC)/mkdir/Makefile
+-include $(PROGLOC)/mkfifo/Makefile
+-include $(PROGLOC)/mknod/Makefile
+-include $(PROGLOC)/modinit/Makefile
+-include $(PROGLOC)/mount/Makefile
+-include $(PROGLOC)/reboot/Makefile
+-include $(PROGLOC)/rm/Makefile
+-include $(PROGLOC)/telnet/Makefile
+-include $(PROGLOC)/time/Makefile
+-include $(PROGLOC)/top/Makefile
+-include $(PROGLOC)/touch/Makefile
+-include $(PROGLOC)/umount/Makefile
+-include $(PROGLOC)/uname/Makefile
+-include $(PROGLOC)/uptime/Makefile
