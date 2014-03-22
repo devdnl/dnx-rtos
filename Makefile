@@ -25,7 +25,7 @@
 #
 ####################################################################################################
 
-include ./config/fs.config
+include ./config/config.mk
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -40,7 +40,7 @@ TOOLCHAIN_stm32f1 = arm-none-eabi-
 LD_SCRIPT_stm32f1 = src/system/portable/stm32f1/STM32F107xCxx.ld
 CPU_stm32f1       = cortex-m3
 MCU_stm32f1       = STM32F10X_CL
-DEFINE_stm32f1    = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET) $(FS_CONFIG_DEF)
+DEFINE_stm32f1    = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET) $(CONFIG_DEF)
 CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
                     -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINE_stm32f1) -Werror=implicit-function-declaration
 CXXFLAGS_stm32f1  = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
