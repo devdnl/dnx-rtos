@@ -2,9 +2,10 @@ include ./config/fs.config
 include ./config/arch.config
 #include ./config/toolchain.config
 
-#ifeq ($(ARCHCONFIG__TARGET), stm32f1)
-#include ./config/stm32f1/cpu.config
-#endif
+ifeq ($(ARCHCONFIG__TARGET), stm32f1)
+include ./config/stm32f1/cpu.config
+include ./config/stm32f1/toolchain.config
+endif
 
 CONFIG_DEF += -D__DEVFS_ENABLE__=$(FSCONFIG__DEVFS_ENABLE)
 CONFIG_DEF += -D__LFS_ENABLE__=$(FSCONFIG__LFS_ENABLE)

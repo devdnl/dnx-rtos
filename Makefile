@@ -34,22 +34,56 @@ include ./config/config.mk
 PROJECT = dnx
 
 #---------------------------------------------------------------------------------------------------
-# ARCHITECTURE CONFIG: stm32f1
+# DEFAULT COMPILER FLAGS
 #---------------------------------------------------------------------------------------------------
-TOOLCHAIN_stm32f1 = arm-none-eabi-
-LD_SCRIPT_stm32f1 = src/system/portable/stm32f1/STM32F107xCxx.ld
-CPU_stm32f1       = cortex-m3
-MCU_stm32f1       = STM32F10X_CL
-DEFINE_stm32f1    = -D$(MCU_stm32f1) -DGCC_ARMCM3 -DARCH_$(TARGET) $(CONFIG_DEF)
-CFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
-                    -Wextra -std=c99 -g -ggdb3 -Wparentheses $(DEFINE_stm32f1) -Werror=implicit-function-declaration
-CXXFLAGS_stm32f1  = -c -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -Os -ffunction-sections -Wall \
-                    -Wextra -std=c++0x -g -ggdb3 -Wparentheses $(DEFINE_stm32f1) -Werror=implicit-function-declaration \
-                    -fno-rtti -fno-exceptions -fno-unwind-tables
-LFLAGS_stm32f1    = -mcpu=$(CPU_stm32f1) -mthumb -mthumb-interwork -T$(LD_SCRIPT_stm32f1) -g -nostartfiles \
-                    -Wl,--gc-sections -Wall -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
-                    $(DEFINE_stm32f1) -lm
-AFLAGS_stm32f1    = -c -mcpu=$(CPU_stm32f1) -mthumb -g -ggdb3 $(DEFINE_stm32f1)
+TOOLCHAIN = $(TOOLCHAINCONFIG__TOOLCHAIN)
+
+AFLAGS   += -c
+AFLAGS   += -g
+AFLAGS   += -ggdb3
+AFLAGS   += $(CPUCONFIG__AFLAGS)
+AFLAGS   += $(CONFIG_DEF)
+
+CFLAGS   += -c  
+CFLAGS   += -g
+CFLAGS   += -ggdb3 
+CFLAGS   += -Os
+CFLAGS   += -std=c99
+CFLAGS   += -ffunction-sections
+CFLAGS   += -Wall
+CFLAGS   += -Wextra
+CFLAGS   += -Wparentheses
+CFLAGS   += -Werror=implicit-function-declaration
+CFLAGS   += -DARCH_$(ARCHCONFIG__TARGET)
+CFLAGS   += $(CPUCONFIG__CFLAGS)
+CFLAGS   += $(CONFIG_DEF)
+
+CXXFLAGS += -c
+CXXFLAGS += -g
+CXXFLAGS += -ggdb3
+CXXFLAGS += -Os
+CXXFLAGS += -std=c++0x
+CXXFLAGS += -ffunction-sections
+CXXFLAGS += -fno-rtti
+CXXFLAGS += -fno-exceptions
+CXXFLAGS += -fno-unwind-tables
+CXXFLAGS += -Wall
+CXXFLAGS += -Wextra
+CXXFLAGS += -Wparentheses
+CXXFLAGS += -Werror=implicit-function-declaration
+CXXFLAGS += -DARCH_$(ARCHCONFIG__TARGET)
+CXXFLAGS += $(CPUCONFIG__CXXFLAGS)
+CXXFLAGS += $(CONFIG_DEF)
+
+LFLAGS   += -g
+LFLAGS   += $(CPUCONFIG__LDFLAGS)
+LFLAGS   += -nostartfiles
+LFLAGS   += -T$(CPUCONFIG__LD)
+LFLAGS   += -Wl,--gc-sections
+LFLAGS   += -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch
+LFLAGS   += -Wall
+LFLAGS   += $(CONFIG_DEF)
+LFLAGS   += -lm
 
 #---------------------------------------------------------------------------------------------------
 # FILE EXTENSIONS CONFIGURATION
@@ -94,13 +128,13 @@ MKDEP    = makedepend
 WC       = wc
 GREP     = grep
 SIZEOF   = stat -c %s
-CC       = $(TOOLCHAIN_$(TARGET))gcc
-CXX      = $(TOOLCHAIN_$(TARGET))g++
-LD       = $(TOOLCHAIN_$(TARGET))g++
-AS       = $(TOOLCHAIN_$(TARGET))gcc -x assembler-with-cpp
-OBJCOPY  = $(TOOLCHAIN_$(TARGET))objcopy
-OBJDUMP  = $(TOOLCHAIN_$(TARGET))objdump
-SIZE     = $(TOOLCHAIN_$(TARGET))size
+CC       = $(TOOLCHAIN)gcc
+CXX      = $(TOOLCHAIN)g++
+LD       = $(TOOLCHAIN)g++
+AS       = $(TOOLCHAIN)gcc -x assembler-with-cpp
+OBJCOPY  = $(TOOLCHAIN)objcopy
+OBJDUMP  = $(TOOLCHAIN)objdump
+SIZE     = $(TOOLCHAIN)size
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -109,13 +143,13 @@ SIZE     = $(TOOLCHAIN_$(TARGET))size
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
 # number of threads used in compilation (cpu count + 1)
-THREAD = $(shell echo $$[ $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l) + 1 ])
+THREAD = $(shell echo $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
 
 # sets header search path (adds -I flags to paths)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
 # main target without defined prefixes
-TARGET = $(lastword $(subst _, ,$(MAKECMDGOALS)))
+TARGET = $(ARCHCONFIG__TARGET)
 
 # target path
 TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
@@ -230,14 +264,14 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@echo "Linking..."
-	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS_$(TARGET)) -o $(TARGET_PATH)/$(PROJECT).elf
+	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
 # build objects
 ####################################################################################################
 .PHONY : buildobjects buildobjects_$(TARGET)
 buildobjects :
-	@echo "Starting building objects on $(THREAD) threads..."
+	@echo "Starting building objects up to $(THREAD) threads..."
 	@$(MAKE) -s -j$(THREAD) -f$(THIS_MAKEFILE) buildobjects_$(TARGET)
 
 buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
@@ -248,7 +282,7 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CC) $(CFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
+	@$(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from C++ sources
@@ -256,7 +290,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(CXX) $(CXXFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
+	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
 
 ####################################################################################################
 # rule used to compile object files from assembler sources
@@ -264,7 +298,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	$(AS) $(AFLAGS_$(TARGET)) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	@$(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
 ####################################################################################################
 # clean target
