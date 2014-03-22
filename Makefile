@@ -76,6 +76,8 @@ CORE_LOC   = $(SYS_LOC)/core
 FS_LOC     = $(SYS_LOC)/fs
 KERNEL_LOC = $(SYS_LOC)/kernel
 NET_LOC    = $(SYS_LOC)/net
+DRV_LOC    = $(SYS_LOC)/drivers
+PORT_LOC   = $(SYS_LOC)/portable
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -123,25 +125,26 @@ include $(PROG_LOC)/Makefile
 include $(SYS_LOC)/Makefile
 
 # defines objects localizations
-HDRLOC  = $(foreach file, $(HDRLOC_noarch),$(SYS_LOC)/$(file)) \
-          $(foreach file, $(HDRLOC_$(TARGET)),$(SYS_LOC)/$(file)) \
-          $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
+HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_CORE),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_NOARCH),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_ARCH),$(SYS_LOC)/$(file)) \
           src/
 
 # defines all C sources
-CSRC    = $(foreach file, $(CSRC_CORE),$(SYS_LOC)/$(file)) \
-          $(foreach file, $(CSRC_$(TARGET)),$(SYS_LOC)/$(file)) \
-          $(foreach file, $(CSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(CSRC_noarch),$(SYS_LOC)/$(file))
+CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(CSRC_CORE),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CSRC_NOARCH),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CSRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines all C++ sources
-CXXSRC  = $(foreach file, $(CXXSRC_$(TARGET)),$(SYS_LOC)/$(file)) \
-          $(foreach file, $(CXXSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(CXXSRC_noarch),$(SYS_LOC)/$(file))
+CXXSRC  = $(foreach file, $(CXXSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_CORE),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_NOARCH),$(SYS_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines all assembler sources
-ASRC    = $(foreach file, $(ASRC_$(TARGET)),$(SYS_LOC)/$(file))
+ASRC    = $(foreach file, $(ASRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines objects names
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT))

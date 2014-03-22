@@ -3,19 +3,12 @@
 ####################################################################################################
 # INSERT HERE SOURCES NOT ARCHITECTURE DEPENDED
 ####################################################################################################
-CSRC_noarch   += drivers/tty/tty.c
-CSRC_noarch   += drivers/tty/tty_bfr.c
-CSRC_noarch   += drivers/tty/tty_cmd.c
-CSRC_noarch   += drivers/tty/tty_editln.c
 
-CXXSRC_noarch += 
-
-HDRLOC_noarch += drivers/tty
 
 ####################################################################################################
 # INSERT HERE SOURCES stm32f1 ARCHITECTURE DEPENDED
 ####################################################################################################
-CSRC_stm32f1   += drivers/gpio/stm32f1/gpio.c
+
 CSRC_stm32f1   += drivers/uart/stm32f1/uart.c
 CSRC_stm32f1   += drivers/pll/stm32f1/pll.c
 CSRC_stm32f1   += drivers/sdspi/stm32f1/sdspi.c
@@ -36,8 +29,6 @@ CXXSRC_stm32f1 +=
 
 ASRC_stm32f1   += portable/stm32f1/cmx_startup.s
 
-HDRLOC_stm32f1 += drivers/gpio
-HDRLOC_stm32f1 += drivers/gpio/stm32f1
 HDRLOC_stm32f1 += drivers/pll
 HDRLOC_stm32f1 += drivers/uart
 HDRLOC_stm32f1 += drivers/sdspi
@@ -55,5 +46,6 @@ include $(CORE_LOC)/Makefile
 include $(FS_LOC)/Makefile
 include $(KERNEL_LOC)/Makefile
 include $(NET_LOC)/Makefile
+include $(DRV_LOC)/Makefile
 
 HDRLOC_CORE += portable
