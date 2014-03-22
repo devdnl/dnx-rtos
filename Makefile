@@ -25,65 +25,77 @@
 #
 ####################################################################################################
 
-include ./config/config.mk
+include ./config/project/fs.config
+include ./config/project/name.config
+include ./config/arch.config
+
+ifeq ($(ARCHCONFIG__TARGET), stm32f1)
+include ./config/stm32f1/cpu.config
+include ./config/stm32f1/toolchain.config
+endif
+
+CONFIG_DEF = -D__DEVFS_ENABLE__=$(FSCONFIG__DEVFS_ENABLE) \
+             -D__LFS_ENABLE__=$(FSCONFIG__LFS_ENABLE) \
+             -D__FATFS_ENABLE__=$(FSCONFIG__FATFS_ENABLE) \
+             -D__PROCFS_ENABLE__=$(FSCONFIG__PROCFS_ENABLE)
 
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
-PROJECT = dnx
+PROJECT = $(NAMECONFIG__PROJECT_NAME)
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
 #---------------------------------------------------------------------------------------------------
 TOOLCHAIN = $(TOOLCHAINCONFIG__TOOLCHAIN)
 
-AFLAGS   += -c
-AFLAGS   += -g
-AFLAGS   += -ggdb3
-AFLAGS   += $(CPUCONFIG__AFLAGS)
-AFLAGS   += $(CONFIG_DEF)
+AFLAGS   = -c \
+           -g \
+           -ggdb3 \
+           $(CPUCONFIG__AFLAGS) \
+           $(CONFIG_DEF)
 
-CFLAGS   += -c  
-CFLAGS   += -g
-CFLAGS   += -ggdb3 
-CFLAGS   += -Os
-CFLAGS   += -std=c99
-CFLAGS   += -ffunction-sections
-CFLAGS   += -Wall
-CFLAGS   += -Wextra
-CFLAGS   += -Wparentheses
-CFLAGS   += -Werror=implicit-function-declaration
-CFLAGS   += -DARCH_$(ARCHCONFIG__TARGET)
-CFLAGS   += $(CPUCONFIG__CFLAGS)
-CFLAGS   += $(CONFIG_DEF)
+CFLAGS   = -c \
+           -g \
+           -ggdb3  \
+           -Os \
+           -std=c99 \
+           -ffunction-sections \
+           -Wall \
+           -Wextra \
+           -Wparentheses \
+           -Werror=implicit-function-declaration \
+           -DARCH_$(ARCHCONFIG__TARGET) \
+           $(CPUCONFIG__CFLAGS) \
+           $(CONFIG_DEF)
+         
+CXXFLAGS = -c \
+           -g \
+           -ggdb3 \
+           -Os \
+           -std=c++0x \
+           -ffunction-sections \
+           -fno-rtti \
+           -fno-exceptions \
+           -fno-unwind-tables \
+           -Wall \
+           -Wextra \
+           -Wparentheses \
+           -Werror=implicit-function-declaration \
+           -DARCH_$(ARCHCONFIG__TARGET) \
+           $(CPUCONFIG__CXXFLAGS) \
+           $(CONFIG_DEF) \
 
-CXXFLAGS += -c
-CXXFLAGS += -g
-CXXFLAGS += -ggdb3
-CXXFLAGS += -Os
-CXXFLAGS += -std=c++0x
-CXXFLAGS += -ffunction-sections
-CXXFLAGS += -fno-rtti
-CXXFLAGS += -fno-exceptions
-CXXFLAGS += -fno-unwind-tables
-CXXFLAGS += -Wall
-CXXFLAGS += -Wextra
-CXXFLAGS += -Wparentheses
-CXXFLAGS += -Werror=implicit-function-declaration
-CXXFLAGS += -DARCH_$(ARCHCONFIG__TARGET)
-CXXFLAGS += $(CPUCONFIG__CXXFLAGS)
-CXXFLAGS += $(CONFIG_DEF)
-
-LFLAGS   += -g
-LFLAGS   += $(CPUCONFIG__LDFLAGS)
-LFLAGS   += -nostartfiles
-LFLAGS   += -T$(CPUCONFIG__LD)
-LFLAGS   += -Wl,--gc-sections
-LFLAGS   += -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch
-LFLAGS   += -Wall
-LFLAGS   += $(CONFIG_DEF)
-LFLAGS   += -lm
+LFLAGS   = -g \
+           $(CPUCONFIG__LDFLAGS) \
+           -nostartfiles \
+           -T$(CPUCONFIG__LD) \
+           -Wl,--gc-sections \
+           -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
+           -Wall \
+           $(CONFIG_DEF) \
+           -lm
 
 #---------------------------------------------------------------------------------------------------
 # FILE EXTENSIONS CONFIGURATION
