@@ -118,7 +118,7 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 include $(PROGLOC)/Makefile
-include $(SYSLOC)/Makefile.include
+include $(SYSLOC)/Makefile
 
 # defines objects localizations
 HDRLOC  = $(foreach file, $(HDRLOC_noarch),$(SYSLOC)/$(file)) \
