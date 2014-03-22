@@ -73,6 +73,7 @@ DEP_FILE_NAME   = $(PROJECT).d
 PROG_LOC = src/programs
 SYS_LOC  = src/system
 CORE_LOC = $(SYS_LOC)/core
+FS_LOC   = $(SYS_LOC)/fs
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS

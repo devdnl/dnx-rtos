@@ -52,15 +52,8 @@ HDRLOC_stm32f1 += portable/stm32f1
 # CORE SOURCES
 ####################################################################################################
 include $(CORE_LOC)/Makefile
+include $(FS_LOC)/Makefile
 
-CSRC_CORE += fs/procfs/procfs.c
-CSRC_CORE += fs/lfs/lfs.c
-CSRC_CORE += fs/fatfs/fatfs.c
-CSRC_CORE += fs/fatfs/libfat/libfat_user.c
-CSRC_CORE += fs/fatfs/libfat/libfat.c
-CSRC_CORE += fs/fatfs/libfat/libfat_unicode.c
-CSRC_CORE += fs/devfs/devfs.c
-CSRC_CORE += fs/fs_registration.c
 
 CSRC_CORE += user/initd.c
 CSRC_CORE += drivers/driver_registration.c
