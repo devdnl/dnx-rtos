@@ -70,10 +70,11 @@ OBJ_DIR_NAME    = obj
 DEP_FILE_NAME   = $(PROJECT).d
 
 # folder localizations
-PROG_LOC = src/programs
-SYS_LOC  = src/system
-CORE_LOC = $(SYS_LOC)/core
-FS_LOC   = $(SYS_LOC)/fs
+PROG_LOC   = src/programs
+SYS_LOC    = src/system
+CORE_LOC   = $(SYS_LOC)/core
+FS_LOC     = $(SYS_LOC)/fs
+KERNEL_LOC = $(SYS_LOC)/kernel
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
