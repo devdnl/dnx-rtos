@@ -34,19 +34,35 @@
 /*==============================================================================
   External objects
 ==============================================================================*/
+#ifdef __LFS_ENABLE__
 _IMPORT_FILE_SYSTEM(lfs);
+#endif
+#ifdef __PROCFS_ENABLE__
 _IMPORT_FILE_SYSTEM(procfs);
+#endif
+#ifdef __FATFS_ENABLE__
 _IMPORT_FILE_SYSTEM(fatfs);
+#endif
+#ifdef __DEVFS_ENABLE__
 _IMPORT_FILE_SYSTEM(devfs);
+#endif
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
 const struct _FS_entry _FS_table[] = {
+#ifdef __LFS_ENABLE__
         _USE_FILE_SYSTEM_INTERFACE(lfs),
+#endif
+#ifdef __PROCFS_ENABLE__
         _USE_FILE_SYSTEM_INTERFACE(procfs),
+#endif
+#ifdef __FATFS_ENABLE__
         _USE_FILE_SYSTEM_INTERFACE(fatfs),
+#endif
+#ifdef __DEVFS_ENABLE__
         _USE_FILE_SYSTEM_INTERFACE(devfs),
+#endif
 };
 
 const uint _FS_table_size = ARRAY_SIZE(_FS_table);
