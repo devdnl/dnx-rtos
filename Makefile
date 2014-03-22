@@ -31,21 +31,24 @@ include ./config/project/arch.config
 include ./config/$(ARCHCONFIG__TARGET)/cpu.config
 include ./config/$(ARCHCONFIG__TARGET)/toolchain.config
 
-CONFIG_DEF = -D__DEVFS_ENABLE__=$(FSCONFIG__DEVFS_ENABLE) \
-             -D__LFS_ENABLE__=$(FSCONFIG__LFS_ENABLE) \
-             -D__FATFS_ENABLE__=$(FSCONFIG__FATFS_ENABLE) \
-             -D__PROCFS_ENABLE__=$(FSCONFIG__PROCFS_ENABLE)
-
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
+ifeq ($(NAMECONFIG__PROJECT_NAME), "")
+NAMECONFIG__PROJECT_NAME="dnx"
+endif
 PROJECT = $(NAMECONFIG__PROJECT_NAME)
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
 #---------------------------------------------------------------------------------------------------
 TOOLCHAIN = $(TOOLCHAINCONFIG__TOOLCHAIN)
+
+CONFIG_DEF = -D__DEVFS_ENABLE__=$(FSCONFIG__DEVFS_ENABLE) \
+             -D__LFS_ENABLE__=$(FSCONFIG__LFS_ENABLE) \
+             -D__FATFS_ENABLE__=$(FSCONFIG__FATFS_ENABLE) \
+             -D__PROCFS_ENABLE__=$(FSCONFIG__PROCFS_ENABLE)
 
 AFLAGS   = -c \
            -g \
