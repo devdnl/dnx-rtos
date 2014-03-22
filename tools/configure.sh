@@ -115,7 +115,7 @@ configure()
                                 echo "${msg[$i]}"
                         done
 
-                        echo "---> $(get_key_value "$fle" "$key")"
+                        echo "Now: $(get_key_value "$fle" "$key")"
 
                         case "$sel_type" in
                         "CHOOSE" )
@@ -128,7 +128,7 @@ configure()
                                         read -p "Select option (1..${#selection[@]}), or 's' for skip: " choice
 
                                         if [ "$choice" == "" ]; then
-                                                choice=${#selection[@]}
+                                                choice=999
                                         elif [ "$choice" == "s" ]; then
                                                 save=false
                                                 break
@@ -204,6 +204,8 @@ configure()
                         fi
 
                         echo ""
+                        echo "================================================================================"
+                        echo ""
 
                         selection=()
                         msg=()
@@ -225,10 +227,12 @@ main()
 
         cd "$working_path"
 
+        configure "./project/name.config"
         configure "./project/arch.config"
         CPU_arch=$(get_key_value "./project/arch.config" "ARCHCONFIG__TARGET")
+        configure "./$CPU_arch/toolchain.config"
         configure "./$CPU_arch/cpu.config"
-        configure "./project/name.config"
+        configure "./project/fs.config"
 
         echo "Done"
 }
