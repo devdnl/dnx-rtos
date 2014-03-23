@@ -30,20 +30,14 @@ include ./config/project/name.config
 include ./config/project/arch.config
 include ./config/$(ARCHCONFIG__TARGET)/cpu.config
 include ./config/$(ARCHCONFIG__TARGET)/toolchain.config
+include ./config/$(ARCHCONFIG__TARGET)/mod.config
+include ./config/project/defaults.config
 
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
 PROJECT = $(NAMECONFIG__PROJECT_NAME)
-MODCONFIG__CRC_ENABLE=ENABLE
-MODCONFIG__ETHMAC_ENABLE=ENABLE
-MODCONFIG__PLL_ENABLE=ENABLE
-MODCONFIG__SDSPI_ENABLE=ENABLE
-MODCONFIG__SPI_ENABLE=ENABLE
-MODCONFIG__TTY_ENABLE=ENABLE
-MODCONFIG__UART_ENABLE=ENABLE
-MODCONFIG__WDG_ENABLE=ENABLE
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
@@ -163,9 +157,10 @@ SIZE     = $(TOOLCHAIN)size
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
-# defines ENABLE/DISABLE VALUES
+# defines VALUES
 ENABLE  = 1
 DISABLE = 0
+EMPTY   =
 
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))

@@ -219,6 +219,7 @@ main()
         configure "./$CPU_arch/toolchain.config"
         configure "./$CPU_arch/cpu.config"
         configure "./project/fs.config"
+        configure "./$CPU_arch/mod.config"
 
         echo "Done"
 }
