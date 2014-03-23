@@ -17,57 +17,62 @@ is_integer() {
 #-------------------------------------------------------------------------------
 is_begin_cmd()
 {
-        if [[ "$1" =~ ^\s*\\begin\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\begin\{.*\}$ ]]; then true; else false; fi
 }
 
 is_end_cmd()
 {
-        if [[ "$1" =~ ^\s*\\end\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\end\{.*\}$ ]]; then true; else false; fi
 }
 
 is_msg_cmd()
 {
-        if [[ "$1" =~ ^\s*\\msg\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\msg\{.*\}$ ]]; then true; else false; fi
 }
 
 is_item_cmd()
 {
-        if [[ "$1" =~ ^\s*\\item\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\item\{.*\}$ ]]; then true; else false; fi
 }
 
-is_select_cmd()
+is_readsel_cmd()
 {
-        if [[ "$1" =~ ^\s*\\select\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\readsel\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
-is_getint_cmd()
+is_readint_cmd()
 {
-        if [[ "$1" =~ ^\s*\\getint\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\readint\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
-is_getuint_cmd()
+is_readuint_cmd()
 {
-        if [[ "$1" =~ ^\s*\\getuint\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\readuint\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
-is_getstring_cmd()
+is_readstring_cmd()
 {
-        if [[ "$1" =~ ^\s*\\getstring\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\readstring\{.*\}\{.*\}$ ]]; then true; else false; fi
+}
+
+is_keyread_cmd()
+{
+        if [[ "$1" =~ ^\s*\\keyread\{.*\}\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
 is_keysave_cmd()
 {
-        if [[ "$1" =~ ^\s*\\keysave\{.*\}\{.*\}\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\keysave\{.*\}\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
 is_keycreate_cmd()
 {
-        if [[ "$1" =~ ^\s*\\keycreate\{.*\}\{.*\}\{.*\}\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\keycreate\{.*\}\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
 is_keydelete_cmd()
 {
-        if [[ "$1" =~ ^\s*\\keydelete\{.*\}\{.*\}\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\keydelete\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
 #-------------------------------------------------------------------------------
@@ -75,57 +80,62 @@ is_keydelete_cmd()
 #-------------------------------------------------------------------------------
 get_begin_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\begin{\(.*\)}/\1/'
+        echo $1 | sed 's/^\s*\\begin{\(.*\)}$/\1/'
 }
 
 get_end_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\end{\(.*\)}/\1/'
+        echo $1 | sed 's/^\s*\\end{\(.*\)}$/\1/'
 }
 
 get_msg_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\msg{\(.*\)}/\1/'
+        echo $1 | sed 's/^\s*\\msg{\(.*\)}$/\1/'
 }
 
 get_item_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\item{\(.*\)}{\(.*\)}/\1 \2/'
+        echo $1 | sed 's/^\s*\\item{\(.*\)}{\(.*\)}$/\1 \2/'
 }
 
-get_select_cmd_arg()
+get_readsel_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\select{\(.*\)}/\1/'
+        echo $1 | sed 's/^\s*\\readsel{\(.*\)}{\(.*\)}$/\1 \2/'
 }
 
-get_getint_cmd_arg()
+get_readint_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\getint{\(.*\)}/\1/'
+        echo $1 | sed 's/^\s*\\readint{\(.*\)}{\(.*\)}$/\1 \2/'
 }
 
-get_getuint_cmd_arg()
+get_readuint_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\getuint{\(.*\)}/\1/'
+        echo $1 | sed 's/^\s*\\readuint{\(.*\)}{\(.*\)}$/\1 \2/'
 }
 
-get_getstring_cmd_arg()
+get_readstring_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\getstring{\(.*\)}/\1/'
+        echo $1 | sed 's/^\s*\\readstring{\(.*\)}{\(.*\)}$/\1 \2/'
+}
+
+get_keyread_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\\keyread{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3 \4/'
 }
 
 get_keysave_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\keysave{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
+        echo $1 | sed 's/^\s*\\keysave{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3 \4/'
 }
 
 get_keycreate_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\keycreate{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
+        echo $1 | sed 's/^\s*\\keycreate{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3 \4/'
 }
 
 get_keydelete_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\keydelete{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3/'
+        echo $1 | sed 's/^\s*\\keydelete{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3/'
 }
 
 #-------------------------------------------------------------------------------
@@ -150,8 +160,8 @@ warrning()
 #-------------------------------------------------------------------------------
 read_script()
 {
-        local script=$1 seek=0
-        local begin=false items=() qtype msg=()
+        local script=$1 seek=0 args=()
+        local begin=false items=() itemdesc=() msgs=() var=() save=false
 
         while read -r line <&9; do
                 seek=$[$seek+1]
@@ -169,40 +179,88 @@ read_script()
                 elif $(is_end_cmd "$line"); then
                         if $begin; then
                                 begin=false
-
-                                echo ${msg[*]}
+                                msgs=()
+                                items=()
+                                itemdesc=()
+                                save=false
+                                echo ""
                         else
                                 error $script $seek "orphaned \end{} command"
                         fi
 
                 elif $(is_msg_cmd "$line") && $begin; then
-                        msg[${#msg[@]}]=$(get_msg_cmd_arg "$line")
-                        echo "$seek: msg: $(get_msg_cmd_arg "$line")"
+                        msgs[${#msgs[@]}]=$(get_msg_cmd_arg "$line")
 
                 elif $(is_item_cmd "$line") && $begin; then
-                        echo "$seek: item: $(get_item_cmd_arg "$line")"
+                        args=()
+                        args=($(get_item_cmd_arg "$line"))
+                        items[${#items[@]}]=${args[0]}
+                        itemdesc[${#itemdesc[@]}]=${args[*]/${args[0]}/}
 
-                elif $(is_select_cmd "$line") && $begin; then
-                        echo "$seek: select: $(get_select_cmd_arg "$line")"
+                elif $(is_readsel_cmd "$line") && $begin; then
+                        args=()
+                        args=($(get_readsel_cmd_arg "$line"))
+                        idx=${args[0]}
+                        msg=${args[*]/${args[0]}/}
 
-                elif $(is_getint_cmd "$line") && $begin; then
-                        echo "$seek: getint: $(get_getint_cmd_arg "$line")"
+                        if [ "$idx" == "" ]; then
+                                error $script $seek "undefined variable"
+                        fi
 
-                elif $(is_getuint_cmd "$line") && $begin; then
-                        echo "$seek: getuint: $(get_getuint_cmd_arg "$line")"
+                        if [ "$msg" == "" ]; then
+                                msg="Select item (1..${#items[@]})"
+                        fi
 
-                elif $(is_getstring_cmd "$line") && $begin; then
-                        echo "$seek: getstring: $(get_getstring_cmd_arg "$line")"
+                        for ((i=0; i<${#msgs[*]}; i++)); do
+                                echo "${msgs[$i]}"
+                        done
+
+                        for ((i=0; i<${#items[*]}; i++)); do
+                                echo "  $[$i+1]) ${items[$i]} - ${itemdesc[$i]}"
+                        done
+
+                        value=0
+                        until [ $value -le ${#items[@]} ] && [ $value -gt 0 ]; do
+                                read -p "$msg: " value
+
+                                if [ "$value" == "" ]; then
+                                        break
+                                elif ! is_integer "$value"; then
+                                        value=0
+                                else
+                                        var[$idx]=${items[$[$value-1]]}
+                                        save=true
+                                fi
+                        done
+
+                elif $(is_readint_cmd "$line") && $begin; then
+                        continue
+
+                elif $(is_readuint_cmd "$line") && $begin; then
+                        continue
+
+                elif $(is_readstring_cmd "$line") && $begin; then
+                        continue
+
+                elif $(is_keyread_cmd "$line") && $begin; then
+                        continue
 
                 elif $(is_keysave_cmd "$line") && $begin; then
-                        echo "$seek: keysave: $(get_keysave_cmd_arg "$line")"
+                        if $save; then
+                                args=()
+                                args=($(get_keysave_cmd_arg "$line"))
+                                type=${args[0]}
+                                file=${args[1]}
+                                key=${args[2]}
+                                idx=${args[3]}
+                                echo "Save value: ${var[$idx]} in key $key to file: $file type: $type"
+                        fi
 
                 elif $(is_keycreate_cmd "$line") && $begin; then
-                        echo "$seek: keycreate: $(get_keycreate_cmd_arg "$line")"
+                        continue
 
                 elif $(is_keydelete_cmd "$line") && $begin; then
-                        echo "$seek: keydelete: $(get_keydelete_cmd_arg "$line")"
-
+                        continue
                 else
                         if $begin; then
                                 error $script $seek "unknown command: $line"
