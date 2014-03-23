@@ -1,2 +1,1 @@
-MK_TEST_3=234
 MK_TEST_2="test"

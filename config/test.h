@@ -9,7 +9,8 @@
 
 #ifdef dfsf
 
-#define H_TEST1 1
+//#define H_TEST1 fsfds
+#define H_TEST1 fsfds
 #define H_TEST2 "test"
 
 #endif

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # configuration file
-script="$1"
-cwd=$(dirname "$1")
+script=$(basename "$1")
+cd $(dirname "$1")
 
 #-------------------------------------------------------------------------------
 # Function check that value is an integer
@@ -196,6 +196,20 @@ warrning()
 }
 
 #-------------------------------------------------------------------------------
+# Remove key and value in specified file
+#-------------------------------------------------------------------------------
+key_remove()
+{
+        local file=$1 type=$2 key=$3
+
+        if [ "$type" = "makefile" ]; then
+                sed -i "/^\s*$key\s*=.*$/d" $file
+        elif [ "$type" = "header" ]; then
+                sed -i "/^\s*#\s*define\s*$key\s*.*$/d" $file
+        fi
+}
+
+#-------------------------------------------------------------------------------
 # Function read configuration commands step by step
 #-------------------------------------------------------------------------------
 read_script()
@@ -340,7 +354,7 @@ read_script()
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
-                        echo "Delete key: $key to file: $file type: $type"
+                        key_remove "$file" "$type" "$key"
 
                 elif $(is_exit_cmd "$line") && $begin; then
                         exit 0
