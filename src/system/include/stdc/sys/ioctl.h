@@ -38,17 +38,36 @@ extern "C" {
 #include "core/vfs.h"
 
 /* include here drivers definitions */
-#include "tty_def.h"
 #ifdef ARCH_stm32f1
 #       include "stm32f1/gpio_def.h"
-#       include "stm32f1/pll_def.h"
-#       include "stm32f1/sdspi_def.h"
-#       include "stm32f1/uart_def.h"
-#       include "stm32f1/ethmac_def.h"
-#       include "stm32f1/crc_def.h"
-#       include "stm32f1/wdg_def.h"
+#
+#       if (__UART_ENABLE__)
+#               include "stm32f1/uart_def.h"
+#       endif
+#       if (__PLL_ENABLE__)
+#               include "stm32f1/pll_def.h"
+#       endif
+#       if (__SDSPI_ENABLE__)
+#               include "stm32f1/sdspi_def.h"
+#       endif
+#       if (__ETHMAC_ENABLE__)
+#               include "stm32f1/ethmac_def.h"
+#       endif
+#       if (__SPI_ENABLE__)
+#               include "stm32f1/spi_def.h"
+#       endif
+#       if (__CRC_ENABLE__)
+#               include "stm32f1/crc_def.h"
+#       endif
+#       if (__WDG_ENABLE__)
+#               include "stm32f1/wdg_def.h"
+#       endif
 #else
-#       error "Unknown architecture!"
+#       error Unknown CPU architecture!
+#endif
+
+#if (__TTY_ENABLE__)
+#       include "tty_def.h"
 #endif
 
 /*==============================================================================

@@ -36,6 +36,14 @@ include ./config/$(ARCHCONFIG__TARGET)/toolchain.config
 ####################################################################################################
 # project name
 PROJECT = $(NAMECONFIG__PROJECT_NAME)
+MODCONFIG__CRC_ENABLE=ENABLE
+MODCONFIG__ETHMAC_ENABLE=ENABLE
+MODCONFIG__PLL_ENABLE=ENABLE
+MODCONFIG__SDSPI_ENABLE=ENABLE
+MODCONFIG__SPI_ENABLE=ENABLE
+MODCONFIG__TTY_ENABLE=ENABLE
+MODCONFIG__UART_ENABLE=ENABLE
+MODCONFIG__WDG_ENABLE=ENABLE
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
@@ -45,7 +53,15 @@ TOOLCHAIN = $(TOOLCHAINCONFIG__TOOLCHAIN)
 CONFIG_DEF = -D__DEVFS_ENABLE__=$($(FSCONFIG__DEVFS_ENABLE)) \
              -D__LFS_ENABLE__=$($(FSCONFIG__LFS_ENABLE)) \
              -D__FATFS_ENABLE__=$($(FSCONFIG__FATFS_ENABLE)) \
-             -D__PROCFS_ENABLE__=$($(FSCONFIG__PROCFS_ENABLE))
+             -D__PROCFS_ENABLE__=$($(FSCONFIG__PROCFS_ENABLE)) \
+             -D__CRC_ENABLE__=$($(MODCONFIG__CRC_ENABLE)) \
+             -D__ETHMAC_ENABLE__=$($(MODCONFIG__ETHMAC_ENABLE)) \
+             -D__PLL_ENABLE__=$($(MODCONFIG__PLL_ENABLE)) \
+             -D__SDSPI_ENABLE__=$($(MODCONFIG__SDSPI_ENABLE)) \
+             -D__SPI_ENABLE__=$($(MODCONFIG__SPI_ENABLE)) \
+             -D__TTY_ENABLE__=$($(MODCONFIG__TTY_ENABLE)) \
+             -D__UART_ENABLE__=$($(MODCONFIG__UART_ENABLE)) \
+             -D__WDG_ENABLE__=$($(MODCONFIG__WDG_ENABLE))
 
 AFLAGS   = -c \
            -g \
@@ -269,6 +285,7 @@ status :
 ####################################################################################################
 .PHONY : dependencies
 dependencies :
+	@echo $(CONFIG_DEF)
 	@echo "Creating dependencies for '$(TARGET)' target..."
 	@$(MKDIR) $(TARGET_PATH)
 	@$(RM) $(TARGET_PATH)/*.*

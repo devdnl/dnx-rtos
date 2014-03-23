@@ -31,15 +31,37 @@
 #include "core/module.h"
 #include <dnx/misc.h>
 
-#include "stm32f1/uart_def.h"
-#include "stm32f1/gpio_def.h"
-#include "stm32f1/pll_def.h"
-#include "stm32f1/sdspi_def.h"
-#include "stm32f1/ethmac_def.h"
-#include "stm32f1/spi_def.h"
-#include "stm32f1/crc_def.h"
-#include "stm32f1/wdg_def.h"
-#include "tty_def.h"
+#ifdef ARCH_stm32f1
+#       include "stm32f1/gpio_def.h"
+#
+#       if (__UART_ENABLE__)
+#               include "stm32f1/uart_def.h"
+#       endif
+#       if (__PLL_ENABLE__)
+#               include "stm32f1/pll_def.h"
+#       endif
+#       if (__SDSPI_ENABLE__)
+#               include "stm32f1/sdspi_def.h"
+#       endif
+#       if (__ETHMAC_ENABLE__)
+#               include "stm32f1/ethmac_def.h"
+#       endif
+#       if (__SPI_ENABLE__)
+#               include "stm32f1/spi_def.h"
+#       endif
+#       if (__CRC_ENABLE__)
+#               include "stm32f1/crc_def.h"
+#       endif
+#       if (__WDG_ENABLE__)
+#               include "stm32f1/wdg_def.h"
+#       endif
+#else
+#       error Unknown CPU architecture!
+#endif
+
+#if (__TTY_ENABLE__)
+#       include "tty_def.h"
+#endif
 
 /**
  * NOTE: To use drivers' ioctl definitions add include to file: ./src/system/include/sys/ioctl.h
@@ -48,45 +70,205 @@
 /*==============================================================================
   External objects
 ==============================================================================*/
-_IMPORT_MODULE(UART);
 _IMPORT_MODULE(GPIO);
+
+#if (__UART_ENABLE__)
+_IMPORT_MODULE(UART);
+#endif
+
+#if (__PLL_ENABLE__)
 _IMPORT_MODULE(PLL);
+#endif
+
+#if (__TTY_ENABLE__)
 _IMPORT_MODULE(TTY);
+#endif
+
+#if (__SDSPI_ENABLE__)
 _IMPORT_MODULE(SDSPI);
+#endif
+
+#if (__ETHMAC_ENABLE__)
 _IMPORT_MODULE(ETHMAC);
+#endif
+
+#if (__CRC_ENABLE__)
 _IMPORT_MODULE(CRCCU);
+#endif
+
+#if (__WDG_ENABLE__)
 _IMPORT_MODULE(WDG);
+#endif
+
+#if (__SPI_ENABLE__)
+_IMPORT_MODULE(SPI);
+#endif
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
 const char *const _regdrv_module_name[] = {
+#if (__UART_ENABLE__)
         _USE_MODULE(UART),
-        _USE_MODULE(GPIO),
+#endif
+
+#if (__PLL_ENABLE__)
         _USE_MODULE(PLL),
+#endif
+
+#if (__TTY_ENABLE__)
         _USE_MODULE(TTY),
+#endif
+
+#if (__SDSPI_ENABLE__)
         _USE_MODULE(SDSPI),
+#endif
+
+#if (__ETHMAC_ENABLE__)
         _USE_MODULE(ETHMAC),
+#endif
+
+#if (__CRC_ENABLE__)
         _USE_MODULE(CRCCU),
+#endif
+
+#if (__WDG_ENABLE__)
         _USE_MODULE(WDG),
+#endif
+
+#if (__SPI_ENABLE__)
+        _USE_MODULE(SPI),
+#endif
+
+        _USE_MODULE(GPIO)
 };
 
 const struct _driver_entry _regdrv_driver_table[] = {
-        _USE_DRIVER_INTERFACE(UART  , "uart1" , _UART1              , _UART_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(GPIO  , "gpio"  , _GPIO_MAJOR_NUMBER  , _GPIO_MINOR_NUMBER  ),
-        _USE_DRIVER_INTERFACE(PLL   , "pll"   , _PLL_MAJOR_NUMBER   , _PLL_MINOR_NUMBER   ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty0"  , _TTY0               , _TTY_MINOR_NUMBER   ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty1"  , _TTY1               , _TTY_MINOR_NUMBER   ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty2"  , _TTY2               , _TTY_MINOR_NUMBER   ),
-        _USE_DRIVER_INTERFACE(TTY   , "tty3"  , _TTY3               , _TTY_MINOR_NUMBER   ),
-        _USE_DRIVER_INTERFACE(SDSPI , "sda"   , _SDSPI_CARD_0       , _SDSPI_FULL_VOLUME  ),
-        _USE_DRIVER_INTERFACE(SDSPI , "sda1"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_1  ),
-        _USE_DRIVER_INTERFACE(SDSPI , "sda2"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_2  ),
-        _USE_DRIVER_INTERFACE(SDSPI , "sda3"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_3  ),
-        _USE_DRIVER_INTERFACE(SDSPI , "sda4"  , _SDSPI_CARD_0       , _SDSPI_PARTITION_4  ),
+#if (__UART_ENABLE__ && _UART1_ENABLE)
+        _USE_DRIVER_INTERFACE(UART, "uart1", _UART1, _UART_MINOR_NUMBER),
+#endif
+#if (__UART_ENABLE__ && _UART2_ENABLE)
+        _USE_DRIVER_INTERFACE(UART, "uart2", _UART2, _UART_MINOR_NUMBER),
+#endif
+#if (__UART_ENABLE__ && _UART3_ENABLE)
+        _USE_DRIVER_INTERFACE(UART, "uart3", _UART3, _UART_MINOR_NUMBER),
+#endif
+#if (__UART_ENABLE__ && _UART4_ENABLE)
+        _USE_DRIVER_INTERFACE(UART, "uart4", _UART4, _UART_MINOR_NUMBER),
+#endif
+
+#if (__PLL_ENABLE__)
+        _USE_DRIVER_INTERFACE(PLL, "pll", _PLL_MAJOR_NUMBER, _PLL_MINOR_NUMBER),
+#endif
+#if (__TTY_ENABLE__ && _TTY_NUMBER_OF_VT > 0)
+        _USE_DRIVER_INTERFACE(TTY, "tty0", _TTY0, _TTY_MINOR_NUMBER),
+#endif
+#if (__TTY_ENABLE__ && _TTY_NUMBER_OF_VT > 1)
+        _USE_DRIVER_INTERFACE(TTY, "tty1", _TTY1, _TTY_MINOR_NUMBER),
+#endif
+#if (__TTY_ENABLE__ && _TTY_NUMBER_OF_VT > 2)
+        _USE_DRIVER_INTERFACE(TTY, "tty2", _TTY2, _TTY_MINOR_NUMBER),
+#endif
+#if (__TTY_ENABLE__ && _TTY_NUMBER_OF_VT > 3)
+        _USE_DRIVER_INTERFACE(TTY, "tty3", _TTY3, _TTY_MINOR_NUMBER),
+#endif
+
+#if (__SDSPI_ENABLE__)
+        _USE_DRIVER_INTERFACE(SDSPI, "sda" , _SDSPI_CARD_0, _SDSPI_FULL_VOLUME),
+        _USE_DRIVER_INTERFACE(SDSPI, "sda1", _SDSPI_CARD_0, _SDSPI_PARTITION_1),
+        _USE_DRIVER_INTERFACE(SDSPI, "sda2", _SDSPI_CARD_0, _SDSPI_PARTITION_2),
+        _USE_DRIVER_INTERFACE(SDSPI, "sda3", _SDSPI_CARD_0, _SDSPI_PARTITION_3),
+        _USE_DRIVER_INTERFACE(SDSPI, "sda4", _SDSPI_CARD_0, _SDSPI_PARTITION_4),
+#endif
+
+#if (__ETHMAC_ENABLE__)
         _USE_DRIVER_INTERFACE(ETHMAC, "ethmac", _ETHMAC_MAJOR_NUMBER, _ETHMAC_MINOR_NUMBER),
-        _USE_DRIVER_INTERFACE(CRCCU , "crc"   , _CRC_MAJOR_NUMBER   , _CRC_MINOR_NUMBER   ),
-        _USE_DRIVER_INTERFACE(WDG   , "wdg"   , _WDG_MAJOR_NUMBER   , _WDG_MINOR_NUMBER   ),
+#endif
+
+#if (__CRC_ENABLE__)
+        _USE_DRIVER_INTERFACE(CRCCU, "crc", _CRC_MAJOR_NUMBER, _CRC_MINOR_NUMBER),
+#endif
+
+#if (__WDG_ENABLE__)
+        _USE_DRIVER_INTERFACE(WDG, "wdg", _WDG_MAJOR_NUMBER, _WDG_MINOR_NUMBER),
+#endif
+
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 1)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs0", _SPI1, 0),
+#endif
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 2)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs1", _SPI1, 1),
+#endif
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 3)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs2", _SPI1, 2),
+#endif
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 4)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs3", _SPI1, 3),
+#endif
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 5)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs4", _SPI1, 4),
+#endif
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 6)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs5", _SPI1, 5),
+#endif
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 7)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs6", _SPI1, 6),
+#endif
+#if (__SPI_ENABLE__ && _SPI1_ENABLE && _SPI1_NUMBER_OF_SLAVES >= 8)
+        _USE_DRIVER_INTERFACE(SPI, "spi1_cs7", _SPI1, 7),
+#endif
+
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 1)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs0", _SPI2, 0),
+#endif
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 2)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs1", _SPI2, 1),
+#endif
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 3)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs2", _SPI2, 2),
+#endif
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 4)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs3", _SPI2, 3),
+#endif
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 5)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs4", _SPI2, 4),
+#endif
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 6)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs5", _SPI2, 5),
+#endif
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 7)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs6", _SPI2, 6),
+#endif
+#if (__SPI_ENABLE__ && _SPI2_ENABLE && _SPI2_NUMBER_OF_SLAVES >= 8)
+        _USE_DRIVER_INTERFACE(SPI, "spi2_cs7", _SPI2, 7),
+#endif
+
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 1)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs0", _SPI3, 0),
+#endif
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 2)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs1", _SPI3, 1),
+#endif
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 3)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs2", _SPI3, 2),
+#endif
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 4)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs3", _SPI3, 3),
+#endif
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 5)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs4", _SPI3, 4),
+#endif
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 6)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs5", _SPI3, 5),
+#endif
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 7)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs6", _SPI3, 6),
+#endif
+#if (__SPI_ENABLE__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 8)
+        _USE_DRIVER_INTERFACE(SPI, "spi3_cs7", _SPI3, 7),
+#endif
+
+        _USE_DRIVER_INTERFACE(GPIO, "gpio", _GPIO_MAJOR_NUMBER, _GPIO_MINOR_NUMBER)
 };
 
 const uint _regdrv_size_of_driver_table = ARRAY_SIZE(_regdrv_driver_table);
