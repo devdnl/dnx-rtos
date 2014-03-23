@@ -35,9 +35,6 @@ include ./config/$(ARCHCONFIG__TARGET)/toolchain.config
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
-ifeq ($(NAMECONFIG__PROJECT_NAME), "")
-NAMECONFIG__PROJECT_NAME="dnx"
-endif
 PROJECT = $(NAMECONFIG__PROJECT_NAME)
 
 #---------------------------------------------------------------------------------------------------
@@ -45,10 +42,10 @@ PROJECT = $(NAMECONFIG__PROJECT_NAME)
 #---------------------------------------------------------------------------------------------------
 TOOLCHAIN = $(TOOLCHAINCONFIG__TOOLCHAIN)
 
-CONFIG_DEF = -D__DEVFS_ENABLE__=$(FSCONFIG__DEVFS_ENABLE) \
-             -D__LFS_ENABLE__=$(FSCONFIG__LFS_ENABLE) \
-             -D__FATFS_ENABLE__=$(FSCONFIG__FATFS_ENABLE) \
-             -D__PROCFS_ENABLE__=$(FSCONFIG__PROCFS_ENABLE)
+CONFIG_DEF = -D__DEVFS_ENABLE__=$($(FSCONFIG__DEVFS_ENABLE)) \
+             -D__LFS_ENABLE__=$($(FSCONFIG__LFS_ENABLE)) \
+             -D__FATFS_ENABLE__=$($(FSCONFIG__FATFS_ENABLE)) \
+             -D__PROCFS_ENABLE__=$($(FSCONFIG__PROCFS_ENABLE))
 
 AFLAGS   = -c \
            -g \
@@ -150,6 +147,10 @@ SIZE     = $(TOOLCHAIN)size
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
+# defines ENABLE/DISABLE VALUES
+ENABLE  = 1
+DISABLE = 0
+
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
@@ -221,7 +222,7 @@ help :
 # project configuration
 ####################################################################################################
 .PHONY : config
-config :
+config : clean
 	@./tools/configure.sh ./config
 
 ####################################################################################################
