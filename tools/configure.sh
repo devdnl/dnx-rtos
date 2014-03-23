@@ -125,15 +125,11 @@ configure()
 
                                 choice=999
                                 until [ $choice -le ${#selection[@]} ] && [ $choice -gt 0 ]; do
-                                        read -p "Select option (1..${#selection[@]}), or 's' for skip: " choice
+                                        read -p "Select option (1..${#selection[@]}): " choice
 
                                         if [ "$choice" == "" ]; then
-                                                choice=999
-                                        elif [ "$choice" == "s" ]; then
                                                 save=false
                                                 break
-                                        elif [ "$choice" == "q" ]; then
-                                                exit 0
                                         elif ! is_integer "$choice"; then
                                                 choice=999
                                         fi
@@ -141,12 +137,10 @@ configure()
                                 ;;
 
                         "STRING" )
-                                read -p "Enter string or 's' for skip: " choice
+                                read -p "Enter string: " choice
 
-                                if [ "$choice" == "s" ]; then
+                                if [ "$choice" == "" ]; then
                                         save=false
-                                elif [ "$choice" == "q" ]; then
-                                        exit 0
                                 fi
 
                                 choice=\"$choice\"
@@ -156,15 +150,11 @@ configure()
                         "INT" )
                                 choice=false
                                 while ! is_integer "$choice"; do
-                                        read -p "Enter number (bin, oct, dec, hex) or 's' for skip: " choice
+                                        read -p "Enter number (bin, oct, dec, hex): " choice
 
                                         if [ "$choice" == "" ]; then
-                                                choice=false
-                                        elif [ "$choice" == "s" ]; then
                                                 save=false
                                                 break
-                                        elif [ "$choice" == "q" ]; then
-                                                exit 0
                                         fi
                                 done
                                 ;;
@@ -172,15 +162,11 @@ configure()
                         "UINT" )
                                 choice=false
                                 while ! is_integer "$choice"; do
-                                        read -p "Enter positive number (bin, oct, dec, hex) or 's' for skip: " choice
+                                        read -p "Enter positive number (bin, oct, dec, hex): " choice
 
                                         if [ "$choice" == "" ]; then
-                                                choice=false
-                                        elif [ "$choice" == "s" ]; then
                                                 save=false
                                                 break
-                                        elif [ "$choice" == "q" ]; then
-                                                exit 0
                                         fi
                                 done
 
