@@ -115,12 +115,12 @@ get_getstring_cmd_arg()
 
 get_keysave_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\savekey{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
+        echo $1 | sed 's/^\s*\\keysave{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
 }
 
 get_keycreate_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\newvar{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
+        echo $1 | sed 's/^\s*\\keycreate{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
 }
 
 get_keydelete_cmd_arg()
@@ -129,12 +129,29 @@ get_keydelete_cmd_arg()
 }
 
 #-------------------------------------------------------------------------------
+# Error message
+#-------------------------------------------------------------------------------
+error()
+{
+        echo "$1:$2: error: $3"
+        exit -1
+}
+
+#-------------------------------------------------------------------------------
+# Warrning message
+#-------------------------------------------------------------------------------
+warrning()
+{
+        echo "$1:$2: warrning: $3"
+}
+
+#-------------------------------------------------------------------------------
 # Function read configuration commands step by step
 #-------------------------------------------------------------------------------
 read_script()
 {
         local script=$1 seek=0
-        local items=() qtype
+        local begin=false items=() qtype
 
         while read -r line <&9; do
                 seek=$[$seek+1]
@@ -143,40 +160,57 @@ read_script()
                         continue
 
                 elif $(is_begin_cmd $line); then
-                        echo "begin $(get_begin_cmd_arg "$line")"
+                        if $begin; then
+                                error $script $seek "\begin{} in the \begin{}..\end{} block"
+                                exit -1
+                        else
+                                echo "$seek: begin $(get_begin_cmd_arg "$line")"
+                                begin=true
+                        fi
 
                 elif $(is_end_cmd $line); then
-                        echo "end: $(get_end_cmd_arg "$line")"
+                        if $begin; then
+                                echo "$seek: end: $(get_end_cmd_arg "$line")"
+                                begin=false
+                        else
+                                error $script $seek "orphaned \end{} command"
+                        fi
 
-                elif $(is_msg_cmd $line); then
-                        echo "msg: $(get_msg_cmd_arg "$line")"
+                elif $(is_msg_cmd $line) && $begin; then
+                        echo "$seek: msg: $(get_msg_cmd_arg "$line")"
 
-                elif $(is_item_cmd $line); then
-                        echo "item: $(get_item_cmd_arg "$line")"
+                elif $(is_item_cmd $line) && $begin; then
+                        echo "$seek: item: $(get_item_cmd_arg "$line")"
 
-                elif $(is_select_cmd $line); then
-                        echo "select: $(get_select_cmd_arg "$line")"
+                elif $(is_select_cmd $line) && $begin; then
+                        echo "$seek: select: $(get_select_cmd_arg "$line")"
 
-                elif $(is_getint_cmd $line); then
-                        echo "getint: $(get_getint_cmd_arg "$line")"
+                elif $(is_getint_cmd $line) && $begin; then
+                        echo "$seek: getint: $(get_getint_cmd_arg "$line")"
 
-                elif $(is_getuint_cmd $line); then
-                        echo "getuint: $(get_getuint_cmd_arg "$line")"
+                elif $(is_getuint_cmd $line) && $begin; then
+                        echo "$seek: getuint: $(get_getuint_cmd_arg "$line")"
 
-                elif $(is_getstring_cmd $line); then
-                        echo "getstring: $(get_getstring_cmd_arg "$line")"
+                elif $(is_getstring_cmd $line) && $begin; then
+                        echo "$seek: getstring: $(get_getstring_cmd_arg "$line")"
 
-                elif $(is_keysave_cmd $line); then
-                        echo "keysave: $(get_keysave_cmd_arg "$line")"
+                elif $(is_keysave_cmd $line) && $begin; then
+                        echo "$seek: keysave: $(get_keysave_cmd_arg "$line")"
 
-                elif $(is_keycreate_cmd $line); then
-                        echo "keycreate: $(get_keycreate_cmd_arg "$line")"
+                elif $(is_keycreate_cmd $line) && $begin; then
+                        echo "$seek: keycreate: $(get_keycreate_cmd_arg "$line")"
 
-                elif $(is_keydelete_cmd $line); then
-                        echo "keydelete: $(get_keydelete_cmd_arg "$line")"
+                elif $(is_keydelete_cmd $line) && $begin; then
+                        echo "$seek: keydelete: $(get_keydelete_cmd_arg "$line")"
 
                 else
-                        echo "Unknown command in line $seek: $line"
+                        if $begin; then
+                                error $script $seek "unknown command: $line"
+                        else
+                                error $script $seek "command outsite \begin{}..\end{}"
+                        fi
+
+                        exit -1
                 fi
         done 9< $script
 }
