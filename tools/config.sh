@@ -151,7 +151,7 @@ warrning()
 read_script()
 {
         local script=$1 seek=0
-        local begin=false items=() qtype
+        local begin=false items=() qtype msg=()
 
         while read -r line <&9; do
                 seek=$[$seek+1]
@@ -159,48 +159,48 @@ read_script()
                 if [[ "$line" =~ ^\s*#.* ]] || [[ "$line" == "" ]]; then
                         continue
 
-                elif $(is_begin_cmd $line); then
+                elif $(is_begin_cmd "$line"); then
                         if $begin; then
                                 error $script $seek "\begin{} in the \begin{}..\end{} block"
-                                exit -1
                         else
-                                echo "$seek: begin $(get_begin_cmd_arg "$line")"
                                 begin=true
                         fi
 
-                elif $(is_end_cmd $line); then
+                elif $(is_end_cmd "$line"); then
                         if $begin; then
-                                echo "$seek: end: $(get_end_cmd_arg "$line")"
                                 begin=false
+
+                                echo ${msg[*]}
                         else
                                 error $script $seek "orphaned \end{} command"
                         fi
 
-                elif $(is_msg_cmd $line) && $begin; then
+                elif $(is_msg_cmd "$line") && $begin; then
+                        msg[${#msg[@]}]=$(get_msg_cmd_arg "$line")
                         echo "$seek: msg: $(get_msg_cmd_arg "$line")"
 
-                elif $(is_item_cmd $line) && $begin; then
+                elif $(is_item_cmd "$line") && $begin; then
                         echo "$seek: item: $(get_item_cmd_arg "$line")"
 
-                elif $(is_select_cmd $line) && $begin; then
+                elif $(is_select_cmd "$line") && $begin; then
                         echo "$seek: select: $(get_select_cmd_arg "$line")"
 
-                elif $(is_getint_cmd $line) && $begin; then
+                elif $(is_getint_cmd "$line") && $begin; then
                         echo "$seek: getint: $(get_getint_cmd_arg "$line")"
 
-                elif $(is_getuint_cmd $line) && $begin; then
+                elif $(is_getuint_cmd "$line") && $begin; then
                         echo "$seek: getuint: $(get_getuint_cmd_arg "$line")"
 
-                elif $(is_getstring_cmd $line) && $begin; then
+                elif $(is_getstring_cmd "$line") && $begin; then
                         echo "$seek: getstring: $(get_getstring_cmd_arg "$line")"
 
-                elif $(is_keysave_cmd $line) && $begin; then
+                elif $(is_keysave_cmd "$line") && $begin; then
                         echo "$seek: keysave: $(get_keysave_cmd_arg "$line")"
 
-                elif $(is_keycreate_cmd $line) && $begin; then
+                elif $(is_keycreate_cmd "$line") && $begin; then
                         echo "$seek: keycreate: $(get_keycreate_cmd_arg "$line")"
 
-                elif $(is_keydelete_cmd $line) && $begin; then
+                elif $(is_keydelete_cmd "$line") && $begin; then
                         echo "$seek: keydelete: $(get_keydelete_cmd_arg "$line")"
 
                 else
@@ -209,8 +209,6 @@ read_script()
                         else
                                 error $script $seek "command outsite \begin{}..\end{}"
                         fi
-
-                        exit -1
                 fi
         done 9< $script
 }
