@@ -17,42 +17,57 @@ is_integer() {
 #-------------------------------------------------------------------------------
 is_begin_cmd()
 {
-        if [[ "$1" =~ ^\s*\\begin\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\begin\{.*\} ]]; then true; else false; fi
 }
 
 is_end_cmd()
 {
-        if [[ "$1" =~ ^\s*\\end\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\end\{.*\} ]]; then true; else false; fi
 }
 
 is_msg_cmd()
 {
-        if [[ "$1" =~ ^\s*\\msg\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\msg\{.*\} ]]; then true; else false; fi
 }
 
 is_item_cmd()
 {
-        if [[ "$1" =~ ^\s*\\item\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\item\{.*\} ]]; then true; else false; fi
 }
 
 is_select_cmd()
 {
-        if [[ "$1" =~ ^\s*\\select\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\select\{.*\} ]]; then true; else false; fi
 }
 
 is_getint_cmd()
 {
-        if [[ "$1" =~ ^\s*\\getint\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\getint\{.*\} ]]; then true; else false; fi
 }
 
 is_getuint_cmd()
 {
-        if [[ "$1" =~ ^\s*\\getuint\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\getuint\{.*\} ]]; then true; else false; fi
 }
 
 is_getstring_cmd()
 {
-        if [[ "$1" =~ ^\s*\\getstring\s*\{.*\} ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*\\getstring\{.*\} ]]; then true; else false; fi
+}
+
+is_keysave_cmd()
+{
+        if [[ "$1" =~ ^\s*\\keysave\{.*\}\{.*\}\{.*\} ]]; then true; else false; fi
+}
+
+is_keycreate_cmd()
+{
+        if [[ "$1" =~ ^\s*\\keycreate\{.*\}\{.*\}\{.*\}\{.*\} ]]; then true; else false; fi
+}
+
+is_keydelete_cmd()
+{
+        if [[ "$1" =~ ^\s*\\keydelete\{.*\}\{.*\}\{.*\} ]]; then true; else false; fi
 }
 
 #-------------------------------------------------------------------------------
@@ -98,16 +113,35 @@ get_getstring_cmd_arg()
         echo $1 | sed 's/^\s*\\getstring{\(.*\)}/\1/'
 }
 
+get_keysave_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\\savekey{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
+}
+
+get_keycreate_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\\newvar{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3 \4/'
+}
+
+get_keydelete_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\\keydelete{\(.*\)}{\(.*\)}{\(.*\)}/\1 \2 \3/'
+}
+
 #-------------------------------------------------------------------------------
 # Function read configuration commands step by step
 #-------------------------------------------------------------------------------
 read_script()
 {
-        local script=$1
+        local script=$1 seek=0
+        local items=() qtype
 
         while read -r line <&9; do
+                seek=$[$seek+1]
+
                 if [[ "$line" =~ ^\s*#.* ]] || [[ "$line" == "" ]]; then
                         continue
+
                 elif $(is_begin_cmd $line); then
                         echo "begin $(get_begin_cmd_arg "$line")"
 
@@ -132,8 +166,17 @@ read_script()
                 elif $(is_getstring_cmd $line); then
                         echo "getstring: $(get_getstring_cmd_arg "$line")"
 
+                elif $(is_keysave_cmd $line); then
+                        echo "keysave: $(get_keysave_cmd_arg "$line")"
+
+                elif $(is_keycreate_cmd $line); then
+                        echo "keycreate: $(get_keycreate_cmd_arg "$line")"
+
+                elif $(is_keydelete_cmd $line); then
+                        echo "keydelete: $(get_keydelete_cmd_arg "$line")"
+
                 else
-                        echo "Unknown command: $line"
+                        echo "Unknown command in line $seek: $line"
                 fi
         done 9< $script
 }
