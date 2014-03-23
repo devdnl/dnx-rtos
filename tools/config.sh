@@ -77,7 +77,7 @@ is_keydelete_cmd()
 
 is_variable_cmd()
 {
-        if [[ "$1" =~ ^\s*[[:alnum:]]+=.*$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*[a-zA-Z0-9_]+=.*$ ]]; then true; else false; fi
 }
 
 is_ifeq_cmd()
@@ -88,6 +88,11 @@ is_ifeq_cmd()
 is_ifneq_cmd()
 {
         if [[ "$1" =~ ^\s*\\ifneq\{.*\}\{.*\}$ ]]; then true; else false; fi
+}
+
+is_exit_cmd()
+{
+        if [[ "$1" =~ ^\s*\\exit\{.*\}$ ]]; then true; else false; fi
 }
 
 #-------------------------------------------------------------------------------
@@ -155,7 +160,7 @@ get_keydelete_cmd_arg()
 
 get_variable_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\([[:alnum:]]*\)=\(.*\)/\1 \2/'
+        echo $1 | sed 's/^\s*\([a-zA-Z0-9_]*\)=\(.*\)/\1 \2/'
 }
 
 get_ifeq_cmd_arg()
@@ -166,6 +171,11 @@ get_ifeq_cmd_arg()
 get_ifneq_cmd_arg()
 {
         echo $1 | sed 's/^\s*\\ifneq{\(.*\)}{\(.*\)}$/\1 \2/'
+}
+
+get_exit_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\\exit{\(.*\)}$/\1/'
 }
 
 #-------------------------------------------------------------------------------
@@ -191,8 +201,8 @@ warrning()
 read_script()
 {
         local script=$1 seek=0 args=()
-        local begin=false items=() itemdesc=() msgs=() save=false rewind=false
-        declare -A var
+        local begin=false items=() itemdesc=() msgs=() rewind=false
+        declare -A variable
 
         while read -r line <&9; do
                 seek=$[$seek+1]
@@ -226,7 +236,7 @@ read_script()
                         lh=${args[0]}
                         rh=${args[1]}
 
-                        if [ "${var["$lh"]}" != "${var["$rh"]}" ]; then
+                        if [ "${variable["$lh"]}" != "${variable["$rh"]}" ]; then
                                 rewind=true
                         fi
 
@@ -236,7 +246,7 @@ read_script()
                         lh=${args[0]}
                         rh=${args[1]}
 
-                        if [ "${var["$lh"]}" == "${var["$rh"]}" ]; then
+                        if [ "${variable["$lh"]}" == "${variable["$rh"]}" ]; then
                                 rewind=true
                         fi
 
@@ -279,12 +289,12 @@ read_script()
                                 read -p "$msg: " value
 
                                 if [ "$value" == "" ]; then
+                                        rewind=true
                                         break
                                 elif ! is_integer "$value"; then
                                         value=0
                                 else
-                                        var[$idx]=${items[$[$value-1]]}
-                                        save=true
+                                        variable[$idx]=${items[$[$value-1]]}
                                 fi
                         done
 
@@ -298,31 +308,49 @@ read_script()
                         continue
 
                 elif $(is_keyread_cmd "$line") && $begin; then
-                        continue
+                        args=()
+                        args=($(get_keyread_cmd_arg "$line"))
+                        type=${args[0]}
+                        file=${args[1]}
+                        key=${args[2]}
+                        tovar=${args[3]}
+                        echo "Read value from file: $file type: $type by key: $key to $tovar"
 
                 elif $(is_keysave_cmd "$line") && $begin; then
-                        if $save; then
-                                args=()
-                                args=($(get_keysave_cmd_arg "$line"))
-                                type=${args[0]}
-                                file=${args[1]}
-                                key=${args[2]}
-                                idx=${args[3]}
-                                echo "Save value: ${var["$idx"]} in key $key to file: $file type: $type"
-                        fi
+                        args=()
+                        args=($(get_keysave_cmd_arg "$line"))
+                        type=${args[0]}
+                        file=${args[1]}
+                        key=${args[2]}
+                        idx=${args[3]}
+                        echo "Save value: ${variable["$idx"]} in key $key to file: $file type: $type"
 
                 elif $(is_keycreate_cmd "$line") && $begin; then
-                        continue
+                        args=()
+                        args=($(get_keycreate_cmd_arg "$line"))
+                        type=${args[0]}
+                        file=${args[1]}
+                        key=${args[2]}
+                        idx=${args[3]}
+                        echo "Create key: ${variable["$idx"]} in key $key to file: $file type: $type"
 
                 elif $(is_keydelete_cmd "$line") && $begin; then
-                        continue
+                        args=()
+                        args=($(get_keydelete_cmd_arg "$line"))
+                        type=${args[0]}
+                        file=${args[1]}
+                        key=${args[2]}
+                        echo "Delete key: $key to file: $file type: $type"
+
+                elif $(is_exit_cmd "$line") && $begin; then
+                        exit 0
 
                 elif $(is_variable_cmd "$line"); then
                         args=()
                         args=($(get_variable_cmd_arg "$line"))
                         name=${args[0]}
                         val=${args[1]}
-                        var["$name"]=$val
+                        variable["$name"]=$val
 
                 else
                         if $begin; then
