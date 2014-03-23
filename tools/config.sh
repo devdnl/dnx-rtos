@@ -75,6 +75,21 @@ is_keydelete_cmd()
         if [[ "$1" =~ ^\s*\\keydelete\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
 }
 
+is_variable_cmd()
+{
+        if [[ "$1" =~ ^\s*[[:alnum:]]+=.*$ ]]; then true; else false; fi
+}
+
+is_ifeq_cmd()
+{
+        if [[ "$1" =~ ^\s*\\ifeq\{.*\}\{.*\}$ ]]; then true; else false; fi
+}
+
+is_ifneq_cmd()
+{
+        if [[ "$1" =~ ^\s*\\ifneq\{.*\}\{.*\}$ ]]; then true; else false; fi
+}
+
 #-------------------------------------------------------------------------------
 # Command argument return functions
 #-------------------------------------------------------------------------------
@@ -138,6 +153,21 @@ get_keydelete_cmd_arg()
         echo $1 | sed 's/^\s*\\keydelete{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3/'
 }
 
+get_variable_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\([[:alnum:]]*\)=\(.*\)/\1 \2/'
+}
+
+get_ifeq_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\\ifeq{\(.*\)}{\(.*\)}$/\1 \2/'
+}
+
+get_ifneq_cmd_arg()
+{
+        echo $1 | sed 's/^\s*\\ifneq{\(.*\)}{\(.*\)}$/\1 \2/'
+}
+
 #-------------------------------------------------------------------------------
 # Error message
 #-------------------------------------------------------------------------------
@@ -161,7 +191,8 @@ warrning()
 read_script()
 {
         local script=$1 seek=0 args=()
-        local begin=false items=() itemdesc=() msgs=() var=() save=false
+        local begin=false items=() itemdesc=() msgs=() save=false rewind=false
+        declare -A var
 
         while read -r line <&9; do
                 seek=$[$seek+1]
@@ -183,10 +214,34 @@ read_script()
                                 items=()
                                 itemdesc=()
                                 save=false
+                                rewind=false
                                 echo ""
                         else
                                 error $script $seek "orphaned \end{} command"
                         fi
+
+                elif $(is_ifeq_cmd "$line") && $begin; then
+                        args=()
+                        args=($(get_ifeq_cmd_arg "$line"))
+                        lh=${args[0]}
+                        rh=${args[1]}
+
+                        if [ "${var["$lh"]}" != "${var["$rh"]}" ]; then
+                                rewind=true
+                        fi
+
+                elif $(is_ifneq_cmd "$line") && $begin; then
+                        args=()
+                        args=($(get_ifneq_cmd_arg "$line"))
+                        lh=${args[0]}
+                        rh=${args[1]}
+
+                        if [ "${var["$lh"]}" == "${var["$rh"]}" ]; then
+                                rewind=true
+                        fi
+
+                elif $rewind; then
+                        continue
 
                 elif $(is_msg_cmd "$line") && $begin; then
                         msgs[${#msgs[@]}]=$(get_msg_cmd_arg "$line")
@@ -253,7 +308,7 @@ read_script()
                                 file=${args[1]}
                                 key=${args[2]}
                                 idx=${args[3]}
-                                echo "Save value: ${var[$idx]} in key $key to file: $file type: $type"
+                                echo "Save value: ${var["$idx"]} in key $key to file: $file type: $type"
                         fi
 
                 elif $(is_keycreate_cmd "$line") && $begin; then
@@ -261,11 +316,19 @@ read_script()
 
                 elif $(is_keydelete_cmd "$line") && $begin; then
                         continue
+
+                elif $(is_variable_cmd "$line"); then
+                        args=()
+                        args=($(get_variable_cmd_arg "$line"))
+                        name=${args[0]}
+                        val=${args[1]}
+                        var["$name"]=$val
+
                 else
                         if $begin; then
                                 error $script $seek "unknown command: $line"
                         else
-                                error $script $seek "command outsite \begin{}..\end{}"
+                                error $script $seek "command '$line' outsite \begin{}..\end{}"
                         fi
                 fi
         done 9< $script
