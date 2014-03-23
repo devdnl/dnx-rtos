@@ -280,7 +280,6 @@ status :
 ####################################################################################################
 .PHONY : dependencies
 dependencies :
-	@echo $(CONFIG_DEF)
 	@echo "Creating dependencies for '$(TARGET)' target..."
 	@$(MKDIR) $(TARGET_PATH)
 	@$(RM) $(TARGET_PATH)/*.*
