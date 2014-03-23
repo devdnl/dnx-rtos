@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    modinit.c
+@file    lsmod.c
 
 @author  Daniel Zorychta
 
-@brief   Module control.
+@brief   Module listing
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -60,57 +60,35 @@ GLOBAL_VARIABLES_SECTION_END
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief Print help
- */
-//==============================================================================
-static void show_help(const char *name)
-{
-        printf("Usage: %s [OPTIONS] <module name> [module node]\n", name);
-        puts("  -r            release module");
-        puts("  -h, --help    this help");
-}
 
 //==============================================================================
 /**
  * @brief Program main function
  */
 //==============================================================================
-PROGRAM_MAIN(modinit, int argc, char *argv[])
+PROGRAM_MAIN(lsmod, int argc, char *argv[])
 {
-        if (argc < 2) {
-                show_help(argv[0]);
-                return 0;
-        }
+        (void)argc;
+        (void)argv;
 
-        bool release = false;
-        for (int i = 1; i < argc; i++) {
-                if (strcmp(argv[i], "-r") == 0) {
-                        release = true;
-                }
+        puts(FONT_BOLD"Driver"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"Module"
+             CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"MID"
+             CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"DID"
+             CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"Active"
+             RESET_ATTRIBUTES);
 
-                if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-                        show_help(argv[0]);
-                        return 0;
-                }
-        }
+        int drv_number = get_number_of_drivers();
+        for (int i = 0; i < drv_number; i++) {
+                const char *mod_name  = get_driver_module_name(i);
+                const char *drv_name  = get_driver_name(i);
+                int         mod_id    = get_module_number(mod_name);
+                bool        is_active = is_driver_active(i);
 
-        int status;
-        if (release) {
-                status = driver_release(argv[2]);
-        } else {
-                if (argc == 2) {
-                        status = driver_init(argv[1], NULL);
-                } else {
-                        status = driver_init(argv[1], argv[2]);
-                }
-        }
-
-        if (status == 0) {
-                puts("Success.");
-        } else {
-                puts("Failure.");
+                printf("%s"CURSOR_BACKWARD(99)CURSOR_FORWARD(16)"%s"
+                           CURSOR_BACKWARD(99)CURSOR_FORWARD(32)"%i"
+                           CURSOR_BACKWARD(99)CURSOR_FORWARD(37)"%u"
+                           CURSOR_BACKWARD(99)CURSOR_FORWARD(42)"%c\n",
+                       drv_name, mod_name, mod_id, i, is_active ? '*': ' ');
         }
 
         return EXIT_SUCCESS;

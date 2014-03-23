@@ -47,6 +47,7 @@ _IMPORT_PROGRAM(helloworld);
 _IMPORT_PROGRAM(httpserver);
 _IMPORT_PROGRAM(ifconfig);
 _IMPORT_PROGRAM(ls);
+_IMPORT_PROGRAM(lsmod);
 _IMPORT_PROGRAM(mkdir);
 _IMPORT_PROGRAM(mkfifo);
 _IMPORT_PROGRAM(mknod);
@@ -79,6 +80,7 @@ const struct _prog_data _prog_table[] = {
         _PROGRAM_CONFIG(httpserver, STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(ifconfig  , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(ls        , STACK_DEPTH_LOW     ),
+        _PROGRAM_CONFIG(lsmod     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mkdir     , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mkfifo    , STACK_DEPTH_LOW     ),
         _PROGRAM_CONFIG(mknod     , STACK_DEPTH_LOW     ),
