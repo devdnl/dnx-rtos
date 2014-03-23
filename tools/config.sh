@@ -210,6 +210,48 @@ key_remove()
 }
 
 #-------------------------------------------------------------------------------
+# Add key and value in specified file
+#-------------------------------------------------------------------------------
+key_create()
+{
+        local file=$1 type=$2 key=$3 val=$4
+
+        if [ "$type" = "makefile" ]; then
+                sed -i "$ a\\$key=$val" $file
+        elif [ "$type" = "header" ]; then
+                sed -i "/^\s*#\s*ifdef\s.*/a #define $key $val" $file
+        fi
+}
+
+#-------------------------------------------------------------------------------
+# Change key value
+#-------------------------------------------------------------------------------
+key_save()
+{
+        local file=$1 type=$2 key=$3 val=$4
+
+        if [ "$type" = "makefile" ]; then
+                sed -i -e "s%^\s*$key\s*=.*%$key=$val%g" $file
+        elif [ "$type" = "header" ]; then
+                sed -i -e "s%^\s*#\s*define\s*$key\s*.*%#define $key $val%g" $file
+        fi
+}
+
+#-------------------------------------------------------------------------------
+# Read key value
+#-------------------------------------------------------------------------------
+key_read()
+{
+        local file=$1 type=$2 key=$3
+
+        if [ "$type" = "makefile" ]; then
+                cat $file | grep -P "^\s*$key" | sed "s/^\s*$key\s*=\s*//g"
+        elif [ "$type" = "header" ]; then
+                cat $file | grep -P "^\s*#\s*define\s*$key\s*.*" | sed "s/^\s*#\s*define\s*$key\s*//g"
+        fi
+}
+
+#-------------------------------------------------------------------------------
 # Function read configuration commands step by step
 #-------------------------------------------------------------------------------
 read_script()
@@ -327,8 +369,8 @@ read_script()
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
-                        tovar=${args[3]}
-                        echo "Read value from file: $file type: $type by key: $key to $tovar"
+                        var=${args[3]}
+                        variable[$var]=$(key_read "$file" "$type" "$key")
 
                 elif $(is_keysave_cmd "$line") && $begin; then
                         args=()
@@ -336,8 +378,8 @@ read_script()
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
-                        idx=${args[3]}
-                        echo "Save value: ${variable["$idx"]} in key $key to file: $file type: $type"
+                        var=${args[3]}
+                        key_save "$file" "$type" "$key" "${variable[$var]}"
 
                 elif $(is_keycreate_cmd "$line") && $begin; then
                         args=()
@@ -345,8 +387,8 @@ read_script()
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
-                        idx=${args[3]}
-                        echo "Create key: ${variable["$idx"]} in key $key to file: $file type: $type"
+                        var=${args[3]}
+                        key_create "$file" "$type" "$key" "${variable[$var]}"
 
                 elif $(is_keydelete_cmd "$line") && $begin; then
                         args=()
