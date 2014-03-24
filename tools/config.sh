@@ -97,7 +97,7 @@ is_endif_cmd()
 
 is_exit_cmd()
 {
-        if [[ "$1" =~ ^\s*exit()$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*exit(.*)$ ]]; then true; else false; fi
 }
 
 #-------------------------------------------------------------------------------
@@ -247,7 +247,7 @@ key_read()
 read_script()
 {
         local script=$1 seek=0 args=()
-        local begin=false items=() itemdesc=() msgs=() nestedif=0 rewind=false
+        local begin=false items=() itemdesc=() msgs=() nestedif=0 nestedtarget=0 rewind=false
         declare -A variable
 
         while read -r line <&9; do
@@ -288,10 +288,16 @@ read_script()
                         lh=${args[0]}
                         rh=${args[1]}
 
-                        if [ "${variable["$lh"]}" != "${variable["$rh"]}" ]; then
-                                rewind=true
-                        else
-                                nestedif=$[$nestedif+1]
+                        nestedif=$[$nestedif+1]
+                        echo "ifeq++ = $nestedif"
+
+                        if ! $rewind; then
+                                if [ "${variable["$lh"]}" != "${variable["$rh"]}" ]; then
+                                        nestedtarget=$nestedif
+                                        rewind=true
+
+                                        echo "ifeq rewind=true; target=$nestedtarget"
+                                fi
                         fi
 
                 elif $(is_ifneq_cmd "$line") && $begin; then
@@ -300,14 +306,25 @@ read_script()
                         lh=${args[0]}
                         rh=${args[1]}
 
-                        if [ "${variable["$lh"]}" == "${variable["$rh"]}" ]; then
-                                rewind=true
-                        else
-                                nestedif=$[$nestedif+1]
+                        nestedif=$[$nestedif+1]
+                        echo "ifneq++ = $nestedif"
+
+                        if ! $rewind; then
+                                if [ "${variable["$lh"]}" == "${variable["$rh"]}" ]; then
+                                        nestedtarget=$nestedif
+                                        rewind=true
+
+                                        echo "ifneq rewind=true; target=$nestedtarget"
+                                fi
                         fi
 
                 elif $(is_endif_cmd "$line") && $begin; then
-                        rewind=false
+                        echo "endif nested: $nestedif"
+
+                        if [ $nestedif -eq $nestedtarget ]; then
+                                rewind=false
+                        fi
+
                         nestedif=$[$nestedif-1]
 
                 elif $rewind; then
