@@ -30,46 +30,55 @@ is_msg_cmd()
         if [[ "$1" =~ ^\s*msg(.*)$ ]]; then true; else false; fi
 }
 
+# setitem(item, [description])
 is_setitem_cmd()
 {
         if [[ "$1" =~ ^\s*setitem(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# readsel(var, [description])
 is_readsel_cmd()
 {
         if [[ "$1" =~ ^\s*readsel(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# readint(var, [description])
 is_readint_cmd()
 {
         if [[ "$1" =~ ^\s*readint(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# readuint(var, [description])
 is_readuint_cmd()
 {
         if [[ "$1" =~ ^\s*readuint(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# readstring(var, [description])
 is_readstring_cmd()
 {
         if [[ "$1" =~ ^\s*readstring(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# keyread(makefile|header, file, key, var)
 is_keyread_cmd()
 {
         if [[ "$1" =~ ^\s*keyread(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# keysave(makefile|header, file, key, var)
 is_keysave_cmd()
 {
         if [[ "$1" =~ ^\s*keysave(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# keycreate(makefile|header, file, key, var)
 is_keycreate_cmd()
 {
         if [[ "$1" =~ ^\s*keycreate(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
 }
 
+# keydelete(makefile|header, file, key)
 is_keydelete_cmd()
 {
         if [[ "$1" =~ ^\s*keydelete(.*\s*,\s*.*,\s*.*)$ ]]; then true; else false; fi
@@ -80,6 +89,7 @@ is_variable_cmd()
         if [[ "$1" =~ ^\s*[a-zA-Z0-9_]+=.*$ ]]; then true; else false; fi
 }
 
+# if(var1 =|==|=~|~=|!=|<|>|>=|<= var2)
 is_if_cmd()
 {
         if [[ "$1" =~ ^\s*if(.*\s*[!=<>]+\s*.*)$ ]]; then true; else false; fi
@@ -90,11 +100,13 @@ is_endif_cmd()
         if [[ "$1" =~ ^\s*endif$ ]]; then true; else false; fi
 }
 
+# exit()
 is_exit_cmd()
 {
         if [[ "$1" =~ ^\s*exit(.*)$ ]]; then true; else false; fi
 }
 
+# print(string [@var] ...)
 is_print_cmd()
 {
         if [[ "$1" =~ ^\s*print(.*\s*)$ ]]; then true; else false; fi
@@ -235,6 +247,7 @@ read_script()
                                 items=()
                                 itemdesc=()
                                 save=false
+                                rewind=false
 
                                 if [ $nestedif -gt 0 ]; then
                                         error $script $seek "not closed 'if-endif', too less 'endif'"
@@ -242,7 +255,7 @@ read_script()
                                         error $script $seek "not closed 'if-endif', too more 'endif'"
                                 fi
                         else
-                                error $script $seek "orphaned 'end'"
+                                error $script $seek "orphaned 'endconfig'"
                         fi
 
                 elif $(is_if_cmd "$line") && $begin; then
@@ -311,7 +324,7 @@ read_script()
                         done
 
                         for ((i=0; i<${#items[*]}; i++)); do
-                                echo "  $[$i+1]) ${items[$i]} - ${itemdesc[$i]}"
+                                echo "  $[$i+1]) ${items[$i]} ${itemdesc[$i]}"
                         done
 
                         value=0
@@ -407,7 +420,6 @@ read_script()
 
                         if [ "$value" == "" ]; then
                                 rewind=true
-                                break
                         else
                                 variable[$var]=\"$value\"
                         fi

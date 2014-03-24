@@ -25,13 +25,7 @@
 #
 ####################################################################################################
 
-include ./config/project/fs.config
-include ./config/project/name.config
-include ./config/project/arch.config
-include ./config/$(ARCHCONFIG__TARGET)/cpu.config
-include ./config/$(ARCHCONFIG__TARGET)/toolchain.config
-include ./config/$(ARCHCONFIG__TARGET)/mod.config
-include ./config/project/defaults.config
+include ./config/Makefile
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -160,6 +154,8 @@ SIZE     = $(TOOLCHAIN)size
 # defines VALUES
 ENABLE  = 1
 DISABLE = 0
+YES     = 1
+NO      = 0
 EMPTY   =
 
 # defines this makefile name
@@ -234,7 +230,7 @@ help :
 ####################################################################################################
 .PHONY : config
 config : clean
-	@./tools/configure.sh ./config
+	@./tools/config.sh ./config/wizard.config
 
 ####################################################################################################
 # analisis
