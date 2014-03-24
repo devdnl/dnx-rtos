@@ -15,14 +15,14 @@ is_integer() {
 #-------------------------------------------------------------------------------
 # Command recognition functions
 #-------------------------------------------------------------------------------
-is_begin_cmd()
+is_config_cmd()
 {
-        if [[ "$1" =~ ^\s*begin$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*config$ ]]; then true; else false; fi
 }
 
-is_end_cmd()
+is_endconfig_cmd()
 {
-        if [[ "$1" =~ ^\s*end$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*endconfig$ ]]; then true; else false; fi
 }
 
 is_msg_cmd()
@@ -221,14 +221,14 @@ read_script()
                 if [[ "$line" =~ ^\s*#.* ]] || [[ "$line" == "" ]]; then
                         continue
 
-                elif $(is_begin_cmd "$line"); then
+                elif $(is_config_cmd "$line"); then
                         if $begin; then
-                                error $script $seek "nested 'begin'"
+                                error $script $seek "nested 'config'"
                         else
                                 begin=true
                         fi
 
-                elif $(is_end_cmd "$line"); then
+                elif $(is_endconfig_cmd "$line"); then
                         if $begin; then
                                 begin=false
                                 msgs=()
@@ -237,12 +237,10 @@ read_script()
                                 save=false
 
                                 if [ $nestedif -gt 0 ]; then
-                                        error $script $seek "not closed 'ifeq' or 'ifneq', too less 'endif'"
+                                        error $script $seek "not closed 'if-endif', too less 'endif'"
                                 elif [ $nestedif -lt 0 ]; then
-                                        error $script $seek "not closed 'ifeq' or 'ifneq', too more 'endif'"
+                                        error $script $seek "not closed 'if-endif', too more 'endif'"
                                 fi
-
-                                echo ""
                         else
                                 error $script $seek "orphaned 'end'"
                         fi
@@ -497,7 +495,7 @@ main()
 
         read_script $script
 
-        echo "Done"
+        echo "Configuration done."
 }
 
 main
