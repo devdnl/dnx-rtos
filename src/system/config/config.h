@@ -27,6 +27,8 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include "../../../config/project/flags.h"
+
 /**=== FREQ CONFIGURATION ====================================================*/
 /**
  * CPU start frequency [Hz] (frequency after power up, before clock configuration)

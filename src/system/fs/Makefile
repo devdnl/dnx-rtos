@@ -1,16 +1,16 @@
 # Makefile for GNU make
-#ifeq ($(FS_DEVFS_ENABLE), YES)
+ifeq ($(ENABLE_DEVFS), YES)
 include $(FS_LOC)/devfs/Makefile
-#endif
+endif
 
-#ifeq ($(FS_FATFS_ENABLE), YES)
+ifeq ($(ENABLE_FATFS), YES)
 include $(FS_LOC)/fatfs/Makefile
-#endif
+endif
 
-#ifeq ($(FS_LFS_ENABLE), YES)
+ifeq ($(ENABLE_LFS), YES)
 include $(FS_LOC)/lfs/Makefile
-#endif
+endif
 
-#ifeq ($(FS_PROCFS_ENABLE), YES)
+ifeq ($(ENABLE_PROCFS), YES)
 include $(FS_LOC)/procfs/Makefile
-#endif
+endif

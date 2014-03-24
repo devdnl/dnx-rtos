@@ -25,7 +25,7 @@
 #
 ####################################################################################################
 
-include ./config/general/Makefile
+include ./config/project/Makefile
 include ./config/$(PROJECT_CPU_ARCH)/Makefile
 
 ####################################################################################################
@@ -44,6 +44,7 @@ CONFIG_DEF =
 AFLAGS   = -c \
            -g \
            -ggdb3 \
+           -include ./config/project/flags.h \
            $(CPUCONFIG_AFLAGS) \
            $(CONFIG_DEF)
 
@@ -57,7 +58,7 @@ CFLAGS   = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -include ./config/general/flags.h \
+           -include ./config/project/flags.h \
            $(CPUCONFIG_CFLAGS) \
            $(CONFIG_DEF)
 
@@ -74,7 +75,7 @@ CXXFLAGS = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -include ./config/general/flags.h \
+           -include ./config/project/flags.h \
            $(CPUCONFIG__CXXFLAGS) \
            $(CONFIG_DEF) \
 
@@ -166,6 +167,7 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 # object path
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
+# list of sources to compile
 include $(PROG_LOC)/Makefile
 include $(SYS_LOC)/Makefile
 
