@@ -1,0 +1,252 @@
+config
+        print()
+        print(==============================)
+        print(Operating system configuration)
+        print(==============================)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_TASK_MIN_STACK_DEPTH__, tmp)
+        print(Task stack depth configuration)
+        print(Current value: @tmp)
+        readuint(tmp, Enter minimal stack depth for task)
+        keysave(header, ../general/flags.h, __OS_TASK_MIN_STACK_DEPTH__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_FILE_SYSTEM_STACK_DEPTH__, tmp)
+        print(File system stack depth configuration)
+        print(Current value: @tmp)
+        readuint(tmp, Enter stack depth for file system)
+        keysave(header, ../general/flags.h, __OS_FILE_SYSTEM_STACK_DEPTH__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_IRQ_STACK_DEPTH__, tmp)
+        print(IRQ stack depth configuration)
+        print(Current value: @tmp)
+        readuint(tmp, Enter stack depth for interrupts)
+        keysave(header, ../general/flags.h, __OS_IRQ_STACK_DEPTH__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_TASK_MAX_PRIORITIES__, tmp)
+        print(Number of task priorites. E.g: 7 -> -3..0..3. Max value is 255)
+        print(Current value: @tmp)
+        readuint(tmp, Enter number of task priorities)
+        keysave(header, ../general/flags.h, __OS_TASK_MAX_PRIORITIES__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_TASK_NAME_LEN__, tmp)
+        print(Configure task name length)
+        print(Current value: @tmp)
+        readuint(tmp, Enter length of task name)
+        keysave(header, ../general/flags.h, __OS_TASK_NAME_LEN__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_TASK_SCHED_FREQ__, tmp)
+        print(Configure context switch frequency. Range: 1-1000 Hz)
+        print(Current value: @tmp)
+        readuint(tmp, Enter context switch frequency)
+        keysave(header, ../general/flags.h, __OS_TASK_SCHED_FREQ__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_SLEEP_ON_IDLE__, tmp)
+        print(Do you want to enable kernel sleep in idle task?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_SLEEP_ON_IDLE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_PRINTF_ENABLE__, tmp)
+        print(Do you want to enable printf family functions?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_PRINTF_ENABLE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_SCANF_ENABLE__, tmp)
+        print(Do you want to enable scanf family functions?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_SCANF_ENABLE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_SYSTEM_MSG_ENABLE__, tmp)
+        print(Do you want to enable system message function (printk)?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_SYSTEM_MSG_ENABLE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_COLOR_TERMINAL_ENABLE__, tmp)
+        print(Do you want to enable color terminal output?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_COLOR_TERMINAL_ENABLE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_STREAM_BUFFER_LENGTH__, tmp)
+        print(Stream buffer length configuration (BUFSIZ). Buffer is used in the printf and scanf family functions.)
+        print(Current value: @tmp)
+        readuint(tmp, Enter buffer size)
+        keysave(header, ../general/flags.h, __OS_STREAM_BUFFER_LENGTH__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_PIPE_LENGTH__, tmp)
+        print(Pipe length configuration. It is a number of items in queue that create pipe.)
+        print(Current value: @tmp)
+        readuint(tmp, Enter pipe length)
+        keysave(header, ../general/flags.h, __OS_PIPE_LENGTH__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_ERRNO_STRING_LEN__, tmp)
+        print(Configure 'errno' string lengths.)
+        print(Current value: @tmp)
+        additem(0, - diabled (lowest memory consumption))
+        additem(1, - only numbers (small memory consumption))
+        additem(2, - short names (medium memory consumption))
+        additem(3, - full names (high memory consumption))
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_ERRNO_STRING_LEN__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_TASK_MEMORY_USAGE__, tmp)
+        print(Do you want to monitor task memory usage?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_MONITOR_TASK_MEMORY_USAGE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_TASK_FILE_USAGE__, tmp)
+        print(Do you want to monitor task file usage?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_MONITOR_TASK_FILE_USAGE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_KERNEL_MEMORY_USAGE__, tmp)
+        print(Do you want to monitor kernel memory usage?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_MONITOR_KERNEL_MEMORY_USAGE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_MODULE_MEMORY_USAGE__, tmp)
+        print(Do you want to monitor module memory usage?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_MONITOR_MODULE_MEMORY_USAGE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_SYSTEM_MEMORY_USAGE__, tmp)
+        print(Do you want to monitor system memory usage?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_MONITOR_SYSTEM_MEMORY_USAGE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_CPU_LOAD__, tmp)
+        print(Do you want to monitor CPU load?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_MONITOR_CPU_LOAD__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_NETWORK_MEMORY_USAGE__, tmp)
+        print(Do you want to monitor network memory usage?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_MONITOR_NETWORK_MEMORY_USAGE__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__, tmp)
+        print(Memory usage limit by network layer. To disable enter 0.)
+        print(Current value: @tmp)
+        readuint(tmp, Enter limit [bytes])
+        keysave(header, ../general/flags.h, __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_HOSTNAME__, tmp)
+        print(Host name configuration.)
+        print(Current value: @tmp)
+        readstring(tmp, Enter hostname)
+        keysave(header, ../general/flags.h, __OS_HOSTNAME__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../general/flags.h, __OS_SYSTEM_STOP_MACRO__, tmp)
+        print(Do you want to enable stop macro in the system level? Use only in debug purposes.)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../general/flags.h, __OS_SYSTEM_STOP_MACRO__, tmp)
+endconfig

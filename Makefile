@@ -25,36 +25,26 @@
 #
 ####################################################################################################
 
-include ./config/Makefile
+include ./config/general/Makefile
+include ./config/$(PROJECT_CPU_ARCH)/Makefile
 
 ####################################################################################################
 # PROJECT CONFIGURATION
 ####################################################################################################
 # project name
-PROJECT = $(NAMECONFIG__PROJECT_NAME)
+PROJECT = $(PROJECT_NAME)
 
 #---------------------------------------------------------------------------------------------------
 # DEFAULT COMPILER FLAGS
 #---------------------------------------------------------------------------------------------------
-TOOLCHAIN = $(TOOLCHAINCONFIG__TOOLCHAIN)
+TOOLCHAIN = $(PROJECT_TOOLCHAIN)
 
-CONFIG_DEF = -D__DEVFS_ENABLE__=$($(FSCONFIG__DEVFS_ENABLE)) \
-             -D__LFS_ENABLE__=$($(FSCONFIG__LFS_ENABLE)) \
-             -D__FATFS_ENABLE__=$($(FSCONFIG__FATFS_ENABLE)) \
-             -D__PROCFS_ENABLE__=$($(FSCONFIG__PROCFS_ENABLE)) \
-             -D__CRC_ENABLE__=$($(MODCONFIG__CRC_ENABLE)) \
-             -D__ETHMAC_ENABLE__=$($(MODCONFIG__ETHMAC_ENABLE)) \
-             -D__PLL_ENABLE__=$($(MODCONFIG__PLL_ENABLE)) \
-             -D__SDSPI_ENABLE__=$($(MODCONFIG__SDSPI_ENABLE)) \
-             -D__SPI_ENABLE__=$($(MODCONFIG__SPI_ENABLE)) \
-             -D__TTY_ENABLE__=$($(MODCONFIG__TTY_ENABLE)) \
-             -D__UART_ENABLE__=$($(MODCONFIG__UART_ENABLE)) \
-             -D__WDG_ENABLE__=$($(MODCONFIG__WDG_ENABLE))
+CONFIG_DEF = 
 
 AFLAGS   = -c \
            -g \
            -ggdb3 \
-           $(CPUCONFIG__AFLAGS) \
+           $(CPUCONFIG_AFLAGS) \
            $(CONFIG_DEF)
 
 CFLAGS   = -c \
@@ -67,10 +57,10 @@ CFLAGS   = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -DARCH_$(ARCHCONFIG__TARGET) \
-           $(CPUCONFIG__CFLAGS) \
+           -include ./config/general/flags.h \
+           $(CPUCONFIG_CFLAGS) \
            $(CONFIG_DEF)
-         
+
 CXXFLAGS = -c \
            -g \
            -ggdb3 \
@@ -84,14 +74,14 @@ CXXFLAGS = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -DARCH_$(ARCHCONFIG__TARGET) \
+           -include ./config/general/flags.h \
            $(CPUCONFIG__CXXFLAGS) \
            $(CONFIG_DEF) \
 
 LFLAGS   = -g \
            $(CPUCONFIG__LDFLAGS) \
            -nostartfiles \
-           -T$(CPUCONFIG__LD) \
+           -T$(CPUCONFIG_LD) \
            -Wl,--gc-sections \
            -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
            -Wall \
@@ -162,13 +152,13 @@ EMPTY   =
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
 # number of threads used in compilation (cpu count + 1)
-THREAD = $(shell echo $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
+THREAD = 1#$(shell echo $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
 
 # sets header search path (adds -I flags to paths)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
 # main target without defined prefixes
-TARGET = $(ARCHCONFIG__TARGET)
+TARGET = $(PROJECT_CPU_ARCH)
 
 # target path
 TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
@@ -230,7 +220,26 @@ help :
 ####################################################################################################
 .PHONY : config
 config : clean
-	@./tools/config.sh ./config/wizard.config
+ifeq ($(MAKECMDGOALS), config)
+	@./tools/config.sh ./config/wizard/project
+	@./tools/config.sh ./config/wizard/cpu
+	@./tools/config.sh ./config/wizard/os
+	@./tools/config.sh ./config/wizard/memory
+	@./tools/config.sh ./config/wizard/fs
+	@./tools/config.sh ./config/wizard/network
+else
+	@./tools/config.sh ./config/wizard/$(lastword $(MAKECMDGOALS))
+endif
+
+.PHONY : project cpu memory os network
+project: _configdone
+cpu    : _configdone
+memory : _configdone
+os     : _configdone
+network: _configdone
+fs     : _configdone
+_configdone:
+	@echo "Configuration done"
 
 ####################################################################################################
 # analisis
@@ -290,6 +299,7 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@echo "Linking..."
+	@echo $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
@@ -308,6 +318,7 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
+	@echo $(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 	@$(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 
 ####################################################################################################
@@ -324,6 +335,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
+	@echo $(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 	@$(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
 ####################################################################################################

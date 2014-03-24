@@ -1,0 +1,36 @@
+config
+        print()
+        print(=============================)
+        print(Project general configuration)
+        print(=============================)
+endconfig
+
+# configure project name
+config
+        print()
+        keyread(makefile, ../general/Makefile, PROJECT_NAME, project_name)
+        print(Current project name: @project_name)
+        readstring(project_name, Enter project name)
+        keysave(makefile, ../general/Makefile, PROJECT_NAME, project_name)
+endconfig
+
+# project architecture configuration
+config
+        print()
+        print(Select project CPU architecture)
+        keyread(makefile, ../general/Makefile, PROJECT_CPU_ARCH, project_cpu_arch)
+        print(Current selection: @project_cpu_arch)
+        additem(stm32f1,)
+        readsel(project_cpu_arch,)
+        keysave(makefile, ../general/Makefile, PROJECT_CPU_ARCH, project_cpu_arch)
+        keysave(header, ../general/flags.h, __CPU_ARCH__, project_cpu_arch)
+endconfig
+
+# configure toolchain
+config
+        print()
+        keyread(makefile, ../general/Makefile, PROJECT_TOOLCHAIN, project_toolchain)
+        print(Current toolchain name: @project_toolchain)
+        readstring(project_toolchain, Enter toolchain name)
+        keysave(makefile, ../general/Makefile, PROJECT_TOOLCHAIN, project_toolchain)
+endconfig

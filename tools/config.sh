@@ -31,9 +31,9 @@ is_msg_cmd()
 }
 
 # setitem(item, [description])
-is_setitem_cmd()
+is_additem_cmd()
 {
-        if [[ "$1" =~ ^\s*setitem(.*\s*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*additem(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 # readsel(var, [description])
@@ -186,7 +186,7 @@ key_create()
         if [ "$type" = "makefile" ]; then
                 sed -i "$ a\\$key=$val" $file
         elif [ "$type" = "header" ]; then
-                sed -i "/^\s*#\s*ifdef\s.*/a #define $key $val" $file
+                sed -i "/^\s*#\s*define\s.*/a #define $key $val" $file
         fi
 }
 
@@ -299,7 +299,7 @@ read_script()
                 elif $(is_msg_cmd "$line") && $begin; then
                         msgs[${#msgs[@]}]=$(get_cmd_1arg "$line")
 
-                elif $(is_setitem_cmd "$line") && $begin; then
+                elif $(is_additem_cmd "$line") && $begin; then
                         args=()
                         args=($(get_cmd_2args "$line"))
                         items[${#items[@]}]=${args[0]}
@@ -506,8 +506,6 @@ main()
         fi
 
         read_script $script
-
-        echo "Configuration done."
 }
 
 main

@@ -1,0 +1,126 @@
+config
+        print()
+        print(=============================)
+        print(Project general configuration)
+        print(=============================)
+endconfig
+
+# reads CPU architecture
+config
+        keyread(makefile, ../general/Makefile, PROJECT_CPU_ARCH, project_cpu_arch)
+endconfig
+
+#===============================================================================
+# COMMON CONFIGURATION
+#===============================================================================
+config
+        print()
+        keyread(header, ../general/flags.h, __CPU_OSC_FREQ__, tmp)
+        print(Configuration of oscillator frequency. If your oscillator is e.g. crystal, then set it frequency.)
+        print(Current value: @tmp)
+        readuint(tmp, Enter frequency [Hz])
+        keysave(header, ../general/flags.h, __CPU_OSC_FREQ__, tmp)
+endconfig
+
+#===============================================================================
+# CONFIGURATION FOR stm32f1 CPU ARCHITECTURE
+#===============================================================================
+stm32f1=stm32f1
+config
+        if(project_cpu_arch = stm32f1)
+                print()
+                keyread(header, ../stm32f1/cpu.h, __CPU_NAME__, cpu_name)
+                print(Microcontroller selection.)
+                print(Current value: @cpu_name)
+                additem(STM32F100C4xx,)
+                additem(STM32F100C6xx,)
+                additem(STM32F100C8xx,)
+                additem(STM32F100R6xx,)
+                additem(STM32F100RBxx,)
+                additem(STM32F100RExx,)
+                additem(STM32F100VBxx,)
+                additem(STM32F100ZCxx,)
+                additem(STM32F101C6xx,)
+                additem(STM32F101C8xx,)
+                additem(STM32F101CBxx,)
+                additem(STM32F101R6xx,)
+                additem(STM32F101R8xx,)
+                additem(STM32F101RBxx,)
+                additem(STM32F101V8xx,)
+                additem(STM32F101VBxx,)
+                additem(STM32F103C6xx,)
+                additem(STM32F103C8xx,)
+                additem(STM32F103CBxx,)
+                additem(STM32F103R4xx,)
+                additem(STM32F103R6xx,)
+                additem(STM32F103R8xx,)
+                additem(STM32F103RBxx,)
+                additem(STM32F103RCxx,)
+                additem(STM32F103RDxx,)
+                additem(STM32F103RExx,)
+                additem(STM32F103RGxx,)
+                additem(STM32F103T8xx,)
+                additem(STM32F103V8xx,)
+                additem(STM32F103VBxx,)
+                additem(STM32F103VCxx,)
+                additem(STM32F103VDxx,)
+                additem(STM32F103VExx,)
+                additem(STM32F103VGxx,)
+                additem(STM32F103ZCxx,)
+                additem(STM32F103ZExx,)
+                additem(STM32F103ZGxx,)
+                additem(STM32F105RBxx,)
+                additem(STM32F105RCxx,)
+                additem(STM32F105VBxx,)
+                additem(STM32F105VCxx,)
+                additem(STM32F107RCxx,)
+                additem(STM32F107VBxx,)
+                additem(STM32F107VCxx,)
+                readsel(cpu_name,)
+                keysave(header, ../stm32f1/cpu.h, __CPU_NAME__, cpu_name)
+                keysave(makefile, ../stm32f1/Makefile, CPUCONFIG_CPUNAME, cpu_name)
+        endif
+endconfig
+
+config
+        if(project_cpu_arch = stm32f1)
+                print()
+                keyread(header, ../general/flags.h, __IRQ_USER_PRIORITY__, tmp)
+                print(Select default user priority for interrupts.)
+                print(Current value: @tmp)
+                additem(0x0F, - priority 0 - highest)
+                additem(0x1F, - priority 1)
+                additem(0x2F, - priority 2)
+                additem(0x3F, - priority 3)
+                additem(0x4F, - priority 4)
+                additem(0x5F, - priority 5)
+                additem(0x6F, - priority 6)
+                additem(0x7F, - priority 7)
+                additem(0x8F, - priority 8)
+                additem(0x9F, - priority 9)
+                additem(0xAF, - priority 10)
+                additem(0xBF, - priority 11)
+                additem(0xCF, - priority 12)
+                additem(0xDF, - priority 13 - lowest)
+                readsel(tmp,)
+                kernel_prio=0xFF
+                syscall_prio=0xEF
+                keysave(header, ../general/flags.h, __IRQ_RTOS_KERNEL_PRIORITY__, kernel_prio)
+                keysave(header, ../general/flags.h, __IRQ_RTOS_SYSCALL_PRIORITY__, syscall_prio)
+                keysave(header, ../general/flags.h, __IRQ_USER_PRIORITY__, tmp)
+        endif
+endconfig
+
+config
+        if(project_cpu_arch = stm32f1)
+                exit()
+        endif
+endconfig
+
+
+#===============================================================================
+# UNKNOWN CPU
+#===============================================================================
+config
+        print(Unknown CPU architecture!)
+endconfig

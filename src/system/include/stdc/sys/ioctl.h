@@ -41,32 +41,32 @@ extern "C" {
 #ifdef ARCH_stm32f1
 #       include "stm32f1/gpio_def.h"
 #
-#       if (__UART_ENABLE__)
+#       if (__ENABLE_UART__)
 #               include "stm32f1/uart_def.h"
 #       endif
-#       if (__PLL_ENABLE__)
+#       if (__ENABLE_PLL__)
 #               include "stm32f1/pll_def.h"
 #       endif
-#       if (__SDSPI_ENABLE__)
+#       if (__ENABLE_SDSPI__)
 #               include "stm32f1/sdspi_def.h"
 #       endif
-#       if (__ETHMAC_ENABLE__)
+#       if (__ENABLE_ETHMAC__)
 #               include "stm32f1/ethmac_def.h"
 #       endif
-#       if (__SPI_ENABLE__)
+#       if (__ENABLE_SPI__)
 #               include "stm32f1/spi_def.h"
 #       endif
-#       if (__CRC_ENABLE__)
+#       if (__ENABLE_CRC__)
 #               include "stm32f1/crc_def.h"
 #       endif
-#       if (__WDG_ENABLE__)
+#       if (__ENABLE_WDG__)
 #               include "stm32f1/wdg_def.h"
 #       endif
 #else
 #       error Unknown CPU architecture!
 #endif
 
-#if (__TTY_ENABLE__)
+#if (__ENABLE_TTY__)
 #       include "tty_def.h"
 #endif
 
