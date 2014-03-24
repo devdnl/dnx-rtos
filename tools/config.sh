@@ -100,6 +100,11 @@ is_exit_cmd()
         if [[ "$1" =~ ^\s*exit(.*)$ ]]; then true; else false; fi
 }
 
+is_print_cmd()
+{
+        if [[ "$1" =~ ^\s*print(.*\s*)$ ]]; then true; else false; fi
+}
+
 #-------------------------------------------------------------------------------
 # Command argument return functions
 #-------------------------------------------------------------------------------
@@ -166,6 +171,11 @@ get_ifeq_cmd_arg()
 get_ifneq_cmd_arg()
 {
         echo $1 | sed 's/^\s*ifneq(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
+}
+
+get_print_cmd_arg()
+{
+        echo $1 | sed 's/^\s*print(\(.*\))$/\1/'
 }
 
 #-------------------------------------------------------------------------------
@@ -342,10 +352,10 @@ read_script()
                 elif $(is_readsel_cmd "$line") && $begin; then
                         args=()
                         args=($(get_readsel_cmd_arg "$line"))
-                        idx=${args[0]}
+                        var=${args[0]}
                         msg=${args[*]/${args[0]}/}
 
-                        if [ "$idx" == "" ]; then
+                        if [ "$var" == "" ]; then
                                 error $script $seek "undefined variable"
                         fi
 
@@ -371,18 +381,107 @@ read_script()
                                 elif ! is_integer "$value"; then
                                         value=0
                                 else
-                                        variable[$idx]=${items[$[$value-1]]}
+                                        variable[$var]=${items[$[$value-1]]}
                                 fi
                         done
 
                 elif $(is_readint_cmd "$line") && $begin; then
-                        continue
+                        args=()
+                        args=($(get_readint_cmd_arg "$line"))
+                        var=${args[0]}
+                        msg=${args[*]/${args[0]}/}
+
+                        if [ "$var" == "" ]; then
+                                error $script $seek "undefined variable"
+                        fi
+
+                        if [ "$msg" == "" ]; then
+                                msg="Enter number (bin, oct, dec, hex)"
+                        fi
+
+                        value=false
+                        while ! is_integer "$value"; do
+                                read -p "$msg: " value
+
+                                if [ "$value" == "" ]; then
+                                        rewind=true
+                                        break
+                                elif ! is_integer "$value"; then
+                                        value=false
+                                else
+                                        variable[$var]=$value
+                                fi
+                        done
 
                 elif $(is_readuint_cmd "$line") && $begin; then
-                        continue
+                        args=()
+                        args=($(get_readuint_cmd_arg "$line"))
+                        var=${args[0]}
+                        msg=${args[*]/${args[0]}/}
+
+                        if [ "$var" == "" ]; then
+                                error $script $seek "undefined variable"
+                        fi
+
+                        if [ "$msg" == "" ]; then
+                                msg="Enter positive number (bin, oct, dec, hex)"
+                        fi
+
+                        value=false
+                        while ! is_integer "$value"; do
+                                read -p "$msg: " value
+
+                                if [ "$value" == "" ]; then
+                                        rewind=true
+                                        break
+                                elif ! is_integer "$value"; then
+                                        value=false
+                                else
+                                        if [ $value -gt 0 ]; then
+                                                variable[$var]=$value
+                                        else
+                                                value=false
+                                        fi
+                                fi
+                        done
 
                 elif $(is_readstring_cmd "$line") && $begin; then
-                        continue
+                        args=()
+                        args=($(get_readstring_cmd_arg "$line"))
+                        var=${args[0]}
+                        msg=${args[*]/${args[0]}/}
+
+                        if [ "$var" == "" ]; then
+                                error $script $seek "undefined variable"
+                        fi
+
+                        if [ "$msg" == "" ]; then
+                                msg="Enter string"
+                        fi
+
+                        read -p "$msg: " value
+
+                        if [ "$value" == "" ]; then
+                                rewind=true
+                                break
+                        else
+                                variable[$var]=\"$value\"
+                        fi
+
+                elif $(is_print_cmd "$line") && $begin; then
+                        args=()
+                        args=($(get_print_cmd_arg "$line"))
+
+                        msg=
+                        for word in ${args[*]}; do
+                                if [[ $word =~ @[a-zA-Z0-9_] ]]; then
+                                        msg="$msg ${variable[${word/@/}]}"
+                                else
+                                        msg="$msg $word"
+                                fi
+                        done
+
+                        echo $msg
 
                 elif $(is_keyread_cmd "$line") && $begin; then
                         args=()
