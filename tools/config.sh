@@ -90,6 +90,11 @@ is_ifneq_cmd()
         if [[ "$1" =~ ^\s*ifneq(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
+is_endif_cmd()
+{
+        if [[ "$1" =~ ^\s*endif$ ]]; then true; else false; fi
+}
+
 is_exit_cmd()
 {
         if [[ "$1" =~ ^\s*exit()$ ]]; then true; else false; fi
@@ -242,7 +247,7 @@ key_read()
 read_script()
 {
         local script=$1 seek=0 args=()
-        local begin=false items=() itemdesc=() msgs=() rewind=false
+        local begin=false items=() itemdesc=() msgs=() nestedif=0 rewind=false
         declare -A variable
 
         while read -r line <&9; do
@@ -265,7 +270,13 @@ read_script()
                                 items=()
                                 itemdesc=()
                                 save=false
-                                rewind=false
+
+                                if [ $nestedif -gt 0 ]; then
+                                        error $script $seek "not closed 'ifeq' or 'ifneq', too less 'endif'"
+                                elif [ $nestedif -lt 0 ]; then
+                                        error $script $seek "not closed 'ifeq' or 'ifneq', too more 'endif'"
+                                fi
+
                                 echo ""
                         else
                                 error $script $seek "orphaned 'end'"
@@ -279,6 +290,8 @@ read_script()
 
                         if [ "${variable["$lh"]}" != "${variable["$rh"]}" ]; then
                                 rewind=true
+                        else
+                                nestedif=$[$nestedif+1]
                         fi
 
                 elif $(is_ifneq_cmd "$line") && $begin; then
@@ -289,7 +302,13 @@ read_script()
 
                         if [ "${variable["$lh"]}" == "${variable["$rh"]}" ]; then
                                 rewind=true
+                        else
+                                nestedif=$[$nestedif+1]
                         fi
+
+                elif $(is_endif_cmd "$line") && $begin; then
+                        rewind=false
+                        nestedif=$[$nestedif-1]
 
                 elif $rewind; then
                         continue
