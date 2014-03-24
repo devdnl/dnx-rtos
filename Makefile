@@ -39,14 +39,11 @@ PROJECT = $(PROJECT_NAME)
 #---------------------------------------------------------------------------------------------------
 TOOLCHAIN = $(PROJECT_TOOLCHAIN)
 
-CONFIG_DEF = 
-
 AFLAGS   = -c \
            -g \
            -ggdb3 \
            -include ./config/project/flags.h \
-           $(CPUCONFIG_AFLAGS) \
-           $(CONFIG_DEF)
+           $(CPUCONFIG_AFLAGS)
 
 CFLAGS   = -c \
            -g \
@@ -59,8 +56,7 @@ CFLAGS   = -c \
            -Wparentheses \
            -Werror=implicit-function-declaration \
            -include ./config/project/flags.h \
-           $(CPUCONFIG_CFLAGS) \
-           $(CONFIG_DEF)
+           $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
            -g \
@@ -76,11 +72,10 @@ CXXFLAGS = -c \
            -Wparentheses \
            -Werror=implicit-function-declaration \
            -include ./config/project/flags.h \
-           $(CPUCONFIG__CXXFLAGS) \
-           $(CONFIG_DEF) \
+           $(CPUCONFIG__CXXFLAGS)
 
 LFLAGS   = -g \
-           $(CPUCONFIG__LDFLAGS) \
+           $(CPUCONFIG_LDFLAGS) \
            -nostartfiles \
            -T$(CPUCONFIG_LD) \
            -Wl,--gc-sections \
@@ -223,12 +218,12 @@ help :
 .PHONY : config
 config : clean
 ifeq ($(MAKECMDGOALS), config)
-	@./tools/config.sh ./config/wizard/project
-	@./tools/config.sh ./config/wizard/cpu
-	@./tools/config.sh ./config/wizard/os
-	@./tools/config.sh ./config/wizard/memory
-	@./tools/config.sh ./config/wizard/fs
-	@./tools/config.sh ./config/wizard/network
+	@./tools/config.sh.x ./config/wizard/project
+	@./tools/config.sh.x ./config/wizard/cpu
+	@./tools/config.sh.x ./config/wizard/os
+	@./tools/config.sh.x ./config/wizard/memory
+	@./tools/config.sh.x ./config/wizard/fs
+	@./tools/config.sh.x ./config/wizard/network
 else
 	@./tools/config.sh ./config/wizard/$(lastword $(MAKECMDGOALS))
 endif

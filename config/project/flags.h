@@ -67,9 +67,9 @@
 #define __IRQ_USER_PRIORITY__ 0xDF
 
 /* dynamic memory configuration */
-#define __HEAP_ALIGN __CPU_HEAP_ALIGN__
-#define __HEAP_SIZE (64332)
-#define __HEAP_BLOCK_SIZE (4)
+#define __HEAP_ALIGN__ __CPU_HEAP_ALIGN__
+#define __HEAP_SIZE__ 64332
+#define __HEAP_BLOCK_SIZE__ 4
 
 /* os configuration */
 #define __OS_TASK_MIN_STACK_DEPTH__ 48
@@ -98,13 +98,13 @@
 #define __OS_SYSTEM_STOP_MACRO__ YES
 
 /* network configuration */
-#define __NETWORK_ENABLE__                           (1)
-#define __NETWORK_MAC_ADDR_0__                        0x50
-#define __NETWORK_MAC_ADDR_1__                        0xE5
-#define __NETWORK_MAC_ADDR_2__                        0x49
-#define __NETWORK_MAC_ADDR_3__                        0x37
-#define __NETWORK_MAC_ADDR_4__                        0xB5
-#define __NETWORK_MAC_ADDR_5__                        0xBD
+#define __NETWORK_ENABLE__ YES
+#define __NETWORK_MAC_ADDR_0__ 0x50
+#define __NETWORK_MAC_ADDR_1__ 0xE5
+#define __NETWORK_MAC_ADDR_2__ 0x49
+#define __NETWORK_MAC_ADDR_3__ 0x37
+#define __NETWORK_MAC_ADDR_4__ 0xB5
+#define __NETWORK_MAC_ADDR_5__ 0xBD
 
 /* file systems */
 #define __ENABLE_DEVFS__ YES

@@ -1,0 +1,34 @@
+config
+        print()
+        print(============================)
+        print(Dynamic memory configuration)
+        print(============================)
+endconfig
+
+config
+        keyread(header, ../project/flags.h, __CPU_ARCH__, cpu_arch)
+endconfig
+
+config
+        stm32f1=stm32f1
+        RAM_size=0
+        if(cpu_arch = stm32f1)
+                keyread(header, ../stm32f1/cpu.h, __CPU_RAM_MEM_SIZE__, RAM_size)
+        endif
+
+        print()
+        keyread(header, ../project/flags.h, __HEAP_SIZE__, heap_size)
+        print(Configure heap size. Heap must be smaller than RAM size.)
+        print(Current value: @heap_size B. RAM size: @RAM_size B.)
+        readuint(heap_size, Enter heap size [bytes])
+        keysave(header, ../project/flags.h, __HEAP_SIZE__, heap_size)
+endconfig
+
+config
+        print()
+        keyread(header, ../project/flags.h, __HEAP_BLOCK_SIZE__, tmp)
+        print(Allocation block size.)
+        print(Current value: @tmp)
+        readuint(tmp, Enter block size [bytes])
+        keysave(header, ../project/flags.h, __HEAP_BLOCK_SIZE__, tmp)
+endconfig

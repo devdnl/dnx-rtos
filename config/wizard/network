@@ -1,0 +1,74 @@
+config
+        print()
+        print(=====================)
+        print(Network configuration)
+        print(=====================)
+endconfig
+
+config
+        print()
+        keyread(header, ../project/flags.h, __NETWORK_ENABLE__, tmp)
+        print(Do you want to enable network?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../project/flags.h, __NETWORK_ENABLE__, tmp)
+        keysave(makefile, ../project/Makefile, ENABLE_NETWORK, tmp)
+endconfig
+
+config
+        # read MAC address
+        keyread(header, ../project/flags.h, __NETWORK_MAC_ADDR_0__, maca0)
+        keyread(header, ../project/flags.h, __NETWORK_MAC_ADDR_1__, maca1)
+        keyread(header, ../project/flags.h, __NETWORK_MAC_ADDR_2__, maca2)
+        keyread(header, ../project/flags.h, __NETWORK_MAC_ADDR_3__, maca3)
+        keyread(header, ../project/flags.h, __NETWORK_MAC_ADDR_4__, maca4)
+        keyread(header, ../project/flags.h, __NETWORK_MAC_ADDR_5__, maca5)
+
+        print()
+        print(Setup a MAC address. You configure: __ xx xx xx xx xx)
+        print(Current value: @maca0 @maca1 @maca2 @maca3 @maca4 @maca5)
+        readuint(tmp, Enter MAC part number [hex])
+        keysave(header, ../project/flags.h, __NETWORK_MAC_ADDR_0__, tmp)
+endconfig
+
+config
+        print()
+        print(Setup a MAC address. You configure: xx __ xx xx xx xx)
+        print(Current value: @maca0 @maca1 @maca2 @maca3 @maca4 @maca5)
+        readuint(tmp, Enter MAC part number [hex])
+        keysave(header, ../project/flags.h, __NETWORK_MAC_ADDR_1__, tmp)
+endconfig
+
+config
+        print()
+        print(Setup a MAC address. You configure: xx xx __ xx xx xx)
+        print(Current value: @maca0 @maca1 @maca2 @maca3 @maca4 @maca5)
+        readuint(tmp, Enter MAC part number [hex])
+        keysave(header, ../project/flags.h, __NETWORK_MAC_ADDR_2__, tmp)
+endconfig
+
+config
+        print()
+        print(Setup a MAC address. You configure: xx xx xx __ xx xx)
+        print(Current value: @maca0 @maca1 @maca2 @maca3 @maca4 @maca5)
+        readuint(tmp, Enter MAC part number [hex])
+        keysave(header, ../project/flags.h, __NETWORK_MAC_ADDR_3__, tmp)
+endconfig
+
+config
+        print()
+        print(Setup a MAC address. You configure: xx xx xx xx __ xx)
+        print(Current value: @maca0 @maca1 @maca2 @maca3 @maca4 @maca5)
+        readuint(tmp, Enter MAC part number [hex])
+        keysave(header, ../project/flags.h, __NETWORK_MAC_ADDR_4__, tmp)
+endconfig
+
+config
+        print()
+        print(Setup a MAC address. You configure: xx xx xx xx xx __)
+        print(Current value: @maca0 @maca1 @maca2 @maca3 @maca4 @maca5)
+        readuint(tmp, Enter MAC part number [hex])
+        keysave(header, ../project/flags.h, __NETWORK_MAC_ADDR_5__, tmp)
+endconfig

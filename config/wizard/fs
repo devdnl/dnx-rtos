@@ -1,0 +1,50 @@
+config
+        print()
+        print(=========================)
+        print(File system configuration)
+        print(=========================)
+endconfig
+
+config
+        print()
+        keyread(header, ../project/flags.h, __ENABLE_DEVFS__, tmp)
+        print(Do you want to enable DEVFS?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../project/flags.h, __ENABLE_DEVFS__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../project/flags.h, __ENABLE_LFS__, tmp)
+        print(Do you want to enable LFS?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../project/flags.h, __ENABLE_LFS__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../project/flags.h, __ENABLE_FATFS__, tmp)
+        print(Do you want to enable FATFS?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../project/flags.h, __ENABLE_FATFS__, tmp)
+endconfig
+
+config
+        print()
+        keyread(header, ../project/flags.h, __ENABLE_PROCFS__, tmp)
+        print(Do you want to enable PROCFS?)
+        print(Current value: @tmp)
+        additem(YES,)
+        additem(NO,)
+        readsel(tmp,)
+        keysave(header, ../project/flags.h, __ENABLE_PROCFS__, tmp)
+endconfig

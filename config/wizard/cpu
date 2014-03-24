@@ -1,13 +1,13 @@
 config
         print()
         print(=============================)
-        print(Project general configuration)
+        print(Microcontroller configuration)
         print(=============================)
 endconfig
 
 # reads CPU architecture
 config
-        keyread(makefile, ../general/Makefile, PROJECT_CPU_ARCH, project_cpu_arch)
+        keyread(makefile, ../project/Makefile, PROJECT_CPU_ARCH, project_cpu_arch)
 endconfig
 
 #===============================================================================
@@ -15,11 +15,11 @@ endconfig
 #===============================================================================
 config
         print()
-        keyread(header, ../general/flags.h, __CPU_OSC_FREQ__, tmp)
+        keyread(header, ../project/flags.h, __CPU_OSC_FREQ__, tmp)
         print(Configuration of oscillator frequency. If your oscillator is e.g. crystal, then set it frequency.)
         print(Current value: @tmp)
         readuint(tmp, Enter frequency [Hz])
-        keysave(header, ../general/flags.h, __CPU_OSC_FREQ__, tmp)
+        keysave(header, ../project/flags.h, __CPU_OSC_FREQ__, tmp)
 endconfig
 
 #===============================================================================
@@ -85,7 +85,7 @@ endconfig
 config
         if(project_cpu_arch = stm32f1)
                 print()
-                keyread(header, ../general/flags.h, __IRQ_USER_PRIORITY__, tmp)
+                keyread(header, ../project/flags.h, __IRQ_USER_PRIORITY__, tmp)
                 print(Select default user priority for interrupts.)
                 print(Current value: @tmp)
                 additem(0x0F, - priority 0 - highest)
@@ -105,9 +105,9 @@ config
                 readsel(tmp,)
                 kernel_prio=0xFF
                 syscall_prio=0xEF
-                keysave(header, ../general/flags.h, __IRQ_RTOS_KERNEL_PRIORITY__, kernel_prio)
-                keysave(header, ../general/flags.h, __IRQ_RTOS_SYSCALL_PRIORITY__, syscall_prio)
-                keysave(header, ../general/flags.h, __IRQ_USER_PRIORITY__, tmp)
+                keysave(header, ../project/flags.h, __IRQ_RTOS_KERNEL_PRIORITY__, kernel_prio)
+                keysave(header, ../project/flags.h, __IRQ_RTOS_SYSCALL_PRIORITY__, syscall_prio)
+                keysave(header, ../project/flags.h, __IRQ_USER_PRIORITY__, tmp)
         endif
 endconfig
 

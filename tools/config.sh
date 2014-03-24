@@ -25,11 +25,6 @@ is_endconfig_cmd()
         if [[ "$1" =~ ^\s*endconfig$ ]]; then true; else false; fi
 }
 
-is_msg_cmd()
-{
-        if [[ "$1" =~ ^\s*msg(.*)$ ]]; then true; else false; fi
-}
-
 # setitem(item, [description])
 is_additem_cmd()
 {
@@ -224,7 +219,7 @@ key_read()
 read_script()
 {
         local script=$1 seek=0 args=()
-        local begin=false items=() itemdesc=() msgs=() nestedif=0 nestedtarget=0 rewind=false
+        local begin=false items=() itemdesc=() nestedif=0 nestedtarget=0 rewind=false
         declare -A variable
 
         while read -r line <&9; do
@@ -243,7 +238,6 @@ read_script()
                 elif $(is_endconfig_cmd "$line"); then
                         if $begin; then
                                 begin=false
-                                msgs=()
                                 items=()
                                 itemdesc=()
                                 save=false
@@ -296,9 +290,6 @@ read_script()
                 elif $rewind; then
                         continue
 
-                elif $(is_msg_cmd "$line") && $begin; then
-                        msgs[${#msgs[@]}]=$(get_cmd_1arg "$line")
-
                 elif $(is_additem_cmd "$line") && $begin; then
                         args=()
                         args=($(get_cmd_2args "$line"))
@@ -319,10 +310,6 @@ read_script()
                                 msg="Select item (1..${#items[@]})"
                         fi
 
-                        for ((i=0; i<${#msgs[*]}; i++)); do
-                                echo "${msgs[$i]}"
-                        done
-
                         for ((i=0; i<${#items[*]}; i++)); do
                                 echo "  $[$i+1]) ${items[$i]} ${itemdesc[$i]}"
                         done
@@ -342,7 +329,6 @@ read_script()
                         done
 
                         items=()
-                        msgs=()
 
                 elif $(is_readint_cmd "$line") && $begin; then
                         args=()

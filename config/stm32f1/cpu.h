@@ -181,7 +181,7 @@
 #define __CPU_RAM_MEM_SIZE__
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F107RCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F107VBxx)
 #define __CPU_RAM_MEM_SIZE__
