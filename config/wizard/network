@@ -72,3 +72,12 @@ config
         readuint(tmp, Enter MAC part number [hex])
         keysave(header, ../project/flags.h, __NETWORK_MAC_ADDR_5__, tmp)
 endconfig
+
+config
+        keyread(header, ../project/flags.h, __NETWORK_ETHIF_FILE__, tmp)
+        print()
+        print(Select a file which is an Ethernet port)
+        print(Current value: @tmp)
+        readstring(tmp, Enter file name)
+        keysave(header, ../project/flags.h, __NETWORK_ETHIF_FILE__, tmp)
+endconfig

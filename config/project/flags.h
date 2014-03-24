@@ -60,8 +60,8 @@
 
 /* CPU configuration */
 #define __CPU_START_FREQ__ __CPU_START_FREQUENCY__
-#define __CPU_RAM_SIZE__ __CPU_RAM_MEM_SIZE__
 #define __CPU_OSC_FREQ__ 8000000
+#define __CPU_RAM_SIZE__ __CPU_RAM_MEM_SIZE__
 #define __IRQ_RTOS_KERNEL_PRIORITY__ 0xFF
 #define __IRQ_RTOS_SYSCALL_PRIORITY__ 0xEF
 #define __IRQ_USER_PRIORITY__ 0xDF
@@ -105,6 +105,7 @@
 #define __NETWORK_MAC_ADDR_3__ 0x37
 #define __NETWORK_MAC_ADDR_4__ 0xB5
 #define __NETWORK_MAC_ADDR_5__ 0xBD
+#define __NETWORK_ETHIF_FILE__ "/dev/eth0"
 
 /* file systems */
 #define __ENABLE_DEVFS__ YES
