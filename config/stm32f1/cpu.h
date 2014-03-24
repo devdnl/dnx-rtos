@@ -58,136 +58,136 @@
 #define STM32F107VCxx 44
 
 #if   (__CPU_NAME__ == STM32F100C4xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 4096
 #define STM32F10X_LD_VL
 #elif (__CPU_NAME__ == STM32F100C6xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 4096
 #define STM32F10X_LD_VL
 #elif (__CPU_NAME__ == STM32F100C8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 8192
 #define STM32F10X_MD_VL
 #elif (__CPU_NAME__ == STM32F100R6xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 4096
 #define STM32F10X_LD_VL
 #elif (__CPU_NAME__ == STM32F100RBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 8192
 #define STM32F10X_MD_VL
 #elif (__CPU_NAME__ == STM32F100RExx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 32768
 #define STM32F10X_HD_VL
 #elif (__CPU_NAME__ == STM32F100VBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 8192
 #define STM32F10X_MD_VL
 #elif (__CPU_NAME__ == STM32F100ZCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 24576
 #define STM32F10X_HD_VL
 #elif (__CPU_NAME__ == STM32F101C6xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 6144
 #define STM32F10X_LD
 #elif (__CPU_NAME__ == STM32F101C8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 10240
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F101CBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 16384
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F101R6xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 6144
 #define STM32F10X_LD
 #elif (__CPU_NAME__ == STM32F101R8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 10240
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F101RBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 16384
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F101V8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 10240
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F101VBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 16384
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103C6xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 10240
 #define STM32F10X_LD
 #elif (__CPU_NAME__ == STM32F103C8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 20480
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103CBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 20480
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103R4xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 6144
 #define STM32F10X_LD
 #elif (__CPU_NAME__ == STM32F103R6xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 10240
 #define STM32F10X_LD
 #elif (__CPU_NAME__ == STM32F103R8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 20480
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103RBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 20480
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103RCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 49152
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103RDxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103RExx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103RGxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 98304
 #define STM32F10X_XL
 #elif (__CPU_NAME__ == STM32F103T8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 20480
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103V8xx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 20480
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103VBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 20480
 #define STM32F10X_MD
 #elif (__CPU_NAME__ == STM32F103VCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 49152
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103VDxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103VExx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103VGxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 98304
 #define STM32F10X_XL
 #elif (__CPU_NAME__ == STM32F103ZCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 49152
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103ZExx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_HD
 #elif (__CPU_NAME__ == STM32F103ZGxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 98304
 #define STM32F10X_XL
 #elif (__CPU_NAME__ == STM32F105RBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 32768
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F105RCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F105VBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 32768
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F105VCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F107RCxx)
 #define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F107VBxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 49152
 #define STM32F10X_CL
 #elif (__CPU_NAME__ == STM32F107VCxx)
-#define __CPU_RAM_MEM_SIZE__
+#define __CPU_RAM_MEM_SIZE__ 65536
 #define STM32F10X_CL
 #else
 #error Select supported microcontroller!

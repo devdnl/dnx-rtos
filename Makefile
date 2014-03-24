@@ -218,12 +218,12 @@ help :
 .PHONY : config
 config : clean
 ifeq ($(MAKECMDGOALS), config)
-	@./tools/config.sh.x ./config/wizard/project
-	@./tools/config.sh.x ./config/wizard/cpu
-	@./tools/config.sh.x ./config/wizard/os
-	@./tools/config.sh.x ./config/wizard/memory
-	@./tools/config.sh.x ./config/wizard/fs
-	@./tools/config.sh.x ./config/wizard/network
+	@./tools/config.sh ./config/wizard/project
+	@./tools/config.sh ./config/wizard/cpu
+	@./tools/config.sh ./config/wizard/os
+	@./tools/config.sh ./config/wizard/memory
+	@./tools/config.sh ./config/wizard/fs
+	@./tools/config.sh ./config/wizard/network
 else
 	@./tools/config.sh ./config/wizard/$(lastword $(MAKECMDGOALS))
 endif
