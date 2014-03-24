@@ -80,14 +80,9 @@ is_variable_cmd()
         if [[ "$1" =~ ^\s*[a-zA-Z0-9_]+=.*$ ]]; then true; else false; fi
 }
 
-is_ifeq_cmd()
+is_if_cmd()
 {
-        if [[ "$1" =~ ^\s*ifeq(.*\s*,\s*.*)$ ]]; then true; else false; fi
-}
-
-is_ifneq_cmd()
-{
-        if [[ "$1" =~ ^\s*ifneq(.*\s*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*if(.*\s*[!=<>]+\s*.*)$ ]]; then true; else false; fi
 }
 
 is_endif_cmd()
@@ -128,7 +123,12 @@ get_cmd_4args()
         echo $1 | sed 's/^\s*[a-z]*(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
 }
 
-get_variable_arg()
+get_if_args()
+{
+        echo $1 | sed 's/^\s*if(\(.*\)\s*\([!=<>]*\)\s*\(.*\))/\1 \2 \3/'
+}
+
+get_variable_args()
 {
         echo $1 | sed 's/^\s*\([a-zA-Z0-9_]*\)=\(.*\)/\1 \2/'
 }
@@ -247,31 +247,29 @@ read_script()
                                 error $script $seek "orphaned 'end'"
                         fi
 
-                elif $(is_ifeq_cmd "$line") && $begin; then
+                elif $(is_if_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_cmd_2args "$line"))
+                        args=($(get_if_args "$line"))
                         lh=${args[0]}
-                        rh=${args[1]}
+                        op=${args[1]}
+                        rh=${args[2]}
 
                         nestedif=$[$nestedif+1]
 
                         if ! $rewind; then
-                                if [ "${variable["$lh"]}" != "${variable["$rh"]}" ]; then
-                                        nestedtarget=$nestedif
-                                        rewind=true
-                                fi
-                        fi
+                                local condition=false
 
-                elif $(is_ifneq_cmd "$line") && $begin; then
-                        args=()
-                        args=($(get_cmd_2args "$line"))
-                        lh=${args[0]}
-                        rh=${args[1]}
+                                case "$op" in
+                                "="  | "==" | "=~" ) if [ "${variable["$lh"]}" ==  "${variable["$rh"]}" ]; then condition=true; fi ;;
+                                "!=" | "~="        ) if [ "${variable["$lh"]}" !=  "${variable["$rh"]}" ]; then condition=true; fi ;;
+                                ">"                ) if [ "${variable["$lh"]}" -gt "${variable["$rh"]}" ] >/dev/null 2>&1; then condition=true; fi ;;
+                                "<"                ) if [ "${variable["$lh"]}" -lt "${variable["$rh"]}" ] >/dev/null 2>&1; then condition=true; fi ;;
+                                ">="               ) if [ "${variable["$lh"]}" -ge "${variable["$rh"]}" ] >/dev/null 2>&1; then condition=true; fi ;;
+                                "<="               ) if [ "${variable["$lh"]}" -le "${variable["$rh"]}" ] >/dev/null 2>&1; then condition=true; fi ;;
+                                *                  ) error $script $seek "unknown operator: '$op'"
+                                esac
 
-                        nestedif=$[$nestedif+1]
-
-                        if ! $rewind; then
-                                if [ "${variable["$lh"]}" == "${variable["$rh"]}" ]; then
+                                if ! $condition; then
                                         nestedtarget=$nestedif
                                         rewind=true
                                 fi
@@ -332,6 +330,9 @@ read_script()
                                 fi
                         done
 
+                        items=()
+                        msgs=()
+
                 elif $(is_readint_cmd "$line") && $begin; then
                         args=()
                         args=($(get_cmd_2args "$line"))
@@ -343,7 +344,7 @@ read_script()
                         fi
 
                         if [ "$msg" == "" ]; then
-                                msg="Enter number (bin, oct, dec, hex)"
+                                msg="Enter number (oct, dec, hex)"
                         fi
 
                         value=false
@@ -371,7 +372,7 @@ read_script()
                         fi
 
                         if [ "$msg" == "" ]; then
-                                msg="Enter positive number (bin, oct, dec, hex)"
+                                msg="Enter positive number (oct, dec, hex)"
                         fi
 
                         value=false
@@ -382,13 +383,11 @@ read_script()
                                         rewind=true
                                         break
                                 elif ! is_integer "$value"; then
+                                        echo "not integer"
                                         value=false
                                 else
-                                        if [ $value -gt 0 ]; then
-                                                variable[$var]=$value
-                                        else
-                                                value=false
-                                        fi
+
+                                        variable[$var]=${value/-/}
                                 fi
                         done
 
@@ -470,7 +469,7 @@ read_script()
 
                 elif $(is_variable_cmd "$line"); then
                         args=()
-                        args=($(get_variable_arg "$line"))
+                        args=($(get_variable_args "$line"))
                         name=${args[0]}
                         val=${args[1]}
                         variable["$name"]=$val
