@@ -108,74 +108,29 @@ is_print_cmd()
 #-------------------------------------------------------------------------------
 # Command argument return functions
 #-------------------------------------------------------------------------------
-get_msg_cmd_arg()
+get_cmd_1arg()
 {
-        echo $1 | sed 's/^\s*msg(\(.*\))$/\1/'
+        echo $1 | sed 's/^\s*[a-z]*(\(.*\))$/\1/'
 }
 
-get_setitem_cmd_arg()
+get_cmd_2args()
 {
-        echo $1 | sed 's/^\s*setitem(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
+        echo $1 | sed 's/^\s*[a-z]*(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
-get_readsel_cmd_arg()
+get_cmd_3args()
 {
-        echo $1 | sed 's/^\s*readsel(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
+        echo $1 | sed 's/^\s*[a-z]*(\(.*\)\s*,\s*\(.*\),\s*\(.*\))$/\1 \2 \3/'
 }
 
-get_readint_cmd_arg()
+get_cmd_4args()
 {
-        echo $1 | sed 's/^\s*readint(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
+        echo $1 | sed 's/^\s*[a-z]*(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
 }
 
-get_readuint_cmd_arg()
-{
-        echo $1 | sed 's/^\s*readuint(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
-}
-
-get_readstring_cmd_arg()
-{
-        echo $1 | sed 's/^\s*readstring(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
-}
-
-get_keyread_cmd_arg()
-{
-        echo $1 | sed 's/^\s*keyread(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
-}
-
-get_keysave_cmd_arg()
-{
-        echo $1 | sed 's/^\s*keysave(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
-}
-
-get_keycreate_cmd_arg()
-{
-        echo $1 | sed 's/^\s*keycreate(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
-}
-
-get_keydelete_cmd_arg()
-{
-        echo $1 | sed 's/^\s*\\keydelete(\(.*\)\s*,\s*\(.*\),\s*\(.*\))$/\1 \2 \3/'
-}
-
-get_variable_cmd_arg()
+get_variable_arg()
 {
         echo $1 | sed 's/^\s*\([a-zA-Z0-9_]*\)=\(.*\)/\1 \2/'
-}
-
-get_ifeq_cmd_arg()
-{
-        echo $1 | sed 's/^\s*ifeq(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
-}
-
-get_ifneq_cmd_arg()
-{
-        echo $1 | sed 's/^\s*ifneq(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
-}
-
-get_print_cmd_arg()
-{
-        echo $1 | sed 's/^\s*print(\(.*\))$/\1/'
 }
 
 #-------------------------------------------------------------------------------
@@ -294,43 +249,35 @@ read_script()
 
                 elif $(is_ifeq_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_ifeq_cmd_arg "$line"))
+                        args=($(get_cmd_2args "$line"))
                         lh=${args[0]}
                         rh=${args[1]}
 
                         nestedif=$[$nestedif+1]
-                        echo "ifeq++ = $nestedif"
 
                         if ! $rewind; then
                                 if [ "${variable["$lh"]}" != "${variable["$rh"]}" ]; then
                                         nestedtarget=$nestedif
                                         rewind=true
-
-                                        echo "ifeq rewind=true; target=$nestedtarget"
                                 fi
                         fi
 
                 elif $(is_ifneq_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_ifneq_cmd_arg "$line"))
+                        args=($(get_cmd_2args "$line"))
                         lh=${args[0]}
                         rh=${args[1]}
 
                         nestedif=$[$nestedif+1]
-                        echo "ifneq++ = $nestedif"
 
                         if ! $rewind; then
                                 if [ "${variable["$lh"]}" == "${variable["$rh"]}" ]; then
                                         nestedtarget=$nestedif
                                         rewind=true
-
-                                        echo "ifneq rewind=true; target=$nestedtarget"
                                 fi
                         fi
 
                 elif $(is_endif_cmd "$line") && $begin; then
-                        echo "endif nested: $nestedif"
-
                         if [ $nestedif -eq $nestedtarget ]; then
                                 rewind=false
                         fi
@@ -341,17 +288,17 @@ read_script()
                         continue
 
                 elif $(is_msg_cmd "$line") && $begin; then
-                        msgs[${#msgs[@]}]=$(get_msg_cmd_arg "$line")
+                        msgs[${#msgs[@]}]=$(get_cmd_1arg "$line")
 
                 elif $(is_setitem_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_setitem_cmd_arg "$line"))
+                        args=($(get_cmd_2args "$line"))
                         items[${#items[@]}]=${args[0]}
                         itemdesc[${#itemdesc[@]}]=${args[*]/${args[0]}/}
 
                 elif $(is_readsel_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_readsel_cmd_arg "$line"))
+                        args=($(get_cmd_2args "$line"))
                         var=${args[0]}
                         msg=${args[*]/${args[0]}/}
 
@@ -387,7 +334,7 @@ read_script()
 
                 elif $(is_readint_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_readint_cmd_arg "$line"))
+                        args=($(get_cmd_2args "$line"))
                         var=${args[0]}
                         msg=${args[*]/${args[0]}/}
 
@@ -415,7 +362,7 @@ read_script()
 
                 elif $(is_readuint_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_readuint_cmd_arg "$line"))
+                        args=($(get_cmd_2args "$line"))
                         var=${args[0]}
                         msg=${args[*]/${args[0]}/}
 
@@ -447,7 +394,7 @@ read_script()
 
                 elif $(is_readstring_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_readstring_cmd_arg "$line"))
+                        args=($(get_cmd_2args "$line"))
                         var=${args[0]}
                         msg=${args[*]/${args[0]}/}
 
@@ -470,7 +417,7 @@ read_script()
 
                 elif $(is_print_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_print_cmd_arg "$line"))
+                        args=($(get_cmd_1arg "$line"))
 
                         msg=
                         for word in ${args[*]}; do
@@ -485,7 +432,7 @@ read_script()
 
                 elif $(is_keyread_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_keyread_cmd_arg "$line"))
+                        args=($(get_cmd_4args "$line"))
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
@@ -494,7 +441,7 @@ read_script()
 
                 elif $(is_keysave_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_keysave_cmd_arg "$line"))
+                        args=($(get_cmd_4args "$line"))
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
@@ -503,7 +450,7 @@ read_script()
 
                 elif $(is_keycreate_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_keycreate_cmd_arg "$line"))
+                        args=($(get_cmd_4args "$line"))
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
@@ -512,7 +459,7 @@ read_script()
 
                 elif $(is_keydelete_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_keydelete_cmd_arg "$line"))
+                        args=($(get_cmd_3args "$line"))
                         type=${args[0]}
                         file=${args[1]}
                         key=${args[2]}
@@ -523,7 +470,7 @@ read_script()
 
                 elif $(is_variable_cmd "$line"); then
                         args=()
-                        args=($(get_variable_cmd_arg "$line"))
+                        args=($(get_variable_arg "$line"))
                         name=${args[0]}
                         val=${args[1]}
                         variable["$name"]=$val
