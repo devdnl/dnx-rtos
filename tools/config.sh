@@ -17,62 +17,62 @@ is_integer() {
 #-------------------------------------------------------------------------------
 is_begin_cmd()
 {
-        if [[ "$1" =~ ^\s*\\begin\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*begin$ ]]; then true; else false; fi
 }
 
 is_end_cmd()
 {
-        if [[ "$1" =~ ^\s*\\end\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*end$ ]]; then true; else false; fi
 }
 
 is_msg_cmd()
 {
-        if [[ "$1" =~ ^\s*\\msg\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*msg(.*)$ ]]; then true; else false; fi
 }
 
-is_item_cmd()
+is_setitem_cmd()
 {
-        if [[ "$1" =~ ^\s*\\item\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*setitem(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_readsel_cmd()
 {
-        if [[ "$1" =~ ^\s*\\readsel\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readsel(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_readint_cmd()
 {
-        if [[ "$1" =~ ^\s*\\readint\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readint(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_readuint_cmd()
 {
-        if [[ "$1" =~ ^\s*\\readuint\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readuint(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_readstring_cmd()
 {
-        if [[ "$1" =~ ^\s*\\readstring\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readstring(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_keyread_cmd()
 {
-        if [[ "$1" =~ ^\s*\\keyread\{.*\}\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keyread(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_keysave_cmd()
 {
-        if [[ "$1" =~ ^\s*\\keysave\{.*\}\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keysave(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_keycreate_cmd()
 {
-        if [[ "$1" =~ ^\s*\\keycreate\{.*\}\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keycreate(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_keydelete_cmd()
 {
-        if [[ "$1" =~ ^\s*\\keydelete\{.*\}\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keydelete(.*\s*,\s*.*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_variable_cmd()
@@ -82,80 +82,70 @@ is_variable_cmd()
 
 is_ifeq_cmd()
 {
-        if [[ "$1" =~ ^\s*\\ifeq\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*ifeq(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_ifneq_cmd()
 {
-        if [[ "$1" =~ ^\s*\\ifneq\{.*\}\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*ifneq(.*\s*,\s*.*)$ ]]; then true; else false; fi
 }
 
 is_exit_cmd()
 {
-        if [[ "$1" =~ ^\s*\\exit\{.*\}$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*exit()$ ]]; then true; else false; fi
 }
 
 #-------------------------------------------------------------------------------
 # Command argument return functions
 #-------------------------------------------------------------------------------
-get_begin_cmd_arg()
-{
-        echo $1 | sed 's/^\s*\\begin{\(.*\)}$/\1/'
-}
-
-get_end_cmd_arg()
-{
-        echo $1 | sed 's/^\s*\\end{\(.*\)}$/\1/'
-}
-
 get_msg_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\msg{\(.*\)}$/\1/'
+        echo $1 | sed 's/^\s*msg(\(.*\))$/\1/'
 }
 
-get_item_cmd_arg()
+get_setitem_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\item{\(.*\)}{\(.*\)}$/\1 \2/'
+        echo $1 | sed 's/^\s*setitem(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
 get_readsel_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\readsel{\(.*\)}{\(.*\)}$/\1 \2/'
+        echo $1 | sed 's/^\s*readsel(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
 get_readint_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\readint{\(.*\)}{\(.*\)}$/\1 \2/'
+        echo $1 | sed 's/^\s*readint(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
 get_readuint_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\readuint{\(.*\)}{\(.*\)}$/\1 \2/'
+        echo $1 | sed 's/^\s*readuint(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
 get_readstring_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\readstring{\(.*\)}{\(.*\)}$/\1 \2/'
+        echo $1 | sed 's/^\s*readstring(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
 get_keyread_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\keyread{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3 \4/'
+        echo $1 | sed 's/^\s*keyread(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
 }
 
 get_keysave_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\keysave{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3 \4/'
+        echo $1 | sed 's/^\s*keysave(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
 }
 
 get_keycreate_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\keycreate{\(.*\)}{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3 \4/'
+        echo $1 | sed 's/^\s*keycreate(\(.*\)\s*,\s*\(.*\),\s*\(.*\),\s*\(.*\))$/\1 \2 \3 \4/'
 }
 
 get_keydelete_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\keydelete{\(.*\)}{\(.*\)}{\(.*\)}$/\1 \2 \3/'
+        echo $1 | sed 's/^\s*\\keydelete(\(.*\)\s*,\s*\(.*\),\s*\(.*\))$/\1 \2 \3/'
 }
 
 get_variable_cmd_arg()
@@ -165,17 +155,12 @@ get_variable_cmd_arg()
 
 get_ifeq_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\ifeq{\(.*\)}{\(.*\)}$/\1 \2/'
+        echo $1 | sed 's/^\s*ifeq(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
 get_ifneq_cmd_arg()
 {
-        echo $1 | sed 's/^\s*\\ifneq{\(.*\)}{\(.*\)}$/\1 \2/'
-}
-
-get_exit_cmd_arg()
-{
-        echo $1 | sed 's/^\s*\\exit{\(.*\)}$/\1/'
+        echo $1 | sed 's/^\s*ifneq(\(.*\)\s*,\s*\(.*\))$/\1 \2/'
 }
 
 #-------------------------------------------------------------------------------
@@ -268,7 +253,7 @@ read_script()
 
                 elif $(is_begin_cmd "$line"); then
                         if $begin; then
-                                error $script $seek "\begin{} in the \begin{}..\end{} block"
+                                error $script $seek "nested 'begin'"
                         else
                                 begin=true
                         fi
@@ -283,7 +268,7 @@ read_script()
                                 rewind=false
                                 echo ""
                         else
-                                error $script $seek "orphaned \end{} command"
+                                error $script $seek "orphaned 'end'"
                         fi
 
                 elif $(is_ifeq_cmd "$line") && $begin; then
@@ -312,9 +297,9 @@ read_script()
                 elif $(is_msg_cmd "$line") && $begin; then
                         msgs[${#msgs[@]}]=$(get_msg_cmd_arg "$line")
 
-                elif $(is_item_cmd "$line") && $begin; then
+                elif $(is_setitem_cmd "$line") && $begin; then
                         args=()
-                        args=($(get_item_cmd_arg "$line"))
+                        args=($(get_setitem_cmd_arg "$line"))
                         items[${#items[@]}]=${args[0]}
                         itemdesc[${#itemdesc[@]}]=${args[*]/${args[0]}/}
 
@@ -412,7 +397,7 @@ read_script()
                         if $begin; then
                                 error $script $seek "unknown command: $line"
                         else
-                                error $script $seek "command '$line' outsite \begin{}..\end{}"
+                                error $script $seek "command '$line' outsite begin..end"
                         fi
                 fi
         done 9< $script
