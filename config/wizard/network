@@ -7,14 +7,21 @@ endconfig
 
 config
         print()
-        keyread(header, ../project/flags.h, __NETWORK_ENABLE__, tmp)
+        keyread(header, ../project/flags.h, __NETWORK_ENABLE__, net_en)
         print(Do you want to enable network?)
-        print(Current value: @tmp)
+        print(Current value: @net_en)
         additem(YES,)
         additem(NO,)
-        readsel(tmp,)
-        keysave(header, ../project/flags.h, __NETWORK_ENABLE__, tmp)
-        keysave(makefile, ../project/Makefile, ENABLE_NETWORK, tmp)
+        readsel(net_en,)
+        keysave(header, ../project/flags.h, __NETWORK_ENABLE__, net_en)
+        keysave(makefile, ../project/Makefile, ENABLE_NETWORK, net_en)
+endconfig
+
+config
+        no=NO
+        if(net_en = no)
+                exit()
+        endif
 endconfig
 
 config

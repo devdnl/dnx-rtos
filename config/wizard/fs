@@ -14,6 +14,7 @@ config
         additem(NO,)
         readsel(tmp,)
         keysave(header, ../project/flags.h, __ENABLE_DEVFS__, tmp)
+        keysave(makefile, ../project/Makefile, ENABLE_DEVFS, tmp)
 endconfig
 
 config
@@ -25,6 +26,7 @@ config
         additem(NO,)
         readsel(tmp,)
         keysave(header, ../project/flags.h, __ENABLE_LFS__, tmp)
+        keysave(makefile, ../project/Makefile, ENABLE_LFS, tmp)
 endconfig
 
 config
@@ -36,6 +38,7 @@ config
         additem(NO,)
         readsel(tmp,)
         keysave(header, ../project/flags.h, __ENABLE_FATFS__, tmp)
+        keysave(makefile, ../project/Makefile, ENABLE_FATFS, tmp)
 endconfig
 
 config
@@ -47,4 +50,5 @@ config
         additem(NO,)
         readsel(tmp,)
         keysave(header, ../project/flags.h, __ENABLE_PROCFS__, tmp)
+        keysave(makefile, ../project/Makefile, ENABLE_PROCFS, tmp)
 endconfig

@@ -1,0 +1,209 @@
+config
+        print()
+        print(=====================)
+        print(Modules configuration)
+        print(=====================)
+endconfig
+
+# supported architectures
+stm32f1=stm32f1
+stm32f2=stm32f2
+stm32f3=stm32f3
+stm32f4=stm32f4
+arch=
+
+# answers
+YES=YES
+NO=NO
+
+# read architecture and set which module is implemented in current architecture
+config
+        keyread(makefile, ../project/Makefile, PROJECT_CPU_ARCH, arch)
+        if(arch = stm32f1)
+                is_CRC=YES
+                is_ETHMAC=YES
+                is_PLL=YES
+                is_SDSPI=YES
+                is_SPI=YES
+                is_TTY=YES
+                is_UART=YES
+                is_WDG=YES
+        endif
+
+        if(arch = stm32f2)
+                is_CRC=NO
+                is_ETHMAC=NO
+                is_PLL=NO
+                is_SDSPI=NO
+                is_SPI=NO
+                is_TTY=NO
+                is_UART=NO
+                is_WDG=NO
+        endif
+
+        if(arch = stm32f3)
+                is_CRC=NO
+                is_ETHMAC=NO
+                is_PLL=NO
+                is_SDSPI=NO
+                is_SPI=NO
+                is_TTY=NO
+                is_UART=NO
+                is_WDG=NO
+        endif
+
+        if(arch = stm32f4)
+                is_CRC=NO
+                is_ETHMAC=NO
+                is_PLL=NO
+                is_SDSPI=NO
+                is_SPI=NO
+                is_TTY=NO
+                is_UART=NO
+                is_WDG=NO
+        endif
+endconfig
+
+config
+        if(is_CRC = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_CRC__, tmp)
+                print(Do you want to enable CRC module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_CRC,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_CRC__, tmp)
+        endif
+        if(is_CRC = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_CRC,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_CRC__, NO)
+        endif
+endconfig
+
+config
+        if(is_ETHMAC = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_ETHMAC__, tmp)
+                print(Do you want to enable ETHMAC module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_ETHMAC,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_ETHMAC__, tmp)
+        endif
+        if(is_ETHMAC = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_ETHMAC,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_ETHMAC__, NO)
+        endif
+endconfig
+
+config
+        if(is_PLL = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_PLL__, tmp)
+                print(Do you want to enable PLL module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_PLL,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_PLL__, tmp)
+        endif
+        if(is_PLL = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_PLL,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_PLL__, NO)
+        endif
+endconfig
+
+config
+        if(is_SDSPI = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_SDSPI__, tmp)
+                print(Do you want to enable SDSPI module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_SDSPI,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_SDSPI__, tmp)
+        endif
+        if(is_SDSPI = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_SDSPI,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_SDSPI__, NO)
+        endif
+endconfig
+
+config
+        if(is_SPI = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_SPI__, tmp)
+                print(Do you want to enable SPI module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_SPI,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_SPI__, tmp)
+        endif
+        if(is_SPI = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_SPI,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_SPI__, NO)
+        endif
+endconfig
+
+config
+        if(is_TTY = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_TTY__, tmp)
+                print(Do you want to enable TTY module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_TTY,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_TTY__, tmp)
+        endif
+        if(is_TTY = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_TTY,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_TTY__, NO)
+        endif
+endconfig
+
+config
+        if(is_UART = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_UART__, tmp)
+                print(Do you want to enable UART module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_UART,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_UART__, tmp)
+        endif
+        if(is_UART = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_UART,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_UART__, NO)
+        endif
+endconfig
+
+config
+        if(is_WDG = YES)
+                print()
+                keyread(header, ../project/flags.h, __ENABLE_WDG__, tmp)
+                print(Do you want to enable WDG module?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(makefile, ../project/Makefile,  ENABLE_WDG,   tmp)
+                keysave(header,   ../project/flags.h, __ENABLE_WDG__, tmp)
+        endif
+        if(is_WDG = NO)
+                keysave(makefile, ../project/Makefile,  ENABLE_WDG,   NO)
+                keysave(header,   ../project/flags.h, __ENABLE_WDG__, NO)
+        endif
+endconfig

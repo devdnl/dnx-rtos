@@ -1,0 +1,93 @@
+# answer definitions
+NO=NO
+YES=YES
+
+# architecture definitions
+stm32f1=stm32f1
+stm32f2=stm32f2
+stm32f3=stm32f3
+stm32f4=stm32f4
+arch=
+
+# read driver enable status and CPU architecture
+config
+        keyread(makefile, ../project/Makefile, ENABLE_ETHMAC, ethmac_en)
+        keyread(makefile, ../project/Makefile, PROJECT_CPU_ARCH, arch)
+        if(ethmac_en = NO)
+                exit()
+        endif
+endconfig
+
+#-------------------------------------------------------------------------------
+# CRC configuration for stm32f1 architecture
+#-------------------------------------------------------------------------------
+config
+        if(arch = stm32f1)
+                print()
+                print(====================================================)
+                print(ETHMAC module configuration for stm32f1 architecture)
+                print(====================================================)
+        endif
+endconfig
+
+config
+        if(arch = stm32f1)
+                keyread(header, ../stm32f1/ethmac_flags.h, __ETHMAC_IRQ_PRIORITY__, tmp)
+                print()
+                print(Configure Ethernet IRQ priority)
+                print(Current value: @tmp)
+                additem(0x0F, - priority 0 - highest)
+                additem(0x1F, - priority 1)
+                additem(0x2F, - priority 2)
+                additem(0x3F, - priority 3)
+                additem(0x4F, - priority 4)
+                additem(0x5F, - priority 5)
+                additem(0x6F, - priority 6)
+                additem(0x7F, - priority 7)
+                additem(0x8F, - priority 8)
+                additem(0x9F, - priority 9)
+                additem(0xAF, - priority 10)
+                additem(0xBF, - priority 11)
+                additem(0xCF, - priority 12)
+                additem(0xDF, - priority 13 - lowest)
+                additem(CONFIG_USER_IRQ_PRIORITY, - default priority)
+                readsel(tmp,)
+                keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_IRQ_PRIORITY__, tmp)
+        endif
+endconfig
+
+#-------------------------------------------------------------------------------
+# CRC configuration for stm32f2 architecture
+#-------------------------------------------------------------------------------
+config
+        if(arch = stm32f2)
+                print()
+                print(====================================================)
+                print(ETHMAC module configuration for stm32f2 architecture)
+                print(====================================================)
+        endif
+endconfig
+
+#-------------------------------------------------------------------------------
+# CRC configuration for stm32f3 architecture
+#-------------------------------------------------------------------------------
+config
+        if(arch = stm32f3)
+                print()
+                print(====================================================)
+                print(ETHMAC module configuration for stm32f3 architecture)
+                print(====================================================)
+        endif
+endconfig
+
+#-------------------------------------------------------------------------------
+# CRC configuration for stm32f4 architecture
+#-------------------------------------------------------------------------------
+config
+        if(arch = stm32f4)
+                print()
+                print(====================================================)
+                print(ETHMAC module configuration for stm32f4 architecture)
+                print(====================================================)
+        endif
+endconfig

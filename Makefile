@@ -224,6 +224,7 @@ ifeq ($(MAKECMDGOALS), config)
 	@./tools/config.sh ./config/wizard/memory
 	@./tools/config.sh ./config/wizard/fs
 	@./tools/config.sh ./config/wizard/network
+	@./tools/config.sh ./config/wizard/module
 else
 	@./tools/config.sh ./config/wizard/$(lastword $(MAKECMDGOALS))
 endif
@@ -235,6 +236,16 @@ memory : _configdone
 os     : _configdone
 network: _configdone
 fs     : _configdone
+module : _configdone
+crc    : _configdone
+ethmac : _configdone
+pll    : _configdone
+sdspi  : _configdone
+spi    : _configdone
+tty    : _configdone
+uart   : _configdone
+wdg    : _configdone
+
 _configdone:
 	@echo "Configuration done"
 
@@ -296,7 +307,7 @@ dependencies :
 .PHONY : linkobjects
 linkobjects :
 	@echo "Linking..."
-	@echo $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
+	@#echo $(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 	@$(LD) $(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var)) $(LFLAGS) -o $(TARGET_PATH)/$(PROJECT).elf
 
 ####################################################################################################
@@ -315,7 +326,7 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	@echo $(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
+	@#echo $(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 	@$(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
 
 ####################################################################################################
@@ -324,6 +335,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
+	@#$(CXX) $(CXXFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
 	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
 
 ####################################################################################################
@@ -332,7 +344,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
 	@echo "Building: $@..."
 	@$(MKDIR) $(dir $@)
-	@echo $(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	@#echo $(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 	@$(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
 
 ####################################################################################################

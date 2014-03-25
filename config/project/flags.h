@@ -118,7 +118,7 @@
 #define __ENABLE_ETHMAC__ YES
 #define __ENABLE_PLL__ YES
 #define __ENABLE_SDSPI__ YES
-#define __ENABLE_SPI__ YES
+#define __ENABLE_SPI__ NO
 #define __ENABLE_TTY__ YES
 #define __ENABLE_UART__ YES
 #define __ENABLE_WDG__ YES
