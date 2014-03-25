@@ -28,55 +28,55 @@ is_endconfig_cmd()
 # setitem(item, [description])
 is_additem_cmd()
 {
-        if [[ "$1" =~ ^\s*additem(.*\s*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*additem\(.*\s*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # readsel(var, [description])
 is_readsel_cmd()
 {
-        if [[ "$1" =~ ^\s*readsel(.*\s*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readsel\(.*\s*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # readint(var, [description])
 is_readint_cmd()
 {
-        if [[ "$1" =~ ^\s*readint(.*\s*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readint\(.*\s*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # readuint(var, [description])
 is_readuint_cmd()
 {
-        if [[ "$1" =~ ^\s*readuint(.*\s*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readuint\(.*\s*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # readstring(var, [description])
 is_readstring_cmd()
 {
-        if [[ "$1" =~ ^\s*readstring(.*\s*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*readstring\(.*\s*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # keyread(makefile|header, file, key, var)
 is_keyread_cmd()
 {
-        if [[ "$1" =~ ^\s*keyread(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keyread\(.*\s*,\s*.*,\s*.*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # keysave(makefile|header, file, key, var)
 is_keysave_cmd()
 {
-        if [[ "$1" =~ ^\s*keysave(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keysave\(.*\s*,\s*.*,\s*.*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # keycreate(makefile|header, file, key, var)
 is_keycreate_cmd()
 {
-        if [[ "$1" =~ ^\s*keycreate(.*\s*,\s*.*,\s*.*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keycreate\(.*\s*,\s*.*,\s*.*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 # keydelete(makefile|header, file, key)
 is_keydelete_cmd()
 {
-        if [[ "$1" =~ ^\s*keydelete(.*\s*,\s*.*,\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*keydelete\(.*\s*,\s*.*,\s*.*\)$ ]]; then true; else false; fi
 }
 
 is_variable_cmd()
@@ -87,7 +87,7 @@ is_variable_cmd()
 # if(var1 =|==|=~|~=|!=|<|>|>=|<= var2)
 is_if_cmd()
 {
-        if [[ "$1" =~ ^\s*if(.*\s*[!=<>]+\s*.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*if\(.*\s*[!=\<\>]+\s*.*\)$ ]]; then true; else false; fi
 }
 
 is_endif_cmd()
@@ -98,13 +98,13 @@ is_endif_cmd()
 # exit()
 is_exit_cmd()
 {
-        if [[ "$1" =~ ^\s*exit(.*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*exit\(\)$ ]]; then true; else false; fi
 }
 
 # print(string [@var] ...)
 is_print_cmd()
 {
-        if [[ "$1" =~ ^\s*print(.*\s*)$ ]]; then true; else false; fi
+        if [[ "$1" =~ ^\s*print\(.*\s*\)$ ]]; then true; else false; fi
 }
 
 #-------------------------------------------------------------------------------
