@@ -50,6 +50,7 @@
 #include "stm32f0/cpu.h"
 #elif (__CPU_ARCH__ == stm32f1)
 #include "../stm32f1/cpu.h"
+#include "../stm32f1/ethmac_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
 #include "stm32f2/cpu.h"
 #elif (__CPU_ARCH__ == stm32f3)

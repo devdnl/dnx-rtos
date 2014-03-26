@@ -9,6 +9,10 @@ stm32f3=stm32f3
 stm32f4=stm32f4
 arch=
 
+# PHY devices
+DP83848=DP83848
+LAN8700=LAN8700
+
 # read driver enable status and CPU architecture
 config
         keyread(makefile, ../project/Makefile, ENABLE_ETHMAC, ethmac_en)
@@ -53,6 +57,94 @@ config
                 additem(CONFIG_USER_IRQ_PRIORITY, - default priority)
                 readsel(tmp,)
                 keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_IRQ_PRIORITY__, tmp)
+        endif
+endconfig
+
+config
+        if(arch = stm32f1)
+                keyread(header, ../stm32f1/ethmac_flags.h, __ETHMAC_CHECKSUM_BY_HARDWARE__, tmp)
+                print()
+                print(Do you want to enable hardware checksum calculation?)
+                print(Current value: @tmp)
+                additem(YES,)
+                additem(NO,)
+                readsel(tmp,)
+                keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_CHECKSUM_BY_HARDWARE__, tmp)
+        endif
+endconfig
+
+config
+        if(arch = stm32f1)
+                keyread(header, ../stm32f1/ethmac_flags.h, __ETHMAC_SPEED__, tmp)
+                print()
+                print(Select Ethernet speed.)
+                print(Current value: @tmp)
+                additem(ETH_Speed_10M,)
+                additem(ETH_Speed_100M,)
+                readsel(tmp,)
+                keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_SPEED__, tmp)
+        endif
+endconfig
+
+config
+        if(arch = stm32f1)
+                keyread(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_ADDRESS__, tmp)
+                print()
+                print(Configure PHY transceiver address.)
+                print(Current value: @tmp)
+                readuint(tmp, Enter PHY address)
+                keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_ADDRESS__, tmp)
+        endif
+endconfig
+
+config
+        if(arch = stm32f1)
+                keyread(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_RESET_DELAY__, tmp)
+                print()
+                print(Configure PHY reset delay time.)
+                print(Current value: @tmp)
+                readuint(tmp, Enter PHY reset delay time [ms])
+                keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_RESET_DELAY__, tmp)
+        endif
+endconfig
+
+config
+        if(arch = stm32f1)
+                keyread(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_CONFIG_DELAY__, tmp)
+                print()
+                print(Configure PHY configuration delay time.)
+                print(Current value: @tmp)
+                readuint(tmp, Enter PHY configuration delay time [ms])
+                keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_CONFIG_DELAY__, tmp)
+        endif
+endconfig
+
+config
+        if(arch = stm32f1)
+                keyread(header, ../stm32f1/ethmac_flags.h, __ETHMAC_DEVICE__, tmp)
+                print()
+                print(Select PHY device.)
+                print(Current value: @tmp)
+                additem(DP83848,)
+                additem(LAN8700,)
+                readsel(tmp,)
+                keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_DEVICE__, tmp)
+                if(tmp = DP83848)
+                        speed_status_bm=0x0002
+                        duplex_status_bm=0x0004
+                        status_reg_addr=16
+                        keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_SPEED_STATUS_BM__, speed_status_bm)
+                        keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_DUPLEX_STATUS_BM__, duplex_status_bm)
+                        keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_SR__, status_reg_addr)
+                endif
+                if(tmp = LAN8700)
+                        speed_status_bm=0x0004
+                        duplex_status_bm=0x0010
+                        status_reg_addr=31
+                        keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_SPEED_STATUS_BM__, speed_status_bm)
+                        keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_DUPLEX_STATUS_BM__, duplex_status_bm)
+                        keysave(header, ../stm32f1/ethmac_flags.h, __ETHMAC_PHY_SR__, status_reg_addr)
+                endif
         endif
 endconfig
 

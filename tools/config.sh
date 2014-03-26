@@ -478,6 +478,10 @@ read_script()
                         fi
                 fi
         done 9< $script
+
+        if [ $nestedif -gt 0 ]; then
+                error $script $seek "unexpected file end"
+        fi
 }
 
 #-------------------------------------------------------------------------------

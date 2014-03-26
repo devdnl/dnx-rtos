@@ -42,32 +42,32 @@ extern "C" {
 /*
  * Ethernet MAC IRQ priority
  */
-#define ETHMAC_IRQ_PRIORITY             CONFIG_USER_IRQ_PRIORITY
+#define ETHMAC_IRQ_PRIORITY             __ETHMAC_IRQ_PRIORITY__
 
 /*
  * Enable (1) or disable (0) hardware checksum calculation
  */
-#define ETHMAC_CHECKSUM_BY_HARDWARE     1
+#define ETHMAC_CHECKSUM_BY_HARDWARE     __ETHMAC_CHECKSUM_BY_HARDWARE__
 
 /*
  * Ethernet MAC speed (ETH_Speed_100M or ETH_Speed_10M)
  */
-#define ETHMAC_SPEED                    ETH_Speed_100M
+#define ETHMAC_SPEED                    __ETHMAC_SPEED__
 
 /*
  * PHY address
  */
-#define ETHMAC_PHY_ADDRESS              0x01
+#define ETHMAC_PHY_ADDRESS              __ETHMAC_PHY_ADDRESS__
 
 /*
  * PHY reset delay [ms]
  */
-#define ETHMAC_PHY_RESET_DELAY          250
+#define ETHMAC_PHY_RESET_DELAY          __ETHMAC_PHY_RESET_DELAY__
 
 /*
  * PHY configuration apply delay [ms]
  */
-#define ETHMAC_PHY_CONFIG_DELAY         250
+#define ETHMAC_PHY_CONFIG_DELAY         __ETHMAC_PHY_CONFIG_DELAY__
 
 /*
  * Transceiver Status Register address
@@ -75,7 +75,7 @@ extern "C" {
  * For DP83848: 16
  * For LAN8700: 31
  */
-#define ETHMAC_PHY_SR                   16
+#define ETHMAC_PHY_SR                   __ETHMAC_PHY_SR__
 
 /*
  * PHY speed status 16-bit mask
@@ -83,7 +83,7 @@ extern "C" {
  * For DP83848: 0x0002
  * For LAN8700: 0x0004
  */
-#define ETHMAC_PHY_SPEED_STATUS_BM      0x0002
+#define ETHMAC_PHY_SPEED_STATUS_BM      __ETHMAC_PHY_SPEED_STATUS_BM__
 
 /*
  * PHY duplex status 16-bit mask
@@ -91,7 +91,7 @@ extern "C" {
  * For DP83848: 0x0004
  * For LAN8700: 0x0010
  */
-#define ETHMAC_PHY_DUPLEX_STATUS_BM     0x0004
+#define ETHMAC_PHY_DUPLEX_STATUS_BM     __ETHMAC_PHY_DUPLEX_STATUS_BM__
 
 /*==============================================================================
   Exported object types
