@@ -27,12 +27,12 @@
 #define _FLAGS_H_
 
 /* definition of answers for questions */
-#ifndef NO
-#define NO 0
+#ifndef __NO__
+#define __NO__ 0
 #endif
 
-#ifndef YES
-#define YES 1
+#ifndef __YES__
+#define __YES__ 1
 #endif
 
 /* fixed configuration */
@@ -80,27 +80,27 @@
 #define __OS_TASK_MAX_PRIORITIES__ 7
 #define __OS_TASK_NAME_LEN__ 16
 #define __OS_TASK_SCHED_FREQ__ 1000
-#define __OS_SLEEP_ON_IDLE__ NO
-#define __OS_PRINTF_ENABLE__ YES
-#define __OS_SCANF_ENABLE__ YES
-#define __OS_SYSTEM_MSG_ENABLE__ YES
-#define __OS_COLOR_TERMINAL_ENABLE__ YES
+#define __OS_SLEEP_ON_IDLE__ __YES__
+#define __OS_PRINTF_ENABLE__ __YES__
+#define __OS_SCANF_ENABLE__ __YES__
+#define __OS_SYSTEM_MSG_ENABLE__ __YES__
+#define __OS_COLOR_TERMINAL_ENABLE__ __YES__
 #define __OS_STREAM_BUFFER_LENGTH__ 100
 #define __OS_PIPE_LENGTH__ 128
 #define __OS_ERRNO_STRING_LEN__ 3
-#define __OS_MONITOR_TASK_MEMORY_USAGE__ YES
-#define __OS_MONITOR_TASK_FILE_USAGE__ YES
-#define __OS_MONITOR_KERNEL_MEMORY_USAGE__ YES
-#define __OS_MONITOR_MODULE_MEMORY_USAGE__ YES
-#define __OS_MONITOR_SYSTEM_MEMORY_USAGE__ YES
-#define __OS_MONITOR_CPU_LOAD__ YES
-#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ YES
+#define __OS_MONITOR_TASK_MEMORY_USAGE__ __YES__
+#define __OS_MONITOR_TASK_FILE_USAGE__ __YES__
+#define __OS_MONITOR_KERNEL_MEMORY_USAGE__ __YES__
+#define __OS_MONITOR_MODULE_MEMORY_USAGE__ __YES__
+#define __OS_MONITOR_SYSTEM_MEMORY_USAGE__ __YES__
+#define __OS_MONITOR_CPU_LOAD__ __YES__
+#define __OS_MONITOR_NETWORK_MEMORY_USAGE__ __YES__
 #define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
 #define __OS_HOSTNAME__ "localhost"
-#define __OS_SYSTEM_STOP_MACRO__ YES
+#define __OS_SYSTEM_STOP_MACRO__ __YES__
 
 /* network configuration */
-#define __NETWORK_ENABLE__ YES
+#define __NETWORK_ENABLE__ __YES__
 #define __NETWORK_MAC_ADDR_0__ 0x50
 #define __NETWORK_MAC_ADDR_1__ 0xE5
 #define __NETWORK_MAC_ADDR_2__ 0x49
@@ -110,20 +110,20 @@
 #define __NETWORK_ETHIF_FILE__ "/dev/eth0"
 
 /* file systems */
-#define __ENABLE_DEVFS__ YES
-#define __ENABLE_LFS__ YES
-#define __ENABLE_FATFS__ YES
-#define __ENABLE_PROCFS__ YES
+#define __ENABLE_DEVFS__ __YES__
+#define __ENABLE_LFS__ __YES__
+#define __ENABLE_FATFS__ __YES__
+#define __ENABLE_PROCFS__ __YES__
 
 /* modules */
-#define __ENABLE_CRC__ YES
-#define __ENABLE_ETHMAC__ YES
-#define __ENABLE_PLL__ YES
-#define __ENABLE_SDSPI__ YES
-#define __ENABLE_SPI__ NO
-#define __ENABLE_TTY__ YES
-#define __ENABLE_UART__ YES
-#define __ENABLE_WDG__ YES
+#define __ENABLE_CRC__ __YES__
+#define __ENABLE_ETHMAC__ __YES__
+#define __ENABLE_PLL__ __YES__
+#define __ENABLE_SDSPI__ __YES__
+#define __ENABLE_SPI__ __NO__
+#define __ENABLE_TTY__ __YES__
+#define __ENABLE_UART__ __YES__
+#define __ENABLE_WDG__ __YES__
 
 #endif /* _FLAGS_H_ */
 /*==============================================================================

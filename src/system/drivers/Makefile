@@ -1,34 +1,34 @@
 # Makefile for GNU make
 include $(DRV_LOC)/gpio/Makefile
 
-ifeq ($(ENABLE_CRC), YES)
+ifeq ($(ENABLE_CRC), __YES__)
 include $(DRV_LOC)/crc/Makefile
 endif
 
-ifeq ($(ENABLE_ETHMAC), YES)
+ifeq ($(ENABLE_ETHMAC), __YES__)
 include $(DRV_LOC)/ethmac/Makefile
 endif
 
-ifeq ($(ENABLE_PLL), YES)
+ifeq ($(ENABLE_PLL), __YES__)
 include $(DRV_LOC)/pll/Makefile
 endif
 
-ifeq ($(ENABLE_SDSPI), YES)
+ifeq ($(ENABLE_SDSPI), __YES__)
 include $(DRV_LOC)/sdspi/Makefile
 endif
 
-ifeq ($(ENABLE_SPI), YES)
+ifeq ($(ENABLE_SPI), __YES__)
 include $(DRV_LOC)/spi/Makefile
 endif
 
-ifeq ($(ENABLE_TTY), YES)
+ifeq ($(ENABLE_TTY), __YES__)
 include $(DRV_LOC)/tty/Makefile
 endif
 
-ifeq ($(ENABLE_UART), YES)
+ifeq ($(ENABLE_UART), __YES__)
 include $(DRV_LOC)/uart/Makefile
 endif
 
-ifeq ($(ENABLE_WDG), YES)
+ifeq ($(ENABLE_WDG), __YES__)
 include $(DRV_LOC)/wdg/Makefile
 endif

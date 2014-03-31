@@ -133,15 +133,14 @@ AS       = $(TOOLCHAIN)gcc -x assembler-with-cpp
 OBJCOPY  = $(TOOLCHAIN)objcopy
 OBJDUMP  = $(TOOLCHAIN)objdump
 SIZE     = $(TOOLCHAIN)size
+UNAME    = uname -s
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
 # defines VALUES
-ENABLE  = 1
-DISABLE = 0
-YES     = 1
-NO      = 0
+__YES__ = 1
+__NO__  = 0
 EMPTY   =
 
 # defines this makefile name
@@ -217,37 +216,27 @@ help :
 ####################################################################################################
 .PHONY : config
 config : clean
-ifeq ($(MAKECMDGOALS), config)
-	@./tools/config.sh ./config/wizard/project
-	@./tools/config.sh ./config/wizard/cpu
-	@./tools/config.sh ./config/wizard/os
-	@./tools/config.sh ./config/wizard/memory
-	@./tools/config.sh ./config/wizard/fs
-	@./tools/config.sh ./config/wizard/network
-	@./tools/config.sh ./config/wizard/module
-else
-	@./tools/config.sh ./config/wizard/$(lastword $(MAKECMDGOALS))
+ifeq ($(shell $(UNAME)), Linux)
+	@./tools/config_tool.linux --no-gui ./config/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Cygwin)
+	@./tools/config_tool.win.exe --no-gui ./config/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Darwin)
+	@echo "Lack of program for the Darwin kernel"
 endif
 
-.PHONY : project cpu memory os network
-project: _configdone
-cpu    : _configdone
-memory : _configdone
-os     : _configdone
-network: _configdone
-fs     : _configdone
-module : _configdone
-crc    : _configdone
-ethmac : _configdone
-pll    : _configdone
-sdspi  : _configdone
-spi    : _configdone
-tty    : _configdone
-uart   : _configdone
-wdg    : _configdone
-
-_configdone:
-	@echo "Configuration done"
+.PHONY : xconfig
+xconfig : clean
+ifeq ($(shell $(UNAME)), Linux)
+	@./tools/config_tool.linux ./config/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Cygwin)
+	@./tools/config_tool.win.exe ./config/wizard/wizard.lua
+endif
+ifeq ($(shell $(UNAME)), Darwin)
+	@echo "Lack of program for the Darwin kernel"
+endif
 
 ####################################################################################################
 # analisis
