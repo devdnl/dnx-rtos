@@ -30,8 +30,11 @@
 arch            = ""
 yes             = "__YES__"
 no              = "__NO__"
-current_cfg     = 1
-total_cfg       = 0
+current_step    = 1
+total_steps     = 0
+back            = "wXeVluSSUkF9sMtietKfvg=Back"
+skip            = ""
+next            = skip
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS
@@ -41,9 +44,37 @@ total_cfg       = 0
 -- @return progress string
 --------------------------------------------------------------------------------
 function progress()
-        local msg = "(" .. current_cfg .. "/" .. total_cfg .. ") "
-        current_cfg = current_cfg + 1
+        local msg = "(" .. current_step .. "/" .. total_steps .. ") \n"
+        current_step = current_step + 1
         return msg
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function adds to current step value
+--------------------------------------------------------------------------------
+function modify_current_step(value)
+        current_step = current_step + value
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function adds to total step value
+--------------------------------------------------------------------------------
+function modify_total_steps(value)
+        total_steps = total_steps + value
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function set total step value
+--------------------------------------------------------------------------------
+function set_total_steps(steps)
+        total_steps = steps
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function set current step value
+--------------------------------------------------------------------------------
+function set_current_step(step)
+        current_step = step
 end
 
 --------------------------------------------------------------------------------
@@ -65,9 +96,38 @@ end
 -- Function set architecture variable directly, and also return it.
 -- @return current architecture
 --------------------------------------------------------------------------------
-function get_cpu_architecture()
+function get_cpu_arch()
         arch = key_read("../project/Makefile", "PROJECT_CPU_ARCH")
         return arch
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function set CPU architecture
+-- Function set architecture variable directly, and also return it.
+-- @return current architecture
+--------------------------------------------------------------------------------
+function set_cpu_arch(val)
+        key_save("../project/Makefile", "PROJECT_CPU_ARCH", val)
+        key_save("../project/flags.h", "__CPU_ARCH__", val)
+        arch = val
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function check if value can be saved
+-- If value can be saved then true is returned, otherwise false. If value is the
+-- back value then current config number is decremented.
+-- @return Return true if can be saved, otherwise false
+--------------------------------------------------------------------------------
+function can_be_saved(value)
+        if (value ~= back and value ~= skip) then
+                return true
+        else
+                if (value == back) then
+                        current_step = current_step - 2
+                end
+
+                return false
+        end
 end
 
 --------------------------------------------------------------------------------

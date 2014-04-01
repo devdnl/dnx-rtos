@@ -23,6 +23,7 @@
 
 
 *//*========================================================================--]]
+
 require "defs"
 
 --------------------------------------------------------------------------------
@@ -32,51 +33,66 @@ require "defs"
 -- @brief Calculate total steps of this configuration
 --------------------------------------------------------------------------------
 local function calculate_total_steps()
-        total_cfg = 2
+        set_total_steps(2)
 end
 
 --------------------------------------------------------------------------------
 -- @brief Configure heap size
 --------------------------------------------------------------------------------
-function configure_heap_size()
+local function configure_heap_size()
         local value = key_read("../project/flags.h", "__HEAP_SIZE__")
         msg(progress() .. "Configure heap size. Heap must be smaller than RAM size.")
         msg("Current heap size is: " .. value .. " bytes.")
         value = get_number("dec", 1024, 1*1024*1024*1024)
-        if (value ~= "") then
+        if (can_be_saved(value)) then
                 key_save("../project/flags.h", "__HEAP_SIZE__", value)
         end
+
+        return value
 end
 
 --------------------------------------------------------------------------------
 -- @brief Configre heap block size
 --------------------------------------------------------------------------------
-function configure_heap_block_size()
+local function configure_heap_block_size()
         local value = key_read("../project/flags.h", "__HEAP_BLOCK_SIZE__")
         msg(progress() .. "Configure the smallest block size that can be allocated in the heap.")
         msg("Current block size is: " .. value .. " bytes.")
         value = get_number("dec", 1, 4096)
-        if (value ~= "") then
+        if (can_be_saved(value)) then
                 key_save("../project/flags.h", "__HEAP_BLOCK_SIZE__", value)
         end
+
+        return value
 end
 
 --------------------------------------------------------------------------------
--- @brief Function execute memory configuration
+-- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function mem_configure()
-        current_cfg = 1
-        title("Dynamic Memory Management Configuration")
         calculate_total_steps()
-        configure_heap_size()
-        configure_heap_block_size()
+
+        title("Dynamic Memory Management Configuration")
+
+        ::_01_::
+        if configure_heap_size() == back then
+                return back
+        end
+
+        ::_02_::
+        if configure_heap_block_size() == back then
+                goto _01_
+        end
+
+        return next
 end
 
 --------------------------------------------------------------------------------
 -- Enable configuration if master wizard is not defined
 --------------------------------------------------------------------------------
 if (master ~= true) then
-        mem_configure()
+        while mem_configure() == back do
+        end
         configuration_finished()
 end
 

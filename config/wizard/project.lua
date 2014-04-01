@@ -30,70 +30,77 @@ require "defs"
 -- FUNCTIONS
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
--- @brief Function calculate a total configuration steps
---------------------------------------------------------------------------------
-local function calculate_total_steps()
-        total_cfg = 2
-end
-
---------------------------------------------------------------------------------
 -- @brief Function configure project name
 --------------------------------------------------------------------------------
-function configure_project_name()
+local function configure_project_name()
         msg(progress() .. "Project name configuration.")
         local str = key_read("../project/Makefile", "PROJECT_NAME")
         msg("Current project name is: " .. str .. ".")
         str = get_string()
-        if (str ~= "") then
+        if (can_be_saved(str)) then
                 key_save("../project/Makefile", "PROJECT_NAME", str)
         end
+
+        return str
 end
 
 --------------------------------------------------------------------------------
 -- @brief Function configure toolchain name
 --------------------------------------------------------------------------------
-function configure_toolchain_name()
+local function configure_toolchain_name()
         local message = "Toolchain name configuration."
         local curr_is = "Current toolchain name is: "
+        local choice  = key_read("../project/Makefile", "PROJECT_TOOLCHAIN")
 
         msg(progress() .. message)
-        current_cfg = current_cfg - 1
-
-        local choice = key_read("../project/Makefile", "PROJECT_TOOLCHAIN")
         msg(curr_is .. choice)
         add_item("arm-none-eabi-", "arm-none-eabi - e.g. Linaro, CodeSourcery")
         add_item("other", "Other")
         local name = get_selection()
-        if (name ~= "") then
+        if (can_be_saved(name)) then
                 if (name == "other") then
+                        modify_current_step(-1)
                         msg(progress() .. message)
                         msg(curr_is .. choice)
                         name = get_string()
                 end
 
-                if (name ~= "") then
+                if (can_be_saved(name)) then
                         key_save("../project/Makefile", "PROJECT_TOOLCHAIN", name)
                 end
         end
+
+        return name
 end
 
 --------------------------------------------------------------------------------
--- @brief Main function that configure CPU according to current architecture
+-- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function project_configure()
-        current_cfg = 1
-        calculate_total_steps()
+        set_total_steps(2)
 
         title("General project configuration")
-        configure_project_name()
-        configure_toolchain_name()
+
+        ::_1_::
+        if configure_project_name() == back then
+                return back
+        end
+
+        ::_2_::
+        if configure_toolchain_name() == back then
+                goto _1_
+        end
+
+        return next
 end
 
 --------------------------------------------------------------------------------
 -- Enable configuration if master wizard is not defined
 --------------------------------------------------------------------------------
 if (master ~= true) then
-        project_configure()
+        while project_configure() == back do
+        end
+
         configuration_finished()
 end
 

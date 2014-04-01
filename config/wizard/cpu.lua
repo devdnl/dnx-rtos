@@ -33,21 +33,25 @@ require "defs"
 -- @brief Function calculate a total configuration steps
 --------------------------------------------------------------------------------
 local function calculate_total_steps()
+        local arch = get_cpu_arch()
+
         if (arch == "stm32f1") then
-                total_cfg = 4
+                set_total_steps(4)
         elseif (arch == "stm32f2") then
-                total_cfg = 2
+                set_total_steps(2)
         elseif (arch == "stm32f3") then
-                total_cfg = 2
+                set_total_steps(2)
         elseif (arch == "stm32f4") then
-                total_cfg = 2
+                set_total_steps(2)
+        else
+                set_total_steps(0)
         end
 end
 
 --------------------------------------------------------------------------------
 -- @brief Function configure CPU architecture
 --------------------------------------------------------------------------------
-function configure_cpu_arch()
+local function configure_cpu_arch()
         msg(progress() .. "CPU architecture configuration.")
         local choice = key_read("../project/Makefile", "PROJECT_CPU_ARCH")
         msg("Current CPU architecture is: " .. choice .. ".")
@@ -56,30 +60,32 @@ function configure_cpu_arch()
         add_item("stm32f3", "stm32f3 microcontroller family")
         add_item("stm32f4", "stm32f4 microcontroller family")
         choice = get_selection()
-        if (choice ~= "") then
-                key_save("../project/Makefile", "PROJECT_CPU_ARCH", choice)
-                key_save("../project/flags.h", "__CPU_ARCH__", choice)
-                arch = choice
+        if (can_be_saved(choice)) then
+                set_cpu_arch(choice)
         end
+
+        return choice
 end
 
 --------------------------------------------------------------------------------
 -- @brief Configure CPU frequency
 --------------------------------------------------------------------------------
-function configure_freq()
+local function configure_freq()
         msg(progress() .. "Configuration of oscillator frequency (generator, crystal, etc).")
         local value = key_read("../project/flags.h", "__CPU_OSC_FREQ__")
         msg("Current value is: " .. value .. " Hz.")
         value = get_number("dec", 0, 100e6)
-        if (value ~= "") then
+        if (can_be_saved(value)) then
                 key_save("../project/flags.h", "__CPU_OSC_FREQ__", value)
         end
+
+        return value
 end
 
 --------------------------------------------------------------------------------
 -- @brief Configure microcontroller for stm32f1 family
 --------------------------------------------------------------------------------
-function configure_stm32f1_mcu()
+local function configure_stm32f1_mcu()
         msg(progress() .. "Which microcontroller do you want to use?")
         local choice = key_read("../stm32f1/cpu.h", "__CPU_NAME__")
         msg("Current microcontroller is: " .. choice .. ".")
@@ -128,15 +134,17 @@ function configure_stm32f1_mcu()
         add_item("STM32F107VBxx", "STM32F107VBxx")
         add_item("STM32F107VCxx", "STM32F107VCxx")
         choice = get_selection()
-        if (choice ~= "") then
+        if (can_be_saved(choice)) then
                 key_save("../stm32f1/cpu.h", "__CPU_NAME__", choice)
         end
+
+        return choice
 end
 
 --------------------------------------------------------------------------------
 -- @brief Configure IRQ priorities for stm32f1 family
 --------------------------------------------------------------------------------
-function configure_stm32f1_priorities()
+local function configure_stm32f1_priorities()
         local choice = key_read("../project/flags.h", "__IRQ_USER_PRIORITY__")
         msg(progress() .. "Select default priority for user's interrputs.")
         msg("Current priority is: priority " .. math.floor(tonumber(choice) / 16))
@@ -155,40 +163,74 @@ function configure_stm32f1_priorities()
         add_item("0xCF", "Priority 12")
         add_item("0xDF", "Priority 13 (the lowest)")
         choice = get_selection()
-        if (choice ~= "") then
+        if (can_be_saved(choice)) then
                 key_save("../project/flags.h", "__IRQ_RTOS_KERNEL_PRIORITY__", "0xFF")
                 key_save("../project/flags.h", "__IRQ_RTOS_SYSCALL_PRIORITY__", "0xEF")
                 key_save("../project/flags.h", "__IRQ_USER_PRIORITY__", choice)
         end
+
+        return choice
 end
 
 --------------------------------------------------------------------------------
--- @brief Main function that configure CPU according to current architecture
+-- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function cpu_configure()
-        current_cfg = 1
-        get_cpu_architecture()
+        local arch = get_cpu_arch()
+
+        calculate_total_steps()
 
         title("CPU configuration (" .. arch .. ")")
-        calculate_total_steps()
-        configure_cpu_arch()
-        calculate_total_steps()
-        configure_freq()
 
-        if (arch == "stm32f1") then
-                configure_stm32f1_mcu()
-                configure_stm32f1_priorities()
-        elseif (arch == "stm32f2") then
-        elseif (arch == "stm32f3") then
-        elseif (arch == "stm32f4") then
+        ::common_1::
+        if configure_cpu_arch() == back then
+                return back
+        else
+                arch = get_cpu_arch()
+                calculate_total_steps()
         end
+
+        ::common_2::
+        if configure_freq() == back then
+                goto common_1
+        end
+
+        if     arch == "stm32f1" then goto stm32f1_1
+        elseif arch == "stm32f2" then goto stm32f2_1
+        elseif arch == "stm32f3" then goto stm32f3_1
+        elseif arch == "stm32f4" then goto stm32f4_1
+        else return next end
+
+        -- stm32f1 --
+        ::stm32f1_1::
+        if configure_stm32f1_mcu() == back then
+                goto common_2
+        end
+
+        ::_stm32f1_02_::
+        if configure_stm32f1_priorities() == back then
+                goto stm32f1_1
+        end
+
+        -- stm32f2 --
+        ::stm32f2_1::
+
+        -- stm32f3 --
+        ::stm32f3_1::
+
+        -- stm32f4 --
+        ::stm32f4_1::
+
+        return next
 end
 
 --------------------------------------------------------------------------------
 -- Enable configuration if master wizard is not defined
 --------------------------------------------------------------------------------
 if (master ~= true) then
-        cpu_configure()
+        while cpu_configure() == back do
+        end
+
         configuration_finished()
 end
 
