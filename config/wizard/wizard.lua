@@ -34,6 +34,7 @@ require "memory"
 require "project"
 require "fs"
 require "network"
+require "modules"
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS
@@ -44,7 +45,7 @@ require "network"
 --------------------------------------------------------------------------------
 local function ask_for_configuration()
         title("Welcome to dnx RTOS configuration!")
-        msg("The configuration is divided to few parts, each one confiugre specified system module.")
+        msg("The configuration is divided to few parts, each one configure specified system module.")
         msg("What the part would you like to configure?")
         add_item("project","Project (name, toolchain, etc)")
         add_item("cpu", "CPU (architecture, microcontroller selection)")
@@ -85,5 +86,8 @@ while true do
 
         elseif (configure == "net") then
                 net_configure()
+
+        elseif (configure == "mod") then
+                mod_configure()
         end
 end
