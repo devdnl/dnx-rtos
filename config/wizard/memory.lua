@@ -25,6 +25,12 @@
 *//*========================================================================--]]
 
 require "defs"
+require "cpu"
+
+--------------------------------------------------------------------------------
+-- GLOBAL OBJECTS
+--------------------------------------------------------------------------------
+mem = {}
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS
@@ -41,9 +47,9 @@ end
 --------------------------------------------------------------------------------
 local function configure_heap_size()
         local value = key_read("../project/flags.h", "__HEAP_SIZE__")
-        msg(progress() .. "Configure heap size. Heap must be smaller than RAM size.")
+        msg(progress() .. "Configure heap size. Heap must be smaller than ".. cpu:get_RAM_size() .." bytes.")
         msg("Current heap size is: " .. value .. " bytes.")
-        value = get_number("dec", 1024, 1*1024*1024*1024)
+        value = get_number("dec", 1024, cpu:get_RAM_size())
         if (can_be_saved(value)) then
                 key_save("../project/flags.h", "__HEAP_SIZE__", value)
         end
@@ -69,7 +75,7 @@ end
 --------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
-function mem_configure()
+function mem:configure()
         calculate_total_steps()
 
         title("Dynamic Memory Management Configuration")
@@ -91,7 +97,7 @@ end
 -- Enable configuration if master wizard is not defined
 --------------------------------------------------------------------------------
 if (master ~= true) then
-        while mem_configure() == back do
+        while mem:configure() == back do
         end
         configuration_finished()
 end

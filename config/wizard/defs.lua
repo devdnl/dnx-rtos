@@ -27,7 +27,6 @@
 --------------------------------------------------------------------------------
 -- GLOBAL VARIABLES
 --------------------------------------------------------------------------------
-arch            = ""
 yes             = "__YES__"
 no              = "__NO__"
 current_step    = 1
@@ -35,6 +34,8 @@ total_steps     = 0
 back            = "wXeVluSSUkF9sMtietKfvg=Back"
 skip            = ""
 next            = skip
+
+local no_master = false
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS
@@ -92,24 +93,15 @@ function configuration_finished()
 end
 
 --------------------------------------------------------------------------------
--- @brief Function read current architecture from file
--- Function set architecture variable directly, and also return it.
--- @return current architecture
+-- @brief Function prints message if master wizard is not running
 --------------------------------------------------------------------------------
-function get_cpu_arch()
-        arch = key_read("../project/Makefile", "PROJECT_CPU_ARCH")
-        return arch
-end
-
---------------------------------------------------------------------------------
--- @brief Function set CPU architecture
--- Function set architecture variable directly, and also return it.
--- @return current architecture
---------------------------------------------------------------------------------
-function set_cpu_arch(val)
-        key_save("../project/Makefile", "PROJECT_CPU_ARCH", val)
-        key_save("../project/flags.h", "__CPU_ARCH__", val)
-        arch = val
+function show_no_master_info()
+        if (no_master == false) then
+                title("Information")
+                msg("Master wizard file is not started. To turn configuration please run wizard.lua file.")
+                pause()
+                no_master = true
+        end
 end
 
 --------------------------------------------------------------------------------

@@ -1,11 +1,13 @@
 # Makefile for GNU make
+ifeq ($(ENABLE_GPIO), __YES__)
 include $(DRV_LOC)/gpio/Makefile
+endif
 
 ifeq ($(ENABLE_CRC), __YES__)
 include $(DRV_LOC)/crc/Makefile
 endif
 
-ifeq ($(ENABLE_ETHMAC), __YES__)
+ifeq ($(ENABLE_ETH), __YES__)
 include $(DRV_LOC)/ethmac/Makefile
 endif
 

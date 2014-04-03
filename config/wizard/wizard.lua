@@ -24,7 +24,6 @@
 
 *//*========================================================================--]]
 
--- set this file as master file
 master = true
 
 require "defs"
@@ -73,13 +72,13 @@ while true do
                 project_configure()
 
         elseif (configure == "cpu") then
-                cpu_configure()
+                cpu:configure()
 
         elseif (configure == "rtos") then
                 rtos_configure()
 
         elseif (configure == "mem") then
-                mem_configure()
+                mem:configure()
 
         elseif (configure == "fs") then
                 fs_configure()
@@ -88,6 +87,6 @@ while true do
                 net_configure()
 
         elseif (configure == "mod") then
-                mod_configure()
+                mod:configure()
         end
 end
