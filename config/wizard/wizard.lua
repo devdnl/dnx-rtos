@@ -69,7 +69,7 @@ while true do
         set_current_step(1)
 
         if (configure == "project") then
-                project_configure()
+                pro:configure()
 
         elseif (configure == "cpu") then
                 cpu:configure()
