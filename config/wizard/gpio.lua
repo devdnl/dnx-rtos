@@ -33,19 +33,27 @@ require "cpu"
 -- public calls objects
 gpio = {}
 
-local gpio_port                 = {}
-gpio_port.stm32f1               = {}
-gpio_port.stm32f1.pins          = 16
-gpio_port.stm32f1.configure     = nil   -- configured below
-gpio_port.stm32f2               = {}
-gpio_port.stm32f2.pins          = 16
-gpio_port.stm32f2.configure     = nil   -- configured below
-gpio_port.stm32f3               = {}
-gpio_port.stm32f3.pins          = 16
-gpio_port.stm32f3.configure     = nil   -- configured below
-gpio_port.stm32f4               = {}
-gpio_port.stm32f4.pins          = 16
-gpio_port.stm32f4.configure     = nil   -- configured below
+local gpio_port                         = {}
+gpio_port.stm32f1                       = {}
+gpio_port.stm32f1.pins                  = 16
+gpio_port.stm32f1.configure             = nil   -- configured below
+gpio_port.stm32f1.disable_unused        = nil   -- ...
+gpio_port.stm32f1.port_list             = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
+gpio_port.stm32f2                       = {}
+gpio_port.stm32f2.pins                  = 16
+gpio_port.stm32f2.configure             = nil   -- configured below
+gpio_port.stm32f2.disable_unused        = nil   -- ...
+gpio_port.stm32f2.port_list             = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
+gpio_port.stm32f3                       = {}
+gpio_port.stm32f3.pins                  = 16
+gpio_port.stm32f3.configure             = nil   -- configured below
+gpio_port.stm32f3.disable_unused        = nil   -- ...
+gpio_port.stm32f3.port_list             = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
+gpio_port.stm32f4                       = {}
+gpio_port.stm32f4.pins                  = 16
+gpio_port.stm32f4.configure             = nil   -- configured below
+gpio_port.stm32f4.disable_unused        = nil   -- ...
+gpio_port.stm32f4.port_list             = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
 
 --------------------------------------------------------------------------------
 -- LOCAL FUNCTIONS
@@ -54,8 +62,6 @@ gpio_port.stm32f4.configure     = nil   -- configured below
 -- @brief Function configure CPU architecture
 --------------------------------------------------------------------------------
 local function configure_enable()
-        -- TODO disable unused ports
-
         local choice = key_read("../project/Makefile", "ENABLE_GPIO")
         msg(progress(1, 2) .. "Do you want to enable GPIO module?")
         msg("Current choice is: " .. filter_yes_no(choice) .. ".")
@@ -73,8 +79,8 @@ end
 -- @brief Port configuration for stm32f1
 --------------------------------------------------------------------------------
 gpio_port.stm32f1.configure = function()
-        local port_name = {"PA", "PB", "PC", "PD", "PE", "PF", "PG"}
-        local cfg_file  = "../"..cpu:get_arch().."/gpio_flags.h"
+        local port_name = gpio_port.stm32f1.port_list
+        local cfg_file  = "../stm32f1/gpio_flags.h"
         local pin       = -1
         local mode      = {{"_GPIO_OUT_PUSH_PULL_10MHZ"     , "Output Push-Pull 10MHZ"},
                            {"_GPIO_OUT_PUSH_PULL_2MHZ"      , "Output Push-Pull 2MHZ"},
@@ -239,12 +245,40 @@ gpio_port.stm32f1.configure = function()
 end
 
 --------------------------------------------------------------------------------
+-- @brief Disable unused ports for stm32f1
+--------------------------------------------------------------------------------
+gpio_port.stm32f1.disable_unused = function()
+        for i = 1, #gpio_port.stm32f1.port_list do
+                local enable = no
+                if i <= cpu:get_number_of_GPIO_ports() then
+                        enable = yes
+                end
+
+                key_save("../stm32f1/gpio_flags.h", "__GPIO_"..gpio_port.stm32f1.port_list[i].."_ENABLE__", enable)
+        end
+end
+
+--------------------------------------------------------------------------------
 -- @brief Port configuration for stm32f2
 --------------------------------------------------------------------------------
 gpio_port.stm32f2.configure = function(port)
         msg("Not implemented")
         pause()
         return next
+end
+
+--------------------------------------------------------------------------------
+-- @brief Disable unused ports for stm32f2
+--------------------------------------------------------------------------------
+gpio_port.stm32f2.disable_unused = function()
+        for i = 1, #gpio_port.stm32f2.port_list do
+                local enable = no
+                if i <= cpu:get_number_of_GPIO_ports() then
+                        enable = yes
+                end
+
+                key_save("../stm32f2/gpio_flags.h", "__GPIO_"..gpio_port.stm32f2.port_list[i].."_ENABLE__", enable)
+        end
 end
 
 --------------------------------------------------------------------------------
@@ -257,12 +291,40 @@ gpio_port.stm32f3.configure = function(port)
 end
 
 --------------------------------------------------------------------------------
+-- @brief Disable unused ports for stm32f3
+--------------------------------------------------------------------------------
+gpio_port.stm32f3.disable_unused = function()
+        for i = 1, #gpio_port.stm32f3.port_list do
+                local enable = no
+                if i <= cpu:get_number_of_GPIO_ports() then
+                        enable = yes
+                end
+
+                key_save("../stm32f3/gpio_flags.h", "__GPIO_"..gpio_port.stm32f3.port_list[i].."_ENABLE__", enable)
+        end
+end
+
+--------------------------------------------------------------------------------
 -- @brief Port configuration for stm32f4
 --------------------------------------------------------------------------------
 gpio_port.stm32f4.configure = function(port)
         msg("Not implemented")
         pause()
         return next
+end
+
+--------------------------------------------------------------------------------
+-- @brief Disable unused ports for stm32f4
+--------------------------------------------------------------------------------
+gpio_port.stm32f4.disable_unused = function()
+        for i = 1, #gpio_port.stm32f4.port_list do
+                local enable = no
+                if i <= cpu:get_number_of_GPIO_ports() then
+                        enable = yes
+                end
+
+                key_save("../stm32f4/gpio_flags.h", "__GPIO_"..gpio_port.stm32f4.port_list[i].."_ENABLE__", enable)
+        end
 end
 
 --------------------------------------------------------------------------------
@@ -274,6 +336,8 @@ end
 function gpio:configure()
         title("GPIO configuration for " .. cpu:get_name())
         navigation("Home/Modules/GPIO")
+
+        gpio_port[cpu:get_arch()].disable_unused()
 
         ::gpio_enable::
         if configure_enable() == back then

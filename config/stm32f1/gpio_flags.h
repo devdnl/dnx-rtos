@@ -5,9 +5,9 @@
 #define __GPIO_PB_ENABLE__ __YES__
 #define __GPIO_PC_ENABLE__ __YES__
 #define __GPIO_PD_ENABLE__ __YES__
-#define __GPIO_PE_ENABLE__ __YES__
-#define __GPIO_PF_ENABLE__ __YES__
-#define __GPIO_PG_ENABLE__ __YES__
+#define __GPIO_PE_ENABLE__ __NO__
+#define __GPIO_PF_ENABLE__ __NO__
+#define __GPIO_PG_ENABLE__ __NO__
 
 #define __GPIO_PA_PIN_0_NAME__ TEST
 #define __GPIO_PA_PIN_0_MODE__ _GPIO_OUT_PUSH_PULL_10MHZ

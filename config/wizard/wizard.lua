@@ -54,7 +54,7 @@ local function ask_for_configuration()
         add_item("fs", "File systems")
         add_item("net", "Network")
         add_item("mod", "Modules (drivers)")
-        add_item("exit", "None - wizard exit")
+        add_item("exit", "Exit - close wizard")
         return get_selection()
 end
 
@@ -76,16 +76,16 @@ while true do
                 cpu:configure()
 
         elseif (configure == "rtos") then
-                rtos_configure()
+                rtos:configure()
 
         elseif (configure == "mem") then
                 mem:configure()
 
         elseif (configure == "fs") then
-                fs_configure()
+                fs:configure()
 
         elseif (configure == "net") then
-                net_configure()
+                net:configure()
 
         elseif (configure == "mod") then
                 mod:configure()

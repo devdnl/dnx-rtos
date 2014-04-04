@@ -27,6 +27,12 @@
 require "defs"
 
 --------------------------------------------------------------------------------
+-- GLOBAL OBJECTS
+--------------------------------------------------------------------------------
+-- public calls objects
+rtos = {}
+
+--------------------------------------------------------------------------------
 -- FUNCTIONS
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -451,7 +457,7 @@ end
 --------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
-function rtos_configure()
+function rtos:configure()
         title("Operating System Configuration")
         navigation("Home/Operating system")
         calculate_total_steps()
@@ -583,14 +589,9 @@ function rtos_configure()
         return next
 end
 
---------------------------------------------------------------------------------
--- Enable configuration if master wizard is not defined
---------------------------------------------------------------------------------
+-- started without master file
 if (master ~= true) then
-        while rtos_configure() == back do
-        end
-
-        configuration_finished()
+        show_no_master_info()
 end
 
 --------------------------------------------------------------------------------
