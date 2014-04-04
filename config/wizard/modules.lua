@@ -44,6 +44,7 @@ local function ask_for_module()
         local name = cpu:get_name()
 
         title("Module Configuration Menu for " .. name)
+        navigation("Home/Modules")
         msg("There are listed only implemented modules for selected microcontroller. Select module to configure.")
         modules = {}
         modules = cpu:get_modules()
@@ -51,6 +52,7 @@ local function ask_for_module()
         for i, m in pairs(modules) do
                 add_item(m, cpu:get_module_description(m))
         end
+        add_item(back, "Exit - previous menu")
 
         return get_selection()
 end
@@ -61,7 +63,7 @@ end
 function mod:configure()
         while true do
                 local choice = ask_for_module()
-                if (choice == skip or choice == back) then
+                if choice == back then
                         return back
                 end
 

@@ -51,8 +51,6 @@ extern "C" {
 #define _GPIO_ALT_OUT_OPEN_DRAIN_10MHZ                          0x0D
 #define _GPIO_ALT_OUT_OPEN_DRAIN_2MHZ                           0x0E
 #define _GPIO_ALT_OUT_OPEN_DRAIN_50MHZ                          0x0F
-
-/** define GPIO pin inputs (do not edit) */
 #define _GPIO_IN_ANALOG                                         0x00
 #define _GPIO_IN_FLOAT                                          0x04
 #define _GPIO_IN_PULLED                                         0x08

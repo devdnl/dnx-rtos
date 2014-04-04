@@ -453,6 +453,7 @@ end
 --------------------------------------------------------------------------------
 function rtos_configure()
         title("Operating System Configuration")
+        navigation("Home/Operating system")
         calculate_total_steps()
 
         ::_01_::

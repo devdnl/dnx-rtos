@@ -124,6 +124,7 @@ function fs_configure()
         calculate_total_steps()
 
         title("File Systems Configuration")
+        navigation("Home/File systems")
 
         ::_01_::
         if configure_devfs_enable() == back then

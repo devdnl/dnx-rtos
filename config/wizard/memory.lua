@@ -79,6 +79,7 @@ function mem:configure()
         calculate_total_steps()
 
         title("Dynamic Memory Management Configuration")
+        navigation("Home/Memory")
 
         ::_01_::
         if configure_heap_size() == back then

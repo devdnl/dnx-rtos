@@ -32,6 +32,7 @@ no              = "__NO__"
 current_step    = 1
 total_steps     = 0
 back            = "wXeVluSSUkF9sMtietKfvg=Back"
+cancel          = "HDhfV99oIyr1kpJgiD+o=Cancel"
 skip            = ""
 next            = skip
 
@@ -44,7 +45,12 @@ local no_master = false
 -- @brief Function create progress string
 -- @return progress string
 --------------------------------------------------------------------------------
-function progress()
+function progress(current, total)
+        if current ~= nil and total ~= nil then
+                current_step = current
+                total_steps  = total
+        end
+
         local msg = "(" .. current_step .. "/" .. total_steps .. ") \n"
         current_step = current_step + 1
         return msg
@@ -120,6 +126,30 @@ function can_be_saved(value)
 
                 return false
         end
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function remove additional characters from YES/NO answer
+-- @return Return cleared YES/NO string
+--------------------------------------------------------------------------------
+function filter_yes_no(yes_no)
+        return string.gsub(yes_no, "_", "")
+end
+
+--------------------------------------------------------------------------------
+-- @brief Function find in table t key k (from subtable)
+-- @param t     table
+-- @param k     key
+-- @return Return on success value, otherwise nil
+--------------------------------------------------------------------------------
+function table.find(t, k)
+        for i,v in pairs(t) do
+                if v[1] == k then
+                        return v[2]
+                end
+        end
+
+        return nil
 end
 
 --------------------------------------------------------------------------------

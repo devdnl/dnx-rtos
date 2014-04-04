@@ -85,6 +85,7 @@ function pro:configure()
         set_total_steps(2)
 
         title("General project configuration")
+        navigation("Home/Project")
 
         ::_1_::
         if configure_project_name() == back then

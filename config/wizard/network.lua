@@ -152,6 +152,7 @@ function net_configure()
         calculate_total_steps()
 
         title("Network Configuration")
+        navigation("Home/Network")
 
         ::_01_::
         if configure_net_enable() == back then

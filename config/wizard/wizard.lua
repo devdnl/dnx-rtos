@@ -44,6 +44,7 @@ require "modules"
 --------------------------------------------------------------------------------
 local function ask_for_configuration()
         title("Welcome to dnx RTOS configuration!")
+        navigation("Home")
         msg("The configuration is divided to few parts, each one configure specified system module.")
         msg("What the part would you like to configure?")
         add_item("project","Project (name, toolchain, etc)")
