@@ -97,12 +97,12 @@ local function configure_mcu_name()
         if (can_be_saved(choice)) then
                 key_save(dir.."/cpu.h", "__CPU_NAME__", choice)
                 key_save(dir.."/Makefile", "CPUCONFIG_CPUNAME", choice)
-                key_save(dir.."/cpu.h", "__CPU_FAMILY__", "__" .. db:get_mcu_family(cpu:get_arch(), choice) .. "__")
-                key_save(dir.."/cpu.h", "__CPU_RAM_MEM_SIZE__", db:get_mcu_ram_size(cpu:get_arch(), choice))
+                key_save(dir.."/cpu.h", "__CPU_FAMILY__", "__" .. db:get_mcu_family(choice) .. "__")
+                key_save(dir.."/cpu.h", "__CPU_RAM_MEM_SIZE__", db:get_mcu_ram_size(choice))
 
                 -- disable not supported modules
                 for i, m in pairs(db:get_modules_list()) do
-                        if not db:is_module_supported(cpu:get_arch(), cpu:get_name(), m) then
+                        if not db:is_module_supported(cpu:get_name(), m) then
                                 key_save("../project/Makefile", "ENABLE_"..m, no)
                                 key_save("../project/flags.h", "__ENABLE_"..m.."__", no)
                         end

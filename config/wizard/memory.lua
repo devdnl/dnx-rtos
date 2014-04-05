@@ -48,7 +48,7 @@ end
 --------------------------------------------------------------------------------
 local function configure_heap_size()
         local value    = key_read("../project/flags.h", "__HEAP_SIZE__")
-        local ram_size = db:get_mcu_ram_size(cpu:get_arch(), cpu:get_name())
+        local ram_size = db:get_mcu_ram_size(cpu:get_name())
 
         msg(progress() .. "Configure heap size. Heap must be smaller than ".. ram_size .." bytes.")
         msg("Current heap size is: " .. value .. " bytes.")
@@ -97,13 +97,9 @@ function mem:configure()
         return next
 end
 
---------------------------------------------------------------------------------
--- Enable configuration if master wizard is not defined
---------------------------------------------------------------------------------
+-- started without master file
 if (master ~= true) then
-        while mem:configure() == back do
-        end
-        configuration_finished()
+        show_no_master_info()
 end
 
 --------------------------------------------------------------------------------

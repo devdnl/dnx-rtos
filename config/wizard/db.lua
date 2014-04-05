@@ -53,6 +53,8 @@ module.description.HDMICEC              = "HDMI-CEC - High Definition Media Inte
 
 local arch                              = {}
 arch.list                               = {"stm32f1"} --, "stm32f2", "stm32f3", "stm32f4"}
+
+-- STM32F1 ---------------------------------------------------------------------
 arch.stm32f1                            = {}
 arch.stm32f1.description                = "stm32f1 microcontroller family"
 arch.stm32f1.mcu                        = {}
@@ -81,9 +83,15 @@ arch.stm32f1.mcu.STM32F100C6xx.GPIO     = {4}
 arch.stm32f1.mcu.STM32F100C6xx.SPI      = {1}
 arch.stm32f1.mcu.STM32F100C6xx.UART     = {2}
 
+arch.stm32f1.mcu.STM32F100C8xx          = {}
+arch.stm32f1.mcu.STM32F100C8xx.ram      = 8192
+arch.stm32f1.mcu.STM32F100C8xx.family   = "STM32F10X_MD_VL"
+arch.stm32f1.mcu.STM32F100C8xx.modules  = {"GPIO", "PLL", "SDSPI", "SPI", "TTY", "UART", "WDG", "I2S", "I2C", "ADC", "DAC", "HDMICEC"}
+arch.stm32f1.mcu.STM32F100C6xx.GPIO     = {4}
+arch.stm32f1.mcu.STM32F100C6xx.SPI      = {1}
+arch.stm32f1.mcu.STM32F100C6xx.UART     = {2}
 
 
--- uc.stm32f1.mcu.STM32F100C8xx    = {["RAM"] = 8192 , ["family"] = "STM32F10X_MD_VL", ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F100R6xx    = {["RAM"] = 4096 , ["family"] = "STM32F10X_LD_VL", ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F100RBxx    = {["RAM"] = 8192 , ["family"] = "STM32F10X_MD_VL", ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F100RExx    = {["RAM"] = 32768, ["family"] = "STM32F10X_HD_VL", ["modules"] = {}}
@@ -147,7 +155,12 @@ arch.stm32f4.mcu.list                   = {}
 --------------------------------------------------------------------------------
 -- LOCAL FUNCTIONS
 --------------------------------------------------------------------------------
-local function get_arch_by_mcu(mcu_name)
+--------------------------------------------------------------------------------
+-- @brief Function find architecture for selected MCU
+-- @param mcu_name      MCU name
+-- @return On success architecture string is returned, on error nil
+--------------------------------------------------------------------------------
+local function get_mcu_arch(mcu_name)
         for i = 1, #arch.list do
                 local arch_name = arch.list[i]
                 if arch[arch_name].mcu[mcu_name] ~= nil then
@@ -161,48 +174,105 @@ end
 --------------------------------------------------------------------------------
 -- METHODS
 --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- @brief Method returns modules list
+-- @param None
+-- @return Modules list
+--------------------------------------------------------------------------------
 function db:get_modules_list()
         return module.list
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method return module description
+-- @param module_name           module name to get description
+-- @return Module description.
+--------------------------------------------------------------------------------
 function db:get_module_description(module_name)
         return module.description[module_name]
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method return list of architectures
+-- @param None
+-- @return Architecture list
+--------------------------------------------------------------------------------
 function db:get_arch_list()
         return arch.list
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method return architecture description
+-- @param arch_name     architecture name
+-- @return Architecture description
+--------------------------------------------------------------------------------
 function db:get_arch_description(arch_name)
         return arch[arch_name].description
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method returns MCU list for selected architecture
+-- @param arch_name     architecture name
+-- @return MCU list
+--------------------------------------------------------------------------------
 function db:get_mcu_list(arch_name)
         return arch[arch_name].mcu.list
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method return RAM size for selected MCU
+-- @param mcu_name      MCU name
+-- @return RAM size
+--------------------------------------------------------------------------------
 function db:get_mcu_ram_size(mcu_name)
-        return arch[get_arch_by_mcu(mcu_name)].mcu[mcu_name].ram
+        return arch[get_mcu_arch(mcu_name)].mcu[mcu_name].ram
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method return family of selected MCU
+-- @param mcu_name      MCU name
+-- @return
+--------------------------------------------------------------------------------
 function db:get_mcu_family(mcu_name)
-        return arch[get_arch_by_mcu(mcu_name)].mcu[mcu_name].family
+        return arch[get_mcu_arch(mcu_name)].mcu[mcu_name].family
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method return list of supported modules by selected MCU
+-- @param mcu_name      MCU name
+-- @return List of supported modules
+--------------------------------------------------------------------------------
 function db:get_mcu_modules_list(mcu_name)
-        return arch[get_arch_by_mcu(mcu_name)].mcu[mcu_name].modules
+        return arch[get_mcu_arch(mcu_name)].mcu[mcu_name].modules
 end
 
-function db:get_mcu_module_data(mcu_name, mcu_module)
-        return arch[get_arch_by_mcu(mcu_name)].mcu[mcu_name][mcu_module]
+--------------------------------------------------------------------------------
+-- @brief Method returns data of selected MCU's module
+-- @param mcu_name      MCU name
+-- @param module_name   module name
+-- @return List of module data
+--------------------------------------------------------------------------------
+function db:get_mcu_module_data(mcu_name, module_name)
+        return arch[get_mcu_arch(mcu_name)].mcu[mcu_name][module_name]
 end
 
+--------------------------------------------------------------------------------
+-- @brief Method check if selected MCU's module is supported
+-- @param mcu_name      MCU name
+-- @param module_name   module name
+-- @return true if module is supported, otherwise false
+--------------------------------------------------------------------------------
 function db:is_module_supported(mcu_name, module_name)
-        for i, m in pairs(arch[get_arch_by_mcu(mcu_name)].mcu[mcu_name].modules) do
+        for i, m in pairs(arch[get_mcu_arch(mcu_name)].mcu[mcu_name].modules) do
                 if m == module_name then
                         return true
                 end
         end
 
         return false
+end
+
+-- started without master file
+if (master ~= true) then
+        show_no_master_info()
 end
