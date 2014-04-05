@@ -26,6 +26,7 @@
 
 require "defs"
 require "cpu"
+require "db"
 
 --------------------------------------------------------------------------------
 -- GLOBAL OBJECTS
@@ -58,6 +59,14 @@ gpio_port.stm32f4.port_list             = {"PA", "PB", "PC", "PD", "PE", "PF", "
 --------------------------------------------------------------------------------
 -- LOCAL FUNCTIONS
 --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- @brief Function returns port count for selected architecture
+-- @return Number of ports
+--------------------------------------------------------------------------------
+local function get_ports_count()
+        return db:get_mcu_module_data(cpu:get_name(), "GPIO")[1]
+end
+
 --------------------------------------------------------------------------------
 -- @brief Function configure CPU architecture
 --------------------------------------------------------------------------------
@@ -223,14 +232,14 @@ gpio_port.stm32f1.configure = function()
                 title("GPIO configuration for " .. cpu:get_name())
                 msg(progress(2, 2).."Select port to configure.")
 
-                for i=1, cpu:get_number_of_GPIO_ports() do
+                 for i = 1, get_ports_count() do
                         add_item(port_name[i], "Port "..port_name[i])
                 end
                 add_item(cancel, "Exit - previous menu")
 
                 local port = get_selection()
 
-                for i=1, cpu:get_number_of_GPIO_ports() do
+                for i = 1, get_ports_count() do
                         if port_name[i] == port then
                                 port_configure(i)
                         end
@@ -250,7 +259,7 @@ end
 gpio_port.stm32f1.disable_unused = function()
         for i = 1, #gpio_port.stm32f1.port_list do
                 local enable = no
-                if i <= cpu:get_number_of_GPIO_ports() then
+                if i <= get_ports_count() then
                         enable = yes
                 end
 
@@ -273,7 +282,7 @@ end
 gpio_port.stm32f2.disable_unused = function()
         for i = 1, #gpio_port.stm32f2.port_list do
                 local enable = no
-                if i <= cpu:get_number_of_GPIO_ports() then
+                if i <= get_ports_count() then
                         enable = yes
                 end
 
@@ -296,7 +305,7 @@ end
 gpio_port.stm32f3.disable_unused = function()
         for i = 1, #gpio_port.stm32f3.port_list do
                 local enable = no
-                if i <= cpu:get_number_of_GPIO_ports() then
+                if i <= get_ports_count() then
                         enable = yes
                 end
 
@@ -319,7 +328,7 @@ end
 gpio_port.stm32f4.disable_unused = function()
         for i = 1, #gpio_port.stm32f4.port_list do
                 local enable = no
-                if i <= cpu:get_number_of_GPIO_ports() then
+                if i <= get_ports_count() then
                         enable = yes
                 end
 

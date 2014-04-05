@@ -26,6 +26,7 @@
 
 require "defs"
 require "cpu"
+require "db"
 
 --------------------------------------------------------------------------------
 -- GLOBAL OBJECTS
@@ -46,10 +47,12 @@ end
 -- @brief Configure heap size
 --------------------------------------------------------------------------------
 local function configure_heap_size()
-        local value = key_read("../project/flags.h", "__HEAP_SIZE__")
-        msg(progress() .. "Configure heap size. Heap must be smaller than ".. cpu:get_RAM_size() .." bytes.")
+        local value    = key_read("../project/flags.h", "__HEAP_SIZE__")
+        local ram_size = db:get_mcu_ram_size(cpu:get_arch(), cpu:get_name())
+
+        msg(progress() .. "Configure heap size. Heap must be smaller than ".. ram_size .." bytes.")
         msg("Current heap size is: " .. value .. " bytes.")
-        value = get_number("dec", 1024, cpu:get_RAM_size())
+        value = get_number("dec", 1024, ram_size)
         if (can_be_saved(value)) then
                 key_save("../project/flags.h", "__HEAP_SIZE__", value)
         end

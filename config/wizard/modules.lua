@@ -46,11 +46,8 @@ local function ask_for_module()
         title("Module Configuration Menu for " .. name)
         navigation("Home/Modules")
         msg("There are listed only implemented modules for selected microcontroller. Select module to configure.")
-        modules = {}
-        modules = cpu:get_modules()
-
-        for i, m in pairs(modules) do
-                add_item(m, cpu:get_module_description(m))
+        for i, m in pairs(db:get_mcu_modules_list(name)) do
+                add_item(m, db:get_module_description(m))
         end
         add_item(back, "Exit - previous menu")
 
