@@ -26,6 +26,8 @@
 
 master = true
 
+package.path = './modules/?.lua;'..package.path
+
 require "defs"
 require "cpu"
 require "rtos"

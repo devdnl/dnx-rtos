@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    project.lua
+@file    memory.lua
 
 @author  Daniel Zorychta
 
-@brief   Project configuration file.
+@brief   Dynamic Memory Management configuration file.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,77 +24,74 @@
 
 *//*========================================================================--]]
 
-require "defs"
+require "modules/defs"
+require "modules/cpu"
+require "modules/db"
 
 --------------------------------------------------------------------------------
--- OBJECT DEFINITIONS
+-- GLOBAL OBJECTS
 --------------------------------------------------------------------------------
-pro = {}
+mem = {}
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
--- @brief Function configure project name
+-- @brief Calculate total steps of this configuration
 --------------------------------------------------------------------------------
-local function configure_project_name()
-        msg(progress() .. "Project name configuration.")
-        local str = key_read("../project/Makefile", "PROJECT_NAME")
-        msg("Current project name is: " .. str .. ".")
-        str = get_string()
-        if (can_be_saved(str)) then
-                key_save("../project/Makefile", "PROJECT_NAME", str)
-        end
-
-        return str
+local function calculate_total_steps()
+        set_total_steps(2)
 end
 
 --------------------------------------------------------------------------------
--- @brief Function configure toolchain name
+-- @brief Configure heap size
 --------------------------------------------------------------------------------
-local function configure_toolchain_name()
-        local message = "Toolchain name configuration."
-        local curr_is = "Current toolchain name is: "
-        local choice  = key_read("../project/Makefile", "PROJECT_TOOLCHAIN")
+local function configure_heap_size()
+        local value    = key_read("../project/flags.h", "__HEAP_SIZE__")
+        local ram_size = db:get_mcu_ram_size(cpu:get_name())
 
-        msg(progress() .. message)
-        msg(curr_is .. choice)
-        add_item("arm-none-eabi-", "arm-none-eabi - e.g. Linaro, CodeSourcery")
-        add_item("other", "Other")
-        local name = get_selection()
-        if (can_be_saved(name)) then
-                if (name == "other") then
-                        modify_current_step(-1)
-                        msg(progress() .. message)
-                        msg(curr_is .. choice)
-                        name = get_string()
-                end
-
-                if (can_be_saved(name)) then
-                        key_save("../project/Makefile", "PROJECT_TOOLCHAIN", name)
-                end
+        msg(progress() .. "Configure heap size. Heap must be smaller than ".. ram_size .." bytes.")
+        msg("Current heap size is: " .. value .. " bytes.")
+        value = get_number("dec", 1024, ram_size)
+        if (can_be_saved(value)) then
+                key_save("../project/flags.h", "__HEAP_SIZE__", value)
         end
 
-        return name
+        return value
+end
+
+--------------------------------------------------------------------------------
+-- @brief Configre heap block size
+--------------------------------------------------------------------------------
+local function configure_heap_block_size()
+        local value = key_read("../project/flags.h", "__HEAP_BLOCK_SIZE__")
+        msg(progress() .. "Configure the smallest block size that can be allocated in the heap.")
+        msg("Current block size is: " .. value .. " bytes.")
+        value = get_number("dec", 1, 4096)
+        if (can_be_saved(value)) then
+                key_save("../project/flags.h", "__HEAP_BLOCK_SIZE__", value)
+        end
+
+        return value
 end
 
 --------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
-function pro:configure()
-        set_total_steps(2)
+function mem:configure()
+        calculate_total_steps()
 
-        title("General project configuration")
-        navigation("Home/Project")
+        title("Dynamic Memory Management Configuration")
+        navigation("Home/Memory")
 
-        ::_1_::
-        if configure_project_name() == back then
+        ::_01_::
+        if configure_heap_size() == back then
                 return back
         end
 
-        ::_2_::
-        if configure_toolchain_name() == back then
-                goto _1_
+        ::_02_::
+        if configure_heap_block_size() == back then
+                goto _01_
         end
 
         return next

@@ -104,7 +104,7 @@ end
 function show_no_master_info()
         if (no_master == false) then
                 title("Information")
-                msg("Master wizard file is not started. To turn configuration please run wizard.lua file.")
+                msg("Master wizard is not started. To start configuration wizard, please run wizard.lua file, or type 'make xconfig' or 'make config' in the command line.")
                 pause()
                 no_master = true
         end

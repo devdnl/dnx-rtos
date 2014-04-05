@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    memory.lua
+@file    modules.lua
 
 @author  Daniel Zorychta
 
-@brief   Dynamic Memory Management configuration file.
+@brief   Modules configuration wizard.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -24,77 +24,69 @@
 
 *//*========================================================================--]]
 
-require "defs"
-require "cpu"
-require "db"
+require "modules/defs"
+require "modules/cpu"
+require "modules/gpio"
 
 --------------------------------------------------------------------------------
--- GLOBAL OBJECTS
+-- OBJECTS
 --------------------------------------------------------------------------------
-mem = {}
+-- class definition
+mod = {}
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
--- @brief Calculate total steps of this configuration
+-- @brief Ask user to select module to configuration
 --------------------------------------------------------------------------------
-local function calculate_total_steps()
-        set_total_steps(2)
-end
+local function ask_for_module()
+        local name = cpu:get_name()
 
---------------------------------------------------------------------------------
--- @brief Configure heap size
---------------------------------------------------------------------------------
-local function configure_heap_size()
-        local value    = key_read("../project/flags.h", "__HEAP_SIZE__")
-        local ram_size = db:get_mcu_ram_size(cpu:get_name())
-
-        msg(progress() .. "Configure heap size. Heap must be smaller than ".. ram_size .." bytes.")
-        msg("Current heap size is: " .. value .. " bytes.")
-        value = get_number("dec", 1024, ram_size)
-        if (can_be_saved(value)) then
-                key_save("../project/flags.h", "__HEAP_SIZE__", value)
+        title("Module Configuration Menu for " .. name)
+        navigation("Home/Modules")
+        msg("There are listed only implemented modules for selected microcontroller. Select module to configure.")
+        for i, m in pairs(db:get_mcu_modules_list(name)) do
+                add_item(m, db:get_module_description(m))
         end
+        add_item(back, "Exit - previous menu")
 
-        return value
-end
-
---------------------------------------------------------------------------------
--- @brief Configre heap block size
---------------------------------------------------------------------------------
-local function configure_heap_block_size()
-        local value = key_read("../project/flags.h", "__HEAP_BLOCK_SIZE__")
-        msg(progress() .. "Configure the smallest block size that can be allocated in the heap.")
-        msg("Current block size is: " .. value .. " bytes.")
-        value = get_number("dec", 1, 4096)
-        if (can_be_saved(value)) then
-                key_save("../project/flags.h", "__HEAP_BLOCK_SIZE__", value)
-        end
-
-        return value
+        return get_selection()
 end
 
 --------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
-function mem:configure()
-        calculate_total_steps()
+function mod:configure()
+        while true do
+                local choice = ask_for_module()
+                if choice == back then
+                        return back
+                end
 
-        title("Dynamic Memory Management Configuration")
-        navigation("Home/Memory")
+                set_current_step(1)
 
-        ::_01_::
-        if configure_heap_size() == back then
-                return back
+                if     choice == "GPIO" then
+                        gpio:configure()
+                elseif choice == "CRC" then
+                elseif choice == "ETH" then
+                elseif choice == "PLL" then
+                elseif choice == "SDSPI" then
+                elseif choice == "SPI" then
+                elseif choice == "TTY" then
+                elseif choice == "UART" then
+                elseif choice == "WDG" then
+                elseif choice == "I2S" then
+                elseif choice == "USB" then
+                elseif choice == "USBOTG" then
+                elseif choice == "I2C" then
+                elseif choice == "ADC" then
+                elseif choice == "DAC" then
+                elseif choice == "SDIO" then
+                elseif choice == "FSMC" then
+                elseif choice == "HDMICEC" then
+                end
         end
-
-        ::_02_::
-        if configure_heap_block_size() == back then
-                goto _01_
-        end
-
-        return next
 end
 
 -- started without master file

@@ -24,9 +24,9 @@
 
 *//*========================================================================--]]
 
-require "defs"
-require "cpu"
-require "db"
+require "modules/defs"
+require "modules/cpu"
+require "modules/db"
 
 --------------------------------------------------------------------------------
 -- GLOBAL OBJECTS
