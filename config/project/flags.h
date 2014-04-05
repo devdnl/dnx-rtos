@@ -51,7 +51,7 @@
 #elif (__CPU_ARCH__ == stm32f1)
 #include "../stm32f1/cpu.h"
 #include "../stm32f1/crc_flags.h"
-#include "../stm32f1/gpio_flags.h
+#include "../stm32f1/gpio_flags.h"
 #include "../stm32f1/ethmac_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
 #include "stm32f2/cpu.h"
@@ -117,7 +117,7 @@
 #define __ENABLE_PROCFS__ __YES__
 
 /* modules */
-#define __ENABLE_GPIO__ __NO__
+#define __ENABLE_GPIO__ __YES__
 #define __ENABLE_CRC__ __NO__
 #define __ENABLE_ETH__ __NO__
 #define __ENABLE_PLL__ __NO__

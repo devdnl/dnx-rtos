@@ -79,6 +79,7 @@ local function configure_enable()
         choice = get_selection()
         if (can_be_saved(choice)) then
                 key_save("../project/Makefile", "ENABLE_GPIO", choice)
+                key_save("../project/flags.h", "__ENABLE_GPIO__", choice)
         end
 
         return choice
@@ -91,21 +92,21 @@ gpio_port.stm32f1.configure = function()
         local port_name = gpio_port.stm32f1.port_list
         local cfg_file  = "../stm32f1/gpio_flags.h"
         local pin       = -1
-        local mode      = {{"_GPIO_OUT_PUSH_PULL_10MHZ"     , "Output Push-Pull 10MHZ"},
-                           {"_GPIO_OUT_PUSH_PULL_2MHZ"      , "Output Push-Pull 2MHZ"},
+        local mode      = {{"_GPIO_OUT_PUSH_PULL_2MHZ"      , "Output Push-Pull 2MHZ"},
+                           {"_GPIO_OUT_PUSH_PULL_10MHZ"     , "Output Push-Pull 10MHZ"},
                            {"_GPIO_OUT_PUSH_PULL_50MHZ"     , "Output Push-Pull 50MHZ"},
-                           {"_GPIO_OUT_OPEN_DRAIN_10MHZ"    , "Output Open drain 10MHZ"},
                            {"_GPIO_OUT_OPEN_DRAIN_2MHZ"     , "Output Open drain 2MHZ"},
+                           {"_GPIO_OUT_OPEN_DRAIN_10MHZ"    , "Output Open drain 10MHZ"},
                            {"_GPIO_OUT_OPEN_DRAIN_50MHZ"    , "Output Open drain 50MHZ"},
-                           {"_GPIO_ALT_OUT_PUSH_PULL_10MHZ" , "Alternative output Push-Pull 10MHZ"},
                            {"_GPIO_ALT_OUT_PUSH_PULL_2MHZ"  , "Alternative output Push-Pull 2MHZ"},
+                           {"_GPIO_ALT_OUT_PUSH_PULL_10MHZ" , "Alternative output Push-Pull 10MHZ"},
                            {"_GPIO_ALT_OUT_PUSH_PULL_50MHZ" , "Alternative output Push-Pull 50MHZ"},
-                           {"_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ", "Alternative output Open drain 10MHZ"},
                            {"_GPIO_ALT_OUT_OPEN_DRAIN_2MHZ" , "Alternative output Open drain 2MHZ"},
+                           {"_GPIO_ALT_OUT_OPEN_DRAIN_10MHZ", "Alternative output Open drain 10MHZ"},
                            {"_GPIO_ALT_OUT_OPEN_DRAIN_50MHZ", "Alternative output Open drain 50MHZ"},
                            {"_GPIO_IN_ANALOG"               , "Analog input"},
                            {"_GPIO_IN_FLOAT"                , "Float input"},
-                           {"_GPIO_IN_PULLED"               , "Input pulled down or up"}}
+                           {"_GPIO_IN_PULLED"               , "Input pull-up/pull-down"}}
 
         local function pin_name_str(port, pin)
                 return "__GPIO_"..port_name[port].."_PIN_"..pin.."_NAME__"
@@ -158,7 +159,7 @@ gpio_port.stm32f1.configure = function()
                 if pin_mode == "_GPIO_IN_PULLED" then
                         msg(str1)
 
-                        if pin_state == "_LOW" then
+                        if pin_state == "_LOW" or pin_state == "_FLOAT" then
                                 msg(str2.."Pull-down.")
                         else
                                 msg(str2.."Pull-up.")
@@ -174,7 +175,7 @@ gpio_port.stm32f1.configure = function()
                 else
                         msg(str1)
 
-                        if current == "_LOW" then
+                        if pin_state == "_LOW" or pin_state == "_FLOAT" then
                                 msg(str2.."Low (0)")
                         else
                                 msg(str2.."High (1)")
@@ -228,13 +229,17 @@ gpio_port.stm32f1.configure = function()
                 until pin >= gpio_port.stm32f1.pins
         end
 
+        local function afio_configure()
+        end
+
         repeat
                 title("GPIO configuration for " .. cpu:get_name())
                 msg(progress(2, 2).."Select port to configure.")
 
-                 for i = 1, get_ports_count() do
+                for i = 1, get_ports_count() do
                         add_item(port_name[i], "Port "..port_name[i])
                 end
+                add_item("AFIO", "AFIO")
                 add_item(cancel, "Exit - previous menu")
 
                 local port = get_selection()
@@ -243,6 +248,10 @@ gpio_port.stm32f1.configure = function()
                         if port_name[i] == port then
                                 port_configure(i)
                         end
+                end
+
+                if port == "AFIO" then
+                        afio_configure()
                 end
 
                 if port == back then
