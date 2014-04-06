@@ -49,9 +49,7 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static const uint32_t EVCR    = (_AFIO_EVO_EN * AFIO_EVCR_EVOE)
-                              | ((_AFIO_EVO_PORT - 1) << 4)
-                              | (_AFIO_EVO_PIN << 0);
+static const uint32_t EVCR    = (_AFIO_EVO_EN * AFIO_EVCR_EVOE) | (_AFIO_EVO_PORT << 4) | (_AFIO_EVO_PIN  << 0);
 
 static const uint32_t MAPR    = (_AFIO_REMAP_SPI1         * AFIO_MAPR_SPI1_REMAP        )
                               | (_AFIO_REMAP_I2C1         * AFIO_MAPR_I2C1_REMAP        )
