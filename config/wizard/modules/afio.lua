@@ -1169,15 +1169,40 @@ local function stm32f1_configure()
                 until exti < 0 or exti >= 16
         end
 
+        -- ASK USER TO ENBALE/DISABLE AFIO MODULE
+        ::afio_enable::
+        local choice = key_read("../project/flags.h", "__ENABLE_AFIO__")
+        if choice == yes then
+                progress(1, 2)
+        else
+                progress(1, 1)
+        end
+
+        msg(progress().."Do you want to enable AFIO module?")
+        msg("Current choice is: " .. filter_yes_no(choice)..".")
+        add_item(yes, "Yes")
+        add_item(no, "No")
+        choice = get_selection()
+        if can_be_saved(choice) then
+                key_save("../project/flags.h", "__ENABLE_AFIO__", choice)
+                key_save("../project/Makefile", "ENABLE_AFIO", choice)
+        end
+
+        if choice == back then
+                return back
+        elseif choice == no then
+                return next
+        end
+
         while true do
                 title("AFIO configuration for " .. cpu:get_name())
-                msg("Select AFIO part to configure.")
+                msg(progress(2, 2).."Select AFIO part to configure.")
                 add_item("EVO", "Cortex Event Output")
                 add_item("remap", "Peripheral remap")
                 add_item("exti", "EXTI port assign")
                 local choice = get_selection()
                 if choice == back then
-                        return back
+                        goto afio_enable
                 end
 
                 if     choice == "EVO" then
@@ -1197,6 +1222,7 @@ end
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function afio:configure()
+        title("AFIO configuration for " .. cpu:get_name())
         navigation("Home/Modules/AFIO")
 
         local arch = cpu:get_arch()
