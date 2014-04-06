@@ -82,8 +82,6 @@ struct gpio_reg_val {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void init_GPIO();
-static void init_AFIO();
 
 /*==============================================================================
   Local object definitions
@@ -140,8 +138,33 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 
         (void) _module_name_;
 
-        init_AFIO();
-        init_GPIO();
+#if (_GPIOA_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
+#endif
+#if (_GPIOB_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPBEN);
+#endif
+#if (_GPIOC_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);
+#endif
+#if (_GPIOD_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPDEN);
+#endif
+#if (_GPIOE_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPEEN);
+#endif
+#if (_GPIOF_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPFEN);
+#endif
+#if (_GPIOG_EN > 0)
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPGEN);
+#endif
+
+        for (int i = 0; i < ARRAY_SIZE(GPIOx); i++) {
+                GPIOx[i].GPIO->ODR = GPIOx[i].ODR;
+                GPIOx[i].GPIO->CRL = GPIOx[i].CRL;
+                GPIOx[i].GPIO->CRH = GPIOx[i].CRH;
+        }
 
         return STD_RET_OK;
 }
@@ -159,6 +182,28 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 API_MOD_RELEASE(GPIO, void *device_handle)
 {
         UNUSED_ARG(device_handle);
+
+#if (_GPIOA_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPAEN);
+#endif
+#if (_GPIOB_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPBEN);
+#endif
+#if (_GPIOC_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPCEN);
+#endif
+#if (_GPIOD_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPDEN);
+#endif
+#if (_GPIOE_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPEEN);
+#endif
+#if (_GPIOF_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPFEN);
+#endif
+#if (_GPIOG_EN > 0)
+        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPGEN);
+#endif
 
         return STD_RET_OK;
 }
@@ -316,56 +361,6 @@ API_MOD_STAT(GPIO, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_minor = 0;
 
         return STD_RET_OK;
-}
-
-//==============================================================================
-/**
- * @brief Initialize GPIO
- */
-//==============================================================================
-static void init_GPIO()
-{
-#if (_GPIOA_EN > 0)
-        RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-#endif
-#if (_GPIOB_EN > 0)
-        RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
-#endif
-#if (_GPIOC_EN > 0)
-        RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
-#endif
-#if (_GPIOD_EN > 0)
-        RCC->APB2ENR |= RCC_APB2ENR_IOPDEN;
-#endif
-#if (_GPIOE_EN > 0)
-        RCC->APB2ENR |= RCC_APB2ENR_IOPEEN;
-#endif
-#if (_GPIOF_EN > 0)
-        RCC->APB2ENR |= RCC_APB2ENR_IOPFEN;
-#endif
-#if (_GPIOG_EN > 0)
-        RCC->APB2ENR |= RCC_APB2ENR_IOPGEN;
-#endif
-
-        for (int i = 0; i < ARRAY_SIZE(GPIOx); i++) {
-                GPIOx[i].GPIO->ODR = GPIOx[i].ODR;
-                GPIOx[i].GPIO->CRL = GPIOx[i].CRL;
-                GPIOx[i].GPIO->CRH = GPIOx[i].CRH;
-        }
-}
-
-//==============================================================================
-/**
- * @brief Initialize AFIO peripheral
- */
-//==============================================================================
-static void init_AFIO(void)
-{
-        RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
-
-#if (SPI3_REMAP > 0)
-        AFIO->MAPR |= AFIO_MAPR_SPI3_REMAP;
-#endif
 }
 
 /*==============================================================================

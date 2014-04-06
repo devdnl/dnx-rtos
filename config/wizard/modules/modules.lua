@@ -24,9 +24,10 @@
 
 *//*========================================================================--]]
 
-require "modules/defs"
-require "modules/cpu"
-require "modules/gpio"
+require "defs"
+require "cpu"
+require "gpio"
+require "afio"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -68,6 +69,8 @@ function mod:configure()
 
                 if     choice == "GPIO" then
                         gpio:configure()
+                elseif choice == "AFIO" then
+                        afio:configure()
                 elseif choice == "CRC" then
                 elseif choice == "ETH" then
                 elseif choice == "PLL" then

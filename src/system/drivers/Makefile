@@ -3,6 +3,10 @@ ifeq ($(ENABLE_GPIO), __YES__)
 include $(DRV_LOC)/gpio/Makefile
 endif
 
+ifeq ($(ENABLE_AFIO), __YES__)
+include $(DRV_LOC)/afio/Makefile
+endif
+
 ifeq ($(ENABLE_CRC), __YES__)
 include $(DRV_LOC)/crc/Makefile
 endif

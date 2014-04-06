@@ -151,7 +151,7 @@ static inline int umount(const char *mount_point)
  * be created only on file system which support it.
  *
  * @param drv_name      driver_name
- * @param node_path     path to node which should be created
+ * @param node_path     path to node which should be created (or NULL)
  *
  * @errors EINVAL, ENOMEM, EADDRINUSE
  *
@@ -161,7 +161,8 @@ static inline int umount(const char *mount_point)
  * @example
  * // ...
  *
- * driver_init("crc", "/dev/crc");
+ * driver_init("crc", "/dev/crc");   // with node
+ * driver_init("afio", NULL);        // without node
  *
  * // ...
  */

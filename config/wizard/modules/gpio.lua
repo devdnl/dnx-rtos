@@ -229,9 +229,6 @@ gpio_port.stm32f1.configure = function()
                 until pin >= gpio_port.stm32f1.pins
         end
 
-        local function afio_configure()
-        end
-
         repeat
                 title("GPIO configuration for " .. cpu:get_name())
                 msg(progress(2, 2).."Select port to configure.")
@@ -239,7 +236,6 @@ gpio_port.stm32f1.configure = function()
                 for i = 1, get_ports_count() do
                         add_item(port_name[i], "Port "..port_name[i])
                 end
-                add_item("AFIO", "AFIO")
                 add_item(cancel, "Exit - previous menu")
 
                 local port = get_selection()
@@ -248,10 +244,6 @@ gpio_port.stm32f1.configure = function()
                         if port_name[i] == port then
                                 port_configure(i)
                         end
-                end
-
-                if port == "AFIO" then
-                        afio_configure()
                 end
 
                 if port == back then

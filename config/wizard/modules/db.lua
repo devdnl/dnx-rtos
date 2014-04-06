@@ -30,9 +30,10 @@
 db = {}
 
 local module                            = {}
-module.list                             = {"GPIO", "CRC", "ETH", "PLL", "SDSPI", "SPI", "TTY", "UART", "WDG", "I2S", "USB", "USBOTG", "I2C", "ADC", "DAC", "SDIO", "FSMC", "HDMICEC"}
+module.list                             = {"GPIO", "AFIO", "CRC", "ETH", "PLL", "SDSPI", "SPI", "TTY", "UART", "WDG", "I2S", "USB", "USBOTG", "I2C", "ADC", "DAC", "SDIO", "FSMC", "HDMICEC"}
 module.description                      = {}
 module.description.GPIO                 = "GPIO - General Purpose Input Output"
+module.description.AFIO                 = "AFIO - Alternative Function Input Output"
 module.description.CRC                  = "CRC - CRC caluclation unit"
 module.description.ETH                  = "ETH - Ethernet interface"
 module.description.PLL                  = "PLL - Phase Lock Loop"
@@ -70,7 +71,7 @@ arch.stm32f1.mcu.list                   = {"STM32F100C4xx", "STM32F100C6xx", "ST
 arch.stm32f1.mcu.STM32F100C4xx          = {}
 arch.stm32f1.mcu.STM32F100C4xx.ram      = 4096
 arch.stm32f1.mcu.STM32F100C4xx.family   = "STM32F10X_LD_VL"
-arch.stm32f1.mcu.STM32F100C4xx.modules  = {"GPIO", "PLL", "SDSPI", "SPI", "TTY", "UART", "WDG", "I2S", "I2C", "ADC", "DAC", "HDMICEC"}
+arch.stm32f1.mcu.STM32F100C4xx.modules  = {"GPIO", "AFIO", "PLL", "SDSPI", "SPI", "TTY", "UART", "WDG", "I2S", "I2C", "ADC", "DAC", "HDMICEC"}
 arch.stm32f1.mcu.STM32F100C4xx.GPIO     = {4}
 arch.stm32f1.mcu.STM32F100C4xx.SPI      = {1}
 arch.stm32f1.mcu.STM32F100C4xx.UART     = {2}

@@ -46,13 +46,20 @@ local no_master = false
 -- @return progress string
 --------------------------------------------------------------------------------
 function progress(current, total)
-        if current ~= nil and total ~= nil then
+        if current ~= nil then
                 current_step = current
+        end
+
+        if total ~= nil then
                 total_steps  = total
         end
 
         local msg = "(" .. current_step .. "/" .. total_steps .. ") \n"
-        current_step = current_step + 1
+
+        if current == nil and total == nil then
+                current_step = current_step + 1
+        end
+
         return msg
 end
 

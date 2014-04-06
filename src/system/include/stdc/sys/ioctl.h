@@ -41,6 +41,9 @@ extern "C" {
 #ifdef ARCH_stm32f1
 #       include "stm32f1/gpio_def.h"
 #
+#       if (__ENABLE_AFIO__)
+#               include "stm32f1/afio_def.h"
+#       endif
 #       if (__ENABLE_UART__)
 #               include "stm32f1/uart_def.h"
 #       endif

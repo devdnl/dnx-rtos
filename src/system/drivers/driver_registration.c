@@ -34,6 +34,9 @@
 #ifdef ARCH_stm32f1
 #       include "stm32f1/gpio_def.h"
 #
+#       if (__ENABLE_AFIO__)
+#               include "stm32f1/afio_def.h"
+#       endif
 #       if (__ENABLE_UART__)
 #               include "stm32f1/uart_def.h"
 #       endif
@@ -71,6 +74,10 @@
   External objects
 ==============================================================================*/
 _IMPORT_MODULE(GPIO);
+
+#if (__ENABLE_AFIO__)
+_IMPORT_MODULE(afio)
+#endif
 
 #if (__ENABLE_UART__)
 _IMPORT_MODULE(UART);
@@ -138,6 +145,10 @@ const char *const _regdrv_module_name[] = {
 
 #if (__ENABLE_SPI__)
         _USE_MODULE(SPI),
+#endif
+
+#if (__ENABLE_AFIO__)
+        _USE_MODULE(afio)
 #endif
 
         _USE_MODULE(GPIO)
@@ -266,6 +277,10 @@ const struct _driver_entry _regdrv_driver_table[] = {
 #endif
 #if (__ENABLE_SPI__ && _SPI3_ENABLE && _SPI3_NUMBER_OF_SLAVES >= 8)
         _USE_DRIVER_INTERFACE(SPI, "spi3_cs7", _SPI3, 7),
+#endif
+
+#if (__ENABLE_AFIO__)
+        _USE_DRIVER_INTERFACE(afio, "afio", _AFIO_MAJOR_NUMBER, _AFIO_MINOR_NUMBER)
 #endif
 
         _USE_DRIVER_INTERFACE(GPIO, "gpio", _GPIO_MAJOR_NUMBER, _GPIO_MINOR_NUMBER)

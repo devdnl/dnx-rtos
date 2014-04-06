@@ -41,7 +41,7 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** concat macro */
-#define _CONCAT(x , y) x##y
+#define _CONCAT(x, y) x##y
 
 /** macro creates an enumerator with pin data */
 #define _PIN_CONFIGURATION(port, number, pin_name, mode, state) \
@@ -74,14 +74,6 @@ enum port##_##number##_CFG {\
 
 /** enable (1) or disable (0) GPIOG port */
 #define _GPIOG_EN                               __GPIO_PG_ENABLE__
-
-/** enable (1) or disable (0) AFIO */
-#define _AFIO_EN                                (1)
-#if (_AFIO_EN > 0)
-
-/** SPI3 remaped */
-#define SPI3_REMAP                              (1)
-#endif
 
 /** GPIOA pins configuration */
 #if _GPIOA_EN

@@ -27,13 +27,8 @@
 #define _FLAGS_H_
 
 /* definition of answers for questions */
-#ifndef __NO__
-#define __NO__ 0
-#endif
-
-#ifndef __YES__
+#define __NO__  0
 #define __YES__ 1
-#endif
 
 /* fixed configuration */
 #define stm32f0 0
@@ -52,6 +47,7 @@
 #include "../stm32f1/cpu.h"
 #include "../stm32f1/crc_flags.h"
 #include "../stm32f1/gpio_flags.h"
+#include "../stm32f1/afio_flags.h"
 #include "../stm32f1/ethmac_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
 #include "stm32f2/cpu.h"
@@ -81,7 +77,7 @@
 #define __OS_TASK_MAX_PRIORITIES__ 7
 #define __OS_TASK_NAME_LEN__ 16
 #define __OS_TASK_SCHED_FREQ__ 1000
-#define __OS_SLEEP_ON_IDLE__ __YES__
+#define __OS_SLEEP_ON_IDLE__ __NO__
 #define __OS_PRINTF_ENABLE__ __YES__
 #define __OS_SCANF_ENABLE__ __YES__
 #define __OS_SYSTEM_MSG_ENABLE__ __YES__
@@ -118,6 +114,7 @@
 
 /* modules */
 #define __ENABLE_GPIO__ __YES__
+#define __ENABLE_AFIO__ __YES__
 #define __ENABLE_CRC__ __NO__
 #define __ENABLE_ETH__ __NO__
 #define __ENABLE_PLL__ __NO__

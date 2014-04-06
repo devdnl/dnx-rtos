@@ -13,6 +13,7 @@ ENABLE_FATFS=__YES__
 
 # modules enable flags
 ENABLE_GPIO=__YES__
+ENABLE_AFIO=__YES__
 ENABLE_CRC=__NO__
 ENABLE_ETH=__NO__
 ENABLE_PLL=__NO__
