@@ -115,7 +115,7 @@
 /* modules */
 #define __ENABLE_GPIO__ __YES__
 #define __ENABLE_AFIO__ __YES__
-#define __ENABLE_CRC__ __NO__
+#define __ENABLE_CRC__ __YES__
 #define __ENABLE_ETH__ __NO__
 #define __ENABLE_PLL__ __NO__
 #define __ENABLE_SDSPI__ __NO__

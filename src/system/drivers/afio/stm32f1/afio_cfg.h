@@ -336,32 +336,32 @@ extern "C" {
 /**
  * EXTI10 PORT SELECTION: 0-6 for PA-PG
  */
-#define _AFIO_EXTI10_PORT                __AFIO_EXTI10_PORT__
+#define _AFIO_EXTI10_PORT               __AFIO_EXTI10_PORT__
 
 /**
  * EXTI11 PORT SELECTION: 0-6 for PA-PG
  */
-#define _AFIO_EXTI11_PORT                __AFIO_EXTI11_PORT__
+#define _AFIO_EXTI11_PORT               __AFIO_EXTI11_PORT__
 
 /**
  * EXTI12 PORT SELECTION: 0-6 for PA-PG
  */
-#define _AFIO_EXTI12_PORT                __AFIO_EXTI12_PORT__
+#define _AFIO_EXTI12_PORT               __AFIO_EXTI12_PORT__
 
 /**
  * EXTI13 PORT SELECTION: 0-6 for PA-PG
  */
-#define _AFIO_EXTI13_PORT                __AFIO_EXTI13_PORT__
+#define _AFIO_EXTI13_PORT               __AFIO_EXTI13_PORT__
 
 /**
  * EXTI14 PORT SELECTION: 0-6 for PA-PG
  */
-#define _AFIO_EXTI14_PORT                __AFIO_EXTI14_PORT__
+#define _AFIO_EXTI14_PORT               __AFIO_EXTI14_PORT__
 
 /**
  * EXTI15 PORT SELECTION: 0-6 for PA-PG
  */
-#define _AFIO_EXTI15_PORT                __AFIO_EXTI15_PORT__
+#define _AFIO_EXTI15_PORT               __AFIO_EXTI15_PORT__
 
 /*==============================================================================
   Exported types, enums definitions

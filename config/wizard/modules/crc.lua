@@ -1,9 +1,9 @@
 --[[============================================================================
-@file    modules.lua
+@file    crc.lua
 
 @author  Daniel Zorychta
 
-@brief   Modules configuration wizard.
+@brief   CRC configuration wizard.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -26,72 +26,40 @@
 
 require "defs"
 require "cpu"
-require "gpio"
-require "afio"
-require "crc"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
 --------------------------------------------------------------------------------
--- class definition
-mod = {}
+crc = {}
 
 --------------------------------------------------------------------------------
 -- FUNCTIONS
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
--- @brief Ask user to select module to configuration
+-- @brief Ask user to select enable/disable module
 --------------------------------------------------------------------------------
-local function ask_for_module()
-        local name = cpu:get_name()
-
-        title("Module Configuration Menu for " .. name)
-        navigation("Home/Modules")
-        msg("There are listed only implemented modules for selected microcontroller. Select module to configure.")
-        for i, m in pairs(db:get_mcu_modules_list(name)) do
-                add_item(m, db:get_module_description(m))
+local function ask_for_enable()
+        local choice = key_read("../project/flags.h", "__ENABLE_CRC__")
+        msg(progress(1, 1).."Do you want to enable CRC module?")
+        msg("Current selection is: "..filter_yes_no(choice)..".")
+        add_item(yes, "Yes")
+        add_item(no, "No")
+        choice = get_selection()
+        if can_be_saved(choice) then
+                key_save("../project/flags.h", "__ENABLE_CRC__", choice)
+                key_save("../project/Makefile", "ENABLE_CRC", choice)
         end
-        add_item(back, "Exit - previous menu")
 
-        return get_selection()
+        return choice
 end
 
 --------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
-function mod:configure()
-        while true do
-                local choice = ask_for_module()
-                if choice == back then
-                        return back
-                end
-
-                set_current_step(1)
-
-                if     choice == "GPIO" then
-                        gpio:configure()
-                elseif choice == "AFIO" then
-                        afio:configure()
-                elseif choice == "CRC" then
-                        crc:configure()
-                elseif choice == "ETH" then
-                elseif choice == "PLL" then
-                elseif choice == "SDSPI" then
-                elseif choice == "SPI" then
-                elseif choice == "TTY" then
-                elseif choice == "UART" then
-                elseif choice == "WDG" then
-                elseif choice == "I2S" then
-                elseif choice == "USB" then
-                elseif choice == "USBOTG" then
-                elseif choice == "I2C" then
-                elseif choice == "ADC" then
-                elseif choice == "DAC" then
-                elseif choice == "SDIO" then
-                elseif choice == "FSMC" then
-                elseif choice == "HDMICEC" then
-                end
-        end
+function crc:configure()
+        title("CRC module configuration for ".. cpu:get_name())
+        navigation("Home/Modules/CRC")
+        ask_for_enable()
 end
 
 -- started without master file
