@@ -171,7 +171,7 @@ extern "C" {
 #ifdef STM32F10X_CL
 /*
  * USB prescaler
- * RCC_OTGFSCLKSource_PLLVCO_Div3: PLL VCO clock divided by 2 selected as USB OTG FS clock source
+ * RCC_OTGFSCLKSource_PLLVCO_Div3: PLL VCO clock divided by 3 selected as USB OTG FS clock source
  * RCC_OTGFSCLKSource_PLLVCO_Div2: PLL VCO clock divided by 2 selected as USB OTG FS clock source
  */
 #define _PLL_CFG__USB_DIV               RCC_OTGFSCLKSource_PLLVCO_Div3
@@ -273,11 +273,11 @@ extern "C" {
 
 /*
  * APB2 prescaler (in: HCLK; out: PCLK2) (high speed)
- * RCC_HCLK_Div1 : APB1 clock = HCLK
- * RCC_HCLK_Div2 : APB1 clock = HCLK/2
- * RCC_HCLK_Div4 : APB1 clock = HCLK/4
- * RCC_HCLK_Div8 : APB1 clock = HCLK/8
- * RCC_HCLK_Div16: APB1 clock = HCLK/16
+ * RCC_HCLK_Div1 : APB2 clock = HCLK
+ * RCC_HCLK_Div2 : APB2 clock = HCLK/2
+ * RCC_HCLK_Div4 : APB2 clock = HCLK/4
+ * RCC_HCLK_Div8 : APB2 clock = HCLK/8
+ * RCC_HCLK_Div16: APB2 clock = HCLK/16
  */
 #define _PLL_CFG__APB2_PRE              RCC_HCLK_Div1
 
