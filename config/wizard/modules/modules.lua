@@ -29,6 +29,7 @@ require "cpu"
 require "gpio"
 require "afio"
 require "crc"
+require "pll"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -47,7 +48,7 @@ local function ask_for_module()
 
         title("Module Configuration Menu for " .. name)
         navigation("Home/Modules")
-        msg("There are listed only implemented modules for selected microcontroller. Select module to configure.")
+        msg("Here are listed only implemented modules for selected microcontroller. Select module to configure.")
         for i, m in pairs(db:get_mcu_modules_list(name)) do
                 add_item(m, db:get_module_description(m))
         end
@@ -76,6 +77,7 @@ function mod:configure()
                         crc:configure()
                 elseif choice == "ETH" then
                 elseif choice == "PLL" then
+                        pll:configure()
                 elseif choice == "SDSPI" then
                 elseif choice == "SPI" then
                 elseif choice == "TTY" then
