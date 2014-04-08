@@ -97,18 +97,54 @@ configure.stm32f1 = function()
                 local pllsource        = key_read("../stm32f1/pll_flags.h", "__PLL_PLL_SRC__")
                 local sysclksource     = key_read("../stm32f1/pll_flags.h", "__PLL_SYS_CLK_SRC__")
                 local prediv1source    = key_read("../stm32f1/pll_flags.h", "__PLL_PREDIV1_SRC__")
+                local RTCsource        = key_read("../stm32f1/pll_flags.h", "__PLL_RTC_CLK_SRC__")
                 local pllmull          = key_read("../stm32f1/pll_flags.h", "__PLL_PLL_MULL__"):gsub("6_5", "6.5"):gsub("RCC_PLLMul_", "")
                 local prediv1factor    = key_read("../stm32f1/pll_flags.h", "__PLL_PREDIV1_VAL__"):gsub("RCC_PREDIV1_Div", "")
                 local prediv2factor    = key_read("../stm32f1/pll_flags.h", "__PLL_PREDIV2_VAL__"):gsub("RCC_PREDIV2_Div", "")
                 local pll2mull         = key_read("../stm32f1/pll_flags.h", "__PLL_PLL2_MULL__"):gsub("RCC_PLL2Mul_", "")
+                local pll3mull         = key_read("../stm32f1/pll_flags.h", "__PLL_PLL3_MULL__"):gsub("RCC_PLL3Mul_", "")
                 local AHBprescaler     = key_read("../stm32f1/pll_flags.h", "__PLL_AHB_PRE__"):gsub("RCC_SYSCLK_Div", "")
                 local APB1prescaler    = key_read("../stm32f1/pll_flags.h", "__PLL_APB1_PRE__"):gsub("RCC_HCLK_Div", "")
                 local APB2prescaler    = key_read("../stm32f1/pll_flags.h", "__PLL_APB2_PRE__"):gsub("RCC_HCLK_Div", "")
                 local ADCprescaler     = key_read("../stm32f1/pll_flags.h", "__PLL_ADC_PRE__"):gsub("RCC_PCLK2_Div", "")
+                local USBprescaler     = key_read("../stm32f1/pll_flags.h", "__PLL_USB_DIV__"):gsub("1Div5", "Div1.5"):gsub("RCC_.*CLKSource_PLL.*_Div", "")
                 local HSE_Value        = key_read("../project/flags.h", "__CPU_OSC_FREQ__")
                 local HSI_Value        = 8e6
                 local LSI_Value        = 40e3
+                local LSE_Value        = 32768
                 local SYSCLK_Frequency = 0
+                local PLL_Frequency    = 0
+                local USB_Frequency    = 0
+                local PLL2_Frequency   = 0
+                local PLL3_Frequency   = 0
+                local I2S_Frequency    = 0
+                local RTC_Freqency     = 0
+
+                -- calculate PLL Clk frequency
+                if pllsource == "RCC_PLLSource_HSI_Div2" then
+                        PLL_Frequency = (HSI_Value / 2) * pllmull
+                else
+                        if family == "STM32F10X_CL" then
+                                if prediv1source == "RCC_PREDIV1_Source_HSE" then
+                                        PLL_Frequency = (HSE_Value / prediv1factor) * pllmull
+                                else
+                                        PLL_Frequency = (((HSE_Value / prediv2factor) * pll2mull) / prediv1factor) * pllmull
+                                end
+                        else
+                                if pllsource == "RCC_PLLSource_HSE_Div2" then
+                                        PLL_Frequency = (HSE_Value / 2) * pllmull
+                                else
+                                        PLL_Frequency = HSE_Value * pllmull
+                                end
+                        end
+                end
+
+                -- calculate USB frequency
+                if family == "STM32F10X_CL" then
+                        USB_Frequency = (2 * PLL_Frequency) / USBprescaler
+                else
+                        USB_Frequency = PLL_Frequency / USBprescaler
+                end
 
                 -- calculate SYSCLK frequency
                 if sysclksource == "RCC_SYSCLKSource_HSI" then
@@ -118,36 +154,30 @@ configure.stm32f1 = function()
                         SYSCLK_Frequency = HSE_Value
 
                 elseif sysclksource == "RCC_SYSCLKSource_PLLCLK" then
-                        if pllsource == "RCC_PLLSource_HSI_Div2" then
-                                SYSCLK_Frequency = (HSI_Value / 2) * pllmull
-                        else
-                                if family == "STM32F10X_CL" then
-                                        if prediv1source == "RCC_PREDIV1_Source_HSE" then
-                                                SYSCLK_Frequency = (HSE_Value / prediv1factor) * pllmull
-                                        else
-                                                SYSCLK_Frequency = (((HSE_Value / prediv2factor) * pll2mull) / prediv1factor) * pllmull
-                                        end
-                                else
-                                        if pllsource == "RCC_PLLSource_HSE_Div2" then
-                                                SYSCLK_Frequency = (HSE_Value / 2) * pllmull
-                                        else
-                                                SYSCLK_Frequency = HSE_Value * pllmull
-                                        end
-                                end
-                        end
+                        SYSCLK_Frequency = PLL_Frequency
                 end
 
-                -- calculate USB frequency
-                -- TODO
+                -- calculate PLL2CLK and PLL3CLK
+                if family == "STM32F10X_CL" then
+                        PLL2_Frequency = (HSE_Value / prediv2factor) * pll2mull
+                        PLL3_Frequency = (HSE_Value / prediv2factor) * pll3mull
+                end
 
                 -- calculate I2S frequency
-                -- TODO
+                if family == "STM32F10X_CL" then
+                        I2S_Frequency = PLL3_Frequency * 2
+                else
+                        I2S_Frequency = SYSCLK_Frequency
+                end
 
                 -- calculate RTC frequency
-                -- TODO
-
-                -- calculate PLL Clk frequency
-                -- TODO
+                if RTCsource == "RCC_RTCCLKSource_LSE" then
+                        RTC_Freqency = LSE_Value
+                elseif RTCsource == "RCC_RTCCLKSource_LSI" then
+                        RTC_Freqency = LSI_Value
+                elseif RTCsource == "RCC_RTCCLKSource_HSE_Div128" then
+                        RTC_Freqency = HSE_Value / 128
+                end
 
                 local HCLK_Frequency   = SYSCLK_Frequency / AHBprescaler
                 local PCLK1_Frequency  = HCLK_Frequency / APB1prescaler
@@ -155,14 +185,18 @@ configure.stm32f1 = function()
                 local ADCCLK_Frequency = PCLK2_Frequency / ADCprescaler
 
                 local freq  = {}
+                freq.HSE    = HSE_Value
+                freq.HSI    = HSI_Value
+                freq.LSI    = LSI_Value
                 freq.SYSCLK = SYSCLK_Frequency
                 freq.HCLK   = HCLK_Frequency
                 freq.PCLK1  = PCLK1_Frequency
                 freq.PCLK2  = PCLK2_Frequency
                 freq.ADCCLK = ADCCLK_Frequency
-                freq.HSE    = HSE_Value
-                freq.HSI    = HSI_Value
-                freq.LSI    = LSI_Value
+                freq.PLLCLK = PLL_Frequency
+                freq.USBCLK = USB_Frequency
+                freq.I2SCLK = I2S_Frequency
+                freq.USBCLK = USB_Frequency
 
                 return freq
         end
@@ -731,7 +765,7 @@ configure.stm32f1 = function()
                 value.RCC_PLL3Mul_16  = "x16"
                 value.RCC_PLL3Mul_20  = "x20"
 
-                local choice = key_read("../stm32f1/pll_flags.h", "__PLL3_MULL__")
+                local choice = key_read("../stm32f1/pll_flags.h", "__PLL_PLL3_MULL__")
                 msg(progress() .. "PLL3 multiplication factor configuration.")
                 msg("Current choice is: " .. value[choice] .. ".")
                 add_item("RCC_PLL3Mul_8",  value.RCC_PLL3Mul_8)
@@ -745,7 +779,7 @@ configure.stm32f1 = function()
                 add_item("RCC_PLL3Mul_20", value.RCC_PLL3Mul_20)
                 choice = get_selection()
                 if (can_be_saved(choice)) then
-                        key_save("../stm32f1/pll_flags.h", "__PLL3_MULL__", choice)
+                        key_save("../stm32f1/pll_flags.h", "__PLL_PLL3_MULL__", choice)
                 end
 
                 configure_flash_latency()
