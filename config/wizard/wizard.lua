@@ -27,6 +27,7 @@
 master = true
 
 package.path = './modules/?.lua;'..package.path
+os.setlocale("en_US")
 
 require "defs"
 require "cpu"
