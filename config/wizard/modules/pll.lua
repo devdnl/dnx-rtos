@@ -52,9 +52,9 @@ local function calculate_total_steps()
         if key_read("../project/Makefile", "ENABLE_PLL") == yes then
                 if arch == "stm32f1" then
                         if family == "STM32F10X_CL" then
-                                progress(1, 23)
+                                progress(1, 24)
                         else
-                                progress(1, 14)
+                                progress(1, 15)
                         end
 
                 elseif arch == "stm32f2" then
@@ -108,95 +108,98 @@ configure.stm32f1 = function()
                 local APB2prescaler    = key_read("../stm32f1/pll_flags.h", "__PLL_APB2_PRE__"):gsub("RCC_HCLK_Div", "")
                 local ADCprescaler     = key_read("../stm32f1/pll_flags.h", "__PLL_ADC_PRE__"):gsub("RCC_PCLK2_Div", "")
                 local USBprescaler     = key_read("../stm32f1/pll_flags.h", "__PLL_USB_DIV__"):gsub("1Div5", "Div1.5"):gsub("RCC_.*CLKSource_PLL.*_Div", "")
-                local HSE_Value        = key_read("../project/flags.h", "__CPU_OSC_FREQ__")
-                local HSI_Value        = 8e6
-                local LSI_Value        = 40e3
-                local LSE_Value        = 32768
-                local SYSCLK_Frequency = 0
-                local PLL_Frequency    = 0
-                local USB_Frequency    = 0
-                local PLL2_Frequency   = 0
-                local PLL3_Frequency   = 0
-                local I2S_Frequency    = 0
-                local RTC_Freqency     = 0
+
+                local freq    = {}
+                freq.HSE      = key_read("../project/flags.h", "__CPU_OSC_FREQ__")
+                freq.HSI      = 8e6
+                freq.LSI      = 40e3
+                freq.LSE      = 32768
+                freq.SYSCLK   = 0
+                freq.HCLK     = 0
+                freq.PCLK1    = 0
+                freq.PCLK2    = 0
+                freq.ADCCLK   = 0
+                freq.PLLCLK   = 0
+                freq.USBCLK   = 0
+                freq.I2SCLK   = 0
+                freq.USBCLK   = 0
+                freq.RTCCLK   = 0
+                freq.PD1CLK   = 0
+                freq.PD1INCLK = 0
+                freq.PD2CLK   = 0
+                freq.PLLINCLK = 0
+                freq.PLL2CLK  = 0
+                freq.PLL3CLK  = 0
+                freq.PLL3VCO  = 0
 
                 -- calculate PLL Clk frequency
                 if pllsource == "RCC_PLLSource_HSI_Div2" then
-                        PLL_Frequency = (HSI_Value / 2) * pllmull
+                        freq.PLLINCLK = (freq.HSI / 2)
+                        freq.PLLCLK   = freq.PLLINCLK * pllmull
                 else
                         if family == "STM32F10X_CL" then
                                 if prediv1source == "RCC_PREDIV1_Source_HSE" then
-                                        PLL_Frequency = (HSE_Value / prediv1factor) * pllmull
+                                        freq.PD1INCLK = freq.HSE
                                 else
-                                        PLL_Frequency = (((HSE_Value / prediv2factor) * pll2mull) / prediv1factor) * pllmull
+                                        freq.PD1INCLK = (freq.HSE / prediv2factor) * pll2mull
                                 end
+                                freq.PD1CLK   = freq.PD1INCLK / prediv1factor
+                                freq.PLLINCLK = freq.PD1CLK
+                                freq.PLLCLK   = freq.PLLINCLK * pllmull
+                                freq.PD2CLK   = freq.HSE / prediv2factor
                         else
                                 if pllsource == "RCC_PLLSource_HSE_Div2" then
-                                        PLL_Frequency = (HSE_Value / 2) * pllmull
+                                        freq.PLLINCLK = (freq.HSE / 2)
                                 else
-                                        PLL_Frequency = HSE_Value * pllmull
+                                        freq.PLLINCLK = (freq.HSE)
                                 end
+                                freq.PLLCLK   = freq.PLLINCLK * pllmull
                         end
                 end
 
                 -- calculate USB frequency
                 if family == "STM32F10X_CL" then
-                        USB_Frequency = (2 * PLL_Frequency) / USBprescaler
+                        freq.USBCLK = (2 * freq.PLLCLK) / USBprescaler
                 else
-                        USB_Frequency = PLL_Frequency / USBprescaler
+                        freq.USBCLK = freq.PLLCLK / USBprescaler
                 end
 
                 -- calculate SYSCLK frequency
                 if sysclksource == "RCC_SYSCLKSource_HSI" then
-                        SYSCLK_Frequency = HSI_Value
-
+                        freq.SYSCLK = freq.HSI
                 elseif sysclksource == "RCC_SYSCLKSource_HSE" then
-                        SYSCLK_Frequency = HSE_Value
-
+                        freq.SYSCLK = freq.HSE
                 elseif sysclksource == "RCC_SYSCLKSource_PLLCLK" then
-                        SYSCLK_Frequency = PLL_Frequency
+                        freq.SYSCLK = freq.PLLCLK
                 end
 
                 -- calculate PLL2CLK and PLL3CLK
                 if family == "STM32F10X_CL" then
-                        PLL2_Frequency = (HSE_Value / prediv2factor) * pll2mull
-                        PLL3_Frequency = (HSE_Value / prediv2factor) * pll3mull
+                        freq.PLL2CLK = (freq.HSE / prediv2factor) * pll2mull
+                        freq.PLL3CLK = (freq.HSE / prediv2factor) * pll3mull
+                        freq.PLL3VCO = freq.PLL3CLK * 2
                 end
 
                 -- calculate I2S frequency
                 if family == "STM32F10X_CL" then
-                        I2S_Frequency = PLL3_Frequency * 2
+                        freq.I2S = freq.PLL3CLK * 2
                 else
-                        I2S_Frequency = SYSCLK_Frequency
+                        freq.I2S = freq.SYSCLK
                 end
 
                 -- calculate RTC frequency
                 if RTCsource == "RCC_RTCCLKSource_LSE" then
-                        RTC_Freqency = LSE_Value
+                        freq.RTCCLK = freq.LSE
                 elseif RTCsource == "RCC_RTCCLKSource_LSI" then
-                        RTC_Freqency = LSI_Value
+                        freq.RTCCLK = freq.LSI
                 elseif RTCsource == "RCC_RTCCLKSource_HSE_Div128" then
-                        RTC_Freqency = HSE_Value / 128
+                        freq.RTCCLK = freq.HSE / 128
                 end
 
-                local HCLK_Frequency   = SYSCLK_Frequency / AHBprescaler
-                local PCLK1_Frequency  = HCLK_Frequency / APB1prescaler
-                local PCLK2_Frequency  = HCLK_Frequency / APB2prescaler
-                local ADCCLK_Frequency = PCLK2_Frequency / ADCprescaler
-
-                local freq  = {}
-                freq.HSE    = HSE_Value
-                freq.HSI    = HSI_Value
-                freq.LSI    = LSI_Value
-                freq.SYSCLK = SYSCLK_Frequency
-                freq.HCLK   = HCLK_Frequency
-                freq.PCLK1  = PCLK1_Frequency
-                freq.PCLK2  = PCLK2_Frequency
-                freq.ADCCLK = ADCCLK_Frequency
-                freq.PLLCLK = PLL_Frequency
-                freq.USBCLK = USB_Frequency
-                freq.I2SCLK = I2S_Frequency
-                freq.USBCLK = USB_Frequency
+                freq.HCLK   = freq.SYSCLK / AHBprescaler
+                freq.PCLK1  = freq.HCLK / APB1prescaler
+                freq.PCLK2  = freq.HCLK / APB2prescaler
+                freq.ADCCLK = freq.PCLK2 / ADCprescaler
 
                 return freq
         end
@@ -217,7 +220,7 @@ configure.stm32f1 = function()
                 key_save("../stm32f1/pll_flags.h", "__PLL_FLASH_LATENCY__", flash_latency)
         end
 
-        local function print_freq()
+        local function print_summary()
                 local freq = get_frequencies()
 
                 msg("PLL configuration summary:")
@@ -295,10 +298,11 @@ configure.stm32f1 = function()
         end
 
         local function configure_RTC_clk_src()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_RTCCLKSource_LSE        = "LSE selected as RTC clock"
-                value.RCC_RTCCLKSource_LSI        = "LSI selected as RTC clock"
-                value.RCC_RTCCLKSource_HSE_Div128 = "HSE clock divided by 128 selected as RTC clock"
+                value.RCC_RTCCLKSource_LSE        = "LSE selected as RTC clock ("..freq.LSE/1e3 .." kHz)"
+                value.RCC_RTCCLKSource_LSI        = "LSI selected as RTC clock ("..freq.LSI/1e3 .." kHz)"
+                value.RCC_RTCCLKSource_HSE_Div128 = "HSE clock divided by 128 selected as RTC clock ("..freq.HSE/128/1e3 .." kHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_RTC_CLK_SRC__")
                 msg(progress() .. "RTC clock source configuration.")
@@ -317,10 +321,11 @@ configure.stm32f1 = function()
         end
 
         local function configure_sys_clk_src()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_SYSCLKSource_HSI    = "HSI selected as system clock"
-                value.RCC_SYSCLKSource_HSE    = "HSE selected as system clock"
-                value.RCC_SYSCLKSource_PLLCLK = "PLL selected as system clock"
+                value.RCC_SYSCLKSource_HSI    = "HSI selected as system clock ("..freq.HSI/1e6 .." MHz)"
+                value.RCC_SYSCLKSource_HSE    = "HSE selected as system clock ("..freq.HSE/1e6 .." MHz)"
+                value.RCC_SYSCLKSource_PLLCLK = "PLL selected as system clock ("..freq.PLLCLK/1e6 .." MHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_SYS_CLK_SRC__")
                 msg(progress() .. "System clock source configuration.")
@@ -339,18 +344,18 @@ configure.stm32f1 = function()
         end
 
         local function configure_MCO_src()
-                local freq = get_frequencies()
+                local freq  = get_frequencies()
                 local value = {}
                 value.RCC_MCO_NoClock      = "No clock selected (0 Hz)"
                 value.RCC_MCO_SYSCLK       = "System clock selected ("..freq.SYSCLK/1e6 .." MHz)"
-                value.RCC_MCO_HSI          = "HSI oscillator clock selected"
-                value.RCC_MCO_HSE          = "HSE oscillator clock selected"
-                value.RCC_MCO_PLLCLK_Div2  = "PLL clock divided by 2 selected"
+                value.RCC_MCO_HSI          = "HSI oscillator clock selected ("..freq.HSI/1e6 .." MHz)"
+                value.RCC_MCO_HSE          = "HSE oscillator clock selected ("..freq.HSE/1e6 .." MHz)"
+                value.RCC_MCO_PLLCLK_Div2  = "PLL clock divided by 2 selected ("..freq.PLLCLK/2/1e6 .." MHz)"
                 if family == "STM32F10X_CL" then
-                value.RCC_MCO_PLL2CLK      = "PLL2 clock selected"
-                value.RCC_MCO_PLL3CLK_Div2 = "PLL3 clock divided by 2 selected"
-                value.RCC_MCO_XT1          = "External 3-25 MHz oscillator clock selected"
-                value.RCC_MCO_PLL3CLK      = "PLL3 clock selected"
+                value.RCC_MCO_PLL2CLK      = "PLL2 clock selected ("..freq.PLL2CLK/1e6 .." MHz)"
+                value.RCC_MCO_PLL3CLK_Div2 = "PLL3 clock divided by 2 selected ("..freq.PLL3CLK/2/1e6 .." MHz)"
+                value.RCC_MCO_XT1          = "External 3-25 MHz oscillator clock selected ("..freq.HSE/1e6 .." MHz)"
+                value.RCC_MCO_PLL3CLK      = "PLL3 clock selected ("..freq.PLL3CLK/1e6 .." MHz)"
                 end
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_MCO_SRC__")
@@ -378,9 +383,10 @@ configure.stm32f1 = function()
         end
 
         local function configure_I2S2_src()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_I2S2CLKSource_SYSCLK   = "System clock selected as I2S2 clock entry"
-                value.RCC_I2S2CLKSource_PLL3_VCO = "PLL3 VCO clock selected as I2S2 clock entry"
+                value.RCC_I2S2CLKSource_SYSCLK   = "System clock selected as I2S2 clock entry ("..freq.SYSCLK/1e6 .." MHz)"
+                value.RCC_I2S2CLKSource_PLL3_VCO = "PLL3 VCO clock selected as I2S2 clock entry ("..freq.I2SCLK/1e6 .." MHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_I2S2_SRC__")
                 msg(progress() .. "I2S2 clock source configuration.")
@@ -398,9 +404,10 @@ configure.stm32f1 = function()
         end
 
         local function configure_I2S3_src()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_I2S3CLKSource_SYSCLK   = "System clock selected as I2S3 clock entry"
-                value.RCC_I2S3CLKSource_PLL3_VCO = "PLL3 VCO clock selected as I2S3 clock entry"
+                value.RCC_I2S3CLKSource_SYSCLK   = "System clock selected as I2S3 clock entry ("..freq.SYSCLK/1e6 .." MHz)"
+                value.RCC_I2S3CLKSource_PLL3_VCO = "PLL3 VCO clock selected as I2S3 clock entry ("..freq.I2SCLK/1e6 .." MHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_I2S3_SRC__")
                 msg(progress() .. "Do you want to ?")
@@ -438,14 +445,15 @@ configure.stm32f1 = function()
         end
 
         local function configure_PLL_src()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_PLLSource_HSI_Div2 = "HSI oscillator clock divided by 2 selected as PLL clock entry"
-                if family == "STM32F10X_CL" then
-                value.RCC_PLLSource_PREDIV1  = "PREDIV1 clock selected as PLL clock entry"
-                else
-                value.RCC_PLLSource_HSE_Div1 = "HSE oscillator clock selected as PLL clock entry"
-                value.RCC_PLLSource_HSE_Div2 = "HSE oscillator clock divided by 2 selected as PLL clock entry"
-                end
+                value.RCC_PLLSource_HSI_Div2 = "HSI oscillator clock divided by 2 selected as PLL clock entry ("..freq.HSI/2/1e6 .." MHz)"
+--                 if family == "STM32F10X_CL" then
+                value.RCC_PLLSource_PREDIV1  = "PREDIV1 clock selected as PLL clock entry ("..freq.PD1CLK/1e6 .." MHz)"
+--                 else
+                value.RCC_PLLSource_HSE_Div1 = "HSE oscillator clock selected as PLL clock entry ("..freq.HSE/1e6 .." MHz)"
+                value.RCC_PLLSource_HSE_Div2 = "HSE oscillator clock divided by 2 selected as PLL clock entry ("..freq.HSE/2/1e6 .." MHz)"
+--                 end
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_PLL_SRC__")
                 msg(progress() .. "PLL clock source configuration.")
@@ -468,31 +476,32 @@ configure.stm32f1 = function()
         end
 
         local function configure_PLL_mul()
+                local freq  = get_frequencies()
                 local value = {}
                 if family == "STM32F10X_CL" then
-                value.RCC_PLLMul_4   = "x4"
-                value.RCC_PLLMul_5   = "x5"
-                value.RCC_PLLMul_6   = "x6"
-                value.RCC_PLLMul_6_5 = "x6.5"
-                value.RCC_PLLMul_7   = "x7"
-                value.RCC_PLLMul_8   = "x8"
-                value.RCC_PLLMul_9   = "x9"
+                value.RCC_PLLMul_4   = "x4 ("..freq.PLLINCLK*4/1e6 .." MHz)"
+                value.RCC_PLLMul_5   = "x5 ("..freq.PLLINCLK*5/1e6 .." MHz)"
+                value.RCC_PLLMul_6   = "x6 ("..freq.PLLINCLK*6/1e6 .." MHz)"
+                value.RCC_PLLMul_6_5 = "x6.5 ("..freq.PLLINCLK*6.5/1e6 .." MHz)"
+                value.RCC_PLLMul_7   = "x7 ("..freq.PLLINCLK*7/1e6 .." MHz)"
+                value.RCC_PLLMul_8   = "x8 ("..freq.PLLINCLK*8/1e6 .." MHz)"
+                value.RCC_PLLMul_9   = "x9 ("..freq.PLLINCLK*9/1e6 .." MHz)"
                 else
-                value.RCC_PLLMul_2   = "x2"
-                value.RCC_PLLMul_3   = "x3"
-                value.RCC_PLLMul_4   = "x4"
-                value.RCC_PLLMul_5   = "x5"
-                value.RCC_PLLMul_6   = "x6"
-                value.RCC_PLLMul_7   = "x7"
-                value.RCC_PLLMul_8   = "x8"
-                value.RCC_PLLMul_9   = "x9"
-                value.RCC_PLLMul_10  = "x10"
-                value.RCC_PLLMul_11  = "x11"
-                value.RCC_PLLMul_12  = "x12"
-                value.RCC_PLLMul_13  = "x13"
-                value.RCC_PLLMul_14  = "x14"
-                value.RCC_PLLMul_15  = "x15"
-                value.RCC_PLLMul_16  = "x16"
+                value.RCC_PLLMul_2   = "x2 ("..freq.PLLINCLK*2/1e6 .." MHz)"
+                value.RCC_PLLMul_3   = "x3 ("..freq.PLLINCLK*3/1e6 .." MHz)"
+                value.RCC_PLLMul_4   = "x4 ("..freq.PLLINCLK*4/1e6 .." MHz)"
+                value.RCC_PLLMul_5   = "x5 ("..freq.PLLINCLK*5/1e6 .." MHz)"
+                value.RCC_PLLMul_6   = "x6 ("..freq.PLLINCLK*6/1e6 .." MHz)"
+                value.RCC_PLLMul_7   = "x7 ("..freq.PLLINCLK*7/1e6 .." MHz)"
+                value.RCC_PLLMul_8   = "x8 ("..freq.PLLINCLK*8/1e6 .." MHz)"
+                value.RCC_PLLMul_9   = "x9 ("..freq.PLLINCLK*9/1e6 .." MHz)"
+                value.RCC_PLLMul_10  = "x10 ("..freq.PLLINCLK*10/1e6 .." MHz)"
+                value.RCC_PLLMul_11  = "x11 ("..freq.PLLINCLK*11/1e6 .." MHz)"
+                value.RCC_PLLMul_12  = "x12 ("..freq.PLLINCLK*12/1e6 .." MHz)"
+                value.RCC_PLLMul_13  = "x13 ("..freq.PLLINCLK*13/1e6 .." MHz)"
+                value.RCC_PLLMul_14  = "x14 ("..freq.PLLINCLK*14/1e6 .." MHz)"
+                value.RCC_PLLMul_15  = "x15 ("..freq.PLLINCLK*15/1e6 .." MHz)"
+                value.RCC_PLLMul_16  = "x16 ("..freq.PLLINCLK*16/1e6 .." MHz)"
                 end
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_PLL_MULL__")
@@ -534,13 +543,14 @@ configure.stm32f1 = function()
         end
 
         local function configure_USB_div()
+                local freq  = get_frequencies()
                 local value = {}
                 if family == "STM32F10X_CL" then
-                value.RCC_OTGFSCLKSource_PLLVCO_Div3 = "PLL VCO clock divided by 3 selected as USB OTG FS clock source"
-                value.RCC_OTGFSCLKSource_PLLVCO_Div2 = "PLL VCO clock divided by 2 selected as USB OTG FS clock source"
+                value.RCC_OTGFSCLKSource_PLLVCO_Div3 = "PLL VCO clock divided by 3 selected as USB OTG FS clock source (".. freq.PLL3VCO/3/1e6 .." MHz)"
+                value.RCC_OTGFSCLKSource_PLLVCO_Div2 = "PLL VCO clock divided by 2 selected as USB OTG FS clock source (".. freq.PLL3VCO/2/1e6 .." MHz)"
                 else
-                value.RCC_USBCLKSource_PLLCLK_1Div5  = "PLL clock divided by 1.5 selected as USB clock source"
-                value.RCC_USBCLKSource_PLLCLK_Div1   = "PLL clock selected as USB clock source"
+                value.RCC_USBCLKSource_PLLCLK_1Div5  = "PLL clock divided by 1.5 selected as USB clock source (".. freq.PLLCLK/1.5/1e6 .." MHz)"
+                value.RCC_USBCLKSource_PLLCLK_Div1   = "PLL clock selected as USB clock source (".. freq.PLLCLK/1e6 .." MHz)"
                 end
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_USB_DIV__")
@@ -584,23 +594,24 @@ configure.stm32f1 = function()
         end
 
         local function configure_prediv1_val()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_PREDIV1_Div1  = "/1"
-                value.RCC_PREDIV1_Div2  = "/2"
-                value.RCC_PREDIV1_Div3  = "/3"
-                value.RCC_PREDIV1_Div4  = "/4"
-                value.RCC_PREDIV1_Div5  = "/5"
-                value.RCC_PREDIV1_Div6  = "/6"
-                value.RCC_PREDIV1_Div7  = "/7"
-                value.RCC_PREDIV1_Div8  = "/8"
-                value.RCC_PREDIV1_Div9  = "/9"
-                value.RCC_PREDIV1_Div10 = "/10"
-                value.RCC_PREDIV1_Div11 = "/11"
-                value.RCC_PREDIV1_Div12 = "/12"
-                value.RCC_PREDIV1_Div13 = "/13"
-                value.RCC_PREDIV1_Div14 = "/14"
-                value.RCC_PREDIV1_Div15 = "/15"
-                value.RCC_PREDIV1_Div16 = "/16"
+                value.RCC_PREDIV1_Div1  = "/1 (PLL input clock = "..freq.PD1INCLK/1/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div2  = "/2 (PLL input clock = "..freq.PD1INCLK/2/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div3  = "/3 (PLL input clock = "..freq.PD1INCLK/3/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div4  = "/4 (PLL input clock = "..freq.PD1INCLK/4/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div5  = "/5 (PLL input clock = "..freq.PD1INCLK/5/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div6  = "/6 (PLL input clock = "..freq.PD1INCLK/6/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div7  = "/7 (PLL input clock = "..freq.PD1INCLK/7/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div8  = "/8 (PLL input clock = "..freq.PD1INCLK/8/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div9  = "/9 (PLL input clock = "..freq.PD1INCLK/9/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div10 = "/10 (PLL input clock = "..freq.PD1INCLK/10/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div11 = "/11 (PLL input clock = "..freq.PD1INCLK/11/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div12 = "/12 (PLL input clock = "..freq.PD1INCLK/12/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div13 = "/13 (PLL input clock = "..freq.PD1INCLK/13/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div14 = "/14 (PLL input clock = "..freq.PD1INCLK/14/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div15 = "/15 (PLL input clock = "..freq.PD1INCLK/15/1e6 .." MHz)"
+                value.RCC_PREDIV1_Div16 = "/16 (PLL input clock = "..freq.PD1INCLK/16/1e6 .." MHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_PREDIV1_VAL__")
                 msg(progress() .. "Pre-divider 1 divide value configuration.")
@@ -632,26 +643,27 @@ configure.stm32f1 = function()
         end
 
         local function configure_prediv2_val()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_PREDIV2_Div1  = "/1"
-                value.RCC_PREDIV2_Div2  = "/2"
-                value.RCC_PREDIV2_Div3  = "/3"
-                value.RCC_PREDIV2_Div4  = "/4"
-                value.RCC_PREDIV2_Div5  = "/5"
-                value.RCC_PREDIV2_Div6  = "/6"
-                value.RCC_PREDIV2_Div7  = "/7"
-                value.RCC_PREDIV2_Div8  = "/8"
-                value.RCC_PREDIV2_Div9  = "/9"
-                value.RCC_PREDIV2_Div10 = "/10"
-                value.RCC_PREDIV2_Div11 = "/11"
-                value.RCC_PREDIV2_Div12 = "/12"
-                value.RCC_PREDIV2_Div13 = "/13"
-                value.RCC_PREDIV2_Div14 = "/14"
-                value.RCC_PREDIV2_Div15 = "/15"
-                value.RCC_PREDIV2_Div16 = "/16"
+                value.RCC_PREDIV2_Div1  = "/1 ("..freq.HSE/1/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div2  = "/2 ("..freq.HSE/2/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div3  = "/3 ("..freq.HSE/3/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div4  = "/4 ("..freq.HSE/4/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div5  = "/5 ("..freq.HSE/5/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div6  = "/6 ("..freq.HSE/6/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div7  = "/7 ("..freq.HSE/7/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div8  = "/8 ("..freq.HSE/8/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div9  = "/9 ("..freq.HSE/9/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div10 = "/10 ("..freq.HSE/10/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div11 = "/11 ("..freq.HSE/11/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div12 = "/12 ("..freq.HSE/12/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div13 = "/13 ("..freq.HSE/13/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div14 = "/14 ("..freq.HSE/14/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div15 = "/15 ("..freq.HSE/15/1e6 .." MHz)"
+                value.RCC_PREDIV2_Div16 = "/16 ("..freq.HSE/16/1e6 .." MHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_PREDIV2_VAL__")
-                msg(progress() .. "Pre-divider 2 divide value configuration.")
+                msg(progress() .. "Pre-divider 2 divide value configuration. The divider is connected to HSE.")
                 msg("Current choice is: " .. value[choice] .. ".")
                 add_item("RCC_PREDIV2_Div1",  value.RCC_PREDIV2_Div1 )
                 add_item("RCC_PREDIV2_Div2",  value.RCC_PREDIV2_Div2 )
@@ -700,16 +712,17 @@ configure.stm32f1 = function()
         end
 
         local function configure_PLL2_mul()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_PLL2Mul_8   = "x8"
-                value.RCC_PLL2Mul_9   = "x9"
-                value.RCC_PLL2Mul_10  = "x10"
-                value.RCC_PLL2Mul_11  = "x11"
-                value.RCC_PLL2Mul_12  = "x12"
-                value.RCC_PLL2Mul_13  = "x13"
-                value.RCC_PLL2Mul_14  = "x14"
-                value.RCC_PLL2Mul_16  = "x16"
-                value.RCC_PLL2Mul_20  = "x20"
+                value.RCC_PLL2Mul_8   = "x8 ("..freq.PD2CLK/8/1e6 .." MHz)"
+                value.RCC_PLL2Mul_9   = "x9 ("..freq.PD2CLK/9/1e6 .." MHz)"
+                value.RCC_PLL2Mul_10  = "x10 ("..freq.PD2CLK/10/1e6 .." MHz)"
+                value.RCC_PLL2Mul_11  = "x11 ("..freq.PD2CLK/11/1e6 .." MHz)"
+                value.RCC_PLL2Mul_12  = "x12 ("..freq.PD2CLK/12/1e6 .." MHz)"
+                value.RCC_PLL2Mul_13  = "x13 ("..freq.PD2CLK/13/1e6 .." MHz)"
+                value.RCC_PLL2Mul_14  = "x14 ("..freq.PD2CLK/14/1e6 .." MHz)"
+                value.RCC_PLL2Mul_16  = "x16 ("..freq.PD2CLK/16/1e6 .." MHz)"
+                value.RCC_PLL2Mul_20  = "x20 ("..freq.PD2CLK/20/1e6 .." MHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_PLL2_MULL__")
                 msg(progress() .. "PLL2 multiplication factor configuration.")
@@ -754,16 +767,17 @@ configure.stm32f1 = function()
         end
 
         local function configure_PLL3_mul()
+                local freq  = get_frequencies()
                 local value = {}
-                value.RCC_PLL3Mul_8   = "x8"
-                value.RCC_PLL3Mul_9   = "x9"
-                value.RCC_PLL3Mul_10  = "x10"
-                value.RCC_PLL3Mul_11  = "x11"
-                value.RCC_PLL3Mul_12  = "x12"
-                value.RCC_PLL3Mul_13  = "x13"
-                value.RCC_PLL3Mul_14  = "x14"
-                value.RCC_PLL3Mul_16  = "x16"
-                value.RCC_PLL3Mul_20  = "x20"
+                value.RCC_PLL3Mul_8   = "x8 ("..freq.PD2CLK/8/1e6 .." MHz)"
+                value.RCC_PLL3Mul_9   = "x9 ("..freq.PD2CLK/9/1e6 .." MHz)"
+                value.RCC_PLL3Mul_10  = "x10 ("..freq.PD2CLK/10/1e6 .." MHz)"
+                value.RCC_PLL3Mul_11  = "x11 ("..freq.PD2CLK/11/1e6 .." MHz)"
+                value.RCC_PLL3Mul_12  = "x12 ("..freq.PD2CLK/12/1e6 .." MHz)"
+                value.RCC_PLL3Mul_13  = "x13 ("..freq.PD2CLK/13/1e6 .." MHz)"
+                value.RCC_PLL3Mul_14  = "x14 ("..freq.PD2CLK/14/1e6 .." MHz)"
+                value.RCC_PLL3Mul_16  = "x16 ("..freq.PD2CLK/16/1e6 .." MHz)"
+                value.RCC_PLL3Mul_20  = "x20 ("..freq.PD2CLK/20/1e6 .." MHz)"
 
                 local choice = key_read("../stm32f1/pll_flags.h", "__PLL_PLL3_MULL__")
                 msg(progress() .. "PLL3 multiplication factor configuration.")
@@ -906,30 +920,31 @@ configure.stm32f1 = function()
                 ::lsi_on::      if configure_LSI_on()      == back then return back     end
                 ::lse_on::      if configure_LSE_on()      == back then goto lsi_on     end
                 ::hse_on::      if configure_HSE_on()      == back then goto lse_on     end
-                ::rtc_src::     if configure_RTC_clk_src() == back then goto hse_on     end
+                ::pll_on::      if configure_PLL_on()      == back then goto hse_on     end
+                ::pll_src::     if configure_PLL_src()     == back then goto pll_on     end
+                ::pll_mull::    if configure_PLL_mul()     == back then goto pll_src    end
+                ::rtc_src::     if configure_RTC_clk_src() == back then goto pll_mull   end
                 ::sysclk_src::  if configure_sys_clk_src() == back then goto rtc_src    end
                 ::mco_src::     if configure_MCO_src()     == back then goto sysclk_src end
-                ::pll_on::      if configure_PLL_on()      == back then goto mco_src    end
-                ::pll_mull::    if configure_PLL_mul()     == back then goto pll_on     end
-                ::usb_div::     if configure_USB_div()     == back then goto pll_mull   end
+                ::usb_div::     if configure_USB_div()     == back then goto mco_src    end
                 ::ahb_pre::     if configure_AHB_pre()     == back then goto usb_div    end
                 ::apb1_pre::    if configure_APB1_pre()    == back then goto ahb_pre    end
                 ::apb2_pre::    if configure_APB2_pre()    == back then goto apb1_pre   end
                 ::adc_pre::     if configure_ADC_pre()     == back then goto apb2_pre   end
 
                 if family == "STM32F10X_CL" then
-                        ::i2s2_src::    if configure_I2S2_src()    == back then goto adc_pre     end
+                        ::pll2_on::     if configure_PLL2_on()     == back then goto adc_pre     end
+                        ::pll2_mull::   if configure_PLL2_mul()    == back then goto pll2_on     end
+                        ::pll3_on::     if configure_PLL3_on()     == back then goto pll2_mull   end
+                        ::pll3_mull::   if configure_PLL3_mul()    == back then goto pll3_on     end
+                        ::i2s2_src::    if configure_I2S2_src()    == back then goto pll3_mull   end
                         ::i2s3_src::    if configure_I2S3_src()    == back then goto i2s2_src    end
                         ::prediv1_src:: if configure_prediv1_src() == back then goto i2s3_src    end
                         ::prediv1_val:: if configure_prediv1_val() == back then goto prediv1_src end
                         ::prediv2_val:: if configure_prediv2_val() == back then goto prediv1_val end
-                        ::pll2_on::     if configure_PLL2_on()     == back then goto prediv2_val end
-                        ::pll2_mull::   if configure_PLL2_mul()    == back then goto pll2_on     end
-                        ::pll3_on::     if configure_PLL3_on()     == back then goto pll2_mull   end
-                        ::pll3_mull::   if configure_PLL3_mul()    == back then goto pll3_on     end
                 end
 
-                print_freq()
+                print_summary()
         end
 
         return next

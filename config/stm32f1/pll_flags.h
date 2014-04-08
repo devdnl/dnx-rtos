@@ -10,7 +10,7 @@
 #define __PLL_I2S2_SRC__ RCC_I2S2CLKSource_SYSCLK
 #define __PLL_I2S3_SRC__ RCC_I2S3CLKSource_SYSCLK
 #define __PLL_PLL_ON__ ENABLE
-#define __PLL_PLL_SRC__ RCC_PLLSource_PREDIV1
+#define __PLL_PLL_SRC__ RCC_PLLSource_HSE_Div1
 #define __PLL_PLL_MULL__ RCC_PLLMul_9
 #define __PLL_USB_DIV__ RCC_USBCLKSource_PLLCLK_1Div5
 #define __PLL_PREDIV1_SRC__ RCC_PREDIV1_Source_HSE
