@@ -32,8 +32,9 @@
 #include <dnx/misc.h>
 
 #ifdef ARCH_stm32f1
-#       include "stm32f1/gpio_def.h"
-#
+#       if (__ENABLE_GPIO__)
+#               include "stm32f1/gpio_def.h"
+#       endif
 #       if (__ENABLE_AFIO__)
 #               include "stm32f1/afio_def.h"
 #       endif
@@ -73,10 +74,12 @@
 /*==============================================================================
   External objects
 ==============================================================================*/
+#if (__ENABLE_GPIO__)
 _IMPORT_MODULE(GPIO);
+#endif
 
 #if (__ENABLE_AFIO__)
-_IMPORT_MODULE(afio)
+_IMPORT_MODULE(afio);
 #endif
 
 #if (__ENABLE_UART__)
@@ -115,6 +118,14 @@ _IMPORT_MODULE(SPI);
   Exported object definitions
 ==============================================================================*/
 const char *const _regdrv_module_name[] = {
+#if (__ENABLE_GPIO__)
+        _USE_MODULE(GPIO),
+#endif
+
+#if (__ENABLE_AFIO__)
+        _USE_MODULE(afio),
+#endif
+
 #if (__ENABLE_UART__)
         _USE_MODULE(UART),
 #endif
@@ -146,12 +157,6 @@ const char *const _regdrv_module_name[] = {
 #if (__ENABLE_SPI__)
         _USE_MODULE(SPI),
 #endif
-
-#if (__ENABLE_AFIO__)
-        _USE_MODULE(afio)
-#endif
-
-        _USE_MODULE(GPIO)
 };
 
 const struct _driver_entry _regdrv_driver_table[] = {
@@ -280,10 +285,12 @@ const struct _driver_entry _regdrv_driver_table[] = {
 #endif
 
 #if (__ENABLE_AFIO__)
-        _USE_DRIVER_INTERFACE(afio, "afio", _AFIO_MAJOR_NUMBER, _AFIO_MINOR_NUMBER)
+        _USE_DRIVER_INTERFACE(afio, "afio", _AFIO_MAJOR_NUMBER, _AFIO_MINOR_NUMBER),
 #endif
 
-        _USE_DRIVER_INTERFACE(GPIO, "gpio", _GPIO_MAJOR_NUMBER, _GPIO_MINOR_NUMBER)
+#if (__ENABLE_GPIO__)
+        _USE_DRIVER_INTERFACE(GPIO, "gpio", _GPIO_MAJOR_NUMBER, _GPIO_MINOR_NUMBER),
+#endif
 };
 
 const uint _regdrv_size_of_driver_table = ARRAY_SIZE(_regdrv_driver_table);
