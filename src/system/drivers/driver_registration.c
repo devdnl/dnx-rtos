@@ -46,7 +46,7 @@
 #       if (__ENABLE_SDSPI__)
 #               include "stm32f1/sdspi_def.h"
 #       endif
-#       if (__ENABLE_ETHMAC__)
+#       if (__ENABLE_ETH__)
 #               include "stm32f1/ethmac_def.h"
 #       endif
 #       if (__ENABLE_SPI__)
@@ -95,7 +95,7 @@ _IMPORT_MODULE(TTY);
 _IMPORT_MODULE(SDSPI);
 #endif
 
-#if (__ENABLE_ETHMAC__)
+#if (__ENABLE_ETH__)
 _IMPORT_MODULE(ETHMAC);
 #endif
 
@@ -131,7 +131,7 @@ const char *const _regdrv_module_name[] = {
         _USE_MODULE(SDSPI),
 #endif
 
-#if (__ENABLE_ETHMAC__)
+#if (__ENABLE_ETH__)
         _USE_MODULE(ETHMAC),
 #endif
 
@@ -192,7 +192,7 @@ const struct _driver_entry _regdrv_driver_table[] = {
         _USE_DRIVER_INTERFACE(SDSPI, "sda4", _SDSPI_CARD_0, _SDSPI_PARTITION_4),
 #endif
 
-#if (__ENABLE_ETHMAC__)
+#if (__ENABLE_ETH__)
         _USE_DRIVER_INTERFACE(ETHMAC, "ethmac", _ETHMAC_MAJOR_NUMBER, _ETHMAC_MINOR_NUMBER),
 #endif
 

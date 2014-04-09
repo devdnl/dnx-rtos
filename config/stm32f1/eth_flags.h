@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    ethmac_flags.h
+@file    eth_flags.h
 
 @author  Daniel Zorychta
 
@@ -24,21 +24,21 @@
 
 *//*==========================================================================*/
 
-#ifndef _ETHMAC_FLAGS_H_
-#define _ETHMAC_FLAGS_H_
+#ifndef _ETH_FLAGS_H_
+#define _ETH_FLAGS_H_
 
-#define __ETHMAC_IRQ_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
-#define __ETHMAC_CHECKSUM_BY_HARDWARE__ YES
-#define __ETHMAC_SPEED__ ETH_Speed_100M
-#define __ETHMAC_PHY_ADDRESS__ 0x01
-#define __ETHMAC_PHY_RESET_DELAY__ 250
-#define __ETHMAC_PHY_CONFIG_DELAY__ 250
-#define __ETHMAC_DEVICE__ DP83848
-#define __ETHMAC_PHY_SR__ 16
-#define __ETHMAC_PHY_SPEED_STATUS_BM__ 0x0002
-#define __ETHMAC_PHY_DUPLEX_STATUS_BM__ 0x0004
+#define __ETH_IRQ_PRIORITY__ CONFIG_USER_IRQ_PRIORITY
+#define __ETH_CHECKSUM_BY_HARDWARE__ __YES__
+#define __ETH_SPEED__ ETH_Speed_100M
+#define __ETH_PHY_ADDRESS__ 0x01
+#define __ETH_PHY_RESET_DELAY__ 250
+#define __ETH_PHY_CONFIG_DELAY__ 250
+#define __ETH_DEVICE__ DP83848
+#define __ETH_PHY_SR__ 16
+#define __ETH_PHY_SPEED_STATUS_BM__ 0x0002
+#define __ETH_PHY_DUPLEX_STATUS_BM__ 0x0004
 
-#endif /* _ETHMAC_FLAGS_H_ */
+#endif /* _ETH_FLAGS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

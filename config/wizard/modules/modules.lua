@@ -30,6 +30,7 @@ require "gpio"
 require "afio"
 require "crc"
 require "pll"
+require "eth"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -76,6 +77,7 @@ function mod:configure()
                 elseif choice == "CRC" then
                         crc:configure()
                 elseif choice == "ETH" then
+                        eth:configure()
                 elseif choice == "PLL" then
                         pll:configure()
                 elseif choice == "SDSPI" then

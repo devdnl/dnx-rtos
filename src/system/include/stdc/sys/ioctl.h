@@ -53,7 +53,7 @@ extern "C" {
 #       if (__ENABLE_SDSPI__)
 #               include "stm32f1/sdspi_def.h"
 #       endif
-#       if (__ENABLE_ETHMAC__)
+#       if (__ENABLE_ETH__)
 #               include "stm32f1/ethmac_def.h"
 #       endif
 #       if (__ENABLE_SPI__)
