@@ -31,6 +31,7 @@ require "afio"
 require "crc"
 require "pll"
 require "eth"
+require "sdspi"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -81,6 +82,7 @@ function mod:configure()
                 elseif choice == "PLL" then
                         pll:configure()
                 elseif choice == "SDSPI" then
+                        sdspi:configure()
                 elseif choice == "SPI" then
                 elseif choice == "TTY" then
                 elseif choice == "UART" then

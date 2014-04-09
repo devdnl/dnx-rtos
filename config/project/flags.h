@@ -119,7 +119,7 @@
 #define __ENABLE_CRC__ __YES__
 #define __ENABLE_ETH__ __YES__
 #define __ENABLE_PLL__ __YES__
-#define __ENABLE_SDSPI__ __NO__
+#define __ENABLE_SDSPI__ __YES__
 #define __ENABLE_SPI__ __NO__
 #define __ENABLE_TTY__ __NO__
 #define __ENABLE_UART__ __NO__
