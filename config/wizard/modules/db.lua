@@ -75,6 +75,7 @@ arch.stm32f1.mcu.STM32F100C4xx.modules  = {"GPIO", "AFIO", "CRC", "PLL", "ETH", 
 arch.stm32f1.mcu.STM32F100C4xx.GPIO     = {4}
 arch.stm32f1.mcu.STM32F100C4xx.SPI      = {1}
 arch.stm32f1.mcu.STM32F100C4xx.UART     = {2}
+arch.stm32f1.mcu.STM32F100C4xx.SPI      = {2}
 
 arch.stm32f1.mcu.STM32F100C6xx          = {}
 arch.stm32f1.mcu.STM32F100C6xx.ram      = 4096

@@ -338,8 +338,24 @@ gpio_port.stm32f4.disable_unused = function()
 end
 
 --------------------------------------------------------------------------------
--- GLOBAL FUNCTIONS
+-- PUBLIC METHODS
 --------------------------------------------------------------------------------
+function gpio:get_pins()
+        local arch = cpu:get_arch()
+        local pins = {}
+
+        if arch == "stm32f1" then
+                for port = 1, get_ports_count() do
+                        for pin = 0, gpio_port.stm32f1.pins - 1 do
+                                local name = key_read("../stm32f1/gpio_flags.h", "__GPIO_"..gpio_port.stm32f1.port_list[port].."_PIN_"..pin.."_NAME__")
+                                table.insert(pins, name)
+                        end
+                end
+        end
+
+        return pins
+end
+
 --------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------

@@ -40,9 +40,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/** concat macro */
-#define _CONCAT(x, y) x##y
-
 /** macro creates an enumerator with pin data */
 #define _PIN_CONFIGURATION(port, number, pin_name, mode, state) \
 enum port##_##number##_CFG {\

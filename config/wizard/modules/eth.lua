@@ -245,7 +245,7 @@ arch.stm32f1.configure = function()
                 if priority == "CONFIG_USER_IRQ_PRIORITY" then
                         priority = "Default"
                 else
-                        priority = math.floor(tonumber(choice) / 16)
+                        priority = math.floor(tonumber(priority) / 16)
                 end
 
                 msg("Priority: " .. priority .. "\n"..

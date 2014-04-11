@@ -50,6 +50,7 @@
 #include "../stm32f1/afio_flags.h"
 #include "../stm32f1/ethmac_flags.h"
 #include "../stm32f1/pll_flags.h"
+#include "../stm32f1/sdspi_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
 #include "stm32f2/cpu.h"
 #elif (__CPU_ARCH__ == stm32f3)

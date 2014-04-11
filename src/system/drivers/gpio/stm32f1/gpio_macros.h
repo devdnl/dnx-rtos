@@ -38,6 +38,9 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/** concat macro */
+#define _CONCAT(x, y) x##y
+
 /** define GPIO pin outputs types and speeds (do not edit) */
 #define _GPIO_OUT_PUSH_PULL_10MHZ               0x01
 #define _GPIO_OUT_PUSH_PULL_2MHZ                0x02
@@ -61,9 +64,9 @@ extern "C" {
 #define _HIGH                                   1U
 
 /** PIN control macros */
-#define GPIO_SET_PIN(name)                      ((GPIO_t*)_GPIO_##name)->BSRR |= (_BM_##name)
-#define GPIO_CLEAR_PIN(name)                    ((GPIO_t*)_GPIO_##name)->BRR  |= (_BM_##name)
-#define GPIO_TEST_PIN(name)                     (((GPIO_t*)_GPIO_##name)->IDR  & (_BM_##name))
+#define GPIO_SET_PIN(name)                      ((GPIO_t*)_CONCAT(_GPIO_, name))->BSRR |= _CONCAT(_BM_, name)
+#define GPIO_CLEAR_PIN(name)                    ((GPIO_t*)_CONCAT(_GPIO_, name))->BRR  |= _CONCAT(_BM_, name)
+#define GPIO_TEST_PIN(name)                     (((GPIO_t*)_CONCAT(_GPIO_, name))->IDR  & _CONCAT(_BM_, name))
 
 /*==============================================================================
   Exported object types
