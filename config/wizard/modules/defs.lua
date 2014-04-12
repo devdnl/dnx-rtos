@@ -160,5 +160,47 @@ function table.find(t, k)
 end
 
 --------------------------------------------------------------------------------
+-- @brief Function round value
+-- @param value         value to round
+-- @param precision     number of digits
+-- @return rounded value
+--------------------------------------------------------------------------------
+function round(value, precision)
+        return math.floor(value * 10^(precision or 0)) / 10^(precision or 0)
+end
+
+--------------------------------------------------------------------------------
+-- @brief Check time value and set unit
+-- @param time          time
+-- @return string with calculated time and unit
+--------------------------------------------------------------------------------
+function tunit(time)
+        if time < 1e-6 then
+                return time*1e9 .." ns"
+        elseif time < 1e-3 then
+                return time*1e6 .." us"
+        elseif time < 1 then
+                return time*1e3 .." ms"
+        else
+                return time.." s"
+        end
+end
+
+--------------------------------------------------------------------------------
+-- @brief Calculate frequency unit
+-- @param freq          frequency
+-- @param string of frequency with unit
+--------------------------------------------------------------------------------
+local function funit(freq)
+        if freq < 1e3 then
+                return freq.." Hz"
+        elseif freq < 1e6 then
+                return freq/1e3 .." kHz"
+        else
+                return freq/1e6 .." MHz"
+        end
+end
+
+--------------------------------------------------------------------------------
 -- END OF FILE
 --------------------------------------------------------------------------------

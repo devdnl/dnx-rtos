@@ -53,6 +53,7 @@
 #include "../stm32f1/sdspi_flags.h"
 #include "../stm32f1/spi_flags.h"
 #include "../stm32f1/tty_flags.h"
+#include "../stm32f1/wdg_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)
 #include "stm32f2/cpu.h"
 #elif (__CPU_ARCH__ == stm32f3)
@@ -126,7 +127,7 @@
 #define __ENABLE_SPI__ __YES__
 #define __ENABLE_TTY__ __YES__
 #define __ENABLE_UART__ __NO__
-#define __ENABLE_WDG__ __NO__
+#define __ENABLE_WDG__ __YES__
 #define __ENABLE_I2S__ __NO__
 #define __ENABLE_USB__ __NO__
 #define __ENABLE_USBOTG__ __NO__

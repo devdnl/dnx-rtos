@@ -34,6 +34,7 @@ require "eth"
 require "sdspi"
 require "spi"
 require "tty"
+require "wdg"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -91,6 +92,7 @@ function mod:configure()
                         tty:configure()
                 elseif choice == "UART" then
                 elseif choice == "WDG" then
+                        wdg:configure()
                 elseif choice == "I2S" then
                 elseif choice == "USB" then
                 elseif choice == "USBOTG" then

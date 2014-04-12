@@ -44,21 +44,21 @@ extern "C" {
  * true:  device locked at open() operation
  * false: device not locked at open() operation
  */
-#define _WDG_CFG_OPEN_LOCK              true
+#define _WDG_CFG_OPEN_LOCK              __WDG_DEVICE_LOCK_AT_OPEN__
 
 /*
  * Set Watchdog prescaler (LSI / prescaler; LSI = 40 kHz)
  *
  * 4, 8, 16, 32, 64, 128, 256: possible dividers
  */
-#define _WDG_CFG_DIVIDER                128
+#define _WDG_CFG_DIVIDER                __WDG_CLK_DIVIDER__
 
 /*
  * Reload value (period = LSI / _WDG_CFG_DIVIDER / _WDG_CFG_RELOAD)
  *
  * 0-0xFFF (0-4095)
  */
-#define _WDG_CFG_RELOAD                 2500    /* 8s */
+#define _WDG_CFG_RELOAD                 __WDG_RELOAD_VALUE__
 
 /*
  * Disable WDG on debug mode
@@ -66,7 +66,7 @@ extern "C" {
  * true : WDG disabled on debug
  * false: WDG continue counting
  */
-#define _WDG_CFG_DISABLE_ON_DEBUG       true
+#define _WDG_CFG_DISABLE_ON_DEBUG       __WDG_DISABLE_ON_DEBUG__
 
 /*==============================================================================
   Exported object types

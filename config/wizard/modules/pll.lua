@@ -99,21 +99,6 @@ local function ask_for_enable()
 end
 
 --------------------------------------------------------------------------------
--- @brief Calculate frequency unit
--- @param freq          frequency
--- @param string of frequency with unit
---------------------------------------------------------------------------------
-local function funit(freq)
-        if freq < 1e3 then
-                return freq.." Hz"
-        elseif freq < 1e6 then
-                return freq/1e3 .." kHz"
-        else
-                return freq/1e6 .." MHz"
-        end
-end
-
---------------------------------------------------------------------------------
 -- @brief Return all stm32f1 PLL frequencies
 --------------------------------------------------------------------------------
 arch.stm32f1.get_frequencies = function()
@@ -1077,7 +1062,7 @@ end
 -- METHODS
 --------------------------------------------------------------------------------
 function pll:get_frequencies()
-        arch[cpu:get_arch()].get_frequencies()
+        return arch[cpu:get_arch()].get_frequencies()
 end
 
 --------------------------------------------------------------------------------
