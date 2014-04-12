@@ -35,6 +35,7 @@ require "sdspi"
 require "spi"
 require "tty"
 require "wdg"
+require "uart"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -91,6 +92,7 @@ function mod:configure()
                 elseif choice == "TTY" then
                         tty:configure()
                 elseif choice == "UART" then
+                        uart:configure()
                 elseif choice == "WDG" then
                         wdg:configure()
                 elseif choice == "I2S" then

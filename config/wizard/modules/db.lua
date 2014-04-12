@@ -71,10 +71,10 @@ arch.stm32f1.mcu.list                   = {"STM32F100C4xx", "STM32F100C6xx", "ST
 arch.stm32f1.mcu.STM32F100C4xx          = {}
 arch.stm32f1.mcu.STM32F100C4xx.ram      = 4096
 arch.stm32f1.mcu.STM32F100C4xx.family   = "STM32F10X_LD_VL"
-arch.stm32f1.mcu.STM32F100C4xx.modules  = {"TTY", "GPIO", "AFIO", "CRC", "PLL", "ETH", "SDSPI", "SPI", "WDG"}
+arch.stm32f1.mcu.STM32F100C4xx.modules  = {"TTY", "GPIO", "AFIO", "CRC", "PLL", "ETH", "SDSPI", "SPI", "WDG", "UART"}
 arch.stm32f1.mcu.STM32F100C4xx.GPIO     = {4}
 arch.stm32f1.mcu.STM32F100C4xx.SPI      = {1}
-arch.stm32f1.mcu.STM32F100C4xx.UART     = {2}
+arch.stm32f1.mcu.STM32F100C4xx.UART     = {5}
 arch.stm32f1.mcu.STM32F100C4xx.SPI      = {2}
 
 arch.stm32f1.mcu.STM32F100C6xx          = {}
