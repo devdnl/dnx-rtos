@@ -32,6 +32,7 @@ require "crc"
 require "pll"
 require "eth"
 require "sdspi"
+require "spi"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -84,6 +85,7 @@ function mod:configure()
                 elseif choice == "SDSPI" then
                         sdspi:configure()
                 elseif choice == "SPI" then
+                        spi:configure()
                 elseif choice == "TTY" then
                 elseif choice == "UART" then
                 elseif choice == "WDG" then

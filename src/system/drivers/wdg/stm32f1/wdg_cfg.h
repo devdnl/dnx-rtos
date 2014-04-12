@@ -39,7 +39,7 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /*
- * Enable device lock for 1 task (e.g. Watchdog daemon)
+ * Enable device lock for 1st task (e.g. Watchdog daemon)
  *
  * true:  device locked at open() operation
  * false: device not locked at open() operation

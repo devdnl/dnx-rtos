@@ -250,13 +250,13 @@ function sdspi:configure()
         navigation("Home/Modules/SDSPI")
         calculate_total_steps()
 
-        ::eth_enable::
+        ::enable::
         if ask_for_enable() == back then
                 return back
         end
 
         if arch[cpu:get_arch()].configure() == back then
-                goto eth_enable
+                goto enable
         end
 
         return next
