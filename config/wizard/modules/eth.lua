@@ -90,7 +90,7 @@ local function ask_for_enable()
 end
 
 --------------------------------------------------------------------------------
--- @brief PLL configuration for STM32F1
+-- @brief ETH configuration for STM32F1
 --------------------------------------------------------------------------------
 arch.stm32f1.configure = function()
         local function configure_priority()

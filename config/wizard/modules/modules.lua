@@ -33,6 +33,7 @@ require "pll"
 require "eth"
 require "sdspi"
 require "spi"
+require "tty"
 
 --------------------------------------------------------------------------------
 -- OBJECTS
@@ -87,6 +88,7 @@ function mod:configure()
                 elseif choice == "SPI" then
                         spi:configure()
                 elseif choice == "TTY" then
+                        tty:configure()
                 elseif choice == "UART" then
                 elseif choice == "WDG" then
                 elseif choice == "I2S" then
