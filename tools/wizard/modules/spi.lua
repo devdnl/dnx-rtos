@@ -265,7 +265,7 @@ arch.stm32f1.configure = function()
 
                         if choice == back then
                                 cs = cs - 1
-                        elseif choice == next then
+                        else choice == next then
                                 cs = cs + 1
                         end
 

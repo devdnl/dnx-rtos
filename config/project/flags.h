@@ -40,6 +40,9 @@
 /* current CPU architecture */
 #define __CPU_ARCH__ stm32f1
 
+/* include noarch files */
+#include "../noarch/tty_flags.h"
+
 /* include specific CPU architecture files */
 #if   (__CPU_ARCH__ == stm32f0)
 #include "stm32f0/cpu.h"
@@ -48,11 +51,10 @@
 #include "../stm32f1/crc_flags.h"
 #include "../stm32f1/gpio_flags.h"
 #include "../stm32f1/afio_flags.h"
-#include "../stm32f1/ethmac_flags.h"
+#include "../stm32f1/eth_flags.h"
 #include "../stm32f1/pll_flags.h"
 #include "../stm32f1/sdspi_flags.h"
 #include "../stm32f1/spi_flags.h"
-#include "../stm32f1/tty_flags.h"
 #include "../stm32f1/wdg_flags.h"
 #include "../stm32f1/uart_flags.h"
 #elif (__CPU_ARCH__ == stm32f2)

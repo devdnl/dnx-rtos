@@ -41,9 +41,9 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /*----------------------------------------------------------------------------*/
-#define _SPI1_CS_CFG(no, name)  enum _SPI1_CS_##no {_SPI1_CS##no##_PORT = GPIO_PIN_PORT(name), _SPI1_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
-#define _SPI2_CS_CFG(no, name)  enum _SPI2_CS_##no {_SPI2_CS##no##_PORT = GPIO_PIN_PORT(name), _SPI2_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
-#define _SPI3_CS_CFG(no, name)  enum _SPI3_CS_##no {_SPI3_CS##no##_PORT = GPIO_PIN_PORT(name), _SPI3_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
+#define _SPI1_CS_CFG(no, name)  enum _SPI1_CS_##no {_SPI1_CS##no##_PORT = (u32_t)GPIO_PIN_PORT(name), _SPI1_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
+#define _SPI2_CS_CFG(no, name)  enum _SPI2_CS_##no {_SPI2_CS##no##_PORT = (u32_t)GPIO_PIN_PORT(name), _SPI2_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
+#define _SPI3_CS_CFG(no, name)  enum _SPI3_CS_##no {_SPI3_CS##no##_PORT = (u32_t)GPIO_PIN_PORT(name), _SPI3_CS##no##_PIN_BM = GPIO_PIN_MASK(name)}
 /*----------------------------------------------------------------------------*/
 
 /*
@@ -89,14 +89,30 @@ extern "C" {
  */
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_ENABLE > 0)
 #define _SPI1_NUMBER_OF_SLAVES                  __SPI_SPI1_NUMBER_OF_CS__
+#if _SPI1_NUMBER_OF_SLAVES >= 1
 _SPI1_CS_CFG(0, __SPI_SPI1_CS0_PIN_NAME__);
+#endif
+#if _SPI1_NUMBER_OF_SLAVES >= 2
 _SPI1_CS_CFG(1, __SPI_SPI1_CS1_PIN_NAME__);
+#endif
+#if _SPI1_NUMBER_OF_SLAVES >= 3
 _SPI1_CS_CFG(2, __SPI_SPI1_CS2_PIN_NAME__);
+#endif
+#if _SPI1_NUMBER_OF_SLAVES >= 4
 _SPI1_CS_CFG(3, __SPI_SPI1_CS3_PIN_NAME__);
+#endif
+#if _SPI1_NUMBER_OF_SLAVES >= 5
 _SPI1_CS_CFG(4, __SPI_SPI1_CS4_PIN_NAME__);
+#endif
+#if _SPI1_NUMBER_OF_SLAVES >= 6
 _SPI1_CS_CFG(5, __SPI_SPI1_CS5_PIN_NAME__);
+#endif
+#if _SPI1_NUMBER_OF_SLAVES >= 7
 _SPI1_CS_CFG(6, __SPI_SPI1_CS6_PIN_NAME__);
+#endif
+#if _SPI1_NUMBER_OF_SLAVES >= 8
 _SPI1_CS_CFG(7, __SPI_SPI1_CS7_PIN_NAME__);
+#endif
 #endif
 
 /*
@@ -104,14 +120,30 @@ _SPI1_CS_CFG(7, __SPI_SPI1_CS7_PIN_NAME__);
  */
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_ENABLE > 0)
 #define _SPI2_NUMBER_OF_SLAVES                  __SPI_SPI2_NUMBER_OF_CS__
+#if _SPI2_NUMBER_OF_SLAVES >= 1
 _SPI2_CS_CFG(0, __SPI_SPI2_CS0_PIN_NAME__);
+#endif
+#if _SPI2_NUMBER_OF_SLAVES >= 2
 _SPI2_CS_CFG(1, __SPI_SPI2_CS1_PIN_NAME__);
+#endif
+#if _SPI2_NUMBER_OF_SLAVES >= 3
 _SPI2_CS_CFG(2, __SPI_SPI2_CS2_PIN_NAME__);
+#endif
+#if _SPI2_NUMBER_OF_SLAVES >= 4
 _SPI2_CS_CFG(3, __SPI_SPI2_CS3_PIN_NAME__);
+#endif
+#if _SPI2_NUMBER_OF_SLAVES >= 5
 _SPI2_CS_CFG(4, __SPI_SPI2_CS4_PIN_NAME__);
+#endif
+#if _SPI2_NUMBER_OF_SLAVES >= 6
 _SPI2_CS_CFG(5, __SPI_SPI2_CS5_PIN_NAME__);
+#endif
+#if _SPI2_NUMBER_OF_SLAVES >= 7
 _SPI2_CS_CFG(6, __SPI_SPI2_CS6_PIN_NAME__);
+#endif
+#if _SPI2_NUMBER_OF_SLAVES >= 8
 _SPI2_CS_CFG(7, __SPI_SPI2_CS7_PIN_NAME__);
+#endif
 #endif
 
 /*
@@ -119,14 +151,30 @@ _SPI2_CS_CFG(7, __SPI_SPI2_CS7_PIN_NAME__);
  */
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_ENABLE > 0)
 #define _SPI3_NUMBER_OF_SLAVES                  __SPI_SPI3_NUMBER_OF_CS__
+#if _SPI3_NUMBER_OF_SLAVES >= 1
 _SPI3_CS_CFG(0, __SPI_SPI3_CS0_PIN_NAME__);
+#endif
+#if _SPI3_NUMBER_OF_SLAVES >= 2
 _SPI3_CS_CFG(1, __SPI_SPI3_CS1_PIN_NAME__);
+#endif
+#if _SPI3_NUMBER_OF_SLAVES >= 3
 _SPI3_CS_CFG(2, __SPI_SPI3_CS2_PIN_NAME__);
+#endif
+#if _SPI3_NUMBER_OF_SLAVES >= 4
 _SPI3_CS_CFG(3, __SPI_SPI3_CS3_PIN_NAME__);
+#endif
+#if _SPI3_NUMBER_OF_SLAVES >= 5
 _SPI3_CS_CFG(4, __SPI_SPI3_CS4_PIN_NAME__);
+#endif
+#if _SPI3_NUMBER_OF_SLAVES >= 6
 _SPI3_CS_CFG(5, __SPI_SPI3_CS5_PIN_NAME__);
+#endif
+#if _SPI3_NUMBER_OF_SLAVES >= 7
 _SPI3_CS_CFG(6, __SPI_SPI3_CS6_PIN_NAME__);
+#endif
+#if _SPI3_NUMBER_OF_SLAVES >= 8
 _SPI3_CS_CFG(7, __SPI_SPI3_CS7_PIN_NAME__);
+#endif
 #endif
 
 /*==============================================================================

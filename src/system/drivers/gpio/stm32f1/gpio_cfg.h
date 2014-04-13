@@ -212,10 +212,6 @@ _PIN_CONFIGURATION(GPIOG, 14, __GPIO_PG_PIN_14_NAME__, __GPIO_PG_PIN_14_MODE__, 
 _PIN_CONFIGURATION(GPIOG, 15, __GPIO_PG_PIN_15_NAME__, __GPIO_PG_PIN_15_MODE__, __GPIO_PG_PIN_15_STATE__);
 #endif
 
-/** NULL port definition with NONE pin */
-#define _NULL_BASE NULL
-_PIN_CONFIGURATION(_NULL, 0, NONE, _GPIO_IN_FLOAT, _FLOAT);
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

@@ -73,9 +73,9 @@
   Local types, enums definitions
 ==============================================================================*/
 struct gpio_reg_val {
-        const GPIO_t  *const GPIO;
-        const uint16_t CRL;
-        const uint16_t CRH;
+        GPIO_t  *const GPIO;
+        const uint32_t CRL;
+        const uint32_t CRH;
         const uint16_t ODR;
 };
 
