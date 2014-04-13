@@ -58,7 +58,8 @@ db.path.noarch.tty                      = {}
 db.path.noarch.tty.flags                = db.path.cwd.."noarch/tty_flags.h"
 
 local module                            = {}
-module.list                             = {"GPIO", "AFIO", "CRC", "ETH", "PLL", "SDSPI", "SPI", "TTY", "UART", "WDG", "I2S", "USB", "USBOTG", "I2C", "ADC", "DAC", "SDIO", "FSMC", "HDMICEC"}
+module.list                             = {"GPIO", "AFIO", "CRC", "ETH", "PLL", "SDSPI", "SPI", "TTY", "UART", "WDG", "I2S",
+                                           "USB", "USBOTG", "I2C", "ADC", "DAC", "SDIO", "FSMC", "HDMICEC"}
 module.description                      = {}
 module.description.GPIO                 = "GPIO - General Purpose Input Output"
 module.description.AFIO                 = "AFIO - Alternative Function Input Output"
@@ -87,50 +88,42 @@ arch.list                               = {"stm32f1"} --, "stm32f2", "stm32f3", 
 arch.stm32f1                            = {}
 arch.stm32f1.description                = "stm32f1 microcontroller family"
 arch.stm32f1.mcu                        = {}
-arch.stm32f1.mcu.list                   = {"STM32F100C4xx", "STM32F100C6xx", "STM32F100C8xx", "STM32F100R6xx", "STM32F100RBxx", "STM32F100RExx",
-                                           "STM32F100VBxx", "STM32F100ZCxx", "STM32F101C6xx", "STM32F101C8xx", "STM32F101CBxx", "STM32F101R6xx",
-                                           "STM32F101R8xx", "STM32F101RBxx", "STM32F101V8xx", "STM32F101VBxx", "STM32F103C6xx", "STM32F103C8xx",
-                                           "STM32F103CBxx", "STM32F103R4xx", "STM32F103R6xx", "STM32F103R8xx", "STM32F103RBxx", "STM32F103RCxx",
+arch.stm32f1.mcu.list                   = {"STM32F100C8xx", "STM32F100RBxx", "STM32F100RExx", "STM32F100VBxx", "STM32F100ZCxx", "STM32F101C8xx",
+                                           "STM32F101CBxx", "STM32F101R8xx", "STM32F101RBxx", "STM32F101V8xx", "STM32F101VBxx", "STM32F103C6xx",
+                                           "STM32F103C8xx", "STM32F103CBxx", "STM32F103R6xx", "STM32F103R8xx", "STM32F103RBxx", "STM32F103RCxx",
                                            "STM32F103RDxx", "STM32F103RExx", "STM32F103RGxx", "STM32F103T8xx", "STM32F103V8xx", "STM32F103VBxx",
                                            "STM32F103VCxx", "STM32F103VDxx", "STM32F103VExx", "STM32F103VGxx", "STM32F103ZCxx", "STM32F103ZExx",
                                            "STM32F103ZGxx", "STM32F105RBxx", "STM32F105RCxx", "STM32F105VBxx", "STM32F105VCxx", "STM32F107RCxx",
                                            "STM32F107VBxx", "STM32F107VCxx"}
 
-arch.stm32f1.mcu.STM32F100C4xx          = {}
-arch.stm32f1.mcu.STM32F100C4xx.ram      = 4096
-arch.stm32f1.mcu.STM32F100C4xx.family   = "STM32F10X_LD_VL"
-arch.stm32f1.mcu.STM32F100C4xx.modules  = {"TTY", "GPIO", "AFIO", "CRC", "PLL", "ETH", "SDSPI", "SPI", "WDG", "UART"}
-arch.stm32f1.mcu.STM32F100C4xx.GPIO     = {4}
-arch.stm32f1.mcu.STM32F100C4xx.SPI      = {1}
-arch.stm32f1.mcu.STM32F100C4xx.UART     = {5}
-arch.stm32f1.mcu.STM32F100C4xx.SPI      = {2}
-
-arch.stm32f1.mcu.STM32F100C6xx          = {}
-arch.stm32f1.mcu.STM32F100C6xx.ram      = 4096
-arch.stm32f1.mcu.STM32F100C6xx.family   = "STM32F10X_LD_VL"
-arch.stm32f1.mcu.STM32F100C6xx.modules  = {}
-arch.stm32f1.mcu.STM32F100C6xx.GPIO     = {4}
-arch.stm32f1.mcu.STM32F100C6xx.SPI      = {1}
-arch.stm32f1.mcu.STM32F100C6xx.UART     = {2}
-
 arch.stm32f1.mcu.STM32F100C8xx          = {}
 arch.stm32f1.mcu.STM32F100C8xx.ram      = 8192
 arch.stm32f1.mcu.STM32F100C8xx.family   = "STM32F10X_MD_VL"
-arch.stm32f1.mcu.STM32F100C8xx.modules  = {}
-arch.stm32f1.mcu.STM32F100C6xx.GPIO     = {4}
-arch.stm32f1.mcu.STM32F100C6xx.SPI      = {1}
-arch.stm32f1.mcu.STM32F100C6xx.UART     = {2}
+arch.stm32f1.mcu.STM32F100C8xx.modules  = {"TTY", "GPIO", "AFIO", "CRC", "PLL", "SDSPI", "SPI", "WDG", "UART"}
+arch.stm32f1.mcu.STM32F100C8xx.GPIO     = {4}
+arch.stm32f1.mcu.STM32F100C8xx.SPI      = {2}
+arch.stm32f1.mcu.STM32F100C8xx.I2C      = {2}
+arch.stm32f1.mcu.STM32F100C8xx.UART     = {3}
+arch.stm32f1.mcu.STM32F100C8xx.ADC      = {1, 10}
+arch.stm32f1.mcu.STM32F100C8xx.DAC      = {2, 2}
+
+arch.stm32f1.mcu.STM32F100RBxx          = {}
+arch.stm32f1.mcu.STM32F100RBxx.ram      = 8192
+arch.stm32f1.mcu.STM32F100RBxx.family   = "STM32F10X_MD_VL"
+arch.stm32f1.mcu.STM32F100RBxx.modules  = {"TTY", "GPIO", "AFIO", "CRC", "PLL", "SDSPI", "SPI", "WDG", "UART"}
+arch.stm32f1.mcu.STM32F100RBxx.GPIO     = {4}
+arch.stm32f1.mcu.STM32F100RBxx.SPI      = {2}
+arch.stm32f1.mcu.STM32F100RBxx.I2C      = {2}
+arch.stm32f1.mcu.STM32F100RBxx.UART     = {3}
+arch.stm32f1.mcu.STM32F100RBxx.ADC      = {1, 16}
+arch.stm32f1.mcu.STM32F100RBxx.DAC      = {2, 2}
 
 
--- uc.stm32f1.mcu.STM32F100R6xx    = {["RAM"] = 4096 , ["family"] = "STM32F10X_LD_VL", ["modules"] = {}}
--- uc.stm32f1.mcu.STM32F100RBxx    = {["RAM"] = 8192 , ["family"] = "STM32F10X_MD_VL", ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F100RExx    = {["RAM"] = 32768, ["family"] = "STM32F10X_HD_VL", ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F100VBxx    = {["RAM"] = 8192 , ["family"] = "STM32F10X_MD_VL", ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F100ZCxx    = {["RAM"] = 24576, ["family"] = "STM32F10X_HD_VL", ["modules"] = {}}
--- uc.stm32f1.mcu.STM32F101C6xx    = {["RAM"] = 6144 , ["family"] = "STM32F10X_LD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F101C8xx    = {["RAM"] = 10240, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F101CBxx    = {["RAM"] = 16384, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
--- uc.stm32f1.mcu.STM32F101R6xx    = {["RAM"] = 6144 , ["family"] = "STM32F10X_LD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F101R8xx    = {["RAM"] = 10240, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F101RBxx    = {["RAM"] = 16384, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F101V8xx    = {["RAM"] = 10240, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
@@ -138,7 +131,6 @@ arch.stm32f1.mcu.STM32F100C6xx.UART     = {2}
 -- uc.stm32f1.mcu.STM32F103C6xx    = {["RAM"] = 10240, ["family"] = "STM32F10X_LD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F103C8xx    = {["RAM"] = 20480, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F103CBxx    = {["RAM"] = 20480, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
--- uc.stm32f1.mcu.STM32F103R4xx    = {["RAM"] = 6144 , ["family"] = "STM32F10X_LD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F103R6xx    = {["RAM"] = 10240, ["family"] = "STM32F10X_LD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F103R8xx    = {["RAM"] = 20480, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F103RBxx    = {["RAM"] = 20480, ["family"] = "STM32F10X_MD"   , ["modules"] = {}}
@@ -160,7 +152,7 @@ arch.stm32f1.mcu.STM32F100C6xx.UART     = {2}
 -- uc.stm32f1.mcu.STM32F105RCxx    = {["RAM"] = 65536, ["family"] = "STM32F10X_CL"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F105VBxx    = {["RAM"] = 32768, ["family"] = "STM32F10X_CL"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F105VCxx    = {["RAM"] = 65536, ["family"] = "STM32F10X_CL"   , ["modules"] = {}}
--- uc.stm32f1.mcu.STM32F107RCxx    = {["RAM"] = 65536, ["family"] = "STM32F10X_CL"   , ["modules"] = {"GPIO", "PLL"}}
+-- uc.stm32f1.mcu.STM32F107RCxx    = {["RAM"] = 65536, ["family"] = "STM32F10X_CL"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F107VBxx    = {["RAM"] = 49152, ["family"] = "STM32F10X_CL"   , ["modules"] = {}}
 -- uc.stm32f1.mcu.STM32F107VCxx    = {["RAM"] = 65536, ["family"] = "STM32F10X_CL"   , ["modules"] = {}}
 
