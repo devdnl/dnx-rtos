@@ -158,6 +158,26 @@ local function configure_priorities()
 end
 
 --------------------------------------------------------------------------------
+-- @brief Configuration summary
+--------------------------------------------------------------------------------
+local function print_summary()
+        local arch = db:get_arch()
+        local name = db:get_cpu_name()
+        local osc  = tonumber(cpu:get_osc_freq())
+        local prio = key_read(db.path.project.flags, "__IRQ_USER_PRIORITY__")
+
+        prio = math.floor(tonumber(prio) / 16)
+
+        msg("CPU configuration summary:")
+        msg("Architecture: "..arch.."\n"..
+            "CPU name: "..name.."\n"..
+            "Oscillator frequency: "..funit(osc).."\n"..
+            "Default modules IRQ priority: "..prio)
+
+        pause()
+end
+
+--------------------------------------------------------------------------------
 -- GLOBAL FUNCTIONS
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -176,7 +196,7 @@ function cpu:configure()
         navigation("Home/CPU")
         calculate_total_steps()
 
-        local pages = {configure_cpu_arch, configure_freq, configure_mcu_name, configure_priorities}
+        local pages = {configure_cpu_arch, configure_freq, configure_mcu_name, configure_priorities, print_summary}
         return show_pages(pages)
 end
 

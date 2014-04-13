@@ -129,6 +129,24 @@ local function configure_procfs_enable()
 end
 
 --------------------------------------------------------------------------------
+-- @brief Configuration summary
+--------------------------------------------------------------------------------
+local function print_summary()
+        local devfs  = key_read(db.path.project.flags, "__ENABLE_DEVFS__")
+        local lfs    = key_read(db.path.project.flags, "__ENABLE_LFS__")
+        local fatfs  = key_read(db.path.project.flags, "__ENABLE_FATFS__")
+        local procfs = key_read(db.path.project.flags, "__ENABLE_PROCFS__")
+
+        msg("File system configuration summary:")
+        msg("devfs enabled: "..filter_yes_no(devfs).."\n"..
+            "lfs enabled: "..filter_yes_no(lfs).."\n"..
+            "fatfs enabled: "..filter_yes_no(fatfs).."\n"..
+            "procfs enabled: "..filter_yes_no(procfs))
+
+        pause()
+end
+
+--------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function fs:configure()
@@ -139,10 +157,13 @@ function fs:configure()
         local pages = {configure_devfs_enable,
                        configure_lfs_enable,
                        configure_fatfs_enable,
-                       configure_procfs_enable}
+                       configure_procfs_enable,
+                       print_summary}
 
         return show_pages(pages)
 end
+
+
 
 --------------------------------------------------------------------------------
 -- Enable configuration if master wizard is not defined

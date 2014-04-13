@@ -80,6 +80,20 @@ local function configure_toolchain_name()
 end
 
 --------------------------------------------------------------------------------
+-- @brief Configuration summary
+--------------------------------------------------------------------------------
+local function print_summary()
+        local pro_name  = key_read(db.path.project.mk, "PROJECT_NAME")
+        local toolchain = key_read(db.path.project.mk, "PROJECT_TOOLCHAIN")
+
+        msg("Project configuration summary:")
+        msg("Project name: "..pro_name.."\n"..
+            "Toolchain name: "..toolchain)
+
+        pause()
+end
+
+--------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function pro:configure()
@@ -87,7 +101,7 @@ function pro:configure()
         navigation("Home/Project")
         set_total_steps(2)
 
-        local pages = {configure_project_name, configure_toolchain_name}
+        local pages = {configure_project_name, configure_toolchain_name, print_summary}
         return show_pages(pages)
 end
 

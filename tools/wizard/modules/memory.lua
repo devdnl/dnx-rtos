@@ -75,6 +75,20 @@ local function configure_heap_block_size()
 end
 
 --------------------------------------------------------------------------------
+-- @brief Configuration summary
+--------------------------------------------------------------------------------
+local function print_summary()
+        local heap_size  = key_read(db.path.project.flags, "__HEAP_SIZE__")
+        local block_size = key_read(db.path.project.flags, "__HEAP_BLOCK_SIZE__")
+
+        msg("Dynamic memory management configuration summary:")
+        msg("Heap size: "..heap_size.." bytes\n"..
+            "Block size: "..block_size.." bytes")
+
+        pause()
+end
+
+--------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function mem:configure()
@@ -82,7 +96,7 @@ function mem:configure()
         navigation("Home/Memory")
         calculate_total_steps()
 
-        local pages = {configure_heap_size, configure_heap_block_size}
+        local pages = {configure_heap_size, configure_heap_block_size, print_summary}
         return show_pages(pages)
 end
 

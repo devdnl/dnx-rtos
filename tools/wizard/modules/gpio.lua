@@ -221,6 +221,29 @@ gpio_port.stm32f1.configure = function()
                 until pin >= gpio_port.stm32f1.pins
         end
 
+        local function print_summary()
+                msg("GPIO module configuration summary:")
+
+                local str = ""
+
+                for port = 1, get_ports_count() do
+                        str = str.."Port "..gpio_port.stm32f1.port_list[port].."\n"
+
+                        for pin = 0, gpio_port.stm32f1.pins - 1 do
+                                local pin_name = key_read(db.path.stm32f1.gpio.flags, "__GPIO_"..gpio_port.stm32f1.port_list[port].."_PIN_"..pin.."_NAME__")
+                                local pin_mode = key_read(db.path.stm32f1.gpio.flags, "__GPIO_"..gpio_port.stm32f1.port_list[port].."_PIN_"..pin.."_MODE__")
+                                pin_mode = table.find(mode, pin_mode)
+                                str = str.."  "..gpio_port.stm32f1.port_list[port]..pin..": "..pin_name.."   ["..pin_mode.."]\n"
+                        end
+
+                        str = str.."\n"
+                end
+
+                msg(str)
+
+                pause()
+        end
+
         repeat
                 title("GPIO configuration for " .. db:get_cpu_name())
                 msg(progress(2, 2).."Select port to configure.")
@@ -228,8 +251,6 @@ gpio_port.stm32f1.configure = function()
                 for i = 1, get_ports_count() do
                         add_item(port_name[i], "Port "..port_name[i])
                 end
-                add_item(cancel, "Exit - previous menu")
-
                 local port = get_selection()
 
                 for i = 1, get_ports_count() do
@@ -240,7 +261,8 @@ gpio_port.stm32f1.configure = function()
 
                 if port == back then
                         return back
-                elseif port == cancel then
+                else
+                        print_summary()
                         return next
                 end
         until false

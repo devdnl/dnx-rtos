@@ -153,6 +153,28 @@ local function configure_eth_file()
 end
 
 --------------------------------------------------------------------------------
+-- @brief Configuration summary
+--------------------------------------------------------------------------------
+local function print_summary()
+        local net_en = key_read(db.path.project.flags, "__NETWORK_ENABLE__")
+        local file   = key_read(db.path.project.flags, "__NETWORK_ETHIF_FILE__")
+        local MAC    = {}
+        MAC[0]       = key_read(db.path.project.flags, "__NETWORK_MAC_ADDR_0__"):gsub("0x", "")
+        MAC[1]       = key_read(db.path.project.flags, "__NETWORK_MAC_ADDR_1__"):gsub("0x", "")
+        MAC[2]       = key_read(db.path.project.flags, "__NETWORK_MAC_ADDR_2__"):gsub("0x", "")
+        MAC[3]       = key_read(db.path.project.flags, "__NETWORK_MAC_ADDR_3__"):gsub("0x", "")
+        MAC[4]       = key_read(db.path.project.flags, "__NETWORK_MAC_ADDR_4__"):gsub("0x", "")
+        MAC[5]       = key_read(db.path.project.flags, "__NETWORK_MAC_ADDR_5__"):gsub("0x", "")
+
+        msg("Network configuration summary:")
+        msg("Enabled: "..filter_yes_no(net_en).."\n"..
+            "MAC: "..MAC[0]..":"..MAC[1]..":"..MAC[2]..":"..MAC[3]..":"..MAC[4]..":"..MAC[5].."\n"..
+            "Ethernet interface file: "..file)
+
+        pause()
+end
+
+--------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function net:configure()
@@ -170,6 +192,8 @@ function net:configure()
 
         ::mac_cfg::  if configure_mac()      == back then goto net_enable end
         ::eth_file:: if configure_eth_file() == back then goto mac_cfg    end
+
+        print_summary()
 
         return next
 end

@@ -33,6 +33,12 @@ require "db"
 -- public calls objects
 rtos = {}
 
+local errno_cfg = {}
+errno_cfg["0"]  = "Disabled (low memory consumption)"
+errno_cfg["1"]  = "Only numbers (small memory consumption)"
+errno_cfg["2"]  = "Short names (medium memory consumption)"
+errno_cfg["3"]  = "Full names (high memory consumption)"
+
 --------------------------------------------------------------------------------
 -- FUNCTIONS
 --------------------------------------------------------------------------------
@@ -94,7 +100,7 @@ local function configure_irq_stack_depth()
 end
 
 --------------------------------------------------------------------------------
--- @brief Function configure number of priorites
+-- @brief Function configure number of priorities
 --------------------------------------------------------------------------------
 local function configure_number_of_priorities()
         local value = key_read(db.path.project.flags, "__OS_TASK_MAX_PRIORITIES__")
@@ -261,18 +267,11 @@ end
 local function configure_errno_beauty()
         local choice = key_read(db.path.project.flags, "__OS_ERRNO_STRING_LEN__")
         msg(progress() .. "Configure the error messages that can be printed from errno value.")
-
-        local messages = {}
-        messages["0"] = "Disabled (low memory consumption)"
-        messages["1"] = "Only numbers (small memory consumption)"
-        messages["2"] = "Short names (medium memory consumption)"
-        messages["3"] = "Full names (high memory consumption)"
-
-        msg("Current choice is: " .. messages[choice] .. ".")
-        add_item("0", messages["0"])
-        add_item("1", messages["1"])
-        add_item("2", messages["2"])
-        add_item("3", messages["3"])
+        msg("Current choice is: " .. errno_cfg[choice] .. ".")
+        add_item("0", errno_cfg["0"])
+        add_item("1", errno_cfg["1"])
+        add_item("2", errno_cfg["2"])
+        add_item("3", errno_cfg["3"])
         choice = get_selection()
         if (can_be_saved(choice)) then
                 key_save(db.path.project.flags, "__OS_ERRNO_STRING_LEN__", choice)
@@ -453,6 +452,66 @@ local function configure_stop_macro()
 end
 
 --------------------------------------------------------------------------------
+-- @brief Configuration summary
+--------------------------------------------------------------------------------
+local function print_summary()
+        local tsk_stack     = key_read(db.path.project.flags, "__OS_TASK_MIN_STACK_DEPTH__")
+        local fs_stack      = key_read(db.path.project.flags, "__OS_FILE_SYSTEM_STACK_DEPTH__")
+        local irq_stack     = key_read(db.path.project.flags, "__OS_IRQ_STACK_DEPTH__")
+        local no_of_prio    = key_read(db.path.project.flags, "__OS_TASK_MAX_PRIORITIES__")
+        local tsk_name_len  = key_read(db.path.project.flags, "__OS_TASK_NAME_LEN__")
+        local sch_freq      = key_read(db.path.project.flags, "__OS_TASK_SCHED_FREQ__")
+        local sleep_on_idle = key_read(db.path.project.flags, "__OS_SLEEP_ON_IDLE__")
+        local printf_en     = key_read(db.path.project.flags, "__OS_PRINTF_ENABLE__")
+        local scanf_en      = key_read(db.path.project.flags, "__OS_SCANF_ENABLE__")
+        local printk_en     = key_read(db.path.project.flags, "__OS_SYSTEM_MSG_ENABLE__")
+        local color_term    = key_read(db.path.project.flags, "__OS_COLOR_TERMINAL_ENABLE__")
+        local stream_len    = key_read(db.path.project.flags, "__OS_STREAM_BUFFER_LENGTH__")
+        local pipe_len      = key_read(db.path.project.flags, "__OS_PIPE_LENGTH__")
+        local errno_look    = key_read(db.path.project.flags, "__OS_ERRNO_STRING_LEN__")
+        local moni_tsk_mem  = key_read(db.path.project.flags, "__OS_MONITOR_TASK_MEMORY_USAGE__")
+        local moni_tsk_file = key_read(db.path.project.flags, "__OS_MONITOR_TASK_FILE_USAGE__")
+        local moni_krn_mem  = key_read(db.path.project.flags, "__OS_MONITOR_KERNEL_MEMORY_USAGE__")
+        local moni_mod_mem  = key_read(db.path.project.flags, "__OS_MONITOR_MODULE_MEMORY_USAGE__")
+        local moni_sys_mem  = key_read(db.path.project.flags, "__OS_MONITOR_SYSTEM_MEMORY_USAGE__")
+        local moni_cpu_load = key_read(db.path.project.flags, "__OS_MONITOR_CPU_LOAD__")
+        local moni_net_mem  = key_read(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE__")
+        local moni_net_lim  = key_read(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__")
+        local hostname      = key_read(db.path.project.flags, "__OS_HOSTNAME__")
+        local stop_macro    = key_read(db.path.project.flags, "__OS_SYSTEM_STOP_MACRO__")
+
+        if tonumber(moni_net_lim) == 0 then moni_net_lim = "None" end
+
+        msg("Operating system configuration summary:")
+        msg("Task stack depth: "..tsk_stack.." levels\n"..
+            "File system stack depth: "..fs_stack.." levels\n"..
+            "IRQ stack depth: "..irq_stack.." levels\n"..
+            "Number of priorities: "..no_of_prio.."\n"..
+            "Task name length: "..tsk_name_len.." characters\n"..
+            "Context switch frequency: "..funit(tonumber(sch_freq)).."\n"..
+            "Sleep on idle task: "..filter_yes_no(sleep_on_idle).."\n"..
+            "printf enabled: "..filter_yes_no(printf_en).."\n"..
+            "scanf enabled: "..filter_yes_no(scanf_en).."\n"..
+            "printk enabled: "..filter_yes_no(printk_en).."\n"..
+            "Color terminal: "..filter_yes_no(color_term).."\n"..
+            "Stream buffer length: "..stream_len.." bytes\n"..
+            "Pipe buffer length: "..pipe_len.." bytes\n"..
+            "Errors texts (errno): "..errno_cfg[errno_look].."\n"..
+            "Task memory usage monitoring: "..filter_yes_no(moni_tsk_mem).."\n"..
+            "Task file usage monitoring: "..filter_yes_no(moni_tsk_file).."\n"..
+            "Kernel memory usage monitoring: "..filter_yes_no(moni_krn_mem).."\n"..
+            "Module memory usage monitoring: "..filter_yes_no(moni_mod_mem).."\n"..
+            "System memory usage monitoring: "..filter_yes_no(moni_sys_mem).."\n"..
+            "CPU load measurement: "..filter_yes_no(moni_cpu_load).."\n"..
+            "Network memory usage monitoring: "..filter_yes_no(moni_net_mem).."\n"..
+            "Network memory usage limit: "..moni_net_lim.."\n"..
+            "Hostname: "..hostname.."\n"..
+            "Stop macro enabled: "..filter_yes_no(stop_macro))
+
+        pause()
+end
+
+--------------------------------------------------------------------------------
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function rtos:configure()
@@ -496,6 +555,8 @@ function rtos:configure()
                         goto p_main
                 end
         end
+
+        print_summary()
 
         return next
 end
