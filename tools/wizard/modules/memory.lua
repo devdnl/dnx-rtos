@@ -78,15 +78,12 @@ end
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function mem:configure()
-        calculate_total_steps()
-
         title("Dynamic Memory Management Configuration")
         navigation("Home/Memory")
+        calculate_total_steps()
 
-        ::heap_size::  if configure_heap_size()       == back then return back    end
-        ::block_size:: if configure_heap_block_size() == back then goto heap_size end
-
-        return next
+        local pages = {configure_heap_size, configure_heap_block_size}
+        return show_pages(pages)
 end
 
 -- started without master file

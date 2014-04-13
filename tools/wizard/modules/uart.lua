@@ -386,19 +386,20 @@ arch.stm32f1.configure = function()
 
         if key_read(db.path.project.mk, "ENABLE_UART") == yes then
 
-                ::rx_buf_len::    if configure_rx_buffer_len()    == back then return back        end
-                ::def_parity::    if configure_parity()           == back then goto rx_buf_len    end
-                ::def_stop_b::    if configure_stop_bits()        == back then goto def_parity    end
-                ::def_lin_brk::   if configure_lin_break_len()    == back then goto def_stop_b    end
-                ::def_tx_en::     if configure_tx_enable()        == back then goto def_lin_brk   end
-                ::def_rx_en::     if configure_rx_enable()        == back then goto def_tx_en     end
-                ::def_lin_mode::  if configure_lin_mode_enable()  == back then goto def_rx_en     end
-                ::def_hw_ctrl::   if configure_hw_flow_ctr()      == back then goto def_lin_mode  end
-                ::def_sgl_wi_mo:: if configure_single_wire_mode() == back then goto def_hw_ctrl   end
-                ::def_baud::      if configure_baud()             == back then goto def_sgl_wi_mo end
-                ::uart_select::   if uart_select()                == back then goto def_baud      end
+                local pages = {configure_rx_buffer_len,
+                               configure_parity,
+                               configure_stop_bits,
+                               configure_lin_break_len,
+                               configure_tx_enable,
+                               configure_rx_enable,
+                               configure_lin_mode_enable,
+                               configure_hw_flow_ctr,
+                               configure_single_wire_mode,
+                               configure_baud,
+                               uart_select,
+                               print_summary}
 
-                print_summary()
+                return show_pages(pages)
         end
 
         return next

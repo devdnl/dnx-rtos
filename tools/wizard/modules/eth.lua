@@ -259,16 +259,16 @@ arch.stm32f1.configure = function()
         end
 
         if key_read(db.path.project.mk, "ENABLE_ETH") == yes then
+                local pages = {configure_priority,
+                               configure_hw_checksum,
+                               configure_speed,
+                               configure_PHY_address,
+                               configure_reset_delay,
+                               configure_config_delay,
+                               configure_PHY_device,
+                               print_summary}
 
-                ::set_priority:: if configure_priority()     == back then return back       end
-                ::checksum::     if configure_hw_checksum()  == back then goto set_priority end
-                ::set_speed::    if configure_speed()        == back then goto checksum     end
-                ::phy_address::  if configure_PHY_address()  == back then goto set_speed    end
-                ::reset_delay::  if configure_reset_delay()  == back then goto phy_address  end
-                ::config_delay:: if configure_config_delay() == back then goto reset_delay  end
-                ::phy_device::   if configure_PHY_device()   == back then goto config_delay end
-
-                print_summary()
+                return show_pages(pages)
         end
 
         return next

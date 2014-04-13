@@ -353,14 +353,8 @@ arch.stm32f1.configure = function()
         end
 
         if key_read(db.path.project.mk, "ENABLE_SPI") == yes then
-
-                ::dummy::      if configure_dummy_byte()  == back then return back    end
-                ::divider::    if configure_clk_divider() == back then goto dummy     end
-                ::mode::       if configure_mode()        == back then goto divider   end
-                ::msb_first::  if configure_msb_first()   == back then goto mode      end
-                ::spi_select:: if spi_select()            == back then goto msb_first end
-
-                print_summary()
+                local pages = {configure_dummy_byte, configure_clk_divider, configure_mode, configure_msb_first, spi_select, print_summary}
+                return show_pages(pages)
         end
 
         return next

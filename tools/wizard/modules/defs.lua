@@ -202,5 +202,51 @@ function funit(freq)
 end
 
 --------------------------------------------------------------------------------
+-- @brief Create pages from table
+-- @param tab           table with functions that creates pages
+-- @param begin         begin page (-1 for last etc)
+-- @param step          current step
+-- @param total         total steps
+-- @return transaction (next, back, cancel)
+--------------------------------------------------------------------------------
+function show_pages(tab, begin, step, total)
+        local current = 1
+
+        if begin ~= nil then
+                if begin ~= 0 then
+                        if begin < 0 then
+                                current = #tab + 1 + begin
+                        else
+                                if begin <= #tab then
+                                        current = begin
+                                end
+                        end
+                end
+        end
+
+        if step ~= nil or total ~= nil then
+                progress(step, total)
+        end
+
+        repeat
+                local ret = tab[current]()
+
+                if ret == back then
+                        current = current - 1
+                elseif ret == cancel then
+                        return cancel
+                else
+                        current = current + 1
+                end
+        until current <= 0 or current > #tab
+
+        if current == 0 then
+                return back
+        else
+                return next
+        end
+end
+
+--------------------------------------------------------------------------------
 -- END OF FILE
 --------------------------------------------------------------------------------

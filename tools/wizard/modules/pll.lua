@@ -1012,47 +1012,51 @@ arch.stm32f1.configure = function()
         if key_read(db.path.project.mk, "ENABLE_PLL") == yes then
 
                 if family == "STM32F10X_CL" then
-                        ::lsi_on::      if configure_LSI_on()      == back then return back      end
-                        ::lse_on::      if configure_LSE_on()      == back then goto lsi_on      end
-                        ::hse_on::      if configure_HSE_on()      == back then goto lse_on      end
-                        ::prediv2_val:: if configure_prediv2_val() == back then goto hse_on      end
-                        ::pll2_on::     if configure_PLL2_on()     == back then goto prediv2_val end
-                        ::pll2_mull::   if configure_PLL2_mul()    == back then goto pll2_on     end
-                        ::pll3_on::     if configure_PLL3_on()     == back then goto pll2_mull   end
-                        ::pll3_mull::   if configure_PLL3_mul()    == back then goto pll3_on     end
-                        ::prediv1_src:: if configure_prediv1_src() == back then goto pll3_mull   end
-                        ::prediv1_val:: if configure_prediv1_val() == back then goto prediv1_src end
-                        ::pll_on::      if configure_PLL_on()      == back then goto prediv1_val end
-                        ::pll_src::     if configure_PLL_src()     == back then goto pll_on      end
-                        ::pll_mull::    if configure_PLL_mul()     == back then goto pll_src     end
-                        ::sysclk_src::  if configure_sys_clk_src() == back then goto pll_mull    end
-                        ::rtc_src::     if configure_RTC_clk_src() == back then goto sysclk_src  end
-                        ::mco_src::     if configure_MCO_src()     == back then goto rtc_src     end
-                        ::usb_div::     if configure_USB_div()     == back then goto mco_src     end
-                        ::ahb_pre::     if configure_AHB_pre()     == back then goto usb_div     end
-                        ::apb1_pre::    if configure_APB1_pre()    == back then goto ahb_pre     end
-                        ::apb2_pre::    if configure_APB2_pre()    == back then goto apb1_pre    end
-                        ::adc_pre::     if configure_ADC_pre()     == back then goto apb2_pre    end
-                        ::i2s2_src::    if configure_I2S2_src()    == back then goto adc_pre     end
-                        ::i2s3_src::    if configure_I2S3_src()    == back then goto i2s2_src    end
-                else
-                        ::lsi_on::      if configure_LSI_on()      == back then return back      end
-                        ::lse_on::      if configure_LSE_on()      == back then goto lsi_on      end
-                        ::hse_on::      if configure_HSE_on()      == back then goto lse_on      end
-                        ::pll_on::      if configure_PLL_on()      == back then goto hse_on      end
-                        ::pll_src::     if configure_PLL_src()     == back then goto pll_on      end
-                        ::pll_mull::    if configure_PLL_mul()     == back then goto pll_src     end
-                        ::sysclk_src::  if configure_sys_clk_src() == back then goto pll_mull    end
-                        ::rtc_src::     if configure_RTC_clk_src() == back then goto sysclk_src  end
-                        ::mco_src::     if configure_MCO_src()     == back then goto rtc_src     end
-                        ::usb_div::     if configure_USB_div()     == back then goto mco_src     end
-                        ::ahb_pre::     if configure_AHB_pre()     == back then goto usb_div     end
-                        ::apb1_pre::    if configure_APB1_pre()    == back then goto ahb_pre     end
-                        ::apb2_pre::    if configure_APB2_pre()    == back then goto apb1_pre    end
-                        ::adc_pre::     if configure_ADC_pre()     == back then goto apb2_pre    end
-                end
+                        local pages = {configure_LSI_on,
+                                       configure_LSE_on,
+                                       configure_HSE_on,
+                                       configure_prediv2_val,
+                                       configure_PLL2_on,
+                                       configure_PLL2_mul,
+                                       configure_PLL3_on,
+                                       configure_PLL3_mul,
+                                       configure_prediv1_src,
+                                       configure_prediv1_val,
+                                       configure_PLL_on,
+                                       configure_PLL_src,
+                                       configure_PLL_mul,
+                                       configure_sys_clk_src,
+                                       configure_RTC_clk_src,
+                                       configure_MCO_src,
+                                       configure_USB_div,
+                                       configure_AHB_pre,
+                                       configure_APB1_pre,
+                                       configure_APB2_pre,
+                                       configure_ADC_pre,
+                                       configure_I2S2_src,
+                                       configure_I2S3_src,
+                                       print_summary}
 
-                print_summary()
+                        return show_pages(pages)
+                else
+                        local pages = {configure_LSI_on,
+                                       configure_LSE_on,
+                                       configure_HSE_on,
+                                       configure_PLL_on,
+                                       configure_PLL_src,
+                                       configure_PLL_mul,
+                                       configure_sys_clk_src,
+                                       configure_RTC_clk_src,
+                                       configure_MCO_src,
+                                       configure_USB_div,
+                                       configure_AHB_pre,
+                                       configure_APB1_pre,
+                                       configure_APB2_pre,
+                                       configure_ADC_pre,
+                                       print_summary}
+
+                        return show_pages(pages)
+                end
         end
 
         return next
@@ -1080,7 +1084,7 @@ function pll:configure()
 
         if key_read(db.path.project.mk, "ENABLE_PLL") == yes then
                 if arch[db:get_arch()].configure() == back then
-                        goto pll_enable
+                        goto enable
                 end
         end
 

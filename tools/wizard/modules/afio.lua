@@ -822,71 +822,98 @@ arch.stm32f1.configure = function()
         end
 
         local function configure_remap()
+                local last = nil
+
+                local common_pages = {configure_remap_spi1,
+                                      configure_remap_i2c1,
+                                      configure_remap_usart1,
+                                      configure_remap_usart2,
+                                      configure_remap_usart3,
+                                      configure_remap_tim1,
+                                      configure_remap_tim2,
+                                      configure_remap_tim3,
+                                      configure_remap_tim4,
+                                      configure_remap_can,
+                                      configure_remap_pd01,
+                                      configure_remap_tim5ch4,
+                                      configure_remap_adc1_etrginj,
+                                      configure_remap_adc1_etrgreg,
+                                      configure_remap_adc2_etrginj,
+                                      configure_remap_adc2_etrgreg,
+                                      configure_remap_swj_cfg}
+
+                local cl_pages     = {configure_remap_eth,
+                                      configure_remap_can2,
+                                      configure_remap_mii_rmii_sel,
+                                      configure_remap_spi3,
+                                      configure_remap_tim2itr1,
+                                      configure_remap_ptp_pps}
+
+                local vl_pages     = {configure_remap_tim15,
+                                      configure_remap_tim16,
+                                      configure_remap_tim17,
+                                      configure_remap_cec,
+                                      configure_remap_tim1_dma}
+
+                local hd_vl_pages =  {configure_remap_tim13,
+                                      configure_remap_tim14,
+                                      configure_remap_fsmc_nadv,
+                                      configure_remap_tim76_dac_dma,
+                                      configure_remap_tim12,
+                                      configure_remap_misc}
+
+                local xl_pages =     {configure_remap_tim9,
+                                      configure_remap_tim10,
+                                      configure_remap_tim11,
+                                      configure_remap_tim13,
+                                      configure_remap_tim14,
+                                      configure_remap_fsmc_nadv}
+
                 if     family == "STM32F10X_CL" then
-                        progress(1, 23)
+                        progress(1, #common_pages + #cl_pages)
                 elseif family == "STM32F10X_LD_VL" or family == "STM32F10X_MD_VL" then
-                        progress(1, 22)
+                        progress(1, #common_pages + #vl_pages)
                 elseif family == "STM32F10X_HD_VL" then
-                        progress(1, 28)
+                        progress(1, #common_pages + #vl_pages + #hd_vl_pages)
                 elseif family == "STM32F10X_XL" then
-                        progress(1, 23)
+                        progress(1, #common_pages + #xl_pages)
                 end
 
-                ::remap_spi1::         if configure_remap_spi1()         == back then return back             end
-                ::remap_i2c1::         if configure_remap_i2c1()         == back then goto remap_spi1         end
-                ::remap_usart1::       if configure_remap_usart1()       == back then goto remap_i2c1         end
-                ::remap_usart2::       if configure_remap_usart2()       == back then goto remap_usart1       end
-                ::remap_usart3::       if configure_remap_usart3()       == back then goto remap_usart2       end
-                ::remap_tim1::         if configure_remap_tim1()         == back then goto remap_usart3       end
-                ::remap_tim2::         if configure_remap_tim2()         == back then goto remap_tim1         end
-                ::remap_tim3::         if configure_remap_tim3()         == back then goto remap_tim2         end
-                ::remap_tim4::         if configure_remap_tim4()         == back then goto remap_tim3         end
-                ::remap_can::          if configure_remap_can()          == back then goto remap_tim4         end
-                ::remap_pd01::         if configure_remap_pd01()         == back then goto remap_can          end
-                ::remap_tim5ch4::      if configure_remap_tim5ch4()      == back then goto remap_pd01         end
-                ::remap_adc1_etrginj:: if configure_remap_adc1_etrginj() == back then goto remap_tim5ch4      end
-                ::remap_adc1_etrgreg:: if configure_remap_adc1_etrgreg() == back then goto remap_adc1_etrginj end
-                ::remap_adc2_etrginj:: if configure_remap_adc2_etrginj() == back then goto remap_adc1_etrgreg end
-                ::remap_adc2_etrgreg:: if configure_remap_adc2_etrgreg() == back then goto remap_adc2_etrginj end
-                ::remap_swj_cfg::      if configure_remap_swj_cfg()      == back then goto remap_adc2_etrgreg end
+                ::common_pg::
+                if show_pages(common_pages, last) == back then
+                        return back
+                else
+                        last = nil
+                end
 
                 if family == "STM32F10X_CL" then
-                        ::cl_remap_eth::          if configure_remap_eth()          == back then goto remap_swj_cfg         end
-                        ::cl_remap_can2::         if configure_remap_can2()         == back then goto cl_remap_eth          end
-                        ::cl_remap_mii_rmii_sel:: if configure_remap_mii_rmii_sel() == back then goto cl_remap_can2         end
-                        ::cl_remap_spi3::         if configure_remap_spi3()         == back then goto cl_remap_mii_rmii_sel end
-                        ::cl_remap_tim2itr1::     if configure_remap_tim2itr1()     == back then goto cl_remap_spi3         end
-                        ::remap_ptp_pps::         if configure_remap_ptp_pps()      == back then goto cl_remap_tim2itr1     end
-                        return next
-                end
-
-                if family == "STM32F10X_LD_VL" or family == "STM32F10X_MD_VL" or family == "STM32F10X_HD_VL" then
-                        ::ld_md_hd_vl_remap_tim15::    if configure_remap_tim15()    == back then goto remap_swj_cfg           end
-                        ::ld_md_hd_vl_remap_tim16::    if configure_remap_tim16()    == back then goto ld_md_hd_vl_remap_tim15 end
-                        ::ld_md_hd_vl_remap_tim17::    if configure_remap_tim17()    == back then goto ld_md_hd_vl_remap_tim16 end
-                        ::ld_md_hd_vl_remap_cec::      if configure_remap_cec()      == back then goto ld_md_hd_vl_remap_tim17 end
-                        ::ld_md_hd_vl_remap_tim1_dma:: if configure_remap_tim1_dma() == back then goto ld_md_hd_vl_remap_cec   end
-
-                        if family == "STM32F10X_HD_VL" then
-                                ::hd_vl_remap_tim13::         if configure_remap_tim13()         == back then goto ld_md_hd_vl_remap_tim1_dma end
-                                ::hd_vl_remap_tim14::         if configure_remap_tim14()         == back then goto hd_vl_remap_tim13          end
-                                ::hd_vl_remap_fsmc_nadv::     if configure_remap_fsmc_nadv()     == back then goto hd_vl_remap_tim14          end
-                                ::hd_vl_remap_tim76_dac_dma:: if configure_remap_tim76_dac_dma() == back then goto hd_vl_remap_fsmc_nadv      end
-                                ::hd_vl_remap_tim12::         if configure_remap_tim12()         == back then goto hd_vl_remap_tim76_dac_dma  end
-                                ::hd_vl_remap_misc::          if configure_remap_misc()          == back then goto hd_vl_remap_tim12          end
+                        if show_pages(cl_pages) == back then
+                                last = -1
+                                goto common_pg
                         end
 
-                        return next
+                elseif family == "STM32F10X_LD_VL" or family == "STM32F10X_MD_VL" or family == "STM32F10X_HD_VL" then
+                        ::vl_pg::
+                        if show_pages(vl_pages, last) == back then
+                                last = -1
+                                goto common_pg
+                        end
+
+                        if family == "STM32F10X_HD_VL" then
+                                if show_pages(hd_vl_pages) == back then
+                                        last = -1
+                                        goto vl_pg
+                                end
+                        end
+
+                elseif family == "STM32F10X_XL" then
+                        if show_pages(xl_pages) == back then
+                                last = -1
+                                goto common_pg
+                        end
                 end
 
-                if family == "STM32F10X_XL" then
-                        ::xl_remap_tim9::      if configure_remap_tim9()      == back then goto remap_swj_cfg  end
-                        ::xl_remap_tim10::     if configure_remap_tim10()     == back then goto xl_remap_tim9  end
-                        ::xl_remap_tim11::     if configure_remap_tim11()     == back then goto xl_remap_tim10 end
-                        ::xl_remap_tim13::     if configure_remap_tim13()     == back then goto xl_remap_tim11 end
-                        ::xl_remap_tim14::     if configure_remap_tim14()     == back then goto xl_remap_tim13 end
-                        ::xl_remap_fsmc_nadv:: if configure_remap_fsmc_nadv() == back then goto xl_remap_tim14 end
-                end
+                return next
         end
 
         local function configure_exti()

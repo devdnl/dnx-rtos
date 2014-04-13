@@ -87,10 +87,8 @@ function pro:configure()
         navigation("Home/Project")
         set_total_steps(2)
 
-        ::project_name::   if configure_project_name()   == back then return back       end
-        ::toolchain_name:: if configure_toolchain_name() == back then goto project_name end
-
-        return next
+        local pages = {configure_project_name, configure_toolchain_name}
+        return show_pages(pages)
 end
 
 -- started without master file

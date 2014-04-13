@@ -226,14 +226,15 @@ arch.stm32f1.configure = function()
 
         if key_read(db.path.project.mk, "ENABLE_SDSPI") == yes then
 
-                ::spi_port::     if configure_SPI_port()            == back then return back       end
-                ::spi_clk_div::  if configure_SPI_clock_prescaler() == back then goto spi_port     end
-                ::card_cs_pin::  if configure_card_CS_pin()         == back then goto spi_clk_div  end
-                ::card_timeout:: if configure_card_timeout()        == back then goto card_cs_pin  end
-                ::enable_dma::   if configure_enable_DMA()          == back then goto card_timeout end
-                ::dma_irq_prio:: if configure_DMA_IRQ_priority()    == back then goto enable_dma   end
+                local pages = {configure_SPI_port,
+                               configure_SPI_clock_prescaler,
+                               configure_card_CS_pin,
+                               configure_card_timeout,
+                               configure_enable_DMA,
+                               configure_DMA_IRQ_priority,
+                               print_summary}
 
-                print_summary()
+                return show_pages(pages)
         end
 
         return next

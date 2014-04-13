@@ -175,11 +175,8 @@ arch.stm32f1.configure = function()
 
         if key_read(db.path.project.mk, "ENABLE_WDG") == yes then
 
-                ::dev_lock:: if configure_dev_lock_at_open()   == back then return back   end
-                ::timeout::  if configure_wdg_timeout()        == back then goto dev_lock end
-                ::debug::    if configure_behaviour_on_debug() == back then goto timeout  end
-
-                print_summary()
+                local pages = {configure_dev_lock_at_open, configure_wdg_timeout, configure_behaviour_on_debug, print_summary}
+                return show_pages(pages)
         end
 
         return next

@@ -174,15 +174,16 @@ local function configure_tty()
 
         if key_read(db.path.project.mk, "ENABLE_TTY") == yes then
 
-                ::term_cols::     if configure_term_cols()              == back then return back       end
-                ::term_rows::     if configure_term_rows()              == back then goto term_cols    end
-                ::term_os::       if configure_out_stream_len()         == back then goto term_rows    end
-                ::no_of_term::    if configure_number_of_terminals()    == back then goto term_os      end
-                ::term_size_ch::  if configure_term_size_check_enable() == back then goto no_of_term   end
-                ::term_in_file::  if configure_term_in_file()           == back then goto term_size_ch end
-                ::term_out_file:: if configure_term_out_file()          == back then goto term_in_file end
+                local pages = {configure_term_cols,
+                               configure_term_rows,
+                               configure_out_stream_len,
+                               configure_number_of_terminals,
+                               configure_term_size_check_enable,
+                               configure_term_in_file,
+                               configure_term_out_file,
+                               print_summary}
 
-                print_summary()
+                return show_pages(pages)
         end
 
         return next

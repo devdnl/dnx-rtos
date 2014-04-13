@@ -132,17 +132,16 @@ end
 -- @brief Function execute configuration
 --------------------------------------------------------------------------------
 function fs:configure()
-        calculate_total_steps()
-
         title("File Systems Configuration")
         navigation("Home/File systems")
+        calculate_total_steps()
 
-        ::devfs_enable::  if configure_devfs_enable()  == back then return back       end
-        ::lfs_enable::    if configure_lfs_enable()    == back then goto devfs_enable end
-        ::fatfs_enable::  if configure_fatfs_enable()  == back then goto lfs_enable   end
-        ::procfs_enable:: if configure_procfs_enable() == back then goto fatfs_enable end
+        local pages = {configure_devfs_enable,
+                       configure_lfs_enable,
+                       configure_fatfs_enable,
+                       configure_procfs_enable}
 
-        return next
+        return show_pages(pages)
 end
 
 --------------------------------------------------------------------------------

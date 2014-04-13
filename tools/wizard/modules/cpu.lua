@@ -63,6 +63,9 @@ local function configure_cpu_arch()
                 db:set_arch(choice)
         end
 
+        calculate_total_steps()
+        title("CPU configuration (" .. db:get_arch() .. ")")
+
         return choice
 end
 
@@ -173,19 +176,8 @@ function cpu:configure()
         navigation("Home/CPU")
         calculate_total_steps()
 
-        ::cpu_arch::
-        if configure_cpu_arch() == back then
-                return back
-        else
-                calculate_total_steps()
-                title("CPU configuration (" .. db:get_arch() .. ")")
-        end
-
-        ::cpu_freq::   if configure_freq()       == back then goto cpu_arch end
-        ::mcu_name::   if configure_mcu_name()   == back then goto cpu_freq end
-        ::priorities:: if configure_priorities() == back then goto mcu_name end
-
-        return next
+        local pages = {configure_cpu_arch, configure_freq, configure_mcu_name, configure_priorities}
+        return show_pages(pages)
 end
 
 -- started without master file

@@ -405,22 +405,19 @@ end
 -- @brief Function configure network memory usage limit
 --------------------------------------------------------------------------------
 local function configure_monitor_network_memory_usage_limit()
-        local choice = key_read(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE__")
-        if (choice == yes) then
-                local value = key_read(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__")
-                msg(progress() .. "Configure a memory usage limit for network layer. To disable this limit enter 0.")
+        local value = key_read(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__")
+        msg(progress() .. "Configure a memory usage limit for network layer. To disable this limit enter 0.")
 
-                if (value == "0") then value = "Disabled"
-                else value = value .. " bytes" end
+        if (value == "0") then value = "Disabled"
+        else value = value .. " bytes" end
 
-                msg("Current limit is: " .. value .. ".")
-                value = get_number("dec", 0, 16*1024*1024)
-                if (can_be_saved(value)) then
-                        key_save(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__", value)
-                end
-
-                return value
+        msg("Current limit is: " .. value .. ".")
+        value = get_number("dec", 0, 16*1024*1024)
+        if (can_be_saved(value)) then
+                key_save(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__", value)
         end
+
+        return value
 end
 
 --------------------------------------------------------------------------------
@@ -463,39 +460,42 @@ function rtos:configure()
         navigation("Home/Operating system")
         calculate_total_steps()
 
-        ::task_stack_depth:: if configure_task_stack_depth()                   == back then return back           end
-        ::fs_stack_depth::   if configure_fs_stack_depth()                     == back then goto task_stack_depth end
-        ::irq_stack_depth::  if configure_irq_stack_depth()                    == back then goto fs_stack_depth   end
-        ::no_of_priorities:: if configure_number_of_priorities()               == back then goto irq_stack_depth  end
-        ::task_name_length:: if configure_task_name_length()                   == back then goto no_of_priorities end
-        ::context_sw_freq::  if configure_context_switch_freq()                == back then goto task_name_length end
-        ::sleep_on_idle::    if configure_sleep_on_idle()                      == back then goto context_sw_freq  end
-        ::printf_enable::    if configure_printf_enable()                      == back then goto sleep_on_idle    end
-        ::scanf_enable::     if configure_scanf_enable()                       == back then goto printf_enable    end
-        ::printk_enable::    if configure_printk_enable()                      == back then goto scanf_enable     end
-        ::color_term_en::    if configure_colorterm_enable()                   == back then goto printk_enable    end
-        ::stream_buf_len::   if configure_stream_buffer_length()               == back then goto color_term_en    end
-        ::pipe_buf_len::     if configure_pipe_buffer_length()                 == back then goto stream_buf_len   end
-        ::errno_beauty::     if configure_errno_beauty()                       == back then goto pipe_buf_len     end
-        ::moni_tsk_mem::     if configure_monitor_task_memory_usage()          == back then goto errno_beauty     end
-        ::moni_tsk_file::    if configure_monitor_task_file_usage()            == back then goto moni_tsk_mem     end
-        ::moni_krn_mem::     if configure_monitor_kernel_memory_usage()        == back then goto moni_tsk_file    end
-        ::moni_mod_mem::     if configure_monitor_module_memory_usage()        == back then goto moni_krn_mem     end
-        ::moni_sys_mem::     if configure_monitor_system_memory_usage()        == back then goto moni_mod_mem     end
-        ::moni_cpu_load::    if configure_monitor_cpu_load()                   == back then goto moni_sys_mem     end
-        ::moni_net_mem::     if configure_monitor_network_memory_usage()       == back then goto moni_cpu_load    end
-        ::moni_net_mem_lim:: if configure_monitor_network_memory_usage_limit() == back then goto moni_net_mem     end
+        local last = nil
+        local main = {configure_task_stack_depth,
+                       configure_fs_stack_depth,
+                       configure_irq_stack_depth,
+                       configure_number_of_priorities,
+                       configure_task_name_length,
+                       configure_context_switch_freq,
+                       configure_sleep_on_idle,
+                       configure_printf_enable,
+                       configure_scanf_enable,
+                       configure_printk_enable,
+                       configure_colorterm_enable,
+                       configure_stream_buffer_length,
+                       configure_pipe_buffer_length,
+                       configure_errno_beauty,
+                       configure_stop_macro,
+                       configure_hostname,
+                       configure_monitor_task_memory_usage,
+                       configure_monitor_task_file_usage,
+                       configure_monitor_kernel_memory_usage,
+                       configure_monitor_module_memory_usage,
+                       configure_monitor_system_memory_usage,
+                       configure_monitor_cpu_load,
+                       configure_monitor_network_memory_usage}
 
-        ::hostname::
-        if configure_hostname() == back then
-                if (key_read(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE__") == yes) then
-                        goto moni_net_mem_lim
-                else
-                        goto moni_net_mem
-                end
+        ::p_main::
+        if show_pages(main, last) == back then
+                return back
         end
 
-        ::stop_macro:: if configure_stop_macro() == back then goto hostname end
+        if key_read(db.path.project.flags, "__OS_MONITOR_NETWORK_MEMORY_USAGE__") == yes then
+                if configure_monitor_network_memory_usage_limit() == back then
+                        last = -1
+                        goto p_main
+                end
+        end
 
         return next
 end
