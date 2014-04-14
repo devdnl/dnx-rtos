@@ -52,7 +52,7 @@
 #define __AFIO_REMAP_ETH__ __NO__
 #define __AFIO_REMAP_CAN2__ __NO__
 #define __AFIO_REMAP_MII_RMII_SEL__ __NO__
-#define __AFIO_REMAP_SPI3__ __NO__
+#define __AFIO_REMAP_SPI3__ __YES__
 #define __AFIO_REMAP_TIM2ITR1__ __NO__
 #define __AFIO_REMAP_PTP_PPS__ __NO__
 
