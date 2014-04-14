@@ -105,7 +105,7 @@ gpio_port.stm32f1.configure = function()
                            {"_GPIO_ALT_OUT_OPEN_DRAIN_50MHZ", "Alternative output Open drain 50MHz"},
                            {"_GPIO_IN_ANALOG"               , "Analog input"},
                            {"_GPIO_IN_FLOAT"                , "Float input"},
-                           {"_GPIO_IN_PULLED"               , "Input pull-up/pull-down"}}
+                           {"_GPIO_IN_PULLED"               , "Pulled input"}}
 
         local function pin_name_str(port, pin)
                 return "__GPIO_"..port_name[port].."_PIN_"..pin.."_NAME__"

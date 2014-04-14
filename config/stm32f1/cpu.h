@@ -27,9 +27,9 @@
 #define _CPU_H_
 
 /* configuration to modify */
-#define __CPU_NAME__ STM32F100C4xx
-#define __CPU_FAMILY__ __STM32F10X_LD_VL__
-#define __CPU_RAM_MEM_SIZE__ 4096
+#define __CPU_NAME__ STM32F107RCxx
+#define __CPU_FAMILY__ __STM32F10X_CL__
+#define __CPU_RAM_MEM_SIZE__ 65536
 
 /* fixed configuration */
 #define __CPU_START_FREQUENCY__ (8000000UL)
