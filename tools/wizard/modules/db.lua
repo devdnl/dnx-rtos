@@ -802,6 +802,15 @@ function db:get_mcu_ram_size(mcu_name)
 end
 
 --------------------------------------------------------------------------------
+-- @brief Method return ROM size for selected MCU
+-- @param mcu_name      MCU name
+-- @return ROM size
+--------------------------------------------------------------------------------
+function db:get_mcu_rom_size(mcu_name)
+        return arch[get_mcu_arch(mcu_name)].mcu[mcu_name].rom
+end
+
+--------------------------------------------------------------------------------
 -- @brief Method return family of selected MCU
 -- @param mcu_name      MCU name
 -- @return
