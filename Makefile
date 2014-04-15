@@ -146,8 +146,8 @@ EMPTY   =
 # defines this makefile name
 THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 
-# number of threads used in compilation (cpu count + 1)
-THREAD = 1#$(shell echo $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
+# number of threads used in compilation (cpu count)
+THREAD = $(shell echo $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
 
 # sets header search path (adds -I flags to paths)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
