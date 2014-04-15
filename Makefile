@@ -126,6 +126,7 @@ MKDEP    = makedepend
 WC       = wc
 GREP     = grep
 SIZEOF   = stat -c %s
+UNAME    = uname -o
 CC       = $(TOOLCHAIN)gcc
 CXX      = $(TOOLCHAIN)g++
 LD       = $(TOOLCHAIN)g++
@@ -133,7 +134,6 @@ AS       = $(TOOLCHAIN)gcc -x assembler-with-cpp
 OBJCOPY  = $(TOOLCHAIN)objcopy
 OBJDUMP  = $(TOOLCHAIN)objdump
 SIZE     = $(TOOLCHAIN)size
-UNAME    = uname -s
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -216,7 +216,7 @@ help :
 ####################################################################################################
 .PHONY : config
 config : clean
-ifeq ($(shell $(UNAME)), Linux)
+ifeq ($(shell $(UNAME)), GNU/Linux)
 	@./tools/config_tool.linux --no-gui ./tools/wizard/wizard.lua
 endif
 ifeq ($(shell $(UNAME)), Cygwin)
@@ -228,7 +228,7 @@ endif
 
 .PHONY : xconfig
 xconfig : clean
-ifeq ($(shell $(UNAME)), Linux)
+ifeq ($(shell $(UNAME)), GNU/Linux)
 	@./tools/config_tool.linux ./tools/wizard/wizard.lua
 endif
 ifeq ($(shell $(UNAME)), Cygwin)
