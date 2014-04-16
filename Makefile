@@ -217,10 +217,10 @@ help :
 .PHONY : config
 config : clean
 ifeq ($(shell $(UNAME)), GNU/Linux)
-	@./tools/config_tool.linux --no-gui ./tools/wizard/wizard.lua
+	@./tools/wizard/bin/config_tool.linux --no-gui ./tools/wizard/wizard.lua
 endif
 ifeq ($(shell $(UNAME)), Cygwin)
-	@./tools/config_tool.win.exe --no-gui ./tools/wizard/wizard.lua
+	@./tools/wizard/bin/config_tool.win.exe --no-gui ./tools/wizard/wizard.lua
 endif
 ifeq ($(shell $(UNAME)), Darwin)
 	@echo "Lack of program for the Darwin kernel"
@@ -229,10 +229,10 @@ endif
 .PHONY : xconfig
 xconfig : clean
 ifeq ($(shell $(UNAME)), GNU/Linux)
-	@./tools/config_tool.linux ./tools/wizard/wizard.lua
+	@./tools/wizard/bin/config_tool.linux ./tools/wizard/wizard.lua
 endif
 ifeq ($(shell $(UNAME)), Cygwin)
-	@./tools/config_tool.win.exe ./tools/wizard/wizard.lua
+	@./tools/wizard/bin/config_tool.win.exe ./tools/wizard/wizard.lua
 endif
 ifeq ($(shell $(UNAME)), Darwin)
 	@echo "Lack of program for the Darwin kernel"
