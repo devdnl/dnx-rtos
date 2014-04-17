@@ -1,7 +1,7 @@
 # Makefile for GNU make
 
 # project configuration
-PROJECT_NAME="dnx"
+PROJECT_NAME=dnx
 PROJECT_CPU_ARCH=stm32f1
 PROJECT_TOOLCHAIN=arm-none-eabi-
 

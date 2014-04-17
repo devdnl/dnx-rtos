@@ -44,7 +44,7 @@ local function configure_project_name()
         msg("Current project name is: " .. str .. ".")
         str = get_string()
         if (can_be_saved(str)) then
-                key_save(db.path.project.mk, "PROJECT_NAME", str)
+                key_save(db.path.project.mk, "PROJECT_NAME", str:gsub('"', ""))
         end
 
         return str

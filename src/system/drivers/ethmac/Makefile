@@ -1,5 +1,4 @@
 # Makefile for GNU make
-
 HDRLOC_ARCH += drivers/ethmac
 
 ifeq ($(TARGET), stm32f1)
